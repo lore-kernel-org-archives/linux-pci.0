@@ -1,67 +1,238 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:63186 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689AbbBCLch (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 06:32:37 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-Date: Tue, 03 Feb 2015 12:31:43 +0100
-Message-ID: <4324891.mqG6Yyfi6J@wuerfel>
-In-Reply-To: <54D0A521.7030405@arm.com>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <4145359.V8A0ARGtXz@wuerfel> <54D0A521.7030405@arm.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:59492 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195AbbBEVx6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Feb 2015 16:53:58 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v6 2/7] of: move of_dma_configure() to device.c to help re-use
+Date: Thu, 5 Feb 2015 16:52:54 -0500
+Message-ID: <1423173179-10227-3-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 03 February 2015 10:38:25 Marc Zyngier wrote:
-> 
-> That's exactly what I thought until Lorenzo reported kvmtool falling
-> over because of this write. Obviously, some platforms must actually
-> require this (possibly for bridges that are not known by the firmware).
+Move of_dma_configure() to device.c so that same function can be re-used
+for PCI devices to obtain DMA configuration from DT. Also add a second
+argument so that for PCI, DT node of root bus host bridge can be used to
+obtain the DMA configuration for the slave PCI device.
 
-This sounds much like a bug in kvmtool.
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/of/device.c       |   59 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/platform.c     |   58 ++------------------------------------------
+ include/linux/of_device.h |    2 ++
+ 3 files changed, 63 insertions(+), 56 deletions(-)
+
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 46d6c75c..2de320d 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -2,6 +2,9 @@
+ #include <linux/kernel.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/of_address.h>
++#include <linux/of_iommu.h>
++#include <linux/dma-mapping.h>
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/mod_devicetable.h>
+@@ -66,6 +69,62 @@ int of_device_add(struct platform_device *ofdev)
+ 	return device_add(&ofdev->dev);
+ }
  
-> Entirely removing that code solves my problem too, but that'd cannot be
-> the right solution...
++/**
++ * of_dma_configure - Setup DMA configuration
++ * @dev:	Device to apply DMA configuration
++ * @np:		ptr to of node having dma configuration
++ *
++ * Try to get devices's DMA configuration from DT and update it
++ * accordingly.
++ *
++ * In case if platform code need to use own special DMA configuration,it
++ * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
++ * to fix up DMA configuration.
++ */
++void of_dma_configure(struct device *dev, struct device_node *np)
++{
++	u64 dma_addr, paddr, size;
++	int ret;
++	bool coherent;
++	unsigned long offset;
++	struct iommu_ops *iommu;
++
++	/*
++	 * Set default dma-mask to 32 bit. Drivers are expected to setup
++	 * the correct supported dma_mask.
++	 */
++	dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++	/*
++	 * Set it to coherent_dma_mask by default if the architecture
++	 * code has not set it.
++	 */
++	if (!dev->dma_mask)
++		dev->dma_mask = &dev->coherent_dma_mask;
++
++	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
++	if (ret < 0) {
++		dma_addr = offset = 0;
++		size = dev->coherent_dma_mask;
++	} else {
++		offset = PFN_DOWN(paddr - dma_addr);
++		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
++	}
++
++	dev->dma_pfn_offset = offset;
++
++	coherent = of_dma_is_coherent(np);
++	dev_dbg(dev, "device is%sdma coherent\n",
++		coherent ? " " : " not ");
++
++	iommu = of_iommu_configure(dev, np);
++	dev_dbg(dev, "device is%sbehind an iommu\n",
++		iommu ? " " : " not ");
++
++	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
++}
++EXPORT_SYMBOL_GPL(of_dma_configure);
++
+ int of_device_register(struct platform_device *pdev)
+ {
+ 	device_initialize(&pdev->dev);
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index d3f3988..cbee18d 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -19,7 +19,6 @@
+ #include <linux/slab.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
+-#include <linux/of_iommu.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
+ }
+ EXPORT_SYMBOL(of_device_alloc);
+ 
+-/**
+- * of_dma_configure - Setup DMA configuration
+- * @dev:	Device to apply DMA configuration
+- *
+- * Try to get devices's DMA configuration from DT and update it
+- * accordingly.
+- *
+- * In case if platform code need to use own special DMA configuration,it
+- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
+- * to fix up DMA configuration.
+- */
+-static void of_dma_configure(struct device *dev)
+-{
+-	u64 dma_addr, paddr, size;
+-	int ret;
+-	bool coherent;
+-	unsigned long offset;
+-	struct iommu_ops *iommu;
+-
+-	/*
+-	 * Set default dma-mask to 32 bit. Drivers are expected to setup
+-	 * the correct supported dma_mask.
+-	 */
+-	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+-
+-	/*
+-	 * Set it to coherent_dma_mask by default if the architecture
+-	 * code has not set it.
+-	 */
+-	if (!dev->dma_mask)
+-		dev->dma_mask = &dev->coherent_dma_mask;
+-
+-	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
+-	if (ret < 0) {
+-		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask;
+-	} else {
+-		offset = PFN_DOWN(paddr - dma_addr);
+-		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+-	}
+-	dev->dma_pfn_offset = offset;
+-
+-	coherent = of_dma_is_coherent(dev->of_node);
+-	dev_dbg(dev, "device is%sdma coherent\n",
+-		coherent ? " " : " not ");
+-
+-	iommu = of_iommu_configure(dev, dev->of_node);
+-	dev_dbg(dev, "device is%sbehind an iommu\n",
+-		iommu ? " " : " not ");
+-
+-	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
+-}
+-
+ static void of_dma_deconfigure(struct device *dev)
+ {
+ 	arch_teardown_dma_ops(dev);
+@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
+ 
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+-	of_dma_configure(&dev->dev);
++	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+ 		of_dma_deconfigure(&dev->dev);
+@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
+ 		dev_set_name(&dev->dev, "%s", bus_id);
+ 	else
+ 		of_device_make_bus_id(&dev->dev);
+-	of_dma_configure(&dev->dev);
++	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	/* Allow the HW Peripheral ID to be overridden */
+ 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
+diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+index ef37021..c661496 100644
+--- a/include/linux/of_device.h
++++ b/include/linux/of_device.h
+@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ 	return of_node_get(cpu_dev->of_node);
+ }
+ 
++void of_dma_configure(struct device *dev, struct device_node *np);
+ #else /* CONFIG_OF */
+ 
+ static inline int of_driver_match_device(struct device *dev,
+@@ -90,6 +91,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ {
+ 	return NULL;
+ }
++void of_dma_configure(struct device *dev, struct device_node *np) { }
+ #endif /* CONFIG_OF */
+ 
+ #endif /* _LINUX_OF_DEVICE_H */
+-- 
+1.7.9.5
 
-The comment in pdev_fixup_irq() says 
-
-        /* Always tell the device, so the driver knows what is
-           the real IRQ to use; the device does not use it. */
-
-which I read to mean that there are drivers that incorrectly use
-'pci_read_config_byte(dev, PCI_INTERRUPT_LINE)' as the number
-they pass into request_irq, rather than using dev->irq.
-However, this means that your patch is actually wrong, because
-what the driver cares about is the virtual irq number (which
-request_irq expects), not the number relative to some interrupt
-controller.
-
-There is another comment in include/linux/pci.h that states
-       /*
-        * Instead of touching interrupt line and base address registers
-        * directly, use the values stored here. They might be different!
-        */
-       unsigned int    irq;
-
-so apparently this has been a cause for problems in the past,
-and drivers that rely on the number are already broken.
-
-I also checked ancient kernel versions from the 2.1 days when the
-code was first added. And indeed at the time drivers used to read
-the word, but now none of them use the number for anything real,
-they were all fixed during linux-2.2 at the latest.
-
-	Arnd
