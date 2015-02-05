@@ -1,184 +1,343 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:60533 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753598AbbBZIPo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:44 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v4 12/30] PCI: Introduce pci_host_bridge_ops to support host specific operations
-Date: Thu, 26 Feb 2015 16:12:06 +0800
-Message-ID: <1424938344-4017-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Mike Travis <travis@sgi.com>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch v4 17/23] resources: Move struct resource_list_entry from ACPI into resource core
+Date: Thu,  5 Feb 2015 13:44:43 +0800
+Message-Id: <1423115089-12904-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have weak functions like pcibios_root_bridge_prepare()
-to setup pci host bridge, We could introduce pci_host_bridge_ops
-which contain host bridge specific ops to setup pci_host_bridge.
-Then host bridge driver could add pci_host_bridge_ops hooks
-intead of weak function to setup pci_host_bridge.
-This patch add following pci_host_bridge_ops hooks:
+Currently ACPI, PCI and pnp all implement the same resource list
+management with different data structure. We need to transfer from
+one data structure into another when passing resources from one
+subsystem into another subsystem. So move struct resource_list_entry
+from ACPI into resource core and rename it as resource_entry,
+then it could be reused by different subystems and avoid the data
+structure conversion.
 
-pci_host_bridge_ops {
-	/* set root bus speed, some platform need this like powerpc */
-	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-	int (*phb_prepare)(struct pci_host_bridge *host);
-	/* platform specific of scan hook to scan pci device */
-	void (*phb_of_scan_bus)(struct pci_host_bridge *);
-}
-We could easily extend it to support different host bridge
-specific operations.
+Introduce dedicated header file resource_ext.h instead of embedding
+it into ioport.h to avoid header file inclusion order issues.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Vinod Koul <vinod.koul@intel.com>
 ---
- drivers/pci/host-bridge.c |   12 ++++++++++--
- drivers/pci/probe.c       |   17 +++++++++++------
- include/linux/pci.h       |   12 ++++++++++--
- 3 files changed, 31 insertions(+), 10 deletions(-)
+ drivers/acpi/acpi_lpss.c     |    8 ++---
+ drivers/acpi/acpi_platform.c |    4 +--
+ drivers/acpi/resource.c      |   17 ++++------
+ drivers/dma/acpi-dma.c       |   10 +++---
+ include/linux/acpi.h         |   12 +------
+ include/linux/resource_ext.h |   77 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/resource.c            |   25 ++++++++++++++
+ 7 files changed, 120 insertions(+), 33 deletions(-)
+ create mode 100644 include/linux/resource_ext.h
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index b42a4bb..4a2baa2 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
- }
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 db, 
--		struct list_head *resources, void *sysdata)
-+		struct device *parent, u32 db, struct list_head *resources, 
-+		void *sysdata, struct pci_host_bridge_ops *ops)
+diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
+index 4f3febf8a589..dfd1b8095dad 100644
+--- a/drivers/acpi/acpi_lpss.c
++++ b/drivers/acpi/acpi_lpss.c
+@@ -313,7 +313,7 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
  {
- 	int error;
- 	int bus = PCI_BUSNUM(db);
-@@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 		}
- 	mutex_unlock(&phb_mutex);
- 
-+	host->ops = ops;
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-@@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
- 			host->busnum);
- 
-+	if (host->ops && host->ops->phb_prepare) {
-+		error = host->ops->phb_prepare(host);
-+		if(error) {
-+			kfree(host);
-+			return NULL;
-+		}
-+	}
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 45056cb..8cec6ab 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1888,6 +1888,8 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-+	if (bridge->ops && bridge->ops->phb_set_root_bus_speed)
-+		bridge->ops->phb_set_root_bus_speed(bridge);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error)
+ 	struct lpss_device_desc *dev_desc;
+ 	struct lpss_private_data *pdata;
+-	struct resource_list_entry *rentry;
++	struct resource_entry *rentry;
+ 	struct list_head resource_list;
+ 	struct platform_device *pdev;
+ 	int ret;
+@@ -333,12 +333,12 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
  		goto err_out;
-@@ -1953,7 +1955,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
  
--	host = pci_create_host_bridge(parent, db, resources, sysdata);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
- 	if (!host)
- 		return NULL;
- 	
-@@ -2050,10 +2052,13 @@ static struct pci_bus *__pci_scan_root_bus(
- 		pci_bus_insert_busn_res(b, b->number, 255);
+ 	list_for_each_entry(rentry, &resource_list, node)
+-		if (resource_type(&rentry->res) == IORESOURCE_MEM) {
++		if (resource_type(rentry->res) == IORESOURCE_MEM) {
+ 			if (dev_desc->prv_size_override)
+ 				pdata->mmio_size = dev_desc->prv_size_override;
+ 			else
+-				pdata->mmio_size = resource_size(&rentry->res);
+-			pdata->mmio_base = ioremap(rentry->res.start,
++				pdata->mmio_size = resource_size(rentry->res);
++			pdata->mmio_base = ioremap(rentry->res->start,
+ 						   pdata->mmio_size);
+ 			break;
+ 		}
+diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+index 6ba8beb6b9d2..1284138e42ab 100644
+--- a/drivers/acpi/acpi_platform.c
++++ b/drivers/acpi/acpi_platform.c
+@@ -45,7 +45,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+ 	struct platform_device *pdev = NULL;
+ 	struct acpi_device *acpi_parent;
+ 	struct platform_device_info pdevinfo;
+-	struct resource_list_entry *rentry;
++	struct resource_entry *rentry;
+ 	struct list_head resource_list;
+ 	struct resource *resources = NULL;
+ 	int count;
+@@ -71,7 +71,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+ 		}
+ 		count = 0;
+ 		list_for_each_entry(rentry, &resource_list, node)
+-			resources[count++] = rentry->res;
++			resources[count++] = *rentry->res;
+ 
+ 		acpi_dev_free_resource_list(&resource_list);
+ 	}
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 3ea0d17eb951..4752b9939987 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -444,12 +444,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_interrupt);
+  */
+ void acpi_dev_free_resource_list(struct list_head *list)
+ {
+-	struct resource_list_entry *rentry, *re;
+-
+-	list_for_each_entry_safe(rentry, re, list, node) {
+-		list_del(&rentry->node);
+-		kfree(rentry);
+-	}
++	resource_list_free(list);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
+ 
+@@ -464,16 +459,16 @@ struct res_proc_context {
+ static acpi_status acpi_dev_new_resource_entry(struct resource_win *win,
+ 					       struct res_proc_context *c)
+ {
+-	struct resource_list_entry *rentry;
++	struct resource_entry *rentry;
+ 
+-	rentry = kmalloc(sizeof(*rentry), GFP_KERNEL);
++	rentry = resource_list_create_entry(NULL, 0);
+ 	if (!rentry) {
+ 		c->error = -ENOMEM;
+ 		return AE_NO_MEMORY;
+ 	}
+-	rentry->res = win->res;
++	*rentry->res = win->res;
+ 	rentry->offset = win->offset;
+-	list_add_tail(&rentry->node, c->list);
++	resource_list_add_tail(rentry, c->list);
+ 	c->count++;
+ 	return AE_OK;
+ }
+@@ -534,7 +529,7 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
+  * returned as the final error code.
+  *
+  * The resultant struct resource objects are put on the list pointed to by
+- * @list, that must be empty initially, as members of struct resource_list_entry
++ * @list, that must be empty initially, as members of struct resource_entry
+  * objects.  Callers of this routine should use %acpi_dev_free_resource_list() to
+  * free that list.
+  *
+diff --git a/drivers/dma/acpi-dma.c b/drivers/dma/acpi-dma.c
+index de361a156b34..5a635646e05c 100644
+--- a/drivers/dma/acpi-dma.c
++++ b/drivers/dma/acpi-dma.c
+@@ -43,7 +43,7 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
+ {
+ 	const struct acpi_csrt_shared_info *si;
+ 	struct list_head resource_list;
+-	struct resource_list_entry *rentry;
++	struct resource_entry *rentry;
+ 	resource_size_t mem = 0, irq = 0;
+ 	int ret;
+ 
+@@ -56,10 +56,10 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
+ 		return 0;
+ 
+ 	list_for_each_entry(rentry, &resource_list, node) {
+-		if (resource_type(&rentry->res) == IORESOURCE_MEM)
+-			mem = rentry->res.start;
+-		else if (resource_type(&rentry->res) == IORESOURCE_IRQ)
+-			irq = rentry->res.start;
++		if (resource_type(rentry->res) == IORESOURCE_MEM)
++			mem = rentry->res->start;
++		else if (resource_type(rentry->res) == IORESOURCE_IRQ)
++			irq = rentry->res->start;
  	}
  
--	max = pci_scan_child_bus(b);
+ 	acpi_dev_free_resource_list(&resource_list);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index e818decb631f..e53822148b6a 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -27,6 +27,7 @@
+ 
+ #include <linux/errno.h>
+ #include <linux/ioport.h>	/* for struct resource */
++#include <linux/resource_ext.h>
+ #include <linux/device.h>
+ #include <linux/property.h>
+ 
+@@ -285,11 +286,6 @@ extern int pnpacpi_disabled;
+ 
+ #define PXM_INVAL	(-1)
+ 
+-struct resource_win {
+-	struct resource res;
+-	resource_size_t offset;
+-};
 -
--	if (!found)
--		pci_bus_update_busn_res_end(b, max);
-+	if (host->ops && host->ops->phb_of_scan_bus) {
-+		host->ops->phb_of_scan_bus(host);
-+	} else {
-+		max = pci_scan_child_bus(b);
-+		if (!found)
-+			pci_bus_update_busn_res_end(b, max);
-+	}
+ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res);
+ bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res);
+ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+@@ -300,12 +296,6 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
+ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 				 struct resource *res);
  
- 	return b;
- }
-@@ -2063,7 +2068,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources, sysdata);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
- 	if (!host)
- 		return NULL;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 74e038d..a4b56e0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
-+struct pci_host_bridge;
-+struct pci_host_bridge_ops {
-+	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-+	int (*phb_prepare)(struct pci_host_bridge *host);
-+	void (*phb_of_scan_bus)(struct pci_host_bridge *);
+-struct resource_list_entry {
+-	struct list_head node;
+-	struct resource res;
+-	resource_size_t offset;
+-};
+-
+ void acpi_dev_free_resource_list(struct list_head *list);
+ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
+ 			   int (*preproc)(struct acpi_resource *, void *),
+diff --git a/include/linux/resource_ext.h b/include/linux/resource_ext.h
+new file mode 100644
+index 000000000000..e2bf63d881d4
+--- /dev/null
++++ b/include/linux/resource_ext.h
+@@ -0,0 +1,77 @@
++/*
++ * Copyright (C) 2015, Intel Corporation
++ * Author: Jiang Liu <jiang.liu@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++#ifndef _LINUX_RESOURCE_EXT_H
++#define _LINUX_RESOURCE_EXT_H
++#include <linux/types.h>
++#include <linux/list.h>
++#include <linux/ioport.h>
++#include <linux/slab.h>
++
++/* Represent resource window for bridge devices */
++struct resource_win {
++	struct resource res;		/* In master (CPU) address space */
++	resource_size_t offset;		/* Translation offset for bridge */
 +};
 +
- struct pci_host_bridge {
- 	u16	domain;
- 	u16 busnum;
-@@ -407,6 +414,7 @@ struct pci_host_bridge {
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
- 	struct list_head list;
-+	struct pci_host_bridge_ops *ops;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
-@@ -418,8 +426,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
++/*
++ * Common resource list management data structure and interfaces to support
++ * ACPI, PNP and PCI host bridge etc.
++ */
++struct resource_entry {
++	struct list_head	node;
++	struct resource		*res;	/* In master (CPU) address space */
++	resource_size_t		offset;	/* Translation offset for bridge */
++	struct resource		__res;	/* Default storage for res */
++};
++
++extern struct resource_entry *
++resource_list_create_entry(struct resource *res, size_t extra_size);
++extern void resource_list_free(struct list_head *head);
++
++static inline void resource_list_add(struct resource_entry *entry,
++				     struct list_head *head)
++{
++	list_add(&entry->node, head);
++}
++
++static inline void resource_list_add_tail(struct resource_entry *entry,
++					  struct list_head *head)
++{
++	list_add_tail(&entry->node, head);
++}
++
++static inline void resource_list_del(struct resource_entry *entry)
++{
++	list_del(&entry->node);
++}
++
++static inline void resource_list_free_entry(struct resource_entry *entry)
++{
++	kfree(entry);
++}
++
++static inline void
++resource_list_destroy_entry(struct resource_entry *entry)
++{
++	resource_list_del(entry);
++	resource_list_free_entry(entry);
++}
++
++#define resource_list_for_each_entry(entry, list)	\
++	list_for_each_entry((entry), (list), node)
++
++#define resource_list_for_each_entry_safe(entry, tmp, list)	\
++	list_for_each_entry_safe((entry), (tmp), (list), node)
++
++#endif /* _LINUX_RESOURCE_EXT_H */
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 0bcebffc4e77..19f2357dfda3 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -22,6 +22,7 @@
+ #include <linux/device.h>
+ #include <linux/pfn.h>
+ #include <linux/mm.h>
++#include <linux/resource_ext.h>
+ #include <asm/io.h>
  
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 dombus, 
--		struct list_head *resources, void *sysdata);
-+		struct device *parent, u32 dombus, struct list_head *resources, 
-+		void *sysdata, struct pci_host_bridge_ops *ops);
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+ 
+@@ -1529,6 +1530,30 @@ int iomem_is_exclusive(u64 addr)
+ 	return err;
+ }
+ 
++struct resource_entry *resource_list_create_entry(struct resource *res,
++						  size_t extra_size)
++{
++	struct resource_entry *entry;
++
++	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
++	if (entry) {
++		INIT_LIST_HEAD(&entry->node);
++		entry->res = res ? res : &entry->__res;
++	}
++
++	return entry;
++}
++EXPORT_SYMBOL(resource_list_create_entry);
++
++void resource_list_free(struct list_head *head)
++{
++	struct resource_entry *entry, *tmp;
++
++	list_for_each_entry_safe(entry, tmp, head, node)
++		resource_list_destroy_entry(entry);
++}
++EXPORT_SYMBOL(resource_list_free);
++
+ static int __init strict_iomem(char *str)
+ {
+ 	if (strstr(str, "relaxed"))
 -- 
-1.7.1
+1.7.10.4
 
