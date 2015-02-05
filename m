@@ -1,44 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:35752 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756140AbbBJA0V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 19:26:21 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Tue, 10 Feb 2015 10:26:18 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 32FAA2CE804E
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:26:15 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A0Q6hm49152030
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:26:15 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A0Pf3N022663
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:25:41 +1100
-Message-ID: <1423527917.4924.66.camel@au1.ibm.com>
-Subject: Re: [PATCH V11 00/17] Enable SRIOV on Power8
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 10 Feb 2015 11:25:17 +1100
-In-Reply-To: <20150204234442.GC20072@google.com>
-References: <20150113180502.GC2776@google.com>
-	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <20150204234442.GC20072@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:57081 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750874AbbBEVxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Feb 2015 16:53:55 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v6 6/7] PCI: update dma configuration from DT
+Date: Thu, 5 Feb 2015 16:52:58 -0500
+Message-ID: <1423173179-10227-7-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-02-04 at 17:44 -0600, Bjorn Helgaas wrote:
-> Ben, I know you chimed in earlier to help explain PEs.  Are you or
-> another powerpc maintainer planning to ack all this?
+If there is a DT node available for the root bridge's parent device,
+use the dma configuration from that device node. For example, keystone
+PCI devices would require dma_pfn_offset to be set correctly in the
+device structure of the pci device in order to have the correct dma mask.
+The DT node will have dma-ranges defined for this. Also support using
+the DT property dma-coherent to allow coherent DMA operation by the
+PCI device.
 
-I'll get through it in the next day or so.
+This patch use the new helper function of_pci_dma_configure() to update
+the device dma configuration.
 
-Cheers,
-Ben.
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/pci/probe.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23212f8..d7dcd6c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,6 +6,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/of_pci.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
++	of_pci_dma_configure(dev);
+ 
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+-- 
+1.7.9.5
 
