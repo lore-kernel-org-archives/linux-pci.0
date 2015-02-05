@@ -1,50 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:36742 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829AbbBZA2h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 19:28:37 -0500
-Received: by mail-qg0-f44.google.com with SMTP id j5so6150766qga.3
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 16:28:37 -0800 (PST)
-Date: Wed, 25 Feb 2015 18:28:33 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Paul Johnson <pjay@nwtrail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
-Message-ID: <20150226002833.GS6220@google.com>
-References: <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
- <54D160B5.70006@nwtrail.com>
- <CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
- <54D6C6CB.6060904@nwtrail.com>
- <CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com>
- <54D7AE67.1090007@nwtrail.com>
- <CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
- <54DB7F39.8030306@nwtrail.com>
- <CAErSpo6z1GmTkLQJDhBZxRU2wjCZiYsFBETi18vsYVNzOBi6VA@mail.gmail.com>
- <54E67479.3020906@nwtrail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54E67479.3020906@nwtrail.com>
+Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751718AbbBEFmm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Feb 2015 00:42:42 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v4 08/23] ACPI: Add prefetch decoding to the address space parser
+Date: Thu,  5 Feb 2015 13:44:34 +0800
+Message-Id: <1423115089-12904-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 19, 2015 at 03:40:41PM -0800, Paul Johnson wrote:
-> ...
-> The 3.4.0 and 3.4.1 kernels I used came from here:
-> http://kernel.ubuntu.com/~kernel-ppa/mainline/?C=N;O=D
-> 
-> A dmesg with the newer firmware and 3.19 from the same url is
-> attached to the bug report
-> https://bugzilla.kernel.org/show_bug.cgi?id=92351 as attachment:
-> dmesg with 3.19 and LSI FW 18
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Sorry, I haven't forgotten this, but I haven't had a chance to look at it
-yet.  Yinghai, have you?  I'd like to have a better understanding of why we
-are seeing the problem before we apply a workaround.
+Add support of PREFETCH attributre to ACPI address space and extended
+address space parser.
 
-Right now, all I know is "mpt2sas worked in 3.4, it stopped working in 
-3.4.1, and this patch fixes it."
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-What I don't know is what changed in 3.4.1 to break it.
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 15d17937c431..7ce00a63f695 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
+ 	if (addr->producer_consumer == ACPI_PRODUCER)
+ 		res->flags |= IORESOURCE_WINDOW;
+ 
++	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++		res->flags |= IORESOURCE_PREFETCH;
++
+ 	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ 
+-- 
+1.7.10.4
 
-Bjorn
