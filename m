@@ -1,107 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:40526 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932102AbbBBMSz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 07:18:55 -0500
-Date: Mon, 2 Feb 2015 12:18:43 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Robin Murphy <Robin.Murphy@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756626AbbBEFnE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Feb 2015 00:43:04 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
-Message-ID: <20150202121843.GD22661@e104818-lin.cambridge.arm.com>
-References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
- <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
- <54C77616.80301@arm.com>
- <54C7DF13.20402@ti.com>
- <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
- <54C9068D.8050701@arm.com>
- <20150128173048.GE31752@e104818-lin.cambridge.arm.com>
- <54CBC823.3020905@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54CBC823.3020905@ti.com>
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v4 14/23] ACPI: Translate resource into master side address for bridge window resources
+Date: Thu,  5 Feb 2015 13:44:40 +0800
+Message-Id: <1423115089-12904-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 30, 2015 at 06:06:27PM +0000, Murali Karicheri wrote:
-> On 01/28/2015 12:30 PM, Catalin Marinas wrote:
-> > I think we can remove this check altogether (we leaved without it for a
-> > while) but we need to add 1 when calculating the mask:
-> >
-> > 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
-> > 				     DMA_BIT_MASK(ilog2(size + 1)));
-> >
-> For Keystone, the dma_addr is to be taken care as well to determine the 
-> mask. The above will not work.
+Add translation_offset into the result address for bridge window
+resources to form the master side address.
 
-This was discussed before (not on this thread) and dma_addr should not
-affect the mask, it only affects the pfn offset.
+Currently acpi_dev_resource_{ext_}address_space() are only used for
+devices instead of bridges, so it won't break current users. Later
+it will be used to support PCI host bridge drivers.
 
-> Based on the discussion so far, this is the function I have come up with 
-> incorporating the suggestions. Please review this and see if I have 
-> missed out any. This works fine on Keystone.
-> 
-> void of_dma_configure(struct device *dev, struct device_node *np)
-> {
-> 	u64 dma_addr = 0, paddr, size;
-> 	int ret;
-> 	bool coherent;
-> 	unsigned long offset = 0;
-> 	struct iommu_ops *iommu;
-> 
-> 	/*
-> 	 * Set default size to cover the 32-bit. Drivers are expected to setup
-> 	 * the correct size and dma_mask.
->    	 */
-> 	size = 1ULL << 32;
-> 
-> 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-> 	if (!ret) {
-> 		offset = PFN_DOWN(paddr - dma_addr);
-> 		if (!size) {
-> 			dev_err(dev, "Invalid size (%llx)\n",
-> 				size);
-> 			return;
-> 		}
-> 		if (size & 1) {
-> 			size = size + 1;
-> 			dev_warn(dev, "Incorrect usage of size (%llx)\n",
-> 				 size);
-> 		}
-> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-> 	}
-> 	dev->dma_pfn_offset = offset;
-> 
-> 	/*
-> 	 * Coherent DMA masks larger than 32-bit must be explicitly set by the
-> 	 * driver.
-> 	 */
-> 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
-> 				     DMA_BIT_MASK(ilog2(dma_addr + size)));
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-That's not correct, coherent_dma_mask should still be calculated solely
-based on size, not dma_addr.
-
-Functions like swiotlb_dma_supported() use phys_to_dma() which on ARM
-(32-bit) subtracts the dma_pfn_offset, so the mask based on size works
-fine.
-
-In the arm64 tree, we haven't taken dma_pfn_offset into account for
-phys_to_dma() yet but if needed for a SoC, we'll add it.
-
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index c902c8eece81..4dc8cfb2e94e 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -205,6 +205,21 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	res->start = attr->minimum;
+ 	res->end = attr->maximum;
+ 
++	/*
++	 * For bridges that translate addresses across the bridge,
++	 * translation_offset is the offset that must be added to the
++	 * address on the secondary side to obtain the address on the
++	 * primary side. Non-bridge devices must list 0 for all Address
++	 * Translation offset bits.
++	 */
++	if (addr->producer_consumer == ACPI_PRODUCER) {
++		res->start += attr->translation_offset;
++		res->end += attr->translation_offset;
++	} else if (attr->translation_offset) {
++		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
++			 attr->translation_offset);
++	}
++
+ 	switch (addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+ 		acpi_dev_memresource_flags(res, len, wp);
 -- 
-Catalin
+1.7.10.4
+
