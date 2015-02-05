@@ -1,36 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:47224 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423AbbBZRsu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 12:48:50 -0500
-Received: by mail-ob0-f180.google.com with SMTP id vb8so12732619obc.11
-        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 09:48:50 -0800 (PST)
-Date: Thu, 26 Feb 2015 11:48:47 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Alnie <memobook80@comcast.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI Issues with ExpressCard/54 Audio Device
-Message-ID: <20150226174847.GB25765@google.com>
-References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net>
- <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net>
- <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com>
- <s5hioep2idw.wl-tiwai@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <s5hioep2idw.wl-tiwai@suse.de>
+Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910AbbBEFmY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Feb 2015 00:42:24 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v4 03/23] ACPI: Implement proper length checks for mem resources
+Date: Thu,  5 Feb 2015 13:44:29 +0800
+Message-Id: <1423115089-12904-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 09:20:59AM +0100, Takashi Iwai wrote:
+From: Thomas Gleixner <tglx@linutronix.de>
 
-> FYI, during the previous debug sessions, we found that the sound
-> driver gets only 0xff for mapped register accesses, so I suggested to
-> report to PCI devs.  IIRC, the non-hotplug board with this chip worked
-> in the past.
+Check whether the resulting length is the same as the given
+length. Check for start <= end as well.
 
-I skimmed the previous emails but I missed this part.  Did you add
-instrumentation to the driver, or is it just obvious from the way the
-driver behaves that we're getting 0xff?
+We need to hand in the resource for this, so we can apply the flags
+directly.
 
-Bjorn
+[Jiang] Remove enforcement that resource starting address must be
+non-zero.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |   62 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 35 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 1c616a56e007..3e7d9f6eb875 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -34,21 +34,37 @@
+ #define valid_IRQ(i) (true)
+ #endif
+ 
+-static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
+-						bool window)
++static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+ {
+-	unsigned long flags = IORESOURCE_MEM;
++	u64 reslen = end - start + 1;
+ 
+-	if (len == 0)
+-		flags |= IORESOURCE_DISABLED;
++	/*
++	 * CHECKME: len might be required to check versus a minimum
++	 * length as well. 1 for io is fine, but for memory it does
++	 * not make any sense at all.
++	 */
++	if (len && reslen && reslen == len && start <= end)
++		return true;
++
++	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
++		io ? "io" : "mem", start, end, len);
++
++	return false;
++}
++
++static void acpi_dev_memresource_flags(struct resource *res, u64 len,
++				       u8 write_protect, bool window)
++{
++	res->flags = IORESOURCE_MEM;
++
++	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
++		res->flags |= IORESOURCE_DISABLED;
+ 
+ 	if (write_protect == ACPI_READ_WRITE_MEMORY)
+-		flags |= IORESOURCE_MEM_WRITEABLE;
++		res->flags |= IORESOURCE_MEM_WRITEABLE;
+ 
+ 	if (window)
+-		flags |= IORESOURCE_WINDOW;
+-
+-	return flags;
++		res->flags |= IORESOURCE_WINDOW;
+ }
+ 
+ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
++	acpi_dev_memresource_flags(res, len, write_protect, false);
+ }
+ 
+ /**
+@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	switch (ares->type) {
+ 	case ACPI_RESOURCE_TYPE_MEMORY24:
+ 		memory24 = &ares->data.memory24;
+-		if (!memory24->minimum && !memory24->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory24->minimum,
+ 					 memory24->address_length,
+ 					 memory24->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_MEMORY32:
+ 		memory32 = &ares->data.memory32;
+-		if (!memory32->minimum && !memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, memory32->minimum,
+ 					 memory32->address_length,
+ 					 memory32->write_protect);
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+ 		fixed_memory32 = &ares->data.fixed_memory32;
+-		if (!fixed_memory32->address && !fixed_memory32->address_length)
+-			return false;
+ 		acpi_dev_get_memresource(res, fixed_memory32->address,
+ 					 fixed_memory32->address_length,
+ 					 fixed_memory32->write_protect);
+@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ 	default:
+ 		return false;
+ 	}
+-	return true;
++
++	return !(res->flags & IORESOURCE_DISABLED);
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 	acpi_status status;
+ 	struct acpi_resource_address64 addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
+ 
+ 	status = acpi_resource_to_address64(ares, &addr);
+@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
+ 
+ 	switch(addr.resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = addr.address.maximum - addr.address.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-						addr.info.mem.write_protect,
+-						window);
++		acpi_dev_memresource_flags(res, addr.address.address_length,
++					   addr.info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = addr.address.granularity == 0xfff ?
+@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ {
+ 	struct acpi_resource_extended_address64 *ext_addr;
+ 	bool window;
+-	u64 len;
+ 	u8 io_decode;
+ 
+ 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
+@@ -250,10 +258,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
+ 
+ 	switch(ext_addr->resource_type) {
+ 	case ACPI_MEMORY_RANGE:
+-		len = ext_addr->address.maximum - ext_addr->address.minimum + 1;
+-		res->flags = acpi_dev_memresource_flags(len,
+-					ext_addr->info.mem.write_protect,
+-					window);
++		acpi_dev_memresource_flags(res,
++					   ext_addr->address.address_length,
++					   ext_addr->info.mem.write_protect,
++					   window);
+ 		break;
+ 	case ACPI_IO_RANGE:
+ 		io_decode = ext_addr->address.granularity == 0xfff ?
+-- 
+1.7.10.4
+
