@@ -1,136 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:33533 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933970AbbBCHDN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 02:03:13 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 3 Feb 2015 17:03:11 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id C8A512BB004D
-	for <linux-pci@vger.kernel.org>; Tue,  3 Feb 2015 18:03:08 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t13730a342139734
-	for <linux-pci@vger.kernel.org>; Tue, 3 Feb 2015 18:03:08 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1372You005955
-	for <linux-pci@vger.kernel.org>; Tue, 3 Feb 2015 18:02:34 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, gwshan@linux.vnet.ibm.com, benh@au1.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH] powerpc/powernv: make sure the IOV BAR will not exceed limit after shifting
-Date: Tue,  3 Feb 2015 15:01:43 +0800
-Message-Id: <1422946903-12958-1-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <20150130230803.GA6795@google.com>
-References: <20150130230803.GA6795@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 5 Feb 2015 22:44:40 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Robin Murphy <Robin.Murphy@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 3/6] of: fix size when dma-range is not used
+Message-ID: <20150205224439.GA19250@e104818-lin.cambridge.arm.com>
+References: <1422052359-12384-1-git-send-email-m-karicheri2@ti.com>
+ <1422052359-12384-4-git-send-email-m-karicheri2@ti.com>
+ <54C77616.80301@arm.com>
+ <54C7DF13.20402@ti.com>
+ <20150128110523.GC6646@e104818-lin.cambridge.arm.com>
+ <54C9068D.8050701@arm.com>
+ <20150128173048.GE31752@e104818-lin.cambridge.arm.com>
+ <54CBC823.3020905@ti.com>
+ <20150202121843.GD22661@e104818-lin.cambridge.arm.com>
+ <54D3E3C3.1040104@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54D3E3C3.1040104@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The actual IOV BAR range is determined by the start address and the actual
-size for vf_num VFs BAR. After shifting the IOV BAR, there would be a
-chance the actual end address exceed the limit and overlap with other
-devices.
+Murali,
 
-This patch adds a check to make sure after shifting, the range will not
-overlap with other devices.
+On Thu, Feb 05, 2015 at 09:42:27PM +0000, Murali Karicheri wrote:
+> On 02/02/2015 07:18 AM, Catalin Marinas wrote:
+> > On Fri, Jan 30, 2015 at 06:06:27PM +0000, Murali Karicheri wrote:
+> >> On 01/28/2015 12:30 PM, Catalin Marinas wrote:
+> >>> I think we can remove this check altogether (we leaved without it for a
+> >>> while) but we need to add 1 when calculating the mask:
+> >>>
+> >>> 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
+> >>> 				     DMA_BIT_MASK(ilog2(size + 1)));
+> >>>
+> >> For Keystone, the dma_addr is to be taken care as well to determine the
+> >> mask. The above will not work.
+> >
+> > This was discussed before (not on this thread) and dma_addr should not
+> > affect the mask, it only affects the pfn offset.
+> >
+> >> Based on the discussion so far, this is the function I have come up with
+> >> incorporating the suggestions. Please review this and see if I have
+> >> missed out any. This works fine on Keystone.
+> >>
+> >> void of_dma_configure(struct device *dev, struct device_node *np)
+> >> {
+> >> 	u64 dma_addr = 0, paddr, size;
+> >> 	int ret;
+> >> 	bool coherent;
+> >> 	unsigned long offset = 0;
+> >> 	struct iommu_ops *iommu;
+> >>
+> >> 	/*
+> >> 	 * Set default size to cover the 32-bit. Drivers are expected to setup
+> >> 	 * the correct size and dma_mask.
+> >>     	 */
+> >> 	size = 1ULL<<  32;
+> >>
+> >> 	ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
+> >> 	if (!ret) {
+> >> 		offset = PFN_DOWN(paddr - dma_addr);
+> >> 		if (!size) {
+> >> 			dev_err(dev, "Invalid size (%llx)\n",
+> >> 				size);
+> >> 			return;
+> >> 		}
+> >> 		if (size&  1) {
+> >> 			size = size + 1;
+> >> 			dev_warn(dev, "Incorrect usage of size (%llx)\n",
+> >> 				 size);
+> >> 		}
+> >> 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+> >> 	}
+> >> 	dev->dma_pfn_offset = offset;
+> >>
+> >> 	/*
+> >> 	 * Coherent DMA masks larger than 32-bit must be explicitly set by the
+> >> 	 * driver.
+> >> 	 */
+> >> 	dev->coherent_dma_mask = min(DMA_BIT_MASK(32),
+> >> 				     DMA_BIT_MASK(ilog2(dma_addr + size)));
+> >
+> > That's not correct, coherent_dma_mask should still be calculated solely
+> > based on size, not dma_addr.
+> >
+> > Functions like swiotlb_dma_supported() use phys_to_dma() which on ARM
+> > (32-bit) subtracts the dma_pfn_offset, so the mask based on size works
+> > fine.
+> >
+> > In the arm64 tree, we haven't taken dma_pfn_offset into account for
+> > phys_to_dma() yet but if needed for a SoC, we'll add it.
+> 
+> The size based dma mask calculation itself can be a separate topic 
+> patch. This series is adding important fix to get the PCI driver 
+> functional and I would like to get this merged as soon as possible.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c |   53 ++++++++++++++++++++++++++---
- 1 file changed, 48 insertions(+), 5 deletions(-)
+Well as long as you don't break the existing users of
+of_dma_configure() ;).
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 8456ae8..1a1e74b 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -854,16 +854,18 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
- }
- 
- #ifdef CONFIG_PCI_IOV
--static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
-+static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- {
- 	struct pci_dn *pdn = pci_get_pdn(dev);
- 	int i;
- 	struct resource *res;
- 	resource_size_t size;
-+	u16 vf_num;
- 
- 	if (!dev->is_physfn)
--		return;
-+		return -EINVAL;
- 
-+	vf_num = pdn->vf_pes;
- 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
- 		res = &dev->resource[i];
- 		if (!res->flags || !res->parent)
-@@ -875,11 +877,49 @@ static void pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
- 		size = pci_iov_resource_size(dev, i);
- 		res->start += size*offset;
--
- 		dev_info(&dev->dev, "                 %pR\n", res);
-+
-+		/*
-+		 * The actual IOV BAR range is determined by the start address
-+		 * and the actual size for vf_num VFs BAR. The check here is
-+		 * to make sure after shifting, the range will not overlap
-+		 * with other device.
-+		 */
-+		if ((res->start + (size * vf_num)) > res->end) {
-+			dev_err(&dev->dev, "VF BAR%d: %pR will conflict with"
-+					" other device after shift\n");
-+			goto failed;
-+		}
-+	}
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		res = &dev->resource[i];
-+		if (!res->flags || !res->parent)
-+			continue;
-+
-+		if (!pnv_pci_is_mem_pref_64(res->flags))
-+			continue;
-+
- 		pci_update_resource(dev, i);
- 	}
- 	pdn->max_vfs -= offset;
-+	return 0;
-+
-+failed:
-+	for (; i >= PCI_IOV_RESOURCES; i--) {
-+		res = &dev->resource[i];
-+		if (!res->flags || !res->parent)
-+			continue;
-+
-+		if (!pnv_pci_is_mem_pref_64(res->flags))
-+			continue;
-+
-+		dev_info(&dev->dev, " Shifting VF BAR %pR to\n", res);
-+		size = pci_iov_resource_size(dev, i);
-+		res->start += size*(-offset);
-+		dev_info(&dev->dev, "                 %pR\n", res);
-+	}
-+	return -EBUSY;
- }
- #endif /* CONFIG_PCI_IOV */
- 
-@@ -1480,8 +1520,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 vf_num)
- 		}
- 
- 		/* Do some magic shift */
--		if (pdn->m64_per_iov == 1)
--			pnv_pci_vf_resource_shift(pdev, pdn->offset);
-+		if (pdn->m64_per_iov == 1) {
-+			ret = pnv_pci_vf_resource_shift(pdev, pdn->offset);
-+			if (ret)
-+				goto m64_failed;
-+		}
- 	}
- 
- 	/* Setup VF PEs */
+> I also want to hear from Arnd about yout comment as we had discussed
+> this in the initial discussion of this patch series and 8/8 is
+> essentially added based on that discussion. I will add a simple check
+> to catch and warn the incorrect size setting in DT for dma-range as
+> suggested by Rob Herring and create a new patch to for size based mask
+> calculation. I will be sending v6 (expected to be merged soon) today
+> and will work to add a new patch. Before that we need to agree on what
+> is the content of the patch.
+> 
+> 1. On keystone, DMA address start at 0x8000_0000 and DMA-able memory is 
+> 2G from the above base address. So without taking into account the
+> dma_addr, mask calculated will be 0x7fff_ffff where as we need that to 
+> be 0xffff_ffff for keystone. So need to use this in the calculation.
+
+Ah, you are right. I confused dma_addr in your patch with the offset.
+
+> 2. W.r.t arm_pfn_offset, this was added to support Keystone as the DDR 
+> physical address for LPAE startes at 0x8_0000_0000 and the pfn offset is 
+> calculated as the PFN of (0x8_0000_0000 - 0x8000_0000) to do the dma 
+> address to DDR address translation.
+
+Indeed.
+
+I'll look at your patches again tomorrow.
+
 -- 
-1.7.9.5
-
+Catalin
