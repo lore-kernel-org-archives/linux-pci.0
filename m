@@ -1,78 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:55518 "EHLO extserv.mm-sol.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbbBKHxc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Feb 2015 02:53:32 -0500
-Message-ID: <54DB0A52.4090907@mm-sol.com>
-Date: Wed, 11 Feb 2015 09:52:50 +0200
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Received: from vserver.eikelenboom.it ([84.200.39.61]:39443 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbbBEUIJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Feb 2015 15:08:09 -0500
+Date: Thu, 5 Feb 2015 21:07:57 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <1369609199.20150205210757@eikelenboom.it>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Stefan Bader <stefan@krikkit.de>
+Subject: Re: [Bugfix 0/3] Xen IRQ related hotfixes for v3.19
+In-Reply-To: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Viresh Kumar <viresh.kumar@linaro.org>,
-	"Matwey V. Kornilov" <matwey@sai.msu.ru>
-CC: Mohit KUMAR <mohit.kumar@st.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of
- platform_driver_register
-References: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru> <CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>
-In-Reply-To: <CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-On 02/11/2015 05:35 AM, Viresh Kumar wrote:
-> On 11 February 2015 at 00:31, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
->> Use platform_driver_probe instead of platform_driver_register
->> because the former allows us to use probe function placed into __init section
->> and the driver itself is not support hotplugging (yet?).
->>
->> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
->> ---
->> Changes from v1:
->>   - Use platform_driver_probe instead of platform_driver_register to make linker happy.
->>
->>   drivers/pci/host/pcie-spear13xx.c | 3 +--
->>   1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
->> index 866465f..51e1344 100644
->> --- a/drivers/pci/host/pcie-spear13xx.c
->> +++ b/drivers/pci/host/pcie-spear13xx.c
->> @@ -371,7 +371,6 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
->>   MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
->>
->>   static struct platform_driver spear13xx_pcie_driver __initdata = {
->> -       .probe          = spear13xx_pcie_probe,
->>          .driver = {
->>                  .name   = "spear-pcie",
->>                  .of_match_table = of_match_ptr(spear13xx_pcie_of_match),
->> @@ -382,7 +381,7 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
->>
->>   static int __init spear13xx_pcie_init(void)
->>   {
->> -       return platform_driver_register(&spear13xx_pcie_driver);
->> +       return platform_driver_probe(&spear13xx_pcie_driver, spear13xx_pcie_probe);
->>   }
->>   module_init(spear13xx_pcie_init);
->
-> The problem here is that the driver is never registered. And we might never
-> see it in sysfs. Probably a better solution would be to just remove all __init
-> parts from this driver. Let it take space even after it is used. And don't care
-> about it.
->
-> Sorry was busy in a conference and couldn't reply to your earlier mail on this.
+Tuesday, January 20, 2015, 3:21:04 AM, you wrote:
 
-Using platform_driver_probe() prevents deferred probe which is problem 
-because you get phy, clocks from probe, and these calls could return 
-EPROBE_DEFFER.
+> Hi Thomas,
+>         This patch set includes three hotfixes related Xen IRQ for v3.19.
+> Sorry for the long delay to get these two regressions fixed, it really
+> cost me some time to read and understand Xen IRQ code.
 
-Also dw_pcie_host_init() called from spear13xx_add_pcie_port() is 
-annotated as __init. I wanted send a patch which removes __init from 
-dw_pcie_host_init() but I haven't time, yet.
+> Patch 1 fixes the failure to register ACPI SCI interrupt on Xen
+> domain0 by reworking acpi_gsi_to_irq(). I will backport it to v3.18
+> too once it reaches the mainstream kernel.
 
-regards,
-Stan
+> Patch 2 fixes the regression in Xen PCI device passthrough(pciback).
+> It's a temporary solution, I will send the formal fix for v3.20 and
+> it has passed tests too.
+
+> Patch 3 fixes an issue found when reading code. There's no real bug
+> reports related to this issue yet.
+
+> Great thanks to Konrad and Sander for testing fixes for these regressions.
+
+> Regards,
+> Gerry
+
+Hi Gerry,
+
+Since these patches now are: tested, reviewed and have landed into mainline,
+could you also provide the backports for 3.17 and 3.18 where required ?
+
+The number of people running into these (subtle) issues with these stable
+kernels seems to be steadily increasing.
+
+--
+Sander
+
+> Jiang Liu (3):
+>   xen/pci: Kill function xen_setup_acpi_sci()
+>   xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
+>     cffe0a2b5a34
+>   xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
+
+>  arch/x86/include/asm/acpi.h |    1 +
+>  arch/x86/kernel/acpi/boot.c |   26 +++++++++++------------
+>  arch/x86/pci/xen.c          |   49 ++-----------------------------------------
+>  drivers/acpi/pci_irq.c      |    1 -
+>  4 files changed, 16 insertions(+), 61 deletions(-)
+
+
