@@ -1,374 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:50042 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755748AbbBQHO3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:29 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Feb 2015 17:14:27 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 615FD3578054
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7EGui37880040
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7Dopo027798
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:13:51 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH RESEND v2 1/7] powerpc/powernv: Use PCI slot reset infrastructure
-Date: Tue, 17 Feb 2015 18:13:17 +1100
-Message-Id: <1424157203-691-2-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:51413 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754732AbbBFShy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Feb 2015 13:37:54 -0500
+Message-ID: <54D509C9.9010204@ti.com>
+Date: Fri, 6 Feb 2015 13:36:57 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v6 0/7] PCI: get DMA configuration from parent device
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <20150206151542.GD23190@e104818-lin.cambridge.arm.com> <54D4DD95.7000303@ti.com> <CAErSpo6GOXHeKKfU8s5jCS3+Mui=HupZd=jpkLEyWAE94Ory5w@mail.gmail.com>
+In-Reply-To: <CAErSpo6GOXHeKKfU8s5jCS3+Mui=HupZd=jpkLEyWAE94Ory5w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For PowerNV platform, running on top of skiboot, all PE level reset
-should be routed to firmware if the bridge of the PE primary bus has
-device-node property "ibm,reset-by-firmware". Otherwise, the kernel
-has to issue hot reset on PE's primary bus despite the requested
-reset types, which is the behaviour before the firmware supports PCI
-slot reset. So the code doesn't depend on the PCI slot reset capability
-exposed from the firmware.
+On 02/06/2015 12:53 PM, Bjorn Helgaas wrote:
+> On Fri, Feb 6, 2015 at 9:28 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>> On 02/06/2015 10:15 AM, Catalin Marinas wrote:
+>>>
+>>> On Thu, Feb 05, 2015 at 09:52:52PM +0000, Murali Karicheri wrote:
+>>>>
+>>>> This patch add an important capability to PCI driver on Keystone. I hope
+>>>> to
+>>>> have this merged to the upstream branch so that it is available for
+>>>> v3.20.
+>>>
+>>> It's very late for 3.20 and the code hasn't been in linux-next at all
+>>> (but it's not me who's merging this code), unless you can squeeze it in
+>>> as a bug-fix.
+>>
+>> This is in fact a bug fix as PCI on Keystone is broken without this.
+>
+> Oh, sorry, I didn't realize that this was so urgent.  I guess I read
+> "this adds an important capability" in the cover letter and concluded
+> that it was new functionality.
+Bjorn,
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |   1 +
- arch/powerpc/include/asm/opal.h              |   9 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c | 218 ++++++++++++++-------------
- 3 files changed, 114 insertions(+), 114 deletions(-)
+Thanks for responding.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 55abfd0..9de87ce 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -193,6 +193,7 @@ enum {
- #define EEH_RESET_DEACTIVATE	0	/* Deactivate the PE reset	*/
- #define EEH_RESET_HOT		1	/* Hot reset			*/
- #define EEH_RESET_FUNDAMENTAL	3	/* Fundamental reset		*/
-+#define EEH_RESET_COMPLETE	4	/* PHB complete reset		*/
- #define EEH_LOG_TEMP		1	/* EEH temporary error log	*/
- #define EEH_LOG_PERM		2	/* EEH permanent error log	*/
- 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index 9ee0a30..ceec756 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -374,11 +374,6 @@ enum OpalPciResetState {
- 	OPAL_ASSERT_RESET = 1
- };
- 
--enum OpalPciMaskAction {
--	OPAL_UNMASK_ERROR_TYPE = 0,
--	OPAL_MASK_ERROR_TYPE = 1
--};
--
- enum OpalSlotLedType {
- 	OPAL_SLOT_LED_ID_TYPE = 0,
- 	OPAL_SLOT_LED_FAULT_TYPE = 1
-@@ -867,7 +862,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
- int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
- 					uint16_t dma_window_number, uint64_t pci_start_addr,
- 					uint64_t pci_mem_size);
--int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
-+int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
- 
- int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
- 				   uint64_t diag_buffer_len);
-@@ -883,7 +878,7 @@ int64_t opal_get_epow_status(__be64 *status);
- int64_t opal_set_system_attention_led(uint8_t led_action);
- int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
- 			    __be16 *pci_error_type, __be16 *severity);
--int64_t opal_pci_poll(uint64_t phb_id);
-+int64_t opal_pci_poll(uint64_t id, uint8_t *val);
- int64_t opal_return_cpu(void);
- int64_t opal_check_token(uint64_t token);
- int64_t opal_reinit_cpus(uint64_t flags);
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index ede6906..8cec57d 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -665,12 +665,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
- 	return ret;
- }
- 
--static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
-+static s64 pnv_eeh_poll(uint64_t id)
- {
- 	s64 rc = OPAL_HARDWARE;
- 
- 	while (1) {
--		rc = opal_pci_poll(phb->opal_id);
-+		rc = opal_pci_poll(id, NULL);
- 		if (rc <= 0)
- 			break;
- 
-@@ -686,84 +686,38 @@ static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
- int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
- {
- 	struct pnv_phb *phb = hose->private_data;
-+	uint8_t scope;
- 	s64 rc = OPAL_HARDWARE;
- 
- 	pr_debug("%s: Reset PHB#%x, option=%d\n",
- 		 __func__, hose->global_number, option);
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+		scope = OPAL_RESET_PCI_HOT;
-+		break;
-+	case EEH_RESET_FUNDAMENTAL:
-+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-+		break;
-+	case EEH_RESET_COMPLETE:
-+		scope = OPAL_RESET_PHB_COMPLETE;
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		return 0;
-+	default:
-+		pr_warn("%s: Unsupported option %d\n",
-+			__func__, option);
-+		return -EINVAL;
-+        }
- 
--	/* Issue PHB complete reset request */
--	if (option == EEH_RESET_FUNDAMENTAL ||
--	    option == EEH_RESET_HOT)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PHB_COMPLETE,
--				    OPAL_ASSERT_RESET);
--	else if (option == EEH_RESET_DEACTIVATE)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PHB_COMPLETE,
--				    OPAL_DEASSERT_RESET);
--	if (rc < 0)
--		goto out;
--
--	/*
--	 * Poll state of the PHB until the request is done
--	 * successfully. The PHB reset is usually PHB complete
--	 * reset followed by hot reset on root bus. So we also
--	 * need the PCI bus settlement delay.
--	 */
--	rc = pnv_eeh_phb_poll(phb);
--	if (option == EEH_RESET_DEACTIVATE) {
--		if (system_state < SYSTEM_RUNNING)
--			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
--		else
--			msleep(EEH_PE_RST_SETTLE_TIME);
--	}
--out:
--	if (rc != OPAL_SUCCESS)
--		return -EIO;
--
--	return 0;
--}
--
--static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
--{
--	struct pnv_phb *phb = hose->private_data;
--	s64 rc = OPAL_HARDWARE;
--
--	pr_debug("%s: Reset PHB#%x, option=%d\n",
--		 __func__, hose->global_number, option);
--
--	/*
--	 * During the reset deassert time, we needn't care
--	 * the reset scope because the firmware does nothing
--	 * for fundamental or hot reset during deassert phase.
--	 */
--	if (option == EEH_RESET_FUNDAMENTAL)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PCI_FUNDAMENTAL,
--				    OPAL_ASSERT_RESET);
--	else if (option == EEH_RESET_HOT)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PCI_HOT,
--				    OPAL_ASSERT_RESET);
--	else if (option == EEH_RESET_DEACTIVATE)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PCI_HOT,
--				    OPAL_DEASSERT_RESET);
--	if (rc < 0)
--		goto out;
--
--	/* Poll state of the PHB until the request is done */
--	rc = pnv_eeh_phb_poll(phb);
--	if (option == EEH_RESET_DEACTIVATE)
--		msleep(EEH_PE_RST_SETTLE_TIME);
--out:
--	if (rc != OPAL_SUCCESS)
--		return -EIO;
-+	/* Issue reset and poll until it's completed */
-+	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
-+	if (rc > 0)
-+		rc = pnv_eeh_poll(phb->opal_id);
- 
--	return 0;
-+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
- }
- 
--static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- {
- 	struct device_node *dn = pci_device_to_OF_node(dev);
- 	struct eeh_dev *edev = of_node_to_eeh_dev(dn);
-@@ -814,14 +768,57 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct device_node *dn = dev ? pci_device_to_OF_node(dev) : NULL;
-+	uint64_t id = (0x1ul << 60);
-+	uint8_t scope;
-+	s64 rc;
-+
-+	/*
-+	 * If the firmware can't handle it, we will issue hot reset
-+	 * on the secondary bus despite the requested reset type
-+	 */
-+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
-+		return __pnv_eeh_bridge_reset(dev, option);
-+
-+	/* The firmware can handle the request */
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+		scope = OPAL_RESET_PCI_HOT;
-+		break;
-+	case EEH_RESET_FUNDAMENTAL:
-+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		return 0;
-+	case EEH_RESET_COMPLETE:
-+	default:
-+		pr_warn("%s: Unsupported option %d on device %s\n",
-+			__func__, option, pci_name(dev));
-+		return -EINVAL;
-+	}
-+
-+	hose = pci_bus_to_host(dev->bus);
-+	phb = hose->private_data;
-+	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
-+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-+	if (rc > 0)
-+		pnv_eeh_poll(id);
-+
-+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-+}
-+
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	struct pci_controller *hose;
- 
- 	if (pci_is_root_bus(dev->bus)) {
- 		hose = pci_bus_to_host(dev->bus);
--		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
--		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
-+		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
-+		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
- 	} else {
- 		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
- 		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
-@@ -843,8 +840,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- {
- 	struct pci_controller *hose = pe->phb;
-+	struct pnv_phb *phb;
- 	struct pci_bus *bus;
--	int ret;
-+	s64 rc;
- 
- 	/*
- 	 * For PHB reset, we always have complete reset. For those PEs whose
-@@ -861,42 +859,48 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 	 * state explicitly after BAR restore.
- 	 */
- 	if (pe->type & EEH_PE_PHB) {
--		ret = pnv_eeh_phb_reset(hose, option);
--	} else {
--		struct pnv_phb *phb;
--		s64 rc;
--
--		/*
--		 * The frozen PE might be caused by PAPR error injection
--		 * registers, which are expected to be cleared after hitting
--		 * frozen PE as stated in the hardware spec. Unfortunately,
--		 * that's not true on P7IOC. So we have to clear it manually
--		 * to avoid recursive EEH errors during recovery.
--		 */
--		phb = hose->private_data;
--		if (phb->model == PNV_PHB_MODEL_P7IOC &&
--		    (option == EEH_RESET_HOT ||
--		    option == EEH_RESET_FUNDAMENTAL)) {
--			rc = opal_pci_reset(phb->opal_id,
--					    OPAL_RESET_PHB_ERROR,
--					    OPAL_ASSERT_RESET);
--			if (rc != OPAL_SUCCESS) {
--				pr_warn("%s: Failure %lld clearing "
--					"error injection registers\n",
--					__func__, rc);
--				return -EIO;
--			}
-+		switch (option) {
-+		case EEH_RESET_HOT:
-+		case EEH_RESET_FUNDAMENTAL:
-+		case EEH_RESET_COMPLETE:
-+			break;
-+		case EEH_RESET_DEACTIVATE:
-+			return 0;
-+		default:
-+			return -EINVAL;
- 		}
- 
--		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
--			pci_is_root_bus(bus->parent))
--			ret = pnv_eeh_root_reset(hose, option);
--		else
--			ret = pnv_eeh_bridge_reset(bus->self, option);
-+		return pnv_eeh_phb_reset(hose, EEH_RESET_COMPLETE);
- 	}
- 
--	return ret;
-+	/*
-+	 * The frozen PE might be caused by PAPR error injection
-+	 * registers, which are expected to be cleared after hitting
-+	 * frozen PE as stated in the hardware spec. Unfortunately,
-+	 * that's not true on P7IOC. So we have to clear it manually
-+	 * to avoid recursive EEH errors during recovery.
-+	 */
-+	phb = hose->private_data;
-+	if (phb->model == PNV_PHB_MODEL_P7IOC &&
-+	    (option == EEH_RESET_HOT ||
-+	     option == EEH_RESET_FUNDAMENTAL)) {
-+		rc = opal_pci_reset(phb->opal_id,
-+				    OPAL_RESET_PHB_ERROR,
-+				    OPAL_ASSERT_RESET);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("%s: Failure %lld clearing error "
-+				"injection registers\n",
-+				__func__, rc);
-+			return -EIO;
-+		}
-+	}
-+
-+	/* Route the reset request to PHB or upstream bridge */
-+	bus = eeh_pe_bus_get(pe);
-+	if (pci_is_root_bus(bus))
-+		return pnv_eeh_phb_reset(hose, option);
-+
-+	return pnv_eeh_bridge_reset(bus->self, option);
- }
- 
- /**
+Let me give you some context on this without which my explanation won't 
+be complete. For using PCI driver on Keystone, I had submitted patches 
+related to machine and DTS to the arm mailing list to enable the driver 
+on Keystone. Subsequenty one of the patch from my series  was Nack-ed 
+and I was asked to implememented in a different way and started this 
+series. You can refer to the discussion of this at
+
+http://www.gossamer-threads.com/lists/linux/kernel/2024591
+
+The PCI driver enablement on Keystone is still a working in progress and 
+I am trying to get it fully functional on the upstream. Another missing 
+piece is the SerDes phy driver patch. We have started working on the 
+other part (SerDes phy driver) already as the initial one was not 
+accepted. So it is fine if we are too late for the v3.20 merge window to 
+merge this series and this can be applied to the next branch for v3.21.
+
+>
+> Anyway, if it's broken, presumably PCI on Keystone *did* work at one
+> point.  Can you identify the commit that broke it and requires these
+> fixes, so we can figure out how far the fixes need to be backported?
+>
+
+I am trying to get this driver enabled on Keystone by adding the missing 
+pieces as described above. So I guess we don't have to back port 
+anything here.
+
+> If I merge it, I would like to get into my for-linus branch and get a
+> little time in -next before asking Linus to pull it.  The merge window
+> is a little wrinkle there -- I don't like to add new things to the mix
+> during the window.  But if it's an important fix we can still get it
+> in before the final v3.20.
+
+Please apply this to next branch for v3.21. It currently apply cleanly 
+to v3.19-rc7. If you want me rebase to another branch, let me know I can 
+apply and send you an updated patch.
+
+Thanks
+
+Murali
+
+>
+> Bjorn
+
+
 -- 
-1.8.3.2
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
