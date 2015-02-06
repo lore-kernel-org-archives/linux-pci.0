@@ -1,179 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:55148 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751193AbbBFU1o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Feb 2015 15:27:44 -0500
+Message-ID: <54D5238F.4030608@ti.com>
+Date: Fri, 6 Feb 2015 15:26:55 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Catalin Marinas <catalin.marinas@arm.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 03/23] ACPI: Implement proper length checks for mem resources
-Date: Mon,  2 Feb 2015 10:42:48 +0800
-Message-Id: <1422844988-13854-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v6 3/7] of: fix size when dma-range is not used
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <1423173179-10227-4-git-send-email-m-karicheri2@ti.com> <20150206143812.GB20549@localhost> <54D4D59F.6050408@ti.com> <20150206151210.GC23190@e104818-lin.cambridge.arm.com>
+In-Reply-To: <20150206151210.GC23190@e104818-lin.cambridge.arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On 02/06/2015 10:12 AM, Catalin Marinas wrote:
+> On Fri, Feb 06, 2015 at 02:54:23PM +0000, Murali Karicheri wrote:
+>> On 02/06/2015 09:38 AM, Catalin Marinas wrote:
+>>> On Thu, Feb 05, 2015 at 09:52:55PM +0000, Murali Karicheri wrote:
+>>>> Fix the dma-range size when the DT attribute is missing. i.e  set size to
+>>>> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
+>>>> code to check invalid values of size configured in DT and log error.
+>>>>
+>>>> Cc: Joerg Roedel<joro@8bytes.org>
+>>>> Cc: Grant Likely<grant.likely@linaro.org>
+>>>> Cc: Rob Herring<robh+dt@kernel.org>
+>>>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+>>>> Cc: Will Deacon<will.deacon@arm.com>
+>>>> Cc: Russell King<linux@arm.linux.org.uk>
+>>>> Cc: Arnd Bergmann<arnd@arndb.de>
+>>>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+>>>>
+>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>>> ---
+>>>>    drivers/of/device.c |   17 ++++++++++++++++-
+>>>>    1 file changed, 16 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>>>> index 2de320d..314c8a9 100644
+>>>> --- a/drivers/of/device.c
+>>>> +++ b/drivers/of/device.c
+>>>> @@ -105,9 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>>>>    	ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
+>>>>    	if (ret<   0) {
+>>>>    		dma_addr = offset = 0;
+>>>> -		size = dev->coherent_dma_mask;
+>>>> +		size = dev->coherent_dma_mask + 1;
+>>>>    	} else {
+>>>>    		offset = PFN_DOWN(paddr - dma_addr);
+>>>> +
+>>>> +		/*
+>>>> +		 * Add a work around to treat the size as mask + 1 in case
+>>>> +		 * it is defined in DT as a mask.
+>>>> +		 */
+>>>> +		if (size&   1) {
+>>>> +			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
+>>>> +				 size);
+>>>> +			size = size + 1;
+>>>> +		}
+>>>> +
+>>>> +		if (!size) {
+>>>> +			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+>>>> +			return;
+>>>> +		}
+>>>
+>>> Would it make sense to set coherent_dma_mask to 0 here to make this more
+>>> noticeable? It can be done together with the mask calculation from size.
+>>
+>> I guess you are the following in the code.
+>>
+>> if (!size) {
+>> 		dev->coherent_dma_mask = 0;
+>> 		dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+>> 		return;
+>> }
+>>
+>> Not sure how this is going to help and how this get handled by the
+>> caller and subsequent logic. Probably it will cause probe to fail, with
+>> some helpful error code.
+>
+> Not sure how it will fail, maybe the driver figures out that DMA isn't
+> available and say something or switch to PIO. I guess you can leave it
+> as 32-bit mask by default for now even in case of size == 0.
+>
+> BTW, since pci_device_add() already sets coherent_dma_mask, you could
+> add another check at the beginning of of_dma_configure():
+>
+> 	if (!dev->coherent_dma_mask)
+> 		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+>
+> That's more of a nitpick as the values are both the same.
+>
+Catalin,
 
-Check whether the resulting length is the same as the given
-length. Check for start <= end as well.
+Just posted a patch for size based dma mask with title "of: calculate 
+masks of the device based on dma-range size". Please review and comment
 
-We need to hand in the resource for this, so we can apply the flags
-directly.
-
-[Jiang] Remove enforcement that resource starting address must be
-non-zero.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   62 ++++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 1c616a56e007..3e7d9f6eb875 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -34,21 +34,37 @@
- #define valid_IRQ(i) (true)
- #endif
- 
--static unsigned long acpi_dev_memresource_flags(u64 len, u8 write_protect,
--						bool window)
-+static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
- {
--	unsigned long flags = IORESOURCE_MEM;
-+	u64 reslen = end - start + 1;
- 
--	if (len == 0)
--		flags |= IORESOURCE_DISABLED;
-+	/*
-+	 * CHECKME: len might be required to check versus a minimum
-+	 * length as well. 1 for io is fine, but for memory it does
-+	 * not make any sense at all.
-+	 */
-+	if (len && reslen && reslen == len && start <= end)
-+		return true;
-+
-+	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
-+		io ? "io" : "mem", start, end, len);
-+
-+	return false;
-+}
-+
-+static void acpi_dev_memresource_flags(struct resource *res, u64 len,
-+				       u8 write_protect, bool window)
-+{
-+	res->flags = IORESOURCE_MEM;
-+
-+	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
-+		res->flags |= IORESOURCE_DISABLED;
- 
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
--		flags |= IORESOURCE_MEM_WRITEABLE;
-+		res->flags |= IORESOURCE_MEM_WRITEABLE;
- 
- 	if (window)
--		flags |= IORESOURCE_WINDOW;
--
--	return flags;
-+		res->flags |= IORESOURCE_WINDOW;
- }
- 
- static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
-@@ -56,7 +72,7 @@ static void acpi_dev_get_memresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	res->flags = acpi_dev_memresource_flags(len, write_protect, false);
-+	acpi_dev_memresource_flags(res, len, write_protect, false);
- }
- 
- /**
-@@ -77,24 +93,18 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	switch (ares->type) {
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 		memory24 = &ares->data.memory24;
--		if (!memory24->minimum && !memory24->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, memory24->minimum,
- 					 memory24->address_length,
- 					 memory24->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
- 		memory32 = &ares->data.memory32;
--		if (!memory32->minimum && !memory32->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, memory32->minimum,
- 					 memory32->address_length,
- 					 memory32->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
- 		fixed_memory32 = &ares->data.fixed_memory32;
--		if (!fixed_memory32->address && !fixed_memory32->address_length)
--			return false;
- 		acpi_dev_get_memresource(res, fixed_memory32->address,
- 					 fixed_memory32->address_length,
- 					 fixed_memory32->write_protect);
-@@ -102,7 +112,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	default:
- 		return false;
- 	}
--	return true;
-+
-+	return !(res->flags & IORESOURCE_DISABLED);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
-@@ -186,7 +197,6 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 	acpi_status status;
- 	struct acpi_resource_address64 addr;
- 	bool window;
--	u64 len;
- 	u8 io_decode;
- 
- 	status = acpi_resource_to_address64(ares, &addr);
-@@ -199,10 +209,9 @@ bool acpi_dev_resource_address_space(struct acpi_resource *ares,
- 
- 	switch(addr.resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		len = addr.address.maximum - addr.address.minimum + 1;
--		res->flags = acpi_dev_memresource_flags(len,
--						addr.info.mem.write_protect,
--						window);
-+		acpi_dev_memresource_flags(res, addr.address.address_length,
-+					   addr.info.mem.write_protect,
-+					   window);
- 		break;
- 	case ACPI_IO_RANGE:
- 		io_decode = addr.address.granularity == 0xfff ?
-@@ -236,7 +245,6 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- {
- 	struct acpi_resource_extended_address64 *ext_addr;
- 	bool window;
--	u64 len;
- 	u8 io_decode;
- 
- 	if (ares->type != ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64)
-@@ -250,10 +258,10 @@ bool acpi_dev_resource_ext_address_space(struct acpi_resource *ares,
- 
- 	switch(ext_addr->resource_type) {
- 	case ACPI_MEMORY_RANGE:
--		len = ext_addr->address.maximum - ext_addr->address.minimum + 1;
--		res->flags = acpi_dev_memresource_flags(len,
--					ext_addr->info.mem.write_protect,
--					window);
-+		acpi_dev_memresource_flags(res,
-+					   ext_addr->address.address_length,
-+					   ext_addr->info.mem.write_protect,
-+					   window);
- 		break;
- 	case ACPI_IO_RANGE:
- 		io_decode = ext_addr->address.granularity == 0xfff ?
 -- 
-1.7.10.4
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
