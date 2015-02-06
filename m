@@ -1,115 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:40952 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225AbbBXIfH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:35:07 -0500
-Received: by paceu11 with SMTP id eu11so34398740pac.7
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:35:07 -0800 (PST)
-Subject: [PATCH v12 18/21] powerpc/powernv: Reserve additional space for IOV
- BAR, with m64_per_iov supported
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:35:04 -0600
-Message-ID: <20150224083504.32124.23374.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:42337 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389AbbBFPMW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Feb 2015 10:12:22 -0500
+Date: Fri, 6 Feb 2015 15:12:10 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>
+Subject: Re: [PATCH v6 3/7] of: fix size when dma-range is not used
+Message-ID: <20150206151210.GC23190@e104818-lin.cambridge.arm.com>
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+ <1423173179-10227-4-git-send-email-m-karicheri2@ti.com>
+ <20150206143812.GB20549@localhost>
+ <54D4D59F.6050408@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54D4D59F.6050408@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+On Fri, Feb 06, 2015 at 02:54:23PM +0000, Murali Karicheri wrote:
+> On 02/06/2015 09:38 AM, Catalin Marinas wrote:
+> > On Thu, Feb 05, 2015 at 09:52:55PM +0000, Murali Karicheri wrote:
+> >> Fix the dma-range size when the DT attribute is missing. i.e  set size to
+> >> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
+> >> code to check invalid values of size configured in DT and log error.
+> >>
+> >> Cc: Joerg Roedel<joro@8bytes.org>
+> >> Cc: Grant Likely<grant.likely@linaro.org>
+> >> Cc: Rob Herring<robh+dt@kernel.org>
+> >> Cc: Bjorn Helgaas<bhelgaas@google.com>
+> >> Cc: Will Deacon<will.deacon@arm.com>
+> >> Cc: Russell King<linux@arm.linux.org.uk>
+> >> Cc: Arnd Bergmann<arnd@arndb.de>
+> >> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+> >>
+> >> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >> ---
+> >>   drivers/of/device.c |   17 ++++++++++++++++-
+> >>   1 file changed, 16 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> >> index 2de320d..314c8a9 100644
+> >> --- a/drivers/of/device.c
+> >> +++ b/drivers/of/device.c
+> >> @@ -105,9 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+> >>   	ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
+> >>   	if (ret<  0) {
+> >>   		dma_addr = offset = 0;
+> >> -		size = dev->coherent_dma_mask;
+> >> +		size = dev->coherent_dma_mask + 1;
+> >>   	} else {
+> >>   		offset = PFN_DOWN(paddr - dma_addr);
+> >> +
+> >> +		/*
+> >> +		 * Add a work around to treat the size as mask + 1 in case
+> >> +		 * it is defined in DT as a mask.
+> >> +		 */
+> >> +		if (size&  1) {
+> >> +			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
+> >> +				 size);
+> >> +			size = size + 1;
+> >> +		}
+> >> +
+> >> +		if (!size) {
+> >> +			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+> >> +			return;
+> >> +		}
+> >
+> > Would it make sense to set coherent_dma_mask to 0 here to make this more
+> > noticeable? It can be done together with the mask calculation from size.
+>
+> I guess you are the following in the code.
+> 
+> if (!size) {
+> 		dev->coherent_dma_mask = 0;
+> 		dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+> 		return;
+> }
+> 
+> Not sure how this is going to help and how this get handled by the 
+> caller and subsequent logic. Probably it will cause probe to fail, with 
+> some helpful error code.
 
-M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
-will exceed the limitation and failed to be assigned.
+Not sure how it will fail, maybe the driver figures out that DMA isn't
+available and say something or switch to PIO. I guess you can leave it
+as 32-bit mask by default for now even in case of size == 0.
 
-Introduce a different mechanism based on the IOV BAR size:
+BTW, since pci_device_add() already sets coherent_dma_mask, you could
+add another check at the beginning of of_dma_configure():
 
-  - if IOV BAR size is smaller than 64MB, expand to total_pe
-  - if IOV BAR size is bigger than 64MB, roundup power2
+	if (!dev->coherent_dma_mask)
+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
 
-[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 3 deletions(-)
+That's more of a nitpick as the values are both the same.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 011340df8583..d824bb184ab8 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -179,6 +179,8 @@ struct pci_dn {
- 	u16     max_vfs;		/* number of VFs IOV BAR expended */
- 	u16     vf_pes;			/* VF PE# under this PF */
- 	int     offset;			/* PE# for the first VF PE */
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index a3c2fbe35fc8..30b7c3909746 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2242,6 +2242,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
- 
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -2252,6 +2253,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->max_vfs = 0;
- 
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
-+
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
-+				 i, res);
-+			continue;
-+		}
-+
-+		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
-+
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
-+				 i, res);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = __roundup_pow_of_two(total_vfs);
-+			break;
-+		}
-+	}
-+
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->flags || res->parent)
-@@ -2264,12 +2291,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 
- 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
- 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
--				i, res, phb->ioda.total_pe);
-+			 i, res, mul);
- 	}
--	pdn->max_vfs = phb->ioda.total_pe;
-+	pdn->max_vfs = mul;
- }
- 
- static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
-
+-- 
+Catalin
