@@ -1,74 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27053 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753459AbbBDAyN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 19:54:13 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"3.12+" <stable@vger.kernel.org>
-Subject: [PATCH] PCI: disable auto realloc detection for lsi devices
-Date: Tue,  3 Feb 2015 16:54:06 -0800
-Message-Id: <1423011246-14429-1-git-send-email-yinghai@kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:38568 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756021AbbBGVMi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Feb 2015 16:12:38 -0500
+Received: by mail-qa0-f41.google.com with SMTP id i13so3101733qae.0
+        for <linux-pci@vger.kernel.org>; Sat, 07 Feb 2015 13:12:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXsk3WK2K6nXrcFczY8oNhn=AiW--Ks7xT+0e_3Z-HHDg@mail.gmail.com>
+References: <1423011246-14429-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo6MV_obn_31J3zTSfR0ke7kNYdr0mxgyuMYstr5RJcQHA@mail.gmail.com> <CAE9FiQXsk3WK2K6nXrcFczY8oNhn=AiW--Ks7xT+0e_3Z-HHDg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 7 Feb 2015 15:12:16 -0600
+Message-ID: <CAErSpo7yiW0gOuHhvjuge84EG_eoyezLPSLT20x=fKxnu2RDDQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: disable auto realloc detection for lsi devices
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	pjay@nwtrail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-LSI cards do not work if pci core change pci bar vaules.
-will need to disable/enable pcie link of bridge manually.
+[+cc Paul]
 
-So disable auto realloc if there is any lsi device on that pci root
-bus.
+On Sat, Feb 7, 2015 at 1:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Feb 7, 2015 at 6:14 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> The BIOS sets the BAR.  Why does the device work when the BIOS sets
+>> the BAR but not when Linux does?
+>
+> If you reset the firmware with disable/enable pcie link, the new BAR will
+> work.
 
-If BIOS is broken, solution would be booting pci=realloc and
-1. check with lsi to get new hba firmware to handle BAR changing.
-2. or disable/enable pcie link manually to get firmare reset.
+I remember experiments like that with changing the bus number on an
+LSI device (https://bugzilla.kernel.org/show_bug.cgi?id=84281,
+http://lkml.kernel.org/r/ghiol53r9u.fsf@lena.gouders.net).  Did you do
+similar experiments with link enable/disable when changing the BAR?
 
-Need to backport to kernel before 3.12 as this one can not be
-applied directly.
+It sounds like you think it's standard practice for BIOSes to disable
+and re-enable the link after programming BARs?  I'm not confident
+about that because I don't think there's anything in the spec that
+would suggest that.
 
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Tested-by: Paul Johnson <pjay@nwtrail.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: 3.12+ <stable@vger.kernel.org> # 3.12+
-
----
- drivers/pci/setup-bus.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1548,14 +1548,31 @@ static int iov_resources_unassigned(stru
- 	return 0;
- }
- 
-+static int strange_dev_check(struct pci_dev *dev, void *data)
-+{
-+	bool *found = data;
-+
-+	/* LSI device firmware is not happy with changing BAR value */
-+	if (dev->vendor == PCI_VENDOR_ID_LSI_LOGIC) {
-+		*found = true;
-+		return 1; /* return early from pci_walk_bus() */
-+	}
-+
-+	return 0;
-+}
- static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- 			 enum enable_type enable_local)
- {
- 	bool unassigned = false;
-+	bool found = false;
- 
- 	if (enable_local != undefined)
- 		return enable_local;
- 
-+	pci_walk_bus(bus, strange_dev_check, &found);
-+	if (found)
-+		return enable_local;
-+
- 	pci_walk_bus(bus, iov_resources_unassigned, &unassigned);
- 	if (unassigned)
- 		return auto_enabled;
+Bjorn
