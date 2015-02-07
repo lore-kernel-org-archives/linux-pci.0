@@ -1,60 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:32997 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbbBZFwH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 00:52:07 -0500
-Received: by pdjz10 with SMTP id z10so10579115pdj.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 21:52:06 -0800 (PST)
-Date: Wed, 25 Feb 2015 23:51:23 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v3 00/30] Refine PCI scan interfaces and make generic pci
- host bridge
-Message-ID: <20150226055123.GA5415@google.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:38823 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756093AbbBGWD2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Feb 2015 17:03:28 -0500
+Received: by iecvy18 with SMTP id vy18so8968238iec.5
+        for <linux-pci@vger.kernel.org>; Sat, 07 Feb 2015 14:03:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <CAErSpo7yiW0gOuHhvjuge84EG_eoyezLPSLT20x=fKxnu2RDDQ@mail.gmail.com>
+References: <1423011246-14429-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo6MV_obn_31J3zTSfR0ke7kNYdr0mxgyuMYstr5RJcQHA@mail.gmail.com>
+	<CAE9FiQXsk3WK2K6nXrcFczY8oNhn=AiW--Ks7xT+0e_3Z-HHDg@mail.gmail.com>
+	<CAErSpo7yiW0gOuHhvjuge84EG_eoyezLPSLT20x=fKxnu2RDDQ@mail.gmail.com>
+Date: Sat, 7 Feb 2015 14:03:27 -0800
+Message-ID: <CAE9FiQVp8tQ+0UtNy1KNksBfBDy_eTt46d_86w555budeFUzmg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: disable auto realloc detection for lsi devices
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	pjay@nwtrail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 09:29:17AM +0800, Yijing Wang wrote:
-> v2->v3:
-> 	Rebase this series on v4.0-rc1.
+On Sat, Feb 7, 2015 at 1:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Hm, still doesn't apply for me:
+> It sounds like you think it's standard practice for BIOSes to disable
+> and re-enable the link after programming BARs?  I'm not confident
+> about that because I don't think there's anything in the spec that
+> would suggest that.
 
-  11:48:15 ~/linux (pci/enumeration)$ git show --oneline | head -1
-  c517d838eb7d Linux 4.0-rc1
-  11:48:36 ~/linux (pci/enumeration)$ stg import -M --sign m/yw
-  Checking for changes in the working directory ... done
-  Importing patch "pci-rip-out" ... done
-  Importing patch "pci-rip-out-0" ... done
-  Importing patch "xen-pci-don-t-use-deprecated" ... done
-  Importing patch "pci-remove-deprecated" ... done
-  Importing patch "pci-rename-pci_scan_bus-to" ... done
-  Importing patch "pci-combine-pci-domain-and-bus" ... done
-  Importing patch "pci-pass-pci-domain-number" ... done
-  Importing patch "pci-introduce" ... done
-  Importing patch "pci-separate-pci_host_bridge" ... done
-  Importing patch "pci-introduce-0" ... done
-  Importing patch "pci-save-sysdata-in" ... error: patch failed: drivers/pci/host-bridge.c:58
-  error: drivers/pci/host-bridge.c: patch does not apply
-  error: patch failed: drivers/pci/probe.c:1954
-  error: drivers/pci/probe.c: patch does not apply
-  stg import: Diff does not apply cleanly
-  11:48:52 ~/linux (pci/enumeration)$ 
+That should be Firmware bug, it could save the BAR or bus info, and use them
+to trap some operation from host.
+
+I still remember that hotplug sometime does not with some LSI cards, as
+firmware trap the pci conf access and not respond in time.
+If I erase the firmware, the silicon always respond to host pci conf in time.
+
+I think we can not say they violate the spec, but that is definitely not a good
+practice of development.
+
+Yinghai
