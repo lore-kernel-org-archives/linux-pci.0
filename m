@@ -1,51 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756371AbbBEFmq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Feb 2015 00:42:46 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v4 09/23] ACPI: Fix a bug in parsing ACPI Memory24 resource
-Date: Thu,  5 Feb 2015 13:44:35 +0800
-Message-Id: <1423115089-12904-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"Will Deacon" <will.deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>
+CC: Marc Zyngier <marc.zyngier@arm.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH 0/2] pci: generic: Add supports for ARM64
+Date: Mon, 9 Feb 2015 23:22:28 +0800
+Message-ID: <1423495350-12295-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to ACPI spec 5, section 6.4.3.1 "24-Bit Memory Range Descriptor",
-minimum, maximum and address_length field in struct acpi_resource_memory24
-is in granularity of 256-bytes. So shift 8-bit left to get correct address.
+This patch series modifies the current PCI generic host controller
+to support both ARM32 and ARM64. It has been tested on AMD Seattle
+platform with the following patch series:
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+1. Marc Zyngier's patch series (for MSI supports):
+[PATCH v2 0/8] Introducing per-device MSI domain
+(http://lwn.net/Articles/628872/)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 7ce00a63f695..5544c6d26f32 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -90,8 +90,8 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- 	switch (ares->type) {
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 		memory24 = &ares->data.memory24;
--		acpi_dev_get_memresource(res, memory24->minimum,
--					 memory24->address_length,
-+		acpi_dev_get_memresource(res, memory24->minimum << 8,
-+					 memory24->address_length << 8,
- 					 memory24->write_protect);
- 		break;
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
+2. Murali Karicheri's patch series: 
+[PATCH v6 0/7] PCI: get DMA configuration from parent device
+(http://www.spinics.net/lists/linux-pci/msg38699.html)
+
+Change from RFC:
+
+  * In [PATCH 1/2] (https://lkml.org/lkml/2014/9/28/150),
+    avoid the ugly #ifdef now that dependencies of pci_sys_data
+    and pci_hw are removed.
+
+  * In [PATCH 2/2] (https://lkml.org/lkml/2014/9/28/151),
+    move tarch-specific check for PCI_PROBE_ONLY into driver/pci/pci.c
+
+
+Suravee Suthikulpanit (2):
+  pci: generic: Use the pci_scan_root_bus instead of pci_common_init_dev
+  PCI: Do not call pci_enable_resource when specifying PCI_PROBE_ONLY
+
+ arch/arm/kernel/bios32.c            | 12 ------------
+ drivers/pci/host/Kconfig            |  2 +-
+ drivers/pci/host/pci-host-generic.c | 33 ++++++++++-----------------------
+ drivers/pci/pci.c                   |  3 +++
+ 4 files changed, 14 insertions(+), 36 deletions(-)
+
 -- 
-1.7.10.4
+2.1.0
 
