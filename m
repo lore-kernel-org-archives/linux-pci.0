@@ -1,86 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:63961 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932096AbbBBQGt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Feb 2015 11:06:49 -0500
-Message-ID: <54CFA093.9040508@linux.intel.com>
-Date: Tue, 03 Feb 2015 00:06:43 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:49810 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759408AbbBINLm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 08:11:42 -0500
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Andre Przywara <andre.przywara@arm.com>,
+In-Reply-To: <CAOh2x=m4U=D7DmhPcfWm8ux_48xsCcWz6EQLXuAqpU4FtvCEYQ@mail.gmail.com>
+References: <1423381030-3457-1-git-send-email-matwey@sai.msu.ru> <CAOh2x=m4U=D7DmhPcfWm8ux_48xsCcWz6EQLXuAqpU4FtvCEYQ@mail.gmail.com>
+From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+Date: Mon, 9 Feb 2015 17:11:21 +0400
+Message-ID: <CAJs94EaCsiFkJQaohmbsFnP4qKr6u9B76=HY2H88A7TswutVHg@mail.gmail.com>
+Subject: Re: [PATCH] pci: spear: Drop __initdata from struct platform_driver spear13xx_pcie_driver
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Mohit Kumar <mohit.kumar@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
-In-Reply-To: <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/2/2 23:57, Bjorn Helgaas wrote:
-> On Wed, Jan 28, 2015 at 8:51 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> pcibios_update_irq writes an irq number into the config space
->> of a given PCI device, but ignores the fact that this number
->> is a virtual interrupt number, which might be a very different
->> value from what the underlying hardware is using.
+2015-02-09 7:22 GMT+03:00 Viresh Kumar <viresh.kumar@linaro.org>:
+> On Sun, Feb 8, 2015 at 3:37 PM, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
+>> spear13xx_pcie_driver.driver is allocated in text.init section
+>> and then the pointer to it is passed futher. This patch is to avoid
+>> crashes like the following, when freed memory is used:
 >>
->> The obvious fix is to fetch the HW interrupt number from the
->> corresponding irq_data structure. This is slightly complicated
->> by the fact that this interrupt might be services by a stacked
->> domain.
+>>  #0  __device_attach (drv=0xc0ed5608 <spear13xx_pcie_driver+20>, data=0xdb622610) at ../drivers/base/dd.c:409
+>>  #1  0xc07a4798 in bus_for_each_drv (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a6740 <__device_attach>)
+>>     at ../drivers/base/bus.c:463
+>>  #2  0xc07a6324 in device_attach (dev=0xdb622610) at ../drivers/base/dd.c:447
+>>  #3  0xc07a5814 in bus_probe_device (dev=0xdb622610) at ../drivers/base/bus.c:558
+>>  #4  0xc07a38d8 in device_add (dev=<optimized out>) at ../drivers/base/core.c:1058
+>>  #5  0xc08b6a5c in of_device_add (ofdev=<optimized out>) at ../drivers/of/device.c:66
+>>  #6  0xc08b742c in of_platform_device_create_pdata (np=<optimized out>, bus_id=0x0 <__vectors_start>, platform_data=0x0 <__vectors_start>,
+>>     parent=<optimized out>) at ../drivers/of/platform.c:241
+>>  #7  0xc08b7568 in of_platform_bus_create (bus=0xdfa46780, matches=0x0 <__vectors_start>, lookup=0x0 <__vectors_start>, parent=0xdb183410,
+>>     strict=true) at ../drivers/of/platform.c:414
+>>  #8  0xc08b79bc in of_platform_populate (root=0xc0ed5608 <spear13xx_pcie_driver+20>, matches=0xdb622610, lookup=0xda0,
+>>     parent=0xc07a6740 <__device_attach>) at ../drivers/of/platform.c:501
+>>  #9  0xbf000030 in am335x_child_probe (pdev=0xdb183400) at ../drivers/usb/musb/musb_am335x.c:12
+>>  #10 0xc07a83f0 in platform_drv_probe (_dev=0xdb183410) at ../drivers/base/platform.c:512
+>>  #11 0xc07a64e8 in really_probe (drv=<optimized out>, dev=<optimized out>) at ../drivers/base/dd.c:302
+>>  #12 driver_probe_device (drv=0xbf000234, dev=0xdb183410) at ../drivers/base/dd.c:399
+>>  #13 0xc07a6820 in __driver_attach (dev=0xdb183410, data=0xbf000234) at ../drivers/base/dd.c:477
+>>  #14 0xc07a46e8 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a83a4 <platform_drv_probe>)
+>>     at ../drivers/base/bus.c:313
+>>  #15 0xc07a5ebc in driver_attach (drv=<optimized out>) at ../drivers/base/dd.c:496
+>>  #16 0xc07a5af0 in bus_add_driver (drv=0xbf000234) at ../drivers/base/bus.c:694
+>>  #17 0xc07a6fec in driver_register (drv=0xbf000234) at ../drivers/base/driver.c:167
+>>  #18 0xc0209c34 in do_one_initcall (fn=0xbf002000) at ../init/main.c:801
+>>  #19 0xc02e0494 in do_init_module (mod=<optimized out>) at ../kernel/module.c:3142
+>>  #20 load_module (info=0xdb6b1f54, uargs=<optimized out>, flags=<optimized out>) at ../kernel/module.c:3461
+>>  #21 0xc02e0a44 in SYSC_finit_module (flags=<optimized out>, uargs=<optimized out>, fd=<optimized out>) at ../kernel/module.c:3537
+>>  #22 SyS_finit_module (fd=7, uargs=-1225602132, flags=0) at ../kernel/module.c:3518
+>>  #23 0xc021a680 in ?? ()
 >>
->> This has been tested on KVM with kvmtool.
->>
->> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Tested-by: Andre Przywara <andre.przywara@arm.com>
->> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> 
-> Jiang, are you OK with this patch as-is now, since it isn't used on x86?
-Sure, I'm OK. I missed the point that it's not used on x86 at all
-in previous review.
+>> Fixes: 6675ef212da (PCI: spear: Fix Section mismatch compilation warning for probe())
+>
+> wouldn't this again result in the problem reported above ?
+>
 
-> 
-> Marc, Lorenzo, I assume this actually fixes a bug.  Can we get any
-> more details about what happens when you hit the bug, and how you
-> reproduced it (what platform, driver, etc.)?
-> 
-> Bjorn
-> 
->> ---
->>  drivers/pci/setup-irq.c | 12 ++++++++++--
->>  1 file changed, 10 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
->> index 4e2d595..828cbc9 100644
->> --- a/drivers/pci/setup-irq.c
->> +++ b/drivers/pci/setup-irq.c
->> @@ -15,11 +15,19 @@
->>  #include <linux/errno.h>
->>  #include <linux/ioport.h>
->>  #include <linux/cache.h>
->> +#include <linux/irq.h>
->>
->>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->>  {
->> -       dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
->> -       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->> +       struct irq_data *d;
->> +
->> +       d = irq_get_irq_data(irq);
->> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
->> +       while (d->parent_data)
->> +               d = d->parent_data;
->> +#endif
->> +       dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
->> +       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->>  }
->>
->>  static void pdev_fixup_irq(struct pci_dev *dev,
->> --
->> 2.1.4
->>
+Frankly speaking, I don't believe that that problem ever existed.
+probe() is marked as __init, it assumes that there are/were guarantees
+that nobody will require actual probing after the driver init. This
+way there is completely no difference where .probe points to.
+If one wants just to make linker happy and not see warnings, almost
+all __init specifications should be dropped out.
+
+-- 
+With best regards,
+Matwey V. Kornilov.
+Sternberg Astronomical Institute, Lomonosov Moscow State University, Russia
