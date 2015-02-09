@@ -1,153 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50186 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbbBME4E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Feb 2015 23:56:04 -0500
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 13 Feb 2015 14:56:02 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id EDAB33578048
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:59 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1D4tpPV37945352
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:59 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1D4tPpl027607
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:26 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	cascardo@linux.vnet.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] PCI: Introduce list for device reset methods
-Date: Fri, 13 Feb 2015 15:54:57 +1100
-Message-Id: <1423803299-22356-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:60391 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759368AbbBIUMg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 15:12:36 -0500
+Received: by mail-qa0-f41.google.com with SMTP id x12so5821158qac.0
+        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2015 12:12:35 -0800 (PST)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: robh@kernel.org, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH] PCI: xgene: Fix xgene_pcie_map_bus() return type
+Date: Mon,  9 Feb 2015 18:12:11 -0200
+Message-Id: <1423512731-9625-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch introduces list to hold the PCI device specific reset
-methods. With help of the list, we can register PCI device specific
-reset method dynamically as we do in next one patch.
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Commit 350f8be5bb402a1 ("PCI: xgene: Convert to use generic config accessors")
+introduced the following build warnings:
+
+drivers/pci/host/pci-xgene.c:137:3: warning: return makes integer from pointer without a cast
+drivers/pci/host/pci-xgene.c:140:2: warning: return makes integer from pointer without a cast
+drivers/pci/host/pci-xgene.c:144:2: warning: initialization from incompatible pointer type
+drivers/pci/host/pci-xgene.c:144:2: warning: (near initialization for 'xgene_pcie_ops.map_bus')
+
+The .map_bus function should return 'void __iomem *' instead of 'int'.
+
+Reported-by: Olof's autobuilder <build@lixom.net>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 ---
- drivers/pci/pci.h    |  1 +
- drivers/pci/quirks.c | 75 +++++++++++++++++++++++++++++++++++++++-------------
- 2 files changed, 57 insertions(+), 19 deletions(-)
+ drivers/pci/host/pci-xgene.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e67b22f..82e648a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -310,6 +310,7 @@ struct pci_dev_reset_method {
- 	u16 vendor;
- 	u16 device;
- 	int (*reset)(struct pci_dev *dev, int probe);
-+	struct list_head node;
- };
- 
- #ifdef CONFIG_PCI_QUIRKS
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 512bbbb..37f4c5d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3508,20 +3508,44 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
- #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
- #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
- 
--static const struct pci_dev_reset_method pci_dev_reset_methods[] = {
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
--		 reset_intel_82599_sfp_virtfn },
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
--		reset_ivb_igd },
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
--		reset_ivb_igd },
--	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
--		reset_intel_generic_dev },
--	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
--		reset_chelsio_generic_dev },
--	{ 0 }
-+static LIST_HEAD(pci_dev_reset_list);
-+static DEFINE_MUTEX(pci_dev_reset_mutex);
-+static bool pci_dev_reset_populated = false;
-+static struct pci_dev_reset_method pci_dev_reset_methods[] = {
-+	{ .vendor = PCI_VENDOR_ID_INTEL,
-+	  .device = PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-+	  .reset  = reset_intel_82599_sfp_virtfn
-+	},
-+	{ .vendor = PCI_VENDOR_ID_INTEL,
-+	  .device = PCI_DEVICE_ID_INTEL_IVB_M_VGA,
-+	  .reset  = reset_ivb_igd
-+	},
-+	{ .vendor = PCI_VENDOR_ID_INTEL,
-+	  .device = PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
-+	  .reset  =reset_ivb_igd
-+	},
-+	{ .vendor = PCI_VENDOR_ID_INTEL,
-+	  .device = PCI_ANY_ID,
-+	  .reset  = reset_intel_generic_dev
-+	},
-+	{ .vendor = PCI_VENDOR_ID_CHELSIO,
-+	  .device = PCI_ANY_ID,
-+	  .reset  = reset_chelsio_generic_dev
-+	}
- };
- 
-+static void pci_dev_populate_reset(void)
-+{
-+	struct pci_dev_reset_method *m;
-+	int i;
-+
-+	for (i = ARRAY_SIZE(pci_dev_reset_methods) - 1; i >= 0; i--) {
-+		m = &pci_dev_reset_methods[i];
-+		INIT_LIST_HEAD(&m->node);
-+		list_add(&m->node, &pci_dev_reset_list);
-+	}
-+}
-+
- /*
-  * These device-specific reset methods are here rather than in a driver
-  * because when a host assigns a device to a guest VM, the host may need
-@@ -3529,16 +3553,29 @@ static const struct pci_dev_reset_method pci_dev_reset_methods[] = {
-  */
- int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- {
--	const struct pci_dev_reset_method *i;
-+	struct pci_dev_reset_method *m;
-+	int ret;
- 
--	for (i = pci_dev_reset_methods; i->reset; i++) {
--		if ((i->vendor == dev->vendor ||
--		     i->vendor == (u16)PCI_ANY_ID) &&
--		    (i->device == dev->device ||
--		     i->device == (u16)PCI_ANY_ID))
--			return i->reset(dev, probe);
-+	mutex_lock(&pci_dev_reset_mutex);
-+
-+	if (!pci_dev_reset_populated) {
-+		pci_dev_populate_reset();
-+		pci_dev_reset_populated = true;
- 	}
- 
-+	list_for_each_entry(m, &pci_dev_reset_list, node) {
-+		if ((m->vendor == dev->vendor ||
-+		     m->vendor == (u16)PCI_ANY_ID) &&
-+		    (m->device == dev->device ||
-+		     m->device == (u16)PCI_ANY_ID)) {
-+			ret = m->reset(dev, probe);
-+			mutex_unlock(&pci_dev_reset_mutex);
-+			return ret;
-+		}
-+	}
-+
-+	mutex_unlock(&pci_dev_reset_mutex);
-+
- 	return -ENOTTY;
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index aab5547..22addb6 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+ 	return false;
  }
  
+-static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
++static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			      int offset)
+ {
+ 	struct xgene_pcie_port *port = bus->sysdata;
 -- 
-1.8.3.2
+1.9.1
 
