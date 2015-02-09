@@ -1,85 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:44885 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbbBJGTz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Feb 2015 01:19:55 -0500
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Feb 2015 16:19:52 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A52F52CE8050
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 17:19:48 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A6JeXT15269966
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 17:19:48 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A6JEjo019012
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 17:19:15 +1100
-Date: Tue, 10 Feb 2015 14:18:57 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 02/17] PCI/IOV: add VF enable/disable hook
-Message-ID: <20150210061857.GA31098@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-3-git-send-email-weiyang@linux.vnet.ibm.com>
- <1423527979.4924.67.camel@au1.ibm.com>
- <20150210013532.GA6326@richard>
- <1423534394.4924.78.camel@au1.ibm.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:58194 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759670AbbBIMaC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 07:30:02 -0500
+Message-ID: <54D8A83B.60307@canonical.com>
+Date: Mon, 09 Feb 2015 13:29:47 +0100
+From: Stefan Bader <stefan.bader@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423534394.4924.78.camel@au1.ibm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Bugfix 0/3] Xen IRQ related hotfixes for v3.19
+References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com> <1369609199.20150205210757@eikelenboom.it> <54D8823F.9080900@canonical.com> <54D8A446.3000008@linux.intel.com>
+In-Reply-To: <54D8A446.3000008@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="cP3TqM45m5iocT53JKQeK872ME9TjDI9Q"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 10, 2015 at 01:13:14PM +1100, Benjamin Herrenschmidt wrote:
->On Tue, 2015-02-10 at 09:35 +0800, Wei Yang wrote:
->> >Don't we want pcibios_sriov_enable() to be able to crop the number
->> >of VFs or do we think any resource limits have been applied
->> >already ?
->> 
->> The second parameter "initial" is the number of VFs will be enabled.
->> Arch
->> dependent function will check the resources for these number of VFs.
->> 
->> Do I catch your question correctly?
->
->I was wondering if the number of resource that can be enabled is
->smaller, should the arch function be able to return that smaller
->number and we would still enable that number ?
->
->Ie, have the arch function be able to "update" the value of
->"initial" (by passing it by pointer for example).
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--cP3TqM45m5iocT53JKQeK872ME9TjDI9Q
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-This would increase the time to enable sriov and block others driver to enable
-sriov.
+On 09.02.2015 13:12, Jiang Liu wrote:
+> On 2015/2/9 17:47, Stefan Bader wrote:
+>> On 05.02.2015 21:07, Sander Eikelenboom wrote:
+>>>
+>>> Tuesday, January 20, 2015, 3:21:04 AM, you wrote:
+>>>
+>>>> Hi Thomas,
+>>>>         This patch set includes three hotfixes related Xen IRQ for v=
+3.19.
+>>>> Sorry for the long delay to get these two regressions fixed, it real=
+ly
+>>>> cost me some time to read and understand Xen IRQ code.
+>>>
+>>>> Patch 1 fixes the failure to register ACPI SCI interrupt on Xen
+>>>> domain0 by reworking acpi_gsi_to_irq(). I will backport it to v3.18
+>>>> too once it reaches the mainstream kernel.
+>>>
+>>>> Patch 2 fixes the regression in Xen PCI device passthrough(pciback).=
 
-On powernv platform, those resources needed are M64 BAR and PE numbers.
-Currently they are acquired separately. We have a lock to protect those
-resources respectively. If we want to apply the logic you mentioned, we need
-to have a "bigger" lock to protect both of them and try different values,
-since at the same time, other driver may want to enable their sriov too. We
-have to protect this contention.
+>>>> It's a temporary solution, I will send the formal fix for v3.20 and
+>>>> it has passed tests too.
+>>>
+>>>> Patch 3 fixes an issue found when reading code. There's no real bug
+>>>> reports related to this issue yet.
+>>>
+>>>> Great thanks to Konrad and Sander for testing fixes for these regres=
+sions.
+>>>
+>>>> Regards,
+>>>> Gerry
+>>>
+>>> Hi Gerry,
+>>>
+>>> Since these patches now are: tested, reviewed and have landed into ma=
+inline,
+>>> could you also provide the backports for 3.17 and 3.18 where required=
+ ?
+>>
+>> This would be my attempt of backporting those to 3.18 (I have not trie=
+d whether
+>> they would apply to 3.17 as well). Those seem to work when test-bootin=
+g and
+>> Sander said he will give them a try as well. But better check yourself=
+ I did not
+>> mess anything up while backporting. One of the three patches seemed no=
+t to be
+>> required at all.
+> I'm backporting them too, but now I will give up my patches:)
+>=20
+> The first one is a must, which should be applied to 3.17 and 3.18.
+> The second one doesn't apply to 3.17 or 3.18.
+> The third may be applied to v3.17 and v3.18, but it shouldn't be applie=
+d
+> according to the stable-kernel doc because no user reports such a bug y=
+et.
 
-Another example is PF has two IOV BAR but just one M64 BAR left in system.
-In this case, no matter how many VFs want to enable, it will fail.
+Hm, ok. So maybe I should retry with only patch#1 and verify that alone g=
+ets
+around the acpi irq and the usb problems, too. Though interestingly from =
+the
+history, the acpi irq I saw in 3.17 while the usb devices started to fail=
+ with
+3.18. I will let you know in a bit. Just want to finish another bisect fi=
+rst.
 
->
->Cheers,
->Ben.
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Stefan
 
--- 
-Richard Yang
-Help you, Help me
+> Regards
+> Gerry
+>>
+>> -Stefan
+>>
+>>>
+>>> The number of people running into these (subtle) issues with these st=
+able
+>>> kernels seems to be steadily increasing.
+>>>
+>>> --
+>>> Sander
+>>>
+>>>> Jiang Liu (3):
+>>>>   xen/pci: Kill function xen_setup_acpi_sci()
+>>>>   xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
+>>>>     cffe0a2b5a34
+>>>>   xen/irq: Override ACPI IRQ management callback __acpi_unregister_g=
+si
+>>>
+>>>>  arch/x86/include/asm/acpi.h |    1 +
+>>>>  arch/x86/kernel/acpi/boot.c |   26 +++++++++++------------
+>>>>  arch/x86/pci/xen.c          |   49 ++------------------------------=
+-----------
+>>>>  drivers/acpi/pci_irq.c      |    1 -
+>>>>  4 files changed, 16 insertions(+), 61 deletions(-)
+>>>
+>>>
+>>
 
+
+
+--cP3TqM45m5iocT53JKQeK872ME9TjDI9Q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJU2KhFAAoJEOhnXe7L7s6j2zQP/iRef4ONjJl8S3/aIHP4ER7D
+z1jt31X+4MEYt4NgjlpKFDOgDSZNrOj45YBsGdnpsvKwhaA2/bk2bl0TR10tjCpf
+kpoZ3QOFS7+ZgGrBRM0r8kMcSCwJKOoJ0B4RBAurmgWUrz3WJrl6uxeL3vUjGdAf
+ZWTee/9kWp7mD/6C2it9CASWuCTvWgcwYXT4sDiei8BLnE8ZKKzwF85y+Q4u7sDv
+rzCskT4A93ub4IvXSyH2hjrfaAukprZeqRBBeBb1O3bPhCpzKedFkSMZSJtFQ9zA
+WEya2xn/CTplydVJIWA7uf3qrvH3q48n2wCIwok6LJHzI+1jNsGWoXvnCEpVTRqn
+VMt7eXMQem1nxlbjueuJOpklG4Z6hR46WqOFjZeraDbtPW9qnzqBVUa5H7x5msYn
+ALsWyKX+hR7x3KCBzCE0YB5Jubz/L69qid54mgdlJ4/UaH7A0H8uXaxz0w/KmiMm
+WHqNCFoy+1IRpmklSEPeqAGD5X7w6It0RZPXjzfygRaI066x+3HdD5l+hjHXd7nF
++0znHk8chr42K+qkm+sYAk45x/5rxvONh554wpHLMYW+RaoEzKHHJiAoEm8xgBo9
+ulMEJam3cU3r8srbFJ+PbAXAlPmA2voIQHE05MlPcBITJJBNr0cmqZzFRfGx3ry/
+ygwNCPmM6c2cdo83zQ0i
+=p/b3
+-----END PGP SIGNATURE-----
+
+--cP3TqM45m5iocT53JKQeK872ME9TjDI9Q--
