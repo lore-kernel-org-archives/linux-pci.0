@@ -1,90 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:45870 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753498AbbBZBc2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:28 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH v3 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify code
-Date: Thu, 26 Feb 2015 09:29:40 +0800
-Message-ID: <1424914187-21027-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:40255 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506AbbBJBpS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 20:45:18 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Feb 2015 11:45:15 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 781CF2BB0040
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:45:14 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A1j6PI45154482
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:45:14 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A1iex7029976
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:44:41 +1100
+Date: Tue, 10 Feb 2015 09:44:24 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 03/17] PCI: Add weak pcibios_iov_resource_alignment()
+ interface
+Message-ID: <20150210014424.GB6326@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-4-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1423528379.4924.69.camel@au1.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423528379.4924.69.camel@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mvebu_pcie_scan_bus() is not necessary, we could use
-pci_common_init_dev() instead of pci_common_init(),
-and pass the device pointer as the parent. Then
-pci_scan_root_bus() will be called to scan the pci busses.
+On Tue, Feb 10, 2015 at 11:32:59AM +1100, Benjamin Herrenschmidt wrote:
+>On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
+>> The alignment of PF's IOV BAR is designed to be the individual size of a
+>> VF's BAR size. This works fine for many platforms, but on PowerNV platform
+>> it needs some change.
+>> 
+>> The original alignment works, since at sizing and assigning stage the
+>> requirement is from an individual VF's BAR size instead of the PF's IOV
+>> BAR.  This is the reason for the original code to just retrieve the
+>> individual VF BAR size as the alignment.
+>> 
+>> On PowerNV platform, it is required to align the whole PF IOV BAR to a
+>> hardware segment. Based on this fact, the alignment of PF's IOV BAR should
+>> be calculated seperately.
+>> 
+>> This patch introduces a weak pcibios_iov_resource_alignment() interface,
+>> which gives platform a chance to implement specific method to calculate
+>> the PF's IOV BAR alignment.
+>
+>While the patch is probably fine, I find the above explanation quite
+>confusing :)
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Jason Cooper <jason@lakedaemon.net>
----
- drivers/pci/host/pci-mvebu.c |   18 +-----------------
- 1 files changed, 1 insertions(+), 17 deletions(-)
+I will try to make it more clear.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 1309cfb..d5a2b70 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
--				  &mvebu_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
--	hw.scan           = mvebu_pcie_scan_bus;
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev->dev, &hw);
- }
- 
- /*
+>>From my memory (vague now) of the scheme we put in place, we need to
+>practically reserve a portion of address space that corresponds to
+>VF_size * Number_of_PEs. IE, it's not just the alignment that has
+>constraints but also the size that need to be allocated.
+>
+>Now I suppose if we make the alignment to be the size of the M64
+>window and if the core also bounces the allocated size to the
+>alignment boundary, then we are fine, but that should be explained.
+>
+
+The purpose of this patch is to give a chance to different archs to calculate
+the alignment of PF's IOV BAR.
+
+How about I move the detailed explanation on powernv platform in the following
+patch? And focus on what this patch does in this log?
+
+>Cheers,
+>Ben.
+>
+>
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/iov.c   |   11 ++++++++++-
+>>  include/linux/pci.h |    3 +++
+>>  2 files changed, 13 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 933d8cc..5f48201 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -556,6 +556,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>>  		4 * (resno - PCI_IOV_RESOURCES);
+>>  }
+>>  
+>> +resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
+>> +		int resno, resource_size_t align)
+>> +{
+>> +	return align;
+>> +}
+>> +
+>>  /**
+>>   * pci_sriov_resource_alignment - get resource alignment for VF BAR
+>>   * @dev: the PCI device
+>> @@ -570,12 +576,15 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>>  {
+>>  	struct resource tmp;
+>>  	int reg = pci_iov_resource_bar(dev, resno);
+>> +	resource_size_t align;
+>>  
+>>  	if (!reg)
+>>  		return 0;
+>>  
+>>  	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+>> -	return resource_alignment(&tmp);
+>> +	align = resource_alignment(&tmp);
+>> +
+>> +	return pcibios_iov_resource_alignment(dev, resno, align);
+>>  }
+>>  
+>>  /**
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 74ef944..ae7a7ea 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1163,6 +1163,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>>  void pci_setup_bridge(struct pci_bus *bus);
+>>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+>>  					 unsigned long type);
+>> +resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
+>> +						 int resno,
+>> +						 resource_size_t align);
+>>  
+>>  #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+>>  #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+>
+
 -- 
-1.7.1
+Richard Yang
+Help you, Help me
 
