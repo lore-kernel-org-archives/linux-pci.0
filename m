@@ -1,91 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:60795 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611AbbBZIPq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:46 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v4 19/30] PCI: Remove weak pcibios_root_bridge_prepare()
-Date: Thu, 26 Feb 2015 16:12:13 +0800
-Message-ID: <1424938344-4017-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+To: mohit.kumar@st.com, viresh.kumar@linaro.org
+Cc: gregkh@linuxfoundation.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Matwey V. Kornilov" <matwey@sai.msu.ru>
+Subject: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of platform_driver_register
+Date: Tue, 10 Feb 2015 19:31:21 +0300
+Message-Id: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use weak pcibios_root_bridge_prepare(),
-we could remove it.
+Use platform_driver_probe instead of platform_driver_register
+because the former allows us to use probe function placed into __init section
+and the driver itself is not support hotplugging (yet?).
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
 ---
- drivers/pci/probe.c |   15 ---------------
- include/linux/pci.h |    2 --
- 2 files changed, 0 insertions(+), 17 deletions(-)
+Changes from v1:
+ - Use platform_driver_probe instead of platform_driver_register to make linker happy.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b5f9ca4..356c90f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1844,18 +1844,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+ drivers/pci/host/pcie-spear13xx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 866465f..51e1344 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -371,7 +371,6 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
+ MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
  
--/**
-- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
-- * @bridge: Host bridge to set up.
-- *
-- * Default empty implementation.  Replace with an architecture-specific setup
-- * routine, if necessary.
-- */
--int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	return 0;
--}
--
- void __weak pcibios_add_bus(struct pci_bus *bus)
+ static struct platform_driver spear13xx_pcie_driver __initdata = {
+-	.probe		= spear13xx_pcie_probe,
+ 	.driver = {
+ 		.name	= "spear-pcie",
+ 		.of_match_table = of_match_ptr(spear13xx_pcie_of_match),
+@@ -382,7 +381,7 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
+ 
+ static int __init spear13xx_pcie_init(void)
  {
+-	return platform_driver_register(&spear13xx_pcie_driver);
++	return platform_driver_probe(&spear13xx_pcie_driver, spear13xx_pcie_probe);
  }
-@@ -1890,9 +1878,6 @@ static struct pci_bus *__pci_create_root_bus(
- 	b->bridge = get_device(&bridge->dev);
- 	if (bridge->ops && bridge->ops->phb_set_root_bus_speed)
- 		bridge->ops->phb_set_root_bus_speed(bridge);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto err_out;
+ module_init(spear13xx_pcie_init);
  
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ef3a821..3c4413c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -423,8 +423,6 @@ struct pci_host_bridge {
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 		     void (*release_fn)(struct pci_host_bridge *),
- 		     void *release_data);
--
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, u32 dombus, struct list_head *resources, 
- 		void *sysdata, struct pci_host_bridge_ops *ops);
 -- 
-1.7.1
+2.1.4
 
