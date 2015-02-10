@@ -1,125 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.65] ([119.145.14.65]:5203 "EHLO
-	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667AbbBZIQ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:16:28 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v4 27/30] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Thu, 26 Feb 2015 16:12:21 +0800
-Message-ID: <1424938344-4017-28-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:62398 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154AbbBJQtl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Feb 2015 11:49:41 -0500
+Received: by mail-ig0-f179.google.com with SMTP id l13so24843873iga.0
+        for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 08:49:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <54D7AE67.1090007@nwtrail.com>
+References: <54C81B4E.7060900@nwtrail.com> <CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com>
+ <54CBB062.4040801@nwtrail.com> <CAE9FiQUxD8g4KG9CYe1znb5Lw5skkq=9QSOgkmGUDbhsaDq2Qw@mail.gmail.com>
+ <54CFBC0E.4080102@nwtrail.com> <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
+ <54D160B5.70006@nwtrail.com> <CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
+ <54D6C6CB.6060904@nwtrail.com> <CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com>
+ <54D7AE67.1090007@nwtrail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Feb 2015 10:49:20 -0600
+Message-ID: <CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
+Subject: Re: [problem] mpt2sas load fails with LSISAS2008
+To: pjay@nwtrail.com
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
+We need to work out what's going wrong here before we rush into a band-aid.
 
-Signed-off-by: wangyijing@huawei.com
----
- drivers/pci/probe.c |   27 ++++++++-------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 8 insertions(+), 22 deletions(-)
+What changed between v3.4 and v3.4.1 that exposed this problem?  "git
+log --oneline v3.4..v3.4.1" doesn't show any likely culprits.  Paul,
+are those the versions you tested?  Your dmesg logs at
+https://bugzilla.kernel.org/show_bug.cgi?id=92351 show
+"3.4.0-030400-generic" and "3.4.1-030401-generic" but I don't know
+whether those are precisely v3.4 and v3.4.1.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 356c90f..2e5997a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1935,18 +1935,6 @@ err_out:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
--	if (!host)
--		return NULL;
--	
--	return __pci_create_root_bus(host, ops);
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2024,7 +2012,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
- 		}
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2086,18 +2074,19 @@ struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
- 					void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, db, sysdata, &resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus_legacy);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d266d74..2f29e95 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -781,9 +781,6 @@ void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
--- 
-1.7.1
+I assume this system works fine with Windows, and I doubt Windows has
+a hack like "never move LSI devices."  So it would be useful to know
+if we're doing something stupid in Linux that makes us trip over this.
+Paul, if you happen to have Windows on this machine as well, a
+complete AIDA64 report (free trial version at http://www.aida64.com)
+would show what Windows did.
 
+The resource allocation we're doing is related SR-IOV, and
+unfortunately we don't print enough information in dmesg to figure
+everything out.  Paul, can you attach the complete "lspci -vv" output
+to the bugzilla?
+
+Bjorn
