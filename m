@@ -1,102 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 14 Feb 2015 19:45:52 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	"linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>,
-	"linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic pci
- host bridge
-Message-ID: <20150214194552.GA3932@e102568-lin.cambridge.arm.com>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:57916 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932772AbbBJAeB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 19:34:01 -0500
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Tue, 10 Feb 2015 10:33:59 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id AECA8357804F
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:33:56 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A0Xm5n47907056
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:33:56 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A0XNqE010625
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:33:23 +1100
+Message-ID: <1423528379.4924.69.camel@au1.ibm.com>
+Subject: Re: [PATCH V11 03/17] PCI: Add weak
+ pcibios_iov_resource_alignment() interface
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 10 Feb 2015 11:32:59 +1100
+In-Reply-To: <1421288887-7765-4-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <1421288887-7765-4-git-send-email-weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yijing,
+On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
+> The alignment of PF's IOV BAR is designed to be the individual size of a
+> VF's BAR size. This works fine for many platforms, but on PowerNV platform
+> it needs some change.
+> 
+> The original alignment works, since at sizing and assigning stage the
+> requirement is from an individual VF's BAR size instead of the PF's IOV
+> BAR.  This is the reason for the original code to just retrieve the
+> individual VF BAR size as the alignment.
+> 
+> On PowerNV platform, it is required to align the whole PF IOV BAR to a
+> hardware segment. Based on this fact, the alignment of PF's IOV BAR should
+> be calculated seperately.
+> 
+> This patch introduces a weak pcibios_iov_resource_alignment() interface,
+> which gives platform a chance to implement specific method to calculate
+> the PF's IOV BAR alignment.
 
-On Wed, Jan 21, 2015 at 12:29:55AM +0000, Yijing Wang wrote:
-> v1->v2:
-> 	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
-> 	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
-> 	Arnd. Refresh some patch description log, and add a new patch to fix
-> 	build warning in ia64.
-> 
-> This series is based on Bjorn's pci-next branch.
-> 
-> Patch 1-4 ripped out pci_bus_add_devices() from pci scan interfaces
-> for better pci scan flow.
-> 
-> Patch 5-11 make a generic pci_host_bridge to hold pci_host_bridge
-> related informations, and introduce a pci_host_bridge_ops to 
-> support platform host drivers provide its own pci_host_bridge 
-> related operations to setup pci_host_bridge during pci enumeration.
-> 
-> Patch 12-28 apply the new pci scan interfaces to platform pci host
-> bridge drivers.
-> 
-> Now in kernel, we scan pci bus use the following ways:
-> 1. pci_scan_bus. 
-> 	parent = NULL, default io/mem/bus resources
-> 	call pci_bus_add_devices()
-> 
-> 2. pci_scan_bus_parented() + pci_bus_add_devices()
-> 	default io/mem/bus resources, only used by xen
-> 
-> 3. pci_scan_root_bus() + pci_bus_add_devices()
-> 
-> 4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
-> 
-> 5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
-> 
-> And we have a lot of arch specific pci_domain_nr() and other platform
-> specific weak function like pcibios_root_bridge_prepare().
-> 
-> After applied this series, we have following scan interfaces:
-> 
-> 1. pci_scan_bus_legacy() 
-> 	parent = NULL, default io/mem/bus resources.
-> 	for legacy pci scan
-> 
-> 2. pci_scan_root_bus()
-> 	for callers provide its own parent and io/mem/bus resources
-> 	but no platform specific pci_host_bridge operations
-> 
-> 3. pci_scan_root_bridge()
-> 	for callers provide its own parent and io/mem/bus resources
-> 	and pci_host_bridge_ops.
-> 
-> Besides, above pci scan interfaces all need addtionally call pci_bus_add_devices()
-> to set match_driver true and try to attach drivers.
-> 
-> Also we could eliminate all arch specific pci_domain_nr() after applied this series.
-> 
-> I tested this series on x86 (with or without ACPI).
-> Comments and tests are warmly welcome!
+While the patch is probably fine, I find the above explanation quite
+confusing :)
 
-Can you push a public branch out rebased against mainline for us to pull
-and test please ?
+>From my memory (vague now) of the scheme we put in place, we need to
+practically reserve a portion of address space that corresponds to
+VF_size * Number_of_PEs. IE, it's not just the alignment that has
+constraints but also the size that need to be allocated.
 
-Thanks !
-Lorenzo
+Now I suppose if we make the alignment to be the size of the M64
+window and if the core also bounces the allocated size to the
+alignment boundary, then we are fine, but that should be explained.
+
+Cheers,
+Ben.
+
+
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/iov.c   |   11 ++++++++++-
+>  include/linux/pci.h |    3 +++
+>  2 files changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 933d8cc..5f48201 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -556,6 +556,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+>  		4 * (resno - PCI_IOV_RESOURCES);
+>  }
+>  
+> +resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
+> +		int resno, resource_size_t align)
+> +{
+> +	return align;
+> +}
+> +
+>  /**
+>   * pci_sriov_resource_alignment - get resource alignment for VF BAR
+>   * @dev: the PCI device
+> @@ -570,12 +576,15 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+>  {
+>  	struct resource tmp;
+>  	int reg = pci_iov_resource_bar(dev, resno);
+> +	resource_size_t align;
+>  
+>  	if (!reg)
+>  		return 0;
+>  
+>  	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+> -	return resource_alignment(&tmp);
+> +	align = resource_alignment(&tmp);
+> +
+> +	return pcibios_iov_resource_alignment(dev, resno, align);
+>  }
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 74ef944..ae7a7ea 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1163,6 +1163,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>  void pci_setup_bridge(struct pci_bus *bus);
+>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+>  					 unsigned long type);
+> +resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
+> +						 int resno,
+> +						 resource_size_t align);
+>  
+>  #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+>  #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+
 
