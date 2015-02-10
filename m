@@ -1,67 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v2 19/23] x86/PCI: Fix the range check for IO resources
-Date: Mon,  2 Feb 2015 10:43:04 +0800
-Message-Id: <1422844988-13854-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:37984 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbbBJG0k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Feb 2015 01:26:40 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 10 Feb 2015 16:26:37 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9B6F52CE8054
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 17:26:34 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A6QQKV19595272
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 17:26:34 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A6Q06D028634
+	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 17:26:01 +1100
+Date: Tue, 10 Feb 2015 14:25:44 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 07/17] powerpc/pci: Don't unset pci resources for VFs
+Message-ID: <20150210062544.GB31098@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-8-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1423528584.4924.70.camel@au1.ibm.com>
+ <20150210015123.GC6326@richard>
+ <1423534451.4924.79.camel@au1.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423534451.4924.79.camel@au1.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The range check in setup_res() checks the IO range against
-iomem_resource. That's just wrong.
+On Tue, Feb 10, 2015 at 01:14:11PM +1100, Benjamin Herrenschmidt wrote:
+>On Tue, 2015-02-10 at 09:51 +0800, Wei Yang wrote:
+>> On Tue, Feb 10, 2015 at 11:36:24AM +1100, Benjamin Herrenschmidt wrote:
+>> >On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
+>> >> If we're going to reassign resources with flag PCI_REASSIGN_ALL_RSRC, all
+>> >> resources will be cleaned out during device header fixup time and then get
+>> >> reassigned by PCI core. However, the VF resources won't be reassigned and
+>> >> thus, we shouldn't clean them out.
+>> >> 
+>> >> This patch adds a condition. If the pci_dev is a VF, skip the resource
+>> >> unset process.
+>> >
+>> >I don't understand this, can you elaborate ? Why wouldn't we reassign
+>> >the IOV resource just like everything else ?
+>> 
+>> Sure.
+>> 
+>> VFs work a little bit different from normal devices. On powernv platform, we
+>> have PCI_REASSIGN_ALL_RSRC set, which means all resource retrieved from
+>> hardware will be cleaned and re-assigned by kernel. While VF's resources are
+>> calculated from PF's IOV BAR, in virtfn_add(). And after this, there is not
+>> re-assign process for VFs.
+>
+>I still don't undertand, you mean SR-IOV is assigned before we assign
+>everybody else ? That doesn't make sense to me...
+>
 
-Reworked based on Thomas original patch.
+PF's resource will be assigned first, including normal BARs and IOV BARs.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Then PF's driver will create VFs, in virtfn_add(). In this function, VF's
+resources is calculated from its PF's IOV BAR.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index bb98afd0591e..1d725d99963d 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -283,7 +283,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 	struct acpi_resource_address64 addr;
- 	acpi_status status;
- 	unsigned long flags;
--	u64 start, orig_end, end;
-+	u64 start, orig_end, end, res_end;
- 
- 	status = resource_to_addr(acpi_res, &addr);
- 	if (!ACPI_SUCCESS(status))
-@@ -293,8 +293,10 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 		flags = IORESOURCE_MEM;
- 		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
- 			flags |= IORESOURCE_PREFETCH;
-+		res_end = (u64)iomem_resource.end;
- 	} else if (addr.resource_type == ACPI_IO_RANGE) {
- 		flags = IORESOURCE_IO;
-+		res_end = (u64)ioport_resource.end;
- 	} else
- 		return AE_OK;
- 
-@@ -302,7 +304,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 	orig_end = end = addr.address.maximum + addr.address.translation_offset;
- 
- 	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
-+	end = min(end, res_end);
- 	if (end <= start) {
- 		dev_info(&info->bridge->dev,
- 			"host bridge window [%#llx-%#llx] "
+If you reset VF's resource as PFs, no one will try to assign it again.
+
+>Ben.
+>
+>> >
+>> >Ben.
+>> >
+>> >> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> >> ---
+>> >>  arch/powerpc/kernel/pci-common.c |    4 ++++
+>> >>  1 file changed, 4 insertions(+)
+>> >> 
+>> >> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>> >> index 37d512d..889f743 100644
+>> >> --- a/arch/powerpc/kernel/pci-common.c
+>> >> +++ b/arch/powerpc/kernel/pci-common.c
+>> >> @@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+>> >>  		       pci_name(dev));
+>> >>  		return;
+>> >>  	}
+>> >> +
+>> >> +	if (dev->is_virtfn)
+>> >> +		return;
+>> >> +
+>> >>  	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+>> >>  		struct resource *res = dev->resource + i;
+>> >>  		struct pci_bus_region reg;
+>> >
+>> 
+>
+
 -- 
-1.7.10.4
+Richard Yang
+Help you, Help me
 
