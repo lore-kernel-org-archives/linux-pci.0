@@ -1,122 +1,204 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:41468 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbbBXIc5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:32:57 -0500
-Received: by padfb1 with SMTP id fb1so34389137pad.8
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:32:57 -0800 (PST)
-Subject: [PATCH v12 00/21] Enable SRIOV on Power8
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:32:55 -0600
-Message-ID: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54DA0821.1000605@canonical.com>
+Date: Tue, 10 Feb 2015 14:31:13 +0100
+From: Stefan Bader <stefan.bader@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Sander Eikelenboom <linux@eikelenboom.it>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Bugfix 0/3] Xen IRQ related hotfixes for v3.19
+References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com> <1369609199.20150205210757@eikelenboom.it> <54D8823F.9080900@canonical.com> <54D8A446.3000008@linux.intel.com> <54D8A83B.60307@canonical.com> <54D8DBC8.3020502@canonical.com> <1703934611.20150209201527@eikelenboom.it>
+In-Reply-To: <1703934611.20150209201527@eikelenboom.it>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="pEoEOn1BWJ2Fn5iiB172D66Ih393i6lQM"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Wei Yang's most recent POWER8 SR-IOV patchset was v11, posted on Jan 15,
-2015.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--pEoEOn1BWJ2Fn5iiB172D66Ih393i6lQM
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-I'm having a hard time keeping everything straight between the tweaks I've
-made on my branch and incremental updates.  I think it's easier to repost
-the whole series so one can easily collect everything that goes together.
-So here'a a v12 with the changes I've made.
+On 09.02.2015 20:15, Sander Eikelenboom wrote:
+>=20
+> Monday, February 9, 2015, 5:09:44 PM, you wrote:
+>=20
+>> On 09.02.2015 13:29, Stefan Bader wrote:
+>>> On 09.02.2015 13:12, Jiang Liu wrote:
+>>>> On 2015/2/9 17:47, Stefan Bader wrote:
+>>>>> On 05.02.2015 21:07, Sander Eikelenboom wrote:
+>>>>>>
+>>>>>> Tuesday, January 20, 2015, 3:21:04 AM, you wrote:
+>>>>>>
+>>>>>>> Hi Thomas,
+>>>>>>>         This patch set includes three hotfixes related Xen IRQ fo=
+r v3.19.
+>>>>>>> Sorry for the long delay to get these two regressions fixed, it r=
+eally
+>>>>>>> cost me some time to read and understand Xen IRQ code.
+>>>>>>
+>>>>>>> Patch 1 fixes the failure to register ACPI SCI interrupt on Xen
+>>>>>>> domain0 by reworking acpi_gsi_to_irq(). I will backport it to v3.=
+18
+>>>>>>> too once it reaches the mainstream kernel.
+>>>>>>
+>>>>>>> Patch 2 fixes the regression in Xen PCI device passthrough(pcibac=
+k).
+>>>>>>> It's a temporary solution, I will send the formal fix for v3.20 a=
+nd
+>>>>>>> it has passed tests too.
+>>>>>>
+>>>>>>> Patch 3 fixes an issue found when reading code. There's no real b=
+ug
+>>>>>>> reports related to this issue yet.
+>>>>>>
+>>>>>>> Great thanks to Konrad and Sander for testing fixes for these reg=
+ressions.
+>>>>>>
+>>>>>>> Regards,
+>>>>>>> Gerry
+>>>>>>
+>>>>>> Hi Gerry,
+>>>>>>
+>>>>>> Since these patches now are: tested, reviewed and have landed into=
+ mainline,
+>>>>>> could you also provide the backports for 3.17 and 3.18 where requi=
+red ?
+>>>>>
+>>>>> This would be my attempt of backporting those to 3.18 (I have not t=
+ried whether
+>>>>> they would apply to 3.17 as well). Those seem to work when test-boo=
+ting and
+>>>>> Sander said he will give them a try as well. But better check yours=
+elf I did not
+>>>>> mess anything up while backporting. One of the three patches seemed=
+ not to be
+>>>>> required at all.
+>>>> I'm backporting them too, but now I will give up my patches:)
+>>>>
+>>>> The first one is a must, which should be applied to 3.17 and 3.18.
+>>>> The second one doesn't apply to 3.17 or 3.18.
+>>>> The third may be applied to v3.17 and v3.18, but it shouldn't be app=
+lied
+>>>> according to the stable-kernel doc because no user reports such a bu=
+g yet.
+>>>
+>>> Hm, ok. So maybe I should retry with only patch#1 and verify that alo=
+ne gets
+>>> around the acpi irq and the usb problems, too. Though interestingly f=
+rom the
+>>> history, the acpi irq I saw in 3.17 while the usb devices started to =
+fail with
+>>> 3.18. I will let you know in a bit. Just want to finish another bisec=
+t first.
+>=20
+>> So it looks like patch #1 indeed does fix both the acpi irq and my usb=
+ devices.
+>> Sander, do you want to verify that variant, too?
+>=20
+> Hi Stefan / Gerry,
+>=20
+> Just tested with only patch 1, ended up the same .. the reported issues=
+ seem=20
+> gone.
 
-Wei, please follow up with a v13 to fix anything I broke here.  Here's how
-I would do that using stgit:
+Sounds good. :) Gerry, do you want me to fwd the backport to Greg for 3.1=
+8 or do
+you do that? As far as I know 3.17 has nobody caring about it.
 
-  git checkout -b pci/virtualization-v13 pci/virtualization-v12
-  stg init
-  stg uncommit -n 21
-  <hack on the patches>
-  stg mail -v v13 ... pci-print-more-info-in..powerpc-pci-add-pci-resource
+-Stefan
 
-I put v10, v11, and v12 on branches based on v4.0-rc1:
+>=20
+>=20
+>> The only odd thing left in a 3.18 with the fix (regardless of using pa=
+tch #1
+>> only or patches #1 and #3) is that the ahci driver shows up with its p=
+ci bus
+>> number in /proc/interrupts. But that does not seem to have any relevan=
+t downside
+>> (cannot try 3.19 on that box right now for other reasons).
+>=20
+>> -Stefan
+>=20
+>> ...
+>> # 57: 12441  0    0    0  xen-pirq-msi       0000:00:1f.2
+>> #                                            (used to be ahci)
+>=20
+> This is also there on baremetal with 3.19 on intel, so not xen related:=
 
-  pci/virtualization-v10	(posted 12/22/2014)
-  pci/virtualization-v11	(posted 01/15/2015)
-  pci/virtualization-v12	(this posting)
-
-This makes it relatively easy to diff the versions, e.g.,
-
-  git diff pci/virtualization-v11 pci/virtualization-v12
-
-These branches are at
-
-  https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/
-
-v12:
-   * remove "align" parameter from pcibios_iov_resource_alignment()
-     default version returns pci_iov_resource_size() instead of the
-     "align" parameter
-   * in powerpc pcibios_iov_resource_alignment(), return
-     pci_iov_resource_size() if there's no ppc_md function pointer
-   * in pci_sriov_resource_alignment(), don't re-read base, since we
-     saved the required alignment when reading it the first time
-   * remove "vf_num" parameter from add_dev_pci_info() and
-     remove_dev_pci_info(); use pci_sriov_get_totalvfs() instead
-   * use dev_warn() instead of pr_warn() when possible
-   * check to be sure IOV BAR is still in range after shifting, change
-     pnv_pci_vf_resource_shift() from void to int
-   * improve sriov_enable() error message
-   * improve SR-IOV BAR sizing message
-   * index IOV resources in conventional style
-   * include preamble patches (refresh offset/stride when updating numVFs,
-     calculate max buses required
-   * restructure pci_iov_max_bus_range() to return value instead of updating
-     internally, rename to virtfn_max_buses()
-   * fix typos & formatting
-   * expand documentation
-
-Bjorn
-
----
-
-Bjorn Helgaas (2):
-      PCI: Print more info in sriov_enable() error message
-      PCI: Index IOV resources in the conventional style
-
-Gavin Shan (1):
-      powerpc/pci: Refactor pci_dn
-
-Wei Yang (18):
-      PCI: Print PF SR-IOV resource that contains all VF(n) BAR space
-      PCI: Keep individual VF BAR size in struct pci_sriov
-      PCI: Refresh First VF Offset and VF Stride when updating NumVFs
-      PCI: Calculate maximum number of buses required for VFs
-      PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
-      PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
-      PCI: Add pcibios_iov_resource_alignment() interface
-      PCI: Consider additional PF's IOV BAR alignment in sizing and assigning
-      powerpc/pci: Don't unset PCI resources for VFs
-      powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
-      powerpc/powernv: Allocate struct pnv_ioda_pe iommu_table dynamically
-      powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
-      powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
-      powerpc/powernv: Shift VF resource with an offset
-      powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
-      powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
-      powerpc/pci: Remove unused struct pci_dn.pcidev field
-      powerpc/pci: Add PCI resource alignment documentation
+>  27:       1868        582       1282        555  IR-PCI-MSI-edge      =
+0000:00:1f.2
+>=20
+> --
+> Sander
+>=20
+>>>
+>>> -Stefan
+>>>
+>>>> Regards
+>>>> Gerry
+>>>>>
+>>>>> -Stefan
+>>>>>
+>>>>>>
+>>>>>> The number of people running into these (subtle) issues with these=
+ stable
+>>>>>> kernels seems to be steadily increasing.
+>>>>>>
+>>>>>> --
+>>>>>> Sander
+>>>>>>
+>>>>>>> Jiang Liu (3):
+>>>>>>>   xen/pci: Kill function xen_setup_acpi_sci()
+>>>>>>>   xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
+>>>>>>>     cffe0a2b5a34
+>>>>>>>   xen/irq: Override ACPI IRQ management callback __acpi_unregiste=
+r_gsi
+>>>>>>
+>>>>>>>  arch/x86/include/asm/acpi.h |    1 +
+>>>>>>>  arch/x86/kernel/acpi/boot.c |   26 +++++++++++------------
+>>>>>>>  arch/x86/pci/xen.c          |   49 ++---------------------------=
+--------------
+>>>>>>>  drivers/acpi/pci_irq.c      |    1 -
+>>>>>>>  4 files changed, 16 insertions(+), 61 deletions(-)
+>>>>>>
+>>>>>>
+>>>>>
+>>>
+>>>
+>=20
+>=20
+>=20
 
 
- .../powerpc/pci_iov_resource_on_powernv.txt        |  305 ++++++++
- arch/powerpc/include/asm/device.h                  |    3 
- arch/powerpc/include/asm/iommu.h                   |    3 
- arch/powerpc/include/asm/machdep.h                 |    5 
- arch/powerpc/include/asm/pci-bridge.h              |   24 +
- arch/powerpc/kernel/pci-common.c                   |   19 
- arch/powerpc/kernel/pci_dn.c                       |  256 ++++++-
- arch/powerpc/platforms/powernv/eeh-powernv.c       |   14 
- arch/powerpc/platforms/powernv/pci-ioda.c          |  777 +++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci.c               |   87 +-
- arch/powerpc/platforms/powernv/pci.h               |   13 
- drivers/pci/iov.c                                  |  155 +++-
- drivers/pci/pci.h                                  |    2 
- drivers/pci/setup-bus.c                            |   83 ++
- include/linux/pci.h                                |   15 
- 15 files changed, 1622 insertions(+), 139 deletions(-)
- create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
+
+--pEoEOn1BWJ2Fn5iiB172D66Ih393i6lQM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJU2ggoAAoJEOhnXe7L7s6j6G4P/25iTLwQmG/LpLdq1ug4L8qH
+/q+lgXd7U00ObdlDdES9/Z+gD1HVenKWRLvWrav3g3+saBeAmq0ZP2TFQ26THQJT
+40y2aQcVzLiiXuSb1TeTNBx85qdwfehxaAym2y2dp2JLPbJ0ndW86cKxUeLNnnIY
+w73gumulBWh3wFYKqqLH0SJlrYoawC2/hzWE+qG7ysRs6xcmCLx5bt0gC/TVNTI5
+WNyxyq7SkGeP0XFGD8AU9mtD6MMBmDDPDs0Pkhtaik3i9FtOiJcWuSz9H4PemrOk
+PFMS0SKll5dncP3T/+ZswgwJl9cnFzAOstoRw7C6Zwme++At6PGmedqsh/rX/a3A
+m/t7BARs5NMgtrfpbAuSeaBkxvhRNk7/MwGw81JsoHrAloleRJPipzkfhIh5o/zt
+PxRVj3FIveSWVOaIvKBesk5ETayatXKJyZE6KqD63NjusxlpH/S+5/Htygkx0tPY
+kCjzoImdFPgXsfKSipZD14okjcwBR/AkUd3WxN5KyptMzHlzsZRYMU5VNbIpua0Y
+iqUaEHDjTDpO254AV4hlzWxaZ70TqXYeISQVRu9x6XSoR5XiX6y0NCXReD5BQFDe
+tVTtp6ecedLeGikUSQ+g6wrOT2NifE2j9YejZlHuWSxOJXu7aBo5whvpYZOuLDUD
+GkxyHi+2ekWq12kA7N8I
+=+HQe
+-----END PGP SIGNATURE-----
+
+--pEoEOn1BWJ2Fn5iiB172D66Ih393i6lQM--
