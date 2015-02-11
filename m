@@ -1,143 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:33246 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932213AbbBDV0S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 16:26:18 -0500
-Received: by mail-oi0-f44.google.com with SMTP id a3so3445866oib.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2015 13:26:17 -0800 (PST)
-Date: Wed, 4 Feb 2015 15:26:14 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 13/17] powerpc/powernv: Implement
- pcibios_iov_resource_alignment() on powernv
-Message-ID: <20150204212614.GB11271@google.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-14-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421288887-7765-14-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from new1-smtp.messagingengine.com ([66.111.4.221]:58562 "EHLO
+	new1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752021AbbBKKcn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Feb 2015 05:32:43 -0500
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by mailnew.nyi.internal (Postfix) with ESMTP id CF12020C3
+	for <linux-pci@vger.kernel.org>; Wed, 11 Feb 2015 05:23:12 -0500 (EST)
+From: Sean Cross <xobs@kosagi.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawn.guo@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-pci@vger.kernel.org
+Cc: bunnie@kosagi.com, Sean Cross <xobs@kosagi.com>
+Subject: [PATCH v3 0/3] Add support for kosagi novena
+Date: Wed, 11 Feb 2015 18:22:59 +0800
+Message-Id: <1423650182-16865-1-git-send-email-xobs@kosagi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 15, 2015 at 10:28:03AM +0800, Wei Yang wrote:
-> This patch implements the pcibios_iov_resource_alignment() on powernv
-> platform.
-> 
-> On PowerNV platform, there are 3 cases for the IOV BAR:
-> 1. initial state, the IOV BAR size is multiple times of VF BAR size
-> 2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
-> 3. sizing stage, the IOV BAR is truncated to 0
-> 
-> pnv_pci_iov_resource_alignment() handle these three cases respectively.
->
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/machdep.h        |    3 +++
->  arch/powerpc/kernel/pci-common.c          |   14 ++++++++++++++
->  arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
->  3 files changed, 37 insertions(+)
-> 
-> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-> index 965547c..12e8eb8 100644
-> --- a/arch/powerpc/include/asm/machdep.h
-> +++ b/arch/powerpc/include/asm/machdep.h
-> @@ -252,6 +252,9 @@ struct machdep_calls {
->  
->  #ifdef CONFIG_PCI_IOV
->  	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
-> +	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *,
-> +			                                    int resno,
-> +							    resource_size_t align);
->  #endif /* CONFIG_PCI_IOV */
->  
->  	/* Called to shutdown machine specific hardware not already controlled
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 832b7e1..8751dfb 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -130,6 +130,20 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
->  	pci_reset_secondary_bus(dev);
->  }
->  
-> +#ifdef CONFIG_PCI_IOV
-> +resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev,
-> +						 int resno,
-> +						 resource_size_t align)
-> +{
-> +	if (ppc_md.pcibios_iov_resource_alignment)
-> +		return ppc_md.pcibios_iov_resource_alignment(pdev,
-> +							       resno,
-> +							       align);
-> +
-> +	return 0;
+The Kosagi Novena mainboard contains an i.MX6, along with a PCI Express slot.
+This patchset adds device tree support for the Novena mainboard.
 
-This isn't right, is it?  The default (weak) version returns
-pci_iov_resource_size(dev, resno).  When you don't have a
-ppc_md.pcibios_iov_resource_alignment pointer, don't you
-want to do that, too?
+Changes since v2:
+ - Updated stmpe_touchscreen bindings to match documentation
+ - Removed bindings for eepromoops, it6251, senoko
+ - Removed simple-bus and moved regulators into the parent node
+ - Removed "Peek array power" from hog
+ - Removed lonely "wakeup" from kpp
+ - Dropped "add power-supply support" patch
 
-> +}
-> +#endif /* CONFIG_PCI_IOV */
-> +
->  static resource_size_t pcibios_io_size(const struct pci_controller *hose)
->  {
->  #ifdef CONFIG_PPC64
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 6704fdf..8bad2b0 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -1953,6 +1953,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
->  	return phb->ioda.io_segsize;
->  }
->  
-> +#ifdef CONFIG_PCI_IOV
-> +static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
-> +							    int resno,
-> +							    resource_size_t align)
-> +{
-> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> +	resource_size_t iov_align;
-> +
-> +	iov_align = resource_size(&pdev->resource[resno]);
-> +	if (iov_align)
-> +		return iov_align;
-> +
-> +	if (pdn->max_vfs)
-> +		return pdn->max_vfs * align;
-> +
-> +	return align;
+Changes since v1:
+ - Add 'kosagi' to vendor prefixes
+ - Add LCD panel to simple-panel
+ - Renamed power-supply to bus-supply
+ - Replaced devm_regulator_get() with devm_regulator_get_optional()
+ - Moved regulator_enable to imx6_add_pcie_port()
+ - Removed fpga@1 from spi definition in dts -- will use overlays instead
 
-pcibios_iov_resource_alignment() returns different things depending on when
-you call it?  That doesn't sound good.
 
-Is this related to my questions about sriov_init() and
-pnv_pci_ioda_fixup_iov_resources()?  If you adopted my suggestion and set
-the size once in sriov_init(), would that get rid of one of these cases?
+Sean Cross (3):
+  drm/panel: simple: Add Innolux N133HSE panel support
+  devicetree: bindings: Add vendor prefix for Kosagi
+  ARM: dts: imx6q: add Novena board
 
-Maybe it would help me understand if you explained the three cases a bit
-more.
+ .../devicetree/bindings/vendor-prefixes.txt        |   1 +
+ arch/arm/boot/dts/Makefile                         |   1 +
+ arch/arm/boot/dts/imx6q-novena.dts                 | 818 +++++++++++++++++++++
+ drivers/gpu/drm/panel/panel-simple.c               |  26 +
+ 4 files changed, 846 insertions(+)
+ create mode 100644 arch/arm/boot/dts/imx6q-novena.dts
 
-> +}
-> +#endif /* CONFIG_PCI_IOV */
-> +
->  /* Prevent enabling devices for which we couldn't properly
->   * assign a PE
->   */
-> @@ -2155,6 +2174,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
->  #ifdef CONFIG_PCI_IOV
->  	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-> +	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
->  #endif /* CONFIG_PCI_IOV */
->  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
->  
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+2.1.3
+
