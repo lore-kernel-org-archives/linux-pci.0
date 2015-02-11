@@ -1,83 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:42325 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941AbbBFOib (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Feb 2015 09:38:31 -0500
-Date: Fri, 6 Feb 2015 14:38:12 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v6 3/7] of: fix size when dma-range is not used
-Message-ID: <20150206143812.GB20549@localhost>
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
- <1423173179-10227-4-git-send-email-m-karicheri2@ti.com>
+Received: from ns.mm-sol.com ([37.157.136.199]:55518 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbbBKHxc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Feb 2015 02:53:32 -0500
+Message-ID: <54DB0A52.4090907@mm-sol.com>
+Date: Wed, 11 Feb 2015 09:52:50 +0200
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423173179-10227-4-git-send-email-m-karicheri2@ti.com>
+To: Viresh Kumar <viresh.kumar@linaro.org>,
+	"Matwey V. Kornilov" <matwey@sai.msu.ru>
+CC: Mohit KUMAR <mohit.kumar@st.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of
+ platform_driver_register
+References: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru> <CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>
+In-Reply-To: <CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 05, 2015 at 09:52:55PM +0000, Murali Karicheri wrote:
-> Fix the dma-range size when the DT attribute is missing. i.e  set size to
-> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
-> code to check invalid values of size configured in DT and log error.
-> 
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/of/device.c |   17 ++++++++++++++++-
->  1 file changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/of/device.c b/drivers/of/device.c
-> index 2de320d..314c8a9 100644
-> --- a/drivers/of/device.c
-> +++ b/drivers/of/device.c
-> @@ -105,9 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->  	if (ret < 0) {
->  		dma_addr = offset = 0;
-> -		size = dev->coherent_dma_mask;
-> +		size = dev->coherent_dma_mask + 1;
->  	} else {
->  		offset = PFN_DOWN(paddr - dma_addr);
-> +
-> +		/*
-> +		 * Add a work around to treat the size as mask + 1 in case
-> +		 * it is defined in DT as a mask.
-> +		 */
-> +		if (size & 1) {
-> +			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
-> +				 size);
-> +			size = size + 1;
-> +		}
-> +
-> +		if (!size) {
-> +			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
-> +			return;
-> +		}
+Hi,
 
-Would it make sense to set coherent_dma_mask to 0 here to make this more
-noticeable? It can be done together with the mask calculation from size.
+On 02/11/2015 05:35 AM, Viresh Kumar wrote:
+> On 11 February 2015 at 00:31, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
+>> Use platform_driver_probe instead of platform_driver_register
+>> because the former allows us to use probe function placed into __init section
+>> and the driver itself is not support hotplugging (yet?).
+>>
+>> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+>> ---
+>> Changes from v1:
+>>   - Use platform_driver_probe instead of platform_driver_register to make linker happy.
+>>
+>>   drivers/pci/host/pcie-spear13xx.c | 3 +--
+>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+>> index 866465f..51e1344 100644
+>> --- a/drivers/pci/host/pcie-spear13xx.c
+>> +++ b/drivers/pci/host/pcie-spear13xx.c
+>> @@ -371,7 +371,6 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
+>>   MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
+>>
+>>   static struct platform_driver spear13xx_pcie_driver __initdata = {
+>> -       .probe          = spear13xx_pcie_probe,
+>>          .driver = {
+>>                  .name   = "spear-pcie",
+>>                  .of_match_table = of_match_ptr(spear13xx_pcie_of_match),
+>> @@ -382,7 +381,7 @@ static struct platform_driver spear13xx_pcie_driver __initdata = {
+>>
+>>   static int __init spear13xx_pcie_init(void)
+>>   {
+>> -       return platform_driver_register(&spear13xx_pcie_driver);
+>> +       return platform_driver_probe(&spear13xx_pcie_driver, spear13xx_pcie_probe);
+>>   }
+>>   module_init(spear13xx_pcie_init);
+>
+> The problem here is that the driver is never registered. And we might never
+> see it in sysfs. Probably a better solution would be to just remove all __init
+> parts from this driver. Let it take space even after it is used. And don't care
+> about it.
+>
+> Sorry was busy in a conference and couldn't reply to your earlier mail on this.
 
--- 
-Catalin
+Using platform_driver_probe() prevents deferred probe which is problem 
+because you get phy, clocks from probe, and these calls could return 
+EPROBE_DEFFER.
+
+Also dw_pcie_host_init() called from spear13xx_add_pcie_port() is 
+annotated as __init. I wanted send a patch which removes __init from 
+dw_pcie_host_init() but I haven't time, yet.
+
+regards,
+Stan
