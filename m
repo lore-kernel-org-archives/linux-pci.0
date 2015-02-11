@@ -1,75 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:57081 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750874AbbBEVxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Feb 2015 16:53:55 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v6 6/7] PCI: update dma configuration from DT
-Date: Thu, 5 Feb 2015 16:52:58 -0500
-Message-ID: <1423173179-10227-7-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foss-mx-na.arm.com ([217.140.108.86]:43005 "EHLO
+	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbbBKE6a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Feb 2015 23:58:30 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: jiang.liu@linux.intel.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: [PATCH] drivers: of: pci: remove duplicate kfree in of_pci_get_host_bridge_resources
+Date: Wed, 11 Feb 2015 04:58:35 +0000
+Message-Id: <1423630715-23568-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If there is a DT node available for the root bridge's parent device,
-use the dma configuration from that device node. For example, keystone
-PCI devices would require dma_pfn_offset to be set correctly in the
-device structure of the pci device in order to have the correct dma mask.
-The DT node will have dma-ranges defined for this. Also support using
-the DT property dma-coherent to allow coherent DMA operation by the
-PCI device.
+Commit d2be00c0fb5a ("of/pci: Free resources on failure in
+of_pci_get_host_bridge_resources()") fixed the error code path in
+of_pci_get_host_bridge_resources() by adding code that runs through the
+resources list to free all resources in it and then calls kfree on the
+bus_range resource pointer to complete the memory deallocation.
+Since the bus_range resource is added to the resources list through
+pci_add_resource, the resource_list_for_each_entry loop in the error
+exit path frees it already and freeing it anew could trigger a double
+free, hence this patch removes the superfluos kfree call on the bus_range
+resource.
 
-This patch use the new helper function of_pci_dma_configure() to update
-the device dma configuration.
-
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Fixes: d2be00c0fb5a ("of/pci: Free resources on failure in of_pci_get_host_bridge_resources()")
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reported-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
 ---
- drivers/pci/probe.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/of/of_pci.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 23212f8..d7dcd6c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -6,6 +6,7 @@
- #include <linux/delay.h>
- #include <linux/init.h>
- #include <linux/pci.h>
-+#include <linux/of_pci.h>
- #include <linux/pci_hotplug.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
-+	of_pci_dma_configure(dev);
- 
- 	pci_set_dma_max_seg_size(dev, 65536);
- 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 110fece..62426d8 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -229,7 +229,6 @@ parse_failed:
+ 	resource_list_for_each_entry(window, resources)
+ 		kfree(window->res);
+ 	pci_free_resource_list(resources);
+-	kfree(bus_range);
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
 -- 
-1.7.9.5
+2.2.1
 
