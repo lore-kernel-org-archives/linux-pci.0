@@ -1,88 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:44092 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752AbbBZIPc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:32 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v4 04/30] PCI: Remove deprecated pci_scan_bus_parented()
-Date: Thu, 26 Feb 2015 16:11:58 +0800
-Message-ID: <1424938344-4017-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [GIT PULL] ACPI and power management updates for 3.20-rc1
+Date: Wed, 11 Feb 2015 02:51:38 +0100
+Message-ID: <2941430.C5WGLLJjlq@vostro.rjw.lan>
+In-Reply-To: <CAJZ5v0iyosRQ2g48TxJ39jLuOTUrER2=7j2F9Pg80rrkFAo1Kw@mail.gmail.com>
+References: <CAJZ5v0iyosRQ2g48TxJ39jLuOTUrER2=7j2F9Pg80rrkFAo1Kw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No one uses pci_scan_bus_parented() any more,
-remove it.
+On Tuesday, February 10, 2015 10:19:34 PM Rafael J. Wysocki wrote:
+> Hi Linus,
+> 
+> Please pull from
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+>  pm+acpi-3.20-rc1
+> 
+> to receive ACPI and power management material for v3.20-rc1 with
+> top-most commit b5e82233cab43c25fc0a1c28d9136a086db4aa52
+> 
+>  Merge branch 'pm-tools'
+> 
+> on top of commit bfa76d49576599a4b9f9b7a71f23d73d6dcff735
+> 
+>  Linux 3.19
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   19 -------------------
- include/linux/pci.h |    2 --
- 2 files changed, 0 insertions(+), 21 deletions(-)
+I messed up one thing here, sorry about that.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8ef0375..699a238 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2091,25 +2091,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 					void *sysdata)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..36effb8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -769,8 +769,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--- 
-1.7.1
+Commit 5c493df25a0d ("Merge branch 'pci/host-generic' of
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci into
+acpi-resources") was supposed to be a merge, but I did something
+wrong (I know what even) and it ended up as a non-merge one.
+And then I didn't notice that it went wrong which was another
+failure.
+
+So this commit will conflict with d2be00c0fb5a ("of/pci: Free resources on
+failure in of_pci_get_host_bridge_resources()") from the PCI tree, but
+5c493df25a0d is how the final code should look like (the kfree(bus_range);
+line needs to go away in particular).
+
+Please let me know if you want me to fix this up (although that would involve
+rebasing).
+
+Rafael
 
