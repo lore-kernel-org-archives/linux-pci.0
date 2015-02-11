@@ -1,143 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:40255 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506AbbBJBpS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 20:45:18 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Feb 2015 11:45:15 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 781CF2BB0040
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:45:14 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A1j6PI45154482
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:45:14 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A1iex7029976
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:44:41 +1100
-Date: Tue, 10 Feb 2015 09:44:24 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 03/17] PCI: Add weak pcibios_iov_resource_alignment()
- interface
-Message-ID: <20150210014424.GB6326@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-4-git-send-email-weiyang@linux.vnet.ibm.com>
- <1423528379.4924.69.camel@au1.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <54DB1EAC.3060302@mm-sol.com>
+Date: Wed, 11 Feb 2015 11:19:40 +0200
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423528379.4924.69.camel@au1.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mohit KUMAR <mohit.kumar@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of
+ platform_driver_register
+References: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru>	<CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>	<54DB0A52.4090907@mm-sol.com> <CAJs94EYS003e_j0S4rzKFEL=PqCqEmT7yd0qdJdnMrziE1700Q@mail.gmail.com>
+In-Reply-To: <CAJs94EYS003e_j0S4rzKFEL=PqCqEmT7yd0qdJdnMrziE1700Q@mail.gmail.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 10, 2015 at 11:32:59AM +1100, Benjamin Herrenschmidt wrote:
->On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
->> The alignment of PF's IOV BAR is designed to be the individual size of a
->> VF's BAR size. This works fine for many platforms, but on PowerNV platform
->> it needs some change.
->> 
->> The original alignment works, since at sizing and assigning stage the
->> requirement is from an individual VF's BAR size instead of the PF's IOV
->> BAR.  This is the reason for the original code to just retrieve the
->> individual VF BAR size as the alignment.
->> 
->> On PowerNV platform, it is required to align the whole PF IOV BAR to a
->> hardware segment. Based on this fact, the alignment of PF's IOV BAR should
->> be calculated seperately.
->> 
->> This patch introduces a weak pcibios_iov_resource_alignment() interface,
->> which gives platform a chance to implement specific method to calculate
->> the PF's IOV BAR alignment.
->
->While the patch is probably fine, I find the above explanation quite
->confusing :)
->
+please don't top posting.
 
-I will try to make it more clear.
+On 02/11/2015 10:38 AM, Matwey V. Kornilov wrote:
+> It sounds reasonable, but does current implementation support deferring?
 
->>From my memory (vague now) of the scheme we put in place, we need to
->practically reserve a portion of address space that corresponds to
->VF_size * Number_of_PEs. IE, it's not just the alignment that has
->constraints but also the size that need to be allocated.
+yes, it uses deferred probe see devm_phy_get() and devm_clk_get() calls 
+in .probe and how the returned values are checked.
+
+> Struct  spear13xx_pcie_driver just dissapears from memory after init.
+
+IMO this is expected because spear13xx_pcie_driver is annotated as 
+__initdata.
+
+The proper solution was pointed by Kumar below, but we also need to 
+remove the __init from dw_pcie_host_init() which is called from driver 
+.probe.
+
+> 11.02.2015 11:18 пользователь "Stanimir Varbanov" <svarbanov@mm-sol.com>
+> написал:
 >
->Now I suppose if we make the alignment to be the size of the M64
->window and if the core also bounces the allocated size to the
->alignment boundary, then we are fine, but that should be explained.
+>> Hi,
+>>
+>> On 02/11/2015 05:35 AM, Viresh Kumar wrote:
+>>
+>>> On 11 February 2015 at 00:31, Matwey V. Kornilov <matwey@sai.msu.ru>
+>>> wrote:
+>>>
+>>>> Use platform_driver_probe instead of platform_driver_register
+>>>> because the former allows us to use probe function placed into __init
+>>>> section
+>>>> and the driver itself is not support hotplugging (yet?).
+>>>>
+>>>> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+>>>> ---
+>>>> Changes from v1:
+>>>>    - Use platform_driver_probe instead of platform_driver_register to
+>>>> make linker happy.ven after it is used
+>>>>
+>>>>    drivers/pci/host/pcie-spear13xx.c | 3 +--
+>>>>    1 file changed, 1 insertion(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-
+>>>> spear13xx.c
+>>>> index 866465f..51e1344 100644
+>>>> --- a/drivers/pci/host/pcie-spear13xx.c
+>>>> +++ b/drivers/pci/host/pcie-spear13xx.c
+>>>> @@ -371,7 +371,6 @@ static const struct of_device_id
+>>>> spear13xx_pcie_of_match[] = {
+>>>>    MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
+>>>>
+>>>>    static struct platform_driver spear13xx_pcie_driver __initdata = {
+>>>> -       .probe          = spear13xx_pcie_probe,
+>>>>           .driver = {
+>>>>                   .name   = "spear-pcie",
+>>>>                   .of_match_table = of_match_ptr(spear13xx_pcie_
+>>>> of_match),
+>>>> @@ -382,7 +381,7 @@ static struct platform_driver spear13xx_pcie_driver
+>>>> __initdata = {
+>>>>
+>>>>    static int __init spear13xx_pcie_init(void)
+>>>>    {
+>>>> -       return platform_driver_register(&spear13xx_pcie_driver);
+>>>> +       return platform_driver_probe(&spear13xx_pcie_driver,
+>>>> spear13xx_pcie_probe);
+>>>>    }
+>>>>    module_init(spear13xx_pcie_init);
+>>>>
+>>>
+>>> The problem here is that the driver is never registered. And we might
+>>> never
+>>> see it in sysfs. Probably a better solution would be to just remove all
+>>> __init
+>>> parts from this driver. Let it take space even after it is used. And
+>>> don't care
+>>> about it.
+>>>
+>>> Sorry was busy in a conference and couldn't reply to your earlier mail on
+>>> this.
+>>>
+>>
+>> Using platform_driver_probe() prevents deferred probe which is problem
+>> because you get phy, clocks from probe, and these calls could return
+>> EPROBE_DEFFER.
+>>
+>> Also dw_pcie_host_init() called from spear13xx_add_pcie_port() is
+>> annotated as __init. I wanted send a patch which removes __init from
+>> dw_pcie_host_init() but I haven't time, yet.
+>>
+>> regards,
+>> Stan
+>>
+>>
 >
-
-The purpose of this patch is to give a chance to different archs to calculate
-the alignment of PF's IOV BAR.
-
-How about I move the detailed explanation on powernv platform in the following
-patch? And focus on what this patch does in this log?
-
->Cheers,
->Ben.
->
->
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/iov.c   |   11 ++++++++++-
->>  include/linux/pci.h |    3 +++
->>  2 files changed, 13 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index 933d8cc..5f48201 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -556,6 +556,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
->>  		4 * (resno - PCI_IOV_RESOURCES);
->>  }
->>  
->> +resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
->> +		int resno, resource_size_t align)
->> +{
->> +	return align;
->> +}
->> +
->>  /**
->>   * pci_sriov_resource_alignment - get resource alignment for VF BAR
->>   * @dev: the PCI device
->> @@ -570,12 +576,15 @@ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
->>  {
->>  	struct resource tmp;
->>  	int reg = pci_iov_resource_bar(dev, resno);
->> +	resource_size_t align;
->>  
->>  	if (!reg)
->>  		return 0;
->>  
->>  	__pci_read_base(dev, pci_bar_unknown, &tmp, reg);
->> -	return resource_alignment(&tmp);
->> +	align = resource_alignment(&tmp);
->> +
->> +	return pcibios_iov_resource_alignment(dev, resno, align);
->>  }
->>  
->>  /**
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 74ef944..ae7a7ea 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1163,6 +1163,9 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
->>  void pci_setup_bridge(struct pci_bus *bus);
->>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
->>  					 unsigned long type);
->> +resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev,
->> +						 int resno,
->> +						 resource_size_t align);
->>  
->>  #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
->>  #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
->
-
--- 
-Richard Yang
-Help you, Help me
-
