@@ -1,111 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:42337 "EHLO
+Received: from foss-mx-na.arm.com ([217.140.108.86]:43279 "EHLO
 	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389AbbBFPMW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Feb 2015 10:12:22 -0500
-Date: Fri, 6 Feb 2015 15:12:10 +0000
+	with ESMTP id S1753132AbbBKSsE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Feb 2015 13:48:04 -0500
+Date: Wed, 11 Feb 2015 18:47:54 +0000
 From: Catalin Marinas <catalin.marinas@arm.com>
 To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
 	Russell King <linux@arm.linux.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
 	Rob Herring <robh+dt@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v6 3/7] of: fix size when dma-range is not used
-Message-ID: <20150206151210.GC23190@e104818-lin.cambridge.arm.com>
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
- <1423173179-10227-4-git-send-email-m-karicheri2@ti.com>
- <20150206143812.GB20549@localhost>
- <54D4D59F.6050408@ti.com>
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH v1] of: calculate masks of the device based on dma-range
+ size
+Message-ID: <20150211184754.GH9058@e104818-lin.cambridge.arm.com>
+References: <1423677215-28968-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54D4D59F.6050408@ti.com>
+In-Reply-To: <1423677215-28968-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 06, 2015 at 02:54:23PM +0000, Murali Karicheri wrote:
-> On 02/06/2015 09:38 AM, Catalin Marinas wrote:
-> > On Thu, Feb 05, 2015 at 09:52:55PM +0000, Murali Karicheri wrote:
-> >> Fix the dma-range size when the DT attribute is missing. i.e  set size to
-> >> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
-> >> code to check invalid values of size configured in DT and log error.
-> >>
-> >> Cc: Joerg Roedel<joro@8bytes.org>
-> >> Cc: Grant Likely<grant.likely@linaro.org>
-> >> Cc: Rob Herring<robh+dt@kernel.org>
-> >> Cc: Bjorn Helgaas<bhelgaas@google.com>
-> >> Cc: Will Deacon<will.deacon@arm.com>
-> >> Cc: Russell King<linux@arm.linux.org.uk>
-> >> Cc: Arnd Bergmann<arnd@arndb.de>
-> >> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
-> >>
-> >> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
-> >> ---
-> >>   drivers/of/device.c |   17 ++++++++++++++++-
-> >>   1 file changed, 16 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/of/device.c b/drivers/of/device.c
-> >> index 2de320d..314c8a9 100644
-> >> --- a/drivers/of/device.c
-> >> +++ b/drivers/of/device.c
-> >> @@ -105,9 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
-> >>   	ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
-> >>   	if (ret<  0) {
-> >>   		dma_addr = offset = 0;
-> >> -		size = dev->coherent_dma_mask;
-> >> +		size = dev->coherent_dma_mask + 1;
-> >>   	} else {
-> >>   		offset = PFN_DOWN(paddr - dma_addr);
-> >> +
-> >> +		/*
-> >> +		 * Add a work around to treat the size as mask + 1 in case
-> >> +		 * it is defined in DT as a mask.
-> >> +		 */
-> >> +		if (size&  1) {
-> >> +			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
-> >> +				 size);
-> >> +			size = size + 1;
-> >> +		}
-> >> +
-> >> +		if (!size) {
-> >> +			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
-> >> +			return;
-> >> +		}
-> >
-> > Would it make sense to set coherent_dma_mask to 0 here to make this more
-> > noticeable? It can be done together with the mask calculation from size.
->
-> I guess you are the following in the code.
-> 
-> if (!size) {
-> 		dev->coherent_dma_mask = 0;
-> 		dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
-> 		return;
-> }
-> 
-> Not sure how this is going to help and how this get handled by the 
-> caller and subsequent logic. Probably it will cause probe to fail, with 
-> some helpful error code.
+On Wed, Feb 11, 2015 at 12:53:35PM -0500, Murali Karicheri wrote:
+> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> index 314c8a9..167ad2d 100644
+> --- a/drivers/of/device.c
+> +++ b/drivers/of/device.c
+> @@ -90,10 +90,11 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>  	struct iommu_ops *iommu;
+>  
+>  	/*
+> -	 * Set default dma-mask to 32 bit. Drivers are expected to setup
+> -	 * the correct supported dma_mask.
+> +	 * Set default coherent_dma_mask to 32 bit. Drivers are expected to
+> +	 * setup the correct supported mask.
+>  	 */
+> -	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +	if (!dev->coherent_dma_mask)
+> +		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+>  
+>  	/*
+>  	 * Set it to coherent_dma_mask by default if the architecture
+> @@ -102,6 +103,11 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>  	if (!dev->dma_mask)
+>  		dev->dma_mask = &dev->coherent_dma_mask;
+>  
+> +	/*
+> +	 * Use default size to cover 32 bit. Drivers need to set this in DT
+> +	 * to override the same.
+> +	 */
+> +	size = 1ULL << 32;
 
-Not sure how it will fail, maybe the driver figures out that DMA isn't
-available and say something or switch to PIO. I guess you can leave it
-as 32-bit mask by default for now even in case of size == 0.
+I'm not sure this is needed since on error path the original code would
+set the size to coherent_dma_mask.
 
-BTW, since pci_device_add() already sets coherent_dma_mask, you could
-add another check at the beginning of of_dma_configure():
+>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>  	if (ret < 0) {
+>  		dma_addr = offset = 0;
 
-	if (!dev->coherent_dma_mask)
-		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+Here we already have (not seen in the context):
 
-That's more of a nitpick as the values are both the same.
+		size = dev->coherent_dma_mask + 1;
 
--- 
-Catalin
+> @@ -128,6 +134,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>  
+>  	dev->dma_pfn_offset = offset;
+>  
+> +	/*
+> +	 * Limit coherent and dma mask based on size and default mask
+> +	 * set by the driver.
+> +	 */
+> +	dev->coherent_dma_mask = min(dev->coherent_dma_mask,
+> +				     DMA_BIT_MASK(ilog2(dma_addr + size)));
+> +	*dev->dma_mask = min((*dev->dma_mask),
+> +			     DMA_BIT_MASK(ilog2(dma_addr + size)));
+> +
+>  	coherent = of_dma_is_coherent(np);
+>  	dev_dbg(dev, "device is%sdma coherent\n",
+>  		coherent ? " " : " not ");
+
+Otherwise it looks fine to me.
+
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
