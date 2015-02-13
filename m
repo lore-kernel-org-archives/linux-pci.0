@@ -1,86 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:43095 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932662AbbBBQd7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 11:33:59 -0500
-Date: Mon, 2 Feb 2015 16:33:44 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andre Przywara <andre.przywara@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-Message-ID: <20150202163344.GF8656@n2100.arm.linux.org.uk>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50186 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbbBME4E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Feb 2015 23:56:04 -0500
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 13 Feb 2015 14:56:02 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id EDAB33578048
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:59 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1D4tpPV37945352
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:59 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1D4tPpl027607
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:26 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	cascardo@linux.vnet.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 2/4] PCI: Introduce list for device reset methods
+Date: Fri, 13 Feb 2015 15:54:57 +1100
+Message-Id: <1423803299-22356-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 02:51:23PM +0000, Marc Zyngier wrote:
->  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  {
-> -	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
-> -	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> +	struct irq_data *d;
-> +
-> +	d = irq_get_irq_data(irq);
-> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
-> +	while (d->parent_data)
-> +		d = d->parent_data;
-> +#endif
-> +	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
-> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
+The patch introduces list to hold the PCI device specific reset
+methods. With help of the list, we can register PCI device specific
+reset method dynamically as we do in next one patch.
 
-I'm really not convinced about this being the correct thing to do.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.h    |  1 +
+ drivers/pci/quirks.c | 75 +++++++++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 57 insertions(+), 19 deletions(-)
 
-Let's take an older ARM system, such as a Footbridge based system with a
-PCI southbridge.
-
-Such a system has IRQs 0-15 as the PCI southbridge ISA interrupts.  Then
-there are four PCI interrupts provided by the on-board Footbridge.
-
-Right now, PCI devices are programmed with the OS specific interrupt
-number - eg:
-
-00:06.1 IDE interface: Contaq Microsystems 82c693 (prog-if 80 [Master])
-        Flags: medium devsel, IRQ 14
-30: 00 00 00 00 00 00 00 00 00 00 00 00 0e 01 00 00
-
-00:06.2 IDE interface: Contaq Microsystems 82c693 (prog-if 00 [])
-        Flags: medium devsel, IRQ 15
-30: 00 00 00 00 00 00 00 00 00 00 00 00 0f 02 00 00
-
-00:06.3 USB Controller: Contaq Microsystems 82c693 (prog-if 10 [OHCI])
-        Flags: medium devsel, IRQ 12
-30: 00 00 00 00 00 00 00 00 00 00 00 00 0c 01 00 00
-
-00:07.0 Mass storage controller: Integrated Technology Express, Inc. IT/ITE8212
-Dual channel ATA RAID controller (rev 13)
-        Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 24
-30: 00 00 02 04 80 00 00 00 00 00 00 00 18 01 08 08
-
-00:08.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado] (rev 74)
-        Flags: bus master, medium devsel, latency 32, IRQ 22
-30: 00 00 06 04 dc 00 00 00 00 00 00 00 16 01 0a 0a
-
-00:09.0 VGA compatible controller: S3 Inc. 86c775/86c785 [Trio 64V2/DX or /GX] (rev 16) (prog-if 00 [VGA controller])
-        Flags: medium devsel, IRQ 21
-30: 00 00 00 0c 00 00 00 00 00 00 00 00 15 01 00 00
-
-What your change would mean is that the IRQs currently being programmed
->= 16 would be programmed into with numbers with 16 removed from them.
-This means that legacy stuff (eg on the Southbridge which really do signal
-via the ISA IRQ controller) end up using the same number range as those
-which take PCI specific IRQs.
-
-This surely is not sane.
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e67b22f..82e648a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -310,6 +310,7 @@ struct pci_dev_reset_method {
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*reset)(struct pci_dev *dev, int probe);
++	struct list_head node;
+ };
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 512bbbb..37f4c5d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3508,20 +3508,44 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+ #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+ #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+ 
+-static const struct pci_dev_reset_method pci_dev_reset_methods[] = {
+-	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+-		 reset_intel_82599_sfp_virtfn },
+-	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M_VGA,
+-		reset_ivb_igd },
+-	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
+-		reset_ivb_igd },
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+-		reset_intel_generic_dev },
+-	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+-		reset_chelsio_generic_dev },
+-	{ 0 }
++static LIST_HEAD(pci_dev_reset_list);
++static DEFINE_MUTEX(pci_dev_reset_mutex);
++static bool pci_dev_reset_populated = false;
++static struct pci_dev_reset_method pci_dev_reset_methods[] = {
++	{ .vendor = PCI_VENDOR_ID_INTEL,
++	  .device = PCI_DEVICE_ID_INTEL_82599_SFP_VF,
++	  .reset  = reset_intel_82599_sfp_virtfn
++	},
++	{ .vendor = PCI_VENDOR_ID_INTEL,
++	  .device = PCI_DEVICE_ID_INTEL_IVB_M_VGA,
++	  .reset  = reset_ivb_igd
++	},
++	{ .vendor = PCI_VENDOR_ID_INTEL,
++	  .device = PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
++	  .reset  =reset_ivb_igd
++	},
++	{ .vendor = PCI_VENDOR_ID_INTEL,
++	  .device = PCI_ANY_ID,
++	  .reset  = reset_intel_generic_dev
++	},
++	{ .vendor = PCI_VENDOR_ID_CHELSIO,
++	  .device = PCI_ANY_ID,
++	  .reset  = reset_chelsio_generic_dev
++	}
+ };
+ 
++static void pci_dev_populate_reset(void)
++{
++	struct pci_dev_reset_method *m;
++	int i;
++
++	for (i = ARRAY_SIZE(pci_dev_reset_methods) - 1; i >= 0; i--) {
++		m = &pci_dev_reset_methods[i];
++		INIT_LIST_HEAD(&m->node);
++		list_add(&m->node, &pci_dev_reset_list);
++	}
++}
++
+ /*
+  * These device-specific reset methods are here rather than in a driver
+  * because when a host assigns a device to a guest VM, the host may need
+@@ -3529,16 +3553,29 @@ static const struct pci_dev_reset_method pci_dev_reset_methods[] = {
+  */
+ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ {
+-	const struct pci_dev_reset_method *i;
++	struct pci_dev_reset_method *m;
++	int ret;
+ 
+-	for (i = pci_dev_reset_methods; i->reset; i++) {
+-		if ((i->vendor == dev->vendor ||
+-		     i->vendor == (u16)PCI_ANY_ID) &&
+-		    (i->device == dev->device ||
+-		     i->device == (u16)PCI_ANY_ID))
+-			return i->reset(dev, probe);
++	mutex_lock(&pci_dev_reset_mutex);
++
++	if (!pci_dev_reset_populated) {
++		pci_dev_populate_reset();
++		pci_dev_reset_populated = true;
+ 	}
+ 
++	list_for_each_entry(m, &pci_dev_reset_list, node) {
++		if ((m->vendor == dev->vendor ||
++		     m->vendor == (u16)PCI_ANY_ID) &&
++		    (m->device == dev->device ||
++		     m->device == (u16)PCI_ANY_ID)) {
++			ret = m->reset(dev, probe);
++			mutex_unlock(&pci_dev_reset_mutex);
++			return ret;
++		}
++	}
++
++	mutex_unlock(&pci_dev_reset_mutex);
++
+ 	return -ENOTTY;
+ }
+ 
 -- 
-FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
-according to speedtest.net.
+1.8.3.2
+
