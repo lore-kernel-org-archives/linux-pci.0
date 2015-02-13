@@ -1,114 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.65] ([119.145.14.65]:10786 "EHLO
-	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346AbbBZIYZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:24:25 -0500
-Message-ID: <54EED808.4070803@huawei.com>
-Date: Thu, 26 Feb 2015 16:23:36 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v3 00/30] Refine PCI scan interfaces and make generic
- pci host bridge
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com> <20150226055123.GA5415@google.com>
-In-Reply-To: <20150226055123.GA5415@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50187 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751477AbbBME4E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Feb 2015 23:56:04 -0500
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 13 Feb 2015 14:56:03 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1D44E2BB004D
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:56:00 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1D4tpU431588450
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:56:00 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1D4tQ8l027615
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:26 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	cascardo@linux.vnet.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 3/4] PCI: Allow registering reset method
+Date: Fri, 13 Feb 2015 15:54:58 +1100
+Message-Id: <1423803299-22356-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/2/26 13:51, Bjorn Helgaas wrote:
-> On Thu, Feb 26, 2015 at 09:29:17AM +0800, Yijing Wang wrote:
->> v2->v3:
->> 	Rebase this series on v4.0-rc1.
-> 
-> Hm, still doesn't apply for me:
+The patch exposes function pci_dev_add_specific_reset() to allow
+registering PCI device specific reset methods.
 
-Hi Bjorn, I redo the series, I guess the errors were introduced by calling ./scripts/cleanpatch
-which is used to clean the whitespace errors.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/quirks.c | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |  9 ++++++++
+ 2 files changed, 73 insertions(+)
 
-The new v4 version should be ok, I test it in the local, apply it on your pci-next branch, and
-result is fine.
-
-[yijing@localhost linux]$ git log --pretty=oneline | head -31
-217e6044658c11a438468cd13bf6fff03d42016d PCI: Remove pci_bus_assign_domain_nr()
-aaf54636ad37341d162e6ce598285ce593ca297d PCI: Remove platform specific pci_domain_nr()
-9cbee5603394b9f5f3f84a5ce5d0a95706895193 PCI: Export find_pci_host_bridge()
-1ae4eec37a2fa33c13e7f7fdaf503fe46b6b5a6b PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-2fcbdfedb004f95ecc4d49d66c672997c3e0dd15 PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-e54e48dff9e0b37228d19603a33d9fddc4af9e36 PCI/designware: Use pci_scan_root_bus() for simplicity
-bd265daafd0dca995dcd3640c3a4361ab0afebfd PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-092c5e0d80178d463a841d07aa94fd0ee496a58b PCI/mvebu: Use pci_common_init_dev() to simplify code
-628f76372ff1537cf9b5a950d0ce44c1cc2b587e PCI/Parisc: Use pci_scan_root_bus() for simplicity
-442c46b8981a1cbb03dcc272f8cbdfb394fb2b57 PCI: Introduce pci_bus_child_max_busnr()
-e46bdddc2cf43ecdfe86b76ae44958ed17a660da PCI/sparc: Use pci_scan_root_bridge() for simplicity
-b58787711a5387892e1aae2da71499e3030309a3 PCI: Remove weak pcibios_root_bridge_prepare()
-0a15d7033ee5201d4632faf13902fb25d67d1b90 PCI/powerpc: Use pci_scan_root_bridge() for simplicity
-c3afd3cdbee4bac9c5cb2f3cf19f961ad76fac43 PCI/powerpc: Rename pcibios_root_bridge_prepare()
-1c3ef8136c322c9da468fd9eb55db7b1075ec0e6 PCI/IA64: Fix the build warning about pci_domain_nr()
-3f2577647c8d0f2a66d3bd050cd43003a597ddb7 PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
-46f5e1aab98f9e210c5d6b7b3bf2de96cdef8048 PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
-78229587d0b2c4e7149599aa95582405270cdbf4 PCI: Introduce new scan function pci_scan_root_bridge()
-918a08001d064a11248c00559817d61bfe09614e PCI: Introduce pci_host_bridge_ops to support host specific operations
-20d0e7067c2f60f461d5caac46a8dfc4e0baf5e5 PCI: Save sysdata in pci_host_bridge drvdata
-f054be8a2f2fb3dbc5ae195d9feeb32a2c115b8d PCI: Introduce pci_host_bridge_list to manage host bridges
-47a01e2b4480167d19e302714e0ba5b950f81d25 PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-7095a7806b1a1379aa048a4a1931ea826de467fa PCI: Introduce pci_host_assign_domain_nr() to assign domain
-3b3c968c1ecd4ec9eeab448d21180ac4bbb273d8 PCI: Pass PCI domain number combined with root bus number
-7eace57bcb341be6cb457d5a5d958a4a79c19131 PCI: Combine PCI domain and bus number in u32 arg
-051523ea7e331474948a946497d9d7ba30a75bdd PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
-712f1326e26b7a58559ad895c8efc94721dffbcc PCI: Remove deprecated pci_scan_bus_parented()
-856ca244888b1c1b84177fa4b50a2bd118b890b6 xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-134ef4b9728afc06cbad03c6d37362bfb7581b86 PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
-2b4a39b85d014149c55cc383a30c1ba4b7690277 PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-c517d838eb7d07bbe9507871fab3931deccff539 Linux 4.0-rc1
-
-Thanks!
-Yijing.
-
-
-
-> 
->   11:48:15 ~/linux (pci/enumeration)$ git show --oneline | head -1
->   c517d838eb7d Linux 4.0-rc1
->   11:48:36 ~/linux (pci/enumeration)$ stg import -M --sign m/yw
->   Checking for changes in the working directory ... done
->   Importing patch "pci-rip-out" ... done
->   Importing patch "pci-rip-out-0" ... done
->   Importing patch "xen-pci-don-t-use-deprecated" ... done
->   Importing patch "pci-remove-deprecated" ... done
->   Importing patch "pci-rename-pci_scan_bus-to" ... done
->   Importing patch "pci-combine-pci-domain-and-bus" ... done
->   Importing patch "pci-pass-pci-domain-number" ... done
->   Importing patch "pci-introduce" ... done
->   Importing patch "pci-separate-pci_host_bridge" ... done
->   Importing patch "pci-introduce-0" ... done
->   Importing patch "pci-save-sysdata-in" ... error: patch failed: drivers/pci/host-bridge.c:58
->   error: drivers/pci/host-bridge.c: patch does not apply
->   error: patch failed: drivers/pci/probe.c:1954
->   error: drivers/pci/probe.c: patch does not apply
->   stg import: Diff does not apply cleanly
->   11:48:52 ~/linux (pci/enumeration)$ 
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 37f4c5d..ef811ec 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3534,6 +3534,70 @@ static struct pci_dev_reset_method pci_dev_reset_methods[] = {
+ 	}
+ };
+ 
++static bool pci_dev_reset_match(struct pci_dev_reset_method *m,
++				u16 vendor, u16 device,
++				int (*reset)(struct pci_dev *, int))
++{
++	if (m->vendor != (u16)PCI_ANY_ID &&
++	    vendor != (u16)PCI_ANY_ID &&
++	    m->vendor != vendor)
++		return false;
++
++	if (m->device != (u16)PCI_ANY_ID &&
++	    device != (u16)PCI_ANY_ID &&
++	    m->device != device)
++		return false;
++
++	if (m->reset != reset)
++		return false;
++
++	return true;
++}
++
++int pci_dev_add_specific_reset(u16 vendor, u16 device,
++			       int (*reset)(struct pci_dev *, int))
++{
++	struct pci_dev_reset_method *m, *method;
++	int i;
++
++	/* Always expect valid handler */
++	if (!reset)
++		return -EINVAL;
++
++	method = kzalloc(sizeof(*method), GFP_KERNEL);
++	if (!method)
++		return -ENOMEM;
++
++	/* Check if we have conflicting method */
++	mutex_lock(&pci_dev_reset_mutex);
++	if (!pci_dev_reset_populated) {
++		for (i = 0; i < ARRAY_SIZE(pci_dev_reset_methods); i++) {
++			m = &pci_dev_reset_methods[i];
++			if (pci_dev_reset_match(m, vendor, device, reset))
++				goto found;
++		}
++	} else {
++		list_for_each_entry(m, &pci_dev_reset_list, node) {
++			if (pci_dev_reset_match(m, vendor, device, reset))
++				goto found;
++		}
++	}
++
++	/* Populate it */
++	method->vendor = vendor;
++	method->device = device;
++	method->reset  = reset;
++	INIT_LIST_HEAD(&method->node);
++	list_add_tail(&method->node, &pci_dev_reset_list);
++	mutex_unlock(&pci_dev_reset_mutex);
++	return 0;
++found:
++	mutex_unlock(&pci_dev_reset_mutex);
++	kfree(method);
++	return -EEXIST;
++}
++EXPORT_SYMBOL(pci_dev_add_specific_reset);
++
+ static void pci_dev_populate_reset(void)
+ {
+ 	struct pci_dev_reset_method *m;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 211e9da..b98be1a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1605,6 +1605,8 @@ enum pci_fixup_pass {
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
++int pci_dev_add_specific_reset(u16 vendor, u16 device,
++			       int (*reset)(struct pci_dev *, int));
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ void pci_dev_specific_enable_acs(struct pci_dev *dev);
+ #else
+@@ -1615,6 +1617,13 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ {
+ 	return -ENOTTY;
+ }
++
++int pci_dev_add_specific_reset(u16 vendor, u16 device,
++			       int (*reset)(struct pci_dev *, int))
++{
++	return -ENOTTY;
++}
++
+ static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) { }
+ #endif
+ 
 -- 
-Thanks!
-Yijing
+1.8.3.2
 
