@@ -1,45 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:45398 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbbBYFqk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 00:46:40 -0500
-Received: by qcvp6 with SMTP id p6so1315078qcv.12
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 21:46:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com>
-References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Feb 2015 23:46:19 -0600
-Message-ID: <CAErSpo5+S58_3sRBDXmgKZ5Ms_dC-q3rEsdYZX9aXt+h9AJjsg@mail.gmail.com>
-Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
-To: Dave Airlie <airlied@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:52165 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbbBME4F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Feb 2015 23:56:05 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 13 Feb 2015 14:56:03 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1FF5D2BB0051
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:56:00 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1D4tp9t29753560
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:56:00 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1D4tPq4013588
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:26 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	cascardo@linux.vnet.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 4/4] powerpc/powernv: Register PCI dev specific reset handlers
+Date: Fri, 13 Feb 2015 15:54:59 +1100
+Message-Id: <1423803299-22356-5-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Currently, PCI VFIO infrastructure depends on pci_reset_function()
+to ensure the PCI device in clean state when passing to guest, or
+being returned back to host. However, the function doesn't work
+(or well) on some PCI devices, which potentially brings pending
+traffic over the boundary between host/guest and usually causes
+memory corruption.
 
-On Tue, Feb 24, 2015 at 9:47 PM, Dave Airlie <airlied@gmail.com> wrote:
-> Hey,
->
-> just booted an old AMD rs780 box with new kernel and my ethernet
-> failed to come up!
->
-> Looks like the MAC addr is all ff's because the PCI bridge windows are
-> messed up.
->
-> I've attached two dmesg one from a 3.19.0-rc6 I had on it, and one
-> failing from the 4.0.0-rc1 time.
->
-> b24e2bdde4af656bb0679a101265ebb8f8735d3c is latest Linus commit in
-> that tree (I have some radeon patches on top).
->
-> motherboard is a Gigabyte GA-MA78GM-S2H, lspci also attached.
+The patch registers PCI device specific reset handlers for those
+PCI devices, pci_reset_function() doesn't work or not well, to
+translate the request to EEH PE reset if possible.
 
-Hi Dave,
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci.c | 61 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
-Looking, thanks for the report and sorry for the inconvenience.
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index e69142f..c68d508 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -727,6 +727,64 @@ static void pnv_pci_dma_fallback_setup(struct pci_controller *hose,
+ 	set_iommu_table_base_and_group(&pdev->dev, pdn->iommu_table);
+ }
+ 
++/*
++ * VFIO infrastructure depends on pci_reset_function() to do
++ * reset on the PCI devices when their owership is changed to
++ * ensure consistent clean state on those devices when someone
++ * grabs them. However, pci_reset_function() doesn't work for
++ * some deivces that require EEH PE reset.
++ */
++static int pnv_pci_dev_specific_reset(struct pci_dev *pdev, int probe)
++{
++	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
++	struct eeh_pe *pe = edev ? edev->pe : NULL;
++
++	if (!pe)
++		return -ENOTTY;
++
++	if (probe)
++		return 0;
++
++	pci_set_pcie_reset_state(pdev, pcie_hot_reset);
++	pci_set_pcie_reset_state(pdev, pcie_deassert_reset);
++	return 0;
++}
++
++static int pnv_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	static bool pnv_pci_reset_registered = false;
++	int ret = 0;
++
++	if (pnv_pci_reset_registered)
++		return 0;
++
++	pnv_pci_reset_registered = true;
++	ret += pci_dev_add_specific_reset(PCI_VENDOR_ID_IBM,
++					  PCI_ANY_ID,
++					  pnv_pci_dev_specific_reset);
++	ret += pci_dev_add_specific_reset(PCI_VENDOR_ID_BROADCOM,
++					  PCI_DEVICE_ID_NX2_57800,
++					  pnv_pci_dev_specific_reset);
++	ret += pci_dev_add_specific_reset(PCI_VENDOR_ID_BROADCOM,
++					  PCI_DEVICE_ID_NX2_57840,
++					  pnv_pci_dev_specific_reset);
++	ret += pci_dev_add_specific_reset(PCI_VENDOR_ID_BROADCOM,
++					  PCI_DEVICE_ID_NX2_57810,
++					  pnv_pci_dev_specific_reset);
++	ret += pci_dev_add_specific_reset(PCI_VENDOR_ID_MELLANOX,
++					  PCI_ANY_ID,
++					  pnv_pci_dev_specific_reset);
++	ret += pci_dev_add_specific_reset(PCI_VENDOR_ID_TI,
++					  PCI_ANY_ID,
++					  pnv_pci_dev_specific_reset);
++	if (ret)
++		pr_warn("%s: Failure adding PCI specific reset handlers\n",
++			__func__);
++
++	/* Don't return error to keep PCI core going */
++	return 0;
++}
++
+ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+@@ -820,6 +878,9 @@ void __init pnv_pci_init(void)
+ 	/* Setup the linkage between OF nodes and PHBs */
+ 	pci_devs_phb_init();
+ 
++	/* Setup root bridge */
++	ppc_md.pcibios_root_bridge_prepare = pnv_pci_root_bridge_prepare;
++
+ 	/* Configure IOMMU DMA hooks */
+ 	ppc_md.pci_dma_dev_setup = pnv_pci_dma_dev_setup;
+ 	ppc_md.tce_build = pnv_tce_build_vm;
+-- 
+1.8.3.2
 
-Bjorn
