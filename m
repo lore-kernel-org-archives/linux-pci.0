@@ -1,68 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54F18017.7060203@linux.intel.com>
-Date: Sat, 28 Feb 2015 16:45:11 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Voegtle <tv@lio96.de>, Dave Airlie <airlied@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Lv Zheng <lv.zheng@intel.com>
-Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
-References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com> <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com> <alpine.LSU.2.11.1502271534570.10799@er-systems.de> <1588858.OaSxSRONoY@vostro.rjw.lan> <54F17715.6050506@linux.intel.com> <32040DE9-54EE-4A7D-883A-F578ACFE4338@holtmann.org>
-In-Reply-To: <32040DE9-54EE-4A7D-883A-F578ACFE4338@holtmann.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:54168 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbbBME4C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Feb 2015 23:56:02 -0500
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 13 Feb 2015 14:56:00 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9E5BC3578048
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:58 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1D4tohd40108254
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:58 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1D4tOjE013548
+	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:25 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	cascardo@linux.vnet.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 0/4] Support registering specific reset handler
+Date: Fri, 13 Feb 2015 15:54:55 +1100
+Message-Id: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/2/28 16:36, Marcel Holtmann wrote:
-> Hi Jiang,
-> 
->>>> I have the same problem with a Asrock Q1900B-ITX mainboard with 
->>>> a Intel Celeron J1900 onboard.
->>>>
->>>> I did a bisect and ended up with:
->>>>
->>>> 593669c2ac0fe18baee04a3cd5539a148aa48574 is the first bad commit
->>>>
->>>> commit 593669c2ac0fe18baee04a3cd5539a148aa48574
->>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
->>>> Date:   Thu Feb 5 13:44:46 2015 +0800
->>>>
->>>>     x86/PCI/ACPI: Use common ACPI resource interfaces to simplify 
->>>> implementation
->>>>
->>>>
->>>> I can revert this quite big commit on current git head (4f671fe) with no 
->>>> problems and then everything is fine again.
->>>
->>> Thanks for nailing this one!
->>>
->>> It really wasn't supposed to make any functional difference, though, so there
->>> must be some subtle mistake that escaped everyone in it.
->>>
->>> I'll have a look at that and hopefully Jiang Liu will be able to help in the
->>> meantime too.
->> Hi all,
->> 	Sorry for slow response, just return from Chinese New Holidays:)
->> Hi Thomas,
->> 	Could you please help to provide the dmesgs before and after the
->> revert?
-> 
-> just grab a Minnowboard Max and test this by yourself. It has the same problem. The MAC address is ff:ff:ff:ff:ff:ff with this patch. Once I reverted it, the MAC address is correctly read again.
-Hi Marcel,
-	I have no access to any Minnowboard Max board, so couldn't test
-it by myself. Could you please help to forward the two dmesg files you
-have sent to Bjorn in the original email?
-Thanks!
-Gerry
+VFIO PCI infrastructure depends on pci_reset_function() to do reset on
+PCI devices so that they would be in clean state when host or guest grabs
+them. Unfortunately, the function doesn't work (or not well) on some PCI
+devices that require EEH PE reset.
 
-> 
-> Regards
-> 
-> Marcel
-> 
+The patchset extends the quirk for PCI device speicific reset methods to
+allow dynamically registration. With it, we can translate reset requests
+for those special PCI devcies to EEH PE reset, which is only avaialble on
+64-bits PowerPC platforms.
+
+Gavin Shan (4):
+  PCI: Rename struct pci_dev_reset_methods
+  PCI: Introduce list for device reset methods
+  PCI: Allow registering reset method
+  powerpc/powernv: Register PCI dev specific reset handlers
+
+ arch/powerpc/platforms/powernv/pci.c |  61 +++++++++++++++
+ drivers/pci/pci.h                    |   3 +-
+ drivers/pci/quirks.c                 | 139 ++++++++++++++++++++++++++++++-----
+ include/linux/pci.h                  |   9 +++
+ 4 files changed, 192 insertions(+), 20 deletions(-)
+
+-- 
+1.8.3.2
+
