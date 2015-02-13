@@ -1,154 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51435 "EHLO mga11.intel.com"
+Received: from ns.mm-sol.com ([37.157.136.199]:37608 "EHLO extserv.mm-sol.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965718AbbBCCvx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Feb 2015 21:51:53 -0500
-Message-ID: <54D037C1.7030802@linux.intel.com>
-Date: Tue, 03 Feb 2015 10:51:45 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+	id S1751322AbbBMCJI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Feb 2015 21:09:08 -0500
+Message-ID: <54DD5CAF.9040006@mm-sol.com>
+Date: Fri, 13 Feb 2015 04:08:47 +0200
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
+To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [Patch Part1 v7 00/38] Convert x86 to hierarchy irqdomain and
- stacked irqchip
-References: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1421723321-8386-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
+	Mohit KUMAR <mohit.kumar@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of
+ platform_driver_register
+References: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru> <CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com> <54DB0A52.4090907@mm-sol.com> <CAJs94EYS003e_j0S4rzKFEL=PqCqEmT7yd0qdJdnMrziE1700Q@mail.gmail.com> <54DB1EAC.3060302@mm-sol.com> <CAJs94EYNs9+Ph3EXZLPEepWJxU_ivXp=Tifq=LkJZ3mwk1fG3g@mail.gmail.com>
+In-Reply-To: <CAJs94EYNs9+Ph3EXZLPEepWJxU_ivXp=Tifq=LkJZ3mwk1fG3g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ping:)
+Hi,
 
-On 2015/1/20 11:08, Jiang Liu wrote:
-> Hi all,
-> 	The generic hierarchy irqdomain and stacked irqchip implementation
-> has been merged into v3.19, so this patch set converts x86 interupt
-> management to hierarchy irqdomain and stacked irqchip. I will send out
-> another following-on patch set to clean up code and interfaces obseleted
-> by this patch set.
+On 02/12/2015 11:07 AM, Matwey V. Kornilov wrote:
+> 2015-02-11 12:19 GMT+03:00 Stanimir Varbanov <svarbanov@mm-sol.com>:
+>> please don't top posting.
+>>
+>> On 02/11/2015 10:38 AM, Matwey V. Kornilov wrote:HI
+>>
+>>> It sounds reasonable, but does current implementation support deferring?
+>>
+>>thor
+>> yes, it uses deferred probe see devm_phy_get() and devm_clk_get() calls in
+>> .probe and how the returned values are checked.
+>>
+>>> Struct  spear13xx_pcie_driver just dissapears from memory after init.
+>>
+>>
+>> IMO this is expected because spear13xx_pcie_driver is annotated as
+>> __initdata.
 > 
-> 	This patch set has been reviewed several times and it missed v3.19
-> merging because several got fixed just before the merging window.
-> 	The main changes since last review are:
-> 1) Rebased the patch set onto v3.19-rc5.
-> 2) Merged bugfixes into the patch introducing the bug so it won't break
->    bisecting.
+> The question was how deferred probe had been expected to work? When
+> probe has been deferred at first attempt, then second attempt
+> performed after init section, so proble() function must be available,at
+> but it is not. Isn't it?
 > 
-> Hi Thomas,
-> 	Rafael needs more time to review the patch set to refine ACPI
-> resource paring interface, and we are nearing to v3.19-rc6. So it would
-> be helpful to move onto the x86 hierarchy irqdomain patch set first, so
-> we may catch up with v3.20 merging window.
-> Thanks!
-> Gerry
-> 
-> Jiang Liu (36):
->   x86/irq: Save destination CPU ID in irq_cfg
->   x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
->   x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
->   x86/MSI: Use new irqdomain interfaces to allocate/free IRQ
->   x86/uv: Use new irqdomain interfaces to allocate/free IRQ
->   x86/htirq: Use new irqdomain interfaces to allocate/free IRQ
->   x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
->   irq_remapping: Introduce new interfaces to support hierarchy
->     irqdomain
->   irq_remapping/vt-d: Change prototypes to prepare for enabling
->     hierarchy irqdomain
->   irq_remapping/vt-d: Enhance Intel IR driver to suppport hierarchy
->     irqdomain
->   irq_remapping/amd: Enhance AMD IR driver to suppport hierarchy
->     irqdomain
->   x86/hpet: Enhance HPET IRQ to support hierarchy irqdomain
->   x86/MSI: Use hierarchy irqdomain to manage MSI interrupts
->   x86/irq: Directly call native_compose_msi_msg() for DMAR IRQ
->   irq_remapping/vt-d: Clean up unused MSI related code
->   irq_remapping/amd: Clean up unused MSI related code
->   irq_remapping: Clean up unused MSI related code
->   x86/MSI: Clean up unused MSI related code and interfaces
->   iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
->   x86/irq: Use hierarchy irqdomain to manage DMAR interrupts
->   x86/htirq: Use hierarchy irqdomain to manage Hypertransport
->     interrupts
->   x86/uv: Use hierarchy irqdomain to manage UV interrupts
->   x86/irq: Normalize x86 irq_chip name
->   x86/MSI: Simplify the way to deal with remapped MSI interrupts
->   x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
->   x86/irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
->     irq_chips
->   x86/irq: Simplify MSI/DMAR/HPET implementation by using common code
->   irq_remapping: Kill unused function irq_remapping_print_chip()
->   x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
->   x86/irq: Kill unused pre_init_apic_IRQ0()
->   x86/irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
->   x86/irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
->   x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
->   x86/irq: Simplify the way to print IOAPIC entry
->   x86/irq: Introduce helper functions to support hierarchy irqdomain
->     for IOAPIC
->   x86/irq: Convert IOAPIC to use hierarchy irqdomain interfaces
-> 
-> Rickard Strandqvist (1):
->   x86/apb_timer: Remove unused function is_apbt_capable()
-> 
-> Thomas Gleixner (1):
->   x86/intel-mid: Delay initialization of APB timer
-> 
->  arch/ia64/include/asm/irq_remapping.h              |    2 -
->  arch/ia64/kernel/msi_ia64.c                        |   30 +-
->  arch/x86/Kconfig                                   |    4 +-
->  arch/x86/include/asm/hpet.h                        |   16 +-
->  arch/x86/include/asm/hw_irq.h                      |   91 +++
->  arch/x86/include/asm/io_apic.h                     |   25 +-
->  arch/x86/include/asm/irq_remapping.h               |   45 +-
->  arch/x86/include/asm/msi.h                         |    7 +
->  arch/x86/include/asm/pci.h                         |    5 -
->  arch/x86/include/asm/x86_init.h                    |    4 -
->  arch/x86/kernel/acpi/boot.c                        |   20 +-
->  arch/x86/kernel/apb_timer.c                        |   12 -
->  arch/x86/kernel/apic/htirq.c                       |  173 ++++--
->  arch/x86/kernel/apic/io_apic.c                     |  600 +++++++++++++++-----
->  arch/x86/kernel/apic/msi.c                         |  416 ++++++++------
->  arch/x86/kernel/apic/vector.c                      |  205 ++++++-
->  arch/x86/kernel/devicetree.c                       |   37 +-
->  arch/x86/kernel/hpet.c                             |   57 +-
->  arch/x86/kernel/mpparse.c                          |    6 +-
->  arch/x86/kernel/x86_init.c                         |    2 -
->  arch/x86/pci/intel_mid_pci.c                       |    6 +-
->  .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
->  arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
->  arch/x86/platform/intel-mid/sfi.c                  |   30 +-
->  arch/x86/platform/sfi/sfi.c                        |    5 +-
->  arch/x86/platform/uv/uv_irq.c                      |  299 ++++------
->  drivers/iommu/amd_iommu.c                          |  376 +++++++++---
->  drivers/iommu/amd_iommu_init.c                     |    4 +
->  drivers/iommu/amd_iommu_proto.h                    |    9 +
->  drivers/iommu/amd_iommu_types.h                    |    5 +
->  drivers/iommu/dmar.c                               |   19 +-
->  drivers/iommu/intel_irq_remapping.c                |  451 ++++++++++-----
->  drivers/iommu/irq_remapping.c                      |  178 ++----
->  drivers/iommu/irq_remapping.h                      |   20 +-
->  drivers/pci/htirq.c                                |   48 +-
->  include/linux/dmar.h                               |    3 +-
->  include/linux/htirq.h                              |   22 +-
->  include/linux/intel-iommu.h                        |    4 +
->  38 files changed, 2100 insertions(+), 1159 deletions(-)
->  create mode 100644 arch/x86/include/asm/msi.h
-> 
+
+That is questionable, maybe it works by chance?.
+
+
+regards,
+Stan
