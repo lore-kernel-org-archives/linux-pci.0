@@ -1,39 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59078 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751436AbbBXUMn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Feb 2015 15:12:43 -0500
-Subject: [PATCH 0/2] PCI: pci_unignore_hotplug()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org, airlied@linux.ie,
-	alexander.deucher@amd.com, dri-devel@lists.freedesktop.org
-Cc: alex.williamson@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 24 Feb 2015 13:12:27 -0700
-Message-ID: <20150224200603.14443.68971.stgit@gimli.home>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:49015 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbBPD2t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Feb 2015 22:28:49 -0500
+Message-ID: <54E163D9.3050107@huawei.com>
+Date: Mon, 16 Feb 2015 11:28:25 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
+	"linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>,
+	"linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
+ pci host bridge
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>	 <20150214194552.GA3932@e102568-lin.cambridge.arm.com>	 <54E14562.30407@huawei.com> <1424056424.21410.33.camel@kernel.crashing.org>
+In-Reply-To: <1424056424.21410.33.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'd kinda like to use pci_ignore_hotplug() for devices in use by a
-user via vfio-pci, but the interface seems only partially implemented
-since we can only set ignore_hotplug and not clear it.  This adds the
-capability to clear the flag and applies it as seems to be appropriate
-to the existing users.  I don't have a system with power control for
-a radeon or nouveau device, so I'd certainly appreciate testing.  It
-seems though that once the device is in D0, we've passed the critical
-point where the device could be accidentally unplugged.  Thanks,
+On 2015/2/16 11:13, Benjamin Herrenschmidt wrote:
+> On Mon, 2015-02-16 at 09:18 +0800, Yijing Wang wrote:
+>>>> I tested this series on x86 (with or without ACPI).
+>>>> Comments and tests are warmly welcome!
+>>>
+>>> Can you push a public branch out rebased against mainline for us to pull
+>>> and test please ?
+>>
+>> Hi Lorenzo, I rebased the series and you could pull it from git@github.com:YijingWang/linux-pci.git for-gen-host-v2
+>>
+>> Thank you to help test!
+> 
+> Thanks, I'll try to spend some time reviewing and testing this on
+> powerpc as well.
 
-Alex
+Thanks very much!
 
----
+Thanks!
+Yijing.
 
-Alex Williamson (2):
-      pci: Add reciprocal function for pci_ignore_hotplug()
-      nouveau/radeon: Un-ignore hotplug on resume
+> 
+> Cheers,
+> Ben.
+> 
+>> Thanks!
+>> Yijing.
+>>
+>>>
+>>> Thanks !
+>>> Lorenzo
+>>>
+>>>
+>>> .
+>>>
+>>
+>>
+> 
+> 
+> 
+> .
+> 
 
 
- drivers/gpu/drm/nouveau/nouveau_drm.c |    1 +
- drivers/gpu/drm/radeon/radeon_drv.c   |    1 +
- include/linux/pci.h                   |    5 +++++
- 3 files changed, 7 insertions(+)
+-- 
+Thanks!
+Yijing
+
