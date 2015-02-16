@@ -1,59 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:60269 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbbBXUX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 15:23:27 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150224200603.14443.68971.stgit@gimli.home>
-References: <20150224200603.14443.68971.stgit@gimli.home>
-Date: Tue, 24 Feb 2015 15:23:27 -0500
-Message-ID: <CADnq5_PDjww+TkPWVV7HLLA50az2n20SfD5ShVp+OpT8Cy4Dew@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI: pci_unignore_hotplug()
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	"Deucher, Alexander" <alexander.deucher@amd.com>,
-	Maling list - DRI developers
-	<dri-devel@lists.freedesktop.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36743 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbbBPByU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Feb 2015 20:54:20 -0500
+Received: by mail-pa0-f42.google.com with SMTP id rd3so31774209pab.1
+        for <linux-pci@vger.kernel.org>; Sun, 15 Feb 2015 17:54:20 -0800 (PST)
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+To: bhelgaas@google.com
+Cc: valentine.barshak@cogentembedded.com, horms+renesas@verge.net.au,
+	linux-pci@vger.kernel.org,
+	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Subject: [PATCH v2] PCI: rcar: Add address check of mem_res
+Date: Mon, 16 Feb 2015 10:54:08 +0900
+Message-Id: <1424051648-7430-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 3:12 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> I'd kinda like to use pci_ignore_hotplug() for devices in use by a
-> user via vfio-pci, but the interface seems only partially implemented
-> since we can only set ignore_hotplug and not clear it.  This adds the
-> capability to clear the flag and applies it as seems to be appropriate
-> to the existing users.  I don't have a system with power control for
-> a radeon or nouveau device, so I'd certainly appreciate testing.  It
-> seems though that once the device is in D0, we've passed the critical
-> point where the device could be accidentally unplugged.  Thanks,
+lower 16 bits of the address, which is managed by mem_res need to be 0.
+This adds address check of lower 16 bits.
 
-Something re-broke this recently.  See:
-https://bugzilla.kernel.org/show_bug.cgi?id=61891
-https://bugzilla.kernel.org/show_bug.cgi?id=89731
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+---
+ v2: Remove to before devm_kzalloc().
 
-Alex
+ drivers/pci/host/pci-rcar-gen2.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
->
-> Alex
->
-> ---
->
-> Alex Williamson (2):
->       pci: Add reciprocal function for pci_ignore_hotplug()
->       nouveau/radeon: Un-ignore hotplug on resume
->
->
->  drivers/gpu/drm/nouveau/nouveau_drm.c |    1 +
->  drivers/gpu/drm/radeon/radeon_drv.c   |    1 +
->  include/linux/pci.h                   |    5 +++++
->  3 files changed, 7 insertions(+)
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index d9c042f..e9617d3 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -346,6 +346,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 	if (!mem_res || !mem_res->start)
+ 		return -ENODEV;
+ 
++	if (mem_res->start & 0xFFFF)
++		return -EINVAL;
++
+ 	priv = devm_kzalloc(&pdev->dev,
+ 			    sizeof(struct rcar_pci_priv), GFP_KERNEL);
+ 	if (!priv)
+-- 
+2.1.3
+
