@@ -1,79 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-05v.sys.comcast.net ([96.114.154.164]:53403 "EHLO
-	resqmta-po-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753057AbbBKQLj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Feb 2015 11:11:39 -0500
-Message-ID: <54DB7F39.8030306@nwtrail.com>
-Date: Wed, 11 Feb 2015 08:11:37 -0800
-From: Paul Johnson <pjay@nwtrail.com>
-Reply-To: pjay@nwtrail.com
+Received: from foss.arm.com ([217.140.101.70]:52034 "EHLO
+	usa-sjc-mx-foss1.foss.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753250AbbBPRqQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Feb 2015 12:46:16 -0500
+Date: Mon, 16 Feb 2015 17:46:29 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	"linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>,
+	"linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory =?iso-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH v2 23/30] PCI/mvebu: Use pci_common_init_dev() to
+ simplify code
+Message-ID: <20150216174628.GA13861@red-moon>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+ <1421800225-26230-24-git-send-email-wangyijing@huawei.com>
+ <20150122184000.63ba06bb@free-electrons.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
-References: <54C81B4E.7060900@nwtrail.com> <CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com> <54CBB062.4040801@nwtrail.com> <CAE9FiQUxD8g4KG9CYe1znb5Lw5skkq=9QSOgkmGUDbhsaDq2Qw@mail.gmail.com> <54CFBC0E.4080102@nwtrail.com> <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com> <54D160B5.70006@nwtrail.com> <CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com> <54D6C6CB.6060904@nwtrail.com> <CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com> <54D7AE67.1090007@nwtrail.com> <CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
-In-Reply-To: <CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150122184000.63ba06bb@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/10/2015 08:49 AM, Bjorn Helgaas wrote:
-> We need to work out what's going wrong here before we rush into a band-aid.
->
-> What changed between v3.4 and v3.4.1 that exposed this problem?  "git
-> log --oneline v3.4..v3.4.1" doesn't show any likely culprits.  Paul,
-> are those the versions you tested?  Your dmesg logs at
-> https://bugzilla.kernel.org/show_bug.cgi?id=92351 show
-> "3.4.0-030400-generic" and "3.4.1-030401-generic" but I don't know
-> whether those are precisely v3.4 and v3.4.1.
->
-> I assume this system works fine with Windows, and I doubt Windows has
-> a hack like "never move LSI devices."  So it would be useful to know
-> if we're doing something stupid in Linux that makes us trip over this.
-> Paul, if you happen to have Windows on this machine as well, a
-> complete AIDA64 report (free trial version at http://www.aida64.com)
-> would show what Windows did.
->
-> The resource allocation we're doing is related SR-IOV, and
-> unfortunately we don't print enough information in dmesg to figure
-> everything out.  Paul, can you attach the complete "lspci -vv" output
-> to the bugzilla?
->
-> Bjorn
->
-The system I have had this problem on is in production, though it should 
-be replaced by a real server. Because it is in use, I have used a 
-separate boot disk to test kernels. I also have limited access to take 
-the machine down. The system runs ubuntu server, though I have used an 
-ubuntu desktop to test kernels. There is not a windows system on the 
-machine, though, just guessing, LSI likely provides the windows driver 
-and that driver may well have dealt with a problem that is looking to be 
-specific to a firmware/bios version on this card.
+Hi Thomas,
 
-Someone found another of these cards here, so I tried it last night in 
-an unused machine. It worked on the ubuntu 3.13 kernel without realloc. 
-The card that has been the problem has these versions of firmware:
-[    9.004647] mpt2sas0: LSISAS2008: FWVersion(17.00.01.00), 
-ChipRevision(0x03), BiosVersion(07.33.00.00)
+On Thu, Jan 22, 2015 at 05:40:00PM +0000, Thomas Petazzoni wrote:
+> Dear Yijing Wang,
+> 
+> On Wed, 21 Jan 2015 08:30:18 +0800, Yijing Wang wrote:
+> > Mvebu_pcie_scan_bus() is not necessary, we could use
+> > pci_common_init_dev() instead of pci_common_init(),
+> > and pass the device pointer as the parent. Then
+> > pci_scan_root_bus() will be called to scan the pci busses.
+> > 
+> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> > CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > CC: Jason Cooper <jason@lakedaemon.net>
+> 
+> While I'm fine with the change to pci_common_init_dev(), I am not so
+> sure about the removal of mvebu_pcie_scan_bus(). I vaguely remember
+> that we intentionally did not use the default function for a specific
+> reason. Of course, this was a long time ago, and I don't remember the
+> reason. I would have to take a bit of time to 1/ review the archives of
+> the discussion surrounding the pcie-mvebu driver, and 2/ test your
+> patch to validate it works fine on HW.
 
-and the card that works has a newer version:
-[   15.725011] mpt2sas0: LSISAS2008: FWVersion(18.00.00.00), 
-ChipRevision(0x03), BiosVersion(07.35.00.00)
+I guess the reason: by providing the scan pointer to pcibios through
+the hw_pci struct you were preventing calling pci_scan_root_bus() in
+bios32.c that in turn can add devices before the resources are assigned.
 
-Now, the cards are in very different machines so the difference could be 
-due to the machines and not the firmware, but I would tend to go with 
-the firmware difference. LSI firmware is now beyond both these firmware 
-versions, but if I can find a copy of the older firmware, I'll try it on 
-the card with the newer firmware.
+Basically mvebu_pci_scan_bus() was doing what pci_scan_root_bus() does
+except for calling pci_bus_add_devices().
 
-Just a suggestion, but from the linux end, if you could trap the older 
-firmware version and put a message out about the realloc flag and 
-firmware version, that would help someone else who might fall into the 
-same hole I found myself in.
+Yijing patches remove pci_bus_add_devices() from pci_scan_root_bus() so
+his change should be fine and it actually improves the current behaviour
+which is quite hard to untangle, and not just on mvebu (I suspect
+drivers/pci/host/pcie-xilinx.c can suffer from the same problem).
 
-Paul
+Lorenzo
 
-
-
-
+> 
+> Thanks!
+> 
+> Thomas
+> -- 
+> Thomas Petazzoni, CTO, Free Electrons
+> Embedded Linux, Kernel and Android engineering
+> http://free-electrons.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
