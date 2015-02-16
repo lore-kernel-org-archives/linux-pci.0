@@ -1,141 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v4 00/23] Improve ACPI resource parsing interfaces and enable IOAPIC hotplug
-Date: Thu,  5 Feb 2015 13:44:26 +0800
-Message-Id: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:51191 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755478AbbBPNOn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Feb 2015 08:14:43 -0500
+Received: from /spool/local
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
+	Mon, 16 Feb 2015 11:14:41 -0200
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 7695F3520062
+	for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2015 08:13:38 -0500 (EST)
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1GDEnMT3829884
+	for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2015 10:14:49 -0300
+Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
+	by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1GDEZt9024169
+	for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2015 11:14:35 -0200
+Date: Mon, 16 Feb 2015 11:14:27 -0200
+From: cascardo@linux.vnet.ibm.com
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH 0/4] Support registering specific reset handler
+Message-ID: <20150216131427.GA4840@oc0812247204.ltc.br.ibm.com>
+References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During enabling ACPI based IOAPIC hotplug, Thomas noticed some issues
-in ACPI resource parsing interfaces. So this is an effort to improve them.
+On Fri, Feb 13, 2015 at 03:54:55PM +1100, Gavin Shan wrote:
+> VFIO PCI infrastructure depends on pci_reset_function() to do reset on
+> PCI devices so that they would be in clean state when host or guest grabs
+> them. Unfortunately, the function doesn't work (or not well) on some PCI
+> devices that require EEH PE reset.
+> 
+> The patchset extends the quirk for PCI device speicific reset methods to
+> allow dynamically registration. With it, we can translate reset requests
+> for those special PCI devcies to EEH PE reset, which is only avaialble on
+> 64-bits PowerPC platforms.
+> 
 
-Patch 1 refines ACPICA resource descriptors, which has already been
-merged into "git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git bleeding-edge"
+Hi, Gavin.
 
-Patch 2-12 improve ACPI resource parsing interfaces and also fixes some
-bugs.
+I like your approach overall. That allows us to confine these quirks to
+the platforms where they are relevant. I would make the quirks more
+specific, though, instead of doing them for all IBM and Mellanox
+devices.
 
-Patch 13-20 try to share the common data structure resource_list_entry
-between PCI and ACPI. It may also be shared with PNP too.
+I wonder if we should not have some form of domain reset, where we would
+reset all the devices on the same group, and use that on vfio. Grouping
+the devices would then be made platform-dependent, as well as the reset
+method. On powernv, we would group by IOMMU group and issue a
+fundamental reset.
 
-Patch 21-23 enable ACPI based IOAPIC hotplug.
+Cascardo.
 
-The patchset is based on v3.19-rc6+ and passed Fengguang's 0day test
-suite. You may get it from:
-https://github.com/jiangliu/linux.git acpires_v2
-
-V3->V4:
-1) rename resource_list_entry as resource_entry to avoid conflicts
-2) kill pcibios_disable_device()
-3) Patch 1-16 are the same with v3
-
-
-V2->V3:
-1) Split out the patch to fix bug in io resource check according to Bjorn's
-   suggestion
-2) Fix minor coding style bugs
-
-V1->V2:
-1) Refine the way to share common code between address space and extended
-   address space.
-2) Relax some checks to avoid regressions according to Rafael's suggestions.
-3) Introduce struct resource_win to avoiding add extra parameter "offset"
-   to several interfaces.
-4) Add patches to enable ACPI based IOAPIC hotplug, which has been reviwed
-   several rounds.
-5) Rebase to v3.19-rc6+
-
-Jiang Liu (14):
-  ACPI: Fix a bug in parsing ACPI Memory24 resource
-  ACPI: Normalize return value of resource parser functions
-  ACPI: Set flag IORESOURCE_UNSET for unassigned resources
-  ACPI: Enforce stricter checks for address space descriptors
-  ACPI: Return translation offset when parsing ACPI address space
-    resources
-  ACPI: Translate resource into master side address for bridge window
-    resources
-  ACPI: Add field offset to struct resource_list_entry
-  ACPI: Introduce helper function acpi_dev_filter_resource_type()
-  resources: Move struct resource_list_entry from ACPI into resource
-    core
-  PCI: Use common resource list management code instead of private
-    implementation
-  x86/PCI: Fix the range check for IO resources
-  x86/PCI/ACPI: Use common ACPI resource interfaces to simplify
-    implementation
-  x86/PCI: Refine the way to release PCI IRQ resources
-  x86/irq, ACPI: Implement ACPI driver to support IOAPIC hotplug
-
-Lv Zheng (1):
-  ACPICA: Resources: Provide common part for struct
-    acpi_resource_address structures.
-
-Thomas Gleixner (7):
-  ACPI: Remove redundant check in function
-    acpi_dev_resource_address_space()
-  ACPI: Implement proper length checks for mem resources
-  ACPI: Use the length check for io resources as well
-  ACPI: Let the parser return false for disabled resources
-  ACPI: Unify the parsing of address_space and ext_address_space
-  ACPI: Move the window flag logic to the combined parser
-  ACPI: Add prefetch decoding to the address space parser
-
-Yinghai Lu (1):
-  ACPI: Add interfaces to parse IOAPIC ID for IOAPIC hotplug
-
- arch/arm/kernel/bios32.c            |    5 +-
- arch/ia64/kernel/acpi-ext.c         |    6 +-
- arch/ia64/pci/pci.c                 |   14 +-
- arch/x86/include/asm/pci_x86.h      |    2 -
- arch/x86/pci/acpi.c                 |  293 +++++++++--------------------
- arch/x86/pci/bus_numa.c             |    4 +-
- arch/x86/pci/common.c               |   34 +++-
- arch/x86/pci/intel_mid_pci.c        |    4 +-
- arch/x86/pci/irq.c                  |   15 +-
- arch/x86/pci/mmconfig-shared.c      |    6 +-
- drivers/acpi/Kconfig                |    6 +
- drivers/acpi/Makefile               |    1 +
- drivers/acpi/acpi_lpss.c            |    8 +-
- drivers/acpi/acpi_memhotplug.c      |    8 +-
- drivers/acpi/acpi_platform.c        |    4 +-
- drivers/acpi/acpica/rsaddr.c        |    9 +-
- drivers/acpi/acpica/rsdumpinfo.c    |   59 +++---
- drivers/acpi/acpica/rsxface.c       |   10 +-
- drivers/acpi/internal.h             |    7 +
- drivers/acpi/ioapic.c               |  229 +++++++++++++++++++++++
- drivers/acpi/pci_irq.c              |    9 +-
- drivers/acpi/pci_root.c             |    9 +-
- drivers/acpi/processor_core.c       |  123 +++++++++++-
- drivers/acpi/resource.c             |  353 +++++++++++++++++++++--------------
- drivers/char/hpet.c                 |    4 +-
- drivers/dma/acpi-dma.c              |   10 +-
- drivers/hv/vmbus_drv.c              |    4 +-
- drivers/pci/bus.c                   |   18 +-
- drivers/pci/host-bridge.c           |    8 +-
- drivers/pci/host/pci-host-generic.c |    4 +-
- drivers/pci/host/pci-xgene.c        |    4 +-
- drivers/pci/host/pcie-xilinx.c      |    4 +-
- drivers/pci/probe.c                 |   10 +-
- drivers/pnp/pnpacpi/rsparser.c      |   45 ++---
- drivers/xen/xen-acpi-memhotplug.c   |    8 +-
- include/acpi/acrestyp.h             |   40 ++--
- include/linux/acpi.h                |   22 ++-
- include/linux/pci.h                 |    9 +-
- include/linux/resource_ext.h        |   77 ++++++++
- kernel/resource.c                   |   25 +++
- 40 files changed, 970 insertions(+), 540 deletions(-)
- create mode 100644 drivers/acpi/ioapic.c
- create mode 100644 include/linux/resource_ext.h
-
--- 
-1.7.10.4
+> Gavin Shan (4):
+>   PCI: Rename struct pci_dev_reset_methods
+>   PCI: Introduce list for device reset methods
+>   PCI: Allow registering reset method
+>   powerpc/powernv: Register PCI dev specific reset handlers
+> 
+>  arch/powerpc/platforms/powernv/pci.c |  61 +++++++++++++++
+>  drivers/pci/pci.h                    |   3 +-
+>  drivers/pci/quirks.c                 | 139 ++++++++++++++++++++++++++++++-----
+>  include/linux/pci.h                  |   9 +++
+>  4 files changed, 192 insertions(+), 20 deletions(-)
+> 
+> -- 
+> 1.8.3.2
+> 
 
