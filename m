@@ -1,51 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:59920 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751272AbbBPDQ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 15 Feb 2015 22:16:29 -0500
+Message-ID: <1424056424.21410.33.camel@kernel.crashing.org>
+Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
+ pci host bridge
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v2 12/23] ACPI: Enforce stricter checks for address space descriptors
-Date: Mon,  2 Feb 2015 10:42:57 +0800
-Message-Id: <1422844988-13854-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	"linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>,
+	"linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 16 Feb 2015 14:13:44 +1100
+In-Reply-To: <54E14562.30407@huawei.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
+	 <20150214194552.GA3932@e102568-lin.cambridge.arm.com>
+	 <54E14562.30407@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enforce stricter checks for address space descriptors according to
-ACPI spec.
+On Mon, 2015-02-16 at 09:18 +0800, Yijing Wang wrote:
+> >> I tested this series on x86 (with or without ACPI).
+> >> Comments and tests are warmly welcome!
+> > 
+> > Can you push a public branch out rebased against mainline for us to pull
+> > and test please ?
+> 
+> Hi Lorenzo, I rebased the series and you could pull it from git@github.com:YijingWang/linux-pci.git for-gen-host-v2
+> 
+> Thank you to help test!
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+Thanks, I'll try to spend some time reviewing and testing this on
+powerpc as well.
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5bf73a9f26d9..57891a621b96 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -192,6 +192,15 @@ static bool acpi_decode_space(struct resource *res,
- 	bool wp = addr->info.mem.write_protect;
- 	u64 len = attr->address_length;
- 
-+	/*
-+	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
-+	 * 6.4.3.5 Address Space Resource Descriptors.
-+	 */
-+	if ((addr->min_address_fixed != addr->max_address_fixed && len) ||
-+	    (addr->min_address_fixed && addr->max_address_fixed && !len))
-+		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
-+			 addr->min_address_fixed, addr->max_address_fixed, len);
-+
- 	res->start = attr->minimum;
- 	res->end = attr->maximum;
- 
--- 
-1.7.10.4
+Cheers,
+Ben.
+
+> Thanks!
+> Yijing.
+> 
+> > 
+> > Thanks !
+> > Lorenzo
+> > 
+> > 
+> > .
+> > 
+> 
+> 
+
 
