@@ -1,214 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:46942 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752114AbbBXIeI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:34:08 -0500
-Received: by pabkx10 with SMTP id kx10so34327617pab.13
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:34:08 -0800 (PST)
-Subject: [PATCH v12 10/21] PCI: Consider additional PF's IOV BAR alignment
- in sizing and assigning
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:34:06 -0600
-Message-ID: <20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:37673 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755763AbbBQHOa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:30 -0500
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Feb 2015 17:14:26 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id EF64E2BB0047
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7EGlt39845980
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7DoMx011083
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:13:51 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH RESEND v2 6/7] powerpc/powernv: Functions to retrieve PCI slot status
+Date: Tue, 17 Feb 2015 18:13:22 +1100
+Message-Id: <1424157203-691-7-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+The patch exports two functions, which base on corresponding OPAL
+APIs to retrieve PCI slot status. Those functions are going to be
+used by PCI hotplug module in subsequent patches:
 
-When sizing and assigning resources, we divide the resources into two
-lists: the requested list and the additional list.  We don't consider the
-alignment of additional VF(n) BAR space.
+   pnv_pci_get_power_status()     opal_pci_get_power_status()
+   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
 
-This is reasonable because the alignment required for the VF(n) BAR space
-is the size of an individual VF BAR, not the size of the space for *all*
-VFs.  But some platforms, e.g., PowerNV, require additional alignment.
-
-Consider the additional IOV BAR alignment when sizing and assigning
-resources.  When there is not enough system MMIO space, the PF's IOV BAR
-alignment will not contribute to the bridge.  When there is enough system
-MMIO space, the additional alignment will contribute to the bridge.
-
-Also, take advantage of pci_dev_resource::min_align to store this
-additional alignment.
-
-[bhelgaas: changelog, printk cast]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/setup-bus.c |   83 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 70 insertions(+), 13 deletions(-)
+ arch/powerpc/include/asm/opal.h                |  5 +++++
+ arch/powerpc/include/asm/pnv-pci.h             |  3 +++
+ arch/powerpc/platforms/powernv/opal-wrappers.S |  2 ++
+ arch/powerpc/platforms/powernv/pci.c           | 24 ++++++++++++++++++++++++
+ 4 files changed, 34 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e3e17f3c0f0f..affbceae560f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
- 	}
+diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+index ceec756..b3fcf07 100644
+--- a/arch/powerpc/include/asm/opal.h
++++ b/arch/powerpc/include/asm/opal.h
+@@ -169,6 +169,8 @@ struct opal_sg_list {
+ #define OPAL_IPMI_SEND				107
+ #define OPAL_IPMI_RECV				108
+ #define OPAL_I2C_REQUEST			109
++#define OPAL_PCI_GET_POWER_STATUS		110
++#define OPAL_PCI_GET_PRESENCE_STATUS		111
+ 
+ /* Device tree flags */
+ 
+@@ -926,6 +928,9 @@ int64_t opal_ipmi_recv(uint64_t interface, struct opal_ipmi_msg *msg,
+ 		uint64_t *msg_len);
+ int64_t opal_i2c_request(uint64_t async_token, uint32_t bus_id,
+ 			 struct opal_i2c_request *oreq);
++int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
++int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
++
+ 
+ /* Internal functions */
+ extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
+diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+index f9b4982..6a19b50 100644
+--- a/arch/powerpc/include/asm/pnv-pci.h
++++ b/arch/powerpc/include/asm/pnv-pci.h
+@@ -13,6 +13,9 @@
+ #include <linux/pci.h>
+ #include <misc/cxl.h>
+ 
++extern int pnv_pci_get_power_status(uint64_t id, uint8_t *status);
++extern int pnv_pci_get_presence_status(uint64_t id, uint8_t *status);
++
+ int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
+ int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+ 			   unsigned int virq);
+diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
+index 0509bca..35e513e 100644
+--- a/arch/powerpc/platforms/powernv/opal-wrappers.S
++++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
+@@ -292,3 +292,5 @@ OPAL_CALL(opal_tpo_read,			OPAL_READ_TPO);
+ OPAL_CALL(opal_ipmi_send,			OPAL_IPMI_SEND);
+ OPAL_CALL(opal_ipmi_recv,			OPAL_IPMI_RECV);
+ OPAL_CALL(opal_i2c_request,			OPAL_I2C_REQUEST);
++OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
++OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index a0ffae2..bee6798 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -63,6 +63,30 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
+ 	return rval ? -EIO : 0;
  }
  
--static resource_size_t get_res_add_size(struct list_head *head,
--					struct resource *res)
-+static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
-+					       struct resource *res)
- {
- 	struct pci_dev_resource *dev_res;
- 
-@@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 			int idx = res - &dev_res->dev->resource[0];
- 
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--				 "res[%d]=%pR get_res_add_size add_size %llx\n",
-+				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
- 				 idx, dev_res->res,
--				 (unsigned long long)dev_res->add_size);
-+				 (unsigned long long)dev_res->add_size,
-+				 (unsigned long long)dev_res->min_align);
- 
--			return dev_res->add_size;
-+			return dev_res;
- 		}
- 	}
- 
--	return 0;
-+	return NULL;
-+}
-+
-+static resource_size_t get_res_add_size(struct list_head *head,
-+					struct resource *res)
++int pnv_pci_get_power_status(uint64_t id, uint8_t *status)
 +{
-+	struct pci_dev_resource *dev_res;
++	long rc;
 +
-+	dev_res = res_to_dev_res(head, res);
-+	return dev_res ? dev_res->add_size : 0;
++	if (!opal_check_token(OPAL_PCI_GET_POWER_STATUS))
++		return -ENXIO;
++
++	rc = opal_pci_get_power_status(id, status);
++	return pnv_pci_poll(id, rc, status);
 +}
++EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
 +
-+static resource_size_t get_res_add_align(struct list_head *head,
-+					 struct resource *res)
++int pnv_pci_get_presence_status(uint64_t id, uint8_t *status)
 +{
-+	struct pci_dev_resource *dev_res;
++	long rc;
 +
-+	dev_res = res_to_dev_res(head, res);
-+	return dev_res ? dev_res->min_align : 0;
- }
- 
++	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATUS))
++		return -ENXIO;
 +
- /* Sort resources by alignment */
- static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++	rc = opal_pci_get_presence_status(id, status);
++	return pnv_pci_poll(id, rc, status);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
++
+ #ifdef CONFIG_PCI_MSI
+ static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
  {
-@@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res;
-+	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
- 	unsigned long fail_type;
-+	resource_size_t add_align, align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -384,10 +405,38 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry(dev_res, head, list)
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
-+		/*
-+		 * There are two kinds of additional resources in the list:
-+		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
-+		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
-+		 * Here just fix the additional alignment for bridge
-+		 */
-+		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+			continue;
-+
-+		add_align = get_res_add_align(realloc_head, dev_res->res);
-+
-+		/* Reorder the list by their alignment */
-+		if (add_align > dev_res->res->start) {
-+			dev_res->res->start = add_align;
-+			dev_res->res->end = add_align +
-+				            resource_size(dev_res->res);
-+
-+			list_for_each_entry(dev_res2, head, list) {
-+				align = pci_resource_alignment(dev_res2->dev,
-+							       dev_res2->res);
-+				if (add_align > align)
-+					list_move_tail(&dev_res->list,
-+						       &dev_res2->list);
-+			}
-+               }
-+
-+	}
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -962,6 +1011,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
- 	resource_size_t children_add_size = 0;
-+	resource_size_t children_add_align = 0;
-+	resource_size_t add_align = 0;
- 
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -986,6 +1037,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			/* put SRIOV requested res to the optional list */
- 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
- 					i <= PCI_IOV_RESOURCE_END) {
-+				add_align = max(pci_resource_alignment(dev, r), add_align);
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
- 				children_add_size += r_size;
-@@ -1016,19 +1068,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (order > max_order)
- 				max_order = order;
- 
--			if (realloc_head)
-+			if (realloc_head) {
- 				children_add_size += get_res_add_size(realloc_head, r);
-+				children_add_align = get_res_add_align(realloc_head, r);
-+				add_align = max(add_align, children_add_align);
-+			}
- 		}
- 	}
- 
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
- 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-+	add_align = max(min_align, add_align);
- 	if (children_add_size > add_size)
- 		add_size = children_add_size;
- 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
- 		calculate_memsize(size, min_size, add_size,
--				resource_size(b_res), min_align);
-+				resource_size(b_res), add_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-@@ -1040,10 +1096,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
--		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
-+		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
-+		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
--			   (unsigned long long)size1-size0);
-+			   (unsigned long long) (size1 - size0),
-+			   (unsigned long long) add_align);
- 	}
- 	return 0;
- }
+-- 
+1.8.3.2
 
