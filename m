@@ -1,90 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.65] ([119.145.14.65]:5110 "EHLO
-	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753651AbbBZIQ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:16:27 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH v4 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify code
-Date: Thu, 26 Feb 2015 16:12:17 +0800
-Message-ID: <1424938344-4017-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:37493 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755762AbbBQHO3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:29 -0500
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Feb 2015 17:14:27 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 83DE82CE8055
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7EGDw51511474
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7DoIh027804
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:13:51 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH RESEND v2 3/7] powerpc/pci: Move pcibios_find_pci_bus() around
+Date: Tue, 17 Feb 2015 18:13:19 +1100
+Message-Id: <1424157203-691-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mvebu_pcie_scan_bus() is not necessary, we could use
-pci_common_init_dev() instead of pci_common_init(),
-and pass the device pointer as the parent. Then
-pci_scan_root_bus() will be called to scan the pci busses.
+The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
+that it can be reused by hotplug code for pSeries and PowerNV
+platform at the same time.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Jason Cooper <jason@lakedaemon.net>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
- drivers/pci/host/pci-mvebu.c |   18 +-----------------
- 1 files changed, 1 insertions(+), 17 deletions(-)
+ arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
+ arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
+ 2 files changed, 36 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 1309cfb..d5a2b70 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 5b78917..6e2b4e3 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -21,6 +21,42 @@
+ #include <asm/firmware.h>
+ #include <asm/eeh.h>
  
--static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
++static struct pci_bus *find_pci_bus(struct pci_bus *bus,
++				    struct device_node *dn)
++{
++	struct pci_bus *tmp, *child = NULL;
++	struct device_node *busdn;
++
++	busdn = pci_bus_to_OF_node(bus);
++	if (busdn == dn)
++		return bus;
++
++	list_for_each_entry(tmp, &bus->children, node) {
++		child = find_pci_bus(tmp, dn);
++		if (child)
++			break;
++	}
++
++	return child;
++}
++
++/**
++ * pcibios_find_pci_bus - find PCI bus according to the given device node
++ * @dn: Device node
++ *
++ * Find the corresponding PCI bus according to the given device node.
++ */
++struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
++{
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn  || !pdn->phb || !pdn->phb->bus)
++		return NULL;
++
++	return find_pci_bus(pdn->phb->bus, dn);
++}
++EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
++
+ /**
+  * pcibios_release_device - release PCI device
+  * @dev: PCI device
+diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+index 89e2381..98c50bc 100644
+--- a/arch/powerpc/platforms/pseries/pci_dlpar.c
++++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+@@ -32,38 +32,6 @@
+ #include <asm/firmware.h>
+ #include <asm/eeh.h>
+ 
+-static struct pci_bus *
+-find_bus_among_children(struct pci_bus *bus,
+-                        struct device_node *dn)
 -{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
+-	struct pci_bus *child = NULL;
+-	struct pci_bus *tmp;
+-	struct device_node *busdn;
 -
--	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
--				  &mvebu_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
+-	busdn = pci_bus_to_OF_node(bus);
+-	if (busdn == dn)
+-		return bus;
 -
--	pci_scan_child_bus(bus);
--
--	return bus;
+-	list_for_each_entry(tmp, &bus->children, node) {
+-		child = find_bus_among_children(tmp, dn);
+-		if (child)
+-			break;
+-	};
+-	return child;
 -}
 -
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
--	hw.scan           = mvebu_pcie_scan_bus;
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev->dev, &hw);
- }
- 
- /*
+-struct pci_bus *
+-pcibios_find_pci_bus(struct device_node *dn)
+-{
+-	struct pci_dn *pdn = dn->data;
+-
+-	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+-		return NULL;
+-
+-	return find_bus_among_children(pdn->phb->bus, dn);
+-}
+-EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+-
+ struct pci_controller *init_phb_dynamic(struct device_node *dn)
+ {
+ 	struct pci_controller *phb;
 -- 
-1.7.1
+1.8.3.2
 
