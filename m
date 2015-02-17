@@ -1,64 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:36926 "EHLO
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:44785 "EHLO
 	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753419AbbBJBg1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 20:36:27 -0500
+	with ESMTP id S1751649AbbBQHOw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:52 -0500
 Received: from /spool/local
 	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Feb 2015 11:36:25 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5F4043578048
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:36:23 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A1aExu34537630
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:36:22 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A1Zm2Y018473
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:35:49 +1100
-Date: Tue, 10 Feb 2015 09:35:32 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 02/17] PCI/IOV: add VF enable/disable hook
-Message-ID: <20150210013532.GA6326@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-3-git-send-email-weiyang@linux.vnet.ibm.com>
- <1423527979.4924.67.camel@au1.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423527979.4924.67.camel@au1.ibm.com>
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Feb 2015 17:14:50 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 00BC12CE8054
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:48 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7Ed9t45547572
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:47 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7EEax027376
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:14 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH RESEND v2 5/7] powerpc/powernv: Introduce pnv_pci_poll()
+Date: Tue, 17 Feb 2015 18:13:21 +1100
+Message-Id: <1424157203-691-6-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 10, 2015 at 11:26:19AM +1100, Benjamin Herrenschmidt wrote:
->On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
->> +       if ((retval = pcibios_sriov_enable(dev, initial))) {
->> +               dev_err(&dev->dev, "Failure %d from
->> pcibios_sriov_setup()\n",
->> +                       retval);
->> +               return retval;
->> +       }
->> +
->
->Don't we want pcibios_sriov_enable() to be able to crop the number
->of VFs or do we think any resource limits have been applied
->already ?
+We might not get some PCI slot information (e.g. power status)
+immediately by OPAL API. Instead, opal_pci_poll() need to be called
+for the required information.
 
-The second parameter "initial" is the number of VFs will be enabled. Arch
-dependent function will check the resources for these number of VFs.
+The patch introduces pnv_pci_poll(), which bases on original
+pnv_eeh_poll(), to cover the above case
 
-Do I catch your question correctly?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 28 ++--------------------------
+ arch/powerpc/platforms/powernv/pci.c         | 19 +++++++++++++++++++
+ arch/powerpc/platforms/powernv/pci.h         |  1 +
+ 3 files changed, 22 insertions(+), 26 deletions(-)
 
->
->Ben.
->
-
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index eeda6e1..81a9cb2 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -665,24 +665,6 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+ 	return ret;
+ }
+ 
+-static s64 pnv_eeh_poll(uint64_t id)
+-{
+-	s64 rc = OPAL_HARDWARE;
+-
+-	while (1) {
+-		rc = opal_pci_poll(id, NULL);
+-		if (rc <= 0)
+-			break;
+-
+-		if (system_state < SYSTEM_RUNNING)
+-			udelay(1000 * rc);
+-		else
+-			msleep(rc);
+-	}
+-
+-	return rc;
+-}
+-
+ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ {
+ 	struct pnv_phb *phb = hose->private_data;
+@@ -711,10 +693,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ 
+ 	/* Issue reset and poll until it's completed */
+ 	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
+-	if (rc > 0)
+-		rc = pnv_eeh_poll(phb->opal_id);
+-
+-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++	return pnv_pci_poll(phb->opal_id, rc, NULL);
+ }
+ 
+ static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+@@ -805,10 +784,7 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	phb = hose->private_data;
+ 	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
+ 	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+-	if (rc > 0)
+-		pnv_eeh_poll(id);
+-
+-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++	return pnv_pci_poll(id, rc, NULL);
+ }
+ 
+ static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index c68d508..a0ffae2 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -44,6 +44,25 @@
+ #define cfg_dbg(fmt...)	do { } while(0)
+ //#define cfg_dbg(fmt...)	printk(fmt)
+ 
++int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
++{
++	while (rval > 0) {
++		rval = opal_pci_poll(id, pval);
++		if (rval == OPAL_SUCCESS && pval)
++			rval = opal_pci_poll(id, pval);
++
++		if (rval <= 0)
++			break;
++
++		if (system_state < SYSTEM_RUNNING)
++			udelay(1000 * rval);
++		else
++			msleep(rval);
++	}
++
++	return rval ? -EIO : 0;
++}
++
+ #ifdef CONFIG_PCI_MSI
+ static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 18ae927..19f532b 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -194,6 +194,7 @@ struct pnv_phb {
+ 
+ extern struct pci_ops pnv_pci_ops;
+ 
++int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+ int pnv_pci_cfg_read(struct device_node *dn,
 -- 
-Richard Yang
-Help you, Help me
+1.8.3.2
 
