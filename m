@@ -1,58 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:41482 "EHLO
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:40909 "EHLO
 	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965684AbbBCPbv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 10:31:51 -0500
-Received: by mail-ob0-f173.google.com with SMTP id uy5so29593199obc.4
-        for <linux-pci@vger.kernel.org>; Tue, 03 Feb 2015 07:31:50 -0800 (PST)
-Date: Tue, 3 Feb 2015 09:31:46 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Kevin Hao <haokexin@gmail.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 01/15] PCI: Add pci_device_to_OF_node() stub for
- !CONFIG_OF
-Message-ID: <20150203153146.GA19679@google.com>
-References: <1422923108.4625.2.camel@ellerman.id.au>
- <1422927444-31292-1-git-send-email-haokexin@gmail.com>
+	with ESMTP id S1752570AbbBQGRk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 01:17:40 -0500
+Received: by mail-ob0-f173.google.com with SMTP id uy5so50025938obc.4
+        for <linux-pci@vger.kernel.org>; Mon, 16 Feb 2015 22:17:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422927444-31292-1-git-send-email-haokexin@gmail.com>
+In-Reply-To: <CAJs94EbeyuZjpMWo2UnYgEVLnj-o2NZu-e_B2bo7bepqxo67Hw@mail.gmail.com>
+References: <1423585882-5464-1-git-send-email-matwey@sai.msu.ru>
+	<CAKohpoknDBJpDAfAGCGb2V_Uq6j3vL=CYOWLzsEn7p35Bi6oEg@mail.gmail.com>
+	<54DB0A52.4090907@mm-sol.com>
+	<CAJs94EYS003e_j0S4rzKFEL=PqCqEmT7yd0qdJdnMrziE1700Q@mail.gmail.com>
+	<54DB1EAC.3060302@mm-sol.com>
+	<CAJs94EYNs9+Ph3EXZLPEepWJxU_ivXp=Tifq=LkJZ3mwk1fG3g@mail.gmail.com>
+	<54DD5CAF.9040006@mm-sol.com>
+	<CAJs94EbeyuZjpMWo2UnYgEVLnj-o2NZu-e_B2bo7bepqxo67Hw@mail.gmail.com>
+Date: Tue, 17 Feb 2015 14:17:39 +0800
+Message-ID: <CAKohpom__a8PCRbnv_5vRAphzpH7PVBZ+R-Pa5G-eWDDUZncdg@mail.gmail.com>
+Subject: Re: [PATCHv2 1/2] pci: spear: Use platform_driver_probe instead of platform_driver_register
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mohit KUMAR <mohit.kumar@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 03, 2015 at 09:37:24AM +0800, Kevin Hao wrote:
-> Add a stub for pci_device_to_OF_node() so drivers don't need to
-> use #ifdef CONFIG_OF around calls to it.
-> 
-> Signed-off-by: Kevin Hao <haokexin@gmail.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On 15 February 2015 at 21:16, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
+> Or maybe it doesn't work at all.
 
-Applied to pci/misc for v3.20, thanks!
-
-> ---
-> Hi Bjorn,
-> 
-> Here is the revised version with the update of the subject and commit log
-> in case that you want to take it for 3.20. Otherwise we will merge this
-> version to powerpc tree during the 3.21 cycle.
-> 
->  include/linux/pci.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8323cbf93913..421eb6a9e600 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1863,6 +1863,8 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
->  static inline void pci_release_of_node(struct pci_dev *dev) { }
->  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
->  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
-> +static inline struct device_node *
-> +pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
->  #endif  /* CONFIG_OF */
->  
->  #ifdef CONFIG_EEH
-> -- 
-> 1.9.3
-> 
+It wouldn't have as that wasn't required earlier. But when we are fixing it, we
+fix it proper.
