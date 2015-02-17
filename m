@@ -1,61 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54F17715.6050506@linux.intel.com>
-Date: Sat, 28 Feb 2015 16:06:45 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:47369 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846AbbBQVpP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 16:45:15 -0500
+Received: from /spool/local
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <stewart@linux.vnet.ibm.com>;
+	Tue, 17 Feb 2015 14:45:15 -0700
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 5F85CC40003
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:36:23 -0700 (MST)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1HLjLLa48037928
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:45:30 -0700
+Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1HLicZU006444
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:44:39 -0700
+From: Stewart Smith <stewart@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [PATCH RESEND v2 0/7] powerpc/powernv: Unified PCI slot reset and hotplug
+In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Date: Wed, 18 Feb 2015 08:44:19 +1100
+Message-ID: <m3vbj0gqmk.fsf@oc8180480414.ibm.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Voegtle <tv@lio96.de>
-CC: Dave Airlie <airlied@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Lv Zheng <lv.zheng@intel.com>
-Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
-References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com> <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com> <alpine.LSU.2.11.1502271534570.10799@er-systems.de> <1588858.OaSxSRONoY@vostro.rjw.lan>
-In-Reply-To: <1588858.OaSxSRONoY@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/2/28 6:24, Rafael J. Wysocki wrote:
-> On Friday, February 27, 2015 03:50:32 PM Thomas Voegtle wrote:
->>
->> Hi,
->>
->> I have the same problem with a Asrock Q1900B-ITX mainboard with 
->> a Intel Celeron J1900 onboard.
->>
->> I did a bisect and ended up with:
->>
->> 593669c2ac0fe18baee04a3cd5539a148aa48574 is the first bad commit
->>
->> commit 593669c2ac0fe18baee04a3cd5539a148aa48574
->> Author: Jiang Liu <jiang.liu@linux.intel.com>
->> Date:   Thu Feb 5 13:44:46 2015 +0800
->>
->>      x86/PCI/ACPI: Use common ACPI resource interfaces to simplify 
->> implementation
->>
->>
->> I can revert this quite big commit on current git head (4f671fe) with no 
->> problems and then everything is fine again.
-> 
-> Thanks for nailing this one!
-> 
-> It really wasn't supposed to make any functional difference, though, so there
-> must be some subtle mistake that escaped everyone in it.
-> 
-> I'll have a look at that and hopefully Jiang Liu will be able to help in the
-> meantime too.
-Hi all,
-	Sorry for slow response, just return from Chinese New Holidays:)
-Hi Thomas,
-	Could you please help to provide the dmesgs before and after the
-revert?
-Thanks!
-Gerry
+Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
 
-> 
-> 
+> The patchset was built based on patchset "powerpc/powernv: Simplify EEH
+> implementation", which can be found from:
+>
+> https://patchwork.ozlabs.org/patch/439956/
+>
+> The patchset corresponds to skiboot changes, which manages PCI slots
+> in a unified way: OPAL APIs used to do slot reset, power management,
+> presence status retrival. The patchset shouldn't be merged before
+> the OPAL firmware counterpart is merged:
+>
+> https://patchwork.ozlabs.org/patch/440463/
+
+But this patchset will work with old OPAL, right? We're not breaking
+compatibility with newer kernels (with this patchset) and older
+firmware?
+
