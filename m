@@ -1,79 +1,164 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150218182739.GA17462@google.com>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
- <1416413091-13452-4-git-send-email-tomasz.nowicki@linaro.org>
- <20141210231746.GF6692@google.com> <54E33C05.9010300@linaro.org> <20150218182739.GA17462@google.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 18 Feb 2015 13:02:56 -0600
-Message-ID: <CAL_Jsq+vR2-YbfVqQ2hFCRLyWUZJW4_Ki+ZFRz1=JTeOiE07Lw@mail.gmail.com>
-Subject: Re: [PATCH 3/6] x86, acpi, pci: Move PCI config space accessors.
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:37492 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbbBQHO2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:28 -0500
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 17 Feb 2015 17:14:25 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 60CA32BB004D
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:23 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7EEwf45416596
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:23 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7DnKd011044
+	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:13:49 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH RESEND v2 0/7] powerpc/powernv: Unified PCI slot reset and hotplug
+Date: Tue, 17 Feb 2015 18:13:16 +1100
+Message-Id: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 18, 2015 at 12:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Feb 17, 2015 at 02:03:01PM +0100, Tomasz Nowicki wrote:
->> On 11.12.2014 00:17, Bjorn Helgaas wrote:
->> >On Wed, Nov 19, 2014 at 05:04:48PM +0100, Tomasz Nowicki wrote:
->> >>We are going to use mmio_config_{} name convention across all architectures.
->> >
->> >mmio_config_*() are workarounds for an AMD Fam10h defect [1].  I would prefer
->> >not to extend these names to other architectures, because they should be
->> >able to use readb()/writeb()/etc. directly, as we did on x86 before
->> >3320ad994afb ("x86: Work around mmio config space quirk on AMD Fam10h").
->> >
->> >In fact, it would be nice if we could use readb()/writeb()/etc. on x86, and
->> >only use mmio_config_*() when we're on AMD Fam10h.  Maybe there could be a
->> >"struct pci_raw_ops pci_mmcfg_amd_fam10h" that used mmio_config_*(), and we
->> >could set raw_pci_ext_ops to those ops instead of the default ones when
->> >we're on AMD Fam10h.  Then x86 should be able to use the generic
->> >readb()-based ops on most platforms.
->>
->> While I do agree we should use readb()/writeb()... methods, I am not
->> sure there is a nice way to use mmio_config_*() exclusively for AMD
->> Fam10h. For x86, right now, we have three PCI config accessors sets:
->> mmconfig_32.c, mmconfig_64.c, numachip.c and each are different. So
->> one pci_mmcfg_amd_fam10h pci_raw_ops is not enough. I am thinking of
->> having additional structure (integrated with "struct
->> pci_mmcfg_region") that keeps MMIO accessors where readb()/writeb()
->> would be the default one. For AMD Fam10h case we could tweak it as
->> necessary. What do you thing Bjorn?
->
-> It's OK if we use mmio_config_*() for all x86 (not just AMD Fam10h); that's
-> what we do today.  It'd be *nicer* if we could use the workaround only for
-> Fam10h, but if it complicates the code, don't bother.
->
-> My main point is that I think your v1 posting requires every arch to
-> implement mmio_config_*(), and they will all be the same.  If an arch
-> doesn't require a workaround, it shouldn't have to supply anything and we
-> should default to readb/writeb/etc.
+The patchset was built based on patchset "powerpc/powernv: Simplify EEH
+implementation", which can be found from:
 
-Perhaps the abstraction needs to move up a level to pci_ops functions.
-Then x86 can use the generic ones I added and AMD can use custom ones.
+https://patchwork.ozlabs.org/patch/439956/
 
-BTW, there are some cases on MIPS that need special accessors. It's
-mainly a function of whether the accessors need to do endian swapping
-or not.
+The patchset corresponds to skiboot changes, which manages PCI slots
+in a unified way: OPAL APIs used to do slot reset, power management,
+presence status retrival. The patchset shouldn't be merged before
+the OPAL firmware counterpart is merged:
 
-Rob
+https://patchwork.ozlabs.org/patch/440463/
+
+The kernel changes have been split into 2 parts:
+(A) Use the unified PCI slot reset OPAL API, PATCH[1] and PATCH[2]
+(B) powernv-php driver to support PCI hotplug for PowerNV platform, starting
+    from PATCH[3]. The device tree is scanned when the driver is loaded. If
+    any PCI device node is equipped with property "ibm,slot-pluggable" and
+    "ibm,reset-by-firmware", it's regarded as hotpluggable slot and the driver
+    creates/registers slot for it. After that, the sysfs entries can be used
+    to operate the slot.
+
+    PATCH[3/4/5/6]: Necessary code changes to PPC PCI subsystem in order to
+                    support PCI slots for PPC PowerNV platform.
+    PATCH[7]      : powernv-php driver to support PCI hotplug for PowerNV
+                    platform.
+
+
+Hotplug testing 
+===============
+# cat /proc/cpuinfo | grep -i powernv
+platform        : PowerNV
+machine         : PowerNV 8286-41A
+
+# pwd
+/sys/bus/pci/slots
+# ls
+C10  C11  C12  C14  C15  C6  C7  C8  C9
+
+# lspci -s 0003::.
+0003:00:00.0 PCI bridge: IBM Device 03dc
+0003:01:00.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:01.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:08.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:09.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:10.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:11.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:03:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+0003:09:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.2 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.3 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:0f:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+# pwd
+/sys/bus/pci/slots/C10
+# cat address
+0003:09:00
+# cat cur_bus_speed
+5.0 GT/s PCIe
+# cat max_bus_speed
+8.0 GT/s PCIe
+# cat power
+1
+# echo 0 > power
+# lspci -s 0003::.
+0003:00:00.0 PCI bridge: IBM Device 03dc
+0003:01:00.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:01.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:08.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:09.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:10.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:11.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:03:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+0003:0f:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+# echo 1 > power
+# lspci -s 0003::.
+0003:00:00.0 PCI bridge: IBM Device 03dc
+0003:01:00.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:01.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:08.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:09.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:10.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:02:11.0 PCI bridge: PLX Technology, Inc. Device 8748 (rev ca)
+0003:03:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+0003:09:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.2 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:09:00.3 Ethernet controller: Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+0003:0f:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+
+Changelog
+=========
+v1 -> v2
+   * Keep opal_pci_reinit(). In case the slot is resetted by kernel,
+     instead of skiboot, this API should be called to restore states
+     for those affected devices.
+   * Reworked slot ID scheme so that old/new kernel can work with
+     skiboot with or without unified PCI slot management support.
+   * Code cleanup here and there.
+   * Separate powernv-php driver to support PCI hotplug for
+     PowerNV platform.
+   * Check if the OPAL API supported by firmware before calling
+     into it, which is necessary for back-compability.
+   * Separate patch for factoring pnv_pci_poll().
+
+
+Gavin Shan (7):
+  powerpc/powernv: Use PCI slot reset infrastructure
+  powerpc/powernv: Issue fundamental reset if required
+  powerpc/pci: Move pcibios_find_pci_bus() around
+  powerpc/pci: Don't scan empty slot
+  powerpc/powernv: Introduce pnv_pci_poll()
+  powerpc/powernv: Functions to retrieve PCI slot status
+  PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+
+ arch/powerpc/include/asm/eeh.h                 |   1 +
+ arch/powerpc/include/asm/opal.h                |  14 +-
+ arch/powerpc/include/asm/pnv-pci.h             |   3 +
+ arch/powerpc/kernel/pci-hotplug.c              |  39 ++-
+ arch/powerpc/platforms/powernv/eeh-powernv.c   | 258 +++++++++--------
+ arch/powerpc/platforms/powernv/opal-wrappers.S |   2 +
+ arch/powerpc/platforms/powernv/pci.c           |  43 +++
+ arch/powerpc/platforms/powernv/pci.h           |   1 +
+ arch/powerpc/platforms/pseries/pci_dlpar.c     |  32 ---
+ drivers/pci/hotplug/Kconfig                    |  12 +
+ drivers/pci/hotplug/Makefile                   |   4 +
+ drivers/pci/hotplug/powernv_php.c              | 126 ++++++++
+ drivers/pci/hotplug/powernv_php.h              |  70 +++++
+ drivers/pci/hotplug/powernv_php_slot.c         | 382 +++++++++++++++++++++++++
+ 14 files changed, 817 insertions(+), 170 deletions(-)
+ create mode 100644 drivers/pci/hotplug/powernv_php.c
+ create mode 100644 drivers/pci/hotplug/powernv_php.h
+ create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
+
+-- 
+1.8.3.2
+
