@@ -1,62 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:14924 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756092AbbBCSqo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Feb 2015 13:46:44 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"horms+renesas@verge.net.au" <horms+renesas@verge.net.au>,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: RE: [PATCH] PCI: rcar: Fix postion of MSI enable bit
-Date: Tue, 3 Feb 2015 18:46:35 +0000
-Message-ID: <SIXPR06MB0639D02BAB35FE7BD328BD24F53D0@SIXPR06MB0639.apcprd06.prod.outlook.com>
-References: <1422853483-14334-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com> 
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:61261 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728AbbBRRjk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Feb 2015 12:39:40 -0500
+Received: by mail-ob0-f180.google.com with SMTP id vb8so4663529obc.11
+        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 09:39:40 -0800 (PST)
+Date: Wed, 18 Feb 2015 11:39:28 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [GIT PULL] PCI fixes for v3.20
+Message-ID: <20150218173928.GA16575@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Resend with correct ml address
+Hi Linus,
 
-On: 03 February 2015 18:44, Phil Edworthy wrote:
-> Hi Iwamatsu-san,
-> 
-> Hmm, this is odd as MSI works before and after your patch. Since bit 31 just
-> represents the value of MSICAP0[16].MSIE, I think this may just be used for
-> endpoints.
-> 
-> However, you are correct that the bit used was wrong and so:
-> Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
-> 
-> Thanks
-> Phil
-> 
-> On: 02 February 2015 05:05, Nobuhiro Iwamatsu wrote:
-> >
-> > Position of MSI enable bit is 31bit, not 28bit.
-> > This fixes position of MSI bit necessary to initialize MSI.
-> >
-> > Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-> > ---
-> >  drivers/pci/host/pcie-rcar.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index bb36e27..eb12659 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -505,7 +505,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
-> >
-> >  	/* Enable MSI */
-> >  	if (IS_ENABLED(CONFIG_PCI_MSI))
-> > -		rcar_pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
-> > +		rcar_pci_write_reg(pcie, 0x801f0000, PCIEMSITXR);
-> >
-> >  	/* Finish initialization - establish a PCI Express link */
-> >  	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> > --
-> > 2.1.3
+This fixes a double kfree in some code we merged for v3.20.
 
+Bjorn
+
+
+The following changes since commit 872912352c5be930e9568e5f3b6d73107d9f278d:
+
+  Merge tag 'pm+acpi-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm (2015-02-10 15:09:41 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.20-fixes-1
+
+for you to fetch changes up to feb28979c137ba3f649ad36fc27c85c64c111f78:
+
+  of/pci: Remove duplicate kfree in of_pci_get_host_bridge_resources() (2015-02-11 15:27:15 -0600)
+
+----------------------------------------------------------------
+PCI updates for v3.20:
+
+  Resource management
+    - Remove duplicate kfree in of_pci_get_host_bridge_resources() (Lorenzo Pieralisi)
+
+----------------------------------------------------------------
+Lorenzo Pieralisi (1):
+      of/pci: Remove duplicate kfree in of_pci_get_host_bridge_resources()
+
+ drivers/of/of_pci.c | 1 -
+ 1 file changed, 1 deletion(-)
