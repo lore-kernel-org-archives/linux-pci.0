@@ -1,127 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.65] ([119.145.14.65]:5288 "EHLO
-	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753672AbbBZIQa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:16:30 -0500
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54892 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751795AbbBRARZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 19:17:25 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 18 Feb 2015 10:17:22 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6F35E2BB0051
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 11:17:19 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1I0HBAm8257782
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 11:17:19 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1I0Giwk008222
+	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 11:16:45 +1100
+Date: Wed, 18 Feb 2015 11:16:20 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v4 30/30] PCI: Remove pci_bus_assign_domain_nr()
-Date: Thu, 26 Feb 2015 16:12:24 +0800
-Message-ID: <1424938344-4017-31-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org,
+	linux-pci@vger.kernel.org, benh@kernel.crashing.org
+Subject: Re: [PATCH RESEND v2 7/7] PCI/hotplug: PowerPC PowerNV PCI hotplug
+ driver
+Message-ID: <20150218001620.GA22042@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1424157203-691-8-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20150217220916.GA26424@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150217220916.GA26424@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus.
+On Tue, Feb 17, 2015 at 04:09:16PM -0600, Bjorn Helgaas wrote:
+>On Tue, Feb 17, 2015 at 06:13:23PM +1100, Gavin Shan wrote:
+>> The patch intends to add standalone driver to support PCI hotplug
+>> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
+>> The firmware identified hotpluggable slots and marked their device
+>> tree node with proper "ibm,slot-pluggable" and "ibm,reset-by-firmware".
+>> The driver simply scans device-tree to create/register PCI hotplug slot
+>> accordingly.
+>> 
+>> If the skiboot firmware doesn't support slot status retrieval, the PCI
+>> slot device node shouldn't have property "ibm,reset-by-firmware". In
+>> that case, none of valid PCI slots will be detected from device tree.
+>> The skiboot firmware doesn't export the capability to access attention
+>> LEDs yet and it's something for TBD.
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ...
+>
+>> +static int disable_slot(struct hotplug_slot *php_slot)
+>> +{
+>> +	struct powernv_php_slot *slot = php_slot->private;
+>> +
+>> +	if (slot->state != POWERNV_PHP_SLOT_STATE_POPULATED)
+>> +		return 0;
+>> +
+>> +	pci_lock_rescan_remove();
+>> +	pcibios_remove_pci_devices(slot->bus);
+>> +	pci_unlock_rescan_remove();
+>> +	vm_unmap_aliases();
+>
+>What is vm_unmap_aliases() for?  I see this is probably copied from
+>rpaphp_core.c, where it was added by b4a26be9f6f8 ("powerpc/pseries: Flush
+>lazy kernel mappings after unplug operations").
+>
+>But I don't know whether:
+>
+>  - this is something specific to powerpc,
+>  - the lack of vm_unmap_aliases() in other hotplug paths is a bug,
+>  - the fact that we only do this on powerpc is covering up a
+>    powerpc bug somewhere
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.c   |    5 -----
- drivers/pci/probe.c |   12 ++++--------
- include/linux/pci.h |    3 ---
- 3 files changed, 4 insertions(+), 16 deletions(-)
+Yes, I copied this piece of code from rpaphp_core.c. I think Ben might
+help to answer the questions as he added the patch. I had very quick
+check on mm/vmalloc.c and it's reasonable to have vm_unmap_aliases()
+here to flush TLB entries for ioremap() regions, which were unmapped
+previously. if I'm correct. I don't think it's powerpc specific.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 51ada13..287cf43 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4579,11 +4579,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- {
- 	host->domain = pci_assign_domain_nr(host->dev.parent);
- }
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
- #endif
- #endif
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2e5997a..e6f03cf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -495,10 +495,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
-+
- 	return b;
- }
- 
-@@ -645,7 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1865,14 +1862,13 @@ static struct pci_bus *pci_create_root_bus(
- 	char *fmt;
- 
- 	parent = bridge->dev.parent;
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 68c09da..8d82340 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -470,9 +470,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
--- 
-1.7.1
+Thanks,
+Gavin
+
+>> +
+>> +	/* Detach the child hotpluggable slots */
+>> +	powernv_php_unregister(slot->dn);
+>> +
+>> +	/* Update slot state */
+>> +	slot->state = POWERNV_PHP_SLOT_STATE_REGISTER;
+>> +	return 0;
+>> +}
+>> 
+>
 
