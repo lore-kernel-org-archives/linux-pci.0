@@ -1,79 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:33647 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932877AbbBDPVm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 10:21:42 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 5 Feb 2015 01:21:39 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2CA382BB0047
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 02:21:36 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t14FLR6Y33554496
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 02:21:35 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t14FL2ED026833
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 02:21:02 +1100
-Date: Wed, 4 Feb 2015 23:20:42 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH] powerpc/powernv: make sure the IOV BAR will not exceed
- limit after shifting
-Message-ID: <20150204152042.GA6273@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150130230803.GA6795@google.com>
- <1422946903-12958-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150204001926.GA19540@google.com>
- <20150204033409.GA11577@richard>
- <CAErSpo4nLEvL4XGvkvZbfy0dFQcRDHdn5aznkx2fRMMnt1_n4g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4nLEvL4XGvkvZbfy0dFQcRDHdn5aznkx2fRMMnt1_n4g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+To: mohit.kumar@st.com
+Cc: viresh.kumar@linaro.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, svarbanov@mm-sol.com,
+	"Matwey V. Kornilov" <matwey@sai.msu.ru>
+Subject: [PATCH v3] pci: spear: Drop __initdata from spear13xx_pcie_driver
+Date: Thu, 19 Feb 2015 20:41:48 +0300
+Message-Id: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 08:19:14AM -0600, Bjorn Helgaas wrote:
->On Tue, Feb 3, 2015 at 9:34 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Tue, Feb 03, 2015 at 06:19:26PM -0600, Bjorn Helgaas wrote:
->>>On Tue, Feb 03, 2015 at 03:01:43PM +0800, Wei Yang wrote:
->
->>>> +    vf_num = pdn->vf_pes;
->>>
->>>I can't actually build this, but I don't think pdn->vf_pes is defined yet.
->>>
->>
->> The pdn->vf_pes is defined in the next patch, it is not defined yet.
->>
->> I thought the incremental patch means a patch on top of the current patch set,
->> so it is defined as the last patch.
->
->Yes, that's fine.  I want to keep the series bisectable, so I'll fold
->these patches together.
->
->>>I pushed an updated pci/virtualization branch with these updates.  I
->>>think there's also a leak that needs to be fixed that Dan Carpenter
->>>pointed out.
->
->>>+      vf_num = pdn->vf_pes;           // FIXME not defined yet
->>
->> Do you want me poll your pci/virtualization branch and fix this?
->
->Don't worry about this FIXME; I can fix that by squashing two patches.
->But please do pull my pci/virtualization branch and fix this one (this
->is the one that I thought Dan Carpenter pointed out):
->
->  drivers/pci/iov.c:488 sriov_init() warn: possible memory leak of 'iov'
+spear13xx_pcie_driver.driver is allocated in text.init section
+and then the pointer to it is passed futher. This patch is to avoid
+crashes like the following, when freed memory is used.
 
-Sure, let me take a look.
+Also, __init has been dropped from the probe() function referred from the struct
+and all called functions.
 
+ #0  __device_attach (drv=0xc0ed5608 <spear13xx_pcie_driver+20>, data=0xdb622610) at ../drivers/base/dd.c:409
+ #1  0xc07a4798 in bus_for_each_drv (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a6740 <__device_attach>)
+    at ../drivers/base/bus.c:463
+ #2  0xc07a6324 in device_attach (dev=0xdb622610) at ../drivers/base/dd.c:447
+ #3  0xc07a5814 in bus_probe_device (dev=0xdb622610) at ../drivers/base/bus.c:558
+ #4  0xc07a38d8 in device_add (dev=<optimized out>) at ../drivers/base/core.c:1058
+ #5  0xc08b6a5c in of_device_add (ofdev=<optimized out>) at ../drivers/of/device.c:66
+ #6  0xc08b742c in of_platform_device_create_pdata (np=<optimized out>, bus_id=0x0 <__vectors_start>, platform_data=0x0 <__vectors_start>,
+    parent=<optimized out>) at ../drivers/of/platform.c:241
+ #7  0xc08b7568 in of_platform_bus_create (bus=0xdfa46780, matches=0x0 <__vectors_start>, lookup=0x0 <__vectors_start>, parent=0xdb183410,
+    strict=true) at ../drivers/of/platform.c:414
+ #8  0xc08b79bc in of_platform_populate (root=0xc0ed5608 <spear13xx_pcie_driver+20>, matches=0xdb622610, lookup=0xda0,
+    parent=0xc07a6740 <__device_attach>) at ../drivers/of/platform.c:501
+ #9  0xbf000030 in am335x_child_probe (pdev=0xdb183400) at ../drivers/usb/musb/musb_am335x.c:12
+ #10 0xc07a83f0 in platform_drv_probe (_dev=0xdb183410) at ../drivers/base/platform.c:512
+ #11 0xc07a64e8 in really_probe (drv=<optimized out>, dev=<optimized out>) at ../drivers/base/dd.c:302
+ #12 driver_probe_device (drv=0xbf000234, dev=0xdb183410) at ../drivers/base/dd.c:399
+ #13 0xc07a6820 in __driver_attach (dev=0xdb183410, data=0xbf000234) at ../drivers/base/dd.c:477
+ #14 0xc07a46e8 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a83a4 <platform_drv_probe>)
+    at ../drivers/base/bus.c:313
+ #15 0xc07a5ebc in driver_attach (drv=<optimized out>) at ../drivers/base/dd.c:496
+ #16 0xc07a5af0 in bus_add_driver (drv=0xbf000234) at ../drivers/base/bus.c:694
+ #17 0xc07a6fec in driver_register (drv=0xbf000234) at ../drivers/base/driver.c:167
+ #18 0xc0209c34 in do_one_initcall (fn=0xbf002000) at ../init/main.c:801
+ #19 0xc02e0494 in do_init_module (mod=<optimized out>) at ../kernel/module.c:3142
+ #20 load_module (info=0xdb6b1f54, uargs=<optimized out>, flags=<optimized out>) at ../kernel/module.c:3461
+ #21 0xc02e0a44 in SYSC_finit_module (flags=<optimized out>, uargs=<optimized out>, fd=<optimized out>) at ../kernel/module.c:3537
+ #22 SyS_finit_module (fd=7, uargs=-1225602132, flags=0) at ../kernel/module.c:3518
+ #23 0xc021a680 in ?? ()
+
+Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+---
+Changes from v2:
+ - Drop __init from all probing functions to allow deferred probing.
+Changes from v1:
+ - Use platform_driver_probe instead of platform_driver_register to make linker happy.
+
+ drivers/pci/host/pcie-designware.c | 2 +-
+ drivers/pci/host/pcie-spear13xx.c  | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index df781cd..5b8a056 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -339,7 +339,7 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
+ };
+ 
+-int __init dw_pcie_host_init(struct pcie_port *pp)
++int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+ 	struct platform_device *pdev = to_platform_device(pp->dev);
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index 866465f..020d788 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -269,7 +269,7 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+ 	.host_init = spear13xx_pcie_host_init,
+ };
+ 
+-static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
++static int spear13xx_add_pcie_port(struct pcie_port *pp,
+ 					 struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -299,7 +299,7 @@ static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
+-static int __init spear13xx_pcie_probe(struct platform_device *pdev)
++static int spear13xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct spear13xx_pcie *spear13xx_pcie;
+ 	struct pcie_port *pp;
+@@ -370,7 +370,7 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
+ 
+-static struct platform_driver spear13xx_pcie_driver __initdata = {
++static struct platform_driver spear13xx_pcie_driver = {
+ 	.probe		= spear13xx_pcie_probe,
+ 	.driver = {
+ 		.name	= "spear-pcie",
 -- 
-Richard Yang
-Help you, Help me
+2.1.4
 
