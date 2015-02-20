@@ -1,97 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:56780 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753364AbbBGOUb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Feb 2015 09:20:31 -0500
-Received: by mail-qc0-f171.google.com with SMTP id s11so16369459qcv.2
-        for <linux-pci@vger.kernel.org>; Sat, 07 Feb 2015 06:20:30 -0800 (PST)
+Received: from ns.mm-sol.com ([37.157.136.199]:33244 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754282AbbBTOjD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Feb 2015 09:39:03 -0500
+Message-ID: <54E74701.9080107@mm-sol.com>
+Date: Fri, 20 Feb 2015 16:38:57 +0200
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
 MIME-Version: 1.0
-In-Reply-To: <1423011246-14429-1-git-send-email-yinghai@kernel.org>
-References: <1423011246-14429-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 7 Feb 2015 08:14:56 -0600
-Message-ID: <CAErSpo6MV_obn_31J3zTSfR0ke7kNYdr0mxgyuMYstr5RJcQHA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: disable auto realloc detection for lsi devices
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"3.12+" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+CC: Mohit Kumar <mohit.kumar@st.com>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] pci: spear: Drop __initdata from spear13xx_pcie_driver
+References: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru> <54E7072C.30303@mm-sol.com> <CAJs94EbZFLc1iz8zoV5PO2grKMzE3R41-8zC_anQ4QchNjK_SA@mail.gmail.com>
+In-Reply-To: <CAJs94EbZFLc1iz8zoV5PO2grKMzE3R41-8zC_anQ4QchNjK_SA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 3, 2015 at 6:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> LSI cards do not work if pci core change pci bar vaules.
-> will need to disable/enable pcie link of bridge manually.
+On 02/20/2015 12:13 PM, Matwey V. Kornilov wrote:
+> 2015-02-20 13:06 GMT+03:00 Stanimir Varbanov <svarbanov@mm-sol.com>:
+>> On 02/19/2015 07:41 PM, Matwey V. Kornilov wrote:
+>>> spear13xx_pcie_driver.driver is allocated in text.init section
+>>> and then the pointer to it is passed futher. This patch is to avoid
+>>> crashes like the following, when freed memory is used.
+>>>
+>>> Also, __init has been dropped from the probe() function referred from the struct
+>>> and all called functions.
+>>>
+>>
+>> <snip>
+>>
+>>>
+>>> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+>>> ---
+>>> Changes from v2:
+>>>  - Drop __init from all probing functions to allow deferred probing.
+>>> Changes from v1:
+>>>  - Use platform_driver_probe instead of platform_driver_register to make linker happy.
+>>>
+>>>  drivers/pci/host/pcie-designware.c | 2 +-
+>>>  drivers/pci/host/pcie-spear13xx.c  | 6 +++---
+>>>  2 files changed, 4 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>>> index df781cd..5b8a056 100644
+>>> --- a/drivers/pci/host/pcie-designware.c
+>>> +++ b/drivers/pci/host/pcie-designware.c
+>>> @@ -339,7 +339,7 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>>       .map = dw_pcie_msi_map,
+>>>  };
+>>>
+>>> -int __init dw_pcie_host_init(struct pcie_port *pp)
+>>> +int dw_pcie_host_init(struct pcie_port *pp)
+>>>  {
+>>
+>> we need to fix up the other pci drivers which use dw_pcie_host_init(), too.
+>>
+>> pci-exynos, pci-imx6, pci-keystone and pci-layerscape.
+>>
+>> Could you prepare a patch with above drivers included?
+> 
+> What is wrong with them? To call ordinary function from __init section
+> is perfectly legal.
 
-Maybe.  There's no analysis to substantiate this theory in the
-bugzilla, and there's no link to email discussion that shows what
-experiments you did.
+I thought in context of probe defer. But this will be subject to another
+patch. So ignore my comment.
 
-The BIOS sets the BAR.  Why does the device work when the BIOS sets
-the BAR but not when Linux does?
-
-> So disable auto realloc if there is any lsi device on that pci root
-> bus.
->
-> If BIOS is broken, solution would be booting pci=realloc and
-> 1. check with lsi to get new hba firmware to handle BAR changing.
-> 2. or disable/enable pcie link manually to get firmare reset.
->
-> Need to backport to kernel before 3.12 as this one can not be
-> applied directly.
->
-> Reported-by: Paul Johnson <pjay@nwtrail.com>
-> Tested-by: Paul Johnson <pjay@nwtrail.com>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: 3.12+ <stable@vger.kernel.org> # 3.12+
->
-> ---
->  drivers/pci/setup-bus.c |   17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
->
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -1548,14 +1548,31 @@ static int iov_resources_unassigned(stru
->         return 0;
->  }
->
-> +static int strange_dev_check(struct pci_dev *dev, void *data)
-> +{
-> +       bool *found = data;
-> +
-> +       /* LSI device firmware is not happy with changing BAR value */
-> +       if (dev->vendor == PCI_VENDOR_ID_LSI_LOGIC) {
-> +               *found = true;
-> +               return 1; /* return early from pci_walk_bus() */
-> +       }
-
-This is pretty ugly.  Do you have evidence that *all* LSI devices have
-an issue like this?
-
-Can you use the usual quirk style rather than polluting common code
-paths like this?
-
-There's an IORESOURCE_PCI_FIXED flag that might be useful in this situation.
-
-> +
-> +       return 0;
-> +}
->  static enum enable_type pci_realloc_detect(struct pci_bus *bus,
->                          enum enable_type enable_local)
->  {
->         bool unassigned = false;
-> +       bool found = false;
->
->         if (enable_local != undefined)
->                 return enable_local;
->
-> +       pci_walk_bus(bus, strange_dev_check, &found);
-> +       if (found)
-> +               return enable_local;
-> +
->         pci_walk_bus(bus, iov_resources_unassigned, &unassigned);
->         if (unassigned)
->                 return auto_enabled;
+-- 
+regards,
+Stan
