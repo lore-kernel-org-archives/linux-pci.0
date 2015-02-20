@@ -1,343 +1,120 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:47037 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753870AbbBTDfq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Feb 2015 22:35:46 -0500
+Received: by mail-ob0-f175.google.com with SMTP id va2so21900704obc.6
+        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2015 19:35:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
+References: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
+Date: Fri, 20 Feb 2015 09:05:45 +0530
+Message-ID: <CAKohpokfNOGSxzJ9qGdsKTOt5BFcyeRiErKoXXvNNOTkkahL=Q@mail.gmail.com>
+Subject: Re: [PATCH v3] pci: spear: Drop __initdata from spear13xx_pcie_driver
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+Cc: Mohit KUMAR <mohit.kumar@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Mike Travis <travis@sgi.com>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch v4 17/23] resources: Move struct resource_list_entry from ACPI into resource core
-Date: Thu,  5 Feb 2015 13:44:43 +0800
-Message-Id: <1423115089-12904-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently ACPI, PCI and pnp all implement the same resource list
-management with different data structure. We need to transfer from
-one data structure into another when passing resources from one
-subsystem into another subsystem. So move struct resource_list_entry
-from ACPI into resource core and rename it as resource_entry,
-then it could be reused by different subystems and avoid the data
-structure conversion.
+On 19 February 2015 at 23:11, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
+> spear13xx_pcie_driver.driver is allocated in text.init section
+> and then the pointer to it is passed futher. This patch is to avoid
+> crashes like the following, when freed memory is used.
+>
+> Also, __init has been dropped from the probe() function referred from the struct
+> and all called functions.
+>
+>  #0  __device_attach (drv=0xc0ed5608 <spear13xx_pcie_driver+20>, data=0xdb622610) at ../drivers/base/dd.c:409
+>  #1  0xc07a4798 in bus_for_each_drv (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a6740 <__device_attach>)
+>     at ../drivers/base/bus.c:463
+>  #2  0xc07a6324 in device_attach (dev=0xdb622610) at ../drivers/base/dd.c:447
+>  #3  0xc07a5814 in bus_probe_device (dev=0xdb622610) at ../drivers/base/bus.c:558
+>  #4  0xc07a38d8 in device_add (dev=<optimized out>) at ../drivers/base/core.c:1058
+>  #5  0xc08b6a5c in of_device_add (ofdev=<optimized out>) at ../drivers/of/device.c:66
+>  #6  0xc08b742c in of_platform_device_create_pdata (np=<optimized out>, bus_id=0x0 <__vectors_start>, platform_data=0x0 <__vectors_start>,
+>     parent=<optimized out>) at ../drivers/of/platform.c:241
+>  #7  0xc08b7568 in of_platform_bus_create (bus=0xdfa46780, matches=0x0 <__vectors_start>, lookup=0x0 <__vectors_start>, parent=0xdb183410,
+>     strict=true) at ../drivers/of/platform.c:414
+>  #8  0xc08b79bc in of_platform_populate (root=0xc0ed5608 <spear13xx_pcie_driver+20>, matches=0xdb622610, lookup=0xda0,
+>     parent=0xc07a6740 <__device_attach>) at ../drivers/of/platform.c:501
+>  #9  0xbf000030 in am335x_child_probe (pdev=0xdb183400) at ../drivers/usb/musb/musb_am335x.c:12
+>  #10 0xc07a83f0 in platform_drv_probe (_dev=0xdb183410) at ../drivers/base/platform.c:512
+>  #11 0xc07a64e8 in really_probe (drv=<optimized out>, dev=<optimized out>) at ../drivers/base/dd.c:302
+>  #12 driver_probe_device (drv=0xbf000234, dev=0xdb183410) at ../drivers/base/dd.c:399
+>  #13 0xc07a6820 in __driver_attach (dev=0xdb183410, data=0xbf000234) at ../drivers/base/dd.c:477
+>  #14 0xc07a46e8 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a83a4 <platform_drv_probe>)
+>     at ../drivers/base/bus.c:313
+>  #15 0xc07a5ebc in driver_attach (drv=<optimized out>) at ../drivers/base/dd.c:496
+>  #16 0xc07a5af0 in bus_add_driver (drv=0xbf000234) at ../drivers/base/bus.c:694
+>  #17 0xc07a6fec in driver_register (drv=0xbf000234) at ../drivers/base/driver.c:167
+>  #18 0xc0209c34 in do_one_initcall (fn=0xbf002000) at ../init/main.c:801
+>  #19 0xc02e0494 in do_init_module (mod=<optimized out>) at ../kernel/module.c:3142
+>  #20 load_module (info=0xdb6b1f54, uargs=<optimized out>, flags=<optimized out>) at ../kernel/module.c:3461
+>  #21 0xc02e0a44 in SYSC_finit_module (flags=<optimized out>, uargs=<optimized out>, fd=<optimized out>) at ../kernel/module.c:3537
+>  #22 SyS_finit_module (fd=7, uargs=-1225602132, flags=0) at ../kernel/module.c:3518
+>  #23 0xc021a680 in ?? ()
+>
+> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+> ---
+> Changes from v2:
+>  - Drop __init from all probing functions to allow deferred probing.
+> Changes from v1:
+>  - Use platform_driver_probe instead of platform_driver_register to make linker happy.
+>
+>  drivers/pci/host/pcie-designware.c | 2 +-
+>  drivers/pci/host/pcie-spear13xx.c  | 6 +++---
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index df781cd..5b8a056 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -339,7 +339,7 @@ static const struct irq_domain_ops msi_domain_ops = {
+>         .map = dw_pcie_msi_map,
+>  };
+>
+> -int __init dw_pcie_host_init(struct pcie_port *pp)
+> +int dw_pcie_host_init(struct pcie_port *pp)
+>  {
+>         struct device_node *np = pp->dev->of_node;
+>         struct platform_device *pdev = to_platform_device(pp->dev);
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 866465f..020d788 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -269,7 +269,7 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+>         .host_init = spear13xx_pcie_host_init,
+>  };
+>
+> -static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
+> +static int spear13xx_add_pcie_port(struct pcie_port *pp,
+>                                          struct platform_device *pdev)
+>  {
+>         struct device *dev = &pdev->dev;
+> @@ -299,7 +299,7 @@ static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
+>         return 0;
+>  }
+>
+> -static int __init spear13xx_pcie_probe(struct platform_device *pdev)
+> +static int spear13xx_pcie_probe(struct platform_device *pdev)
+>  {
+>         struct spear13xx_pcie *spear13xx_pcie;
+>         struct pcie_port *pp;
+> @@ -370,7 +370,7 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
+>
+> -static struct platform_driver spear13xx_pcie_driver __initdata = {
+> +static struct platform_driver spear13xx_pcie_driver = {
+>         .probe          = spear13xx_pcie_probe,
+>         .driver = {
+>                 .name   = "spear-pcie",
 
-Introduce dedicated header file resource_ext.h instead of embedding
-it into ioport.h to avoid header file inclusion order issues.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Vinod Koul <vinod.koul@intel.com>
----
- drivers/acpi/acpi_lpss.c     |    8 ++---
- drivers/acpi/acpi_platform.c |    4 +--
- drivers/acpi/resource.c      |   17 ++++------
- drivers/dma/acpi-dma.c       |   10 +++---
- include/linux/acpi.h         |   12 +------
- include/linux/resource_ext.h |   77 ++++++++++++++++++++++++++++++++++++++++++
- kernel/resource.c            |   25 ++++++++++++++
- 7 files changed, 120 insertions(+), 33 deletions(-)
- create mode 100644 include/linux/resource_ext.h
-
-diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
-index 4f3febf8a589..dfd1b8095dad 100644
---- a/drivers/acpi/acpi_lpss.c
-+++ b/drivers/acpi/acpi_lpss.c
-@@ -313,7 +313,7 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
- {
- 	struct lpss_device_desc *dev_desc;
- 	struct lpss_private_data *pdata;
--	struct resource_list_entry *rentry;
-+	struct resource_entry *rentry;
- 	struct list_head resource_list;
- 	struct platform_device *pdev;
- 	int ret;
-@@ -333,12 +333,12 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
- 		goto err_out;
- 
- 	list_for_each_entry(rentry, &resource_list, node)
--		if (resource_type(&rentry->res) == IORESOURCE_MEM) {
-+		if (resource_type(rentry->res) == IORESOURCE_MEM) {
- 			if (dev_desc->prv_size_override)
- 				pdata->mmio_size = dev_desc->prv_size_override;
- 			else
--				pdata->mmio_size = resource_size(&rentry->res);
--			pdata->mmio_base = ioremap(rentry->res.start,
-+				pdata->mmio_size = resource_size(rentry->res);
-+			pdata->mmio_base = ioremap(rentry->res->start,
- 						   pdata->mmio_size);
- 			break;
- 		}
-diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-index 6ba8beb6b9d2..1284138e42ab 100644
---- a/drivers/acpi/acpi_platform.c
-+++ b/drivers/acpi/acpi_platform.c
-@@ -45,7 +45,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 	struct platform_device *pdev = NULL;
- 	struct acpi_device *acpi_parent;
- 	struct platform_device_info pdevinfo;
--	struct resource_list_entry *rentry;
-+	struct resource_entry *rentry;
- 	struct list_head resource_list;
- 	struct resource *resources = NULL;
- 	int count;
-@@ -71,7 +71,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 		}
- 		count = 0;
- 		list_for_each_entry(rentry, &resource_list, node)
--			resources[count++] = rentry->res;
-+			resources[count++] = *rentry->res;
- 
- 		acpi_dev_free_resource_list(&resource_list);
- 	}
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 3ea0d17eb951..4752b9939987 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -444,12 +444,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resource_interrupt);
-  */
- void acpi_dev_free_resource_list(struct list_head *list)
- {
--	struct resource_list_entry *rentry, *re;
--
--	list_for_each_entry_safe(rentry, re, list, node) {
--		list_del(&rentry->node);
--		kfree(rentry);
--	}
-+	resource_list_free(list);
- }
- EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
- 
-@@ -464,16 +459,16 @@ struct res_proc_context {
- static acpi_status acpi_dev_new_resource_entry(struct resource_win *win,
- 					       struct res_proc_context *c)
- {
--	struct resource_list_entry *rentry;
-+	struct resource_entry *rentry;
- 
--	rentry = kmalloc(sizeof(*rentry), GFP_KERNEL);
-+	rentry = resource_list_create_entry(NULL, 0);
- 	if (!rentry) {
- 		c->error = -ENOMEM;
- 		return AE_NO_MEMORY;
- 	}
--	rentry->res = win->res;
-+	*rentry->res = win->res;
- 	rentry->offset = win->offset;
--	list_add_tail(&rentry->node, c->list);
-+	resource_list_add_tail(rentry, c->list);
- 	c->count++;
- 	return AE_OK;
- }
-@@ -534,7 +529,7 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
-  * returned as the final error code.
-  *
-  * The resultant struct resource objects are put on the list pointed to by
-- * @list, that must be empty initially, as members of struct resource_list_entry
-+ * @list, that must be empty initially, as members of struct resource_entry
-  * objects.  Callers of this routine should use %acpi_dev_free_resource_list() to
-  * free that list.
-  *
-diff --git a/drivers/dma/acpi-dma.c b/drivers/dma/acpi-dma.c
-index de361a156b34..5a635646e05c 100644
---- a/drivers/dma/acpi-dma.c
-+++ b/drivers/dma/acpi-dma.c
-@@ -43,7 +43,7 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
- {
- 	const struct acpi_csrt_shared_info *si;
- 	struct list_head resource_list;
--	struct resource_list_entry *rentry;
-+	struct resource_entry *rentry;
- 	resource_size_t mem = 0, irq = 0;
- 	int ret;
- 
-@@ -56,10 +56,10 @@ static int acpi_dma_parse_resource_group(const struct acpi_csrt_group *grp,
- 		return 0;
- 
- 	list_for_each_entry(rentry, &resource_list, node) {
--		if (resource_type(&rentry->res) == IORESOURCE_MEM)
--			mem = rentry->res.start;
--		else if (resource_type(&rentry->res) == IORESOURCE_IRQ)
--			irq = rentry->res.start;
-+		if (resource_type(rentry->res) == IORESOURCE_MEM)
-+			mem = rentry->res->start;
-+		else if (resource_type(rentry->res) == IORESOURCE_IRQ)
-+			irq = rentry->res->start;
- 	}
- 
- 	acpi_dev_free_resource_list(&resource_list);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index e818decb631f..e53822148b6a 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -27,6 +27,7 @@
- 
- #include <linux/errno.h>
- #include <linux/ioport.h>	/* for struct resource */
-+#include <linux/resource_ext.h>
- #include <linux/device.h>
- #include <linux/property.h>
- 
-@@ -285,11 +286,6 @@ extern int pnpacpi_disabled;
- 
- #define PXM_INVAL	(-1)
- 
--struct resource_win {
--	struct resource res;
--	resource_size_t offset;
--};
--
- bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res);
- bool acpi_dev_resource_io(struct acpi_resource *ares, struct resource *res);
- bool acpi_dev_resource_address_space(struct acpi_resource *ares,
-@@ -300,12 +296,6 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
- bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 				 struct resource *res);
- 
--struct resource_list_entry {
--	struct list_head node;
--	struct resource res;
--	resource_size_t offset;
--};
--
- void acpi_dev_free_resource_list(struct list_head *list);
- int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- 			   int (*preproc)(struct acpi_resource *, void *),
-diff --git a/include/linux/resource_ext.h b/include/linux/resource_ext.h
-new file mode 100644
-index 000000000000..e2bf63d881d4
---- /dev/null
-+++ b/include/linux/resource_ext.h
-@@ -0,0 +1,77 @@
-+/*
-+ * Copyright (C) 2015, Intel Corporation
-+ * Author: Jiang Liu <jiang.liu@linux.intel.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ */
-+#ifndef _LINUX_RESOURCE_EXT_H
-+#define _LINUX_RESOURCE_EXT_H
-+#include <linux/types.h>
-+#include <linux/list.h>
-+#include <linux/ioport.h>
-+#include <linux/slab.h>
-+
-+/* Represent resource window for bridge devices */
-+struct resource_win {
-+	struct resource res;		/* In master (CPU) address space */
-+	resource_size_t offset;		/* Translation offset for bridge */
-+};
-+
-+/*
-+ * Common resource list management data structure and interfaces to support
-+ * ACPI, PNP and PCI host bridge etc.
-+ */
-+struct resource_entry {
-+	struct list_head	node;
-+	struct resource		*res;	/* In master (CPU) address space */
-+	resource_size_t		offset;	/* Translation offset for bridge */
-+	struct resource		__res;	/* Default storage for res */
-+};
-+
-+extern struct resource_entry *
-+resource_list_create_entry(struct resource *res, size_t extra_size);
-+extern void resource_list_free(struct list_head *head);
-+
-+static inline void resource_list_add(struct resource_entry *entry,
-+				     struct list_head *head)
-+{
-+	list_add(&entry->node, head);
-+}
-+
-+static inline void resource_list_add_tail(struct resource_entry *entry,
-+					  struct list_head *head)
-+{
-+	list_add_tail(&entry->node, head);
-+}
-+
-+static inline void resource_list_del(struct resource_entry *entry)
-+{
-+	list_del(&entry->node);
-+}
-+
-+static inline void resource_list_free_entry(struct resource_entry *entry)
-+{
-+	kfree(entry);
-+}
-+
-+static inline void
-+resource_list_destroy_entry(struct resource_entry *entry)
-+{
-+	resource_list_del(entry);
-+	resource_list_free_entry(entry);
-+}
-+
-+#define resource_list_for_each_entry(entry, list)	\
-+	list_for_each_entry((entry), (list), node)
-+
-+#define resource_list_for_each_entry_safe(entry, tmp, list)	\
-+	list_for_each_entry_safe((entry), (tmp), (list), node)
-+
-+#endif /* _LINUX_RESOURCE_EXT_H */
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 0bcebffc4e77..19f2357dfda3 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -22,6 +22,7 @@
- #include <linux/device.h>
- #include <linux/pfn.h>
- #include <linux/mm.h>
-+#include <linux/resource_ext.h>
- #include <asm/io.h>
- 
- 
-@@ -1529,6 +1530,30 @@ int iomem_is_exclusive(u64 addr)
- 	return err;
- }
- 
-+struct resource_entry *resource_list_create_entry(struct resource *res,
-+						  size_t extra_size)
-+{
-+	struct resource_entry *entry;
-+
-+	entry = kzalloc(sizeof(*entry) + extra_size, GFP_KERNEL);
-+	if (entry) {
-+		INIT_LIST_HEAD(&entry->node);
-+		entry->res = res ? res : &entry->__res;
-+	}
-+
-+	return entry;
-+}
-+EXPORT_SYMBOL(resource_list_create_entry);
-+
-+void resource_list_free(struct list_head *head)
-+{
-+	struct resource_entry *entry, *tmp;
-+
-+	list_for_each_entry_safe(entry, tmp, head, node)
-+		resource_list_destroy_entry(entry);
-+}
-+EXPORT_SYMBOL(resource_list_free);
-+
- static int __init strict_iomem(char *str)
- {
- 	if (strstr(str, "relaxed"))
--- 
-1.7.10.4
-
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
