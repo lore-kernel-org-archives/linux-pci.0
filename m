@@ -1,60 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:42735 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751552AbbBIEWN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Feb 2015 23:22:13 -0500
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:43898 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbbBTA4j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Feb 2015 19:56:39 -0500
+Received: by mail-ob0-f179.google.com with SMTP id wp4so21293937obc.10
+        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2015 16:56:39 -0800 (PST)
+Date: Thu, 19 Feb 2015 18:56:21 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V11 06/17] powerpc/pci: Add PCI resource alignment
+ documentation
+Message-ID: <20150220005621.GA21131@google.com>
+References: <20150113180502.GC2776@google.com>
+ <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1421288887-7765-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150204234433.GC11271@google.com>
+ <1423530151.4924.73.camel@au1.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1423381030-3457-1-git-send-email-matwey@sai.msu.ru>
-References: <1423381030-3457-1-git-send-email-matwey@sai.msu.ru>
-Date: Mon, 9 Feb 2015 12:22:12 +0800
-Message-ID: <CAOh2x=m4U=D7DmhPcfWm8ux_48xsCcWz6EQLXuAqpU4FtvCEYQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: spear: Drop __initdata from struct platform_driver spear13xx_pcie_driver
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423530151.4924.73.camel@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 8, 2015 at 3:37 PM, Matwey V. Kornilov <matwey@sai.msu.ru> wrote:
-> spear13xx_pcie_driver.driver is allocated in text.init section
-> and then the pointer to it is passed futher. This patch is to avoid
-> crashes like the following, when freed memory is used:
->
->  #0  __device_attach (drv=0xc0ed5608 <spear13xx_pcie_driver+20>, data=0xdb622610) at ../drivers/base/dd.c:409
->  #1  0xc07a4798 in bus_for_each_drv (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a6740 <__device_attach>)
->     at ../drivers/base/bus.c:463
->  #2  0xc07a6324 in device_attach (dev=0xdb622610) at ../drivers/base/dd.c:447
->  #3  0xc07a5814 in bus_probe_device (dev=0xdb622610) at ../drivers/base/bus.c:558
->  #4  0xc07a38d8 in device_add (dev=<optimized out>) at ../drivers/base/core.c:1058
->  #5  0xc08b6a5c in of_device_add (ofdev=<optimized out>) at ../drivers/of/device.c:66
->  #6  0xc08b742c in of_platform_device_create_pdata (np=<optimized out>, bus_id=0x0 <__vectors_start>, platform_data=0x0 <__vectors_start>,
->     parent=<optimized out>) at ../drivers/of/platform.c:241
->  #7  0xc08b7568 in of_platform_bus_create (bus=0xdfa46780, matches=0x0 <__vectors_start>, lookup=0x0 <__vectors_start>, parent=0xdb183410,
->     strict=true) at ../drivers/of/platform.c:414
->  #8  0xc08b79bc in of_platform_populate (root=0xc0ed5608 <spear13xx_pcie_driver+20>, matches=0xdb622610, lookup=0xda0,
->     parent=0xc07a6740 <__device_attach>) at ../drivers/of/platform.c:501
->  #9  0xbf000030 in am335x_child_probe (pdev=0xdb183400) at ../drivers/usb/musb/musb_am335x.c:12
->  #10 0xc07a83f0 in platform_drv_probe (_dev=0xdb183410) at ../drivers/base/platform.c:512
->  #11 0xc07a64e8 in really_probe (drv=<optimized out>, dev=<optimized out>) at ../drivers/base/dd.c:302
->  #12 driver_probe_device (drv=0xbf000234, dev=0xdb183410) at ../drivers/base/dd.c:399
->  #13 0xc07a6820 in __driver_attach (dev=0xdb183410, data=0xbf000234) at ../drivers/base/dd.c:477
->  #14 0xc07a46e8 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a83a4 <platform_drv_probe>)
->     at ../drivers/base/bus.c:313
->  #15 0xc07a5ebc in driver_attach (drv=<optimized out>) at ../drivers/base/dd.c:496
->  #16 0xc07a5af0 in bus_add_driver (drv=0xbf000234) at ../drivers/base/bus.c:694
->  #17 0xc07a6fec in driver_register (drv=0xbf000234) at ../drivers/base/driver.c:167
->  #18 0xc0209c34 in do_one_initcall (fn=0xbf002000) at ../init/main.c:801
->  #19 0xc02e0494 in do_init_module (mod=<optimized out>) at ../kernel/module.c:3142
->  #20 load_module (info=0xdb6b1f54, uargs=<optimized out>, flags=<optimized out>) at ../kernel/module.c:3461
->  #21 0xc02e0a44 in SYSC_finit_module (flags=<optimized out>, uargs=<optimized out>, fd=<optimized out>) at ../kernel/module.c:3537
->  #22 SyS_finit_module (fd=7, uargs=-1225602132, flags=0) at ../kernel/module.c:3518
->  #23 0xc021a680 in ?? ()
->
-> Fixes: 6675ef212da (PCI: spear: Fix Section mismatch compilation warning for probe())
+On Tue, Feb 10, 2015 at 12:02:31PM +1100, Benjamin Herrenschmidt wrote:
+> On Wed, 2015-02-04 at 17:44 -0600, Bjorn Helgaas wrote:
+> > > 
+> > > diff --git a/Documentation/powerpc/pci_iov_resource_on_powernv.txt b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
+> > > new file mode 100644
+> > > index 0000000..10d4ac2
+> > > --- /dev/null
+> > > +++ b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
+> > 
+> > I added the following two patches on top of this because I'm still confused
+> > about the difference between the M64 window and the M64 BARs.  Several
+> > parts of the writeup seem to imply that there are several M64 windows, but
+> > that seems to be incorrect.
+> > 
+> > And I tried to write something about M64 BARs, too.  But it could well be
+> > incorrect.
+> > 
+> > Please correct as necessary.  Ultimately I'll just fold everything into the
+> > original patch so there's only one.
+> 
+> The way the HW works is that 2 windows of the CPU address space are
+> routed to each PHB. One is used for 32-bit stuff and one is used for
+> 64-bit stuff (it doesn't have to be and it's not fixed in HW which is
+> which, it's just two windows of the fabric being forwarded but that's
+> how we use them). The FW configures them, one is 4G and the other one is
+> today 64G but that might get increased at some point.
+> 
+> (Actually there's a 3rd window but it's exclusively used for the PHB
+> own registers so we can ignore it here).
+> 
+> Once an MMIO cycle hit one of the above window on the powerbus it gets
+> forwarded to the PHB.
+> 
+> Now the PHB itself contains a number of "BARs" which aren't the same
+> thing as device BARs so it's confusing and I tend to call them "windows"
+> for that reason. They are made of pairs of registers indicating an
+> address and a size (sort-of, the M64 ones are actually in some CAM in
+> the chip but that's a register access method detail that is not relevant
+> here).
+> 
+>  - One M32. It's limited to 4G in size, and has the specific attribute
+> that the top bits of the address from the powerbus are dropped (and
+> replaced with the content of a register) thus allowing this "window" to
+> target the 32-bit MMIO space from anywhere in the CPU 50-bit bus space.
+> This is setup at boot time, and we can probably ignore it here. It has
+> it's own segmenting for PEs which is a bit different from 64-bit stuff
+> as it goes through a remapping table allowing to configure which PE each
+> segment maps to.
+> 
+>  - 16 M64's. Each of these can be configured individually to pass a
+> portion of the above "window" space to the PCIe bus. There is no
+> remapping in that case (the powerbus addresses are passed 1:1). Each of
+> those M64's can be configured to have either a single PE (in which case
+> the PE number can be configured) or to be segmented (256 PE's but the PE
+> number cannot be configured and is equal to the segment number).
+> 
+> Additionally, the M64's can overlap, in which case we have a well
+> defined precedence order, which allows us to create a "backing" M64
+> that cover the entire 64G window going to the PCIe for "normal" 64-bit
+> BARs and overlap on top of that M64's appropriately sized and positioned
+> to cover IOV BARs (or in some case, single-PE M64's to cover very large
+> device BARs in order to avoid using too many PE's in the "backing" M64).
 
-wouldn't this again result in the problem reported above ?
+So there are the two windows of CPU address space that are routed to the
+PHB.  And the PHB contains one M32 window and sixteen M64 windows.  What
+happens if the PHB receives an access to something that was in one of the
+two CPU address space windows, but is not contained in M32 or one of the
+M64 windows?
+
+If that is an error or is non-sensical, then the only windows relevant to
+PCI would be the M32 and M64 windows, and we could just ignore the
+top-level two windows.
+
+I squashed all my doc updates into the original and pushed it here:
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=5449d1a812d561bafe0d458132ef356765505507
+
+If I made it say something wrong, a patch would be the best way to fix it.
+
+Bjorn
