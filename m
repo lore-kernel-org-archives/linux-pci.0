@@ -1,199 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"Lee, Chun-Yi" <jlee@suse.com>, stable@vger.kernel.org
-Subject: [PATCH 2/8] x86: Kill E820_RESERVED_KERN
-Date: Sat, 28 Feb 2015 18:17:33 -0800
-Message-Id: <1425176259-30087-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:43952 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbbBTFyM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Feb 2015 00:54:12 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 Feb 2015 15:54:09 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id EE8A72BB0047
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 16:54:06 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1K5rw8R44761214
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 16:54:06 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1K5rWJT005051
+	for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 16:53:33 +1100
+Date: Fri, 20 Feb 2015 16:53:08 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: cascardo@linux.vnet.ibm.com
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 0/4] Support registering specific reset handler
+Message-ID: <20150220055308.GA26047@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20150216131427.GA4840@oc0812247204.ltc.br.ibm.com>
+ <20150216223647.GA5758@shangw>
+ <20150219185746.GA4440@oc0812247204.ltc.br.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150219185746.GA4440@oc0812247204.ltc.br.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we are using memblock to do early resource reserver/allocation
-instead of using e820 map directly, and setup_data is reserved in
-memblock early already.
-Also kexec will generate setup_data and pass pointer to second kernel,
-so second kernel will reserve setup_data by their own.
+On Thu, Feb 19, 2015 at 04:57:47PM -0200, cascardo@linux.vnet.ibm.com wrote:
+>On Tue, Feb 17, 2015 at 09:36:47AM +1100, Gavin Shan wrote:
+>> On Mon, Feb 16, 2015 at 11:14:27AM -0200, cascardo@linux.vnet.ibm.com wrote:
+>> >On Fri, Feb 13, 2015 at 03:54:55PM +1100, Gavin Shan wrote:
+>> >> VFIO PCI infrastructure depends on pci_reset_function() to do reset on
+>> >> PCI devices so that they would be in clean state when host or guest grabs
+>> >> them. Unfortunately, the function doesn't work (or not well) on some PCI
+>> >> devices that require EEH PE reset.
+>> >> 
+>> >> The patchset extends the quirk for PCI device speicific reset methods to
+>> >> allow dynamically registration. With it, we can translate reset requests
+>> >> for those special PCI devcies to EEH PE reset, which is only avaialble on
+>> >> 64-bits PowerPC platforms.
+>> >> 
+>> >
+>> >Hi, Gavin.
+>> >
+>> >I like your approach overall. That allows us to confine these quirks to
+>> >the platforms where they are relevant. I would make the quirks more
+>> >specific, though, instead of doing them for all IBM and Mellanox
+>> >devices.
+>> >
+>> 
+>> Yeah, we need have more specific vendor/device IDs for PATCH[4/4]. Could
+>> you please take a look on PATCH[4/4] and then suggest the specific devices
+>> that requries the platform-dependent reset quirk? Especially the device IDs
+>> for IBM/Mellanox we need put add quirks for.
+>> 
+>> >I wonder if we should not have some form of domain reset, where we would
+>> >reset all the devices on the same group, and use that on vfio. Grouping
+>> >the devices would then be made platform-dependent, as well as the reset
+>> >method. On powernv, we would group by IOMMU group and issue a
+>> >fundamental reset.
+>> >
+>> 
+>> I'm assuming "domain reset" is PE reset, which is the specific reset handler
+>> tries to do on PowerNV platform. The reason why we need platform specific
+>> reset handler is some adapters can't support function level reset methods
+>> (except pci_dev_specific_reset()) in __pci_dev_reset().
+>> 
+>
+>Well, in the case of Power servers, this would be the PE reset, I am not
+>sure what this would be on other platforms. No other platform implements
+>pci_set_pcie_reset_state, which I think would be one possible to
+>implement such a reset.
+>
+>What I am saying is that we should consider doing this on all platforms
+>and for all adapters, because this is not specific to Power and this is
+>not specific to this particular set of adapters. Otherwise, one can
+>simply program one adapter in the guest to write to host memory,
+>shutdown, and since no reset will take place, the card will simply write
+>to host memory when the guest is finished with and IOMMU is off.
+>
 
-We can kill E820_RESERVED_KERN and not touch e820 map at all.
+Yes, I believe your way will make things simpler and we don't need the
+code to support registering reset handler dynamically at atll. Please
+confirm if following idea is what you're suggesting: 
 
-That will fix bug in mark_nonsave_region that can not handle that
-case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
-boundary is not page aligned.
+- Introduce function drivers/pci/quirks.c::pci_dev_specific_reset(), which
+  will be added to pci_dev_reset_methods[] for various vendor/device IDs.
+- pci_dev_specific_reset() routes the reset (or probe) request to
+  pci_set_pcie_reset_state(), which needs one more syntax for reset probing.
+  In turn, pci_set_pcie_reset_state() calls pcibios_set_pcie_reset_state(),
+  which returns -ETTY by default.
 
-Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
-Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
-Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
-Cc: "Lee, Chun-Yi" <jlee@suse.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
----
- arch/x86/include/uapi/asm/e820.h |  9 ---------
- arch/x86/kernel/e820.c           |  6 ++----
- arch/x86/kernel/setup.c          | 26 --------------------------
- arch/x86/kernel/tboot.c          |  3 +--
- arch/x86/mm/init_64.c            | 11 ++++-------
- 5 files changed, 7 insertions(+), 48 deletions(-)
+For PowerPC, pcibios_set_pcie_reset_state() will do PE reset, which can't
+be ported to other platforms as it depends on PowerPC unique EEH feature.
+So other platforms have to override this function and do things similar to
+PowerPC PE reset there.
 
-diff --git a/arch/x86/include/uapi/asm/e820.h b/arch/x86/include/uapi/asm/e820.h
-index d993e33..edc8a71 100644
---- a/arch/x86/include/uapi/asm/e820.h
-+++ b/arch/x86/include/uapi/asm/e820.h
-@@ -33,15 +33,6 @@
- #define E820_NVS	4
- #define E820_UNUSABLE	5
- 
--
--/*
-- * reserved RAM used by kernel itself
-- * if CONFIG_INTEL_TXT is enabled, memory of this type will be
-- * included in the S3 integrity calculation and so should not include
-- * any memory that BIOS might alter over the S3 transition
-- */
--#define E820_RESERVED_KERN        128
--
- #ifndef __ASSEMBLY__
- #include <linux/types.h>
- struct e820entry {
-diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
-index 46201de..2a6bed9 100644
---- a/arch/x86/kernel/e820.c
-+++ b/arch/x86/kernel/e820.c
-@@ -134,7 +134,6 @@ static void __init e820_print_type(u32 type)
- {
- 	switch (type) {
- 	case E820_RAM:
--	case E820_RESERVED_KERN:
- 		printk(KERN_CONT "usable");
- 		break;
- 	case E820_RESERVED:
-@@ -688,7 +687,7 @@ void __init e820_mark_nosave_regions(unsigned long limit_pfn)
- 			register_nosave_region(pfn, PFN_UP(ei->addr));
- 
- 		pfn = PFN_DOWN(ei->addr + ei->size);
--		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
-+		if (ei->type != E820_RAM)
- 			register_nosave_region(PFN_UP(ei->addr), pfn);
- 
- 		if (pfn >= limit_pfn)
-@@ -902,7 +901,6 @@ void __init finish_e820_parsing(void)
- static inline const char *e820_type_to_string(int e820_type)
- {
- 	switch (e820_type) {
--	case E820_RESERVED_KERN:
- 	case E820_RAM:	return "System RAM";
- 	case E820_ACPI:	return "ACPI Tables";
- 	case E820_NVS:	return "ACPI Non-volatile Storage";
-@@ -1077,7 +1075,7 @@ void __init memblock_x86_fill(void)
- 		if (end != (resource_size_t)end)
- 			continue;
- 
--		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
-+		if (ei->type != E820_RAM)
- 			continue;
- 
- 		memblock_add(ei->addr, ei->size);
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 05d444f..c9b3e2f 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -473,30 +473,6 @@ static void __init parse_setup_data(void)
- 	}
- }
- 
--static void __init e820_reserve_setup_data(void)
--{
--	struct setup_data *data;
--	u64 pa_data;
--	int found = 0;
--
--	pa_data = boot_params.hdr.setup_data;
--	while (pa_data) {
--		data = early_memremap(pa_data, sizeof(*data));
--		e820_update_range(pa_data, sizeof(*data)+data->len,
--			 E820_RAM, E820_RESERVED_KERN);
--		found = 1;
--		pa_data = data->next;
--		early_iounmap(data, sizeof(*data));
--	}
--	if (!found)
--		return;
--
--	sanitize_e820_map(e820.map, ARRAY_SIZE(e820.map), &e820.nr_map);
--	memcpy(&e820_saved, &e820, sizeof(struct e820map));
--	printk(KERN_INFO "extended physical RAM map:\n");
--	e820_print_map("reserve setup_data");
--}
--
- static void __init memblock_x86_reserve_range_setup_data(void)
- {
- 	struct setup_data *data;
-@@ -1032,8 +1008,6 @@ void __init setup_arch(char **cmdline_p)
- 		early_dump_pci_devices();
- #endif
- 
--	/* update the e820_saved too */
--	e820_reserve_setup_data();
- 	finish_e820_parsing();
- 
- 	if (efi_enabled(EFI_BOOT))
-diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
-index 91a4496..3c2752a 100644
---- a/arch/x86/kernel/tboot.c
-+++ b/arch/x86/kernel/tboot.c
-@@ -195,8 +195,7 @@ static int tboot_setup_sleep(void)
- 	tboot->num_mac_regions = 0;
- 
- 	for (i = 0; i < e820.nr_map; i++) {
--		if ((e820.map[i].type != E820_RAM)
--		 && (e820.map[i].type != E820_RESERVED_KERN))
-+		if (e820.map[i].type != E820_RAM)
- 			continue;
- 
- 		add_mac_region(e820.map[i].addr, e820.map[i].size);
-diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
-index 30eb05a..19430d5 100644
---- a/arch/x86/mm/init_64.c
-+++ b/arch/x86/mm/init_64.c
-@@ -426,8 +426,7 @@ phys_pte_init(pte_t *pte_page, unsigned long addr, unsigned long end,
- 		next = (addr & PAGE_MASK) + PAGE_SIZE;
- 		if (addr >= end) {
- 			if (!after_bootmem &&
--			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM) &&
--			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RESERVED_KERN))
-+			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM))
- 				set_pte(pte, __pte(0));
- 			continue;
- 		}
-@@ -473,9 +472,8 @@ phys_pmd_init(pmd_t *pmd_page, unsigned long address, unsigned long end,
- 
- 		next = (address & PMD_MASK) + PMD_SIZE;
- 		if (address >= end) {
--			if (!after_bootmem &&
--			    !e820_any_mapped(address & PMD_MASK, next, E820_RAM) &&
--			    !e820_any_mapped(address & PMD_MASK, next, E820_RESERVED_KERN))
-+			if (!after_bootmem && !e820_any_mapped(
-+					address & PMD_MASK, next, E820_RAM))
- 				set_pmd(pmd, __pmd(0));
- 			continue;
- 		}
-@@ -548,8 +546,7 @@ phys_pud_init(pud_t *pud_page, unsigned long addr, unsigned long end,
- 		next = (addr & PUD_MASK) + PUD_SIZE;
- 		if (addr >= end) {
- 			if (!after_bootmem &&
--			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM) &&
--			    !e820_any_mapped(addr & PUD_MASK, next, E820_RESERVED_KERN))
-+			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM))
- 				set_pud(pud, __pud(0));
- 			continue;
- 		}
--- 
-1.8.4.5
+Thanks,
+Gavin
+
+>> >> Gavin Shan (4):
+>> >>   PCI: Rename struct pci_dev_reset_methods
+>> >>   PCI: Introduce list for device reset methods
+>> >>   PCI: Allow registering reset method
+>> >>   powerpc/powernv: Register PCI dev specific reset handlers
+>> >> 
+>> >>  arch/powerpc/platforms/powernv/pci.c |  61 +++++++++++++++
+>> >>  drivers/pci/pci.h                    |   3 +-
+>> >>  drivers/pci/quirks.c                 | 139 ++++++++++++++++++++++++++++++-----
+>> >>  include/linux/pci.h                  |   9 +++
+>> >>  4 files changed, 192 insertions(+), 20 deletions(-)
+>> >> 
+>> >> -- 
+>> >> 1.8.3.2
+>> >> 
+>> 
+>> _______________________________________________
+>> Linuxppc-dev mailing list
+>> Linuxppc-dev@lists.ozlabs.org
+>> https://lists.ozlabs.org/listinfo/linuxppc-dev
 
