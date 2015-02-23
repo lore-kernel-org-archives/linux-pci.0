@@ -1,50 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:47369 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846AbbBQVpP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 16:45:15 -0500
-Received: from /spool/local
-	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <stewart@linux.vnet.ibm.com>;
-	Tue, 17 Feb 2015 14:45:15 -0700
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 5F85CC40003
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:36:23 -0700 (MST)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1HLjLLa48037928
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:45:30 -0700
-Received: from d03av02.boulder.ibm.com (localhost [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1HLicZU006444
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 14:44:39 -0700
-From: Stewart Smith <stewart@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH RESEND v2 0/7] powerpc/powernv: Unified PCI slot reset and hotplug
-In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Wed, 18 Feb 2015 08:44:19 +1100
-Message-ID: <m3vbj0gqmk.fsf@oc8180480414.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:46691 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121AbbBWKV6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Feb 2015 05:21:58 -0500
+From: Phong Tran <tranmanphong@gmail.com>
+To: tinamdar@apm.com, bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Phong Tran <tranmanphong@gmail.com>
+Subject: [PATCH] PCI: xgene: Fix the map_bus callback prototype
+Date: Mon, 23 Feb 2015 17:21:39 +0700
+Message-Id: <1424686899-7869-1-git-send-email-tranmanphong@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
+The return value should be void __iomem *.
+Tested by compile only.
 
-> The patchset was built based on patchset "powerpc/powernv: Simplify EEH
-> implementation", which can be found from:
->
-> https://patchwork.ozlabs.org/patch/439956/
->
-> The patchset corresponds to skiboot changes, which manages PCI slots
-> in a unified way: OPAL APIs used to do slot reset, power management,
-> presence status retrival. The patchset shouldn't be merged before
-> the OPAL firmware counterpart is merged:
->
-> https://patchwork.ozlabs.org/patch/440463/
+Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+---
+ drivers/pci/host/pci-xgene.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-But this patchset will work with old OPAL, right? We're not breaking
-compatibility with newer kernels (with this patchset) and older
-firmware?
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index aab5547..9c3bfd8 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+ 	return false;
+ }
+ 
+-static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
++static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			      int offset)
+ {
+ 	struct xgene_pcie_port *port = bus->sysdata;
+-- 
+2.1.0
 
