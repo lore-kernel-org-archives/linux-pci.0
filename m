@@ -1,69 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.64] ([119.145.14.64]:24360 "EHLO
-	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753851AbbBZBdN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:33:13 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v3 28/30] PCI: Export find_pci_host_bridge()
-Date: Thu, 26 Feb 2015 09:29:45 +0800
-Message-ID: <1424914187-21027-29-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:47093 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbbBXIei (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:34:38 -0500
+Received: by pabkx10 with SMTP id kx10so34330315pab.13
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:34:37 -0800 (PST)
+Subject: [PATCH v12 14/21] powerpc/powernv: Allocate struct pnv_ioda_pe
+ iommu_table dynamically
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:34:35 -0600
+Message-ID: <20150224083435.32124.65099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export find_pci_host_bridge().
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Current iommu_table of a PE is a static field.  This will have a problem
+when iommu_free_table() is called.
+
+Allocate iommu_table dynamically.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host-bridge.c |    2 +-
- include/linux/pci.h       |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ arch/powerpc/include/asm/iommu.h          |    3 +++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
+ arch/powerpc/platforms/powernv/pci.h      |    2 +-
+ 3 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 4a2baa2..51e24f8 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -104,7 +104,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- 	return bus;
+diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+index 9cfa3706a1b8..5574eeb97634 100644
+--- a/arch/powerpc/include/asm/iommu.h
++++ b/arch/powerpc/include/asm/iommu.h
+@@ -78,6 +78,9 @@ struct iommu_table {
+ 	struct iommu_group *it_group;
+ #endif
+ 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
++#ifdef CONFIG_PPC_POWERNV
++	void           *data;
++#endif
+ };
+ 
+ /* Pure 2^n version of get_order */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 58c4fc4ab63c..cd1a56160ded 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -916,6 +916,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 		return;
+ 	}
+ 
++	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
++			GFP_KERNEL, hose->node);
++	pe->tce32_table->data = pe;
++
+ 	/* Associate it with all child devices */
+ 	pnv_ioda_setup_same_PE(bus, pe);
+ 
+@@ -1005,7 +1009,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+ 
+ 	pe = &phb->ioda.pe_array[pdn->pe_number];
+ 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+-	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
++	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
  }
  
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
- {
- 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+@@ -1032,7 +1036,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+ 	} else {
+ 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+ 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+-		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
++		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+ 	}
+ 	*pdev->dev.dma_mask = dma_mask;
+ 	return 0;
+@@ -1069,9 +1073,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (add_to_iommu_group)
+ 			set_iommu_table_base_and_group(&dev->dev,
+-						       &pe->tce32_table);
++						       pe->tce32_table);
+ 		else
+-			set_iommu_table_base(&dev->dev, &pe->tce32_table);
++			set_iommu_table_base(&dev->dev, pe->tce32_table);
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2f29e95..6ac7926 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -426,6 +426,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, u32 dombus, struct list_head *resources, 
- 		void *sysdata, struct pci_host_bridge_ops *ops);
-+struct pci_host_bridge *find_pci_host_bridge(struct pci_bus* bus);
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
--- 
-1.7.1
+ 		if (dev->subordinate)
+ 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
+@@ -1161,8 +1165,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+ void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+ 				 __be64 *startp, __be64 *endp, bool rm)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	struct pnv_phb *phb = pe->phb;
+ 
+ 	if (phb->type == PNV_PHB_IODA1)
+@@ -1228,7 +1231,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+ 				  base << 28, IOMMU_PAGE_SHIFT_4K);
+ 
+@@ -1266,8 +1269,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 
+ static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+ {
+-	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+-					      tce32_table);
++	struct pnv_ioda_pe *pe = tbl->data;
+ 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+ 	int64_t rc;
+ 
+@@ -1312,10 +1314,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+ 	pe->tce_bypass_base = 1ull << 59;
+ 
+ 	/* Install set_bypass callback for VFIO */
+-	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
++	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+ 
+ 	/* Enable bypass by default */
+-	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
++	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+ }
+ 
+ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+@@ -1363,7 +1365,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	/* Setup linux iommu table */
+-	tbl = &pe->tce32_table;
++	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
+ 			IOMMU_PAGE_SHIFT_4K);
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index e5b75b298d95..731777734bca 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
+ 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+ 	int			tce32_seg;
+ 	int			tce32_segcount;
+-	struct iommu_table	tce32_table;
++	struct iommu_table	*tce32_table;
+ 	phys_addr_t		tce_inval_reg_phys;
+ 
+ 	/* 64-bit TCE bypass region */
 
