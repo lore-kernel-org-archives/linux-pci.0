@@ -1,121 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:55161 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934AbbBROat (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Feb 2015 09:30:49 -0500
-Received: by mail-qc0-f179.google.com with SMTP id r5so1031909qcx.10
-        for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 06:30:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1424219432.21410.113.camel@kernel.crashing.org>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1424157203-691-8-git-send-email-gwshan@linux.vnet.ibm.com>
- <20150217220916.GA26424@google.com> <20150218001620.GA22042@shangw> <1424219432.21410.113.camel@kernel.crashing.org>
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:43143 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbbBXIwi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:52:38 -0500
+Received: by pdev10 with SMTP id v10so31874325pde.10
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:52:37 -0800 (PST)
+Date: Tue, 24 Feb 2015 02:52:34 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 18 Feb 2015 08:30:28 -0600
-Message-ID: <CAErSpo6vMyy2SoqZ4ca2D_BUxd3J4W5jASsQu0NM9opFzR5mfg@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 7/7] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-mm@kvack.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 15/21] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+Message-ID: <20150224085234.GJ6220@google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083442.32124.96716.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150224083442.32124.96716.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-mm, linux-kernel]
+On Tue, Feb 24, 2015 at 02:34:42AM -0600, Bjorn Helgaas wrote:
+> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+> 
+> On PHB3, PF IOV BAR will be covered by M64 window to have better PE
+> isolation.  The total_pe number is usually different from total_VFs, which
+> can lead to a conflict between MMIO space and the PE number.
+> 
+> For example, if total_VFs is 128 and total_pe is 256, the second half of
+> M64 window will be part of other PCI device, which may already belong
+> to other PEs.
 
-For context, the start of this discussion was here:
-http://lkml.kernel.org/r/1424157203-691-8-git-send-email-gwshan@linux.vnet.ibm.com
-where Gavin is adding a new PCI hotplug driver for PowerNV.  That new
-driver calls vm_unmap_aliases() the same way we do in the existing RPA
-hotplug driver here:
+I'm still trying to wrap my mind around the explanation here.
 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/hotplug/rpaphp_core.c#n432
+I *think* what's going on is that the M64 window must be a power-of-two
+size.  If the VF(n) BAR space doesn't completely fill it, we might allocate
+the leftover space to another device.  Then the M64 window for *this*
+device may cause the other device to be associated with a PE it didn't
+expect.
 
-I'm trying to figure out whether it's correct to use
-vm_unmap_aliases() here, but I'm not an mm person so all I have is my
-gut feeling that something doesn't smell right.
+But I don't understand this well enough to describe it clearly.
 
-On Tue, Feb 17, 2015 at 6:30 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2015-02-18 at 11:16 +1100, Gavin Shan wrote:
->> >What is vm_unmap_aliases() for?  I see this is probably copied from
->> >rpaphp_core.c, where it was added by b4a26be9f6f8 ("powerpc/pseries:
->> Flush
->> >lazy kernel mappings after unplug operations").
->> >
->> >But I don't know whether:
->> >
->> >  - this is something specific to powerpc,
->> >  - the lack of vm_unmap_aliases() in other hotplug paths is a bug,
->> >  - the fact that we only do this on powerpc is covering up a
->> >    powerpc bug somewhere
->>
->> Yes, I copied this piece of code from rpaphp_core.c. I think Ben might
->> help to answer the questions as he added the patch. I had very quick
->> check on mm/vmalloc.c and it's reasonable to have vm_unmap_aliases()
->> here to flush TLB entries for ioremap() regions, which were unmapped
->> previously. if I'm correct. I don't think it's powerpc specific.
->
-> It's specific to running under the PowerVM hypervisor, and thus doesn't
-> affect PowerNV, just don't copy it over.
->
-> It comes from the fact that the generic ioremap code nowadays delays
-> TLB flushing on unmap. The TLB flushing code is what, on powerpc,
-> ensures that we remove the translations from the MMU hash table (the
-> hash table is essentially treated as an extended in-memory TLB), which
-> on pseries turns into hypervisor calls.
->
-> When running under that hypervisor, the HV ensures that no translation
-> still exists in the hash before allowing a device to be removed from
-> a partition. If translations still exist, the removal fails.
->
-> So we need to force the generic ioremap code to perform all the TLB
-> flushes for iounmap'ed regions before we "complete" the unplug operation
-> from a kernel perspective so that the device can be re-assigned to
-> another partition.
->
-> This is thus useless on platforms like powernv which do not run under
-> such a hypervisor.
+More serious code question below...
 
-So the hypervisor call that removes the device from the partition will
-fail if there are any translations that reference the memory of the
-device.
+> Prevent the conflict by reserving additional space for the PF IOV BAR,
+> which is total_pe number of VF's BAR size.
+> 
+> [bhelgaas: make dev_printk() output more consistent, index resource[]
+> conventionally]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/powerpc/include/asm/machdep.h        |    4 ++
+>  arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+>  arch/powerpc/kernel/pci-common.c          |    5 +++
+>  arch/powerpc/platforms/powernv/pci-ioda.c |   58 +++++++++++++++++++++++++++++
+>  4 files changed, 70 insertions(+)
+> 
+> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+> index c8175a3fe560..965547c58497 100644
+> --- a/arch/powerpc/include/asm/machdep.h
+> +++ b/arch/powerpc/include/asm/machdep.h
+> @@ -250,6 +250,10 @@ struct machdep_calls {
+>  	/* Reset the secondary bus of bridge */
+>  	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
+> +#endif /* CONFIG_PCI_IOV */
+> +
+>  	/* Called to shutdown machine specific hardware not already controlled
+>  	 * by other drivers.
+>  	 */
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 513f8f27060d..de11de7d4547 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -175,6 +175,9 @@ struct pci_dn {
+>  #define IODA_INVALID_PE		(-1)
+>  #ifdef CONFIG_PPC_POWERNV
+>  	int	pe_number;
+> +#ifdef CONFIG_PCI_IOV
+> +	u16     max_vfs;		/* number of VFs IOV BAR expended */
+> +#endif /* CONFIG_PCI_IOV */
+>  #endif
+>  	struct list_head child_list;
+>  	struct list_head list;
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 82031011522f..022e9feeb1f2 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -1646,6 +1646,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+>  	if (ppc_md.pcibios_fixup_phb)
+>  		ppc_md.pcibios_fixup_phb(hose);
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +	if (ppc_md.pcibios_fixup_sriov)
+> +		ppc_md.pcibios_fixup_sriov(bus);
+> +#endif /* CONFIG_PCI_IOV */
+> +
+>  	/* Configure PCI Express settings */
+>  	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>  		struct pci_bus *child;
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index cd1a56160ded..36c533da5ccb 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -1749,6 +1749,61 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+>  static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+>  #endif /* CONFIG_PCI_MSI */
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+> +{
+> +	struct pci_controller *hose;
+> +	struct pnv_phb *phb;
+> +	struct resource *res;
+> +	int i;
+> +	resource_size_t size;
+> +	struct pci_dn *pdn;
+> +
+> +	if (!pdev->is_physfn || pdev->is_added)
+> +		return;
+> +
+> +	hose = pci_bus_to_host(pdev->bus);
+> +	phb = hose->private_data;
+> +
+> +	pdn = pci_get_pdn(pdev);
+> +	pdn->max_vfs = 0;
+> +
+> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> +		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+> +		if (!res->flags || res->parent)
+> +			continue;
+> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+> +			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
+> +				 i, res);
+> +			continue;
+> +		}
+> +
+> +		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+> +		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+> +		res->end = res->start + size * phb->ioda.total_pe - 1;
+> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
+> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+> +				i, res, phb->ioda.total_pe);
+> +	}
+> +	pdn->max_vfs = phb->ioda.total_pe;
+> +}
+> +
+> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *pdev;
+> +	struct pci_bus *b;
+> +
+> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
+> +		b = pdev->subordinate;
+> +
+> +		if (b)
+> +			pnv_pci_ioda_fixup_sriov(b);
+> +
+> +		pnv_pci_ioda_fixup_iov_resources(pdev);
 
-Let me go through this in excruciating detail to see if I understand
-what's going on:
+I'm not sure this happens at the right time.  We have this call chain:
 
-  - PCI core enumerates device D1
-  - PCI core sets device D1 BAR 0 = 0x1000
-  - driver claims D1
-  - driver ioremaps 0x1000 at virtual address V
-  - translation V -> 0x1000 is in TLB
-  - driver iounmaps V (but V -> 0x1000 translation may remain in TLB)
-  - driver releases D1
-  - hot-remove D1 (without vm_unmap_aliases(), hypervisor would fail this)
-  - it would be a bug to reference V here, but if we did, the
-virt-to-phys translation would succeed and we'd have a Master Abort or
-Unsupported Request on PCI/PCIe
-  - hot-add D2
-  - PCI core enumerates device D2
-  - PCI core sets device D2 BAR 0 = 0x1000
-  - it would be a bug to reference V here (before ioremapping), but if
-we did, the reference would reach D2
+  pcibios_scan_phb
+    pci_create_root_bus
+    pci_scan_child_bus
+    pnv_pci_ioda_fixup_sriov
+      pnv_pci_ioda_fixup_iov_resources
+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+	  increase res->size to accomodate 256 PEs (or roundup(totalVFs)
 
-I don't see anything hypervisor-specific here except for the fact that
-the hypervisor checks for existing translations and most other
-platforms don't.  But it seems like the unexpected PCI aborts could
-happen on any platform.
+so we only do the fixup_iov_resources() when we scan the PHB, and we
+wouldn't do it at all for hot-added devices.
 
-Are we saying that those PCI aborts are OK, since it's a bug to make
-those references in the first place?  Or would we rather take a TLB
-miss fault instead so the references never make it to PCI?
-
-I would think there would be similar issues when unmapping and
-re-mapping plain old physical memory.  But I don't see
-vm_unmap_aliases() calls there, so those issues must be handled
-differently.  Should we handle this PCI hotplug issue the same way we
-handle RAM?
-
-Bjorn
+> +	}
+> +}
+> +#endif /* CONFIG_PCI_IOV */
+> +
+>  /*
+>   * This function is supposed to be called on basis of PE from top
+>   * to bottom style. So the the I/O or MMIO segment assigned to
+> @@ -2125,6 +2180,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+> +#ifdef CONFIG_PCI_IOV
+> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
+> +#endif /* CONFIG_PCI_IOV */
+>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>  
+>  	/* Reset IODA tables to a clean state */
+> 
