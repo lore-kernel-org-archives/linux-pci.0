@@ -1,84 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:62652 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932192AbbBBP6G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 10:58:06 -0500
-Received: by mail-qc0-f171.google.com with SMTP id s11so30796352qcv.2
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 07:58:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Feb 2015 09:57:45 -0600
-Message-ID: <CAErSpo5=NhPZ5RNbBeGqKuLbKdOyTD1m+ijWM2SzQFWuKLTJfg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Andre Przywara <andre.przywara@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58659 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841AbbBXI03 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:26:29 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Tue, 24 Feb 2015 18:26:27 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 50ED22BB0047
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 19:26:23 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1O8QEhb22937650
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 19:26:23 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1O8Pnvc002616
+	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 19:25:49 +1100
+Message-ID: <1424766317.12891.32.camel@au1.ibm.com>
+Subject: Re: [PATCH V11 08/17] powrepc/pci: Refactor pci_dn
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 19:25:17 +1100
+In-Reply-To: <20150224081330.GE6220@google.com>
+References: <20150113180502.GC2776@google.com>
+	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <1421288887-7765-9-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <20150220231917.GC21131@google.com> <20150223001349.GA7522@shangw>
+	 <20150224081330.GE6220@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 28, 2015 at 8:51 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> pcibios_update_irq writes an irq number into the config space
-> of a given PCI device, but ignores the fact that this number
-> is a virtual interrupt number, which might be a very different
-> value from what the underlying hardware is using.
->
-> The obvious fix is to fetch the HW interrupt number from the
-> corresponding irq_data structure. This is slightly complicated
-> by the fact that this interrupt might be services by a stacked
-> domain.
->
-> This has been tested on KVM with kvmtool.
->
-> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Tested-by: Andre Przywara <andre.przywara@arm.com>
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+On Tue, 2015-02-24 at 02:13 -0600, Bjorn Helgaas wrote:
+> 
+> Ah, yes, now I see the problem.  I don't really like having to export
+> pci_iov_virtfn_bus() and pci_iov_virtfn_devfn(), but it's probably not
+> worth the hassle of changing it, and I think adding more pcibios
+> interfaces
+> would be even worse.
 
-Jiang, are you OK with this patch as-is now, since it isn't used on x86?
+Aren't we going to eventually turn them all into host bridge ops ? :-)
 
-Marc, Lorenzo, I assume this actually fixes a bug.  Can we get any
-more details about what happens when you hit the bug, and how you
-reproduced it (what platform, driver, etc.)?
+Cheers,
+Ben.
 
-Bjorn
 
-> ---
->  drivers/pci/setup-irq.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 4e2d595..828cbc9 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -15,11 +15,19 @@
->  #include <linux/errno.h>
->  #include <linux/ioport.h>
->  #include <linux/cache.h>
-> +#include <linux/irq.h>
->
->  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  {
-> -       dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
-> -       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> +       struct irq_data *d;
-> +
-> +       d = irq_get_irq_data(irq);
-> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
-> +       while (d->parent_data)
-> +               d = d->parent_data;
-> +#endif
-> +       dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
-> +       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->  }
->
->  static void pdev_fixup_irq(struct pci_dev *dev,
-> --
-> 2.1.4
->
