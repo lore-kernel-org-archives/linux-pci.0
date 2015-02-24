@@ -1,55 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:58379 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933819AbbBDOTf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 09:19:35 -0500
-Received: by mail-qg0-f44.google.com with SMTP id l89so1336390qgf.3
-        for <linux-pci@vger.kernel.org>; Wed, 04 Feb 2015 06:19:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20150204033409.GA11577@richard>
-References: <20150130230803.GA6795@google.com> <1422946903-12958-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150204001926.GA19540@google.com> <20150204033409.GA11577@richard>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:41314 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbbBXG0J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 01:26:09 -0500
+Received: by pdno5 with SMTP id o5so31140995pdn.8
+        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2015 22:26:08 -0800 (PST)
+Date: Tue, 24 Feb 2015 00:26:05 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 4 Feb 2015 08:19:14 -0600
-Message-ID: <CAErSpo4nLEvL4XGvkvZbfy0dFQcRDHdn5aznkx2fRMMnt1_n4g@mail.gmail.com>
-Subject: Re: [PATCH] powerpc/powernv: make sure the IOV BAR will not exceed
- limit after shifting
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=UTF-8
+To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Cc: linux-pci@vger.kernel.org, phil.edworthy@renesas.com,
+	horms+renesas@verge.net.au
+Subject: Re: [PATCH] PCI: rcar: Change macro name of PCIEPARL and PCIEPARH
+Message-ID: <20150224062605.GC6220@google.com>
+References: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423040575-28080-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 3, 2015 at 9:34 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Tue, Feb 03, 2015 at 06:19:26PM -0600, Bjorn Helgaas wrote:
->>On Tue, Feb 03, 2015 at 03:01:43PM +0800, Wei Yang wrote:
+On Wed, Feb 04, 2015 at 06:02:55PM +0900, Nobuhiro Iwamatsu wrote:
+> PCIEPARL and PCIEPARH are macro that calculates address of the register.
+> However, register name is incorrect, PCIEPALR and PCIEPAUR is correct.
+> This change macro name to PCIEPALR and PCIEPAUR.
+> 
+> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 
->>> +    vf_num = pdn->vf_pes;
->>
->>I can't actually build this, but I don't think pdn->vf_pes is defined yet.
->>
->
-> The pdn->vf_pes is defined in the next patch, it is not defined yet.
->
-> I thought the incremental patch means a patch on top of the current patch set,
-> so it is defined as the last patch.
+Applied to pci/host-rcar for v4.1, thanks!
 
-Yes, that's fine.  I want to keep the series bisectable, so I'll fold
-these patches together.
-
->>I pushed an updated pci/virtualization branch with these updates.  I
->>think there's also a leak that needs to be fixed that Dan Carpenter
->>pointed out.
-
->>+      vf_num = pdn->vf_pes;           // FIXME not defined yet
->
-> Do you want me poll your pci/virtualization branch and fix this?
-
-Don't worry about this FIXME; I can fix that by squashing two patches.
-But please do pull my pci/virtualization branch and fix this one (this
-is the one that I thought Dan Carpenter pointed out):
-
-  drivers/pci/iov.c:488 sriov_init() warn: possible memory leak of 'iov'
+> ---
+>  drivers/pci/host/pcie-rcar.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index eb12659..183c32d 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -64,8 +64,8 @@
+>  #define  LAR_ENABLE		(1 << 1)
+>  
+>  /* PCIe address reg & mask */
+> -#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
+> -#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
+> +#define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
+> +#define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
+>  #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
+>  #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
+>  #define  PAR_ENABLE		(1 << 31)
+> @@ -341,9 +341,9 @@ static void rcar_pcie_setup_window(int win, struct rcar_pcie *pcie)
+>  	else
+>  		res_start = res->start;
+>  
+> -	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPARH(win));
+> +	rcar_pci_write_reg(pcie, upper_32_bits(res_start), PCIEPAUR(win));
+>  	rcar_pci_write_reg(pcie, lower_32_bits(res_start) & ~0x7F,
+> -			   PCIEPARL(win));
+> +			   PCIEPALR(win));
+>  
+>  	/* First resource is for IO */
+>  	mask = PAR_ENABLE;
+> -- 
+> 2.1.3
+> 
