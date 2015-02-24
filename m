@@ -1,18 +1,18 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:43831 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326AbbBXIdy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:54 -0500
-Received: by paceu11 with SMTP id eu11so34339225pac.10
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:54 -0800 (PST)
-Subject: [PATCH v12 08/21] PCI: Add pcibios_sriov_enable() and
- pcibios_sriov_disable()
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:40952 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbbBXIfH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:35:07 -0500
+Received: by paceu11 with SMTP id eu11so34398740pac.7
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:35:07 -0800 (PST)
+Subject: [PATCH v12 18/21] powerpc/powernv: Reserve additional space for IOV
+ BAR, with m64_per_iov supported
 To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
 	gwshan@linux.vnet.ibm.com
 From: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:33:52 -0600
-Message-ID: <20150224083352.32124.63952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Tue, 24 Feb 2015 02:35:04 -0600
+Message-ID: <20150224083504.32124.23374.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
@@ -22,73 +22,94 @@ List-ID: <linux-pci.vger.kernel.org>
 
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-VFs are dynamically created when a driver enables them.  On some platforms,
-like PowerNV, special resources are necessary to enable VFs.
+M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
+will exceed the limitation and failed to be assigned.
 
-Add platform hooks for enabling and disabling VFs.
+Introduce a different mechanism based on the IOV BAR size:
 
+  - if IOV BAR size is smaller than 64MB, expand to total_pe
+  - if IOV BAR size is bigger than 64MB, roundup power2
+
+[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
 Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/iov.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5643a1011e23..cc6fedf4a1b9 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	pci_dev_put(dev);
- }
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 011340df8583..d824bb184ab8 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -179,6 +179,8 @@ struct pci_dn {
+ 	u16     max_vfs;		/* number of VFs IOV BAR expended */
+ 	u16     vf_pes;			/* VF PE# under this PF */
+ 	int     offset;			/* PE# for the first VF PE */
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index a3c2fbe35fc8..30b7c3909746 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2242,6 +2242,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
  
-+int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
-+{
-+       return 0;
-+}
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -2252,6 +2253,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->max_vfs = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
 +
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- {
- 	int rc;
-@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
- 	int bus;
-+	int retval;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
- 
-+	if ((retval = pcibios_sriov_enable(dev, initial))) {
-+		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
-+			retval);
-+		return retval;
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++		res = &pdev->resource[i + PCI_IOV_RESOURCES];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
++				 i, res);
++			continue;
++		}
++
++		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
++				 i, res);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = __roundup_pow_of_two(total_vfs);
++			break;
++		}
 +	}
 +
- 	for (i = 0; i < initial; i++) {
- 		rc = virtfn_add(dev, i, 0);
- 		if (rc)
-@@ -335,6 +347,11 @@ failed:
- 	return rc;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+ 		if (!res->flags || res->parent)
+@@ -2264,12 +2291,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 
+ 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+ 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+-				i, res, phb->ioda.total_pe);
++			 i, res, mul);
+ 	}
+-	pdn->max_vfs = phb->ioda.total_pe;
++	pdn->max_vfs = mul;
  }
  
-+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+       return 0;
-+}
-+
- static void sriov_disable(struct pci_dev *dev)
- {
- 	int i;
-@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
- 	for (i = 0; i < iov->num_VFs; i++)
- 		virtfn_remove(dev, i, 0);
- 
-+	pcibios_sriov_disable(dev);
-+
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
 
