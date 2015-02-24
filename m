@@ -1,130 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:37673 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755763AbbBQHOa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:30 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Feb 2015 17:14:26 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id EF64E2BB0047
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7EGlt39845980
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7DoMx011083
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:13:51 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH RESEND v2 6/7] powerpc/powernv: Functions to retrieve PCI slot status
-Date: Tue, 17 Feb 2015 18:13:22 +1100
-Message-Id: <1424157203-691-7-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:39930 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbbBXIdr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:47 -0500
+Received: by pdjy10 with SMTP id y10so31836490pdj.6
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:47 -0800 (PST)
+Subject: [PATCH v12 07/21] PCI: Export pci_iov_virtfn_bus() and
+ pci_iov_virtfn_devfn()
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:45 -0600
+Message-ID: <20150224083345.32124.25546.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exports two functions, which base on corresponding OPAL
-APIs to retrieve PCI slot status. Those functions are going to be
-used by PCI hotplug module in subsequent patches:
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-   pnv_pci_get_power_status()     opal_pci_get_power_status()
-   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
+On PowerNV, some resource reservation is needed for SR-IOV VFs that don't
+exist at the bootup stage.  To do the match between resources and VFs, the
+code need to get the VF's BDF in advance.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Rename virtfn_bus() and virtfn_devfn() to pci_iov_virtfn_bus() and
+pci_iov_virtfn_devfn() and export them.
+
+[bhelgaas: changelog, make "busnr" int]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/powerpc/include/asm/opal.h                |  5 +++++
- arch/powerpc/include/asm/pnv-pci.h             |  3 +++
- arch/powerpc/platforms/powernv/opal-wrappers.S |  2 ++
- arch/powerpc/platforms/powernv/pci.c           | 24 ++++++++++++++++++++++++
- 4 files changed, 34 insertions(+)
+ drivers/pci/iov.c   |   28 ++++++++++++++++------------
+ include/linux/pci.h |   11 +++++++++++
+ 2 files changed, 27 insertions(+), 12 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index ceec756..b3fcf07 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -169,6 +169,8 @@ struct opal_sg_list {
- #define OPAL_IPMI_SEND				107
- #define OPAL_IPMI_RECV				108
- #define OPAL_I2C_REQUEST			109
-+#define OPAL_PCI_GET_POWER_STATUS		110
-+#define OPAL_PCI_GET_PRESENCE_STATUS		111
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2ae921f84bd3..5643a1011e23 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -19,16 +19,20 @@
  
- /* Device tree flags */
+ #define VIRTFN_ID_LEN	16
  
-@@ -926,6 +928,9 @@ int64_t opal_ipmi_recv(uint64_t interface, struct opal_ipmi_msg *msg,
- 		uint64_t *msg_len);
- int64_t opal_i2c_request(uint64_t async_token, uint32_t bus_id,
- 			 struct opal_i2c_request *oreq);
-+int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
-+int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
-+
- 
- /* Internal functions */
- extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index f9b4982..6a19b50 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,9 @@
- #include <linux/pci.h>
- #include <misc/cxl.h>
- 
-+extern int pnv_pci_get_power_status(uint64_t id, uint8_t *status);
-+extern int pnv_pci_get_presence_status(uint64_t id, uint8_t *status);
-+
- int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
-diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
-index 0509bca..35e513e 100644
---- a/arch/powerpc/platforms/powernv/opal-wrappers.S
-+++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
-@@ -292,3 +292,5 @@ OPAL_CALL(opal_tpo_read,			OPAL_READ_TPO);
- OPAL_CALL(opal_ipmi_send,			OPAL_IPMI_SEND);
- OPAL_CALL(opal_ipmi_recv,			OPAL_IPMI_RECV);
- OPAL_CALL(opal_i2c_request,			OPAL_I2C_REQUEST);
-+OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
-+OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index a0ffae2..bee6798 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -63,6 +63,30 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
- 	return rval ? -EIO : 0;
+-static inline u8 virtfn_bus(struct pci_dev *dev, int id)
++int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+-				    dev->sriov->stride * id) >> 8);
++				    dev->sriov->stride * vf_id) >> 8);
  }
  
-+int pnv_pci_get_power_status(uint64_t id, uint8_t *status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_POWER_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_power_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
-+
-+int pnv_pci_get_presence_status(uint64_t id, uint8_t *status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_presence_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
-+
- #ifdef CONFIG_PCI_MSI
- static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+-static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
  {
--- 
-1.8.3.2
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return (dev->devfn + dev->sriov->offset +
+-		dev->sriov->stride * id) & 0xff;
++		dev->sriov->stride * vf_id) & 0xff;
+ }
+ 
+ /*
+@@ -58,11 +62,11 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int nr_virtfn;
+ 	u8 max = 0;
+-	u8 busnr;
++	int busnr;
+ 
+ 	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+ 		pci_iov_set_numvfs(dev, nr_virtfn);
+-		busnr = virtfn_bus(dev, nr_virtfn - 1);
++		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 		if (busnr > max)
+ 			max = busnr;
+ 	}
+@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_bus *bus;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+ 
+@@ -124,7 +128,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	if (!virtfn)
+ 		goto failed0;
+ 
+-	virtfn->devfn = virtfn_devfn(dev, id);
++	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+@@ -186,8 +190,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     virtfn_bus(dev, id),
+-					     virtfn_devfn(dev, id));
++					     pci_iov_virtfn_bus(dev, id),
++					     pci_iov_virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -226,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+-	u8 bus;
++	int bus;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -263,7 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	bus = virtfn_bus(dev, nr_virtfn - 1);
++	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 	if (bus > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+ 			nr_virtfn, bus, &dev->bus->busn_res);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 15596582e575..99ea94835fb6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1669,6 +1669,9 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
+ #ifdef CONFIG_PCI_IOV
++int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
++
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+@@ -1677,6 +1680,14 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
 
