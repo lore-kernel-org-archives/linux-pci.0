@@ -1,248 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:38083 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161295AbbBEAIX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 19:08:23 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 5 Feb 2015 10:08:20 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8A5932BB0047
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 11:08:19 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1508BVS47579142
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 11:08:19 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1507jig010183
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 11:07:45 +1100
-Date: Thu, 5 Feb 2015 08:07:24 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 16/17] powerpc/powernv: Reserve additional space for
- IOV BAR, with m64_per_iov supported
-Message-ID: <20150205000724.GC18037@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-17-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150204220518.GB20072@google.com>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:39638 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549AbbBXIq5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:46:57 -0500
+Received: by pdjy10 with SMTP id y10so31906954pdj.6
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:46:56 -0800 (PST)
+Date: Tue, 24 Feb 2015 02:46:53 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 14/21] powerpc/powernv: Allocate struct pnv_ioda_pe
+ iommu_table dynamically
+Message-ID: <20150224084653.GI6220@google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083435.32124.65099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150204220518.GB20072@google.com>
+In-Reply-To: <20150224083435.32124.65099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 04:05:18PM -0600, Bjorn Helgaas wrote:
->On Thu, Jan 15, 2015 at 10:28:06AM +0800, Wei Yang wrote:
->> M64 aperture size is limited on PHB3. When the IOV BAR is too big, this
->> will exceed the limitation and failed to be assigned.
->> 
->> This patch introduce a different mechanism based on the IOV BAR size:
->> 
->> IOV BAR size is smaller than 64M, expand to total_pe.
->> IOV BAR size is bigger than 64M, roundup power2.
+On Tue, Feb 24, 2015 at 02:34:35AM -0600, Bjorn Helgaas wrote:
+> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+> 
+> Current iommu_table of a PE is a static field.  This will have a problem
+> when iommu_free_table() is called.
+> 
+> Allocate iommu_table dynamically.
 
-To be consistent, IOV BAR in the change log should be VF BAR.
+I'd like a little more explanation about why we're calling
+iommu_free_table() now when we didn't call it before.  Maybe this happens
+when we disable SR-IOV and the VFs go away?
 
->
->Can you elaborate on this a little more?  I assume this is talking about an
->M64 BAR.  What is the size limit for this?
->
+Is there a hotplug remove path where we should also be calling
+iommu_free_table()?
 
-Yes, this is a corner case. This is really not easy to understand and I don't
-talk about it in the Documentation.
-
->If I understand correctly, hardware always splits an M64 BAR into 256
->segments.  If you wanted each 128MB VF BAR in a separate PE, the M64 BAR
->would have to be 256 * 128MB = 32GB.  So maybe the idea is that instead of
->consuming 32GB of address space, you let each VF BAR span several segments.
->If each 128MB VF BAR spanned 4 segments, each segment would be 32MB and the
->whole M64 BAR would be 256 * 32MB = 8GB.  But you would have to use
->"companion" PEs so all 4 segments would be in the same "domain," and that
->would reduce the number of VFs you could support from 256 to 256/4 = 64.
->
-
-You are right on the reason. When the VF BAR is big and we still use the
-previous mechanism, this will used up the total M64 window. 
-
->If that were the intent, I would think TotalVFs would be involved, but it's
->not.  For a device with TotalVFs=8 and a 128MB VF BAR, it would make sense
->to dedicate 4 segments to each of those BARs because you could only use 8*4
->= 32 segments total.  If the device had TotalVFs=128, your only choices
->would be 1 segment per BAR (256 segments * 128MB/segment = 32GB) or 2
->segments per BAR (256 segments * 64MB/segment = 16GB).
->
-
-Hmm... it is time to tell you another usage of the M64 BAR. There are two mode
-of the M64 BAR. First one is the M64 BAR will cover a 256 even segmented
-space, with each segment maps to a PE. Second one is the M64 BAR specify a
-space and the whole space belongs to one PE. It is called "Single PE" mode.
-
-In this implementation of this case, we choose the "Single PE" mode. The
-advantage of this choice is in some case, we still have a chance to map a VF
-into an individual PE, while the mechanism you proposed couldn't. I have to
-admit, our choice has disadvantages. It will use more M64 BAR than yours.
-
-Let me explain how current choice works, so that you could know the
-difference.
-
-When we detected the VF BAR is big enough, we expand the IOV BAR to another
-number of VF BARs instead of 256. The number should be power_of_2 value, since
-the M64 BAR hardware requirement.
-
-Then we decide to use 4 M64 BARs for one IOV BAR at most. (So sad, we just
-have 16 M64 BARs) Then how we map it?
-
-If the user want to enable less than or equal to 4 VFs, that's great! We could
-use one M64 BAR to map one VF BAR, since the M64 BAR works in "Single Mode".
-In this case, each VF sits in their own PE.
-
-If the user want to enable more VFs, so sad several VFs have to share one PE.
-
-The logic for PE sharing is in the last commit.
-
-m64_per_iov 
-   This is a mark.
-   If it is 1, means VF BAR size is not big. Use M64 BAR in segmented mode.
-   If it is M64_PER_IOV, means VF BAR size is big. Use M64 BAR in "Single PE"
-   mode.
-vf_groups
-   Indicates one IOV BAR will be divided in how many groups, and each group
-   use one M64 BAR.
-   In normal case, one M64 BAR per IOV BAR.
-   In this special case, depends on the vf_num user want to enable.
-vf_per_group
-   In normal case, this is not used.
-   In this special case, it helps to calculate the start address and size of
-   each M64 BAR.
-
->If you use 2 segments per BAR and you want NumVFs=128, you can't shift
->anything, so the PE assignments are completely fixed (VF0 in PE0, VF1 in
->PE1, etc.)
->
->It seems like you'd make different choices about pdn->max_vfs for these two
->devices, but currently you only look at the VF BAR size, not at TotalVFs.
->
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/include/asm/pci-bridge.h     |    2 ++
->>  arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
->>  2 files changed, 32 insertions(+), 3 deletions(-)
->> 
->> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->> index d61c384..7156486 100644
->> --- a/arch/powerpc/include/asm/pci-bridge.h
->> +++ b/arch/powerpc/include/asm/pci-bridge.h
->> @@ -174,6 +174,8 @@ struct pci_dn {
->>  	u16     max_vfs;		/* number of VFs IOV BAR expended */
->>  	u16     vf_pes;			/* VF PE# under this PF */
->>  	int     offset;			/* PE# for the first VF PE */
->> +#define M64_PER_IOV 4
->> +	int     m64_per_iov;
->>  #define IODA_INVALID_M64        (-1)
->>  	int     m64_wins[PCI_SRIOV_NUM_BARS];
->>  #endif /* CONFIG_PCI_IOV */
->> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->> index 94fe6e1..23ea873 100644
->> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->> @@ -2180,6 +2180,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->>  	int i;
->>  	resource_size_t size;
->>  	struct pci_dn *pdn;
->> +	int mul, total_vfs;
->>  
->>  	if (!pdev->is_physfn || pdev->is_added)
->>  		return;
->> @@ -2190,6 +2191,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->>  	pdn = pci_get_pdn(pdev);
->>  	pdn->max_vfs = 0;
->>  
->> +	total_vfs = pci_sriov_get_totalvfs(pdev);
->> +	pdn->m64_per_iov = 1;
->> +	mul = phb->ioda.total_pe;
->> +
->> +	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
->> +		res = &pdev->resource[i];
->> +		if (!res->flags || res->parent)
->> +			continue;
->> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
->> +			dev_warn(&pdev->dev, " non M64 IOV BAR %pR on %s\n",
->> +					res, pci_name(pdev));
->> +			continue;
->> +		}
->> +
->> +		size = pci_iov_resource_size(pdev, i);
->> +
->> +		/* bigger than 64M */
->> +		if (size > (1 << 26)) {
->> +			dev_info(&pdev->dev, "PowerNV: VF BAR[%d] size "
->> +					"is bigger than 64M, roundup power2\n", i);
->> +			pdn->m64_per_iov = M64_PER_IOV;
->> +			mul = __roundup_pow_of_two(total_vfs);
->
->I think this might deserve more comment in dmesg.  "roundup power2" doesn't
->really tell me anything, especially since you mention a BAR, but you're
->actually rounding up total_vfs, not the BAR size.
->
->Does this reduce the number of possible VFs?  We already can't set NumVFs
->higher than TotalVFs.  Does this make it so we can't set NumVFs higher than
->pdn->max_vfs?
->
-
-Hope my explanation above could help you understand this.
-
-I am on IRC now, any problem, you could ping me :-)
-
->
->> +			break;
->> +		}
->> +	}
->> +
->>  	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
->>  		res = &pdev->resource[i];
->>  		if (!res->flags || res->parent)
->> @@ -2202,13 +2229,13 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->>  
->>  		dev_dbg(&pdev->dev, " Fixing VF BAR[%d] %pR to\n", i, res);
->>  		size = pci_iov_resource_size(pdev, i);
->> -		res->end = res->start + size * phb->ioda.total_pe - 1;
->> +		res->end = res->start + size * mul - 1;
->>  		dev_dbg(&pdev->dev, "                       %pR\n", res);
->>  		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
->>  				i - PCI_IOV_RESOURCES,
->> -				res, phb->ioda.total_pe);
->> +				res, mul);
->>  	}
->> -	pdn->max_vfs = phb->ioda.total_pe;
->> +	pdn->max_vfs = mul;
->
->Maybe this is the part that makes it hard to compute the size in
->sriov_init() -- you reduce pdn->max_vfs in some cases, and maybe that can
->affect the space you reserve for IOV BARs?  E.g., maybe you reduce
->pdn->max_vfs to 128 because VF BAR 3 is larger than 64MB, but you've
->already expanded the IOV space for VF BAR 1 based on 256 PEs?
->
->But then I'm still confused because the loop here in
->pnv_pci_ioda_fixup_iov_resources() always expands the resource based on
->phb->ioda.total_pe; that part doesn't depend on "mul" or pdn->max_vfs at
->all.
->
->Or maybe this is just a bug in the fixup loop, and it *should* depend on
->"mul"?
->
->>  }
->>  
->>  static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
->> -- 
->> 1.7.9.5
->> 
-
--- 
-Richard Yang
-Help you, Help me
-
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/powerpc/include/asm/iommu.h          |    3 +++
+>  arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
+>  arch/powerpc/platforms/powernv/pci.h      |    2 +-
+>  3 files changed, 18 insertions(+), 13 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
+> index 9cfa3706a1b8..5574eeb97634 100644
+> --- a/arch/powerpc/include/asm/iommu.h
+> +++ b/arch/powerpc/include/asm/iommu.h
+> @@ -78,6 +78,9 @@ struct iommu_table {
+>  	struct iommu_group *it_group;
+>  #endif
+>  	void (*set_bypass)(struct iommu_table *tbl, bool enable);
+> +#ifdef CONFIG_PPC_POWERNV
+> +	void           *data;
+> +#endif
+>  };
+>  
+>  /* Pure 2^n version of get_order */
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 58c4fc4ab63c..cd1a56160ded 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -916,6 +916,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+>  		return;
+>  	}
+>  
+> +	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
+> +			GFP_KERNEL, hose->node);
+> +	pe->tce32_table->data = pe;
+> +
+>  	/* Associate it with all child devices */
+>  	pnv_ioda_setup_same_PE(bus, pe);
+>  
+> @@ -1005,7 +1009,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
+>  
+>  	pe = &phb->ioda.pe_array[pdn->pe_number];
+>  	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
+> -	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
+> +	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
+>  }
+>  
+>  static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+> @@ -1032,7 +1036,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
+>  	} else {
+>  		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
+>  		set_dma_ops(&pdev->dev, &dma_iommu_ops);
+> -		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
+> +		set_iommu_table_base(&pdev->dev, pe->tce32_table);
+>  	}
+>  	*pdev->dev.dma_mask = dma_mask;
+>  	return 0;
+> @@ -1069,9 +1073,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		if (add_to_iommu_group)
+>  			set_iommu_table_base_and_group(&dev->dev,
+> -						       &pe->tce32_table);
+> +						       pe->tce32_table);
+>  		else
+> -			set_iommu_table_base(&dev->dev, &pe->tce32_table);
+> +			set_iommu_table_base(&dev->dev, pe->tce32_table);
+>  
+>  		if (dev->subordinate)
+>  			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
+> @@ -1161,8 +1165,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
+>  void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+>  				 __be64 *startp, __be64 *endp, bool rm)
+>  {
+> -	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+> -					      tce32_table);
+> +	struct pnv_ioda_pe *pe = tbl->data;
+>  	struct pnv_phb *phb = pe->phb;
+>  
+>  	if (phb->type == PNV_PHB_IODA1)
+> @@ -1228,7 +1231,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>  	}
+>  
+>  	/* Setup linux iommu table */
+> -	tbl = &pe->tce32_table;
+> +	tbl = pe->tce32_table;
+>  	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+>  				  base << 28, IOMMU_PAGE_SHIFT_4K);
+>  
+> @@ -1266,8 +1269,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>  
+>  static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
+>  {
+> -	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
+> -					      tce32_table);
+> +	struct pnv_ioda_pe *pe = tbl->data;
+>  	uint16_t window_id = (pe->pe_number << 1 ) + 1;
+>  	int64_t rc;
+>  
+> @@ -1312,10 +1314,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
+>  	pe->tce_bypass_base = 1ull << 59;
+>  
+>  	/* Install set_bypass callback for VFIO */
+> -	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
+> +	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
+>  
+>  	/* Enable bypass by default */
+> -	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
+> +	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
+>  }
+>  
+>  static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+> @@ -1363,7 +1365,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>  	}
+>  
+>  	/* Setup linux iommu table */
+> -	tbl = &pe->tce32_table;
+> +	tbl = pe->tce32_table;
+>  	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
+>  			IOMMU_PAGE_SHIFT_4K);
+>  
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index e5b75b298d95..731777734bca 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -53,7 +53,7 @@ struct pnv_ioda_pe {
+>  	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+>  	int			tce32_seg;
+>  	int			tce32_segcount;
+> -	struct iommu_table	tce32_table;
+> +	struct iommu_table	*tce32_table;
+>  	phys_addr_t		tce_inval_reg_phys;
+>  
+>  	/* 64-bit TCE bypass region */
+> 
