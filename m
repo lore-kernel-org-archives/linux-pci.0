@@ -1,215 +1,352 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Patch v2 21/23] x86/PCI: Refine the way to release PCI IRQ resources
-Date: Tue, 03 Feb 2015 22:57:53 +0100
-Message-ID: <1432434.BPb1XrlA2r@vostro.rjw.lan>
-In-Reply-To: <1422844988-13854-22-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com> <1422844988-13854-22-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:46095 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbbBXIf3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:35:29 -0500
+Received: by pdjy10 with SMTP id y10so31763337pdj.13
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:35:28 -0800 (PST)
+Subject: [PATCH v12 21/21] powerpc/pci: Add PCI resource alignment
+ documentation
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:35:26 -0600
+Message-ID: <20150224083526.32124.30158.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 02, 2015 10:43:06 AM Jiang Liu wrote:
-> Some PCI device drivers assume that pci_dev->irq won't change after
-> calling pci_disable_device() and pci_enable_device() during suspend and
-> resume.
-> 
-> Commit c03b3b0738a5 ("x86, irq, mpparse: Release IOAPIC pin when
-> PCI device is disabled") frees PCI IRQ resources when pci_disable_device()
-> is called and reallocate IRQ resources when pci_enable_device() is
-> called again. This breaks above assumption. So commit 3eec595235c1
-> ("x86, irq, PCI: Keep IRQ assignment for PCI devices during
-> suspend/hibernation") and 9eabc99a635a ("x86, irq, PCI: Keep IRQ
-> assignment for runtime power management") fix the issue by avoiding
-> freeing/reallocating IRQ resources during PCI device suspend/resume.
-> They achieve this by checking dev.power.is_prepared and
-> dev.power.runtime_status.  PM maintainer, Rafael, then pointed out that
-> it's really an ugly fix which leaking PM internal state information to
-> IRQ subsystem.
-> 
-> Recently David Vrabel <david.vrabel@citrix.com> also reports an
-> regression in pciback driver caused by commit cffe0a2b5a34 ("x86, irq:
-> Keep balance of IOAPIC pin reference count"). Please refer to:
-> http://lkml.org/lkml/2015/1/14/546
-> 
-> So this patch refine the way to release PCI IRQ resources. Instead of
-> releasing PCI IRQ resources in pci_disable_device()/
-> pcibios_disable_device(), we now release it at driver unbinding
-> notification BUS_NOTIFY_UNBOUND_DRIVER. In other word, we only release
-> PCI IRQ resources when there's no driver bound to the PCI device, and
-> it keeps the assumption that pci_dev->irq won't through multiple
-> invocation of pci_enable_device()/pci_disable_device().
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-The code after the patch looks better to me than before it, but ->
+In order to enable SRIOV on PowerNV platform, the PF's IOV BAR needs to be
+adjusted:
 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/include/asm/pci_x86.h |    2 --
->  arch/x86/pci/common.c          |   30 ++++++++++++++++++++++++++++--
->  arch/x86/pci/intel_mid_pci.c   |    4 ++--
->  arch/x86/pci/irq.c             |   15 +--------------
->  drivers/acpi/pci_irq.c         |    9 +--------
->  5 files changed, 32 insertions(+), 28 deletions(-)
-> 
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index 164e3f8d3c3d..fa1195dae425 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
->  extern int (*pcibios_enable_irq)(struct pci_dev *dev);
->  extern void (*pcibios_disable_irq)(struct pci_dev *dev);
->  
-> -extern bool mp_should_keep_irq(struct device *dev);
-> -
->  struct pci_raw_ops {
->  	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
->  						int reg, int len, u32 *val);
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 7b20bccf3648..99f15ed19f38 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -497,6 +497,25 @@ void __init pcibios_set_cache_line_size(void)
->  	}
->  }
->  
-> +static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
-> +			    void *data)
-> +{
-> +	struct pci_dev *dev = to_pci_dev(data);
-> +
-> +	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
-> +		return NOTIFY_DONE;
-> +
-> +	if (pcibios_disable_irq)
-> +		pcibios_disable_irq(dev);
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
-> +static struct notifier_block pci_irq_nb = {
-> +	.notifier_call = pci_irq_notifier,
-> +	.priority = INT_MIN,
-> +};
-> +
->  int __init pcibios_init(void)
->  {
->  	if (!raw_pci_ops) {
-> @@ -509,6 +528,9 @@ int __init pcibios_init(void)
->  
->  	if (pci_bf_sort >= pci_force_bf)
->  		pci_sort_breadthfirst();
-> +
-> +	bus_register_notifier(&pci_bus_type, &pci_irq_nb);
-> +
->  	return 0;
->  }
->  
-> @@ -669,8 +691,12 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  
->  void pcibios_disable_device (struct pci_dev *dev)
+    1. size expanded
+    2. aligned to M64BT size
 
--> Since the default __weak implementation of this is an empty function, do
-we still need this one here?
+This patch documents this change on the reason and how.
 
->  {
-> -	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-> -		pcibios_disable_irq(dev);
-> +	/*
-> +	 * Some device drivers assume dev->irq won't change after calling
-> +	 * pci_disable_device(). So delay releasing of IRQ resource to driver
-> +	 * unbinding time. Otherwise it will break PM subsystem and drivers
-> +	 * like xen-pciback etc.
-> +	 */
+[bhelgaas: reformat, clarify, expand]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ .../powerpc/pci_iov_resource_on_powernv.txt        |  305 ++++++++++++++++++++
+ 1 file changed, 305 insertions(+)
+ create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
 
-And perhaps you can put a comment like this one into the notifier routine instead?
+diff --git a/Documentation/powerpc/pci_iov_resource_on_powernv.txt b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
+new file mode 100644
+index 000000000000..4e9bb2812238
+--- /dev/null
++++ b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
+@@ -0,0 +1,305 @@
++Wei Yang <weiyang@linux.vnet.ibm.com>
++Benjamin Herrenschmidt <benh@au1.ibm.com>
++26 Aug 2014
++
++This document describes the requirement from hardware for PCI MMIO resource
++sizing and assignment on PowerNV platform and how generic PCI code handles
++this requirement.  The first two sections describe the concepts of
++Partitionable Endpoints and the implementation on P8 (IODA2).
++
++1. Introduction to Partitionable Endpoints
++
++A Partitionable Endpoint (PE) is a way to group the various resources
++associated with a device or a set of device to provide isolation between
++partitions (i.e., filtering of DMA, MSIs etc.) and to provide a mechanism
++to freeze a device that is causing errors in order to limit the possibility
++of propagation of bad data.
++
++There is thus, in HW, a table of PE states that contains a pair of "frozen"
++state bits (one for MMIO and one for DMA, they get set together but can be
++cleared independently) for each PE.
++
++When a PE is frozen, all stores in any direction are dropped and all loads
++return all 1's value.  MSIs are also blocked.  There's a bit more state
++that captures things like the details of the error that caused the freeze
++etc., but that's not critical.
++
++The interesting part is how the various PCIe transactions (MMIO, DMA, ...)
++are matched to their corresponding PEs.
++
++The following section provides a rough description of what we have on P8
++(IODA2).  Keep in mind that this is all per PHB (PCI host bridge).  Each
++PHB is a completely separate HW entity that replicates the entire logic,
++so has its own set of PEs, etc.
++
++2. Implementation of Partitionable Endpoints on P8 (IODA2)
++
++P8 supports up to 256 Partitionable Endpoints per PHB.
++
++  * Inbound
++
++    For DMA, MSIs and inbound PCIe error messages, we have a table (in
++    memory but accessed in HW by the chip) that provides a direct
++    correspondence between a PCIe RID (bus/dev/fn) with a PE number.
++    We call this the RTT.
++
++    - For DMA we then provide an entire address space for each PE that can
++      contains two "windows", depending on the value of PCI address bit 59.
++      Each window can be configured to be remapped via a "TCE table" (IOMMU
++      translation table), which has various configurable characteristics
++      not described here.
++
++    - For MSIs, we have two windows in the address space (one at the top of
++      the 32-bit space and one much higher) which, via a combination of the
++      address and MSI value, will result in one of the 2048 interrupts per
++      bridge being triggered.  There's a PE# in the interrupt controller
++      descriptor table as well which is compared with the PE# obtained from
++      the RTT to "authorize" the device to emit that specific interrupt.
++
++    - Error messages just use the RTT.
++
++  * Outbound.  That's where the tricky part is.
++
++    Like other PCI host bridges, the Power8 IODA2 PHB supports "windows"
++    from the CPU address space to the PCI address space.  There is one M32
++    window and sixteen M64 windows.  They have different characteristics.
++    First what they have in common: they forward a configurable portion of
++    the CPU address space to the PCIe bus and must be naturally aligned
++    power of two in size.  The rest is different:
++
++    - The M32 window:
++
++      * Is limited to 4GB in size.
++
++      * Drops the top bits of the address (above the size) and replaces
++	them with a configurable value.  This is typically used to generate
++	32-bit PCIe accesses.  We configure that window at boot from FW and
++	don't touch it from Linux; it's usually set to forward a 2GB
++	portion of address space from the CPU to PCIe
++	0x8000_0000..0xffff_ffff.  (Note: The top 64KB are actually
++	reserved for MSIs but this is not a problem at this point; we just
++	need to ensure Linux doesn't assign anything there, the M32 logic
++	ignores that however and will forward in that space if we try).
++
++      * It is divided into 256 segments of equal size.  A table in the chip
++	maps each segment to a PE#.  That allows portions of the MMIO space
++	to be assigned to PEs on a segment granularity.  For a 2GB window,
++	the segment granularity is 2GB/256 = 8MB.
++
++    Now, this is the "main" window we use in Linux today (excluding
++    SR-IOV).  We basically use the trick of forcing the bridge MMIO windows
++    onto a segment alignment/granularity so that the space behind a bridge
++    can be assigned to a PE.
++
++    Ideally we would like to be able to have individual functions in PEs
++    but that would mean using a completely different address allocation
++    scheme where individual function BARs can be "grouped" to fit in one or
++    more segments.
++
++    - The M64 windows:
++
++      * Must be at least 256MB in size.
++
++      * Do not translate addresses (the address on PCIe is the same as the
++	address on the PowerBus).  There is a way to also set the top 14
++	bits which are not conveyed by PowerBus but we don't use this.
++
++      * Can be configured to be segmented.  When not segmented, we can
++	specify the PE# for the entire window.  When segmented, a window
++	has 256 segments; however, there is no table for mapping a segment
++	to a PE#.  The segment number *is* the PE#.
++
++      * Support overlaps.  If an address is covered by multiple windows,
++	there's a defined ordering for which window applies.
++
++    We have code (fairly new compared to the M32 stuff) that exploits that
++    for large BARs in 64-bit space:
++
++    We configure an M64 window to cover the entire region of address space
++    that has been assigned by FW for the PHB (about 64GB, ignore the space
++    for the M32, it comes out of a different "reserve").  We configure it
++    as segmented.
++
++    Then we do the same thing as with M32, using the bridge alignment
++    trick, to match to those giant segments.
++
++    Since we cannot remap, we have two additional constraints:
++
++    - We do the PE# allocation *after* the 64-bit space has been assigned
++      because the addresses we use directly determine the PE#.  We then
++      update the M32 PE# for the devices that use both 32-bit and 64-bit
++      spaces or assign the remaining PE# to 32-bit only devices.
++
++    - We cannot "group" segments in HW, so if a device ends up using more
++      than one segment, we end up with more than one PE#.  There is a HW
++      mechanism to make the freeze state cascade to "companion" PEs but
++      that only works for PCIe error messages (typically used so that if
++      you freeze a switch, it freezes all its children).  So we do it in
++      SW.  We lose a bit of effectiveness of EEH in that case, but that's
++      the best we found.  So when any of the PEs freezes, we freeze the
++      other ones for that "domain".  We thus introduce the concept of
++      "master PE" which is the one used for DMA, MSIs, etc., and "secondary
++      PEs" that are used for the remaining M64 segments.
++
++    We would like to investigate using additional M64 windows in "single
++    PE" mode to overlay over specific BARs to work around some of that, for
++    example for devices with very large BARs, e.g., GPUs.  It would make
++    sense, but we haven't done it yet.
++
++3. PowerNV Platform Considerations for SR-IOV
++
++  * SR-IOV Background
++
++    The PCIe SR-IOV feature allows a single Physical Function (PF) to
++    support several Virtual Functions (VFs).  Registers in the PF's SR-IOV
++    Capability control the number of VFs and whether they are enabled.
++
++    When VFs are enabled, they appear in Configuration Space like normal
++    PCI devices, but the BARs in VF config space headers are unusual.  For
++    a non-VF device, software uses BARs in the config space header to
++    discover the BAR sizes and assign addresses for them.  For VF devices,
++    software uses VF BAR registers in the *PF* SR-IOV Capability to
++    discover sizes and assign addresses.  The BARs in the VF's config space
++    header are read-only zeros.
++
++    When a VF BAR in the PF SR-IOV Capability is programmed, it sets the
++    base address for all the corresponding VF(n) BARs.  For example, if the
++    PF SR-IOV Capability is programmed to enable eight VFs, and it has a
++    1MB VF BAR0, the address in that VF BAR sets the base of an 8MB region.
++    This region is divided into eight contiguous 1MB regions, each of which
++    is a BAR0 for one of the VFs.  Note that even though the VF BAR
++    describes an 8MB region, the alignment requirement is for a single VF,
++    i.e., 1MB in this example.
++
++  There are several strategies for isolating VFs in PEs:
++
++  - M32 window: There's one M32 window, and it is split into 256
++    equally-sized segments.  The finest granularity possible is a 256MB
++    window with 1MB segments.  VF BARs that are 1MB or larger could be
++    mapped to separate PEs in this window.  Each segment can be
++    individually mapped to a PE via the lookup table, so this is quite
++    flexible, but it works best when all the VF BARs are the same size.  If
++    they are different sizes, the entire window has to be small enough that
++    the segment size matches the smallest VF BAR, which means larger VF
++    BARs span several segments.
++
++  - Non-segmented M64 window: A non-segmented M64 window is mapped entirely
++    to a single PE, so it could only isolate one VF.
++
++  - Single segmented M64 windows: A segmented M64 window could be used just
++    like the M32 window, but the segments can't be individually mapped to
++    PEs (the segment number is the PE#), so there isn't as much
++    flexibility.  A VF with multiple BARs would have to be in a "domain" of
++    multiple PEs, which is not as well isolated as a single PE.
++
++  - Multiple segmented M64 windows: As usual, each window is split into 256
++    equally-sized segments, and the segment number is the PE#.  But if we
++    use several M64 windows, they can be set to different base addresses
++    and different segment sizes.  If we have VFs that each have a 1MB BAR
++    and a 32MB BAR, we could use one M64 window to assign 1MB segments and
++    another M64 window to assign 32MB segments.
++
++  Finally, the plan to use M64 windows for SR-IOV, which will be described
++  more in the next two sections.  For a given VF BAR, we need to
++  effectively reserve the entire 256 segments (256 * VF BAR size) and
++  position the VF BAR to start at the beginning of a free range of
++  segments/PEs inside that M64 window.
++
++  The goal is of course to be able to give a separate PE for each VF.
++
++  The PowerNV IODA2 platform has 16 M64 windows, which are used to map MMIO
++  range to PE#.  Each M64 window defines one MMIO range and this range is
++  divided into 256 segments, with each segment corresponding to one PE.
++
++  We decide to leverage this M64 window to map VFs to individual PEs, since
++  SR-IOV VF BARs are all the same size.
++
++  But doing so introduces another problem: total_VFs is usually smaller
++  than the number of M64 window segments, so if we map one VF BAR directly
++  to one M64 window, some part of the M64 window will map to another
++  device's MMIO range.
++
++  IODA supports 256 PEs, so segmented windows contain 256 segments, so if
++  total_VFs is less than 256, we have the situation in Figure 1.0, where
++  segments [total_VFs, 255] of the M64 window may map to some MMIO range on
++  other devices:
++
++     0      1                     total_VFs - 1
++     +------+------+-     -+------+------+
++     |      |      |  ...  |      |      |
++     +------+------+-     -+------+------+
++
++                           VF(n) BAR space
++
++     0      1                     total_VFs - 1                255
++     +------+------+-     -+------+------+-      -+------+------+
++     |      |      |  ...  |      |      |   ...  |      |      |
++     +------+------+-     -+------+------+-      -+------+------+
++
++                           M64 window
++
++		Figure 1.0 Direct map VF(n) BAR space
++
++  Our current solution is to allocate 256 segments even if the VF(n) BAR
++  space doesn't need that much, as shown in Figure 1.1:
++
++     0      1                     total_VFs - 1                255
++     +------+------+-     -+------+------+-      -+------+------+
++     |      |      |  ...  |      |      |   ...  |      |      |
++     +------+------+-     -+------+------+-      -+------+------+
++
++                           VF(n) BAR space + extra
++
++     0      1                     total_VFs - 1                255
++     +------+------+-     -+------+------+-      -+------+------+
++     |      |      |  ...  |      |      |   ...  |      |      |
++     +------+------+-     -+------+------+-      -+------+------+
++
++			   M64 window
++
++		Figure 1.1 Map VF(n) BAR space + extra
++
++  Allocating the extra space ensures that the entire M64 window will be
++  assigned to this one SR-IOV device and none of the space will be
++  available for other devices.  Note that this only expands the space
++  reserved in software; there are still only total_VFs VFs, and they only
++  respond to segments [0, total_VFs - 1].  There's nothing in hardware that
++  responds to segments [total_VFs, 255].
++
++4. Implications for the Generic PCI Code
++
++The PCIe SR-IOV spec requires that the base of the VF(n) BAR space be
++aligned to the size of an individual VF BAR.
++
++On PowerNV, we want to align the base of the VF(n) BAR space to the size of
++an M64 window, not just the size of an individual VF BAR.  This means the
++VF(n) BAR space can fit exactly in the M64 window.
++
++>>>> Bjorn's speculation follows:
++
++In IODA2, the MMIO address determines the PE#.  If the address is in an M32
++window, we can set the PE# by updating the table that translates segments
++to PE#s.  Similarly, if the address is in an unsegmented M64 window, we can
++set the PE# for the window.  But if it's in a segmented M64 window, the
++segment number is the PE#.
++
++Therefore, the only way to control the PE# for a VF is to change the base
++of the VF(n) BAR space in the VF BAR.  If the PCI core allocates the exact
++amount of space required for the VF(n) BAR space, the VF BAR value is fixed
++and cannot be changed.
++
++On the other hand, if the PCI core allocates additional space, the VF BAR
++value can be changed as long as the entire VF(n) BAR space remains inside
++the space allocated by the core.
++
++Ideally the segment size will be the same as an individual VF BAR size.
++Then each VF will be in its own PE.  The VF BARs (and therefore the PE#s)
++are contiguous.  If VF0 is in PE(x), then VF(n) is in PE(x+n).  If we
++allocate 256 segments, there are (256 - numVFs) choices for the PE# of VF0.
++
++If the segment size is smaller than the VF BAR size, it will take several
++segments to cover a VF BAR, and a VF will be in several PEs.  This is
++possible, but the isolation isn't as good, and it reduces the number of PE#
++choices because instead of consuming only numVFs segments, the VF(n) BAR
++space will consume (numVFs * n) segments.  That means there aren't as many
++available segments for adjusting base of the VF(n) BAR space.
 
->  }
->  
->  int pci_ext_cfg_avail(void)
-> diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-> index 44b9271580b5..95c2471f6819 100644
-> --- a/arch/x86/pci/intel_mid_pci.c
-> +++ b/arch/x86/pci/intel_mid_pci.c
-> @@ -234,10 +234,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
->  
->  static void intel_mid_pci_irq_disable(struct pci_dev *dev)
->  {
-> -	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-> -	    dev->irq > 0) {
-> +	if (dev->irq_managed && dev->irq > 0) {
->  		mp_unmap_irq(dev->irq);
->  		dev->irq_managed = 0;
-> +		dev->irq = 0;
->  	}
->  }
->  
-> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-> index 5dc6ca5e1741..e71b3dbd87b8 100644
-> --- a/arch/x86/pci/irq.c
-> +++ b/arch/x86/pci/irq.c
-> @@ -1256,22 +1256,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
->  	return 0;
->  }
->  
-> -bool mp_should_keep_irq(struct device *dev)
-> -{
-> -	if (dev->power.is_prepared)
-> -		return true;
-> -#ifdef CONFIG_PM
-> -	if (dev->power.runtime_status == RPM_SUSPENDING)
-> -		return true;
-> -#endif
-> -
-> -	return false;
-> -}
-> -
->  static void pirq_disable_irq(struct pci_dev *dev)
->  {
-> -	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
-> -	    dev->irq_managed && dev->irq) {
-> +	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
->  		mp_unmap_irq(dev->irq);
->  		dev->irq = 0;
->  		dev->irq_managed = 0;
-> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> index b1def411c0b8..e7f718d6918a 100644
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
->  	if (!pin || !dev->irq_managed || dev->irq <= 0)
->  		return;
->  
-> -	/* Keep IOAPIC pin configuration when suspending */
-> -	if (dev->dev.power.is_prepared)
-> -		return;
-> -#ifdef	CONFIG_PM
-> -	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
-> -		return;
-> -#endif
-> -
->  	entry = acpi_pci_irq_lookup(dev, pin);
->  	if (!entry)
->  		return;
-> @@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
->  	if (gsi >= 0) {
->  		acpi_unregister_gsi(gsi);
->  		dev->irq_managed = 0;
-> +		dev->irq = 0;
->  	}
->  }
-> 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
