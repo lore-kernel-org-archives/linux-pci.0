@@ -1,62 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:36791 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752515AbbBHDLu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Feb 2015 22:11:50 -0500
-Received: by ierx19 with SMTP id x19so3300446ier.3
-        for <linux-pci@vger.kernel.org>; Sat, 07 Feb 2015 19:11:49 -0800 (PST)
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:60269 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbbBXUX1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 15:23:27 -0500
 MIME-Version: 1.0
-In-Reply-To: <54D6C6CB.6060904@nwtrail.com>
-References: <54C81B4E.7060900@nwtrail.com>
-	<CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com>
-	<54CBB062.4040801@nwtrail.com>
-	<CAE9FiQUxD8g4KG9CYe1znb5Lw5skkq=9QSOgkmGUDbhsaDq2Qw@mail.gmail.com>
-	<54CFBC0E.4080102@nwtrail.com>
-	<CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
-	<54D160B5.70006@nwtrail.com>
-	<CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
-	<54D6C6CB.6060904@nwtrail.com>
-Date: Sat, 7 Feb 2015 19:11:49 -0800
-Message-ID: <CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
-From: Yinghai Lu <yinghai@kernel.org>
-To: pjay@nwtrail.com
+In-Reply-To: <20150224200603.14443.68971.stgit@gimli.home>
+References: <20150224200603.14443.68971.stgit@gimli.home>
+Date: Tue, 24 Feb 2015 15:23:27 -0500
+Message-ID: <CADnq5_PDjww+TkPWVV7HLLA50az2n20SfD5ShVp+OpT8Cy4Dew@mail.gmail.com>
+Subject: Re: [PATCH 0/2] PCI: pci_unignore_hotplug()
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@linux.ie>,
+	"Deucher, Alexander" <alexander.deucher@amd.com>,
+	Maling list - DRI developers
+	<dri-devel@lists.freedesktop.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 7, 2015 at 6:15 PM, Paul Johnson <pjay@nwtrail.com> wrote:
-> On 02/07/2015 03:34 PM, Yinghai Lu wrote:
->>
->> On Tue, Feb 3, 2015 at 3:58 PM, Paul Johnson <pjay@nwtrail.com> wrote:
->>>
->>> On 02/02/2015 02:30 PM, Yinghai Lu wrote:
->>>>
->>>>
->>> This patch worked. In case you have a need, the dmesg is attached.
->>
->>
->> Please check two patches instead. You need to apply those two at the same
->> time
->> on current linus tree.
->>
->> Thanks
->>
->> Yinghai
->>
-> The patches did not work. dmesg attached.
+On Tue, Feb 24, 2015 at 3:12 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> I'd kinda like to use pci_ignore_hotplug() for devices in use by a
+> user via vfio-pci, but the interface seems only partially implemented
+> since we can only set ignore_hotplug and not clear it.  This adds the
+> capability to clear the flag and applies it as seems to be appropriate
+> to the existing users.  I don't have a system with power control for
+> a radeon or nouveau device, so I'd certainly appreciate testing.  It
+> seems though that once the device is in D0, we've passed the critical
+> point where the device could be accidentally unplugged.  Thanks,
+
+Something re-broke this recently.  See:
+https://bugzilla.kernel.org/show_bug.cgi?id=61891
+https://bugzilla.kernel.org/show_bug.cgi?id=89731
+
+Alex
+
 >
-> Interesting discussion about LSI cards. I have wondered what other people
-> are running into with this card/chip. It has been around awhile.
+> Alex
 >
-
-first patch there is
-
-+    if (!release_child_resources(r));
-+        return;
-
-can you remote the extra ";" to you will have
-+    if (!release_child_resources(r))
-+        return;
+> ---
+>
+> Alex Williamson (2):
+>       pci: Add reciprocal function for pci_ignore_hotplug()
+>       nouveau/radeon: Un-ignore hotplug on resume
+>
+>
+>  drivers/gpu/drm/nouveau/nouveau_drm.c |    1 +
+>  drivers/gpu/drm/radeon/radeon_drv.c   |    1 +
+>  include/linux/pci.h                   |    5 +++++
+>  3 files changed, 7 insertions(+)
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
