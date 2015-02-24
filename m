@@ -1,117 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: [PATCH v3 17/30] PCI/powerpc: Rename pcibios_root_bridge_prepare()
-Date: Thu, 26 Feb 2015 09:29:34 +0800
-Message-ID: <1424914187-21027-18-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:38474 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbbBXIeB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:34:01 -0500
+Received: by padbj1 with SMTP id bj1so34407950pad.5
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:34:01 -0800 (PST)
+Subject: [PATCH v12 09/21] PCI: Add pcibios_iov_resource_alignment()
+ interface
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:59 -0600
+Message-ID: <20150224083359.32124.91908.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pcibios_root_bridge_prepare() in powerpc is used
-to set root bus speed. Rename it to
-pcibios_set_root_bus_speed() for better readability.
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
+Per the SR-IOV spec r1.1, sec 3.3.14, the required alignment of a PF's IOV
+BAR is the size of an individual VF BAR, and the size consumed is the
+individual VF BAR size times NumVFs.
+
+The PowerNV platform has additional alignment requirements to help support
+its Partitionable Endpoint device isolation feature (see
+Documentation/powerpc/pci_iov_resource_on_powernv.txt).
+
+Add a pcibios_iov_resource_alignment() interface to allow platforms to
+request additional alignment.
+
+[bhelgaas: changelog, adapt to reworked pci_sriov_resource_alignment(),
+drop "align" parameter]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |    6 +++---
- arch/powerpc/platforms/pseries/pci.c     |    2 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- 5 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/iov.c   |    8 +++++++-
+ include/linux/pci.h |    1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index c8175a3..8e7f2a8 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -129,7 +129,7 @@ struct machdep_calls {
- 	void		(*pcibios_fixup)(void);
- 	int		(*pci_probe_mode)(struct pci_bus *);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
-+	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 78cd41b..4401b6a 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -769,9 +769,9 @@ int pci_proc_domain(struct pci_bus *bus)
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	if (ppc_md.pcibios_root_bridge_prepare)
--		return ppc_md.pcibios_root_bridge_prepare(bridge);
--
-+	if (ppc_md.pcibios_set_root_bus_speed)
-+		return ppc_md.pcibios_set_root_bus_speed(bridge);
-+
- 	return 0;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index cc6fedf4a1b9..bde0f02cae32 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -569,6 +569,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ 		4 * (resno - PCI_IOV_RESOURCES);
  }
  
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index fe16a50..af685d6 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
-+int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
++resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
++						      int resno)
++{
++	return pci_iov_resource_size(dev, resno);
++}
++
+ /**
+  * pci_sriov_resource_alignment - get resource alignment for VF BAR
+  * @dev: the PCI device
+@@ -581,7 +587,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+  */
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
  {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 1796c54..5d0be3a 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+-	return pci_iov_resource_size(dev, resno);
++	return pcibios_iov_resource_alignment(dev, resno);
+ }
  
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
-+int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 99ea94835fb6..4e1f17db1a81 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1174,6 +1174,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
  
- unsigned long pseries_memory_block_size(void);
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index e445b67..b196c0d 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
- 	}
- 
--	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
-+	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
- 
- 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
- 		long rc;
--- 
-1.7.1
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
 
