@@ -1,127 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.64] ([119.145.14.64]:24359 "EHLO
-	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753843AbbBZBdN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:33:13 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v3 30/30] PCI: Remove pci_bus_assign_domain_nr()
-Date: Thu, 26 Feb 2015 09:29:47 +0800
-Message-ID: <1424914187-21027-31-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59078 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751436AbbBXUMn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Feb 2015 15:12:43 -0500
+Subject: [PATCH 0/2] PCI: pci_unignore_hotplug()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org, airlied@linux.ie,
+	alexander.deucher@amd.com, dri-devel@lists.freedesktop.org
+Cc: alex.williamson@redhat.com, linux-kernel@vger.kernel.org
+Date: Tue, 24 Feb 2015 13:12:27 -0700
+Message-ID: <20150224200603.14443.68971.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus.
+I'd kinda like to use pci_ignore_hotplug() for devices in use by a
+user via vfio-pci, but the interface seems only partially implemented
+since we can only set ignore_hotplug and not clear it.  This adds the
+capability to clear the flag and applies it as seems to be appropriate
+to the existing users.  I don't have a system with power control for
+a radeon or nouveau device, so I'd certainly appreciate testing.  It
+seems though that once the device is in D0, we've passed the critical
+point where the device could be accidentally unplugged.  Thanks,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Alex
+
 ---
- drivers/pci/pci.c   |    5 -----
- drivers/pci/probe.c |   12 ++++--------
- include/linux/pci.h |    3 ---
- 3 files changed, 4 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 51ada13..287cf43 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4579,11 +4579,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- {
- 	host->domain = pci_assign_domain_nr(host->dev.parent);
- }
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
- #endif
- #endif
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2e5997a..e6f03cf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -495,10 +495,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
-+
- 	return b;
- }
- 
-@@ -645,7 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1865,14 +1862,13 @@ static struct pci_bus *pci_create_root_bus(
- 	char *fmt;
- 
- 	parent = bridge->dev.parent;
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 68c09da..8d82340 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -470,9 +470,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
--- 
-1.7.1
+Alex Williamson (2):
+      pci: Add reciprocal function for pci_ignore_hotplug()
+      nouveau/radeon: Un-ignore hotplug on resume
 
+
+ drivers/gpu/drm/nouveau/nouveau_drm.c |    1 +
+ drivers/gpu/drm/radeon/radeon_drv.c   |    1 +
+ include/linux/pci.h                   |    5 +++++
+ 3 files changed, 7 insertions(+)
