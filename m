@@ -1,105 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:33558 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246AbbBXIjZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:39:25 -0500
-Received: by pdjz10 with SMTP id z10so31937401pdj.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:39:25 -0800 (PST)
-Date: Tue, 24 Feb 2015 02:39:21 -0600
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:37640 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbbBXG03 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 01:26:29 -0500
+Received: by pdbfl12 with SMTP id fl12so31143282pdb.4
+        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2015 22:26:28 -0800 (PST)
+Date: Tue, 24 Feb 2015 00:26:24 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v12 08/21] PCI: Add pcibios_sriov_enable() and
- pcibios_sriov_disable()
-Message-ID: <20150224083921.GF6220@google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083352.32124.63952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Cc: valentine.barshak@cogentembedded.com, horms+renesas@verge.net.au,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: rcar: Add address check of mem_res
+Message-ID: <20150224062624.GD6220@google.com>
+References: <1424051648-7430-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150224083352.32124.63952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <1424051648-7430-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 02:33:52AM -0600, Bjorn Helgaas wrote:
-> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+On Mon, Feb 16, 2015 at 10:54:08AM +0900, Nobuhiro Iwamatsu wrote:
+> lower 16 bits of the address, which is managed by mem_res need to be 0.
+> This adds address check of lower 16 bits.
 > 
-> VFs are dynamically created when a driver enables them.  On some platforms,
-> like PowerNV, special resources are necessary to enable VFs.
-> 
-> Add platform hooks for enabling and disabling VFs.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+
+Applied to pci/host-rcar for v4.1, thanks!
+
 > ---
->  drivers/pci/iov.c |   19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
+>  v2: Remove to before devm_kzalloc().
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 5643a1011e23..cc6fedf4a1b9 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  	pci_dev_put(dev);
->  }
+>  drivers/pci/host/pci-rcar-gen2.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> index d9c042f..e9617d3 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -346,6 +346,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
+>  	if (!mem_res || !mem_res->start)
+>  		return -ENODEV;
 >  
-> +int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
-
-I think this "vf_num" parameter should be renamed to something like
-"num_vfs" instead.  It's subtle, but "vf_num" suggests that we're talking
-about one of several VFs, e.g., VF1 or VF 2.  But here we really mean the
-total number of VFs that we're enabling.
-
-There's similar code in the powerpc implementation that should be
-renamed the same way.
-
-> +{
-> +       return 0;
-> +}
+> +	if (mem_res->start & 0xFFFF)
+> +		return -EINVAL;
 > +
->  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  {
->  	int rc;
-> @@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	struct pci_sriov *iov = dev->sriov;
->  	int bars = 0;
->  	int bus;
-> +	int retval;
->  
->  	if (!nr_virtfn)
->  		return 0;
-> @@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	if (nr_virtfn < initial)
->  		initial = nr_virtfn;
->  
-> +	if ((retval = pcibios_sriov_enable(dev, initial))) {
-> +		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
-> +			retval);
-> +		return retval;
-> +	}
-> +
->  	for (i = 0; i < initial; i++) {
->  		rc = virtfn_add(dev, i, 0);
->  		if (rc)
-> @@ -335,6 +347,11 @@ failed:
->  	return rc;
->  }
->  
-> +int __weak pcibios_sriov_disable(struct pci_dev *pdev)
-> +{
-> +       return 0;
-> +}
-> +
->  static void sriov_disable(struct pci_dev *dev)
->  {
->  	int i;
-> @@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
->  	for (i = 0; i < iov->num_VFs; i++)
->  		virtfn_remove(dev, i, 0);
->  
-> +	pcibios_sriov_disable(dev);
-> +
->  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->  	pci_cfg_access_lock(dev);
->  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>  	priv = devm_kzalloc(&pdev->dev,
+>  			    sizeof(struct rcar_pci_priv), GFP_KERNEL);
+>  	if (!priv)
+> -- 
+> 2.1.3
 > 
