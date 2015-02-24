@@ -1,161 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 16 Feb 2015 16:43:20 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] pci: generic: Use the pci_scan_root_bus instead of
- pci_common_init_dev
-Message-ID: <20150216164320.GB817@red-moon>
-References: <1423495350-12295-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1423495350-12295-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:41468 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334AbbBXIc5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:32:57 -0500
+Received: by padfb1 with SMTP id fb1so34389137pad.8
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:32:57 -0800 (PST)
+Subject: [PATCH v12 00/21] Enable SRIOV on Power8
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:32:55 -0600
+Message-ID: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423495350-12295-2-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 09, 2015 at 03:22:29PM +0000, Suravee Suthikulpanit wrote:
-> Replacing pci_common_init_dev with pci_scan_root_bus, and remove reference
-> to struct pci_sys_data and pci_hw, which is specific to ARM32. This allows
-> the PCI host generic driver to also usable in ARM64 architecture.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Catalin Marinas <Catalin.Marinas@arm.com>
-> Cc: Liviu Dudau <Liviu.Dudau@arm.com>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> ---
->  drivers/pci/host/Kconfig            |  2 +-
->  drivers/pci/host/pci-host-generic.c | 33 ++++++++++-----------------------
->  2 files changed, 11 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index c4b6568..739bab0 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -53,7 +53,7 @@ config PCI_RCAR_GEN2_PCIE
->  
->  config PCI_HOST_GENERIC
->  	bool "Generic PCI host controller"
-> -	depends on ARM && OF
-> +	depends on (ARM||ARM64) && OF
->  	help
->  	  Say Y here if you want to support a simple generic PCI host
->  	  controller, such as the one emulated by kvmtool.
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 6eb1aa7..93f64e4 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -48,8 +48,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->  					     unsigned int devfn,
->  					     int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = bus->sysdata;
->  	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->  
->  	return pci->cfg.win[idx] + ((devfn << 8) | where);
-> @@ -64,8 +63,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
->  					      unsigned int devfn,
->  					      int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = bus->sysdata;
->  	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->  
->  	return pci->cfg.win[idx] + ((devfn << 12) | where);
-> @@ -80,8 +78,7 @@ static int gen_pci_config_read(struct pci_bus *bus, unsigned int devfn,
->  				int where, int size, u32 *val)
->  {
->  	void __iomem *addr;
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = bus->sysdata;
->  
->  	addr = pci->cfg.ops->map_bus(bus, devfn, where);
->  
-> @@ -103,8 +100,7 @@ static int gen_pci_config_write(struct pci_bus *bus, unsigned int devfn,
->  				 int where, int size, u32 val)
->  {
->  	void __iomem *addr;
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = bus->sysdata;
->  
->  	addr = pci->cfg.ops->map_bus(bus, devfn, where);
->  
-> @@ -244,13 +240,6 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	return 0;
->  }
->  
-> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> -{
-> -	struct gen_pci *pci = sys->private_data;
-> -	list_splice_init(&pci->resources, &sys->resources);
-> -	return 1;
-> -}
-> -
->  static int gen_pci_probe(struct platform_device *pdev)
->  {
->  	int err;
-> @@ -260,13 +249,6 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> -	struct hw_pci hw = {
-> -		.nr_controllers	= 1,
-> -		.private_data	= (void **)&pci,
-> -		.setup		= gen_pci_setup,
-> -		.map_irq	= of_irq_parse_and_map_pci,
-> -		.ops		= &gen_pci_ops,
-> -	};
->  
->  	if (!pci)
->  		return -ENOMEM;
-> @@ -303,7 +285,12 @@ static int gen_pci_probe(struct platform_device *pdev)
->  		return err;
->  	}
->  
-> -	pci_common_init_dev(dev, &hw);
-> +	if (!pci_scan_root_bus(&pdev->dev, pci->cfg.bus_range->start,
-> +			       &gen_pci_ops, pci, &pci->resources)) {
-> +		dev_err(&pdev->dev, "failed to enable PCIe ports\n");
-> +		return -ENODEV;
-> +	}
+Wei Yang's most recent POWER8 SR-IOV patchset was v11, posted on Jan 15,
+2015.
 
-We need to assign resources if !PCI_PROBE_ONLY. And to do that we can't
-use pci_scan_root_bus() because it adds devices before resources can be
-assigned.
+I'm having a hard time keeping everything straight between the tweaks I've
+made on my branch and incremental updates.  I think it's easier to repost
+the whole series so one can easily collect everything that goes together.
+So here'a a v12 with the changes I've made.
 
-Furthermore, the ARM32 pcibios_align_resource() implementation requires
-pci_sys_data, so we _still_ rely on pci_common_init_dev to create one
-for us.
+Wei, please follow up with a v13 to fix anything I broke here.  Here's how
+I would do that using stgit:
 
-There are patches in flight to change this behaviour, so for this
-series to be applicable there is still some code to be merged first,
-we are getting there, bear with us.
+  git checkout -b pci/virtualization-v13 pci/virtualization-v12
+  stg init
+  stg uncommit -n 21
+  <hack on the patches>
+  stg mail -v v13 ... pci-print-more-info-in..powerpc-pci-add-pci-resource
 
-Lorenzo
+I put v10, v11, and v12 on branches based on v4.0-rc1:
 
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.1.0
-> 
-> 
+  pci/virtualization-v10	(posted 12/22/2014)
+  pci/virtualization-v11	(posted 01/15/2015)
+  pci/virtualization-v12	(this posting)
+
+This makes it relatively easy to diff the versions, e.g.,
+
+  git diff pci/virtualization-v11 pci/virtualization-v12
+
+These branches are at
+
+  https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/
+
+v12:
+   * remove "align" parameter from pcibios_iov_resource_alignment()
+     default version returns pci_iov_resource_size() instead of the
+     "align" parameter
+   * in powerpc pcibios_iov_resource_alignment(), return
+     pci_iov_resource_size() if there's no ppc_md function pointer
+   * in pci_sriov_resource_alignment(), don't re-read base, since we
+     saved the required alignment when reading it the first time
+   * remove "vf_num" parameter from add_dev_pci_info() and
+     remove_dev_pci_info(); use pci_sriov_get_totalvfs() instead
+   * use dev_warn() instead of pr_warn() when possible
+   * check to be sure IOV BAR is still in range after shifting, change
+     pnv_pci_vf_resource_shift() from void to int
+   * improve sriov_enable() error message
+   * improve SR-IOV BAR sizing message
+   * index IOV resources in conventional style
+   * include preamble patches (refresh offset/stride when updating numVFs,
+     calculate max buses required
+   * restructure pci_iov_max_bus_range() to return value instead of updating
+     internally, rename to virtfn_max_buses()
+   * fix typos & formatting
+   * expand documentation
+
+Bjorn
+
+---
+
+Bjorn Helgaas (2):
+      PCI: Print more info in sriov_enable() error message
+      PCI: Index IOV resources in the conventional style
+
+Gavin Shan (1):
+      powerpc/pci: Refactor pci_dn
+
+Wei Yang (18):
+      PCI: Print PF SR-IOV resource that contains all VF(n) BAR space
+      PCI: Keep individual VF BAR size in struct pci_sriov
+      PCI: Refresh First VF Offset and VF Stride when updating NumVFs
+      PCI: Calculate maximum number of buses required for VFs
+      PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
+      PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
+      PCI: Add pcibios_iov_resource_alignment() interface
+      PCI: Consider additional PF's IOV BAR alignment in sizing and assigning
+      powerpc/pci: Don't unset PCI resources for VFs
+      powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+      powerpc/powernv: Allocate struct pnv_ioda_pe iommu_table dynamically
+      powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
+      powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
+      powerpc/powernv: Shift VF resource with an offset
+      powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
+      powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
+      powerpc/pci: Remove unused struct pci_dn.pcidev field
+      powerpc/pci: Add PCI resource alignment documentation
+
+
+ .../powerpc/pci_iov_resource_on_powernv.txt        |  305 ++++++++
+ arch/powerpc/include/asm/device.h                  |    3 
+ arch/powerpc/include/asm/iommu.h                   |    3 
+ arch/powerpc/include/asm/machdep.h                 |    5 
+ arch/powerpc/include/asm/pci-bridge.h              |   24 +
+ arch/powerpc/kernel/pci-common.c                   |   19 
+ arch/powerpc/kernel/pci_dn.c                       |  256 ++++++-
+ arch/powerpc/platforms/powernv/eeh-powernv.c       |   14 
+ arch/powerpc/platforms/powernv/pci-ioda.c          |  777 +++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c               |   87 +-
+ arch/powerpc/platforms/powernv/pci.h               |   13 
+ drivers/pci/iov.c                                  |  155 +++-
+ drivers/pci/pci.h                                  |    2 
+ drivers/pci/setup-bus.c                            |   83 ++
+ include/linux/pci.h                                |   15 
+ 15 files changed, 1622 insertions(+), 139 deletions(-)
+ create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
