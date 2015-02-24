@@ -1,67 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:46742 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753643AbbBZX5h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 18:57:37 -0500
-Received: by iecvy18 with SMTP id vy18so22983166iec.13
-        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 15:57:37 -0800 (PST)
-Date: Thu, 26 Feb 2015 17:57:32 -0600
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:36437 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbbBXId0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:26 -0500
+Received: by pabkq14 with SMTP id kq14so34429677pab.3
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:26 -0800 (PST)
+Subject: [PATCH v12 04/21] PCI: Index IOV resources in the conventional style
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v4 00/30] Refine PCI scan interfaces and make generic pci
- host bridge
-Message-ID: <20150226235732.GF25765@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:24 -0600
+Message-ID: <20150224083324.32124.74934.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:11:54PM +0800, Yijing Wang wrote:
-> v3->v4:
-> 	Fix the rebase issue.
+Most of PCI uses "res = &dev->resource[i]", not "res = dev->resource + i".
+Use that style in iov.c also.
 
-This did apply on v4.0-rc1, but with many whitespace complaints:
+No functional change.
 
-  Importing patch "pci-pass-pci-domain-number" ... <stdin>:29: trailing whitespace.
-	  bus = pci_scan_root_bus(NULL, 
-  <stdin>:44: trailing whitespace.
-      bus = pci_scan_bus_legacy(PCI_DOMBUS(hose->index, 0), 
-  <stdin>:59: trailing whitespace.
-      pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
-  <stdin>:74: trailing whitespace.
-      bus = pci_scan_root_bus(NULL, 
-  <stdin>:75: trailing whitespace.
-	      PCI_DOMBUS(controller->segment, busnum), 
-  warning: squelched 15 whitespace errors
-  warning: 20 lines add whitespace errors.
-  done
-  Importing patch "pci-introduce" ... done
-  Importing patch "pci-separate-pci_host_bridge" ... <stdin>:50: trailing whitespace.
-      dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
-  <stdin>:181: trailing whitespace.
-      dev_set_name(&b->dev, "%04x:%02x", bridge->domain, 
-  <stdin>:225: trailing whitespace.
-      
-  warning: 3 lines add whitespace errors.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I'll fix them myself this time because I want to make progress on this and
-I need something to do on the plane tomorrow, but please try to fix them
-yourself in the future.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5bca0e1a2799..27b98c361823 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -95,7 +95,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->multifunction = 0;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		if (!res->parent)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+@@ -212,7 +212,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		bars |= (1 << (i + PCI_IOV_RESOURCES));
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		if (res->parent)
+ 			nres++;
+ 	}
+@@ -373,7 +373,7 @@ found:
+ 
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
+ 					pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+@@ -417,7 +417,7 @@ found:
+ 
+ failed:
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		res->flags = 0;
+ 	}
+ 
 
-Bjorn
