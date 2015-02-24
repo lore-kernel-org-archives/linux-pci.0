@@ -1,238 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:59492 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195AbbBEVx6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Feb 2015 16:53:58 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v6 2/7] of: move of_dma_configure() to device.c to help re-use
-Date: Thu, 5 Feb 2015 16:52:54 -0500
-Message-ID: <1423173179-10227-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:62694 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbbBXRKy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 12:10:54 -0500
+Received: by mail-qa0-f53.google.com with SMTP id k15so28037034qaq.12
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 09:10:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150224090037.GK6220@google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083457.32124.55534.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150224090037.GK6220@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Feb 2015 11:10:33 -0600
+Message-ID: <CAErSpo7Yce518DXejsZW0cS34GFKYLxhctSoqk0y_C5UAiDQ9A@mail.gmail.com>
+Subject: Re: [PATCH v12 17/21] powerpc/powernv: Shift VF resource with an offset
+To: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move of_dma_configure() to device.c so that same function can be re-used
-for PCI devices to obtain DMA configuration from DT. Also add a second
-argument so that for PCI, DT node of root bus host bridge can be used to
-obtain the DMA configuration for the slave PCI device.
+On Tue, Feb 24, 2015 at 3:00 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Feb 24, 2015 at 02:34:57AM -0600, Bjorn Helgaas wrote:
+>> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>
+>> On PowerNV platform, resource position in M64 implies the PE# the resource
+>> belongs to.  In some cases, adjustment of a resource is necessary to locate
+>> it to a correct position in M64.
+>>
+>> Add pnv_pci_vf_resource_shift() to shift the 'real' PF IOV BAR address
+>> according to an offset.
+>>
+>> [bhelgaas: rework loops, rework overlap check, index resource[]
+>> conventionally, remove pci_regs.h include, squashed with next patch]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> ...
+>
+>> +#ifdef CONFIG_PCI_IOV
+>> +static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>> +{
+>> +     struct pci_dn *pdn = pci_get_pdn(dev);
+>> +     int i;
+>> +     struct resource *res, res2;
+>> +     resource_size_t size;
+>> +     u16 vf_num;
+>> +
+>> +     if (!dev->is_physfn)
+>> +             return -EINVAL;
+>> +
+>> +     /*
+>> +      * "offset" is in VFs.  The M64 windows are sized so that when they
+>> +      * are segmented, each segment is the same size as the IOV BAR.
+>> +      * Each segment is in a separate PE, and the high order bits of the
+>> +      * address are the PE number.  Therefore, each VF's BAR is in a
+>> +      * separate PE, and changing the IOV BAR start address changes the
+>> +      * range of PEs the VFs are in.
+>> +      */
+>> +     vf_num = pdn->vf_pes;
+>> +     for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +             res = &dev->resource[i + PCI_IOV_RESOURCES];
+>> +             if (!res->flags || !res->parent)
+>> +                     continue;
+>> +
+>> +             if (!pnv_pci_is_mem_pref_64(res->flags))
+>> +                     continue;
+>> +
+>> +             /*
+>> +              * The actual IOV BAR range is determined by the start address
+>> +              * and the actual size for vf_num VFs BAR.  This check is to
+>> +              * make sure that after shifting, the range will not overlap
+>> +              * with another device.
+>> +              */
+>> +             size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+>> +             res2.flags = res->flags;
+>> +             res2.start = res->start + (size * offset);
+>> +             res2.end = res2.start + (size * vf_num) - 1;
+>> +
+>> +             if (res2.end > res->end) {
+>> +                     dev_err(&dev->dev, "VF BAR%d: %pR would extend past %pR (trying to enable %d VFs shifted by %d)\n",
+>> +                             i, &res2, res, vf_num, offset);
+>> +                     return -EBUSY;
+>> +             }
+>> +     }
+>> +
+>> +     for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +             res = &dev->resource[i + PCI_IOV_RESOURCES];
+>> +             if (!res->flags || !res->parent)
+>> +                     continue;
+>> +
+>> +             if (!pnv_pci_is_mem_pref_64(res->flags))
+>> +                     continue;
+>> +
+>> +             size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+>> +             res2 = *res;
+>> +             res->start += size * offset;
+>
+> I'm still not happy about this fiddling with res->start.
+>
+> Increasing res->start means that in principle, the "size * offset" bytes
+> that we just removed from res are now available for allocation to somebody
+> else.  I don't think we *will* give that space to anything else because of
+> the alignment restrictions you're enforcing, but "res" now doesn't
+> correctly describe the real resource map.
+>
+> Would you be able to just update the BAR here while leaving the struct
+> resource alone?  In that case, it would look a little funny that lspci
+> would show a BAR value in the middle of the region in /proc/iomem, but
+> the /proc/iomem region would be more correct.
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+I guess this would also require a tweak where we compute the addresses
+of each of the VF resources.  Today it's probably just "base + VF_num
+* size", where "base" is res->start.  We'd have to account for the
+offset there if we don't adjust it here.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/device.c       |   59 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/platform.c     |   58 ++------------------------------------------
- include/linux/of_device.h |    2 ++
- 3 files changed, 63 insertions(+), 56 deletions(-)
-
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 46d6c75c..2de320d 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -2,6 +2,9 @@
- #include <linux/kernel.h>
- #include <linux/of.h>
- #include <linux/of_device.h>
-+#include <linux/of_address.h>
-+#include <linux/of_iommu.h>
-+#include <linux/dma-mapping.h>
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
-@@ -66,6 +69,62 @@ int of_device_add(struct platform_device *ofdev)
- 	return device_add(&ofdev->dev);
- }
- 
-+/**
-+ * of_dma_configure - Setup DMA configuration
-+ * @dev:	Device to apply DMA configuration
-+ * @np:		ptr to of node having dma configuration
-+ *
-+ * Try to get devices's DMA configuration from DT and update it
-+ * accordingly.
-+ *
-+ * In case if platform code need to use own special DMA configuration,it
-+ * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-+ * to fix up DMA configuration.
-+ */
-+void of_dma_configure(struct device *dev, struct device_node *np)
-+{
-+	u64 dma_addr, paddr, size;
-+	int ret;
-+	bool coherent;
-+	unsigned long offset;
-+	struct iommu_ops *iommu;
-+
-+	/*
-+	 * Set default dma-mask to 32 bit. Drivers are expected to setup
-+	 * the correct supported dma_mask.
-+	 */
-+	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-+	if (ret < 0) {
-+		dma_addr = offset = 0;
-+		size = dev->coherent_dma_mask;
-+	} else {
-+		offset = PFN_DOWN(paddr - dma_addr);
-+		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-+	}
-+
-+	dev->dma_pfn_offset = offset;
-+
-+	coherent = of_dma_is_coherent(np);
-+	dev_dbg(dev, "device is%sdma coherent\n",
-+		coherent ? " " : " not ");
-+
-+	iommu = of_iommu_configure(dev, np);
-+	dev_dbg(dev, "device is%sbehind an iommu\n",
-+		iommu ? " " : " not ");
-+
-+	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
-+}
-+EXPORT_SYMBOL_GPL(of_dma_configure);
-+
- int of_device_register(struct platform_device *pdev)
- {
- 	device_initialize(&pdev->dev);
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index d3f3988..cbee18d 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -19,7 +19,6 @@
- #include <linux/slab.h>
- #include <linux/of_address.h>
- #include <linux/of_device.h>
--#include <linux/of_iommu.h>
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
- }
- EXPORT_SYMBOL(of_device_alloc);
- 
--/**
-- * of_dma_configure - Setup DMA configuration
-- * @dev:	Device to apply DMA configuration
-- *
-- * Try to get devices's DMA configuration from DT and update it
-- * accordingly.
-- *
-- * In case if platform code need to use own special DMA configuration,it
-- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-- * to fix up DMA configuration.
-- */
--static void of_dma_configure(struct device *dev)
--{
--	u64 dma_addr, paddr, size;
--	int ret;
--	bool coherent;
--	unsigned long offset;
--	struct iommu_ops *iommu;
--
--	/*
--	 * Set default dma-mask to 32 bit. Drivers are expected to setup
--	 * the correct supported dma_mask.
--	 */
--	dev->coherent_dma_mask = DMA_BIT_MASK(32);
--
--	/*
--	 * Set it to coherent_dma_mask by default if the architecture
--	 * code has not set it.
--	 */
--	if (!dev->dma_mask)
--		dev->dma_mask = &dev->coherent_dma_mask;
--
--	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
--	if (ret < 0) {
--		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask;
--	} else {
--		offset = PFN_DOWN(paddr - dma_addr);
--		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
--	}
--	dev->dma_pfn_offset = offset;
--
--	coherent = of_dma_is_coherent(dev->of_node);
--	dev_dbg(dev, "device is%sdma coherent\n",
--		coherent ? " " : " not ");
--
--	iommu = of_iommu_configure(dev, dev->of_node);
--	dev_dbg(dev, "device is%sbehind an iommu\n",
--		iommu ? " " : " not ");
--
--	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
--}
--
- static void of_dma_deconfigure(struct device *dev)
- {
- 	arch_teardown_dma_ops(dev);
-@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
- 
- 	dev->dev.bus = &platform_bus_type;
- 	dev->dev.platform_data = platform_data;
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
- 
- 	if (of_device_add(dev) != 0) {
- 		of_dma_deconfigure(&dev->dev);
-@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
- 		dev_set_name(&dev->dev, "%s", bus_id);
- 	else
- 		of_device_make_bus_id(&dev->dev);
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
- 
- 	/* Allow the HW Peripheral ID to be overridden */
- 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index ef37021..c661496 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- 	return of_node_get(cpu_dev->of_node);
- }
- 
-+void of_dma_configure(struct device *dev, struct device_node *np);
- #else /* CONFIG_OF */
- 
- static inline int of_driver_match_device(struct device *dev,
-@@ -90,6 +91,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- {
- 	return NULL;
- }
-+void of_dma_configure(struct device *dev, struct device_node *np) { }
- #endif /* CONFIG_OF */
- 
- #endif /* _LINUX_OF_DEVICE_H */
--- 
-1.7.9.5
-
+>> +
+>> +             dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (enabling %d VFs shifted by %d)\n",
+>> +                      i, &res2, res, vf_num, offset);
+>> +             pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+>> +     }
+>> +     pdn->max_vfs -= offset;
+>> +     return 0;
+>> +}
+>> +#endif /* CONFIG_PCI_IOV */
