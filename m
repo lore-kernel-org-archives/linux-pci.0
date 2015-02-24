@@ -1,87 +1,426 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:51231 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933190AbbBJBwT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 20:52:19 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 10 Feb 2015 11:52:16 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 8907E3578053
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:52:13 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A1q5D845350992
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:52:13 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A1pd1Y008158
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 12:51:40 +1100
-Date: Tue, 10 Feb 2015 09:51:23 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 07/17] powerpc/pci: Don't unset pci resources for VFs
-Message-ID: <20150210015123.GC6326@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-8-git-send-email-weiyang@linux.vnet.ibm.com>
- <1423528584.4924.70.camel@au1.ibm.com>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:34191 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212AbbBXIeY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:34:24 -0500
+Received: by pdjg10 with SMTP id g10so31934910pdj.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:34:23 -0800 (PST)
+Subject: [PATCH v12 12/21] powerpc/pci: Refactor pci_dn
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:34:20 -0600
+Message-ID: <20150224083420.32124.91158.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423528584.4924.70.camel@au1.ibm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 10, 2015 at 11:36:24AM +1100, Benjamin Herrenschmidt wrote:
->On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
->> If we're going to reassign resources with flag PCI_REASSIGN_ALL_RSRC, all
->> resources will be cleaned out during device header fixup time and then get
->> reassigned by PCI core. However, the VF resources won't be reassigned and
->> thus, we shouldn't clean them out.
->> 
->> This patch adds a condition. If the pci_dev is a VF, skip the resource
->> unset process.
->
->I don't understand this, can you elaborate ? Why wouldn't we reassign
->the IOV resource just like everything else ?
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Sure.
+pci_dn is the extension of PCI device node and is created from device node.
+Unfortunately, VFs are enabled dynamically by PF's driver and they don't
+have corresponding device nodes, and pci_dn.  Refactor pci_dn to support
+VFs:
 
-VFs work a little bit different from normal devices. On powernv platform, we
-have PCI_REASSIGN_ALL_RSRC set, which means all resource retrieved from
-hardware will be cleaned and re-assigned by kernel. While VF's resources are
-calculated from PF's IOV BAR, in virtfn_add(). And after this, there is not
-re-assign process for VFs.
+   * pci_dn is organized as a hierarchy tree.  VF's pci_dn is put
+     to the child list of pci_dn of PF's bridge.  pci_dn of other device
+     put to the child list of pci_dn of its upstream bridge.
 
->
->Ben.
->
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  arch/powerpc/kernel/pci-common.c |    4 ++++
->>  1 file changed, 4 insertions(+)
->> 
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index 37d512d..889f743 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
->>  		       pci_name(dev));
->>  		return;
->>  	}
->> +
->> +	if (dev->is_virtfn)
->> +		return;
->> +
->>  	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->>  		struct resource *res = dev->resource + i;
->>  		struct pci_bus_region reg;
->
+   * VF's pci_dn is expected to be created dynamically when PF
+     enabling VFs.  VF's pci_dn will be destroyed when PF disabling VFs.
+     pci_dn of other device is still created from device node as before.
 
--- 
-Richard Yang
-Help you, Help me
+   * For one particular PCI device (VF or not), its pci_dn can be
+     found from pdev->dev.archdata.firmware_data, PCI_DN(devnode), or
+     parent's list.  The fast path (fetching pci_dn through PCI device
+     instance) is populated during early fixup time.
+
+[bhelgaas: add ifdef around add_one_dev_pci_info(), use dev_printk()]
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/include/asm/device.h         |    3 
+ arch/powerpc/include/asm/pci-bridge.h     |   14 +-
+ arch/powerpc/kernel/pci_dn.c              |  245 +++++++++++++++++++++++++++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   16 ++
+ 4 files changed, 272 insertions(+), 6 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/device.h b/arch/powerpc/include/asm/device.h
+index 38faeded7d59..29992cd020bb 100644
+--- a/arch/powerpc/include/asm/device.h
++++ b/arch/powerpc/include/asm/device.h
+@@ -34,6 +34,9 @@ struct dev_archdata {
+ #ifdef CONFIG_SWIOTLB
+ 	dma_addr_t		max_direct_dma_addr;
+ #endif
++#ifdef CONFIG_PPC64
++	void			*firmware_data;
++#endif
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev		*edev;
+ #endif
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 546d036fe925..513f8f27060d 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -89,6 +89,7 @@ struct pci_controller {
+ 
+ #ifdef CONFIG_PPC64
+ 	unsigned long buid;
++	void *firmware_data;
+ #endif	/* CONFIG_PPC64 */
+ 
+ 	void *private_data;
+@@ -154,9 +155,13 @@ static inline int isa_vaddr_is_ioport(void __iomem *address)
+ struct iommu_table;
+ 
+ struct pci_dn {
++	int     flags;
++#define PCI_DN_FLAG_IOV_VF     0x01
++
+ 	int	busno;			/* pci bus number */
+ 	int	devfn;			/* pci device and function number */
+ 
++	struct  pci_dn *parent;
+ 	struct  pci_controller *phb;	/* for pci devices */
+ 	struct	iommu_table *iommu_table;	/* for phb's or bridges */
+ 	struct	device_node *node;	/* back-pointer to the device_node */
+@@ -171,14 +176,19 @@ struct pci_dn {
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
+ #endif
++	struct list_head child_list;
++	struct list_head list;
+ };
+ 
+ /* Get the pointer to a device_node's pci_dn */
+ #define PCI_DN(dn)	((struct pci_dn *) (dn)->data)
+ 
++extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
++					   int devfn);
+ extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
+-
+-extern void * update_dn_pci_info(struct device_node *dn, void *data);
++extern struct pci_dn *add_dev_pci_info(struct pci_dev *pdev);
++extern void remove_dev_pci_info(struct pci_dev *pdev);
++extern void *update_dn_pci_info(struct device_node *dn, void *data);
+ 
+ static inline int pci_device_from_OF_node(struct device_node *np,
+ 					  u8 *bus, u8 *devfn)
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index 83df3075d3df..f3a1a81d112f 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -32,12 +32,223 @@
+ #include <asm/ppc-pci.h>
+ #include <asm/firmware.h>
+ 
++/*
++ * The function is used to find the firmware data of one
++ * specific PCI device, which is attached to the indicated
++ * PCI bus. For VFs, their firmware data is linked to that
++ * one of PF's bridge. For other devices, their firmware
++ * data is linked to that of their bridge.
++ */
++static struct pci_dn *pci_bus_to_pdn(struct pci_bus *bus)
++{
++	struct pci_bus *pbus;
++	struct device_node *dn;
++	struct pci_dn *pdn;
++
++	/*
++	 * We probably have virtual bus which doesn't
++	 * have associated bridge.
++	 */
++	pbus = bus;
++	while (pbus) {
++		if (pci_is_root_bus(pbus) || pbus->self)
++			break;
++
++		pbus = pbus->parent;
++	}
++
++	/*
++	 * Except virtual bus, all PCI buses should
++	 * have device nodes.
++	 */
++	dn = pci_bus_to_OF_node(pbus);
++	pdn = dn ? PCI_DN(dn) : NULL;
++
++	return pdn;
++}
++
++struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
++				    int devfn)
++{
++	struct device_node *dn = NULL;
++	struct pci_dn *parent, *pdn;
++	struct pci_dev *pdev = NULL;
++
++	/* Fast path: fetch from PCI device */
++	list_for_each_entry(pdev, &bus->devices, bus_list) {
++		if (pdev->devfn == devfn) {
++			if (pdev->dev.archdata.firmware_data)
++				return pdev->dev.archdata.firmware_data;
++
++			dn = pci_device_to_OF_node(pdev);
++			break;
++		}
++	}
++
++	/* Fast path: fetch from device node */
++	pdn = dn ? PCI_DN(dn) : NULL;
++	if (pdn)
++		return pdn;
++
++	/* Slow path: fetch from firmware data hierarchy */
++	parent = pci_bus_to_pdn(bus);
++	if (!parent)
++		return NULL;
++
++	list_for_each_entry(pdn, &parent->child_list, list) {
++		if (pdn->busno == bus->number &&
++                    pdn->devfn == devfn)
++                        return pdn;
++        }
++
++	return NULL;
++}
++
+ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ {
+-	struct device_node *dn = pci_device_to_OF_node(pdev);
+-	if (!dn)
++	struct device_node *dn;
++	struct pci_dn *parent, *pdn;
++
++	/* Search device directly */
++	if (pdev->dev.archdata.firmware_data)
++		return pdev->dev.archdata.firmware_data;
++
++	/* Check device node */
++	dn = pci_device_to_OF_node(pdev);
++	pdn = dn ? PCI_DN(dn) : NULL;
++	if (pdn)
++		return pdn;
++
++	/*
++	 * VFs don't have device nodes. We hook their
++	 * firmware data to PF's bridge.
++	 */
++	parent = pci_bus_to_pdn(pdev->bus);
++	if (!parent)
+ 		return NULL;
+-	return PCI_DN(dn);
++
++	list_for_each_entry(pdn, &parent->child_list, list) {
++		if (pdn->busno == pdev->bus->number &&
++		    pdn->devfn == pdev->devfn)
++			return pdn;
++	}
++
++	return NULL;
++}
++
++#ifdef CONFIG_PCI_IOV
++static struct pci_dn *add_one_dev_pci_info(struct pci_dn *parent,
++					   struct pci_dev *pdev,
++					   int busno, int devfn)
++{
++	struct pci_dn *pdn;
++
++	/* Except PHB, we always have parent firmware data */
++	if (!parent)
++		return NULL;
++
++	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
++	if (!pdn) {
++		dev_warn(&pdev->dev, "%s: Out of memory!\n", __func__);
++		return NULL;
++	}
++
++	pdn->phb = parent->phb;
++	pdn->parent = parent;
++	pdn->busno = busno;
++	pdn->devfn = devfn;
++#ifdef CONFIG_PPC_POWERNV
++	pdn->pe_number = IODA_INVALID_PE;
++#endif
++	INIT_LIST_HEAD(&pdn->child_list);
++	INIT_LIST_HEAD(&pdn->list);
++	list_add_tail(&pdn->list, &parent->child_list);
++
++	/*
++	 * If we already have PCI device instance, lets
++	 * bind them.
++	 */
++	if (pdev)
++		pdev->dev.archdata.firmware_data = pdn;
++
++	return pdn;
++}
++#endif
++
++struct pci_dn *add_dev_pci_info(struct pci_dev *pdev)
++{
++#ifdef CONFIG_PCI_IOV
++	struct pci_dn *parent, *pdn;
++	int i;
++
++	/* Only support IOV for now */
++	if (!pdev->is_physfn)
++		return pci_get_pdn(pdev);
++
++	/* Check if VFs have been populated */
++	pdn = pci_get_pdn(pdev);
++	if (!pdn || (pdn->flags & PCI_DN_FLAG_IOV_VF))
++		return NULL;
++
++	pdn->flags |= PCI_DN_FLAG_IOV_VF;
++	parent = pci_bus_to_pdn(pdev->bus);
++	if (!parent)
++		return NULL;
++
++	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
++		pdn = add_one_dev_pci_info(parent, NULL,
++					   pci_iov_virtfn_bus(pdev, i),
++					   pci_iov_virtfn_devfn(pdev, i));
++		if (!pdn) {
++			dev_warn(&pdev->dev, "%s: Cannot create firmware data for VF#%d\n",
++				 __func__, i);
++			return NULL;
++		}
++	}
++#endif
++
++	return pci_get_pdn(pdev);
++}
++
++void remove_dev_pci_info(struct pci_dev *pdev)
++{
++#ifdef CONFIG_PCI_IOV
++	struct pci_dn *parent;
++	struct pci_dn *pdn, *tmp;
++	int i;
++
++	/* Only support IOV PF for now */
++	if (!pdev->is_physfn)
++		return;
++
++	/* Check if VFs have been populated */
++	pdn = pci_get_pdn(pdev);
++	if (!pdn || !(pdn->flags & PCI_DN_FLAG_IOV_VF))
++		return;
++
++	pdn->flags &= ~PCI_DN_FLAG_IOV_VF;
++	parent = pci_bus_to_pdn(pdev->bus);
++	if (!parent)
++		return;
++
++	/*
++	 * We might introduce flag to pci_dn in future
++	 * so that we can release VF's firmware data in
++	 * a batch mode.
++	 */
++	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
++		list_for_each_entry_safe(pdn, tmp,
++			&parent->child_list, list) {
++			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
++			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
++				continue;
++
++			if (!list_empty(&pdn->list))
++				list_del(&pdn->list);
++			kfree(pdn);
++		}
++	}
++#endif
+ }
+ 
+ /*
+@@ -49,6 +260,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 	struct pci_controller *phb = data;
+ 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
+ 	const __be32 *regs;
++	struct device_node *parent;
+ 	struct pci_dn *pdn;
+ 
+ 	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
+@@ -70,6 +282,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 	}
+ 
+ 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
++
++	/* Attach to parent node */
++	INIT_LIST_HEAD(&pdn->child_list);
++	INIT_LIST_HEAD(&pdn->list);
++	parent = of_get_parent(dn);
++	pdn->parent = parent ? PCI_DN(parent) : NULL;
++	if (pdn->parent)
++		list_add_tail(&pdn->list, &pdn->parent->child_list);
++
+ 	return NULL;
+ }
+ 
+@@ -147,8 +368,11 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	/* PHB nodes themselves must not match */
+ 	update_dn_pci_info(dn, phb);
+ 	pdn = dn->data;
+-	if (pdn)
++	if (pdn) {
+ 		pdn->devfn = pdn->busno = -1;
++		pdn->phb = phb;
++		phb->firmware_data = pdn;
++	}
+ 
+ 	/* Update dn->phb ptrs for new phb and children devices */
+ 	traverse_pci_devices(dn, update_dn_pci_info, phb);
+@@ -171,3 +395,16 @@ void __init pci_devs_phb_init(void)
+ 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+ 		pci_devs_phb_init_dynamic(phb);
+ }
++
++static void pci_dev_pdn_setup(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn;
++
++	if (pdev->dev.archdata.firmware_data)
++		return;
++
++	/* Setup the fast path */
++	pdn = pci_get_pdn(pdev);
++	pdev->dev.archdata.firmware_data = pdn;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 6c9ff2b95119..58c4fc4ab63c 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -974,6 +974,22 @@ static void pnv_pci_ioda_setup_PEs(void)
+ 	}
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++int pcibios_sriov_disable(struct pci_dev *pdev)
++{
++	/* Release firmware data */
++	remove_dev_pci_info(pdev);
++	return 0;
++}
++
++int pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
++{
++	/* Allocate firmware data */
++	add_dev_pci_info(pdev);
++	return 0;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn(pdev);
 
