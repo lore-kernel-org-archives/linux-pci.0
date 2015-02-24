@@ -1,64 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:45484 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754038AbbBFRx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Feb 2015 12:53:57 -0500
-Received: by iecrd18 with SMTP id rd18so3110437iec.12
-        for <linux-pci@vger.kernel.org>; Fri, 06 Feb 2015 09:53:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <54D4DD95.7000303@ti.com>
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
- <20150206151542.GD23190@e104818-lin.cambridge.arm.com> <54D4DD95.7000303@ti.com>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:43735 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbbBXIdd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:33 -0500
+Received: by pdev10 with SMTP id v10so31771333pde.10
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:33 -0800 (PST)
+Subject: [PATCH v12 05/21] PCI: Refresh First VF Offset and VF Stride when
+ updating NumVFs
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 6 Feb 2015 11:53:35 -0600
-Message-ID: <CAErSpo6GOXHeKKfU8s5jCS3+Mui=HupZd=jpkLEyWAE94Ory5w@mail.gmail.com>
-Subject: Re: [PATCH v6 0/7] PCI: get DMA configuration from parent device
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:31 -0600
+Message-ID: <20150224083331.32124.41731.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 6, 2015 at 9:28 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On 02/06/2015 10:15 AM, Catalin Marinas wrote:
->>
->> On Thu, Feb 05, 2015 at 09:52:52PM +0000, Murali Karicheri wrote:
->>>
->>> This patch add an important capability to PCI driver on Keystone. I hope
->>> to
->>> have this merged to the upstream branch so that it is available for
->>> v3.20.
->>
->> It's very late for 3.20 and the code hasn't been in linux-next at all
->> (but it's not me who's merging this code), unless you can squeeze it in
->> as a bug-fix.
->
-> This is in fact a bug fix as PCI on Keystone is broken without this.
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Oh, sorry, I didn't realize that this was so urgent.  I guess I read
-"this adds an important capability" in the cover letter and concluded
-that it was new functionality.
+The First VF Offset and VF Stride fields depend on the NumVFs setting, so
+refresh the cached fields in struct pci_sriov when updating NumVFs.  See
+the SR-IOV spec r1.1, sec 3.3.9 and 3.3.10.
 
-Anyway, if it's broken, presumably PCI on Keystone *did* work at one
-point.  Can you identify the commit that broke it and requires these
-fixes, so we can figure out how far the fixes need to be backported?
+[bhelgaas: changelog, remove kernel-doc comment marker]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |   23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-If I merge it, I would like to get into my for-linus branch and get a
-little time in -next before asking Linus to pull it.  The merge window
-is a little wrinkle there -- I don't like to add new things to the mix
-during the window.  But if it's an important fix we can still get it
-in before the final v3.20.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 27b98c361823..a8752c2c2b53 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 		dev->sriov->stride * id) & 0xff;
+ }
+ 
++/*
++ * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
++ * change when NumVFs changes.
++ *
++ * Update iov->offset and iov->stride when NumVFs is written.
++ */
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
++}
++
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -253,7 +268,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -282,7 +297,7 @@ failed:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
+ 
+@@ -313,7 +328,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+ 	iov->num_VFs = 0;
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ }
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+@@ -452,7 +467,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+ 		pci_update_resource(dev, i);
+ 
+ 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
++	pci_iov_set_numvfs(dev, iov->num_VFs);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
+ 		msleep(100);
 
-Bjorn
