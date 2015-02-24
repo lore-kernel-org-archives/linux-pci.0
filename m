@@ -1,222 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53405 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S965646AbbBDNDK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Feb 2015 08:03:10 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Patch v3] x86/PCI: Refine the way to release PCI IRQ resources
-Date: Wed, 04 Feb 2015 14:26:04 +0100
-Message-ID: <1765479.Gge1hOO47N@vostro.rjw.lan>
-In-Reply-To: <1423038920-6136-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432434.BPb1XrlA2r@vostro.rjw.lan> <1423038920-6136-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:43831 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326AbbBXIdy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:54 -0500
+Received: by paceu11 with SMTP id eu11so34339225pac.10
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:54 -0800 (PST)
+Subject: [PATCH v12 08/21] PCI: Add pcibios_sriov_enable() and
+ pcibios_sriov_disable()
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:52 -0600
+Message-ID: <20150224083352.32124.63952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 04, 2015 04:35:16 PM Jiang Liu wrote:
-> Some PCI device drivers assume that pci_dev->irq won't change after
-> calling pci_disable_device() and pci_enable_device() during suspend and
-> resume.
-> 
-> Commit c03b3b0738a5 ("x86, irq, mpparse: Release IOAPIC pin when
-> PCI device is disabled") frees PCI IRQ resources when pci_disable_device()
-> is called and reallocate IRQ resources when pci_enable_device() is
-> called again. This breaks above assumption. So commit 3eec595235c1
-> ("x86, irq, PCI: Keep IRQ assignment for PCI devices during
-> suspend/hibernation") and 9eabc99a635a ("x86, irq, PCI: Keep IRQ
-> assignment for runtime power management") fix the issue by avoiding
-> freeing/reallocating IRQ resources during PCI device suspend/resume.
-> They achieve this by checking dev.power.is_prepared and
-> dev.power.runtime_status.  PM maintainer, Rafael, then pointed out that
-> it's really an ugly fix which leaking PM internal state information to
-> IRQ subsystem.
-> 
-> Recently David Vrabel <david.vrabel@citrix.com> also reports an
-> regression in pciback driver caused by commit cffe0a2b5a34 ("x86, irq:
-> Keep balance of IOAPIC pin reference count"). Please refer to:
-> http://lkml.org/lkml/2015/1/14/546
-> 
-> So this patch refine the way to release PCI IRQ resources. Instead of
-> releasing PCI IRQ resources in pci_disable_device()/
-> pcibios_disable_device(), we now release it at driver unbinding
-> notification BUS_NOTIFY_UNBOUND_DRIVER. In other word, we only release
-> PCI IRQ resources when there's no driver bound to the PCI device, and
-> it keeps the assumption that pci_dev->irq won't through multiple
-> invocation of pci_enable_device()/pci_disable_device().
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
-> Hi Rafael,
-> 	How about this version, which moves comments near to
-> pci_irq_notifier() and kills pcibios_disable_device() as suggested?
-> Regards!
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-It looks better to me, thanks!
+VFs are dynamically created when a driver enables them.  On some platforms,
+like PowerNV, special resources are necessary to enable VFs.
 
-> ---
->  arch/x86/include/asm/pci_x86.h |    2 --
->  arch/x86/pci/common.c          |   34 ++++++++++++++++++++++++++++------
->  arch/x86/pci/intel_mid_pci.c   |    4 ++--
->  arch/x86/pci/irq.c             |   15 +--------------
->  drivers/acpi/pci_irq.c         |    9 +--------
->  5 files changed, 32 insertions(+), 32 deletions(-)
-> 
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index 164e3f8d3c3d..fa1195dae425 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
->  extern int (*pcibios_enable_irq)(struct pci_dev *dev);
->  extern void (*pcibios_disable_irq)(struct pci_dev *dev);
->  
-> -extern bool mp_should_keep_irq(struct device *dev);
-> -
->  struct pci_raw_ops {
->  	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
->  						int reg, int len, u32 *val);
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 7b20bccf3648..ff1f0afa5ed1 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -497,6 +497,31 @@ void __init pcibios_set_cache_line_size(void)
->  	}
->  }
->  
-> +/*
-> + * Some device drivers assume dev->irq won't change after calling
-> + * pci_disable_device(). So delay releasing of IRQ resource to driver
-> + * unbinding time. Otherwise it will break PM subsystem and drivers
-> + * like xen-pciback etc.
-> + */
-> +static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
-> +			    void *data)
-> +{
-> +	struct pci_dev *dev = to_pci_dev(data);
-> +
-> +	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
-> +		return NOTIFY_DONE;
-> +
-> +	if (pcibios_disable_irq)
-> +		pcibios_disable_irq(dev);
-> +
-> +	return NOTIFY_OK;
-> +}
-> +
-> +static struct notifier_block pci_irq_nb = {
-> +	.notifier_call = pci_irq_notifier,
-> +	.priority = INT_MIN,
-> +};
-> +
->  int __init pcibios_init(void)
->  {
->  	if (!raw_pci_ops) {
-> @@ -509,6 +534,9 @@ int __init pcibios_init(void)
->  
->  	if (pci_bf_sort >= pci_force_bf)
->  		pci_sort_breadthfirst();
-> +
-> +	bus_register_notifier(&pci_bus_type, &pci_irq_nb);
-> +
->  	return 0;
->  }
->  
-> @@ -667,12 +695,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  	return 0;
->  }
->  
-> -void pcibios_disable_device (struct pci_dev *dev)
-> -{
-> -	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-> -		pcibios_disable_irq(dev);
-> -}
-> -
->  int pci_ext_cfg_avail(void)
->  {
->  	if (raw_pci_ext_ops)
-> diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-> index 44b9271580b5..95c2471f6819 100644
-> --- a/arch/x86/pci/intel_mid_pci.c
-> +++ b/arch/x86/pci/intel_mid_pci.c
-> @@ -234,10 +234,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
->  
->  static void intel_mid_pci_irq_disable(struct pci_dev *dev)
->  {
-> -	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-> -	    dev->irq > 0) {
-> +	if (dev->irq_managed && dev->irq > 0) {
->  		mp_unmap_irq(dev->irq);
->  		dev->irq_managed = 0;
-> +		dev->irq = 0;
->  	}
->  }
->  
-> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-> index 5dc6ca5e1741..e71b3dbd87b8 100644
-> --- a/arch/x86/pci/irq.c
-> +++ b/arch/x86/pci/irq.c
-> @@ -1256,22 +1256,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
->  	return 0;
->  }
->  
-> -bool mp_should_keep_irq(struct device *dev)
-> -{
-> -	if (dev->power.is_prepared)
-> -		return true;
-> -#ifdef CONFIG_PM
-> -	if (dev->power.runtime_status == RPM_SUSPENDING)
-> -		return true;
-> -#endif
-> -
-> -	return false;
-> -}
-> -
->  static void pirq_disable_irq(struct pci_dev *dev)
->  {
-> -	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
-> -	    dev->irq_managed && dev->irq) {
-> +	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
->  		mp_unmap_irq(dev->irq);
->  		dev->irq = 0;
->  		dev->irq_managed = 0;
-> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> index b1def411c0b8..e7f718d6918a 100644
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
->  	if (!pin || !dev->irq_managed || dev->irq <= 0)
->  		return;
->  
-> -	/* Keep IOAPIC pin configuration when suspending */
-> -	if (dev->dev.power.is_prepared)
-> -		return;
-> -#ifdef	CONFIG_PM
-> -	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
-> -		return;
-> -#endif
-> -
->  	entry = acpi_pci_irq_lookup(dev, pin);
->  	if (!entry)
->  		return;
-> @@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
->  	if (gsi >= 0) {
->  		acpi_unregister_gsi(gsi);
->  		dev->irq_managed = 0;
-> +		dev->irq = 0;
->  	}
->  }
-> 
+Add platform hooks for enabling and disabling VFs.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5643a1011e23..cc6fedf4a1b9 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	pci_dev_put(dev);
+ }
+ 
++int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
++{
++       return 0;
++}
++
+ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ {
+ 	int rc;
+@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+ 	int bus;
++	int retval;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
+ 
++	if ((retval = pcibios_sriov_enable(dev, initial))) {
++		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
++			retval);
++		return retval;
++	}
++
+ 	for (i = 0; i < initial; i++) {
+ 		rc = virtfn_add(dev, i, 0);
+ 		if (rc)
+@@ -335,6 +347,11 @@ failed:
+ 	return rc;
+ }
+ 
++int __weak pcibios_sriov_disable(struct pci_dev *pdev)
++{
++       return 0;
++}
++
+ static void sriov_disable(struct pci_dev *dev)
+ {
+ 	int i;
+@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
+ 	for (i = 0; i < iov->num_VFs; i++)
+ 		virtfn_remove(dev, i, 0);
+ 
++	pcibios_sriov_disable(dev);
++
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+
