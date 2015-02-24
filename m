@@ -1,189 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 18 Feb 2015 12:27:39 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36398 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbbBXIdT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:19 -0500
+Received: by pabkq14 with SMTP id kq14so34428975pab.3
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:19 -0800 (PST)
+Subject: [PATCH v12 03/21] PCI: Keep individual VF BAR size in struct
+ pci_sriov
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com,
-	lorenzo.pieralisi@arm.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH 3/6] x86, acpi, pci: Move PCI config space accessors.
-Message-ID: <20150218182739.GA17462@google.com>
-References: <1416413091-13452-1-git-send-email-tomasz.nowicki@linaro.org>
- <1416413091-13452-4-git-send-email-tomasz.nowicki@linaro.org>
- <20141210231746.GF6692@google.com>
- <54E33C05.9010300@linaro.org>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:16 -0600
+Message-ID: <20150224083316.32124.29294.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54E33C05.9010300@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 02:03:01PM +0100, Tomasz Nowicki wrote:
-> On 11.12.2014 00:17, Bjorn Helgaas wrote:
-> >On Wed, Nov 19, 2014 at 05:04:48PM +0100, Tomasz Nowicki wrote:
-> >>We are going to use mmio_config_{} name convention across all architectures.
-> >
-> >mmio_config_*() are workarounds for an AMD Fam10h defect [1].  I would prefer
-> >not to extend these names to other architectures, because they should be
-> >able to use readb()/writeb()/etc. directly, as we did on x86 before
-> >3320ad994afb ("x86: Work around mmio config space quirk on AMD Fam10h").
-> >
-> >In fact, it would be nice if we could use readb()/writeb()/etc. on x86, and
-> >only use mmio_config_*() when we're on AMD Fam10h.  Maybe there could be a
-> >"struct pci_raw_ops pci_mmcfg_amd_fam10h" that used mmio_config_*(), and we
-> >could set raw_pci_ext_ops to those ops instead of the default ones when
-> >we're on AMD Fam10h.  Then x86 should be able to use the generic
-> >readb()-based ops on most platforms.
-> 
-> While I do agree we should use readb()/writeb()... methods, I am not
-> sure there is a nice way to use mmio_config_*() exclusively for AMD
-> Fam10h. For x86, right now, we have three PCI config accessors sets:
-> mmconfig_32.c, mmconfig_64.c, numachip.c and each are different. So
-> one pci_mmcfg_amd_fam10h pci_raw_ops is not enough. I am thinking of
-> having additional structure (integrated with "struct
-> pci_mmcfg_region") that keeps MMIO accessors where readb()/writeb()
-> would be the default one. For AMD Fam10h case we could tweak it as
-> necessary. What do you thing Bjorn?
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-It's OK if we use mmio_config_*() for all x86 (not just AMD Fam10h); that's
-what we do today.  It'd be *nicer* if we could use the workaround only for
-Fam10h, but if it complicates the code, don't bother.
+Currently we don't store the individual VF BAR size.  We calculate it when
+needed by dividing the PF's IOV resource size (which contains space for
+*all* the VFs) by total_VFs or by reading the BAR in the SR-IOV capability
+again.
 
-My main point is that I think your v1 posting requires every arch to
-implement mmio_config_*(), and they will all be the same.  If an arch
-doesn't require a workaround, it shouldn't have to supply anything and we
-should default to readb/writeb/etc.
+Keep the individual VF BAR size in struct pci_sriov.barsz[], add
+pci_iov_resource_size() to retrieve it, and use that instead of doing the
+division or reading the SR-IOV capability BAR.
 
-> >[1] 3320ad994afb ("x86: Work around mmio config space quirk on AMD Fam10h")
-> >
-> >Somewhere in this process, I'd like to update the AMD Fam10h comment to fix
-> >the typos and reference the spec that talks about this, i.e., the "BIOS and
-> >Kernel Developer's Guide (BKDG) For AMD Family 10h Processors," rev 3.48,
-> >sec 2.11.1, "MMIO Configuration Coding Requirements."
-> >
-> >That can be a separate patch since it's only cosmetic.
-> >
-> >>Currently it belongs to asm/pci_x86.h header which should be included
-> >>only for x86 specific files. From now on, those accessors are in asm/pci.h
-> >>header which can be included in non-architecture code much easier.
-> >>
-> >>Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> >>Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> >>---
-> >>  arch/x86/include/asm/pci.h     | 42 +++++++++++++++++++++++++++++++++++++++++
-> >>  arch/x86/include/asm/pci_x86.h | 43 ------------------------------------------
-> >>  2 files changed, 42 insertions(+), 43 deletions(-)
-> >>
-> >>diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> >>index 0892ea0..5ba3720 100644
-> >>--- a/arch/x86/include/asm/pci.h
-> >>+++ b/arch/x86/include/asm/pci.h
-> >>@@ -71,6 +71,48 @@ void pcibios_set_master(struct pci_dev *dev);
-> >>  struct irq_routing_table *pcibios_get_irq_routing_table(void);
-> >>  int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
-> >>
-> >>+/*
-> >>+ * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
-> >>+ * on their northbrige except through the * %eax register. As such, you MUST
-> >>+ * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
-> >>+ * accessor functions.
-> >>+ * In fact just use pci_config_*, nothing else please.
-> >>+ */
-> >>+static inline unsigned char mmio_config_readb(void __iomem *pos)
-> >>+{
-> >>+	u8 val;
-> >>+	asm volatile("movb (%1),%%al" : "=a" (val) : "r" (pos));
-> >>+	return val;
-> >>+}
-> >>+
-> >>+static inline unsigned short mmio_config_readw(void __iomem *pos)
-> >>+{
-> >>+	u16 val;
-> >>+	asm volatile("movw (%1),%%ax" : "=a" (val) : "r" (pos));
-> >>+	return val;
-> >>+}
-> >>+
-> >>+static inline unsigned int mmio_config_readl(void __iomem *pos)
-> >>+{
-> >>+	u32 val;
-> >>+	asm volatile("movl (%1),%%eax" : "=a" (val) : "r" (pos));
-> >>+	return val;
-> >>+}
-> >>+
-> >>+static inline void mmio_config_writeb(void __iomem *pos, u8 val)
-> >>+{
-> >>+	asm volatile("movb %%al,(%1)" : : "a" (val), "r" (pos) : "memory");
-> >>+}
-> >>+
-> >>+static inline void mmio_config_writew(void __iomem *pos, u16 val)
-> >>+{
-> >>+	asm volatile("movw %%ax,(%1)" : : "a" (val), "r" (pos) : "memory");
-> >>+}
-> >>+
-> >>+static inline void mmio_config_writel(void __iomem *pos, u32 val)
-> >>+{
-> >>+	asm volatile("movl %%eax,(%1)" : : "a" (val), "r" (pos) : "memory");
-> >>+}
-> >>
-> >>  #define HAVE_PCI_MMAP
-> >>  extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-> >>diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> >>index caba141..42e7332 100644
-> >>--- a/arch/x86/include/asm/pci_x86.h
-> >>+++ b/arch/x86/include/asm/pci_x86.h
-> >>@@ -121,49 +121,6 @@ extern int __init pcibios_init(void);
-> >>  extern int pci_legacy_init(void);
-> >>  extern void pcibios_fixup_irqs(void);
-> >>
-> >>-/*
-> >>- * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
-> >>- * on their northbrige except through the * %eax register. As such, you MUST
-> >>- * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
-> >>- * accessor functions.
-> >>- * In fact just use pci_config_*, nothing else please.
-> >>- */
-> >>-static inline unsigned char mmio_config_readb(void __iomem *pos)
-> >>-{
-> >>-	u8 val;
-> >>-	asm volatile("movb (%1),%%al" : "=a" (val) : "r" (pos));
-> >>-	return val;
-> >>-}
-> >>-
-> >>-static inline unsigned short mmio_config_readw(void __iomem *pos)
-> >>-{
-> >>-	u16 val;
-> >>-	asm volatile("movw (%1),%%ax" : "=a" (val) : "r" (pos));
-> >>-	return val;
-> >>-}
-> >>-
-> >>-static inline unsigned int mmio_config_readl(void __iomem *pos)
-> >>-{
-> >>-	u32 val;
-> >>-	asm volatile("movl (%1),%%eax" : "=a" (val) : "r" (pos));
-> >>-	return val;
-> >>-}
-> >>-
-> >>-static inline void mmio_config_writeb(void __iomem *pos, u8 val)
-> >>-{
-> >>-	asm volatile("movb %%al,(%1)" : : "a" (val), "r" (pos) : "memory");
-> >>-}
-> >>-
-> >>-static inline void mmio_config_writew(void __iomem *pos, u16 val)
-> >>-{
-> >>-	asm volatile("movw %%ax,(%1)" : : "a" (val), "r" (pos) : "memory");
-> >>-}
-> >>-
-> >>-static inline void mmio_config_writel(void __iomem *pos, u32 val)
-> >>-{
-> >>-	asm volatile("movl %%eax,(%1)" : : "a" (val), "r" (pos) : "memory");
-> >>-}
-> >>-
-> >>  #ifdef CONFIG_PCI
-> >>  # ifdef CONFIG_ACPI
-> >>  #  define x86_default_pci_init		pci_acpi_init
-> >>--
-> >>1.9.1
-> >>
+[bhelgaas: rename to "barsz[]", simplify barsz[] index computation, remove
+SR-IOV capability BAR sizing]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c   |   39 ++++++++++++++++++++-------------------
+ drivers/pci/pci.h   |    1 +
+ include/linux/pci.h |    3 +++
+ 3 files changed, 24 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 05f9d97e4175..5bca0e1a2799 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -57,6 +57,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ 		pci_remove_bus(virtbus);
+ }
+ 
++resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
++{
++	if (!dev->is_physfn)
++		return 0;
++
++	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
++}
++
+ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+@@ -92,8 +100,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+ 		virtfn->resource[i].flags = res->flags;
+-		size = resource_size(res);
+-		do_div(size, iov->total_VFs);
++		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+ 		virtfn->resource[i].start = res->start + size * id;
+ 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+ 		rc = request_resource(res, &virtfn->resource[i]);
+@@ -311,7 +318,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+ {
+-	int i;
++	int i, bar64;
+ 	int rc;
+ 	int nres;
+ 	u32 pgsz;
+@@ -360,29 +367,29 @@ found:
+ 	pgsz &= ~(pgsz - 1);
+ 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
++	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
++	if (!iov)
++		return -ENOMEM;
++
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = dev->resource + PCI_IOV_RESOURCES + i;
+-		i += __pci_read_base(dev, pci_bar_unknown, res,
+-				     pos + PCI_SRIOV_BAR + i * 4);
++		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
++					pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+ 			continue;
+ 		if (resource_size(res) & (PAGE_SIZE - 1)) {
+ 			rc = -EIO;
+ 			goto failed;
+ 		}
++		iov->barsz[i] = resource_size(res);
+ 		res->end = res->start + resource_size(res) * total - 1;
+ 		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
+ 			 i, res, i, total);
++		i += bar64;
+ 		nres++;
+ 	}
+ 
+-	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
+-	if (!iov) {
+-		rc = -ENOMEM;
+-		goto failed;
+-	}
+-
+ 	iov->pos = pos;
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+@@ -414,6 +421,7 @@ failed:
+ 		res->flags = 0;
+ 	}
+ 
++	kfree(iov);
+ 	return rc;
+ }
+ 
+@@ -510,14 +518,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+  */
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+-	struct resource tmp;
+-	int reg = pci_iov_resource_bar(dev, resno);
+-
+-	if (!reg)
+-		return 0;
+-
+-	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+-	return resource_alignment(&tmp);
++	return pci_iov_resource_size(dev, resno);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82239cd..57329645dd01 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -247,6 +247,7 @@ struct pci_sriov {
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for VF bus */
++	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+ };
+ 
+ #ifdef CONFIG_PCI_ATS
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 211e9da8a7d7..15596582e575 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1675,6 +1675,7 @@ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+@@ -1686,6 +1687,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
++{ return 0; }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+
