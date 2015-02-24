@@ -1,74 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:51099 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754691AbbBBPsT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 10:48:19 -0500
-Received: by mail-qc0-f182.google.com with SMTP id l6so30719030qcy.13
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 07:48:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1422844101.11325.4.camel@ellerman.id.au>
-References: <1422712065-9403-1-git-send-email-haokexin@gmail.com>
- <1422712065-9403-2-git-send-email-haokexin@gmail.com> <1422844101.11325.4.camel@ellerman.id.au>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:40426 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbbBXIdL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:33:11 -0500
+Received: by pdev10 with SMTP id v10so31841999pde.7
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:33:11 -0800 (PST)
+Subject: [PATCH v12 02/21] PCI: Print PF SR-IOV resource that contains all
+ VF(n) BAR space
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Feb 2015 09:47:57 -0600
-Message-ID: <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com>
-Subject: Re: [PATCH 01/15] PCI: introduce pci_device_to_OF_node() for !CONFIG_OF
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Kevin Hao <haokexin@gmail.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Tue, 24 Feb 2015 02:33:09 -0600
+Message-ID: <20150224083309.32124.29690.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 1, 2015 at 8:28 PM, Michael Ellerman <mpe@ellerman.id.au> wrote:
-> On Sat, 2015-01-31 at 21:47 +0800, Kevin Hao wrote:
->> So we can avoid the ugly #ifdef in some drivers.
->>
->> Signed-off-by: Kevin Hao <haokexin@gmail.com>
->> ---
->>  include/linux/pci.h | 2 ++
->>  1 file changed, 2 insertions(+)
->
->
-> Hi Bjorn,
->
-> Do you mind putting this into your next for 3.20? Or giving us an ACK for it if
-> you prefer.
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-I think it makes more sense to merge this along with the other 14
-patches that remove the #ifdefs (at least, I assume that's what they
-do; I haven't seen them).
+When we size VF BAR0, VF BAR1, etc., from the SR-IOV Capability of a PF, we
+learn the alignment requirement and amount of space consumed by a single
+VF.  But when VFs are enabled, *each* of the NumVFs consumes that amount of
+space, so the total size of the PF resource is "VF BAR size * NumVFs".
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Add a printk of the total space consumed by the VFs corresponding to what
+we already do for normal non-IOV BARs.
 
-But please edit the subject line so it is capitalized consistently
-with the rest of the history.  And it'd be nice if the changelog were
-a complete sentence all by itself, e.g.,
+No functional change; new message only.
 
-    PCI: Add pci_device_to_OF_node() stub for !CONFIG_OF
+[bhelgaas: split out into its own patch]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-    Add a stub for pci_device_to_OF_node() so drivers don't need to use
-    #ifdef CONFIG_OF around calls to it.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c4c33ead03bc..05f9d97e4175 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -372,6 +372,8 @@ found:
+ 			goto failed;
+ 		}
+ 		res->end = res->start + resource_size(res) * total - 1;
++		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
++			 i, res, i, total);
+ 		nres++;
+ 	}
+ 
 
-Bjorn
-
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 8323cbf93913..421eb6a9e600 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1863,6 +1863,8 @@ static inline void pci_set_of_node(struct pci_dev *dev) { }
->>  static inline void pci_release_of_node(struct pci_dev *dev) { }
->>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
->>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
->> +static inline struct device_node *
->> +pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
->>  #endif  /* CONFIG_OF */
->>
->>  #ifdef CONFIG_EEH
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
