@@ -1,145 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v3 10/30] PCI: Introduce pci_host_bridge_list to manage host bridges
-Date: Thu, 26 Feb 2015 09:29:27 +0800
-Message-ID: <1424914187-21027-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:33558 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752246AbbBXIjZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:39:25 -0500
+Received: by pdjz10 with SMTP id z10so31937401pdj.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:39:25 -0800 (PST)
+Date: Tue, 24 Feb 2015 02:39:21 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 08/21] PCI: Add pcibios_sriov_enable() and
+ pcibios_sriov_disable()
+Message-ID: <20150224083921.GF6220@google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083352.32124.63952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150224083352.32124.63952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_host_bridge_list to manage pci host
-bridges in system, so we could detect whether
-the host in domain:bus is alreay registered.
-Then we could remove bus alreay exist test in
-__pci_create_root_bus().
+On Tue, Feb 24, 2015 at 02:33:52AM -0600, Bjorn Helgaas wrote:
+> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+> 
+> VFs are dynamically created when a driver enables them.  On some platforms,
+> like PowerNV, special resources are necessary to enable VFs.
+> 
+> Add platform hooks for enabling and disabling VFs.
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/iov.c |   19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 5643a1011e23..cc6fedf4a1b9 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>  	pci_dev_put(dev);
+>  }
+>  
+> +int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 vf_num)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   24 +++++++++++++++++++++++-
- drivers/pci/probe.c       |    8 +-------
- include/linux/pci.h       |    1 +
- 3 files changed, 25 insertions(+), 8 deletions(-)
+I think this "vf_num" parameter should be renamed to something like
+"num_vfs" instead.  It's subtle, but "vf_num" suggests that we're talking
+about one of several VFs, e.g., VF1 or VF 2.  But here we really mean the
+total number of VFs that we're enabling.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index f304f26..5039b3b 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,6 +8,9 @@
- 
- #include "pci.h"
- 
-+static LIST_HEAD(pci_host_bridge_list);
-+static DEFINE_MUTEX(phb_mutex);
-+
- static void pci_release_host_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-@@ -25,7 +28,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	int error;
- 	int bus = PCI_BUSNUM(db);
- 	int domain = PCI_DOMAIN(db);
--	struct pci_host_bridge *host;
-+	struct pci_host_bridge *host, *temp;
- 	struct resource_entry *window, *n;
- 
- 	host = kzalloc(sizeof(*host), GFP_KERNEL);
-@@ -40,6 +43,18 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	 */
- 	pci_host_assign_domain_nr(host);
- 
-+	mutex_lock(&phb_mutex);
-+	list_for_each_entry(temp, &pci_host_bridge_list, list)
-+		if (temp->domain == host->domain
-+				&& temp->busnum == host->busnum) {
-+			dev_dbg(&host->dev, "pci host bridge pci%04x:%02x exist\n",
-+					host->domain, host->busnum);
-+			mutex_unlock(&phb_mutex);
-+			kfree(host);
-+			return NULL;
-+		}
-+	mutex_unlock(&phb_mutex);
-+
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-@@ -55,12 +70,19 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	resource_list_for_each_entry_safe(window, n, resources)
- 		list_move_tail(&window->node, &host->windows);
- 
-+	mutex_lock(&phb_mutex);
-+	list_add_tail(&host->list, &pci_host_bridge_list);
-+	mutex_unlock(&phb_mutex);
- 	return host;
- }
- EXPORT_SYMBOL(pci_create_host_bridge);
- 
- void pci_free_host_bridge(struct pci_host_bridge *host)
- {
-+	mutex_lock(&phb_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&phb_mutex);
-+
- 	device_unregister(&host->dev);
- }
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 20e9206..ec4f99d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1869,7 +1869,7 @@ static struct pci_bus *__pci_create_root_bus(
- 		void *sysdata)
- {
- 	int error;
--	struct pci_bus *b, *b2;
-+	struct pci_bus *b;
- 	struct resource_entry *window;
- 	struct device *parent;
- 	struct resource *res;
-@@ -1886,12 +1886,6 @@ static struct pci_bus *__pci_create_root_bus(
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
--	b2 = pci_find_bus(pci_domain_nr(b), b->number);
--	if (b2) {
--		/* If we already got to this bus through a different bridge, ignore it */
--		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
--	}
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 13b6b25..4d11228 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -406,6 +406,7 @@ struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
-+	struct list_head list;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
--- 
-1.7.1
+There's similar code in the powerpc implementation that should be
+renamed the same way.
 
+> +{
+> +       return 0;
+> +}
+> +
+>  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  {
+>  	int rc;
+> @@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	struct pci_sriov *iov = dev->sriov;
+>  	int bars = 0;
+>  	int bus;
+> +	int retval;
+>  
+>  	if (!nr_virtfn)
+>  		return 0;
+> @@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	if (nr_virtfn < initial)
+>  		initial = nr_virtfn;
+>  
+> +	if ((retval = pcibios_sriov_enable(dev, initial))) {
+> +		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
+> +			retval);
+> +		return retval;
+> +	}
+> +
+>  	for (i = 0; i < initial; i++) {
+>  		rc = virtfn_add(dev, i, 0);
+>  		if (rc)
+> @@ -335,6 +347,11 @@ failed:
+>  	return rc;
+>  }
+>  
+> +int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+> +{
+> +       return 0;
+> +}
+> +
+>  static void sriov_disable(struct pci_dev *dev)
+>  {
+>  	int i;
+> @@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
+>  	for (i = 0; i < iov->num_VFs; i++)
+>  		virtfn_remove(dev, i, 0);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> 
