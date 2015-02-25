@@ -1,149 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	David Vrabel <david.vrabel@citrix.com>
-Subject: [PATCH 4/8] x86, of: let add_dtb reserve by itself
-Date: Sat, 28 Feb 2015 18:17:35 -0800
-Message-Id: <1425176259-30087-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:44369 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752711AbbBYWUy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 17:20:54 -0500
+Received: by iecar1 with SMTP id ar1so9083162iec.11
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 14:20:53 -0800 (PST)
+Date: Wed, 25 Feb 2015 16:20:49 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v6 0/7] PCI: get DMA configuration from parent device
+Message-ID: <20150225222049.GP6220@google.com>
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will not reserve setup_data in general code. Every handler
-need to reserve and copy.
+On Thu, Feb 05, 2015 at 04:52:52PM -0500, Murali Karicheri wrote:
+> This patch add an important capability to PCI driver on Keystone. I hope to
+> have this merged to the upstream branch so that it is available for v3.20.
+> Also would like thank everyone for the contribution.
+> 
+> PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+> add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+> and dma ops etc using the information from DT. The prior RFCs and discussions
+> are available at [1] and [2] below.
+> 
+> [2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+> [1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+> 
+> Change history:
+> 	v6 - Rebased to v3.19-v7
+> 	   - Addressed some minor comments about node name and DT size validation.
+> 	   - Pulled out 8/8 of v5 and plan to send a patch for enhancing
+> 	     of_dma_configure() to use size to calculate dma mask.
+> 	   - Added Acks from reviewers.
+> 	v5 - moved the dma_mask update in device from ARM specific API to
+> 	     of_dma_configure to allow this across other architecture as well
+> 	   - improved sanity check for DT dma-range size in of_dma_configure()
+> 	   - moved API to get parent bridge device to PCI (host-bridge.c)
+> 	v4 - moved size adjustments in of_iommu_configure() to a separate patch
+> 	   - consistent node name comment from Rob
+> 	   - patch 6 added for dma_mask adjustment and iommu mapping size
+> 	     limiting.
+> 	v3 - addressed comments to re-use of_dma_configure() for PCI
+> 	   - To help re-use, change of_iommu_configure() function argument
+> 		- Move of_dma_configure to of/device.c
+> 		- Limit the of_iommu_configure to non pci devices
+> 	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
+> 	   - also check the np for null.
+> 	v1 - updates based on the comments against initial RFC.
+> 	   - Added a helper function to get the OF node of the parent
+> 	   - Added an API in of_pci.c to update DMA configuration of the pci
+> 	     device.
+> 
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+> 
+> Murali Karicheri (7):
+>   of: iommu: add ptr to OF node arg to of_iommu_configure()
+>   of: move of_dma_configure() to device.c to help re-use
+>   of: fix size when dma-range is not used
+>   PCI: add helper functions pci_get[put]_host_bridge_device()
+>   of/pci: add of_pci_dma_configure() update dma configuration
+>   PCI: update dma configuration from DT
+>   arm: dma-mapping: limit iommu mapping size
+> 
+>  arch/arm/mm/dma-mapping.c |    7 +++++
+>  drivers/iommu/of_iommu.c  |   10 ++++--
+>  drivers/of/device.c       |   74 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/of/of_pci.c       |   19 ++++++++++++
+>  drivers/of/platform.c     |   58 ++---------------------------------
+>  drivers/pci/host-bridge.c |   14 +++++++++
+>  drivers/pci/probe.c       |    2 ++
+>  include/linux/of_device.h |    2 ++
+>  include/linux/of_iommu.h  |    6 ++--
+>  include/linux/of_pci.h    |    5 +++
+>  include/linux/pci.h       |    3 ++
+>  11 files changed, 140 insertions(+), 60 deletions(-)
 
-Current dtd handling already have code copying, just add reserve code ...
+Applied with additional acks/tested-by to pci/iommu for v4.1, thanks!
 
-also simplify code a bit with storing real dtb size.
-
-Cc: Rob Herring <robh@kernel.org>
-Cc: David Vrabel <david.vrabel@citrix.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/prom.h  |  9 ++++++---
- arch/x86/kernel/devicetree.c | 39 +++++++++++++++++++++------------------
- 2 files changed, 27 insertions(+), 21 deletions(-)
-
-diff --git a/arch/x86/include/asm/prom.h b/arch/x86/include/asm/prom.h
-index 1d081ac..fb716eddc 100644
---- a/arch/x86/include/asm/prom.h
-+++ b/arch/x86/include/asm/prom.h
-@@ -24,17 +24,20 @@
- 
- #ifdef CONFIG_OF
- extern int of_ioapic;
--extern u64 initial_dtb;
--extern void add_dtb(u64 data);
- void x86_of_pci_init(void);
- void x86_dtb_init(void);
- #else
--static inline void add_dtb(u64 data) { }
- static inline void x86_of_pci_init(void) { }
- static inline void x86_dtb_init(void) { }
- #define of_ioapic 0
- #endif
- 
-+#ifdef CONFIG_OF_FLATTREE
-+extern void add_dtb(u64 data);
-+#else
-+static inline void add_dtb(u64 data) { }
-+#endif
-+
- extern char cmd_line[COMMAND_LINE_SIZE];
- 
- #endif /* __ASSEMBLY__ */
-diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
-index 3d35033..cc2fb61 100644
---- a/arch/x86/kernel/devicetree.c
-+++ b/arch/x86/kernel/devicetree.c
-@@ -2,6 +2,7 @@
-  * Architecture specific OF callbacks.
-  */
- #include <linux/bootmem.h>
-+#include <linux/memblock.h>
- #include <linux/export.h>
- #include <linux/io.h>
- #include <linux/irqdomain.h>
-@@ -23,7 +24,6 @@
- #include <asm/setup.h>
- #include <asm/i8259.h>
- 
--__initdata u64 initial_dtb;
- char __initdata cmd_line[COMMAND_LINE_SIZE];
- 
- int __initdata of_ioapic;
-@@ -43,11 +43,23 @@ void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
- 	return __alloc_bootmem(size, align, __pa(MAX_DMA_ADDRESS));
- }
- 
-+#ifdef CONFIG_OF_FLATTREE
-+static u64 initial_dtb __initdata;
-+static u32 initial_dtb_size __initdata;
- void __init add_dtb(u64 data)
- {
-+	u32 map_len;
-+
- 	initial_dtb = data + offsetof(struct setup_data, data);
--}
- 
-+	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
-+	initial_boot_params = early_memremap(initial_dtb, map_len);
-+	initial_dtb_size = of_get_flat_dt_size();
-+	early_memunmap(initial_boot_params, map_len);
-+	initial_boot_params = NULL;
-+	memblock_reserve(initial_dtb, initial_dtb_size);
-+}
-+#endif
- /*
-  * CE4100 ids. Will be moved to machine_device_initcall() once we have it.
-  */
-@@ -272,31 +284,22 @@ static void __init dtb_apic_setup(void)
- 	dtb_ioapic_setup();
- }
- 
--#ifdef CONFIG_OF_FLATTREE
- static void __init x86_flattree_get_config(void)
- {
--	u32 size, map_len;
-+#ifdef CONFIG_OF_FLATTREE
- 	void *dt;
- 
- 	if (!initial_dtb)
- 		return;
- 
--	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
--
--	initial_boot_params = dt = early_memremap(initial_dtb, map_len);
--	size = of_get_flat_dt_size();
--	if (map_len < size) {
--		early_iounmap(dt, map_len);
--		initial_boot_params = dt = early_memremap(initial_dtb, size);
--		map_len = size;
--	}
--
-+	initial_boot_params = dt = early_memremap(initial_dtb,
-+						  initial_dtb_size);
- 	unflatten_and_copy_device_tree();
--	early_iounmap(dt, map_len);
--}
--#else
--static inline void x86_flattree_get_config(void) { }
-+	early_memunmap(dt, initial_dtb_size);
-+
-+	memblock_free(initial_dtb, initial_dtb_size);
- #endif
-+}
- 
- void __init x86_dtb_init(void)
- {
--- 
-1.8.4.5
-
+Bjorn
