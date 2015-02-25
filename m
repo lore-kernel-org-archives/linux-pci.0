@@ -1,51 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:11954 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754880AbbBBCk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 1 Feb 2015 21:40:57 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com>
+References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Feb 2015 01:10:56 -0600
+Message-ID: <CAErSpo4kG_RrpFtZ6QyRFkMO51Zx62q94L+r60-HfSZY3VHD1g@mail.gmail.com>
+Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
+To: Dave Airlie <airlied@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v2 08/23] ACPI: Add prefetch decoding to the address space parser
-Date: Mon,  2 Feb 2015 10:42:53 +0800
-Message-Id: <1422844988-13854-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Lv Zheng <lv.zheng@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+[+cc Jiang, Thomas, Lv, Rafael, linux-pci, linux-acpi]
 
-Add support of PREFETCH attributre to ACPI address space and extended
-address space parser.
+On Tue, Feb 24, 2015 at 9:47 PM, Dave Airlie <airlied@gmail.com> wrote:
+> Hey,
+>
+> just booted an old AMD rs780 box with new kernel and my ethernet
+> failed to come up!
+>
+> Looks like the MAC addr is all ff's because the PCI bridge windows are
+> messed up.
+>
+> I've attached two dmesg one from a 3.19.0-rc6 I had on it, and one
+> failing from the 4.0.0-rc1 time.
+>
+> b24e2bdde4af656bb0679a101265ebb8f8735d3c is latest Linus commit in
+> that tree (I have some radeon patches on top).
+>
+> motherboard is a Gigabyte GA-MA78GM-S2H, lspci also attached.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    3 +++
- 1 file changed, 3 insertions(+)
+Here's the dmesg diff that looks relevant to me:
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 15d17937c431..7ce00a63f695 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -200,6 +200,9 @@ static bool acpi_decode_space(struct resource *res,
- 	if (addr->producer_consumer == ACPI_PRODUCER)
- 		res->flags |= IORESOURCE_WINDOW;
- 
-+	if (addr->info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+		res->flags |= IORESOURCE_PREFETCH;
-+
- 	return !(res->flags & IORESOURCE_DISABLED);
- }
- 
--- 
-1.7.10.4
+-pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+-pci_bus 0000:00: root bus resource [io  0x0d00-0xffff]
+-pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+-pci_bus 0000:00: root bus resource [mem 0x000c0000-0x000dffff]
+-pci_bus 0000:00: root bus resource [mem 0xfed40000-0xfed44fff]
+-pci_bus 0000:00: root bus resource [mem 0x7ff00000-0xfebfffff]
++pci_bus 0000:00: root bus resource [io  0x0cf8-0x0cff]
++pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
++pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window]
++pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
++pci_bus 0000:00: root bus resource [mem 0x000c0000-0x000dffff window]
++pci_bus 0000:00: root bus resource [mem 0xfed40000-0xfed44fff window]
 
+What's interesting is:
+
+* v3.19 ignored [io  0x0cf8-0x0cff], but v4.0 includes it.  I think
+it's wrong to include it because that's the configuration space
+address/data registers, so it's consumed by the host bridge and not
+produced on the downstream side.
+
+* v3.19 includes [mem 0x7ff00000-0xfebfffff], but v4.0 does not.  This
+is what's screwing up the devices.
+
+I think all the windows should be marked as ACPI_PRODUCER in _CRS
+since the space is "produced" on the downstream side of the bridge.
+The [io  0x0cf8-0x0cff] region should probably be marked
+ACPI_CONSUMER, and maybe that accounts for why v3.19 ignores it.  But
+I haven't found the code that does that yet.
+
+I suspect this is all related to the ACPI resource parsing rework.  I
+looked through that briefly, but no issues jumped out at me, so this
+is just a heads-up in case it is obvious to you guys.
+
+Dave, it'd be useful if you could collect an acpidump so we can look
+at the _CRS data in more detail.
+
+Bjorn
