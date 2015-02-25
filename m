@@ -1,63 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:53999 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156AbbBQW1T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 17:27:19 -0500
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 18 Feb 2015 08:27:17 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 18B212CE8040
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 09:27:14 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1HMR56K14811296
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 09:27:14 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1HMQe2s020066
-	for <linux-pci@vger.kernel.org>; Wed, 18 Feb 2015 09:26:40 +1100
-Date: Wed, 18 Feb 2015 09:26:15 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Stewart Smith <stewart@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH RESEND v2 0/7] powerpc/powernv: Unified PCI slot reset
- and hotplug
-Message-ID: <20150217222615.GA6454@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <m3vbj0gqmk.fsf@oc8180480414.ibm.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:41543 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546AbbBYXJ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 18:09:29 -0500
+Received: by iecrd18 with SMTP id rd18so9368136iec.8
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 15:09:29 -0800 (PST)
+Date: Wed, 25 Feb 2015 17:09:25 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic pci
+ host bridge
+Message-ID: <20150225230925.GQ6220@google.com>
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <m3vbj0gqmk.fsf@oc8180480414.ibm.com>
+In-Reply-To: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 18, 2015 at 08:44:19AM +1100, Stewart Smith wrote:
->Gavin Shan <gwshan@linux.vnet.ibm.com> writes:
->
->> The patchset was built based on patchset "powerpc/powernv: Simplify EEH
->> implementation", which can be found from:
->>
->> https://patchwork.ozlabs.org/patch/439956/
->>
->> The patchset corresponds to skiboot changes, which manages PCI slots
->> in a unified way: OPAL APIs used to do slot reset, power management,
->> presence status retrival. The patchset shouldn't be merged before
->> the OPAL firmware counterpart is merged:
->>
->> https://patchwork.ozlabs.org/patch/440463/
->
->But this patchset will work with old OPAL, right? We're not breaking
->compatibility with newer kernels (with this patchset) and older
->firmware?
+On Wed, Jan 21, 2015 at 08:29:55AM +0800, Yijing Wang wrote:
+> v1->v2:
+> 	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
+> 	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
+> 	Arnd. Refresh some patch description log, and add a new patch to fix
+> 	build warning in ia64.
+> 
+> This series is based on Bjorn's pci-next branch.
 
-Yes. With old OPAL, the reset stuff in Linux works as before and we
-shouldn't see hotpluggable slots from /sys/bus/pci/slots.
+Hi Yijing,
 
-The compatibility issue was pointed by Ben. It's something fixed by
-this revision (v2).
+Would you mind rebasing this to v4.0-rc1?  It doesn't apply quite cleanly
+any more.
 
 Thanks,
-Gavin
-
+  Bjorn
