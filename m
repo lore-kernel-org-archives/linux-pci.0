@@ -1,134 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:37493 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755762AbbBQHO3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Feb 2015 02:14:29 -0500
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 17 Feb 2015 17:14:27 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 83DE82CE8055
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1H7EGDw51511474
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:14:24 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1H7DoIh027804
-	for <linux-pci@vger.kernel.org>; Tue, 17 Feb 2015 18:13:51 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH RESEND v2 3/7] powerpc/pci: Move pcibios_find_pci_bus() around
-Date: Tue, 17 Feb 2015 18:13:19 +1100
-Message-Id: <1424157203-691-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1424157203-691-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:33032 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315AbbBYBxW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 20:53:22 -0500
+Received: by iecar1 with SMTP id ar1so1238131iec.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 17:53:21 -0800 (PST)
+Date: Tue, 24 Feb 2015 19:53:17 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v6 6/7] PCI: update dma configuration from DT
+Message-ID: <20150225015317.GO6220@google.com>
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com>
+ <1423173179-10227-7-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1423173179-10227-7-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
-that it can be reused by hotplug code for pSeries and PowerNV
-platform at the same time.
+On Thu, Feb 05, 2015 at 04:52:58PM -0500, Murali Karicheri wrote:
+> If there is a DT node available for the root bridge's parent device,
+> use the dma configuration from that device node. For example, keystone
+> PCI devices would require dma_pfn_offset to be set correctly in the
+> device structure of the pci device in order to have the correct dma mask.
+> The DT node will have dma-ranges defined for this. Also support using
+> the DT property dma-coherent to allow coherent DMA operation by the
+> PCI device.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
- 2 files changed, 36 insertions(+), 32 deletions(-)
+Hi Murali,
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 5b78917..6e2b4e3 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -21,6 +21,42 @@
- #include <asm/firmware.h>
- #include <asm/eeh.h>
- 
-+static struct pci_bus *find_pci_bus(struct pci_bus *bus,
-+				    struct device_node *dn)
-+{
-+	struct pci_bus *tmp, *child = NULL;
-+	struct device_node *busdn;
-+
-+	busdn = pci_bus_to_OF_node(bus);
-+	if (busdn == dn)
-+		return bus;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		child = find_pci_bus(tmp, dn);
-+		if (child)
-+			break;
-+	}
-+
-+	return child;
-+}
-+
-+/**
-+ * pcibios_find_pci_bus - find PCI bus according to the given device node
-+ * @dn: Device node
-+ *
-+ * Find the corresponding PCI bus according to the given device node.
-+ */
-+struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
-+{
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-+		return NULL;
-+
-+	return find_pci_bus(pdn->phb->bus, dn);
-+}
-+EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-+
- /**
-  * pcibios_release_device - release PCI device
-  * @dev: PCI device
-diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-index 89e2381..98c50bc 100644
---- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-@@ -32,38 +32,6 @@
- #include <asm/firmware.h>
- #include <asm/eeh.h>
- 
--static struct pci_bus *
--find_bus_among_children(struct pci_bus *bus,
--                        struct device_node *dn)
--{
--	struct pci_bus *child = NULL;
--	struct pci_bus *tmp;
--	struct device_node *busdn;
--
--	busdn = pci_bus_to_OF_node(bus);
--	if (busdn == dn)
--		return bus;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		child = find_bus_among_children(tmp, dn);
--		if (child)
--			break;
--	};
--	return child;
--}
--
--struct pci_bus *
--pcibios_find_pci_bus(struct device_node *dn)
--{
--	struct pci_dn *pdn = dn->data;
--
--	if (!pdn  || !pdn->phb || !pdn->phb->bus)
--		return NULL;
--
--	return find_bus_among_children(pdn->phb->bus, dn);
--}
--EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
--
- struct pci_controller *init_phb_dynamic(struct device_node *dn)
- {
- 	struct pci_controller *phb;
--- 
-1.8.3.2
+I'm guessing this is the patch that actually fixes things for Keystone.
 
+And it looks like it should also fix things for other hardware that has
+similar characteristics.  So I'd like to include some higher-level text
+about that here.  For example:
+
+  This fixes DMA on systems where DMA addresses are a constant offset
+  from CPU physical addresses.
+
+(I don't know exactly how these patches all fit together, so that's
+probably not accurate, but that's the *sort* of thing I'd like to include.)
+
+If that actually *is* what's going on, I have to wonder why this isn't
+implemented as a very simple IOMMU instead of adding dma_pfn_offset,
+which is present on all arches but only used on ARM.  In some sense that
+offset is parallel but incompatible with an IOMMU: they both translate DMA
+addresses into system RAM addresses.
+
+I know you're not adding this, and I assume somebody explored that option
+and rejected it for good reasons.  I just missed that discussion.
+
+> This patch use the new helper function of_pci_dma_configure() to update
+> the device dma configuration.
+> 
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/pci/probe.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 23212f8..d7dcd6c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -6,6 +6,7 @@
+>  #include <linux/delay.h>
+>  #include <linux/init.h>
+>  #include <linux/pci.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pci_hotplug.h>
+>  #include <linux/slab.h>
+>  #include <linux/module.h>
+> @@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	dev->dev.dma_mask = &dev->dma_mask;
+>  	dev->dev.dma_parms = &dev->dma_parms;
+>  	dev->dev.coherent_dma_mask = 0xffffffffull;
+> +	of_pci_dma_configure(dev);
+>  
+>  	pci_set_dma_max_seg_size(dev, 65536);
+>  	pci_set_dma_seg_boundary(dev, 0xffffffff);
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
