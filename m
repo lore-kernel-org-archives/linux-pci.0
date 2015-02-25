@@ -1,86 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:61087 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754891AbbBTXrM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Feb 2015 18:47:12 -0500
-Received: by mail-oi0-f51.google.com with SMTP id g201so5296330oib.10
-        for <linux-pci@vger.kernel.org>; Fri, 20 Feb 2015 15:47:12 -0800 (PST)
-Date: Fri, 20 Feb 2015 17:47:09 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 07/17] powerpc/pci: Don't unset pci resources for VFs
-Message-ID: <20150220234709.GD21131@google.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-8-git-send-email-weiyang@linux.vnet.ibm.com>
- <1423528584.4924.70.camel@au1.ibm.com>
- <20150210015123.GC6326@richard>
- <1423534451.4924.79.camel@au1.ibm.com>
- <20150210062544.GB31098@richard>
- <1423556085.4924.91.camel@au1.ibm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:60358 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752552AbbBYSz0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Feb 2015 13:55:26 -0500
+Date: Wed, 25 Feb 2015 19:54:23 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Avoid info leak in __print_tlp_header
+Message-ID: <20150225185423.GA19236@pd.tnic>
+References: <1424818246-11841-1-git-send-email-linux@rasmusvillemoes.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423556085.4924.91.camel@au1.ibm.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1424818246-11841-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 10, 2015 at 07:14:45PM +1100, Benjamin Herrenschmidt wrote:
-> On Tue, 2015-02-10 at 14:25 +0800, Wei Yang wrote:
-> > PF's resource will be assigned first, including normal BARs and IOV
-> > BARs.
-> > 
-> > Then PF's driver will create VFs, in virtfn_add(). In this function,
-> > VF's
-> > resources is calculated from its PF's IOV BAR.
-> > 
-> > If you reset VF's resource as PFs, no one will try to assign it again.
+On Tue, Feb 24, 2015 at 11:50:46PM +0100, Rasmus Villemoes wrote:
+> Commit fab4c256a58b ("PCI/AER: Add a TLP header print helper")
+> introduced the helper function __print_tlp_header, but contrary to the
+> intention, the behaviour did change: Since we're taking the address of
+
+Whoops, good catch.
+
+> the parameter t, the first 4 or 8 bytes printed will be the value of
+> the pointer t itself, and the remaining 12 or 8 bytes will be
+> who-knows-what (something from the stack).
 > 
-> So the problem is that the flag indicating VF is lost ? IE. We should
-> still mark them unset, but preserve that flag ?
+> We want to treat the four members of the struct aer_header_log_regs as
+> little-endian 32 bit numbers and print those. That can be done without
+> ugly and confusing casts.
+> 
+> Fixes: fab4c256a58b ("PCI/AER: Add a TLP header print helper")
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_errprint.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index c6849d9e86ce..e328978038c1 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -132,16 +132,9 @@ static const char *aer_agent_string[] = {
+>  static void __print_tlp_header(struct pci_dev *dev,
+>  			       struct aer_header_log_regs *t)
+>  {
+> -	unsigned char *tlp = (unsigned char *)&t;
+> -
+> -	dev_err(&dev->dev, "  TLP Header:"
+> -		" %02x%02x%02x%02x %02x%02x%02x%02x"
+> -		" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+> -		*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
+> -		*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
+> -		*(tlp + 11), *(tlp + 10), *(tlp + 9),
+> -		*(tlp + 8), *(tlp + 15), *(tlp + 14),
+> -		*(tlp + 13), *(tlp + 12));
+> +	dev_err(&dev->dev, "  TLP Header: %08x %08x %08x %08x\n",
+> +		le32_to_cpu(t->dw0), le32_to_cpu(t->dw1),
+> +		le32_to_cpu(t->dw2), le32_to_cpu(t->dw3));
 
-I think the problem is that the normal path for PCI_REASSIGN_ALL_RSRC is
-at boot-time, where we do this:
+I'm not sure about this: I think the original intention was to dump the
+dwords MS-bit to LS-bit like this here:
 
-    pcibios_init
-      pcibios_scan_phb
-        pci_scan_child_bus
-          ...
-            pci_device_add
-              pci_fixup_device(pci_fixup_header)
-		pcibios_fixup_resources                       # header fixup
-		  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
-		    dev->resource[i].start = 0
-      pcibios_resource_survey
-        pcibios_allocate_resources
+http://www.fpga4fun.com/PCI-Express4.html
 
-and we assign dev->resource[] for everything in
-pcibios_allocate_resources().
+Now, if this runs on a big endian machine, converting to CPU order would
+be wrong IMHO. You'd rather want do do cpu_to_le32() for consistency.
+But I don't know whether big endian machines are even sporting PCIE
+AER...
 
-But VFs are enumerated later, when they are enabled by the PF driver after
-boot, so we have this path:
+Bjorn?
 
-    pci_enable_sriov
-      sriov_enable
-        virtfn_add(vf_id)
-          for (i = 0; i < 6; i++)
-            vf->resource[i].start = pf->resource[IOV + i].start + (size * vf_id)
-          pci_device_add
-            pci_fixup_device(pci_fixup_header)
-              pcibios_fixup_resources                   # header fixup
-                for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
-                  vf->resource[i].start = 0
+-- 
+Regards/Gruss,
+    Boris.
 
-Here, we clear out vf->resource[0..5] in the header fixup, but we're not
-going to call pcibios_allocate_resources() again to reassign them.
-
-So I think the *intent* of PCI_REASSIGN_ALL_RSRC is preserved if
-pcibios_fixup_resources() leaves the VF resources alone, because the VF
-resources are completely determined by the PF resources, and the PF
-resources have already been reassigned.
-
-If my understanding is correct, I think the patch is reasonable, and I
-would try to put some of this explanation into the changelog.
-
-Bjorn
+ECO tip #101: Trim your mails when you reply.
+--
