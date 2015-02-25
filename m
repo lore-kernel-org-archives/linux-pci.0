@@ -1,109 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55278 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932069AbbBFUQW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Feb 2015 15:16:22 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH] of: calculate masks of the device based on dma-range size
-Date: Fri, 6 Feb 2015 15:15:20 -0500
-Message-ID: <1423253720-2785-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Dave Airlie <airlied@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
+Date: Wed, 25 Feb 2015 23:42:26 +0100
+Message-ID: <16779086.0bGZj9locs@vostro.rjw.lan>
+In-Reply-To: <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com>
+References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com> <CAErSpo4kG_RrpFtZ6QyRFkMO51Zx62q94L+r60-HfSZY3VHD1g@mail.gmail.com> <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch update of_dma_configure() API to calculate the
-masks (dma_mask and coherent_dma_mask) based on the dma-range
-values set in DT for the device. Also limit the mask to lower
-of the default mask and mask calculated.
+On Wednesday, February 25, 2015 06:03:56 PM Dave Airlie wrote:
+> > * v3.19 ignored [io  0x0cf8-0x0cff], but v4.0 includes it.  I think
+> > it's wrong to include it because that's the configuration space
+> > address/data registers, so it's consumed by the host bridge and not
+> > produced on the downstream side.
+> >
+> > * v3.19 includes [mem 0x7ff00000-0xfebfffff], but v4.0 does not.  This
+> > is what's screwing up the devices.
+> >
+> > I think all the windows should be marked as ACPI_PRODUCER in _CRS
+> > since the space is "produced" on the downstream side of the bridge.
+> > The [io  0x0cf8-0x0cff] region should probably be marked
+> > ACPI_CONSUMER, and maybe that accounts for why v3.19 ignores it.  But
+> > I haven't found the code that does that yet.
+> >
+> > I suspect this is all related to the ACPI resource parsing rework.  I
+> > looked through that briefly, but no issues jumped out at me, so this
+> > is just a heads-up in case it is obvious to you guys.
+> >
+> > Dave, it'd be useful if you could collect an acpidump so we can look
+> > at the _CRS data in more detail.
+> 
+> acpidump fails here with a /dev/mem warning in the kernel,
+> 
+> now I'm not near the machine again until next week most likely, so I
+> only have ssh for now,
+> and the kernel it is running for which I don't have the source anymore!
+> 
+> is there any of tables from /sys I can grab instead?
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+/sys/firmware/acpi/tables/DSDT
+/sys/firmware/acpi/tables/SSDT*
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/device.c |   27 ++++++++++++++++++++-------
- 1 file changed, 20 insertions(+), 7 deletions(-)
+Also I'm wondering if reverting commit 2ea3d266bab3 (ACPI: Translate
+resource into master side address for bridge window resources) makes
+any difference?
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 314c8a9..44209fa 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -83,17 +83,18 @@ int of_device_add(struct platform_device *ofdev)
-  */
- void of_dma_configure(struct device *dev, struct device_node *np)
- {
--	u64 dma_addr, paddr, size;
-+	u64 dma_addr = 0, paddr, size;
- 	int ret;
- 	bool coherent;
--	unsigned long offset;
-+	unsigned long offset = 0;
- 	struct iommu_ops *iommu;
- 
- 	/*
- 	 * Set default dma-mask to 32 bit. Drivers are expected to setup
- 	 * the correct supported dma_mask.
- 	 */
--	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+	if (!dev->coherent_dma_mask)
-+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
- 
- 	/*
- 	 * Set it to coherent_dma_mask by default if the architecture
-@@ -102,11 +103,14 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 	if (!dev->dma_mask)
- 		dev->dma_mask = &dev->coherent_dma_mask;
- 
-+	/*
-+	 * Set default size to cover the 32-bit. Drivers are expected to setup
-+	 * the correct size and dma_mask.
-+	 */
-+	size = 1ULL << 32;
-+
- 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
--	if (ret < 0) {
--		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask + 1;
--	} else {
-+	if (!ret) {
- 		offset = PFN_DOWN(paddr - dma_addr);
- 
- 		/*
-@@ -128,6 +132,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 
- 	dev->dma_pfn_offset = offset;
- 
-+	/*
-+	 * Limit coherent and dma mask based on size and default mask
-+	 * set by the driver.
-+	 */
-+	dev->coherent_dma_mask = min(dev->coherent_dma_mask,
-+				     DMA_BIT_MASK(ilog2(dma_addr + size)));
-+	*dev->dma_mask = min((*dev->dma_mask),
-+			     DMA_BIT_MASK(ilog2(dma_addr + size)));
-+
- 	coherent = of_dma_is_coherent(np);
- 	dev_dbg(dev, "device is%sdma coherent\n",
- 		coherent ? " " : " not ");
--- 
-1.7.9.5
+Rafael
 
