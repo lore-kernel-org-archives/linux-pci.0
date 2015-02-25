@@ -1,115 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v2 16/23] ACPI: Introduce helper function acpi_dev_filter_resource_type()
-Date: Mon,  2 Feb 2015 10:43:01 +0800
-Message-Id: <1422844988-13854-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1422844988-13854-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:52338 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbbBYQKw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 11:10:52 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	iommu@lists.linux-foundation.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [PATCH v6 6/7] PCI: update dma configuration from DT
+Date: Wed, 25 Feb 2015 17:09:41 +0100
+Message-ID: <4781283.CC9oFpsHLJ@wuerfel>
+In-Reply-To: <54EDF236.40101@ti.com>
+References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <20150225015317.GO6220@google.com> <54EDF236.40101@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper function acpi_dev_filter_resource_type(), which may
-be used by acpi_dev_get_resources() to filer out resource based on
-resource type.
+On Wednesday 25 February 2015 11:03:02 Murali Karicheri wrote:
+> 
+> > (I don't know exactly how these patches all fit together, so that's
+> > probably not accurate, but that's the *sort* of thing I'd like to include.)
+> >
+> > If that actually *is* what's going on, I have to wonder why this isn't
+> > implemented as a very simple IOMMU instead of adding dma_pfn_offset,
+> > which is present on all arches but only used on ARM.  In some sense that
+> > offset is parallel but incompatible with an IOMMU: they both translate DMA
+> > addresses into system RAM addresses.
+> 
+> I don't have much history on any previous discussion on the subject you 
+> are referring to. I assume it would have happened when 
+> of_dma_configure() was first introduced. On Keystone, we don't have 
+> IOMMU support and dma_pfn_offset is needed to translate DMA address to 
+> System RAM address and vice-versa. So this has to be supported for 
+> Keystone. There can be enhancement for IOMMU with out impacting this 
+> feature for Keystone.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi.h    |    8 +++++++
- 2 files changed, 63 insertions(+)
+The direction we are taking with IOMMU in general is opposite to what Bjorn
+is suggesting: I believe what he wants to say is that we should use the
+traditional approach of having a specialized dma_map_ops implementation
+for this, just like we do for IOMMU implementations on x86, IA64 or PowerPC.
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 1c3abae6f2fa..3ea0d17eb951 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -569,3 +569,58 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- 	return c.count;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
-+
-+/**
-+ * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
-+ *				   types
-+ * @ares: Input ACPI resource object.
-+ * @types: Valid resource types of IORESOURCE_XXX
-+ *
-+ * This is a hepler function to support acpi_dev_get_resources(), which filters
-+ * ACPI resource objects according to resource types.
-+ */
-+int acpi_dev_filter_resource_type(struct acpi_resource *ares,
-+				  unsigned long types)
-+{
-+	unsigned long type = 0;
-+
-+	switch (ares->type) {
-+	case ACPI_RESOURCE_TYPE_MEMORY24:
-+	case ACPI_RESOURCE_TYPE_MEMORY32:
-+	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-+		type = IORESOURCE_MEM;
-+		break;
-+	case ACPI_RESOURCE_TYPE_IO:
-+	case ACPI_RESOURCE_TYPE_FIXED_IO:
-+		type = IORESOURCE_IO;
-+		break;
-+	case ACPI_RESOURCE_TYPE_IRQ:
-+	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-+		type = IORESOURCE_IRQ;
-+		break;
-+	case ACPI_RESOURCE_TYPE_DMA:
-+	case ACPI_RESOURCE_TYPE_FIXED_DMA:
-+		type = IORESOURCE_DMA;
-+		break;
-+	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
-+		type = IORESOURCE_REG;
-+		break;
-+	case ACPI_RESOURCE_TYPE_ADDRESS16:
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-+		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
-+			type = IORESOURCE_MEM;
-+		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
-+			type = IORESOURCE_IO;
-+		else if (ares->data.address.resource_type ==
-+			 ACPI_BUS_NUMBER_RANGE)
-+			type = IORESOURCE_BUS;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return (type & types) ? 0 : 1;
-+}
-+EXPORT_SYMBOL_GPL(acpi_dev_filter_resource_type);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 21dac3cb62d2..e818decb631f 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -310,6 +310,14 @@ void acpi_dev_free_resource_list(struct list_head *list);
- int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- 			   int (*preproc)(struct acpi_resource *, void *),
- 			   void *preproc_data);
-+int acpi_dev_filter_resource_type(struct acpi_resource *ares,
-+				  unsigned long types);
-+
-+static inline int acpi_dev_filter_resource_type_cb(struct acpi_resource *ares,
-+						   void *arg)
-+{
-+	return acpi_dev_filter_resource_type(ares, (unsigned long)arg);
-+}
- 
- int acpi_check_resource_conflict(const struct resource *res);
- 
--- 
-1.7.10.4
+However, with the recent explosion of IOMMU implementations on ARM, we
+are moving towards having a single dma_map_ops structure for all of them,
+and that structure does not work with the keystone hardware. Instead,
+the normal ARM dma_map_ops have been changed to handle the offset,
+which is the same thing we do on PowerPC.
 
+	Arnd
