@@ -1,45 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36743 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbbBPByU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Feb 2015 20:54:20 -0500
-Received: by mail-pa0-f42.google.com with SMTP id rd3so31774209pab.1
-        for <linux-pci@vger.kernel.org>; Sun, 15 Feb 2015 17:54:20 -0800 (PST)
-From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-To: bhelgaas@google.com
-Cc: valentine.barshak@cogentembedded.com, horms+renesas@verge.net.au,
-	linux-pci@vger.kernel.org,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Subject: [PATCH v2] PCI: rcar: Add address check of mem_res
-Date: Mon, 16 Feb 2015 10:54:08 +0900
-Message-Id: <1424051648-7430-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:60787 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753606AbbBZIPq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:46 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v4 17/30] PCI/powerpc: Rename pcibios_root_bridge_prepare()
+Date: Thu, 26 Feb 2015 16:12:11 +0800
+Message-ID: <1424938344-4017-18-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-lower 16 bits of the address, which is managed by mem_res need to be 0.
-This adds address check of lower 16 bits.
+Pcibios_root_bridge_prepare() in powerpc is used
+to set root bus speed. Rename it to
+pcibios_set_root_bus_speed() for better readability.
 
-Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
 ---
- v2: Remove to before devm_kzalloc().
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |    6 +++---
+ arch/powerpc/platforms/pseries/pci.c     |    2 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ 5 files changed, 7 insertions(+), 7 deletions(-)
 
- drivers/pci/host/pci-rcar-gen2.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index d9c042f..e9617d3 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -346,6 +346,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	if (!mem_res || !mem_res->start)
- 		return -ENODEV;
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index c8175a3..8e7f2a8 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
++	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
  
-+	if (mem_res->start & 0xFFFF)
-+		return -EINVAL;
-+
- 	priv = devm_kzalloc(&pdev->dev,
- 			    sizeof(struct rcar_pci_priv), GFP_KERNEL);
- 	if (!priv)
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 78cd41b..4401b6a 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -769,9 +769,9 @@ int pci_proc_domain(struct pci_bus *bus)
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ {
+-	if (ppc_md.pcibios_root_bridge_prepare)
+-		return ppc_md.pcibios_root_bridge_prepare(bridge);
+-
++	if (ppc_md.pcibios_set_root_bus_speed)
++		return ppc_md.pcibios_set_root_bus_speed(bridge);
++	
+ 	return 0;
+ }
+ 
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index fe16a50..af685d6 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
++int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 1796c54..5d0be3a 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
++int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index e445b67..b196c0d 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
+ 	}
+ 
+-	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
++	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
+ 
+ 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
+ 		long rc;
 -- 
-2.1.3
+1.7.1
 
