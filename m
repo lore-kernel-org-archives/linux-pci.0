@@ -1,49 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56058 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752679AbbBXUMq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Feb 2015 15:12:46 -0500
-Subject: [PATCH 1/2] pci: Add reciprocal function for pci_ignore_hotplug()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org, airlied@linux.ie,
-	alexander.deucher@amd.com, dri-devel@lists.freedesktop.org
-Cc: alex.williamson@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 24 Feb 2015 13:12:34 -0700
-Message-ID: <20150224201233.14443.61523.stgit@gimli.home>
-In-Reply-To: <20150224200603.14443.68971.stgit@gimli.home>
-References: <20150224200603.14443.68971.stgit@gimli.home>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:60688 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753212AbbBZIPr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:47 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"Fenghua Yu" <fenghua.yu@intel.com>
+Subject: [PATCH v4 15/30] PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Thu, 26 Feb 2015 16:12:09 +0800
+Message-ID: <1424938344-4017-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have pci_ignore_hotplug(), but there's no way to undo this
-without manipulating the device itself.  It seems like the original
-intention of the function is to provide the driver with a way to
-ignore hotplug over a specific time window, ex. the time while the
-device is powered off.  Once the device is powered on again, the
-flag should be cleared to avoid leaving driver cruft on the device.
-Add a trivial helper function to enable this.
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Fenghua Yu <fenghua.yu@intel.com>
+CC: linux-ia64@vger.kernel.org
 ---
- include/linux/pci.h |    5 +++++
- 1 file changed, 5 insertions(+)
+ arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
+ 1 files changed, 18 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..26f9779 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1044,6 +1044,11 @@ static inline void pci_ignore_hotplug(struct pci_dev *dev)
- 	dev->ignore_hotplug = 1;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index e4cda61..dc5354d 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
  }
  
-+static inline void pci_unignore_hotplug(struct pci_dev *dev)
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
 +{
-+	dev->ignore_hotplug = 0;
++	struct pci_controller *controller = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
++	return 0;
 +}
 +
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
++static struct pci_host_bridge_ops phb_ops = {
++	.phb_prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
  {
+ 	struct acpi_device *device = root->device;
+@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
++	struct pci_host_bridge *host;
+ 	int ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
+-			&pci_root_ops, controller, &info->resources);
+-	if (!pbus) {
++	host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, bus), 
++			&pci_root_ops, controller, &info->resources, &phb_ops);
++	if (!host) {
+ 		pci_free_resource_list(&info->resources);
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
+-			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
+-}
+-
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_controller *controller = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	return 0;
++	pci_set_host_bridge_release(host, release_pci_root_info, info);
++	return host->bus;
+ }
+ 
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
+-- 
+1.7.1
 
