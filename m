@@ -1,97 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52034 "EHLO
-	usa-sjc-mx-foss1.foss.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753250AbbBPRqQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Feb 2015 12:46:16 -0500
-Date: Mon, 16 Feb 2015 17:46:29 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from [119.145.14.64] ([119.145.14.64]:23678 "EHLO
+	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753565AbbBZBck (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:40 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	"linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>,
-	"linux-m68k@vger.kernel.org" <linux-m68k@vger.kernel.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, Arnd Bergmann <arnd@arndb.de>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory =?iso-8859-1?Q?Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH v2 23/30] PCI/mvebu: Use pci_common_init_dev() to
- simplify code
-Message-ID: <20150216174628.GA13861@red-moon>
-References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com>
- <1421800225-26230-24-git-send-email-wangyijing@huawei.com>
- <20150122184000.63ba06bb@free-electrons.com>
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v3 04/30] PCI: Remove deprecated pci_scan_bus_parented()
+Date: Thu, 26 Feb 2015 09:29:21 +0800
+Message-ID: <1424914187-21027-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150122184000.63ba06bb@free-electrons.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
+No one uses pci_scan_bus_parented() any more,
+remove it.
 
-On Thu, Jan 22, 2015 at 05:40:00PM +0000, Thomas Petazzoni wrote:
-> Dear Yijing Wang,
-> 
-> On Wed, 21 Jan 2015 08:30:18 +0800, Yijing Wang wrote:
-> > Mvebu_pcie_scan_bus() is not necessary, we could use
-> > pci_common_init_dev() instead of pci_common_init(),
-> > and pass the device pointer as the parent. Then
-> > pci_scan_root_bus() will be called to scan the pci busses.
-> > 
-> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> > CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > CC: Jason Cooper <jason@lakedaemon.net>
-> 
-> While I'm fine with the change to pci_common_init_dev(), I am not so
-> sure about the removal of mvebu_pcie_scan_bus(). I vaguely remember
-> that we intentionally did not use the default function for a specific
-> reason. Of course, this was a long time ago, and I don't remember the
-> reason. I would have to take a bit of time to 1/ review the archives of
-> the discussion surrounding the pcie-mvebu driver, and 2/ test your
-> patch to validate it works fine on HW.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   19 -------------------
+ include/linux/pci.h |    2 --
+ 2 files changed, 0 insertions(+), 21 deletions(-)
 
-I guess the reason: by providing the scan pointer to pcibios through
-the hw_pci struct you were preventing calling pci_scan_root_bus() in
-bios32.c that in turn can add devices before the resources are assigned.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8ef0375..699a238 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2091,25 +2091,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-/* Deprecated; use pci_scan_root_bus() instead */
+-struct pci_bus *pci_scan_bus_parented(struct device *parent,
+-		int bus, struct pci_ops *ops, void *sysdata)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *b;
+-
+-	pci_add_resource(&resources, &ioport_resource);
+-	pci_add_resource(&resources, &iomem_resource);
+-	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
+-	if (b)
+-		pci_scan_child_bus(b);
+-	else
+-		pci_free_resource_list(&resources);
+-	return b;
+-}
+-EXPORT_SYMBOL(pci_scan_bus_parented);
+-
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 					void *sysdata)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 211e9da..36effb8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -769,8 +769,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+-- 
+1.7.1
 
-Basically mvebu_pci_scan_bus() was doing what pci_scan_root_bus() does
-except for calling pci_bus_add_devices().
-
-Yijing patches remove pci_bus_add_devices() from pci_scan_root_bus() so
-his change should be fine and it actually improves the current behaviour
-which is quite hard to untangle, and not just on mvebu (I suspect
-drivers/pci/host/pcie-xilinx.c can suffer from the same problem).
-
-Lorenzo
-
-> 
-> Thanks!
-> 
-> Thomas
-> -- 
-> Thomas Petazzoni, CTO, Free Electrons
-> Embedded Linux, Kernel and Android engineering
-> http://free-electrons.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
