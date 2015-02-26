@@ -1,83 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:38474 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326AbbBXIeB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:34:01 -0500
-Received: by padbj1 with SMTP id bj1so34407950pad.5
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:34:01 -0800 (PST)
-Subject: [PATCH v12 09/21] PCI: Add pcibios_iov_resource_alignment()
- interface
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 02:33:59 -0600
-Message-ID: <20150224083359.32124.91908.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from [119.145.14.64] ([119.145.14.64]:23912 "EHLO
+	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583AbbBZBcm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:42 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v3 11/30] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Thu, 26 Feb 2015 09:29:28 +0800
+Message-ID: <1424914187-21027-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+Save platform specific sysdata in pci_host_bridge
+drvdata, host bridge specific operation need to
+access it before the pci bus creation.
 
-Per the SR-IOV spec r1.1, sec 3.3.14, the required alignment of a PF's IOV
-BAR is the size of an individual VF BAR, and the size consumed is the
-individual VF BAR size times NumVFs.
-
-The PowerNV platform has additional alignment requirements to help support
-its Partitionable Endpoint device isolation feature (see
-Documentation/powerpc/pci_iov_resource_on_powernv.txt).
-
-Add a pcibios_iov_resource_alignment() interface to allow platforms to
-request additional alignment.
-
-[bhelgaas: changelog, adapt to reworked pci_sriov_resource_alignment(),
-drop "align" parameter]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/iov.c   |    8 +++++++-
- include/linux/pci.h |    1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/host-bridge.c |    4 +++-
+ drivers/pci/probe.c       |   18 ++++++++----------
+ include/linux/pci.h       |    3 ++-
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index cc6fedf4a1b9..bde0f02cae32 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -569,6 +569,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- 		4 * (resno - PCI_IOV_RESOURCES);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5039b3b..b42a4bb 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -23,7 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
  }
  
-+resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
-+						      int resno)
-+{
-+	return pci_iov_resource_size(dev, resno);
-+}
-+
- /**
-  * pci_sriov_resource_alignment - get resource alignment for VF BAR
-  * @dev: the PCI device
-@@ -581,7 +587,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
-  */
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 db, struct list_head *resources)
++		struct device *parent, u32 db,
++		struct list_head *resources, void *sysdata)
  {
--	return pci_iov_resource_size(dev, resno);
-+	return pcibios_iov_resource_alignment(dev, resno);
+ 	int error;
+ 	int bus = PCI_BUSNUM(db);
+@@ -58,6 +59,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	host->dev.parent = parent;
+ 	INIT_LIST_HEAD(&host->windows);
+ 	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
+ 			host->busnum);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec4f99d..45056cb 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
  }
  
- /**
+ static struct pci_bus *__pci_create_root_bus(
+-		struct pci_host_bridge *bridge, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error;
+ 	struct pci_bus *b;
+@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
++	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bridge->busnum;
+ 	pci_bus_assign_domain_nr(b, parent);
+@@ -1954,11 +1953,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources);
++	host = pci_create_host_bridge(parent, db, resources, sysdata);
+ 	if (!host)
+ 		return NULL;
+ 	
+-	return __pci_create_root_bus(host, ops, sysdata);
++	return __pci_create_root_bus(host, ops);
+ }
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+@@ -2025,8 +2024,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ }
+ 
+ static struct pci_bus *__pci_scan_root_bus(
+-		struct pci_host_bridge *host, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *host, struct pci_ops *ops)
+ {
+ 	struct resource_entry *window;
+ 	bool found = false;
+@@ -2039,7 +2037,7 @@ static struct pci_bus *__pci_scan_root_bus(
+ 			break;
+ 		}
+ 
+-	b = __pci_create_root_bus(host, ops, sysdata);
++	b = __pci_create_root_bus(host, ops);
+ 	if (!b) {
+ 		pci_free_host_bridge(host);
+ 		return NULL;
+@@ -2065,11 +2063,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources);
++	host = pci_create_host_bridge(parent, db, resources, sysdata);
+ 	if (!host)
+ 		return NULL;
+ 
+-	return __pci_scan_root_bus(host, ops, sysdata);
++	return __pci_scan_root_bus(host, ops);
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 99ea94835fb6..4e1f17db1a81 100644
+index 4d11228..74e038d 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1174,6 +1174,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+@@ -418,7 +418,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
  
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 dombus, struct list_head *resources);
++		struct device *parent, u32 dombus,
++		struct list_head *resources, void *sysdata);
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+-- 
+1.7.1
 
