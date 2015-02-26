@@ -1,136 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35535 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753356AbbCACTU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:19:20 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
+Received: from szxga03-in.huawei.com ([119.145.14.66]:60499 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753597AbbBZIPo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:44 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 7/8] x86, pci: convert SETUP_PCI data to list
-Date: Sat, 28 Feb 2015 18:17:38 -0800
-Message-Id: <1425176259-30087-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v4 11/30] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Thu, 26 Feb 2015 16:12:05 +0800
+Message-ID: <1424938344-4017-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could avoid ioremap every time later.
+Save platform specific sysdata in pci_host_bridge
+drvdata, host bridge specific operation need to
+access it before the pci bus creation.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/pci/common.c | 77 +++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 63 insertions(+), 14 deletions(-)
+ drivers/pci/host-bridge.c |    4 +++-
+ drivers/pci/probe.c       |   18 ++++++++----------
+ include/linux/pci.h       |    3 ++-
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 4846db7..7b6fb94 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -680,10 +680,41 @@ void __init add_pci(u64 pa_data)
- 	early_memunmap(data, sizeof(*data));
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5039b3b..b42a4bb 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -23,7 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
  }
  
--int pcibios_add_device(struct pci_dev *dev)
-+struct firmware_setup_pci_entry {
-+	struct list_head list;
-+	uint16_t vendor;
-+	uint16_t devid;
-+	uint64_t pcilen;
-+	unsigned long segment;
-+	unsigned long bus;
-+	unsigned long device;
-+	unsigned long function;
-+	phys_addr_t rom;
-+};
-+
-+static LIST_HEAD(setup_pci_entries);
-+
-+static void __init firmware_setup_pci_add_entry(struct pci_setup_rom *rom,
-+					u64 pa_data,
-+					struct firmware_setup_pci_entry *entry)
-+{
-+	entry->segment = rom->segment;
-+	entry->bus = rom->bus;
-+	entry->device = rom->device;
-+	entry->function = rom->function;
-+	entry->vendor = rom->vendor;
-+	entry->devid = rom->devid;
-+	entry->rom = pa_data + offsetof(struct pci_setup_rom, romdata);
-+	entry->pcilen = rom->pcilen;
-+
-+	list_add(&entry->list, &setup_pci_entries);
-+}
-+
-+static __init int fill_setup_pci_entries(void)
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 db, struct list_head *resources)
++		struct device *parent, u32 db, 
++		struct list_head *resources, void *sysdata)
  {
- 	struct setup_data *data;
- 	struct pci_setup_rom *rom;
-+	struct firmware_setup_pci_entry *entry;
- 	u64 pa_data;
+ 	int error;
+ 	int bus = PCI_BUSNUM(db);
+@@ -58,6 +59,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	host->dev.parent = parent;
+ 	INIT_LIST_HEAD(&host->windows);
+ 	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
+ 			host->busnum);
  
- 	pa_data = pci_setup_data;
-@@ -692,24 +723,42 @@ int pcibios_add_device(struct pci_dev *dev)
- 		if (!data)
- 			return -ENOMEM;
- 
--		rom = (struct pci_setup_rom *)data;
--
--		if ((pci_domain_nr(dev->bus) == rom->segment) &&
--		    (dev->bus->number == rom->bus) &&
--		    (PCI_SLOT(dev->devfn) == rom->device) &&
--		    (PCI_FUNC(dev->devfn) == rom->function) &&
--		    (dev->vendor == rom->vendor) &&
--		    (dev->device == rom->devid)) {
--			dev->rom = pa_data +
--			      offsetof(struct pci_setup_rom, romdata);
--			dev->romlen = rom->pcilen;
-+		entry = kzalloc(sizeof(struct firmware_setup_pci_entry),
-+				GFP_ATOMIC);
-+		if (!entry) {
-+			iounmap(data);
-+			return -ENOMEM;
-+		}
-+
-+		firmware_setup_pci_add_entry((struct pci_setup_rom *)data,
-+					     pa_data, entry);
-+		pa_data = data->next;
-+		iounmap(data);
-+	}
-+
-+	return 0;
-+}
-+postcore_initcall(fill_setup_pci_entries);
-+
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	struct firmware_setup_pci_entry *entry;
-+
-+	list_for_each_entry(entry, &setup_pci_entries, list) {
-+		if ((pci_domain_nr(dev->bus) == entry->segment) &&
-+		    (dev->bus->number == entry->bus) &&
-+		    (PCI_SLOT(dev->devfn) == entry->device) &&
-+		    (PCI_FUNC(dev->devfn) == entry->function) &&
-+		    (dev->vendor == entry->vendor) &&
-+		    (dev->device == entry->devid)) {
-+			dev->rom = entry->rom;
-+			dev->romlen = entry->pcilen;
- 			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
- 				   (unsigned long)dev->rom,
- 				   (unsigned long)(dev->rom + dev->romlen - 1));
- 		}
--		pa_data = data->next;
--		iounmap(data);
- 	}
-+
- 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec4f99d..45056cb 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
  }
  
+ static struct pci_bus *__pci_create_root_bus(
+-		struct pci_host_bridge *bridge, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error;
+ 	struct pci_bus *b;
+@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
++	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bridge->busnum;
+ 	pci_bus_assign_domain_nr(b, parent);
+@@ -1954,11 +1953,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources);
++	host = pci_create_host_bridge(parent, db, resources, sysdata);
+ 	if (!host)
+ 		return NULL;
+ 	
+-	return __pci_create_root_bus(host, ops, sysdata);
++	return __pci_create_root_bus(host, ops);
+ }
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+@@ -2025,8 +2024,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ }
+ 
+ static struct pci_bus *__pci_scan_root_bus(
+-		struct pci_host_bridge *host, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *host, struct pci_ops *ops)
+ {
+ 	struct resource_entry *window;
+ 	bool found = false;
+@@ -2039,7 +2037,7 @@ static struct pci_bus *__pci_scan_root_bus(
+ 			break;
+ 		}
+ 
+-	b = __pci_create_root_bus(host, ops, sysdata);
++	b = __pci_create_root_bus(host, ops);
+ 	if (!b) {
+ 		pci_free_host_bridge(host);
+ 		return NULL;
+@@ -2065,11 +2063,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources);
++	host = pci_create_host_bridge(parent, db, resources, sysdata);
+ 	if (!host)
+ 		return NULL;
+ 
+-	return __pci_scan_root_bus(host, ops, sysdata);
++	return __pci_scan_root_bus(host, ops);
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4d11228..74e038d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -418,7 +418,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 dombus, struct list_head *resources);
++		struct device *parent, u32 dombus, 
++		struct list_head *resources, void *sysdata);
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
 -- 
-1.8.4.5
+1.7.1
 
