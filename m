@@ -1,70 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62564 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756576AbbBEFmx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Feb 2015 00:42:53 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from [119.145.14.64] ([119.145.14.64]:24191 "EHLO
+	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581AbbBZBdJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:33:09 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v4 11/23] ACPI: Set flag IORESOURCE_UNSET for unassigned resources
-Date: Thu,  5 Feb 2015 13:44:37 +0800
-Message-Id: <1423115089-12904-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v3 26/30] PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+Date: Thu, 26 Feb 2015 09:29:43 +0800
+Message-ID: <1424914187-21027-27-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Also set flag IORESOURCE_UNSET for unassigned resource in addition to
-IORESOURCE_DISABLED to mark resource as unassigned.
+Use pci_scan_root_bus() instead of pci_create_root_bus() +
+pci_scan_child_bus() for simplicity.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/acpi/resource.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-xgene.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 32561290a4a0..5bf73a9f26d9 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -58,7 +58,7 @@ static void acpi_dev_memresource_flags(struct resource *res, u64 len,
- 	res->flags = IORESOURCE_MEM;
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index aab5547..0c0e632 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
  
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, false))
--		res->flags |= IORESOURCE_DISABLED;
-+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+-	bus = pci_create_root_bus(&pdev->dev, 0,
++	bus = pci_scan_root_bus(&pdev->dev, 0,
+ 					&xgene_pcie_ops, port, &res);
+ 	if (!bus)
+ 		return -ENOMEM;
  
- 	if (write_protect == ACPI_READ_WRITE_MEMORY)
- 		res->flags |= IORESOURCE_MEM_WRITEABLE;
-@@ -126,10 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	res->flags = IORESOURCE_IO;
+-	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
  
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
--		res->flags |= IORESOURCE_DISABLED;
-+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
- 	if (res->end >= 0x10003)
--		res->flags |= IORESOURCE_DISABLED;
-+		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-@@ -304,7 +304,7 @@ static void acpi_dev_irqresource_disabled(struct resource *res, u32 gsi)
- {
- 	res->start = gsi;
- 	res->end = gsi;
--	res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED;
-+	res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED | IORESOURCE_UNSET;
- }
- 
- static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
 -- 
-1.7.10.4
+1.7.1
 
