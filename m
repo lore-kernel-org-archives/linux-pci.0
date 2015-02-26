@@ -1,43 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:35343 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752374AbbBMHzy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Feb 2015 02:55:54 -0500
-Received: by pdbfl12 with SMTP id fl12so17807387pdb.2
-        for <linux-pci@vger.kernel.org>; Thu, 12 Feb 2015 23:55:54 -0800 (PST)
-From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-To: bhelgaas@google.com
-Cc: valentine.barshak@cogentembedded.com, horms+renesas@verge.net.au,
-	linux-pci@vger.kernel.org,
-	Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Subject: [PATCH] PCI: rcar: Add address check of mem_res
-Date: Fri, 13 Feb 2015 16:55:38 +0900
-Message-Id: <1423814138-18748-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:32688 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214AbbBZAyl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 19:54:41 -0500
+Message-ID: <54EE6EAC.9070607@huawei.com>
+Date: Thu, 26 Feb 2015 08:54:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2 00/30] Refine PCI scan interfaces and make generic
+ pci host bridge
+References: <1421800225-26230-1-git-send-email-wangyijing@huawei.com> <20150225230925.GQ6220@google.com>
+In-Reply-To: <20150225230925.GQ6220@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-lower 16 bits of the address, which is managed by mem_res need to be 0.
-This adds address check of lower 16 bits.
+On 2015/2/26 7:09, Bjorn Helgaas wrote:
+> On Wed, Jan 21, 2015 at 08:29:55AM +0800, Yijing Wang wrote:
+>> v1->v2:
+>> 	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
+>> 	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
+>> 	Arnd. Refresh some patch description log, and add a new patch to fix
+>> 	build warning in ia64.
+>>
+>> This series is based on Bjorn's pci-next branch.
+> 
+> Hi Yijing,
+> 
+> Would you mind rebasing this to v4.0-rc1?  It doesn't apply quite cleanly
+> any more.
 
-Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
----
- drivers/pci/host/pci-rcar-gen2.c | 3 +++
- 1 file changed, 3 insertions(+)
+OK, I will resend the series based on the v4.0-rc1.
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index d9c042f..13b2793 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -351,6 +351,9 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	if (!priv)
- 		return -ENOMEM;
- 
-+	if (mem_res->start & 0xFFFF)
-+		return -EINVAL;
-+
- 	priv->mem_res = *mem_res;
- 	/*
- 	 * The controller does not support/use port I/O,
+Thanks!
+Yijing.
+
+> 
+> Thanks,
+>   Bjorn
+> 
+> .
+> 
+
+
 -- 
-2.1.3
+Thanks!
+Yijing
 
