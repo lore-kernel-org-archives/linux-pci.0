@@ -1,70 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:54807 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753686AbbBYUp5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Feb 2015 15:45:57 -0500
-Message-ID: <54EE344D.5060403@ti.com>
-Date: Wed, 25 Feb 2015 15:45:01 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:37842 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885AbbBZBXP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:23:15 -0500
+Received: by mail-ig0-f173.google.com with SMTP id a13so40603729igq.0
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 17:23:15 -0800 (PST)
+Date: Wed, 25 Feb 2015 19:23:12 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Phong Tran <tranmanphong@gmail.com>
+Cc: tinamdar@apm.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [PATCH] PCI: xgene: Fix the map_bus callback prototype
+Message-ID: <20150226012312.GV6220@google.com>
+References: <1424686899-7869-1-git-send-email-tranmanphong@gmail.com>
+ <20150226011824.GU6220@google.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [PATCH v6 6/7] PCI: update dma configuration from DT
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <20150225015317.GO6220@google.com> <54EDF236.40101@ti.com> <4781283.CC9oFpsHLJ@wuerfel>
-In-Reply-To: <4781283.CC9oFpsHLJ@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150226011824.GU6220@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/25/2015 11:09 AM, Arnd Bergmann wrote:
-> On Wednesday 25 February 2015 11:03:02 Murali Karicheri wrote:
->>
->>> (I don't know exactly how these patches all fit together, so that's
->>> probably not accurate, but that's the *sort* of thing I'd like to include.)
->>>
->>> If that actually *is* what's going on, I have to wonder why this isn't
->>> implemented as a very simple IOMMU instead of adding dma_pfn_offset,
->>> which is present on all arches but only used on ARM.  In some sense that
->>> offset is parallel but incompatible with an IOMMU: they both translate DMA
->>> addresses into system RAM addresses.
->>
->> I don't have much history on any previous discussion on the subject you
->> are referring to. I assume it would have happened when
->> of_dma_configure() was first introduced. On Keystone, we don't have
->> IOMMU support and dma_pfn_offset is needed to translate DMA address to
->> System RAM address and vice-versa. So this has to be supported for
->> Keystone. There can be enhancement for IOMMU with out impacting this
->> feature for Keystone.
->
-> The direction we are taking with IOMMU in general is opposite to what Bjorn
-> is suggesting: I believe what he wants to say is that we should use the
-> traditional approach of having a specialized dma_map_ops implementation
-> for this, just like we do for IOMMU implementations on x86, IA64 or PowerPC.
->
-> However, with the recent explosion of IOMMU implementations on ARM, we
-> are moving towards having a single dma_map_ops structure for all of them,
-> and that structure does not work with the keystone hardware. Instead,
-> the normal ARM dma_map_ops have been changed to handle the offset,
-> which is the same thing we do on PowerPC.
->
-Arnd,
+On Wed, Feb 25, 2015 at 07:18:24PM -0600, Bjorn Helgaas wrote:
+> [+cc Fabio]
+> 
+> On Mon, Feb 23, 2015 at 05:21:39PM +0700, Phong Tran wrote:
+> > The return value should be void __iomem *.
+> > Tested by compile only.
+> > 
+> > Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+> 
+> I've already applied an identical patch from Fabio Estevam.  I added
+> Arnd's ack to it and also mentioned you in the credits, Phong.
 
-Thanks for the clarification.
+Dropped in favor of a more complete fix:
+https://patchwork.ozlabs.org/patch/440759/
 
-Murali
-
-> 	Arnd
-
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+> > ---
+> >  drivers/pci/host/pci-xgene.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> > index aab5547..9c3bfd8 100644
+> > --- a/drivers/pci/host/pci-xgene.c
+> > +++ b/drivers/pci/host/pci-xgene.c
+> > @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+> >  	return false;
+> >  }
+> >  
+> > -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> > +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> >  			      int offset)
+> >  {
+> >  	struct xgene_pcie_port *port = bus->sysdata;
+> > -- 
+> > 2.1.0
+> > 
