@@ -1,106 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:43898 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304AbbBTA4j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Feb 2015 19:56:39 -0500
-Received: by mail-ob0-f179.google.com with SMTP id wp4so21293937obc.10
-        for <linux-pci@vger.kernel.org>; Thu, 19 Feb 2015 16:56:39 -0800 (PST)
-Date: Thu, 19 Feb 2015 18:56:21 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 06/17] powerpc/pci: Add PCI resource alignment
- documentation
-Message-ID: <20150220005621.GA21131@google.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150204234433.GC11271@google.com>
- <1423530151.4924.73.camel@au1.ibm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:60635 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603AbbBZIPo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:44 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v4 13/30] PCI: Introduce new scan function pci_scan_root_bridge()
+Date: Thu, 26 Feb 2015 16:12:07 +0800
+Message-ID: <1424938344-4017-14-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423530151.4924.73.camel@au1.ibm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 10, 2015 at 12:02:31PM +1100, Benjamin Herrenschmidt wrote:
-> On Wed, 2015-02-04 at 17:44 -0600, Bjorn Helgaas wrote:
-> > > 
-> > > diff --git a/Documentation/powerpc/pci_iov_resource_on_powernv.txt b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
-> > > new file mode 100644
-> > > index 0000000..10d4ac2
-> > > --- /dev/null
-> > > +++ b/Documentation/powerpc/pci_iov_resource_on_powernv.txt
-> > 
-> > I added the following two patches on top of this because I'm still confused
-> > about the difference between the M64 window and the M64 BARs.  Several
-> > parts of the writeup seem to imply that there are several M64 windows, but
-> > that seems to be incorrect.
-> > 
-> > And I tried to write something about M64 BARs, too.  But it could well be
-> > incorrect.
-> > 
-> > Please correct as necessary.  Ultimately I'll just fold everything into the
-> > original patch so there's only one.
-> 
-> The way the HW works is that 2 windows of the CPU address space are
-> routed to each PHB. One is used for 32-bit stuff and one is used for
-> 64-bit stuff (it doesn't have to be and it's not fixed in HW which is
-> which, it's just two windows of the fabric being forwarded but that's
-> how we use them). The FW configures them, one is 4G and the other one is
-> today 64G but that might get increased at some point.
-> 
-> (Actually there's a 3rd window but it's exclusively used for the PHB
-> own registers so we can ignore it here).
-> 
-> Once an MMIO cycle hit one of the above window on the powerbus it gets
-> forwarded to the PHB.
-> 
-> Now the PHB itself contains a number of "BARs" which aren't the same
-> thing as device BARs so it's confusing and I tend to call them "windows"
-> for that reason. They are made of pairs of registers indicating an
-> address and a size (sort-of, the M64 ones are actually in some CAM in
-> the chip but that's a register access method detail that is not relevant
-> here).
-> 
->  - One M32. It's limited to 4G in size, and has the specific attribute
-> that the top bits of the address from the powerbus are dropped (and
-> replaced with the content of a register) thus allowing this "window" to
-> target the 32-bit MMIO space from anywhere in the CPU 50-bit bus space.
-> This is setup at boot time, and we can probably ignore it here. It has
-> it's own segmenting for PEs which is a bit different from 64-bit stuff
-> as it goes through a remapping table allowing to configure which PE each
-> segment maps to.
-> 
->  - 16 M64's. Each of these can be configured individually to pass a
-> portion of the above "window" space to the PCIe bus. There is no
-> remapping in that case (the powerbus addresses are passed 1:1). Each of
-> those M64's can be configured to have either a single PE (in which case
-> the PE number can be configured) or to be segmented (256 PE's but the PE
-> number cannot be configured and is equal to the segment number).
-> 
-> Additionally, the M64's can overlap, in which case we have a well
-> defined precedence order, which allows us to create a "backing" M64
-> that cover the entire 64G window going to the PCIe for "normal" 64-bit
-> BARs and overlap on top of that M64's appropriately sized and positioned
-> to cover IOV BARs (or in some case, single-PE M64's to cover very large
-> device BARs in order to avoid using too many PE's in the "backing" M64).
+Introduce new scan function pci_scan_root_bridge() to
+support host bridge drivers that need to provide platform
+own pci_host_bridge_ops.
 
-So there are the two windows of CPU address space that are routed to the
-PHB.  And the PHB contains one M32 window and sixteen M64 windows.  What
-happens if the PHB receives an access to something that was in one of the
-two CPU address space windows, but is not contained in M32 or one of the
-M64 windows?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   21 +++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-If that is an error or is non-sensical, then the only windows relevant to
-PCI would be the M32 and M64 windows, and we could just ignore the
-top-level two windows.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8cec6ab..b5f9ca4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2063,6 +2063,27 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	return b;
+ }
+ 
++struct pci_host_bridge *pci_scan_root_bridge(struct device *parent,
++		u32 db, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources, struct pci_host_bridge_ops *phb_ops)
++{
++	struct pci_host_bridge *host;
++	struct pci_bus *bus;
++
++	host = pci_create_host_bridge(parent, db, resources, 
++			sysdata, phb_ops);
++	if (!host)
++		return NULL;
++
++	bus = __pci_scan_root_bus(host, ops);
++	if (!bus)
++		pci_free_host_bridge(host);
++
++	return host;
++}
++EXPORT_SYMBOL(pci_scan_root_bridge);
++
++
+ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a4b56e0..ef3a821 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
++struct pci_host_bridge *pci_scan_root_bridge(struct device *parent, 
++		u32 dombus, struct pci_ops *ops, void *sysdata, 
++		struct list_head *resources, struct pci_host_bridge_ops *phb_ops);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+ void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+-- 
+1.7.1
 
-I squashed all my doc updates into the original and pushed it here:
-
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=5449d1a812d561bafe0d458132ef356765505507
-
-If I made it say something wrong, a patch would be the best way to fix it.
-
-Bjorn
