@@ -1,368 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.64] ([119.145.14.64]:23744 "EHLO
-	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753579AbbBZBcl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:41 -0500
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:33026 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbbBZIz1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:55:27 -0500
+Received: by labgf13 with SMTP id gf13so9542624lab.0
+        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 00:55:25 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v3 09/30] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-Date: Thu, 26 Feb 2015 09:29:26 +0800
-Message-ID: <1424914187-21027-10-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Borislav Petkov <bp@suse.de>, Tony Luck <tony.luck@intel.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] PCI/AER: Avoid info leak in __print_tlp_header
+Date: Thu, 26 Feb 2015 09:55:03 +0100
+Message-Id: <1424940903-9147-1-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <20150225225859.GB19236@pd.tnic>
+References: <20150225225859.GB19236@pd.tnic>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch separate pci_host_bridge creation out
-of pci_create_root_bus(), and try to make a generic
-pci_host_bridge, then we could place generic PCI
-infos like domain number in it. Also Ripping out
-pci_host_bridge creation from pci_create_root_bus()
-make code more better readability. Further more,
-we could use the generic pci_host_bridge to hold
-host bridge specific operations like
-pcibios_root_bridge_prepare(). The changes are
-transparent to platform host bridge drivers.
+Commit fab4c256a58b ("PCI/AER: Add a TLP header print helper")
+introduced the helper function __print_tlp_header, but contrary to the
+intention, the behaviour did change: Since we're taking the address of
+the parameter t, the first 4 or 8 bytes printed will be the value of
+the pointer t itself, and the remaining 12 or 8 bytes will be
+who-knows-what (something from the stack).
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+We want to show the values of the four members of the struct
+aer_header_log_regs; that can be done without ugly and error-prone
+casts. On little-endian this should produce the same output as
+originally intended, and since no-one has complained about getting
+garbage output so far, I think big-endian should be ok too.
+
+Fixes: fab4c256a58b ("PCI/AER: Add a TLP header print helper")
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 ---
- drivers/pci/host-bridge.c |   56 ++++++++++++++++++++++
- drivers/pci/probe.c       |  114 ++++++++++++++++++++-------------------------
- include/linux/pci.h       |    5 ++-
- 3 files changed, 110 insertions(+), 65 deletions(-)
+v2: Just print ->dwX as-is.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 39b2dbe..f304f26 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,6 +8,62 @@
- 
- #include "pci.h"
- 
-+static void pci_release_host_bridge_dev(struct device *dev)
-+{
-+	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-+
-+	if (bridge->release_fn)
-+		bridge->release_fn(bridge);
-+
-+	pci_free_resource_list(&bridge->windows);
-+	kfree(bridge);
-+}
-+
-+struct pci_host_bridge *pci_create_host_bridge(
-+		struct device *parent, u32 db, struct list_head *resources)
-+{
-+	int error;
-+	int bus = PCI_BUSNUM(db);
-+	int domain = PCI_DOMAIN(db);
-+	struct pci_host_bridge *host;
-+	struct resource_entry *window, *n;
-+
-+	host = kzalloc(sizeof(*host), GFP_KERNEL);
-+	if (!host)
-+		return NULL;
-+
-+	host->busnum = bus;
-+	host->domain = domain;
-+	/* If support CONFIG_PCI_DOMAINS_GENERIC, use
-+	 * pci_host_assign_domain_nr() to assign domain
-+	 * number instead PCI_DOMAIN(db).
-+	 */
-+	pci_host_assign_domain_nr(host);
-+
-+	host->dev.parent = parent;
-+	INIT_LIST_HEAD(&host->windows);
-+	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
-+			host->busnum);
-+
-+	error = device_register(&host->dev);
-+	if (error) {
-+		put_device(&host->dev);
-+		return NULL;
-+	}
-+
-+	resource_list_for_each_entry_safe(window, n, resources)
-+		list_move_tail(&window->node, &host->windows);
-+
-+	return host;
-+}
-+EXPORT_SYMBOL(pci_create_host_bridge);
-+
-+void pci_free_host_bridge(struct pci_host_bridge *host)
-+{
-+	device_unregister(&host->dev);
-+}
-+
- static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ drivers/pci/pcie/aer/aerdrv_errprint.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index c6849d9e86ce..167fe411ce2e 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -132,16 +132,8 @@ static const char *aer_agent_string[] = {
+ static void __print_tlp_header(struct pci_dev *dev,
+ 			       struct aer_header_log_regs *t)
  {
- 	while (bus->parent)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef57da1..20e9206 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -502,31 +502,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	return b;
+-	unsigned char *tlp = (unsigned char *)&t;
+-
+-	dev_err(&dev->dev, "  TLP Header:"
+-		" %02x%02x%02x%02x %02x%02x%02x%02x"
+-		" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+-		*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
+-		*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
+-		*(tlp + 11), *(tlp + 10), *(tlp + 9),
+-		*(tlp + 8), *(tlp + 15), *(tlp + 14),
+-		*(tlp + 13), *(tlp + 12));
++	dev_err(&dev->dev, "  TLP Header: %08x %08x %08x %08x\n",
++		t->dw0, t->dw1, t->dw2, t->dw3);
  }
  
--static void pci_release_host_bridge_dev(struct device *dev)
--{
--	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
--
--	if (bridge->release_fn)
--		bridge->release_fn(bridge);
--
--	pci_free_resource_list(&bridge->windows);
--
--	kfree(bridge);
--}
--
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
--{
--	struct pci_host_bridge *bridge;
--
--	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
--	if (!bridge)
--		return NULL;
--
--	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
--	return bridge;
--}
--
- static const unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCI_SPEED_66MHz_PCIX,		/* 1 */
-@@ -1889,54 +1864,41 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+static struct pci_bus *__pci_create_root_bus(
-+		struct pci_host_bridge *bridge, struct pci_ops *ops,
-+		void *sysdata)
- {
- 	int error;
--	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
--	struct resource_entry *window, *n;
-+	struct resource_entry *window;
-+	struct device *parent;
- 	struct resource *res;
- 	resource_size_t offset;
- 	char bus_addr[64];
- 	char *fmt;
--	u8	bus = PCI_BUSNUM(db);
- 
-+	parent = bridge->dev.parent;
- 	b = pci_alloc_bus(NULL);
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
--	b->number = b->busn_res.start = bus;
-+	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
--	b2 = pci_find_bus(pci_domain_nr(b), bus);
-+	b2 = pci_find_bus(pci_domain_nr(b), b->number);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
- 		goto err_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
--
--	bridge->domain = PCI_DOMAIN(db);
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
--	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	bridge->bus = b;
-+	b->bridge = get_device(&bridge->dev);
- 	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
-+	if (error)
- 		goto err_out;
--	}
- 
--	error = device_register(&bridge->dev);
--	if (error) {
--		put_device(&bridge->dev);
--		goto err_out;
--	}
--	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
- 
-@@ -1945,10 +1907,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- 
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
--	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-+	dev_set_name(&b->dev, "%04x:%02x", bridge->domain,
-+			b->number);
- 	error = device_register(&b->dev);
- 	if (error)
--		goto class_dev_reg_err;
-+		goto err_out;
- 
- 	pcibios_add_bus(b);
- 
-@@ -1961,12 +1924,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 
- 	/* Add initial resources to the bus */
--	resource_list_for_each_entry_safe(window, n, resources) {
--		list_move_tail(&window->node, &bridge->windows);
-+	resource_list_for_each_entry(window, &bridge->windows) {
- 		res = window->res;
- 		offset = window->offset;
- 		if (res->flags & IORESOURCE_BUS)
--			pci_bus_insert_busn_res(b, bus, res->end);
-+			pci_bus_insert_busn_res(b, b->number, res->end);
- 		else
- 			pci_bus_add_resource(b, res, 0);
- 		if (offset) {
-@@ -1988,14 +1950,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- 
- 	return b;
- 
--class_dev_reg_err:
--	put_device(&bridge->dev);
--	device_unregister(&bridge->dev);
- err_out:
- 	kfree(b);
- 	return NULL;
- }
- 
-+struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+{
-+	struct pci_host_bridge *host;
-+
-+	host = pci_create_host_bridge(parent, db, resources);
-+	if (!host)
-+		return NULL;
-+
-+	return __pci_create_root_bus(host, ops, sysdata);
-+}
-+
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2059,29 +2030,32 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
- 
--struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+static struct pci_bus *__pci_scan_root_bus(
-+		struct pci_host_bridge *host, struct pci_ops *ops,
-+		void *sysdata)
- {
- 	struct resource_entry *window;
- 	bool found = false;
- 	struct pci_bus *b;
- 	int max;
- 
--	resource_list_for_each_entry(window, resources)
-+	resource_list_for_each_entry(window, &host->windows)
- 		if (window->res->flags & IORESOURCE_BUS) {
- 			found = true;
- 			break;
- 		}
- 
--	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
--	if (!b)
-+	b = __pci_create_root_bus(host, ops, sysdata);
-+	if (!b) {
-+		pci_free_host_bridge(host);
- 		return NULL;
-+	}
- 
- 	if (!found) {
- 		dev_info(&b->dev,
- 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
--			PCI_BUSNUM(db));
--		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
-+			host->busnum);
-+		pci_bus_insert_busn_res(b, b->number, 255);
- 	}
- 
- 	max = pci_scan_child_bus(b);
-@@ -2091,6 +2065,18 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- 
- 	return b;
- }
-+
-+struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+{
-+	struct pci_host_bridge *host;
-+
-+	host = pci_create_host_bridge(parent, db, resources);
-+	if (!host)
-+		return NULL;
-+
-+	return __pci_scan_root_bus(host, ops, sysdata);
-+}
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
- struct pci_bus *pci_scan_bus_legacy(u32 db, struct pci_ops *ops,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index efd9917..13b6b25 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -402,6 +402,7 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 
- struct pci_host_bridge {
- 	u16	domain;
-+	u16 busnum;
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
-@@ -415,7 +416,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 		     void *release_data);
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
--
-+struct pci_host_bridge *pci_create_host_bridge(
-+		struct device *parent, u32 dombus, struct list_head *resources);
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
-@@ -774,6 +776,7 @@ struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysda
- struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+void pci_free_host_bridge(struct pci_host_bridge *host);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
+ static void __aer_print_error(struct pci_dev *dev,
 -- 
-1.7.1
+2.1.3
 
