@@ -1,88 +1,175 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54D8A446.3000008@linux.intel.com>
-Date: Mon, 09 Feb 2015 20:12:54 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [119.145.14.64] ([119.145.14.64]:23684 "EHLO
+	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753570AbbBZBck (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:40 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v3 00/30] Refine PCI scan interfaces and make generic pci host bridge
+Date: Thu, 26 Feb 2015 09:29:17 +0800
+Message-ID: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Stefan Bader <stefan.bader@canonical.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [Bugfix 0/3] Xen IRQ related hotfixes for v3.19
-References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com> <1369609199.20150205210757@eikelenboom.it> <54D8823F.9080900@canonical.com>
-In-Reply-To: <54D8823F.9080900@canonical.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/2/9 17:47, Stefan Bader wrote:
-> On 05.02.2015 21:07, Sander Eikelenboom wrote:
->>
->> Tuesday, January 20, 2015, 3:21:04 AM, you wrote:
->>
->>> Hi Thomas,
->>>         This patch set includes three hotfixes related Xen IRQ for v3.19.
->>> Sorry for the long delay to get these two regressions fixed, it really
->>> cost me some time to read and understand Xen IRQ code.
->>
->>> Patch 1 fixes the failure to register ACPI SCI interrupt on Xen
->>> domain0 by reworking acpi_gsi_to_irq(). I will backport it to v3.18
->>> too once it reaches the mainstream kernel.
->>
->>> Patch 2 fixes the regression in Xen PCI device passthrough(pciback).
->>> It's a temporary solution, I will send the formal fix for v3.20 and
->>> it has passed tests too.
->>
->>> Patch 3 fixes an issue found when reading code. There's no real bug
->>> reports related to this issue yet.
->>
->>> Great thanks to Konrad and Sander for testing fixes for these regressions.
->>
->>> Regards,
->>> Gerry
->>
->> Hi Gerry,
->>
->> Since these patches now are: tested, reviewed and have landed into mainline,
->> could you also provide the backports for 3.17 and 3.18 where required ?
-> 
-> This would be my attempt of backporting those to 3.18 (I have not tried whether
-> they would apply to 3.17 as well). Those seem to work when test-booting and
-> Sander said he will give them a try as well. But better check yourself I did not
-> mess anything up while backporting. One of the three patches seemed not to be
-> required at all.
-I'm backporting them too, but now I will give up my patches:)
+v2->v3:
+	Rebase this series on v4.0-rc1.
+v1->v2:
+	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
+	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
+	Arnd. Refresh some patch description log, and add a new patch to fix
+	build warning in ia64.
 
-The first one is a must, which should be applied to 3.17 and 3.18.
-The second one doesn't apply to 3.17 or 3.18.
-The third may be applied to v3.17 and v3.18, but it shouldn't be applied
-according to the stable-kernel doc because no user reports such a bug yet.
-Regards
-Gerry
-> 
-> -Stefan
-> 
->>
->> The number of people running into these (subtle) issues with these stable
->> kernels seems to be steadily increasing.
->>
->> --
->> Sander
->>
->>> Jiang Liu (3):
->>>   xen/pci: Kill function xen_setup_acpi_sci()
->>>   xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
->>>     cffe0a2b5a34
->>>   xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
->>
->>>  arch/x86/include/asm/acpi.h |    1 +
->>>  arch/x86/kernel/acpi/boot.c |   26 +++++++++++------------
->>>  arch/x86/pci/xen.c          |   49 ++-----------------------------------------
->>>  drivers/acpi/pci_irq.c      |    1 -
->>>  4 files changed, 16 insertions(+), 61 deletions(-)
->>
->>
-> 
+This series is based on Bjorn's pci-next branch.
+
+Patch 1-4 ripped out pci_bus_add_devices() from pci scan interfaces
+for better pci scan flow.
+
+Patch 5-11 make a generic pci_host_bridge to hold pci_host_bridge
+related informations, and introduce a pci_host_bridge_ops to 
+support platform host drivers provide its own pci_host_bridge 
+related operations to setup pci_host_bridge during pci enumeration.
+
+Patch 12-28 apply the new pci scan interfaces to platform pci host
+bridge drivers.
+
+Now in kernel, we scan pci bus use the following ways:
+1. pci_scan_bus. 
+	parent = NULL, default io/mem/bus resources
+	call pci_bus_add_devices()
+
+2. pci_scan_bus_parented() + pci_bus_add_devices()
+	default io/mem/bus resources, only used by xen
+
+3. pci_scan_root_bus() + pci_bus_add_devices()
+
+4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
+
+5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
+
+And we have a lot of arch specific pci_domain_nr() and other platform
+specific weak function like pcibios_root_bridge_prepare().
+
+After applied this series, we have following scan interfaces:
+
+1. pci_scan_bus_legacy() 
+	parent = NULL, default io/mem/bus resources.
+	for legacy pci scan
+
+2. pci_scan_root_bus()
+	for callers provide its own parent and io/mem/bus resources
+	but no platform specific pci_host_bridge operations
+
+3. pci_scan_root_bridge()
+	for callers provide its own parent and io/mem/bus resources
+	and pci_host_bridge_ops.
+
+Besides, above pci scan interfaces all need addtionally call pci_bus_add_devices()
+to set match_driver true and try to attach drivers.
+
+Also we could eliminate all arch specific pci_domain_nr() after applied this series.
+
+I tested this series on x86 (with or without ACPI).
+Comments and tests are warmly welcome!
+
+
+Arnd Bergmann (1):
+  xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+
+Yijing Wang (29):
+  PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+  PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+  PCI: Remove deprecated pci_scan_bus_parented()
+  PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
+  PCI: Combine PCI domain and bus number in u32 arg
+  PCI: Pass PCI domain number combined with root bus number
+  PCI: Introduce pci_host_assign_domain_nr() to assign domain
+  PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+  PCI: Introduce pci_host_bridge_list to manage host bridges
+  PCI: Save sysdata in pci_host_bridge drvdata
+  PCI: Introduce pci_host_bridge_ops to support host specific
+    operations
+  PCI: Introduce new scan function pci_scan_root_bridge()
+  PCI/x86: Refine pci_acpi_scan_root() with generic pci_host_bridge
+  PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
+  PCI/IA64: Fix the build warning about pci_domain_nr()
+  PCI/powerpc: Rename pcibios_root_bridge_prepare()
+  PCI/powerpc: Use pci_scan_root_bridge() for simplicity
+  PCI: Remove weak pcibios_root_bridge_prepare()
+  PCI/sparc: Use pci_scan_root_bridge() for simplicity
+  PCI: Introduce pci_bus_child_max_busnr()
+  PCI/Parisc: Use pci_scan_root_bus() for simplicity
+  PCI/mvebu: Use pci_common_init_dev() to simplify code
+  PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+  PCI/designware: Use pci_scan_root_bus() for simplicity
+  PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+  PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+  PCI: Export find_pci_host_bridge()
+  PCI: Remove platform specific pci_domain_nr()
+  PCI: Remove pci_bus_assign_domain_nr()
+
+ arch/alpha/include/asm/pci.h             |    2 -
+ arch/alpha/kernel/pci.c                  |    7 +-
+ arch/alpha/kernel/sys_nautilus.c         |    4 +-
+ arch/frv/mb93090-mb00/pci-vdk.c          |    6 +-
+ arch/ia64/include/asm/pci.h              |    1 -
+ arch/ia64/pci/pci.c                      |   34 +++---
+ arch/ia64/sn/kernel/io_acpi_init.c       |    6 +-
+ arch/ia64/sn/kernel/io_init.c            |    8 +-
+ arch/m68k/coldfire/pci.c                 |    3 +-
+ arch/microblaze/pci/pci-common.c         |   17 +--
+ arch/mips/include/asm/pci.h              |    2 -
+ arch/mips/pci/pci.c                      |    5 +-
+ arch/mn10300/unit-asb2305/pci.c          |    5 +-
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |   77 ++++++------
+ arch/powerpc/platforms/pseries/pci.c     |    8 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ arch/s390/pci/pci.c                      |   13 +--
+ arch/sh/drivers/pci/pci.c                |    6 +-
+ arch/sh/include/asm/pci.h                |    2 -
+ arch/sparc/kernel/leon_pci.c             |    1 +
+ arch/sparc/kernel/pci.c                  |   50 ++++----
+ arch/sparc/kernel/pcic.c                 |    4 +-
+ arch/tile/include/asm/pci.h              |    2 -
+ arch/tile/kernel/pci.c                   |    6 +-
+ arch/tile/kernel/pci_gx.c                |    7 +-
+ arch/unicore32/kernel/pci.c              |   13 +--
+ arch/x86/include/asm/pci.h               |    6 -
+ arch/x86/pci/acpi.c                      |   38 +++---
+ arch/x86/pci/common.c                    |    4 +-
+ arch/xtensa/kernel/pci.c                 |    2 +
+ drivers/parisc/dino.c                    |   11 +--
+ drivers/parisc/lba_pci.c                 |    7 +-
+ drivers/pci/host-bridge.c                |   90 ++++++++++++++-
+ drivers/pci/host/pci-mvebu.c             |   18 +---
+ drivers/pci/host/pci-tegra.c             |   16 ---
+ drivers/pci/host/pci-xgene.c             |    3 +-
+ drivers/pci/host/pcie-designware.c       |    4 +-
+ drivers/pci/hotplug/acpiphp_glue.c       |   29 +-----
+ drivers/pci/hotplug/ibmphp_core.c        |    6 +-
+ drivers/pci/pci.c                        |   42 ++++++-
+ drivers/pci/probe.c                      |  195 ++++++++++++------------------
+ drivers/pci/xen-pcifront.c               |   11 ++-
+ include/linux/pci.h                      |   47 +++++---
+ include/uapi/linux/pci.h                 |    3 +
+ 46 files changed, 423 insertions(+), 404 deletions(-)
+
