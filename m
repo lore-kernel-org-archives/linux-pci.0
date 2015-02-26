@@ -1,52 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:33343 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbbBEGgd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Feb 2015 01:36:33 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 5 Feb 2015 16:36:31 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 40B612CE8054
-	for <linux-pci@vger.kernel.org>; Thu,  5 Feb 2015 17:36:30 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t156aMDi51642370
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 17:36:30 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t156Zu4b014214
-	for <linux-pci@vger.kernel.org>; Thu, 5 Feb 2015 17:35:56 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH 3/3] remove the unused end in pnv_pci_vf_resource_shift()
-Date: Thu,  5 Feb 2015 14:34:25 +0800
-Message-Id: <1423118065-6250-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1423118065-6250-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150204234442.GC20072@google.com>
- <1423118065-6250-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:58191 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753725AbbBZPVs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 10:21:48 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linus Walleij <linus.walleij@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Joachim Nilsson <troglobit@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] pci-versatile.c: Update for API change in list_for_each_entry()
+Date: Thu, 26 Feb 2015 16:45:15 +0100
+Message-ID: <1908959.51iYpqoucA@vostro.rjw.lan>
+In-Reply-To: <CACRpkdbBsLQ_RSrDHBTZJVKoq33ySF9Eo4Bp9R=-Ak2ek-7GKA@mail.gmail.com>
+References: <5150533.nuGgOOyLIn@wuerfel> <CACRpkdbBsLQ_RSrDHBTZJVKoq33ySF9Eo4Bp9R=-Ak2ek-7GKA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thursday, February 26, 2015 08:41:37 AM Linus Walleij wrote:
+> On Wed, Feb 25, 2015 at 4:15 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> 
+> > From: Joachim Nilsson <troglobit@gmail.com>
+> >
+> > In Linux 4.0-rc1 ARM Versatile PCI build fails to build due to what
+> > appears to be an API update.  This patch is a very simple correction,
+> > merely posted as a heads-up to the maintainers.  Hopefully a better
+> > fix can be forwarded to Linus.
+> >
+> > [arnd: the patch actually looks correct, so let's take this version]
+> >
+> > Signed-off-by: Joachim Nilsson <troglobit@gmail.com>
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> >
+> > Joachim reported the bug, and I independently found the same problem.
+> > The patch he sent to the list did not apply for me for an unknown reason,
+> > but I fixed it up and forward it now to the right list of recipients.
+> 
+> Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 1776b36..f1fc7cf 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -854,7 +854,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 	struct pci_dn *pdn = pci_get_pdn(dev);
- 	int i;
- 	struct resource *res, res2;
--	resource_size_t size, end;
-+	resource_size_t size;
- 	u16 vf_num;
- 
- 	if (!dev->is_physfn)
+Do I need to take this one?  Bjorn?
+
+
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
