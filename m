@@ -1,81 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-tegra@vger.kernel.org>
-Subject: [PATCH v4 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-Date: Thu, 26 Feb 2015 16:12:18 +0800
-Message-ID: <1424938344-4017-25-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:38786 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbbBZGCn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 01:02:43 -0500
+Received: by iecrd18 with SMTP id rd18so11381477iec.5
+        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 22:02:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150226002833.GS6220@google.com>
+References: <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
+	<54D160B5.70006@nwtrail.com>
+	<CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
+	<54D6C6CB.6060904@nwtrail.com>
+	<CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com>
+	<54D7AE67.1090007@nwtrail.com>
+	<CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
+	<54DB7F39.8030306@nwtrail.com>
+	<CAErSpo6z1GmTkLQJDhBZxRU2wjCZiYsFBETi18vsYVNzOBi6VA@mail.gmail.com>
+	<54E67479.3020906@nwtrail.com>
+	<20150226002833.GS6220@google.com>
+Date: Wed, 25 Feb 2015 22:02:42 -0800
+Message-ID: <CAE9FiQXgX4iJSvgRaBq9Xk-0jWZHPmshU8dgWyqKsNOG1zgXJA@mail.gmail.com>
+Subject: Re: [problem] mpt2sas load fails with LSISAS2008
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Paul Johnson <pjay@nwtrail.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_scan_root_bus() is almost simliar to
-pci_create_root_bus() + pci_scan_child_bus().
-So we could use common pci_scan_root_bus() in
-pci_common_init_dev() to scan pci busses.
-tegra_pcie_scan_bus() is redundant, remove it.
+On Wed, Feb 25, 2015 at 4:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Feb 19, 2015 at 03:40:41PM -0800, Paul Johnson wrote:
+>
+> Right now, all I know is "mpt2sas worked in 3.4, it stopped working in
+> 3.4.1, and this patch fixes it."
+>
+> What I don't know is what changed in 3.4.1 to break it.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thierry Reding <thierry.reding@gmail.com>
-CC: linux-tegra@vger.kernel.org
----
- drivers/pci/host/pci-tegra.c |   16 ----------------
- 1 files changed, 0 insertions(+), 16 deletions(-)
+We enable auto detection to enable realloc automatically for SRIOV case.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 00e9272..10c0571 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -630,21 +630,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct tegra_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(pcie->dev, sys->busnr, &tegra_pcie_ops, sys,
--				  &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static irqreturn_t tegra_pcie_isr(int irq, void *arg)
- {
- 	const char *err_msg[] = {
-@@ -1831,7 +1816,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 	hw.private_data = (void **)&pcie;
- 	hw.setup = tegra_pcie_setup;
- 	hw.map_irq = tegra_pcie_map_irq;
--	hw.scan = tegra_pcie_scan_bus;
- 	hw.ops = &tegra_pcie_ops;
- 
- 	pci_common_init_dev(pcie->dev, &hw);
--- 
-1.7.1
+and after pci realloc pci bar for lsi get new assigned values.
 
+assume even 3.4 if passing pci=realloc will make lsi card stop working.
+
+Thanks
+
+Yinghai
