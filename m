@@ -1,44 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:38568 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756021AbbBGVMi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Feb 2015 16:12:38 -0500
-Received: by mail-qa0-f41.google.com with SMTP id i13so3101733qae.0
-        for <linux-pci@vger.kernel.org>; Sat, 07 Feb 2015 13:12:37 -0800 (PST)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:45870 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753498AbbBZBc2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:28 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Subject: [PATCH v3 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify code
+Date: Thu, 26 Feb 2015 09:29:40 +0800
+Message-ID: <1424914187-21027-24-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXsk3WK2K6nXrcFczY8oNhn=AiW--Ks7xT+0e_3Z-HHDg@mail.gmail.com>
-References: <1423011246-14429-1-git-send-email-yinghai@kernel.org>
- <CAErSpo6MV_obn_31J3zTSfR0ke7kNYdr0mxgyuMYstr5RJcQHA@mail.gmail.com> <CAE9FiQXsk3WK2K6nXrcFczY8oNhn=AiW--Ks7xT+0e_3Z-HHDg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 7 Feb 2015 15:12:16 -0600
-Message-ID: <CAErSpo7yiW0gOuHhvjuge84EG_eoyezLPSLT20x=fKxnu2RDDQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: disable auto realloc detection for lsi devices
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	pjay@nwtrail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Paul]
+Mvebu_pcie_scan_bus() is not necessary, we could use
+pci_common_init_dev() instead of pci_common_init(),
+and pass the device pointer as the parent. Then
+pci_scan_root_bus() will be called to scan the pci busses.
 
-On Sat, Feb 7, 2015 at 1:42 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Feb 7, 2015 at 6:14 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> The BIOS sets the BAR.  Why does the device work when the BIOS sets
->> the BAR but not when Linux does?
->
-> If you reset the firmware with disable/enable pcie link, the new BAR will
-> work.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Jason Cooper <jason@lakedaemon.net>
+---
+ drivers/pci/host/pci-mvebu.c |   18 +-----------------
+ 1 files changed, 1 insertions(+), 17 deletions(-)
 
-I remember experiments like that with changing the bus number on an
-LSI device (https://bugzilla.kernel.org/show_bug.cgi?id=84281,
-http://lkml.kernel.org/r/ghiol53r9u.fsf@lena.gouders.net).  Did you do
-similar experiments with link enable/disable when changing the BAR?
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 1309cfb..d5a2b70 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
+-static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
+-				  &mvebu_pcie_ops, sys, &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 						 const struct resource *res,
+ 						 resource_size_t start,
+@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.nr_controllers = 1;
+ 	hw.private_data   = (void **)&pcie;
+ 	hw.setup          = mvebu_pcie_setup;
+-	hw.scan           = mvebu_pcie_scan_bus;
+ 	hw.map_irq        = of_irq_parse_and_map_pci;
+ 	hw.ops            = &mvebu_pcie_ops;
+ 	hw.align_resource = mvebu_pcie_align_resource;
+ 
+-	pci_common_init(&hw);
++	pci_common_init_dev(&pcie->pdev->dev, &hw);
+ }
+ 
+ /*
+-- 
+1.7.1
 
-It sounds like you think it's standard practice for BIOSes to disable
-and re-enable the link after programming BARs?  I'm not confident
-about that because I don't think there's anything in the spec that
-would suggest that.
-
-Bjorn
