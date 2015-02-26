@@ -1,115 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:55148 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751193AbbBFU1o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Feb 2015 15:27:44 -0500
-Message-ID: <54D5238F.4030608@ti.com>
-Date: Fri, 6 Feb 2015 15:26:55 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Catalin Marinas <catalin.marinas@arm.com>
-CC: "linux-arm-kernel@lists.infradead.org"
+Received: from szxga03-in.huawei.com ([119.145.14.66]:45573 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752919AbbBZBeU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:34:20 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>
-Subject: Re: [PATCH v6 3/7] of: fix size when dma-range is not used
-References: <1423173179-10227-1-git-send-email-m-karicheri2@ti.com> <1423173179-10227-4-git-send-email-m-karicheri2@ti.com> <20150206143812.GB20549@localhost> <54D4D59F.6050408@ti.com> <20150206151210.GC23190@e104818-lin.cambridge.arm.com>
-In-Reply-To: <20150206151210.GC23190@e104818-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v3 18/30] PCI/powerpc: Use pci_scan_root_bridge() for simplicity
+Date: Thu, 26 Feb 2015 09:29:35 +0800
+Message-ID: <1424914187-21027-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/06/2015 10:12 AM, Catalin Marinas wrote:
-> On Fri, Feb 06, 2015 at 02:54:23PM +0000, Murali Karicheri wrote:
->> On 02/06/2015 09:38 AM, Catalin Marinas wrote:
->>> On Thu, Feb 05, 2015 at 09:52:55PM +0000, Murali Karicheri wrote:
->>>> Fix the dma-range size when the DT attribute is missing. i.e  set size to
->>>> dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask. Also add
->>>> code to check invalid values of size configured in DT and log error.
->>>>
->>>> Cc: Joerg Roedel<joro@8bytes.org>
->>>> Cc: Grant Likely<grant.likely@linaro.org>
->>>> Cc: Rob Herring<robh+dt@kernel.org>
->>>> Cc: Bjorn Helgaas<bhelgaas@google.com>
->>>> Cc: Will Deacon<will.deacon@arm.com>
->>>> Cc: Russell King<linux@arm.linux.org.uk>
->>>> Cc: Arnd Bergmann<arnd@arndb.de>
->>>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
->>>>
->>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>> ---
->>>>    drivers/of/device.c |   17 ++++++++++++++++-
->>>>    1 file changed, 16 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/of/device.c b/drivers/of/device.c
->>>> index 2de320d..314c8a9 100644
->>>> --- a/drivers/of/device.c
->>>> +++ b/drivers/of/device.c
->>>> @@ -105,9 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>>>    	ret = of_dma_get_range(np,&dma_addr,&paddr,&size);
->>>>    	if (ret<   0) {
->>>>    		dma_addr = offset = 0;
->>>> -		size = dev->coherent_dma_mask;
->>>> +		size = dev->coherent_dma_mask + 1;
->>>>    	} else {
->>>>    		offset = PFN_DOWN(paddr - dma_addr);
->>>> +
->>>> +		/*
->>>> +		 * Add a work around to treat the size as mask + 1 in case
->>>> +		 * it is defined in DT as a mask.
->>>> +		 */
->>>> +		if (size&   1) {
->>>> +			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
->>>> +				 size);
->>>> +			size = size + 1;
->>>> +		}
->>>> +
->>>> +		if (!size) {
->>>> +			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
->>>> +			return;
->>>> +		}
->>>
->>> Would it make sense to set coherent_dma_mask to 0 here to make this more
->>> noticeable? It can be done together with the mask calculation from size.
->>
->> I guess you are the following in the code.
->>
->> if (!size) {
->> 		dev->coherent_dma_mask = 0;
->> 		dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
->> 		return;
->> }
->>
->> Not sure how this is going to help and how this get handled by the
->> caller and subsequent logic. Probably it will cause probe to fail, with
->> some helpful error code.
->
-> Not sure how it will fail, maybe the driver figures out that DMA isn't
-> available and say something or switch to PIO. I guess you can leave it
-> as 32-bit mask by default for now even in case of size == 0.
->
-> BTW, since pci_device_add() already sets coherent_dma_mask, you could
-> add another check at the beginning of of_dma_configure():
->
-> 	if (!dev->coherent_dma_mask)
-> 		dev->coherent_dma_mask = DMA_BIT_MASK(32);
->
-> That's more of a nitpick as the values are both the same.
->
-Catalin,
+Now we could use pci_scan_root_bridge() to scan
+pci buses, provide powerpc specific pci_host_bridge_ops.
 
-Just posted a patch for size based dma mask with title "of: calculate 
-masks of the device based on dma-range size". Please review and comment
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |   63 +++++++++++++++++-------------
+ arch/powerpc/platforms/pseries/pci.c     |    8 ++--
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ 4 files changed, 42 insertions(+), 33 deletions(-)
 
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 8e7f2a8..b811d12 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
++	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
+ 
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 4401b6a..48a6cff 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -767,14 +767,33 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++static void pci_host_bridge_set_root_bus_speed(
++		struct pci_host_bridge *bridge)
+ {
+ 	if (ppc_md.pcibios_set_root_bus_speed)
+-		return ppc_md.pcibios_set_root_bus_speed(bridge);
+-	
+-	return 0;
++		ppc_md.pcibios_set_root_bus_speed(bridge);
+ }
+ 
++static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
++{
++	int mode = PCI_PROBE_NORMAL;
++	struct pci_bus *bus = host->bus;
++	struct pci_controller *hose = dev_get_drvdata(&host->dev);
++
++	/* Get probe mode and perform scan */
++	if (hose->dn && ppc_md.pci_probe_mode)
++		mode = ppc_md.pci_probe_mode(bus);
++
++	pr_debug("    probe mode: %d\n", mode);
++	if (mode == PCI_PROBE_DEVTREE)
++		of_scan_bus(hose->dn, bus);
++
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
++		hose->last_busno = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, hose->last_busno);
++	}
++}
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -1587,6 +1606,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ 	return of_node_get(hose->dn);
+ }
+ 
++static struct pci_host_bridge_ops phb_ops = {
++	.phb_set_root_bus_speed = pci_host_bridge_set_root_bus_speed,
++	.phb_of_scan_bus = pci_host_bridge_of_scan_bus,
++};
++
+ /**
+  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
+  * @hose: Pointer to the PCI host controller instance structure
+@@ -1594,9 +1618,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ void pcibios_scan_phb(struct pci_controller *hose)
+ {
+ 	LIST_HEAD(resources);
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host;
+ 	struct device_node *node = hose->dn;
+-	int mode;
+ 
+ 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
+ 
+@@ -1612,30 +1635,16 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	pci_add_resource(&resources, &hose->busn);
+ 
+ 	/* Create an empty bus for the toplevel */
+-	bus = pci_create_root_bus(hose->parent, 
++	host = pci_scan_root_bridge(hose->parent,
+ 			PCI_DOMBUS(hose->global_number, hose->first_busno),
+-			hose->ops, hose, &resources);
+-	if (bus == NULL) {
+-		pr_err("Failed to create bus for PCI domain %04x\n",
++			hose->ops, hose, &resources, &phb_ops);
++	if (host == NULL) {
++		pr_err("Failed to create host bridge for PCI domain %04x\n",
+ 			hose->global_number);
+ 		pci_free_resource_list(&resources);
+ 		return;
+ 	}
+-	hose->bus = bus;
+-
+-	/* Get probe mode and perform scan */
+-	mode = PCI_PROBE_NORMAL;
+-	if (node && ppc_md.pci_probe_mode)
+-		mode = ppc_md.pci_probe_mode(bus);
+-	pr_debug("    probe mode: %d\n", mode);
+-	if (mode == PCI_PROBE_DEVTREE)
+-		of_scan_bus(node, bus);
+-
+-	if (mode == PCI_PROBE_NORMAL) {
+-		pci_bus_update_busn_res_end(bus, 255);
+-		hose->last_busno = pci_scan_child_bus(bus);
+-		pci_bus_update_busn_res_end(bus, hose->last_busno);
+-	}
++	hose->bus = host->bus;
+ 
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+@@ -1644,9 +1653,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
+ 	/* Configure PCI Express settings */
+-	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node)
++		list_for_each_entry(child, &host->bus->children, node)
+ 			pcie_bus_configure_settings(child);
+ 	}
+ }
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index af685d6..89ff79c 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+@@ -121,7 +121,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 
+ 	dn = pcibios_get_phb_of_node(bus);
+ 	if (!dn)
+-		return 0;
++		return;
+ 
+ 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
+ 		rc = of_property_read_u32_array(pdn,
+@@ -135,7 +135,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 
+ 	if (rc) {
+ 		pr_debug("no ibm,pcie-link-speed-stats property\n");
+-		return 0;
++		return;
+ 	}
+ 
+ 	switch (pcie_link_speed_stats[0]) {
+@@ -168,5 +168,5 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 		break;
+ 	}
+ 
+-	return 0;
++	return;
+ }
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 5d0be3a..9aa9c13 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.1
+
