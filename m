@@ -1,62 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:40200 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965989AbbBCP3r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 10:29:47 -0500
-Received: by mail-qa0-f46.google.com with SMTP id j7so34263233qaq.5
-        for <linux-pci@vger.kernel.org>; Tue, 03 Feb 2015 07:29:47 -0800 (PST)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:45823 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197AbbBZBc1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:27 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-tegra@vger.kernel.org>
+Subject: [PATCH v3 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+Date: Thu, 26 Feb 2015 09:29:41 +0800
+Message-ID: <1424914187-21027-25-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1422923108.4625.2.camel@ellerman.id.au>
-References: <1422712065-9403-1-git-send-email-haokexin@gmail.com>
- <1422712065-9403-2-git-send-email-haokexin@gmail.com> <1422844101.11325.4.camel@ellerman.id.au>
- <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com> <1422923108.4625.2.camel@ellerman.id.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 3 Feb 2015 09:29:25 -0600
-Message-ID: <CAErSpo4Q8Oj3Yk6mFfZGmEfLGFdum9LJRumhT5yE4x0ctC3mGw@mail.gmail.com>
-Subject: Re: [PATCH 01/15] PCI: introduce pci_device_to_OF_node() for !CONFIG_OF
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Kevin Hao <haokexin@gmail.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 2, 2015 at 6:25 PM, Michael Ellerman <mpe@ellerman.id.au> wrote:
-> On Mon, 2015-02-02 at 09:47 -0600, Bjorn Helgaas wrote:
->> On Sun, Feb 1, 2015 at 8:28 PM, Michael Ellerman <mpe@ellerman.id.au> wrote:
->> > On Sat, 2015-01-31 at 21:47 +0800, Kevin Hao wrote:
->> >> So we can avoid the ugly #ifdef in some drivers.
->> >>
->> >> Signed-off-by: Kevin Hao <haokexin@gmail.com>
->> >> ---
->> >>  include/linux/pci.h | 2 ++
->> >>  1 file changed, 2 insertions(+)
->> >
->> >
->> > Hi Bjorn,
->> >
->> > Do you mind putting this into your next for 3.20? Or giving us an ACK for it if
->> > you prefer.
->>
->> I think it makes more sense to merge this along with the other 14
->> patches that remove the #ifdefs (at least, I assume that's what they
->> do; I haven't seen them).
->
-> Yeah that is what they do.
->
-> The problem with doing it that way is the rest of the patches are splattered
-> all across the tree, so getting them merged as a series will require a lot of
-> searching for acks.
->
-> If you merged this one for 3.20 we could then merge the rest of the series one
-> at a time as the respective maintainers get around to it during the 3.21 cycle.
->
-> I probably should have said all that in my original mail :)
->
-> Anyway it's not a big deal, but that's why it'd be nice if you could take it.
+Now pci_scan_root_bus() is almost simliar to
+pci_create_root_bus() + pci_scan_child_bus().
+So we could use common pci_scan_root_bus() in
+pci_common_init_dev() to scan pci busses.
+tegra_pcie_scan_bus() is redundant, remove it.
 
-OK, sure, I didn't get the hint that it would be preferable for me to
-take it.  I'll merge it for v3.20.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: linux-tegra@vger.kernel.org
+---
+ drivers/pci/host/pci-tegra.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 00e9272..10c0571 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -630,21 +630,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	return irq;
+ }
+ 
+-static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct tegra_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(pcie->dev, sys->busnr, &tegra_pcie_ops, sys,
+-				  &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+ {
+ 	const char *err_msg[] = {
+@@ -1831,7 +1816,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ 	hw.private_data = (void **)&pcie;
+ 	hw.setup = tegra_pcie_setup;
+ 	hw.map_irq = tegra_pcie_map_irq;
+-	hw.scan = tegra_pcie_scan_bus;
+ 	hw.ops = &tegra_pcie_ops;
+ 
+ 	pci_common_init_dev(pcie->dev, &hw);
+-- 
+1.7.1
+
