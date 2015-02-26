@@ -1,144 +1,305 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:50187 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbbBME4E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Feb 2015 23:56:04 -0500
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 13 Feb 2015 14:56:03 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1D44E2BB004D
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:56:00 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1D4tpU431588450
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:56:00 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1D4tQ8l027615
-	for <linux-pci@vger.kernel.org>; Fri, 13 Feb 2015 15:55:26 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-	cascardo@linux.vnet.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] PCI: Allow registering reset method
-Date: Fri, 13 Feb 2015 15:54:58 +1100
-Message-Id: <1423803299-22356-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1423803299-22356-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:47708 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083AbbBZITv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:19:51 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Richard Henderson <rth@twiddle.net>,
+	"Ivan Kokshaysky" <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	David Howells <dhowells@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	"Ralf Baechle" <ralf@linux-mips.org>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	"Chris Zankel" <chris@zankel.net>,
+	Max Filippov <jcmvbkbc@gmail.com>, <linux-mips@linux-mips.org>,
+	<linux-am33-list@redhat.com>, <linux-s390@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <sparclinux@vger.kernel.org>,
+	<linux-xtensa@linux-xtensa.org>
+Subject: [PATCH v4 02/30] PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+Date: Thu, 26 Feb 2015 16:11:56 +0800
+Message-ID: <1424938344-4017-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exposes function pci_dev_add_specific_reset() to allow
-registering PCI device specific reset methods.
+Just like pci_scan_bus(), we also should rip out
+pci_bus_add_devices() from pci_scan_root_bus().
+Lots platforms first call pci_scan_root_bus(), but
+after that, they call pci_bus_size_bridges() and
+pci_bus_assign_resources(). Place pci_bus_add_devices()
+in pci_scan_root_bus() hurts PCI scan logic.
+For arm hw_pci->scan() functions which call
+pci_scan_root_bus(), it's no need to change anything,
+because pci_bus_add_devices() will be called later
+in pci_common_init_dev().
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Richard Henderson <rth@twiddle.net>
+CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+CC: Matt Turner <mattst88@gmail.com>
+CC: David Howells <dhowells@redhat.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Michal Simek <monstr@monstr.eu>
+CC: Ralf Baechle <ralf@linux-mips.org>
+CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: Chris Metcalf <cmetcalf@ezchip.com>
+CC: Chris Zankel <chris@zankel.net>
+CC: Max Filippov <jcmvbkbc@gmail.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: linux-alpha@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+CC: linux-mips@linux-mips.org
+CC: linux-am33-list@redhat.com
+CC: linux-s390@vger.kernel.org
+CC: linux-sh@vger.kernel.org
+CC: sparclinux@vger.kernel.org
+CC: linux-xtensa@linux-xtensa.org
 ---
- drivers/pci/quirks.c | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |  9 ++++++++
- 2 files changed, 73 insertions(+)
+ arch/alpha/kernel/pci.c          |    2 ++
+ arch/frv/mb93090-mb00/pci-vdk.c  |    6 ++++--
+ arch/ia64/sn/kernel/io_init.c    |    1 +
+ arch/microblaze/pci/pci-common.c |    1 +
+ arch/mips/pci/pci.c              |    1 +
+ arch/mn10300/unit-asb2305/pci.c  |    5 ++++-
+ arch/s390/pci/pci.c              |    2 +-
+ arch/sh/drivers/pci/pci.c        |    1 +
+ arch/sparc/kernel/leon_pci.c     |    1 +
+ arch/tile/kernel/pci.c           |    2 ++
+ arch/tile/kernel/pci_gx.c        |    2 ++
+ arch/x86/pci/common.c            |    1 +
+ arch/xtensa/kernel/pci.c         |    2 ++
+ drivers/pci/probe.c              |    1 -
+ 14 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 37f4c5d..ef811ec 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3534,6 +3534,70 @@ static struct pci_dev_reset_method pci_dev_reset_methods[] = {
- 	}
- };
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 98a1525..518b767 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -338,6 +338,8 @@ common_init_pci(void)
  
-+static bool pci_dev_reset_match(struct pci_dev_reset_method *m,
-+				u16 vendor, u16 device,
-+				int (*reset)(struct pci_dev *, int))
-+{
-+	if (m->vendor != (u16)PCI_ANY_ID &&
-+	    vendor != (u16)PCI_ANY_ID &&
-+	    m->vendor != vendor)
-+		return false;
-+
-+	if (m->device != (u16)PCI_ANY_ID &&
-+	    device != (u16)PCI_ANY_ID &&
-+	    m->device != device)
-+		return false;
-+
-+	if (m->reset != reset)
-+		return false;
-+
-+	return true;
-+}
-+
-+int pci_dev_add_specific_reset(u16 vendor, u16 device,
-+			       int (*reset)(struct pci_dev *, int))
-+{
-+	struct pci_dev_reset_method *m, *method;
-+	int i;
-+
-+	/* Always expect valid handler */
-+	if (!reset)
-+		return -EINVAL;
-+
-+	method = kzalloc(sizeof(*method), GFP_KERNEL);
-+	if (!method)
-+		return -ENOMEM;
-+
-+	/* Check if we have conflicting method */
-+	mutex_lock(&pci_dev_reset_mutex);
-+	if (!pci_dev_reset_populated) {
-+		for (i = 0; i < ARRAY_SIZE(pci_dev_reset_methods); i++) {
-+			m = &pci_dev_reset_methods[i];
-+			if (pci_dev_reset_match(m, vendor, device, reset))
-+				goto found;
-+		}
-+	} else {
-+		list_for_each_entry(m, &pci_dev_reset_list, node) {
-+			if (pci_dev_reset_match(m, vendor, device, reset))
-+				goto found;
-+		}
-+	}
-+
-+	/* Populate it */
-+	method->vendor = vendor;
-+	method->device = device;
-+	method->reset  = reset;
-+	INIT_LIST_HEAD(&method->node);
-+	list_add_tail(&method->node, &pci_dev_reset_list);
-+	mutex_unlock(&pci_dev_reset_mutex);
-+	return 0;
-+found:
-+	mutex_unlock(&pci_dev_reset_mutex);
-+	kfree(method);
-+	return -EEXIST;
-+}
-+EXPORT_SYMBOL(pci_dev_add_specific_reset);
-+
- static void pci_dev_populate_reset(void)
- {
- 	struct pci_dev_reset_method *m;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..b98be1a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1605,6 +1605,8 @@ enum pci_fixup_pass {
+ 		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
+ 					hose, &resources);
++		if (bus)
++			pci_bus_add_devices(bus);
+ 		hose->bus = bus;
+ 		hose->need_domain_info = need_domain_info;
+ 		next_busno = bus->busn_res.end + 1;
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index b073f4d..4b63781 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -316,6 +316,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
  
- #ifdef CONFIG_PCI_QUIRKS
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
-+int pci_dev_add_specific_reset(u16 vendor, u16 device,
-+			       int (*reset)(struct pci_dev *, int));
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
- void pci_dev_specific_enable_acs(struct pci_dev *dev);
- #else
-@@ -1615,6 +1617,13 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ int __init pcibios_init(void)
  {
- 	return -ENOTTY;
++	struct pci_bus *bus;
+ 	struct pci_ops *dir = NULL;
+ 	LIST_HEAD(resources);
+ 
+@@ -383,12 +384,13 @@ int __init pcibios_init(void)
+ 	printk("PCI: Probing PCI hardware\n");
+ 	pci_add_resource(&resources, &pci_ioport_resource);
+ 	pci_add_resource(&resources, &pci_iomem_resource);
+-	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
++	bus = pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
+ 
+ 	pcibios_irq_init();
+ 	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
+-
++	if (bus)
++		pci_bus_add_devices(bus);
+ 	return 0;
  }
-+
-+int pci_dev_add_specific_reset(u16 vendor, u16 device,
-+			       int (*reset)(struct pci_dev *, int))
-+{
-+	return -ENOTTY;
-+}
-+
- static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) { }
- #endif
  
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 0b5ce82..63b43a6 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -272,6 +272,7 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 		kfree(res);
+ 		kfree(controller);
+ 	}
++	pci_bus_add_devices(bus);
+ }
+ 
+ /*
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 48528fb..d8bbad9 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1362,6 +1362,7 @@ static void pcibios_scan_phb(struct pci_controller *hose)
+ 	hose->bus = bus;
+ 
+ 	hose->last_busno = bus->busn_res.end;
++	pci_bus_add_devices(bus);
+ }
+ 
+ static int __init pcibios_init(void)
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 1bf60b1..9eb54b5 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -114,6 +114,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ 			pci_bus_size_bridges(bus);
+ 			pci_bus_assign_resources(bus);
+ 		}
++		pci_bus_add_devices(bus);
+ 	}
+ }
+ 
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 613ca1e..2a815c1 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -340,6 +340,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+  */
+ static int __init pcibios_init(void)
+ {
++	struct pci_bus *bus;
+ 	resource_size_t io_offset, mem_offset;
+ 	LIST_HEAD(resources);
+ 
+@@ -371,11 +372,13 @@ static int __init pcibios_init(void)
+ 
+ 	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
+ 	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
+-	pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
++	bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
+ 
+ 	pcibios_irq_init();
+ 	pcibios_fixup_irqs();
+ 	pcibios_resource_survey();
++	if (bus)
++		pci_bus_add_devices(bus);
+ 	return 0;
+ }
+ 
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 753a567..1534e5a 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -776,7 +776,7 @@ static int zpci_scan_bus(struct zpci_dev *zdev)
+ 		zpci_cleanup_bus_resources(zdev);
+ 		return -EIO;
+ 	}
+-
++	pci_bus_add_devices(zdev->bus);
+ 	zdev->bus->max_bus_speed = zdev->max_bus_speed;
+ 	return 0;
+ }
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index 1bc09ee..efc1051 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -69,6 +69,7 @@ static void pcibios_scanbus(struct pci_channel *hose)
+ 
+ 		pci_bus_size_bridges(bus);
+ 		pci_bus_assign_resources(bus);
++		pci_bus_add_devices(bus);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
+index 899b720..2971076 100644
+--- a/arch/sparc/kernel/leon_pci.c
++++ b/arch/sparc/kernel/leon_pci.c
+@@ -40,6 +40,7 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
+ 
+ 		/* Assign devices with resources */
+ 		pci_assign_unassigned_resources();
++		pci_bus_add_devices(root_bus);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 325df47..9475a74 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -339,6 +339,8 @@ int __init pcibios_init(void)
+ 			struct pci_bus *next_bus;
+ 			struct pci_dev *dev;
+ 
++			pci_bus_add_devices(root_bus);
++
+ 			list_for_each_entry(dev, &root_bus->devices, bus_list) {
+ 				/*
+ 				 * Find the PCI host controller, ie. the 1st
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index 2c95f37..d7a0729 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -916,6 +916,8 @@ int __init pcibios_init(void)
+ 		/* Configure the max_payload_size values for this domain. */
+ 		fixup_read_and_payload_sizes(controller);
+ 
++		pci_bus_add_devices(root_bus);
++
+ 		/* Alloc a PIO region for PCI memory access for each RC port. */
+ 		ret = gxio_trio_alloc_pio_regions(trio_context, 1, 0, 0);
+ 		if (ret < 0) {
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 3d2612b..0cbc723 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -491,6 +491,7 @@ void pcibios_scan_root(int busnum)
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+ 	}
++	pci_bus_add_devices(bus);
+ }
+ 
+ void __init pcibios_set_cache_line_size(void)
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 5b34033..f2ae64e 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -185,6 +185,8 @@ static int __init pcibios_init(void)
+ 		pci_controller_apertures(pci_ctrl, &resources);
+ 		bus = pci_scan_root_bus(NULL, pci_ctrl->first_busno,
+ 					pci_ctrl->ops, pci_ctrl, &resources);
++		if (bus)
++			pci_bus_add_devices(bus);
+ 		pci_ctrl->bus = bus;
+ 		pci_ctrl->last_busno = bus->busn_res.end;
+ 		if (next_busno <= pci_ctrl->last_busno)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 88604f2..8ef0375 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2087,7 +2087,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!found)
+ 		pci_bus_update_busn_res_end(b, max);
+ 
+-	pci_bus_add_devices(b);
+ 	return b;
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
 -- 
-1.8.3.2
+1.7.1
 
