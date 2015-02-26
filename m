@@ -1,149 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:54361 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756104AbbBGXeQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Feb 2015 18:34:16 -0500
-Received: by mail-ig0-f179.google.com with SMTP id l13so9871370iga.0
-        for <linux-pci@vger.kernel.org>; Sat, 07 Feb 2015 15:34:15 -0800 (PST)
+Received: from resqmta-po-12v.sys.comcast.net ([96.114.154.171]:36605 "EHLO
+	resqmta-po-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753005AbbBZBUh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:20:37 -0500
+Date: Thu, 26 Feb 2015 01:12:25 +0000 (UTC)
+From: Alnie <memobook80@comcast.net>
+To: linux-pci@vger.kernel.org
+Message-ID: <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net>
+In-Reply-To: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net>
+Subject: PCI Issues with ExpressCard/54 Audio Device
 MIME-Version: 1.0
-In-Reply-To: <54D160B5.70006@nwtrail.com>
-References: <54C81B4E.7060900@nwtrail.com>
-	<CAErSpo6P-gm1xFjLrbKBU+P3zUHY-RGMkhaVpWsK7vDz_wK=YQ@mail.gmail.com>
-	<54CBB062.4040801@nwtrail.com>
-	<CAE9FiQUxD8g4KG9CYe1znb5Lw5skkq=9QSOgkmGUDbhsaDq2Qw@mail.gmail.com>
-	<54CFBC0E.4080102@nwtrail.com>
-	<CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
-	<54D160B5.70006@nwtrail.com>
-Date: Sat, 7 Feb 2015 15:34:15 -0800
-Message-ID: <CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
-From: Yinghai Lu <yinghai@kernel.org>
-To: pjay@nwtrail.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7bd75846a81d7f050e87f9ec
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7bd75846a81d7f050e87f9ec
-Content-Type: text/plain; charset=UTF-8
+Hi, I am seeking feedback in regards to issues with a ExpressCard/54 audio card (http://www.notebookreview.com/notebookreview/creative-soundblaster-x-fi-xtreme-audio-for-notebook-review/) under Linux (same card has been working fine in Win 7). After recently having a conversation on alsa-devel about it, it was decided it seems to be a PCI issue. The "devices" in question....
 
-On Tue, Feb 3, 2015 at 3:58 PM, Paul Johnson <pjay@nwtrail.com> wrote:
-> On 02/02/2015 02:30 PM, Yinghai Lu wrote:
->>
-> This patch worked. In case you have a need, the dmesg is attached.
+05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI to PCIe Bridge (prog-if 00 [Normal decode])
+     Physical Slot: 3
+     Flags: bus master, fast devsel, latency 0
+     Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
+     Memory behind bridge: f4300000-f43fffff
+     Capabilities: [50] Power Management version 3
+     Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+     Capabilities: [80] Subsystem: Creative Labs Device 0040
+     Capabilities: [90] Express PCI-Express to PCI/PCI-X Bridge, MSI 00
+     Capabilities: [100] Advanced Error Reporting
 
-Please check two patches instead. You need to apply those two at the same time
-on current linus tree.
+06:00.0 Audio device: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
+     Subsystem: Creative Labs SB1040
+     Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ 19
+     Memory at f4300000 (32-bit, non-prefetchable) [size=16K]
+     Capabilities: [dc] Power Management version 3
+     Kernel driver in use: snd_hda_intel
 
-Thanks
 
-Yinghai
 
---047d7bd75846a81d7f050e87f9ec
-Content-Type: text/x-patch; charset=US-ASCII; name="not_touch_fixed_res_1.patch"
-Content-Disposition: attachment; filename="not_touch_fixed_res_1.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i5vn06xm1
+dmesg output... http://pastebin.com/66UE659K
 
-U3ViamVjdDogW1BBVENIXSBQQ0k6IGRvbid0IHJlbGVhc2UgZml4ZWQgcmVzb3VyY2UgZm9yIHBj
-aT1yZWFsbG9jCgpXZSBzaG91bGQgbm90IHJlbGVhc2UgYnJpZGdlIHJlc291cmNlIGlmIHRoZXJl
-IGlzIGZpeGVkIHJlc291cmNlcwp1bmRlciBpdCwgb3RoZXJ3aXNlIHRoZSBjaGlsZHJlbiB3aWxs
-IG5vdCB3b3JrIHdpdGggbmV3IGJyaWRnZQpyZXNvdXJjZXMuCgpSZXBvcnRlZC1ieTogUGF1bCBK
-b2huc29uIDxwamF5QG53dHJhaWwuY29tPgpTdWdnZXN0ZWQtYnk6IEJqb3JuIEhlbGdhYXMgPGJo
-ZWxnYWFzQGdvb2dsZS5jb20+CkJ1Z3ppbGxhOiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcv
-c2hvd19idWcuY2dpP2lkPTkyMzUxClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlA
-a2VybmVsLm9yZz4KQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcKCi0tLQogZHJpdmVycy9wY2kv
-c2V0dXAtYnVzLmMgfCAgICA2ICsrKystLQogaW5jbHVkZS9saW51eC9pb3BvcnQuaCAgfCAgICAy
-ICstCiBrZXJuZWwvcmVzb3VyY2UuYyAgICAgICB8ICAgMjggKysrKysrKysrKysrKysrKysrKysr
-KysrKystLQogMyBmaWxlcyBjaGFuZ2VkLCAzMSBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygt
-KQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
-LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2Ry
-aXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC0xMzg0LDE0ICsxMzg0LDE2IEBAIHN0YXRpYyB2b2lk
-IHBjaV9icmlkZ2VfcmVsZWFzZV9yZXNvdXJjZXMKIAogCXIgPSAmYl9yZXNbaWR4XTsKIAotCWlm
-ICghci0+cGFyZW50KQorCWlmICghci0+cGFyZW50IHx8IHItPmZsYWdzICYgSU9SRVNPVVJDRV9Q
-Q0lfRklYRUQpCiAJCXJldHVybjsKIAogCS8qCiAJICogaWYgdGhlcmUgYXJlIGNoaWxkcmVuIHVu
-ZGVyIHRoYXQsIHdlIHNob3VsZCByZWxlYXNlIHRoZW0KIAkgKiAgYWxsCiAJICovCi0JcmVsZWFz
-ZV9jaGlsZF9yZXNvdXJjZXMocik7CisJaWYgKCFyZWxlYXNlX2NoaWxkX3Jlc291cmNlcyhyKSk7
-CisJCXJldHVybjsKKwogCWlmICghcmVsZWFzZV9yZXNvdXJjZShyKSkgewogCQl0eXBlID0gb2xk
-X2ZsYWdzID0gci0+ZmxhZ3MgJiB0eXBlX21hc2s7CiAJCWRldl9wcmludGsoS0VSTl9ERUJVRywg
-JmRldi0+ZGV2LCAicmVzb3VyY2UgJWQgJXBSIHJlbGVhc2VkXG4iLApJbmRleDogbGludXgtMi42
-L2luY2x1ZGUvbGludXgvaW9wb3J0LmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvaW5j
-bHVkZS9saW51eC9pb3BvcnQuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvaW9wb3J0LmgK
-QEAgLTE0MSw3ICsxNDEsNyBAQCBleHRlcm4gc3RydWN0IHJlc291cmNlIGlvbWVtX3Jlc291cmNl
-OwogZXh0ZXJuIHN0cnVjdCByZXNvdXJjZSAqcmVxdWVzdF9yZXNvdXJjZV9jb25mbGljdChzdHJ1
-Y3QgcmVzb3VyY2UgKnJvb3QsIHN0cnVjdCByZXNvdXJjZSAqbmV3KTsKIGV4dGVybiBpbnQgcmVx
-dWVzdF9yZXNvdXJjZShzdHJ1Y3QgcmVzb3VyY2UgKnJvb3QsIHN0cnVjdCByZXNvdXJjZSAqbmV3
-KTsKIGV4dGVybiBpbnQgcmVsZWFzZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3VyY2UgKm5ldyk7Ci12
-b2lkIHJlbGVhc2VfY2hpbGRfcmVzb3VyY2VzKHN0cnVjdCByZXNvdXJjZSAqbmV3KTsKK2Jvb2wg
-cmVsZWFzZV9jaGlsZF9yZXNvdXJjZXMoc3RydWN0IHJlc291cmNlICpuZXcpOwogZXh0ZXJuIHZv
-aWQgcmVzZXJ2ZV9yZWdpb25fd2l0aF9zcGxpdChzdHJ1Y3QgcmVzb3VyY2UgKnJvb3QsCiAJCQkg
-ICAgIHJlc291cmNlX3NpemVfdCBzdGFydCwgcmVzb3VyY2Vfc2l6ZV90IGVuZCwKIAkJCSAgICAg
-Y29uc3QgY2hhciAqbmFtZSk7CkluZGV4OiBsaW51eC0yLjYva2VybmVsL3Jlc291cmNlLmMKPT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcva2VybmVsL3Jlc291cmNlLmMKKysrIGxpbnV4LTIu
-Ni9rZXJuZWwvcmVzb3VyY2UuYwpAQCAtMjc1LDExICsyNzUsMzUgQEAgc3RhdGljIHZvaWQgX19y
-ZWxlYXNlX2NoaWxkX3Jlc291cmNlcyhzdAogCX0KIH0KIAotdm9pZCByZWxlYXNlX2NoaWxkX3Jl
-c291cmNlcyhzdHJ1Y3QgcmVzb3VyY2UgKnIpCitzdGF0aWMgYm9vbCBfX2hhc19maXhlZF9jaGls
-ZF9yZXNvdXJjZXMoc3RydWN0IHJlc291cmNlICpyKQogeworCXN0cnVjdCByZXNvdXJjZSAqcDsK
-KworCXAgPSByLT5jaGlsZDsKKwl3aGlsZSAocCkgeworCQlpZiAocC0+ZmxhZ3MgJiBJT1JFU09V
-UkNFX1BDSV9GSVhFRCkKKwkJCXJldHVybiB0cnVlOworCisJCWlmIChfX2hhc19maXhlZF9jaGls
-ZF9yZXNvdXJjZXMocCkpCisJCQlyZXR1cm4gdHJ1ZTsKKworCQlwID0gcC0+c2libGluZzsKKwl9
-CisKKwlyZXR1cm4gZmFsc2U7Cit9CisKK2Jvb2wgcmVsZWFzZV9jaGlsZF9yZXNvdXJjZXMoc3Ry
-dWN0IHJlc291cmNlICpyKQoreworCWJvb2wgZml4ZWQ7CisKIAl3cml0ZV9sb2NrKCZyZXNvdXJj
-ZV9sb2NrKTsKLQlfX3JlbGVhc2VfY2hpbGRfcmVzb3VyY2VzKHIpOworCWZpeGVkID0gX19oYXNf
-Zml4ZWRfY2hpbGRfcmVzb3VyY2VzKHIpOworCWlmICghZml4ZWQpCisJCV9fcmVsZWFzZV9jaGls
-ZF9yZXNvdXJjZXMocik7CiAJd3JpdGVfdW5sb2NrKCZyZXNvdXJjZV9sb2NrKTsKKworCXJldHVy
-biAhZml4ZWQ7CiB9CiAKIC8qKgo=
---047d7bd75846a81d7f050e87f9ec
-Content-Type: text/x-patch; charset=US-ASCII; name="not_touch_fixed_res_2.patch"
-Content-Disposition: attachment; filename="not_touch_fixed_res_2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i5vn0kti2
+and comments in regard to it... http://mailman.alsa-project.org/pipermail/alsa-devel/2015-February/088237.html
+> 
+> [ 2619.199658] pciehp 0000:00:1c.3:pcie04: Card not present on Slot(3)
+> [ 2619.199666] pciehp 0000:00:1c.3:pcie04: slot(3): Link Down event
+> [ 2619.199674] pciehp 0000:00:1c.3:pcie04: Link Down event ignored on 
+> slot(3): already powering off
+> [ 2619.199911] pci_bus 0000:06: busn_res: [bus 06-0c] is released
+> [ 2620.757928] pciehp 0000:00:1c.3:pcie04: Card present on Slot(3)
+> [ 2620.767950] pciehp 0000:00:1c.3:pcie04: slot(3): Link Up event
+> [ 2620.767985] pciehp 0000:00:1c.3:pcie04: Link Up event ignored on 
+> slot(3): already powering on
 
-U3ViamVjdDogW1BBVENIXSBQQ0k6IHNldCByZXNvdXJjZSB0byBmaXhlZCBmb3IgbHNpIGRldmlj
-ZXMKCkxTSSBjYXJkcyBkbyBub3Qgd29yayBpZiBwY2kgY29yZSBjaGFuZ2UgcGNpIGJhciB2YXVs
-ZXMuCgpTZXQgdGhlaXIgcmVzb3VyY2UgdG8gZml4ZWQsIHNvIHdpbGwgYWxsb3cgcmVhbGxvYyB0
-byBza2lwIHRoZW0uCgpSZXBvcnRlZC1ieTogUGF1bCBKb2huc29uIDxwamF5QG53dHJhaWwuY29t
-PgpTdWdnZXN0ZWQtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+CkJ1Z3pp
-bGxhOiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTkyMzUxClNp
-Z25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KQ2M6IHN0YWJsZUB2
-Z2VyLmtlcm5lbC5vcmcKCi0tLQogZHJpdmVycy9wY2kvcGNpLmggICAgICAgfCAgICAxICsKIGRy
-aXZlcnMvcGNpL3F1aXJrcy5jICAgIHwgICAyMCArKysrKysrKysrKysrKysrKysrKwogZHJpdmVy
-cy9wY2kvc2V0dXAtYnVzLmMgfCAgICA0ICsrKysKIDMgZmlsZXMgY2hhbmdlZCwgMjUgaW5zZXJ0
-aW9ucygrKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2kuaAo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
-LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9wY2kuaAorKysgbGludXgtMi42L2RyaXZlcnMv
-cGNpL3BjaS5oCkBAIC0xNDcsNiArMTQ3LDcgQEAgc3RhdGljIGlubGluZSB2b2lkIHBjaV9tc2lf
-aW5pdF9wY2lfZGV2KAogI2VuZGlmCiAKIHZvaWQgcGNpX3JlYWxsb2NfZ2V0X29wdChjaGFyICop
-OworYm9vbCBwY2lfcmVhbGxvY191c2VyX2VuYWJsZWQodm9pZCk7CiAKIHN0YXRpYyBpbmxpbmUg
-aW50IHBjaV9ub19kMWQyKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CkluZGV4OiBsaW51eC0yLjYv
-ZHJpdmVycy9wY2kvcXVpcmtzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVy
-cy9wY2kvcXVpcmtzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9xdWlya3MuYwpAQCAtMzI0
-LDYgKzMyNCwyNiBAQCBzdGF0aWMgdm9pZCBxdWlya19zM182NE0oc3RydWN0IHBjaV9kZXYKIERF
-Q0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX1MzLAlQQ0lfREVWSUNFX0lEX1Mz
-Xzg2OCwJCXF1aXJrX3MzXzY0TSk7CiBERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRP
-Ul9JRF9TMywJUENJX0RFVklDRV9JRF9TM185NjgsCQlxdWlya19zM182NE0pOwogCisvKgorICog
-TFNJIGRldmljZXMgZmlybXdhcmUgZG9lcyBub3QgbGlrZSBCQVIgZ2V0IGNoYW5nZWQKKyAqLwor
-c3RhdGljIHZvaWQgcXVpcmtfYmFyX2ZpeGVkKHN0cnVjdCBwY2lfZGV2ICpkZXYpCit7CisJaW50
-IGk7CisKKwlpZiAocGNpX3JlYWxsb2NfdXNlcl9lbmFibGVkKCkpCisJCXJldHVybjsKKworCWZv
-ciAoaSA9IDA7IGkgPCBQQ0lfU1REX1JFU09VUkNFX0VORDsgaSsrKSB7CisJCXN0cnVjdCByZXNv
-dXJjZSAqciA9ICZkZXYtPnJlc291cmNlW2ldOworCisJCWlmICghci0+ZmxhZ3MgfHwgci0+Zmxh
-Z3MgJiBJT1JFU09VUkNFX1VOU0VUKQorCQkJY29udGludWU7CisJCXItPmZsYWdzIHw9IElPUkVT
-T1VSQ0VfUENJX0ZJWEVEOworCX0KK30KK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVO
-RE9SX0lEX0xTSV9MT0dJQywJUENJX0FOWV9JRCwJcXVpcmtfYmFyX2ZpeGVkKTsKKwogc3RhdGlj
-IHZvaWQgcXVpcmtfaW8oc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IHBvcywgdW5zaWduZWQgc2l6
-ZSwKIAkJICAgICBjb25zdCBjaGFyICpuYW1lKQogewpJbmRleDogbGludXgtMi42L2RyaXZlcnMv
-cGNpL3NldHVwLWJ1cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNp
-L3NldHVwLWJ1cy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTE1
-MjEsNiArMTUyMSwxMCBAQCB2b2lkIF9faW5pdCBwY2lfcmVhbGxvY19nZXRfb3B0KGNoYXIgKnN0
-CiAJZWxzZSBpZiAoIXN0cm5jbXAoc3RyLCAib24iLCAyKSkKIAkJcGNpX3JlYWxsb2NfZW5hYmxl
-ID0gdXNlcl9lbmFibGVkOwogfQorYm9vbCBwY2lfcmVhbGxvY191c2VyX2VuYWJsZWQodm9pZCkK
-K3sKKwlyZXR1cm4gcGNpX3JlYWxsb2NfZW5hYmxlID09IHVzZXJfZW5hYmxlZDsKK30KIHN0YXRp
-YyBib29sIHBjaV9yZWFsbG9jX2VuYWJsZWQoZW51bSBlbmFibGVfdHlwZSBlbmFibGUpCiB7CiAJ
-cmV0dXJuIGVuYWJsZSA+PSB1c2VyX2VuYWJsZWQ7Cg==
---047d7bd75846a81d7f050e87f9ec--
+pciehp reacted power off and on here, and...
+
+> [ 2620.876160] pci 0000:05:00.0: [1102:7006] type 01 class 0x060400
+> [ 2620.876426] pci 0000:05:00.0: supports D1 D2
+> [ 2620.876719] pci 0000:05:00.0: bridge configuration invalid ([bus 
+> 00-00]), reconfiguring
+> [ 2620.876928] pci_bus 0000:06: busn_res: can not insert [bus 06-ff] 
+> under [bus 05-0c] (conflicts with (null) [bus 05-0c])
+
+.... and something failed here for the PCI bridge device.
+
+> [ 2620.876967] pci 0000:06:00.0: [1102:0009] type 00 class 0x040300
+> [ 2620.877013] pci 0000:06:00.0: reg 0x10: [mem 0x00000000-0x00003fff]
+> [ 2620.877203] pci 0000:06:00.0: supports D1 D2
+> [ 2620.877443] pci 0000:05:00.0: PCI bridge to [bus 06-ff]
+> [ 2620.877462] pci 0000:05:00.0:   bridge window [io  0x0000-0x0fff]
+> [ 2620.877474] pci 0000:05:00.0:   bridge window [mem 0x00000000-0x000fffff]
+> [ 2620.877492] pci 0000:05:00.0:   bridge window [mem 
+> 0x00000000-0x000fffff 64bit pref]
+> [ 2620.877500] pci_bus 0000:06: busn_res: [bus 06-ff] end is updated to 06
+> [ 2620.877559] pci 0000:05:00.0: BAR 14: assigned [mem 
+> 0xf4300000-0xf43fffff]
+> [ 2620.877568] pci 0000:05:00.0: BAR 15: assigned [mem 
+> 0xf4000000-0xf40fffff 64bit pref]
+> [ 2620.877574] pci 0000:05:00.0: BAR 13: assigned [io  0x2000-0x2fff]
+> [ 2620.877582] pci 0000:06:00.0: BAR 0: assigned [mem 0xf4300000-0xf4303fff]
+> [ 2620.877595] pci 0000:05:00.0: PCI bridge to [bus 06]
+> [ 2620.877603] pci 0000:05:00.0:   bridge window [io  0x2000-0x2fff]
+> [ 2620.877618] pci 0000:05:00.0:   bridge window [mem 0xf4300000-0xf43fffff]
+> [ 2620.877630] pci 0000:05:00.0:   bridge window [mem 
+> 0xf4000000-0xf40fffff 64bit pref]
+> [ 2620.877647] pcieport 0000:00:1c.3: PCI bridge to [bus 05-0c]
+> [ 2620.877655] pcieport 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
+> [ 2620.877667] pcieport 0000:00:1c.3:   bridge window [mem 
+> 0xf4300000-0xf7efffff]
+> [ 2620.877677] pcieport 0000:00:1c.3:   bridge window [mem 
+> 0xf4000000-0xf40fffff 64bit pref]
+> [ 2620.877990] pci 0000:05:00.0: enabling device (0000 -> 0003)
+> [ 2620.878013] snd_hda_intel 0000:06:00.0: enabling device (0000 -> 0002)
+> [ 2620.882747] azx_single_wait_for_response: 108 callbacks suppressed
+> [ 2620.882753] snd_hda_intel 0000:06:00.0: Codec #1 probe error; 
+> disabling it...
+> [ 2620.887052] snd_hda_intel 0000:06:00.0: no AFG or MFG node found
+> [ 2620.887058] snd_hda_intel 0000:06:00.0: no codecs initialized
+
+
+
+I've tried many kernels from 2.6 to 3.18 with similar results. Willing to retrieve more info. Thank you :)
+
+-Alnie
