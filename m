@@ -1,67 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [119.145.14.64] ([119.145.14.64]:23646 "EHLO
+	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753564AbbBZBck (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:40 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v4 19/23] x86/PCI: Fix the range check for IO resources
-Date: Thu,  5 Feb 2015 13:44:45 +0800
-Message-Id: <1423115089-12904-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: [PATCH v3 03/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+Date: Thu, 26 Feb 2015 09:29:20 +0800
+Message-ID: <1424914187-21027-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The range check in setup_res() checks the IO range against
-iomem_resource. That's just wrong.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Reworked based on Thomas original patch.
+Use pci_scan_root_bus() instead of deprecated function
+pci_scan_bus_parented().
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: xen-devel@lists.xenproject.org
 ---
- arch/x86/pci/acpi.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/xen-pcifront.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index bb98afd0591e..1d725d99963d 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -283,7 +283,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 	struct acpi_resource_address64 addr;
- 	acpi_status status;
- 	unsigned long flags;
--	u64 start, orig_end, end;
-+	u64 start, orig_end, end, res_end;
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index b1ffebe..240ddbc 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -446,6 +446,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 				 unsigned int domain, unsigned int bus)
+ {
+ 	struct pci_bus *b;
++	LIST_HEAD(resources);
+ 	struct pcifront_sd *sd = NULL;
+ 	struct pci_bus_entry *bus_entry = NULL;
+ 	int err = 0;
+@@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
+ 	pcifront_init_sd(sd, domain, bus, pdev);
  
- 	status = resource_to_addr(acpi_res, &addr);
- 	if (!ACPI_SUCCESS(status))
-@@ -293,8 +293,10 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 		flags = IORESOURCE_MEM;
- 		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
- 			flags |= IORESOURCE_PREFETCH;
-+		res_end = (u64)iomem_resource.end;
- 	} else if (addr.resource_type == ACPI_IO_RANGE) {
- 		flags = IORESOURCE_IO;
-+		res_end = (u64)ioport_resource.end;
- 	} else
- 		return AE_OK;
+ 	pci_lock_rescan_remove();
  
-@@ -302,7 +304,7 @@ static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
- 	orig_end = end = addr.address.maximum + addr.address.translation_offset;
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++				  &pcifront_bus_ops, sd, &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+ 		err = -ENOMEM;
+ 		pci_unlock_rescan_remove();
++		pci_free_resource_list(&resources);
+ 		goto err_out;
+ 	}
  
- 	/* Exclude non-addressable range or non-addressable portion of range */
--	end = min(end, (u64)iomem_resource.end);
-+	end = min(end, res_end);
- 	if (end <= start) {
- 		dev_info(&info->bridge->dev,
- 			"host bridge window [%#llx-%#llx] "
+@@ -488,7 +492,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	list_add(&bus_entry->list, &pdev->root_buses);
+ 
+-	/* pci_scan_bus_parented skips devices which do not have a have
++	/* pci_scan_root_bus skips devices which do not have a have
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+ 	err = pcifront_scan_bus(pdev, domain, bus, b);
+ 
 -- 
-1.7.10.4
+1.7.1
 
