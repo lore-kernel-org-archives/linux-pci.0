@@ -1,51 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58659 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbbBXI03 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:26:29 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Tue, 24 Feb 2015 18:26:27 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 50ED22BB0047
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 19:26:23 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1O8QEhb22937650
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 19:26:23 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1O8Pnvc002616
-	for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 19:25:49 +1100
-Message-ID: <1424766317.12891.32.camel@au1.ibm.com>
-Subject: Re: [PATCH V11 08/17] powrepc/pci: Refactor pci_dn
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 24 Feb 2015 19:25:17 +1100
-In-Reply-To: <20150224081330.GE6220@google.com>
-References: <20150113180502.GC2776@google.com>
-	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <1421288887-7765-9-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <20150220231917.GC21131@google.com> <20150223001349.GA7522@shangw>
-	 <20150224081330.GE6220@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:35341 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932355AbbBZXfL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 18:35:11 -0500
+Received: by iecrl12 with SMTP id rl12so22911455iec.2
+        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 15:35:10 -0800 (PST)
+Date: Thu, 26 Feb 2015 17:35:07 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Joachim Nilsson <troglobit@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] pci-versatile.c: Update for API change in
+ list_for_each_entry()
+Message-ID: <20150226233507.GD25765@google.com>
+References: <5150533.nuGgOOyLIn@wuerfel>
+ <CACRpkdbBsLQ_RSrDHBTZJVKoq33ySF9Eo4Bp9R=-Ak2ek-7GKA@mail.gmail.com>
+ <1908959.51iYpqoucA@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1908959.51iYpqoucA@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-02-24 at 02:13 -0600, Bjorn Helgaas wrote:
+On Thu, Feb 26, 2015 at 04:45:15PM +0100, Rafael J. Wysocki wrote:
+> On Thursday, February 26, 2015 08:41:37 AM Linus Walleij wrote:
+> > On Wed, Feb 25, 2015 at 4:15 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > 
+> > > From: Joachim Nilsson <troglobit@gmail.com>
+> > >
+> > > In Linux 4.0-rc1 ARM Versatile PCI build fails to build due to what
+> > > appears to be an API update.  This patch is a very simple correction,
+> > > merely posted as a heads-up to the maintainers.  Hopefully a better
+> > > fix can be forwarded to Linus.
+> > >
+> > > [arnd: the patch actually looks correct, so let's take this version]
+> > >
+> > > Signed-off-by: Joachim Nilsson <troglobit@gmail.com>
+> > > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > > ---
+> > >
+> > > Joachim reported the bug, and I independently found the same problem.
+> > > The patch he sent to the list did not apply for me for an unknown reason,
+> > > but I fixed it up and forward it now to the right list of recipients.
+> > 
+> > Acked-by: Linus Walleij <linus.walleij@linaro.org>
 > 
-> Ah, yes, now I see the problem.  I don't really like having to export
-> pci_iov_virtfn_bus() and pci_iov_virtfn_devfn(), but it's probably not
-> worth the hassle of changing it, and I think adding more pcibios
-> interfaces
-> would be even worse.
+> Do I need to take this one?  Bjorn?
 
-Aren't we going to eventually turn them all into host bridge ops ? :-)
+Yeah, if you don't mind, why don't you take it, Rafael.  I think it was
+introduced by 872912352c5b ("Merge tag 'pm+acpi-3.20-rc1' of
+git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm").  I don't
+really understand that commit, but it looks like this part of it is the
+problem:
 
-Cheers,
-Ben.
+  -       list_for_each_entry(win, res, list) {
+  ++      resource_list_for_each_entry(win, res, list) {
 
+If you do, would you mind updating the subject line and adding these acks?
 
+  PCI: versatile: Update for list_for_each_entry() API change
+
+  Acked-by: Linus Walleij <linus.walleij@linaro.org>
+  Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Bjorn
