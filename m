@@ -1,66 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Feb 2015 17:36:03 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Graf <agraf@suse.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3] PCI/sysfs: off by two when checking the limit on
- driver_override length
-Message-ID: <20150224233603.GN6220@google.com>
-References: <1423089495-5647-1-git-send-email-sasha.levin@oracle.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [119.145.14.65] ([119.145.14.65]:5123 "EHLO
+	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753475AbbBZIQ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:16:27 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH v4 25/30] PCI/designware: Use pci_scan_root_bus() for simplicity
+Date: Thu, 26 Feb 2015 16:12:19 +0800
+Message-ID: <1424938344-4017-26-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423089495-5647-1-git-send-email-sasha.levin@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 04, 2015 at 05:38:15PM -0500, Sasha Levin wrote:
-> When printing the driver_override parameter when it is 4095 and 4094 bytes
-> long the printing code would access invalid memory because we need count+1
-> bytes for printing.
-> 
-> Cc: <stable@vger.kernel.org> # v3.16+
-> Fixes: 782a985d ("PCI: Introduce new device binding path using pci_dev.driver_override")
-> Cc: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Alexander Graf <agraf@suse.de>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+Use pci_scan_root_bus() instead of pci_create_root_bus() +
+pci_scan_child_bus() for simplicity.
 
-Applied with Alex's ack to for-linus for v4.0, thanks!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pcie-designware.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-> ---
->  drivers/pci/pci-sysfs.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index aa012fb..312f23a 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -521,7 +521,8 @@ static ssize_t driver_override_store(struct device *dev,
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  	char *driver_override, *old = pdev->driver_override, *cp;
->  
-> -	if (count > PATH_MAX)
-> +	/* We need to keep extra room for a newline */
-> +	if (count >= (PAGE_SIZE - 1))
->  		return -EINVAL;
->  
->  	driver_override = kstrndup(buf, count, GFP_KERNEL);
-> @@ -549,7 +550,7 @@ static ssize_t driver_override_show(struct device *dev,
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  
-> -	return sprintf(buf, "%s\n", pdev->driver_override);
-> +	return snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
->  }
->  static DEVICE_ATTR_RW(driver_override);
->  
-> -- 
-> 1.7.10.4
-> 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1f4ea6f..658b46b 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -728,13 +728,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	struct pcie_port *pp = sys_to_pcie(sys);
+ 
+ 	pp->root_bus_nr = sys->busnr;
+-	bus = pci_create_root_bus(pp->dev, sys->busnr,
++	bus = pci_scan_root_bus(pp->dev, sys->busnr,
+ 				  &dw_pcie_ops, sys, &sys->resources);
+ 	if (!bus)
+ 		return NULL;
+ 
+-	pci_scan_child_bus(bus);
+-
+ 	if (bus && pp->ops->scan_bus)
+ 		pp->ops->scan_bus(pp);
+ 
+-- 
+1.7.1
+
