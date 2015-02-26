@@ -1,118 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:40806 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932635AbbBBQW1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 11:22:27 -0500
-Received: by mail-qa0-f44.google.com with SMTP id w8so29778687qac.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 08:22:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <54CFA29B.9000200@arm.com>
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com>
- <54C8FE61.1030304@linux.intel.com> <54C8FFE0.3030007@arm.com>
- <CAErSpo6jOs+MBpAjDxkeVp5AqU1Ln+_-k8Xgb2eqPm3Lv6Udzw@mail.gmail.com> <54CFA29B.9000200@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Feb 2015 10:22:06 -0600
-Message-ID: <CAErSpo7+Wv0vEQdhMYVMnzTGm15+m7YZ6usVfcbKtC66AMGZ4A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from [119.145.14.64] ([119.145.14.64]:23682 "EHLO
+	szxga01-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753568AbbBZBck (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:40 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v3 05/30] PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
+Date: Thu, 26 Feb 2015 09:29:22 +0800
+Message-ID: <1424914187-21027-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 2, 2015 at 10:15 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On 28/01/15 15:43, Bjorn Helgaas wrote:
->> On Wed, Jan 28, 2015 at 9:27 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->>> Hi Gerry,
->>>
->>> On 28/01/15 15:21, Jiang Liu wrote:
->>>>
->>>>
->>>> On 2015/1/28 22:51, Marc Zyngier wrote:
->>>>> pcibios_update_irq writes an irq number into the config space
->>>>> of a given PCI device, but ignores the fact that this number
->>>>> is a virtual interrupt number, which might be a very different
->>>>> value from what the underlying hardware is using.
->>>>>
->>>>> The obvious fix is to fetch the HW interrupt number from the
->>>>> corresponding irq_data structure. This is slightly complicated
->>>>> by the fact that this interrupt might be services by a stacked
->>>>> domain.
->>>>>
->>>>> This has been tested on KVM with kvmtool.
->>>>>
->>>>> Reported-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>> Tested-by: Andre Przywara <andre.przywara@arm.com>
->>>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>>>> ---
->>>>>  drivers/pci/setup-irq.c | 12 ++++++++++--
->>>>>  1 file changed, 10 insertions(+), 2 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
->>>>> index 4e2d595..828cbc9 100644
->>>>> --- a/drivers/pci/setup-irq.c
->>>>> +++ b/drivers/pci/setup-irq.c
->>>>> @@ -15,11 +15,19 @@
->>>>>  #include <linux/errno.h>
->>>>>  #include <linux/ioport.h>
->>>>>  #include <linux/cache.h>
->>>>> +#include <linux/irq.h>
->>>>>
->>>>>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->>>>>  {
->>>>> -    dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
->>>>> -    pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->>>>> +    struct irq_data *d;
->>>>> +
->>>>> +    d = irq_get_irq_data(irq);
->>>>> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
->>>>> +    while (d->parent_data)
->>>>> +            d = d->parent_data;
->>>>> +#endif
->>>>> +    dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
->>>>> +    pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
->>>>>  }
->>>> Hi Mark,
->>>>       Instead of modifying the common version, how about
->>>> implementing an arch specific version? Arch may have different
->>>> way to determine the irq number. Above implementation doesn't
->>>> work with x86, for example.
->>>
->>> If you look at the Makefile, this file is used on:
->>>
->>> obj-$(CONFIG_ALPHA) += setup-irq.o
->>> obj-$(CONFIG_ARM) += setup-irq.o
->>> obj-$(CONFIG_UNICORE32) += setup-irq.o
->>> obj-$(CONFIG_SUPERH) += setup-irq.o
->>> obj-$(CONFIG_MIPS) += setup-irq.o
->>> obj-$(CONFIG_TILE) += setup-irq.o
->>> obj-$(CONFIG_SPARC_LEON) += setup-irq.o
->>> obj-$(CONFIG_M68K) += setup-irq.o
->>>
->>> x86 doesn't use that at all.
->>
->> Since you're looking at this, Marc, do you see a nice way to get rid
->> of these arch dependencies in the Makefile and unify this a bit?  We
->> still have this pci_fixup_irqs() ugliness -- it's not really
->> arch-specific at all, but it's called from arch code, and it uses
->> for_each_pci_dev(), which obviously only works for things present at
->> boot and not for things hot-added later.
->
-> I can have a look at this in the next cycle - I'm a bit strapped for
-> time just now.
->
-> As for for_each_pci_dev(), I'm not completely clear about what it should
-> be replaced for. Do we have some form of notifier for this?
+Pci_scan_bus() is called by legacy pci host drivers,
+the legacy host drivers mean they use NULL as parent
+device, use all IO/MEM as default resources. Rename
+pci_scan_bus() to pci_scan_bus_legacy() for better
+readability.
 
-I think this should be done somewhere in the enumeration path, e.g.,
-maybe in pci_device_add().  Then we shouldn't need a
-for_each_pci_dev() loop or a notifier at all.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/alpha/kernel/sys_nautilus.c  |    2 +-
+ arch/m68k/coldfire/pci.c          |    2 +-
+ arch/sparc/kernel/pcic.c          |    2 +-
+ arch/unicore32/kernel/pci.c       |    2 +-
+ drivers/pci/hotplug/ibmphp_core.c |    2 +-
+ drivers/pci/probe.c               |    4 ++--
+ include/linux/pci.h               |    2 +-
+ 7 files changed, 8 insertions(+), 8 deletions(-)
 
-Bjorn
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 4ae4a40..2c864bb 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -206,7 +206,7 @@ nautilus_init_pci(void)
+ 	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
+ 
+ 	/* Scan our single hose.  */
+-	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
++	bus = pci_scan_bus_legacy(0, alpha_mv.pci_ops, hose);
+ 	hose->bus = bus;
+ 	pcibios_claim_one_bus(bus);
+ 
+diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+index d45f087..0ef4dd4 100644
+--- a/arch/m68k/coldfire/pci.c
++++ b/arch/m68k/coldfire/pci.c
+@@ -312,7 +312,7 @@ static int __init mcf_pci_init(void)
+ 	set_current_state(TASK_UNINTERRUPTIBLE);
+ 	schedule_timeout(msecs_to_jiffies(200));
+ 
+-	rootbus = pci_scan_bus(0, &mcf_pci_ops, NULL);
++	rootbus = pci_scan_bus_legacy(0, &mcf_pci_ops, NULL);
+ 	rootbus->resource[0] = &mcf_pci_io;
+ 	rootbus->resource[1] = &mcf_pci_mem;
+ 
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index 7a82fe2..f7edc97 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -390,7 +390,7 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+ {
+ 	struct linux_pbm_info *pbm = &pcic->pbm;
+ 
+-	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
++	pbm->pci_bus = pci_scan_bus_legacy(pbm->pci_first_busno, &pcic_ops, pbm);
+ 	if (pbm->pci_bus)
+ 		pci_bus_add_devices(pbm->pci_bus);
+ #if 0 /* deadwood transplanted from sparc64 */
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 3d82024..2e238b4 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -258,7 +258,7 @@ static int __init pci_common_init(void)
+ 
+ 	pci_puv3_preinit();
+ 
+-	puv3_bus = pci_scan_bus(0, &pci_puv3_ops, NULL);
++	puv3_bus = pci_scan_bus_legacy(0, &pci_puv3_ops, NULL);
+ 
+ 	if (!puv3_bus)
+ 		panic("PCI: unable to scan bus!");
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 86e3bfd..4ade1b4 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -765,7 +765,7 @@ static u8 bus_structure_fixup(u8 busno)
+ 					(l != 0x0000) && (l != 0xffff)) {
+ 			debug("%s - Inside bus_structure_fixup()\n",
+ 							__func__);
+-			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			b = pci_scan_bus_legacy(busno, ibmphp_pci_bus->ops, NULL);
+ 			if (b)
+ 				pci_bus_add_devices(b);
+ 			break;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 699a238..ccab9b1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2091,7 +2091,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
++struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
+ 					void *sysdata)
+ {
+ 	LIST_HEAD(resources);
+@@ -2108,7 +2108,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 	}
+ 	return b;
+ }
+-EXPORT_SYMBOL(pci_scan_bus);
++EXPORT_SYMBOL(pci_scan_bus_legacy);
+ 
+ /**
+  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 36effb8..6dffc57 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -769,7 +769,7 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
++struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+-- 
+1.7.1
+
