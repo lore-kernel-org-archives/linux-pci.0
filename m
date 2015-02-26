@@ -1,137 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:48280 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933111AbbBITPe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 14:15:34 -0500
-Date: Mon, 9 Feb 2015 20:15:27 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1703934611.20150209201527@eikelenboom.it>
-To: Stefan Bader <stefan.bader@canonical.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Tony Luck <tony.luck@intel.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [Bugfix 0/3] Xen IRQ related hotfixes for v3.19
-In-Reply-To: <54D8DBC8.3020502@canonical.com>
-References: <1421720467-7709-1-git-send-email-jiang.liu@linux.intel.com> <1369609199.20150205210757@eikelenboom.it> <54D8823F.9080900@canonical.com> <54D8A446.3000008@linux.intel.com> <54D8A83B.60307@canonical.com> <54D8DBC8.3020502@canonical.com>
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:53600 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597AbbBZP75 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 10:59:57 -0500
+Received: by mail-qg0-f45.google.com with SMTP id h3so9275685qgf.4
+        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 07:59:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXgX4iJSvgRaBq9Xk-0jWZHPmshU8dgWyqKsNOG1zgXJA@mail.gmail.com>
+References: <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
+ <54D160B5.70006@nwtrail.com> <CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
+ <54D6C6CB.6060904@nwtrail.com> <CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com>
+ <54D7AE67.1090007@nwtrail.com> <CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
+ <54DB7F39.8030306@nwtrail.com> <CAErSpo6z1GmTkLQJDhBZxRU2wjCZiYsFBETi18vsYVNzOBi6VA@mail.gmail.com>
+ <54E67479.3020906@nwtrail.com> <20150226002833.GS6220@google.com> <CAE9FiQXgX4iJSvgRaBq9Xk-0jWZHPmshU8dgWyqKsNOG1zgXJA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 26 Feb 2015 07:59:36 -0800
+Message-ID: <CAErSpo5a2GnYH01U0OyA0G4Z7yyzqE8Dxt1TKXygifXY0zF_qQ@mail.gmail.com>
+Subject: Re: [problem] mpt2sas load fails with LSISAS2008
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Paul Johnson <pjay@nwtrail.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Feb 25, 2015 at 10:02 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Feb 25, 2015 at 4:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Feb 19, 2015 at 03:40:41PM -0800, Paul Johnson wrote:
+>>
+>> Right now, all I know is "mpt2sas worked in 3.4, it stopped working in
+>> 3.4.1, and this patch fixes it."
+>>
+>> What I don't know is what changed in 3.4.1 to break it.
+>
+> We enable auto detection to enable realloc automatically for SRIOV case.
+>
+> and after pci realloc pci bar for lsi get new assigned values.
+>
+> assume even 3.4 if passing pci=realloc will make lsi card stop working.
 
-Monday, February 9, 2015, 5:09:44 PM, you wrote:
+Can you be any more specific?  What I'm looking for is:
 
-> On 09.02.2015 13:29, Stefan Bader wrote:
->> On 09.02.2015 13:12, Jiang Liu wrote:
->>> On 2015/2/9 17:47, Stefan Bader wrote:
->>>> On 05.02.2015 21:07, Sander Eikelenboom wrote:
->>>>>
->>>>> Tuesday, January 20, 2015, 3:21:04 AM, you wrote:
->>>>>
->>>>>> Hi Thomas,
->>>>>>         This patch set includes three hotfixes related Xen IRQ for v3.19.
->>>>>> Sorry for the long delay to get these two regressions fixed, it really
->>>>>> cost me some time to read and understand Xen IRQ code.
->>>>>
->>>>>> Patch 1 fixes the failure to register ACPI SCI interrupt on Xen
->>>>>> domain0 by reworking acpi_gsi_to_irq(). I will backport it to v3.18
->>>>>> too once it reaches the mainstream kernel.
->>>>>
->>>>>> Patch 2 fixes the regression in Xen PCI device passthrough(pciback).
->>>>>> It's a temporary solution, I will send the formal fix for v3.20 and
->>>>>> it has passed tests too.
->>>>>
->>>>>> Patch 3 fixes an issue found when reading code. There's no real bug
->>>>>> reports related to this issue yet.
->>>>>
->>>>>> Great thanks to Konrad and Sander for testing fixes for these regressions.
->>>>>
->>>>>> Regards,
->>>>>> Gerry
->>>>>
->>>>> Hi Gerry,
->>>>>
->>>>> Since these patches now are: tested, reviewed and have landed into mainline,
->>>>> could you also provide the backports for 3.17 and 3.18 where required ?
->>>>
->>>> This would be my attempt of backporting those to 3.18 (I have not tried whether
->>>> they would apply to 3.17 as well). Those seem to work when test-booting and
->>>> Sander said he will give them a try as well. But better check yourself I did not
->>>> mess anything up while backporting. One of the three patches seemed not to be
->>>> required at all.
->>> I'm backporting them too, but now I will give up my patches:)
->>>
->>> The first one is a must, which should be applied to 3.17 and 3.18.
->>> The second one doesn't apply to 3.17 or 3.18.
->>> The third may be applied to v3.17 and v3.18, but it shouldn't be applied
->>> according to the stable-kernel doc because no user reports such a bug yet.
->> 
->> Hm, ok. So maybe I should retry with only patch#1 and verify that alone gets
->> around the acpi irq and the usb problems, too. Though interestingly from the
->> history, the acpi irq I saw in 3.17 while the usb devices started to fail with
->> 3.18. I will let you know in a bit. Just want to finish another bisect first.
+  - this worked at commit X
+  - commit Y broke it
+  - commit Z fixes it
 
-> So it looks like patch #1 indeed does fix both the acpi irq and my usb devices.
-> Sander, do you want to verify that variant, too?
+That way we can connect the dots so people backporting patches know
+that if they backport Y, they should also backport Z along with it.
+And we can get warm fuzzies by double-checking that the 3.4 kernel
+Paul is running does not have Y but 3.4.1 does.
 
-Hi Stefan / Gerry,
+Workaround info, e.g., "if you have commit Y but not Z, 'pci=XXX' is a
+workaround", would also be useful for the changelog.
 
-Just tested with only patch 1, ended up the same .. the reported issues seem 
-gone.
+It would also be nice to know why Linux trips over this but not
+Windows, e.g., "Windows doesn't see this because it doesn't allocate
+more space for SR-IOV" or whatever.
 
-
-> The only odd thing left in a 3.18 with the fix (regardless of using patch #1
-> only or patches #1 and #3) is that the ahci driver shows up with its pci bus
-> number in /proc/interrupts. But that does not seem to have any relevant downside
-> (cannot try 3.19 on that box right now for other reasons).
-
-> -Stefan
-
-> ...
-> # 57: 12441  0    0    0  xen-pirq-msi       0000:00:1f.2
-> #                                            (used to be ahci)
-
-This is also there on baremetal with 3.19 on intel, so not xen related:
- 27:       1868        582       1282        555  IR-PCI-MSI-edge      0000:00:1f.2
-
---
-Sander
-
->> 
->> -Stefan
->> 
->>> Regards
->>> Gerry
->>>>
->>>> -Stefan
->>>>
->>>>>
->>>>> The number of people running into these (subtle) issues with these stable
->>>>> kernels seems to be steadily increasing.
->>>>>
->>>>> --
->>>>> Sander
->>>>>
->>>>>> Jiang Liu (3):
->>>>>>   xen/pci: Kill function xen_setup_acpi_sci()
->>>>>>   xen/irq, ACPI: Fix regression in xen PCI passthrough caused by
->>>>>>     cffe0a2b5a34
->>>>>>   xen/irq: Override ACPI IRQ management callback __acpi_unregister_gsi
->>>>>
->>>>>>  arch/x86/include/asm/acpi.h |    1 +
->>>>>>  arch/x86/kernel/acpi/boot.c |   26 +++++++++++------------
->>>>>>  arch/x86/pci/xen.c          |   49 ++-----------------------------------------
->>>>>>  drivers/acpi/pci_irq.c      |    1 -
->>>>>>  4 files changed, 16 insertions(+), 61 deletions(-)
->>>>>
->>>>>
->>>>
->> 
->> 
-
-
-
+Bjorn
