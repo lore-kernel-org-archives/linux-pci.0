@@ -1,105 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:40720 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740AbbBBSI0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 13:08:26 -0500
-Message-ID: <54CFBD11.3010004@arm.com>
-Date: Mon, 02 Feb 2015 18:08:17 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from [119.145.14.65] ([119.145.14.65]:5288 "EHLO
+	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753672AbbBZIQa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:16:30 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <20150202163344.GF8656@n2100.arm.linux.org.uk>
-In-Reply-To: <20150202163344.GF8656@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset=windows-1252
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v4 30/30] PCI: Remove pci_bus_assign_domain_nr()
+Date: Thu, 26 Feb 2015 16:12:24 +0800
+Message-ID: <1424938344-4017-31-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Russell,
+Now we save the domain number in pci_host_bridge,
+we could remove pci_bus_assign_domain_nr() and
+clean the domain member in pci_bus.
 
-On 02/02/15 16:33, Russell King - ARM Linux wrote:
-> On Wed, Jan 28, 2015 at 02:51:23PM +0000, Marc Zyngier wrote:
->>  void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->>  {
->> -	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
->> -	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->> +	struct irq_data *d;
->> +
->> +	d = irq_get_irq_data(irq);
->> +#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
->> +	while (d->parent_data)
->> +		d = d->parent_data;
->> +#endif
->> +	dev_dbg(&dev->dev, "assigning IRQ %02ld\n", d->hwirq);
->> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, d->hwirq);
-> 
-> I'm really not convinced about this being the correct thing to do.
-> 
-> Let's take an older ARM system, such as a Footbridge based system with a
-> PCI southbridge.
-> 
-> Such a system has IRQs 0-15 as the PCI southbridge ISA interrupts.  Then
-> there are four PCI interrupts provided by the on-board Footbridge.
-> 
-> Right now, PCI devices are programmed with the OS specific interrupt
-> number - eg:
-> 
-> 00:06.1 IDE interface: Contaq Microsystems 82c693 (prog-if 80 [Master])
->         Flags: medium devsel, IRQ 14
-> 30: 00 00 00 00 00 00 00 00 00 00 00 00 0e 01 00 00
-> 
-> 00:06.2 IDE interface: Contaq Microsystems 82c693 (prog-if 00 [])
->         Flags: medium devsel, IRQ 15
-> 30: 00 00 00 00 00 00 00 00 00 00 00 00 0f 02 00 00
-> 
-> 00:06.3 USB Controller: Contaq Microsystems 82c693 (prog-if 10 [OHCI])
->         Flags: medium devsel, IRQ 12
-> 30: 00 00 00 00 00 00 00 00 00 00 00 00 0c 01 00 00
-> 
-> 00:07.0 Mass storage controller: Integrated Technology Express, Inc. IT/ITE8212
-> Dual channel ATA RAID controller (rev 13)
->         Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 24
-> 30: 00 00 02 04 80 00 00 00 00 00 00 00 18 01 08 08
-> 
-> 00:08.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado] (rev 74)
->         Flags: bus master, medium devsel, latency 32, IRQ 22
-> 30: 00 00 06 04 dc 00 00 00 00 00 00 00 16 01 0a 0a
-> 
-> 00:09.0 VGA compatible controller: S3 Inc. 86c775/86c785 [Trio 64V2/DX or /GX] (rev 16) (prog-if 00 [VGA controller])
->         Flags: medium devsel, IRQ 21
-> 30: 00 00 00 0c 00 00 00 00 00 00 00 00 15 01 00 00
-> 
-> What your change would mean is that the IRQs currently being programmed
->> = 16 would be programmed into with numbers with 16 removed from them.
-> This means that legacy stuff (eg on the Southbridge which really do signal
-> via the ISA IRQ controller) end up using the same number range as those
-> which take PCI specific IRQs.
-> 
-> This surely is not sane.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c   |    5 -----
+ drivers/pci/probe.c |   12 ++++--------
+ include/linux/pci.h |    3 ---
+ 3 files changed, 4 insertions(+), 16 deletions(-)
 
-I suppose this is ebsa285? I must confess I don't see how to distinguish
-the two cases (the GIC case uses a purely virtual number, and the
-footbridge case uses something that seems to be physical).
-
-A very easy fix would be to entirely contain this change within #ifdef
-CONFIG_IRQ_DOMAIN_HIERARCHY/#endif, but that doesn't fill me with
-confidence.
-
-What I don't get is how the hwirq field is set in this case. It probably
-isn't very useful (as there is no domain lookup), so I would have hoped
-to see irq == hwirq. Obviously, this is not the case. What am I missing?
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 51ada13..287cf43 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4579,11 +4579,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ {
+ 	host->domain = pci_assign_domain_nr(host->dev.parent);
+ }
+-
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+-{
+-	bus->domain_nr = pci_assign_domain_nr(parent);
+-}
+ #endif
+ #endif
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2e5997a..e6f03cf 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
++static struct pci_bus *pci_alloc_bus(void)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -495,10 +495,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	if (parent)
+-		b->domain_nr = parent->domain_nr;
+-#endif
++
+ 	return b;
+ }
+ 
+@@ -645,7 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus(parent);
++	child = pci_alloc_bus();
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1865,14 +1862,13 @@ static struct pci_bus *pci_create_root_bus(
+ 	char *fmt;
+ 
+ 	parent = bridge->dev.parent;
+-	b = pci_alloc_bus(NULL);
++	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bridge->busnum;
+-	pci_bus_assign_domain_nr(b, parent);
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 68c09da..8d82340 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -470,9 +470,6 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	int		domain_nr;
+-#endif
+ 
+ 	char		name[48];
+ 
 -- 
-Jazz is not dead. It just smells funny...
+1.7.1
+
