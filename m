@@ -1,52 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57910 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932069AbbBLDhE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Feb 2015 22:37:04 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:45433 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752874AbbBZBcQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:32:16 -0500
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	jiang.liu@linux.intel.com
-Subject: Re: [PATCH] drivers: of: pci: remove duplicate kfree in of_pci_get_host_bridge_resources
-Date: Thu, 12 Feb 2015 05:00:09 +0100
-Message-ID: <7358500.qEktYExvcf@vostro.rjw.lan>
-In-Reply-To: <20150211225057.GA16317@google.com>
-References: <1423630715-23568-1-git-send-email-lorenzo.pieralisi@arm.com> <20150211225057.GA16317@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"Fenghua Yu" <fenghua.yu@intel.com>
+Subject: [PATCH v3 15/30] PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Thu, 26 Feb 2015 09:29:32 +0800
+Message-ID: <1424914187-21027-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
+References: <1424914187-21027-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 11, 2015 04:50:57 PM Bjorn Helgaas wrote:
-> On Wed, Feb 11, 2015 at 04:58:35AM +0000, Lorenzo Pieralisi wrote:
-> > Commit d2be00c0fb5a ("of/pci: Free resources on failure in
-> > of_pci_get_host_bridge_resources()") fixed the error code path in
-> > of_pci_get_host_bridge_resources() by adding code that runs through the
-> > resources list to free all resources in it and then calls kfree on the
-> > bus_range resource pointer to complete the memory deallocation.
-> > Since the bus_range resource is added to the resources list through
-> > pci_add_resource, the resource_list_for_each_entry loop in the error
-> > exit path frees it already and freeing it anew could trigger a double
-> > free, hence this patch removes the superfluos kfree call on the bus_range
-> > resource.
-> > 
-> > Fixes: d2be00c0fb5a ("of/pci: Free resources on failure in of_pci_get_host_bridge_resources()")
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Reported-by: Jiang Liu <jiang.liu@linux.intel.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> 
-> I applied this to for-linus, and will ask Linus to put it in before
-> v3.20-rc1, thanks!
-> 
-> Rafael, I applied d2be00c0fb5a, where the bug originally came from, but I
-> see that you fixed it with 5c493df25a0d and the fix got lost because of an
-> incorrect merge resolution.  So if you'd rather take this, just let me
-> know.
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-That really should go through your tree I think.  I attempted to fix it, but
-failed to do that correctly, so effectively that doesn't count ...
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Fenghua Yu <fenghua.yu@intel.com>
+CC: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
+ 1 files changed, 18 insertions(+), 16 deletions(-)
 
-Rafael
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index e4cda61..dc5354d 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
+ }
+ 
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *controller = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops phb_ops = {
++	.phb_prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
++	struct pci_host_bridge *host;
+ 	int ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
+-			&pci_root_ops, controller, &info->resources);
+-	if (!pbus) {
++	host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, bus),
++			&pci_root_ops, controller, &info->resources, &phb_ops);
++	if (!host) {
+ 		pci_free_resource_list(&info->resources);
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
+-			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
+-}
+-
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_controller *controller = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	return 0;
++	pci_set_host_bridge_release(host, release_pci_root_info, info);
++	return host->bus;
+ }
+ 
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
+-- 
+1.7.1
 
