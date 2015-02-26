@@ -1,66 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:40779 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755448AbbBCLho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Feb 2015 06:37:44 -0500
-Message-ID: <54D0B2FA.9080600@arm.com>
-Date: Tue, 03 Feb 2015 11:37:30 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
+Received: from [119.145.14.65] ([119.145.14.65]:5204 "EHLO
+	szxga02-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668AbbBZIQ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:16:29 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andre Przywara <Andre.Przywara@arm.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] PCI: Fix pcibios_update_irq misuse of irq number
-References: <1422456683-797-1-git-send-email-marc.zyngier@arm.com> <4145359.V8A0ARGtXz@wuerfel> <54D0A521.7030405@arm.com> <4324891.mqG6Yyfi6J@wuerfel>
-In-Reply-To: <4324891.mqG6Yyfi6J@wuerfel>
-Content-Type: text/plain; charset=windows-1252
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v4 28/30] PCI: Export find_pci_host_bridge()
+Date: Thu, 26 Feb 2015 16:12:22 +0800
+Message-ID: <1424938344-4017-29-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/02/15 11:31, Arnd Bergmann wrote:
-> On Tuesday 03 February 2015 10:38:25 Marc Zyngier wrote:
->>
->> That's exactly what I thought until Lorenzo reported kvmtool falling
->> over because of this write. Obviously, some platforms must actually
->> require this (possibly for bridges that are not known by the firmware).
-> 
-> This sounds much like a bug in kvmtool.
+Export find_pci_host_bridge().
 
-Lorenzo and I just came to a similar conclusion, given that the HW
-should never use that information.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    2 +-
+ include/linux/pci.h       |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
->> Entirely removing that code solves my problem too, but that'd cannot be
->> the right solution...
-> 
-> The comment in pdev_fixup_irq() says 
-> 
->         /* Always tell the device, so the driver knows what is
->            the real IRQ to use; the device does not use it. */
-> 
-> which I read to mean that there are drivers that incorrectly use
-> 'pci_read_config_byte(dev, PCI_INTERRUPT_LINE)' as the number
-> they pass into request_irq, rather than using dev->irq.
-> However, this means that your patch is actually wrong, because
-> what the driver cares about is the virtual irq number (which
-> request_irq expects), not the number relative to some interrupt
-> controller.
-
-Yes, I now realise that. That makes a lot more sense actually, because I
-was getting very confused about how the HW should interpret that number.
-
-Side question: In the probe-only case, should we still allow this write
-to happen?
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 4a2baa2..51e24f8 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -104,7 +104,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ 	return bus;
+ }
+ 
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ {
+ 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2f29e95..6ac7926 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -426,6 +426,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, u32 dombus, struct list_head *resources, 
+ 		void *sysdata, struct pci_host_bridge_ops *ops);
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus* bus);
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
 -- 
-Jazz is not dead. It just smells funny...
+1.7.1
+
