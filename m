@@ -1,58 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:37842 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752885AbbBZBXP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:23:15 -0500
-Received: by mail-ig0-f173.google.com with SMTP id a13so40603729igq.0
-        for <linux-pci@vger.kernel.org>; Wed, 25 Feb 2015 17:23:15 -0800 (PST)
-Date: Wed, 25 Feb 2015 19:23:12 -0600
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:46742 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753643AbbBZX5h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 18:57:37 -0500
+Received: by iecvy18 with SMTP id vy18so22983166iec.13
+        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 15:57:37 -0800 (PST)
+Date: Thu, 26 Feb 2015 17:57:32 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Phong Tran <tranmanphong@gmail.com>
-Cc: tinamdar@apm.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: Re: [PATCH] PCI: xgene: Fix the map_bus callback prototype
-Message-ID: <20150226012312.GV6220@google.com>
-References: <1424686899-7869-1-git-send-email-tranmanphong@gmail.com>
- <20150226011824.GU6220@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4 00/30] Refine PCI scan interfaces and make generic pci
+ host bridge
+Message-ID: <20150226235732.GF25765@google.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150226011824.GU6220@google.com>
+In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 25, 2015 at 07:18:24PM -0600, Bjorn Helgaas wrote:
-> [+cc Fabio]
-> 
-> On Mon, Feb 23, 2015 at 05:21:39PM +0700, Phong Tran wrote:
-> > The return value should be void __iomem *.
-> > Tested by compile only.
-> > 
-> > Signed-off-by: Phong Tran <tranmanphong@gmail.com>
-> 
-> I've already applied an identical patch from Fabio Estevam.  I added
-> Arnd's ack to it and also mentioned you in the credits, Phong.
+On Thu, Feb 26, 2015 at 04:11:54PM +0800, Yijing Wang wrote:
+> v3->v4:
+> 	Fix the rebase issue.
 
-Dropped in favor of a more complete fix:
-https://patchwork.ozlabs.org/patch/440759/
+This did apply on v4.0-rc1, but with many whitespace complaints:
 
-> > ---
-> >  drivers/pci/host/pci-xgene.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> > index aab5547..9c3bfd8 100644
-> > --- a/drivers/pci/host/pci-xgene.c
-> > +++ b/drivers/pci/host/pci-xgene.c
-> > @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
-> >  	return false;
-> >  }
-> >  
-> > -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> > +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> >  			      int offset)
-> >  {
-> >  	struct xgene_pcie_port *port = bus->sysdata;
-> > -- 
-> > 2.1.0
-> > 
+  Importing patch "pci-pass-pci-domain-number" ... <stdin>:29: trailing whitespace.
+	  bus = pci_scan_root_bus(NULL, 
+  <stdin>:44: trailing whitespace.
+      bus = pci_scan_bus_legacy(PCI_DOMBUS(hose->index, 0), 
+  <stdin>:59: trailing whitespace.
+      pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
+  <stdin>:74: trailing whitespace.
+      bus = pci_scan_root_bus(NULL, 
+  <stdin>:75: trailing whitespace.
+	      PCI_DOMBUS(controller->segment, busnum), 
+  warning: squelched 15 whitespace errors
+  warning: 20 lines add whitespace errors.
+  done
+  Importing patch "pci-introduce" ... done
+  Importing patch "pci-separate-pci_host_bridge" ... <stdin>:50: trailing whitespace.
+      dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
+  <stdin>:181: trailing whitespace.
+      dev_set_name(&b->dev, "%04x:%02x", bridge->domain, 
+  <stdin>:225: trailing whitespace.
+      
+  warning: 3 lines add whitespace errors.
+
+I'll fix them myself this time because I want to make progress on this and
+I need something to do on the plane tomorrow, but please try to fix them
+yourself in the future.
+
+Bjorn
