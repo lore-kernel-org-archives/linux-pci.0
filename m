@@ -1,83 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0143.outbound.protection.outlook.com ([157.56.111.143]:50616
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753944AbbBJWuV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Feb 2015 17:50:21 -0500
-From: Jake Oshins <jakeo@microsoft.com>
-To: Rajat Jain <rajatjain@juniper.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Stu Grossman <grossman@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: 64bit BARs: prefetchable only?
-Date: Tue, 10 Feb 2015 22:34:34 +0000
-Message-ID: <DM2PR0301MB1232770672AC080E235E1E23AB240@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <DM2PR05MB9756702E07AE2E167262448B4270@DM2PR05MB975.namprd05.prod.outlook.com>
- <DM2PR0301MB1232EA3736CC5ABCB800F51FAB270@DM2PR0301MB1232.namprd03.prod.outlook.com>
- <DM2PR05MB975B1F75453CE8874D3D9FDB4240@DM2PR05MB975.namprd05.prod.outlook.com>
-In-Reply-To: <DM2PR05MB975B1F75453CE8874D3D9FDB4240@DM2PR05MB975.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from [119.145.14.66] ([119.145.14.66]:12190 "EHLO
+	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbbBZBBx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Feb 2015 20:01:53 -0500
+Message-ID: <54EE704D.5060401@huawei.com>
+Date: Thu, 26 Feb 2015 09:01:01 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	Scott Murray <scott@spiteful.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<kernel-janitors@vger.kernel.org>
+Subject: Re: [patch] PCI: cpcihp: missing curly braces in cpci_configure_slot()
+References: <20150225132322.GJ19745@mwanda>
+In-Reply-To: <20150225132322.GJ19745@mwanda>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Rajat Jain [mailto:rajatjain@juniper.net]
-> Sent: Tuesday, February 10, 2015 1:52 PM
-> To: Jake Oshins; linux-pci@vger.kernel.org
-> Cc: Stu Grossman; Guenter Roeck
-> Subject: RE: 64bit BARs: prefetchable only?
+On 2015/2/25 21:23, Dan Carpenter wrote:
+> I don't have this hardware but it looks like we weren't adding bridge
+> devices as intended.  Maybe the bridge is always the last device?
 > 
-> > , and the concept of prefetchable
-> > doesn't apply to Express.  Bridges aren't allowed to buffer reads with
-> > Express, and so nothing is actually prefetched.
+> Fixes: 05b125004815 ('PCI: cpcihp: Iterate over all devices in slot, not functions 0-7')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> Can you please point me to the section in the PCI Express spec that mandates
-> this? The only reference I could find in the spec to this was in an
-> "implementation note" below:
+> diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+> index 7d48eca..788db48 100644
+> --- a/drivers/pci/hotplug/cpci_hotplug_pci.c
+> +++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+> @@ -286,11 +286,12 @@ int cpci_configure_slot(struct slot *slot)
+>  	}
+>  	parent = slot->dev->bus;
+>  
+> -	list_for_each_entry(dev, &parent->devices, bus_list)
+> +	list_for_each_entry(dev, &parent->devices, bus_list) {
+>  		if (PCI_SLOT(dev->devfn) != PCI_SLOT(slot->devfn))
+>  			continue;
+>  		if (pci_is_bridge(dev))
+>  			pci_hp_add_bridge(dev);
+> +	}
+>  
+
+Good fix.
+
+Acked-by: Yijing Wang <wangyijing@huawei.com>
+
+Thanks!
+Yijing.
+
+>  
+>  	pci_assign_unassigned_bridge_resources(parent->self);
 > 
-> ================================================================
-> ========
-> "Implementation Note: Additional Guidance on the Prefetchable Bit in Memory
-> Space BARs"
-> ================================================================
-> =======
-> ...
-> <snip>
-> ...
-> On PCI Express systems that meet the criteria enumerated below, setting the
-> Prefetchable bit in a
-> candidate BAR will still permit correct operation even if the BAR's range
-> includes some locations
-> that have read side-effects or cannot tolerate write merging. This is primarily
-> due to the fact that
-> PCI Express Memory Reads always contain an explicit length, and PCI Express
-> Switches never
-> prefetch or do byte merging. Generally only 64-bit BARs are good candidates,
-> since only Legacy
-> Endpoints are permitted to set the Prefetchable bit in 32-bit BARs, and most
-> scalable platforms map
-> all 32-bit Memory BARs into non-prefetchable Memory Space regardless of the
-> Prefetchable bit
-> value.
-> ...
-> <snip>
-> ...
-> ================================================================
-> ========
-
-This is exactly the section that I would have pointed you to.  PCI Express switches are called switches rather than bridges because they do no buffering.  When your endpoint has credits to put TLPs on the fabric, that means that those TLPs are going to pass all the way across the fabric.  Your endpoint will never have credits when this can't happen.  Thus there's no notion of prefetching.  If you want a more detailed discussion than the implementation note above, read the sections on how an endpoint is granted the right to send TLPs.
-
-> I did not get this. How does it work if I map a 64 bit BAR using non-prefetchable
-> region, if there is no way for the bridges to forward the traffic to it (The
-> memory base and limit registers are only 32 bit)?
 > 
 
-If you map a 64-bit BAR into a non-prefetchable region, that will involve writing zeros to all the bits in the upper part of the 64-bit BAR, so that it falls within the bridge windows.  (This is strictly true only for endpoints which are not embedded in the root complex.  These can appear on the root bus, and thus they might have addresses above 4GB in their BARs.)
 
-And yes, in my opinion, this makes the requirement that all BARs be 64-bit capable (on Express) a little silly.
-
--- Jake Oshins
+-- 
+Thanks!
+Yijing
 
