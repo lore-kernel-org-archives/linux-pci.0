@@ -1,49 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:36637 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336AbbBXBWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Feb 2015 20:22:40 -0500
-Received: by mail-ig0-f178.google.com with SMTP id hl2so23182936igb.5
-        for <linux-pci@vger.kernel.org>; Mon, 23 Feb 2015 17:22:39 -0800 (PST)
-Date: Mon, 23 Feb 2015 19:22:36 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-Cc: linux-pci@vger.kernel.org, phil.edworthy@renesas.com,
-	horms+renesas@verge.net.au
-Subject: Re: [PATCH] PCI: rcar: Fix postion of MSI enable bit
-Message-ID: <20150224012236.GA6220@google.com>
-References: <1422853779-14413-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 27 Feb 2015 09:06:19 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [pci:pci/enumeration 21/30] drivers/pci/pci.c:111:15: sparse: symbol
+ 'pci_bus_max_busnr' was not declared. Should it be static?
+Message-ID: <201502270911.8Duq6eJc%fengguang.wu@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422853779-14413-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 02, 2015 at 02:09:39PM +0900, Nobuhiro Iwamatsu wrote:
-> Position of MSI enable bit is 31bit, not 28bit.
-> This fixes position of MSI bit necessary to initialize MSI.
-> 
-> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enumeration
+head:   84dad4dda42cbf93ecf029c5a6b0af35305d6f75
+commit: 762f920d602e28bf32d27003c93ca05244957aff [21/30] PCI: Introduce pci_bus_child_max_busnr()
+reproduce:
+  # apt-get install sparse
+  git checkout 762f920d602e28bf32d27003c93ca05244957aff
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
 
-Applied to pci/host-rcar for v4.1, thanks!
 
-> ---
->  drivers/pci/host/pcie-rcar.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index bb36e27..eb12659 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -505,7 +505,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
->  
->  	/* Enable MSI */
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
-> -		rcar_pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
-> +		rcar_pci_write_reg(pcie, 0x801f0000, PCIEMSITXR);
->  
->  	/* Finish initialization - establish a PCI Express link */
->  	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> -- 
-> 2.1.3
-> 
+sparse warnings: (new ones prefixed by >>)
+
+>> drivers/pci/pci.c:111:15: sparse: symbol 'pci_bus_max_busnr' was not declared. Should it be static?
+   drivers/pci/pci.c:579:13: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:579:21: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:579:31: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:579:39: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:586:35: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:586:54: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:587:19: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:587:37: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:609:23: sparse: invalid assignment: |=
+   drivers/pci/pci.c:609:23:    left side has type unsigned short
+   drivers/pci/pci.c:609:23:    right side has type restricted pci_power_t
+   drivers/pci/pci.c:614:57: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:634:28: sparse: incorrect type in assignment (different base types)
+   drivers/pci/pci.c:634:28:    expected restricted pci_power_t [usertype] current_state
+   drivers/pci/pci.c:634:28:    got int
+   drivers/pci/pci.c:683:36: sparse: incorrect type in assignment (different base types)
+   drivers/pci/pci.c:683:36:    expected restricted pci_power_t [usertype] current_state
+   drivers/pci/pci.c:683:36:    got int
+   drivers/pci/pci.c:810:13: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:810:22: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:840:13: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:840:21: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:842:18: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:842:26: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:860:13: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:860:22: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:867:46: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:867:54: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:1309:36: sparse: incorrect type in assignment (different base types)
+   drivers/pci/pci.c:1309:36:    expected restricted pci_power_t [usertype] current_state
+   drivers/pci/pci.c:1309:36:    got int
+   drivers/pci/pci.c:1685:44: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:1920:61: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:1921:45: sparse: restricted pci_power_t degrades to integer
+   drivers/pci/pci.c:3265:13: sparse: invalid assignment: |=
+   drivers/pci/pci.c:3265:13:    left side has type unsigned short
+   drivers/pci/pci.c:3265:13:    right side has type restricted pci_power_t
+   drivers/pci/pci.c:3270:13: sparse: invalid assignment: |=
+   drivers/pci/pci.c:3270:13:    left side has type unsigned short
+   drivers/pci/pci.c:3270:13:    right side has type restricted pci_power_t
+   drivers/pci/pci.c:4501:1: sparse: symbol 'bus_attr_resource_alignment' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
