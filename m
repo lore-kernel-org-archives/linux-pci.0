@@ -1,50 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:55736 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756535AbbBJA1U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 19:27:20 -0500
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Tue, 10 Feb 2015 10:27:18 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A96902CE8052
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:27:16 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t1A0R8wQ43253784
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:27:16 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t1A0QggA024136
-	for <linux-pci@vger.kernel.org>; Tue, 10 Feb 2015 11:26:43 +1100
-Message-ID: <1423527979.4924.67.camel@au1.ibm.com>
-Subject: Re: [PATCH V11 02/17] PCI/IOV: add VF enable/disable hook
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Tue, 10 Feb 2015 11:26:19 +1100
-In-Reply-To: <1421288887-7765-3-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
-	 <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <1421288887-7765-3-git-send-email-weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([119.145.14.64]:7980 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbbB0A5G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 19:57:06 -0500
+Message-ID: <54EFC0C2.3040000@huawei.com>
+Date: Fri, 27 Feb 2015 08:56:34 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4 00/30] Refine PCI scan interfaces and make generic
+ pci host bridge
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <20150226235732.GF25765@google.com>
+In-Reply-To: <20150226235732.GF25765@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-01-15 at 10:27 +0800, Wei Yang wrote:
-> +       if ((retval = pcibios_sriov_enable(dev, initial))) {
-> +               dev_err(&dev->dev, "Failure %d from
-> pcibios_sriov_setup()\n",
-> +                       retval);
-> +               return retval;
-> +       }
-> +
+On 2015/2/27 7:57, Bjorn Helgaas wrote:
+> On Thu, Feb 26, 2015 at 04:11:54PM +0800, Yijing Wang wrote:
+>> v3->v4:
+>> 	Fix the rebase issue.
+> 
+> This did apply on v4.0-rc1, but with many whitespace complaints:
+> 
+>   Importing patch "pci-pass-pci-domain-number" ... <stdin>:29: trailing whitespace.
+> 	  bus = pci_scan_root_bus(NULL, 
+>   <stdin>:44: trailing whitespace.
+>       bus = pci_scan_bus_legacy(PCI_DOMBUS(hose->index, 0), 
+>   <stdin>:59: trailing whitespace.
+>       pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
+>   <stdin>:74: trailing whitespace.
+>       bus = pci_scan_root_bus(NULL, 
+>   <stdin>:75: trailing whitespace.
+> 	      PCI_DOMBUS(controller->segment, busnum), 
+>   warning: squelched 15 whitespace errors
+>   warning: 20 lines add whitespace errors.
+>   done
+>   Importing patch "pci-introduce" ... done
+>   Importing patch "pci-separate-pci_host_bridge" ... <stdin>:50: trailing whitespace.
+>       dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
+>   <stdin>:181: trailing whitespace.
+>       dev_set_name(&b->dev, "%04x:%02x", bridge->domain, 
+>   <stdin>:225: trailing whitespace.
+>       
+>   warning: 3 lines add whitespace errors.
+> 
+> I'll fix them myself this time because I want to make progress on this and
+> I need something to do on the plane tomorrow, but please try to fix them
+> yourself in the future.
+>
 
-Don't we want pcibios_sriov_enable() to be able to crop the number
-of VFs or do we think any resource limits have been applied
-already ?
+I will fix them in the local, thanks!
 
-Ben.
 
+> Bjorn
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
