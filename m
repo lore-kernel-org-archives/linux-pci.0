@@ -1,123 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:58923 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754518AbbAGSur (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jan 2015 13:50:47 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <joro@8bytes.org>, <grant.likely@linaro.org>, <robh+dt@kernel.org>,
-	<iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <will.deacon@arm.com>,
-	<linux@arm.linux.org.uk>, <arnd@arndb.de>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v3 3/4] of/pci: add of_pci_dma_configure() update dma configuration
-Date: Wed, 7 Jan 2015 13:49:53 -0500
-Message-ID: <1420656594-8908-4-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
-References: <1420656594-8908-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Voegtle <tv@lio96.de>
+Cc: Dave Airlie <airlied@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
+Date: Fri, 27 Feb 2015 23:24:49 +0100
+Message-ID: <1588858.OaSxSRONoY@vostro.rjw.lan>
+In-Reply-To: <alpine.LSU.2.11.1502271534570.10799@er-systems.de>
+References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com> <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com> <alpine.LSU.2.11.1502271534570.10799@er-systems.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_pci_dma_configure() to allow updating the dma configuration
-of the pci device using the configuration from DT of the parent of
-the root bridge device.
+On Friday, February 27, 2015 03:50:32 PM Thomas Voegtle wrote:
+> 
+> Hi,
+> 
+> I have the same problem with a Asrock Q1900B-ITX mainboard with 
+> a Intel Celeron J1900 onboard.
+> 
+> I did a bisect and ended up with:
+> 
+> 593669c2ac0fe18baee04a3cd5539a148aa48574 is the first bad commit
+> 
+> commit 593669c2ac0fe18baee04a3cd5539a148aa48574
+> Author: Jiang Liu <jiang.liu@linux.intel.com>
+> Date:   Thu Feb 5 13:44:46 2015 +0800
+> 
+>      x86/PCI/ACPI: Use common ACPI resource interfaces to simplify 
+> implementation
+> 
+> 
+> I can revert this quite big commit on current git head (4f671fe) with no 
+> problems and then everything is fine again.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/of/of_pci.c    |   39 +++++++++++++++++++++++++++++++++++++++
- include/linux/of_pci.h |   12 ++++++++++++
- 2 files changed, 51 insertions(+)
+Thanks for nailing this one!
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 88471d3..34878c9 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -2,6 +2,7 @@
- #include <linux/export.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
-+#include <linux/of_device.h>
- #include <linux/of_pci.h>
- #include <linux/slab.h>
- 
-@@ -229,6 +230,44 @@ parse_failed:
- 	return err;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-+
-+/**
-+ * of_get_pci_root_bridge_parent - get the OF node of the root bridge's parent
-+ * @dev: ptr to pci_dev struct of the pci device
-+ *
-+ * This function will traverse the bus up to the root bus starting with
-+ * the child and return the OF node ptr to root bridge device's parent device.
-+ */
-+struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct device *bridge;
-+
-+	while (!pci_is_root_bus(bus))
-+		bus = bus->parent;
-+	bridge = bus->bridge;
-+
-+	return bridge->parent->of_node;
-+}
-+EXPORT_SYMBOL_GPL(of_get_pci_root_bridge_parent);
-+
-+/**
-+ * of_pci_dma_configure - Setup DMA configuration
-+ * @dev: ptr to pci_dev struct of the pci device
-+ *
-+ * Function to update PCI devices's DMA configuration using the same
-+ * info from the OF node of root host bridge's parent.
-+ */
-+void of_pci_dma_configure(struct pci_dev *pci_dev)
-+{
-+	struct device *dev = &pci_dev->dev;
-+	struct device_node *parent_np;
-+
-+	parent_np = of_get_pci_root_bridge_parent(pci_dev);
-+	of_dma_configure(dev, parent_np);
-+}
-+EXPORT_SYMBOL_GPL(of_pci_dma_configure);
-+
- #endif /* CONFIG_OF_ADDRESS */
- 
- #ifdef CONFIG_PCI_MSI
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index ce0e5ab..0465a2a 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,8 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
-+struct device_node *of_get_pci_root_bridge_parent(struct pci_dev *dev);
-+void of_pci_dma_configure(struct pci_dev *pci_dev);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -50,6 +52,16 @@ of_get_pci_domain_nr(struct device_node *node)
- {
- 	return -1;
- }
-+
-+static inline struct device_node
-+*of_get_pci_root_bridge_parent(struct pci_dev *dev)
-+{
-+	return NULL;
-+}
-+
-+static inline void of_pci_dma_configure(struct pci_dev *pci_dev)
-+{
-+}
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
+It really wasn't supposed to make any functional difference, though, so there
+must be some subtle mistake that escaped everyone in it.
+
+I'll have a look at that and hopefully Jiang Liu will be able to help in the
+meantime too.
+
+
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
