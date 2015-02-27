@@ -1,58 +1,317 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56093 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752851AbbBXUMv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Feb 2015 15:12:51 -0500
-Subject: [PATCH 2/2] nouveau/radeon: Un-ignore hotplug on resume
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org, airlied@linux.ie,
-	alexander.deucher@amd.com, dri-devel@lists.freedesktop.org
-Cc: alex.williamson@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 24 Feb 2015 13:12:40 -0700
-Message-ID: <20150224201240.14443.6308.stgit@gimli.home>
-In-Reply-To: <20150224200603.14443.68971.stgit@gimli.home>
-References: <20150224200603.14443.68971.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v2 2/9] x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround exclusively.
+Date: Fri, 27 Feb 2015 16:00:37 +0100
+Message-Id: <1425049244-19331-3-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b440bde74f04 enabled drivers to be able to set an ignore
-hotplug flag on the device and used it in the suspend routine for
-nouveau and radeon to prevent hotplug when the device is powered off.
-However, there was no undo function provided, so once set, the ignore
-hotplug flag lives on for the life of the pci_dev.  I think the
-intention was only to ignore hotplug across the power event for the
-device, so we should be able to clear the flag on resume.
+>From now on, readb()/writeb()/etc. generic calls are used as default
+approach. Special MMIO accessors are registered for AMD Fam10h CPUs only.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- drivers/gpu/drm/nouveau/nouveau_drm.c |    1 +
- drivers/gpu/drm/radeon/radeon_drv.c   |    1 +
- 2 files changed, 2 insertions(+)
+ arch/x86/include/asm/pci_x86.h |   8 +++
+ arch/x86/pci/mmconfig-shared.c | 114 +++++++++++++++++++++++++++++++++++++++++
+ arch/x86/pci/mmconfig_32.c     |  24 +--------
+ arch/x86/pci/mmconfig_64.c     |  24 +--------
+ arch/x86/pci/numachip.c        |  24 +--------
+ 5 files changed, 128 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index 8763deb..b168c3a 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-@@ -749,6 +749,7 @@ nouveau_pmops_runtime_resume(struct device *dev)
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index eddf8f0..f7f3b6a 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -139,6 +139,11 @@ struct pci_mmcfg_region {
+ 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
+ };
+ 
++struct pci_mmcfg_mmio_ops {
++	u32 (*read)(int len, void __iomem *addr);
++	void (*write)(int len, void __iomem *addr, u32 value);
++};
++
+ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
+ extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
+@@ -147,6 +152,9 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern u32 pci_mmio_read(int len, void __iomem *addr);
++extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
++extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
+ 
+ extern struct list_head pci_mmcfg_list;
+ 
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 326198a..1fe9d0d 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -31,6 +31,118 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
++static u32
++pci_mmconfig_generic_read(int len, void __iomem *addr)
++{
++	u32 data = 0;
++
++	switch (len) {
++	case 1:
++		data = readb(addr);
++		break;
++	case 2:
++		data = readw(addr);
++		break;
++	case 4:
++		data = readl(addr);
++		break;
++	}
++
++	return data;
++}
++
++static void
++pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
++{
++	switch (len) {
++	case 1:
++		writeb(value, addr);
++		break;
++	case 2:
++		writew(value, addr);
++		break;
++	case 4:
++		writel(value, addr);
++		break;
++	}
++}
++
++static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
++	.read = pci_mmconfig_generic_read,
++	.write = pci_mmconfig_generic_write,
++};
++
++static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
++
++static u32
++pci_mmconfig_amd_read(int len, void __iomem *addr)
++{
++	u32 data = 0;
++
++	switch (len) {
++	case 1:
++		data = mmio_config_readb(addr);
++		break;
++	case 2:
++		data = mmio_config_readw(addr);
++		break;
++	case 4:
++		data = mmio_config_readl(addr);
++		break;
++	}
++
++	return data;
++}
++
++static void
++pci_mmconfig_amd_write(int len, void __iomem *addr, u32 value)
++{
++	switch (len) {
++	case 1:
++		mmio_config_writeb(addr, value);
++		break;
++	case 2:
++		mmio_config_writew(addr, value);
++		break;
++	case 4:
++		mmio_config_writel(addr, value);
++		break;
++	}
++}
++
++static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
++	.read = pci_mmconfig_amd_read,
++	.write = pci_mmconfig_amd_write,
++};
++
++void
++pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
++{
++	pci_mmcfg_mmio = ops;
++}
++
++u32
++pci_mmio_read(int len, void __iomem *addr)
++{
++	if (!pci_mmcfg_mmio) {
++		pr_err("PCI config space has no accessors !");
++		return 0;
++	}
++
++	return pci_mmcfg_mmio->read(len, addr);
++}
++
++void
++pci_mmio_write(int len, void __iomem *addr, u32 value)
++{
++	if (!pci_mmcfg_mmio) {
++		pr_err("PCI config space has no accessors !");
++		return;
++	}
++
++	pci_mmcfg_mmio->write(len, addr, value);
++}
++
+ static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+ {
+ 	if (cfg->res.parent)
+@@ -231,6 +343,8 @@ static const char *__init pci_mmcfg_amd_fam10h(void)
+ 			return NULL;
+ 		}
+ 
++	pci_mmconfig_register_mmio(&pci_mmcfg_mmio_amd_fam10h);
++
+ 	return "AMD Family 10h NB";
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 43984bc..4b3d025 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -71,17 +71,7 @@ err:		*value = -1;
+ 
+ 	pci_exp_set_dev_base(base, bus, devfn);
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(mmcfg_virt_addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(mmcfg_virt_addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(mmcfg_virt_addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, mmcfg_virt_addr + reg);
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+ 	rcu_read_unlock();
+ 
+@@ -108,17 +98,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 
+ 	pci_exp_set_dev_base(base, bus, devfn);
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(mmcfg_virt_addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(mmcfg_virt_addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(mmcfg_virt_addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, mmcfg_virt_addr + reg, value);
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+ 	rcu_read_unlock();
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index bea5249..032593d 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -42,17 +42,7 @@ err:		*value = -1;
+ 		goto err;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, addr + reg);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+@@ -74,17 +64,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
  		return -EINVAL;
+ 	}
  
- 	pci_set_power_state(pdev, PCI_D0);
-+	pci_unignore_hotplug(pdev);
- 	pci_restore_state(pdev);
- 	ret = pci_enable_device(pdev);
- 	if (ret)
-diff --git a/drivers/gpu/drm/radeon/radeon_drv.c b/drivers/gpu/drm/radeon/radeon_drv.c
-index 5d684be..1c7c79b 100644
---- a/drivers/gpu/drm/radeon/radeon_drv.c
-+++ b/drivers/gpu/drm/radeon/radeon_drv.c
-@@ -472,6 +472,7 @@ static int radeon_pmops_runtime_resume(struct device *dev)
- 	drm_dev->switch_power_state = DRM_SWITCH_POWER_CHANGING;
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, addr + reg, value);
+ 	rcu_read_unlock();
  
- 	pci_set_power_state(pdev, PCI_D0);
-+	pci_unignore_hotplug(pdev);
- 	pci_restore_state(pdev);
- 	ret = pci_enable_device(pdev);
- 	if (ret)
+ 	return 0;
+diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
+index 2e565e6..5047e9b 100644
+--- a/arch/x86/pci/numachip.c
++++ b/arch/x86/pci/numachip.c
+@@ -51,17 +51,7 @@ err:		*value = -1;
+ 		goto err;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, addr + reg);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+@@ -87,17 +77,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, addr + reg, value);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+-- 
+1.9.1
 
