@@ -1,58 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:35977 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbbBXIoy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Feb 2015 03:44:54 -0500
-Received: by pdjp10 with SMTP id p10so31939659pdj.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 Feb 2015 00:44:53 -0800 (PST)
-Date: Tue, 24 Feb 2015 02:44:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v12 11/21] powerpc/pci: Don't unset PCI resources for VFs
-Message-ID: <20150224084450.GH6220@google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083413.32124.11968.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from resqmta-po-06v.sys.comcast.net ([96.114.154.165]:37698 "EHLO
+	resqmta-po-06v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754182AbbB0ACK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 19:02:10 -0500
+Message-ID: <54EFB400.4000904@comcast.net>
+Date: Thu, 26 Feb 2015 16:02:08 -0800
+From: Alnie <memobook80@comcast.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150224083413.32124.11968.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>
+Subject: Re: PCI Issues with ExpressCard/54 Audio Device
+References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net> <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net> <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com> <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com> <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com>
+In-Reply-To: <20150226231843.GC25765@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 02:34:13AM -0600, Bjorn Helgaas wrote:
-> From: Wei Yang <weiyang@linux.vnet.ibm.com>
-> 
-> If we're going to reassign resources with flag PCI_REASSIGN_ALL_RSRC, all
-> resources will be cleaned out during device header fixup time and then get
-> reassigned by PCI core.  However, the VF resources won't be reassigned and
-> thus, we shouldn't clean them out.
-> 
-> If the pci_dev is a VF, skip the resource unset process.
 
-I think this patch is correct, but we should include a little more detail
-in the changelog to answer questions like mine and Ben's
-(http://lkml.kernel.org/r/1423528584.4924.70.camel@au1.ibm.com).
 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/powerpc/kernel/pci-common.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 2a525c938158..82031011522f 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
->  		       pci_name(dev));
->  		return;
->  	}
-> +
-> +	if (dev->is_virtfn)
-> +		return;
-> +
->  	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->  		struct resource *res = dev->resource + i;
->  		struct pci_bus_region reg;
-> 
+On 02/26/2015 03:18 PM, Bjorn Helgaas wrote:
+> On Thu, Feb 26, 2015 at 11:32:31AM -0800, Alnie wrote:
+>> On 02/26/2015 09:46 AM, Bjorn Helgaas wrote:
+>>> On Thu, Feb 26, 2015 at 12:22:42AM -0800, Alnie wrote:
+>
+>>>> 	Capabilities: [100 v1] Advanced Error Reporting
+>>>> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+>>>> MalfTLP- ECRC- UnsupReq+ ACSViol-
+>>>
+>>> This looks suspicious: the bridge logged an Unsupported Request error.
+>>> Let's see if we can figure out if this error is left there by BIOS or if
+>>> the PCI core or the driver or rdwrmem is doing something that causes it.
+>>>
+>>> Can you try this:
+>>>
+>>>    - Boot without the snd_hda_intel driver at all
+>>>    - Collect "lspci -vvs05:00.0" output
+>>
+>> blacklist snd_hda_intel
+>>
+>> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
+>> PCI to PCIe Bridge (prog-if 00 [Normal decode])
+>> ...
+>> 	Capabilities: [100 v1] Advanced Error Reporting
+>> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+>> MalfTLP- ECRC- UnsupReq+ ACSViol-
+>
+> All three of your lspci outputs are identical, so it looks like the BIOS
+> probably left UnsupReq set.  Maybe the kernel should log that and clear it
+> at boot.  I sort of doubt this is the problem, but we can try clearing
+> those errors manually:
+>
+>    lspci -vvs05:00.0
+
+05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI 
+to PCIe Bridge (prog-if 00 [Normal decode])
+	Physical Slot: 3
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- 
+Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
+	Memory behind bridge: f4300000-f43fffff
+	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+		Bridge: PM- B3+
+	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+		Address: 0000000000000000  Data: 0000
+	Capabilities: [80] Subsystem: Creative Labs Device 0040
+	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
+		DevCap:	MaxPayload 512 bytes, PhantFunc 0
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency 
+L0s <512ns, L1 <16us
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
+BWMgmt- ABWMgmt-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq+ ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+
+
+>    setpci -s05:00.0 0x9a.w=0x0a		# clear UncorrErr UnsuppReq
+>    setpci -s05:00.0 0x104.l=0x00100000	# clear AER UnsupReq
+>    lspci -vvs05:00.0
+
+05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI 
+to PCIe Bridge (prog-if 00 [Normal decode])
+	Physical Slot: 3
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- 
+Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
+	Memory behind bridge: f4300000-f43fffff
+	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+		Bridge: PM- B3+
+	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+		Address: 0000000000000000  Data: 0000
+	Capabilities: [80] Subsystem: Creative Labs Device 0040
+	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
+		DevCap:	MaxPayload 512 bytes, PhantFunc 0
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency 
+L0s <512ns, L1 <16us
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
+BWMgmt- ABWMgmt-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+
+>    modprobe snd-hda-intel
+>
+
+Same complaint comes up (no codecs found)
+
+>>>    - Poke around with rdwr
+>>
+>> (I am unfamiliar with this & hex, was trying different things,
+>> please correct me in case)
+>>
+>> # ./mem -N -m -s 0xf4300000
+>> ./mem: request seek to 4096786432, but -198180864 returned
+>> F4300000:00
+>> # ./mem -N -m -s f4300000
+>> 00000000:53
+>> # ./mem -N -m -s f4310000
+>> 00000000:53
+>> # ./mem -N -m -s 0xf4310000
+>> ./mem: request seek to 4096851968, but -198115328 returned
+>> F4310000:FF
+>
+> The first and last ones are on the right track.  The program uses strtoul()
+> to convert the address.  That function assumes decimal unless there's a
+> "0x" prefix.  So "-s f4300000" converts to zero, and "-s 0xf4300000" does
+> what you want.
+>
+> The device is at [mem 0xf4300000-0xf4303fff], so anything in that region
+> should respond.  Why don't you try this, which should dump the whole
+> region:
+>
+>    ./mem -N -m -s 0xf4300000 -l 0x4000
+>
+
+http://pastebin.com/eHEsZNmU
+
+> But what's interesting already is that you found these:
+>
+>    F4300000:00
+>    F4310000:FF
+>
+> So we got 0x00 at 0xf4300000, which means the device did respond there.
+> If that path to the device works, all PCI accesses to it *should* work.
+>
+> Bjorn
+>
