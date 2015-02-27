@@ -1,51 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:60391 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759368AbbBIUMg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Feb 2015 15:12:36 -0500
-Received: by mail-qa0-f41.google.com with SMTP id x12so5821158qac.0
-        for <linux-pci@vger.kernel.org>; Mon, 09 Feb 2015 12:12:35 -0800 (PST)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: robh@kernel.org, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH] PCI: xgene: Fix xgene_pcie_map_bus() return type
-Date: Mon,  9 Feb 2015 18:12:11 -0200
-Message-Id: <1423512731-9625-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 27 Feb 2015 15:50:32 +0100 (CET)
+From: Thomas Voegtle <tv@lio96.de>
+To: Dave Airlie <airlied@gmail.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
+In-Reply-To: <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com>
+Message-ID: <alpine.LSU.2.11.1502271534570.10799@er-systems.de>
+References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com> <CAErSpo4kG_RrpFtZ6QyRFkMO51Zx62q94L+r60-HfSZY3VHD1g@mail.gmail.com> <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
 
-Commit 350f8be5bb402a1 ("PCI: xgene: Convert to use generic config accessors")
-introduced the following build warnings:
+Hi,
 
-drivers/pci/host/pci-xgene.c:137:3: warning: return makes integer from pointer without a cast
-drivers/pci/host/pci-xgene.c:140:2: warning: return makes integer from pointer without a cast
-drivers/pci/host/pci-xgene.c:144:2: warning: initialization from incompatible pointer type
-drivers/pci/host/pci-xgene.c:144:2: warning: (near initialization for 'xgene_pcie_ops.map_bus')
+I have the same problem with a Asrock Q1900B-ITX mainboard with 
+a Intel Celeron J1900 onboard.
 
-The .map_bus function should return 'void __iomem *' instead of 'int'.
+I did a bisect and ended up with:
 
-Reported-by: Olof's autobuilder <build@lixom.net>
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- drivers/pci/host/pci-xgene.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+593669c2ac0fe18baee04a3cd5539a148aa48574 is the first bad commit
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index aab5547..22addb6 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
- 	return false;
- }
- 
--static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-+static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			      int offset)
- {
- 	struct xgene_pcie_port *port = bus->sysdata;
--- 
-1.9.1
+commit 593669c2ac0fe18baee04a3cd5539a148aa48574
+Author: Jiang Liu <jiang.liu@linux.intel.com>
+Date:   Thu Feb 5 13:44:46 2015 +0800
+
+     x86/PCI/ACPI: Use common ACPI resource interfaces to simplify 
+implementation
+
+
+I can revert this quite big commit on current git head (4f671fe) with no 
+problems and then everything is fine again.
+
+
+
+       Thomas
 
