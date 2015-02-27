@@ -1,107 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35169 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751976AbbBCXGz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Feb 2015 18:06:55 -0500
-Subject: [PATCH] PCI: Expand quirk's handling of CS553x devices
-From: Myron Stowe <myron.stowe@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: nix@esperi.org.uk, linux-kernel@vger.kernel.org
-Date: Tue, 03 Feb 2015 16:01:24 -0700
-Message-ID: <20150203230124.1578.94572.stgit@amt.stowe>
+Received: from resqmta-po-12v.sys.comcast.net ([96.114.154.171]:33734 "EHLO
+	resqmta-po-12v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750928AbbB0Gcb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Feb 2015 01:32:31 -0500
+Message-ID: <54F00F7D.6040604@comcast.net>
+Date: Thu, 26 Feb 2015 22:32:29 -0800
+From: Alnie <memobook80@comcast.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>
+Subject: Re: PCI Issues with ExpressCard/54 Audio Device
+References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net> <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net> <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com> <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com> <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com> <54EFB400.4000904@comcast.net> <20150227003448.GH25765@google.com>
+In-Reply-To: <20150227003448.GH25765@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There seem to be a number of issues with CS553x devices and due to a
-recent patch series that detects PCI read-only BARs [1], we've encountered
-more.
+On 02/26/2015 04:34 PM, Bjorn Helgaas wrote:
 
-It appears that not only are the BAR values associated with this device
-often greater than the largest range that an IO decoder can request, they
-can also be non-conformant with respect to PCI's BAR sizing aspects,
-behaving instead, in a read-only manner [2].
+>
+> So it looks like the Unsupported Request error is unrelated to the problem
+> you're seeing.  Probably left over from something the BIOS did when it
+> enumerated devices.
+>
+> You could look at "lspci -vv" again after clearing the errors and loading
+> the driver.  But I think it will be the same as it was after you manually
+> cleared the errors.
 
-This patch addresses read-only BAR values corresponding to CS553x devices
-by expanding the existing quirk, manually inserting regions based on the
-device's BIOS settings (as opposed to basing such on normal BAR sizing
-actions) when necessary.
+(after clearing errors) http://pastebin.com/UxdgDyp1
 
-[1] https://lkml.org/lkml/2014/10/30/637
-    [PATCH 0/3] PCI: Fix detection of read-only BARs
-      36e8164882ca  PCI: Restore detection of read-only BARs
-      f795d86aaa57  PCI: Shrink decoding-disabled window while sizing BARs
-      7e79c5f8cad2  PCI: Add informational printk for invalid BARs
-[2] https://bugzilla.kernel.org/show_bug.cgi?id=85991 (Comment #4 forward)
-Reference: support.amd.com/TechDocs/31506_cs5535_databook.pdf
+>
+> Oh, one more idea: *before* clearing the errors, can you collect
+> "lspci -xxxxs05:00.0" output?  That will give us more AER log registers,
+> and it's possible there's a clue there.  It's conceivable that we have
+> an MPS issue that causes the Unsupported Request error.
 
-Reported-by: Nix <nix@esperi.org.uk>
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-Fixes: 36e8164882ca ("PCI: Restore detection of read-only BARs")
-CC: stable@vger.kernel.org  # v.2.6.27+
----
- drivers/pci/quirks.c |   40 +++++++++++++++++++++++++++++++++++++---
- 1 file changed, 37 insertions(+), 3 deletions(-)
+(before clearing errors w/ card in @ boot) http://pastebin.com/wTeNjHHT
+(before clearing errors w/ card out @ boot) http://pastebin.com/4Q82KNNc
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ed6f89b..aac98c5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -324,18 +324,52 @@ static void quirk_s3_64M(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
- 
-+static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
-+		     const char *name)
-+{
-+	u32 region;
-+	struct pci_bus_region bus_region;
-+	struct resource *res = dev->resource + pos;
-+
-+	pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + (pos << 2), &region);
-+
-+	if (!region)
-+		return;
-+
-+	res->name = pci_name(dev);
-+	res->flags = region & ~PCI_BASE_ADDRESS_IO_MASK;
-+	res->flags |=
-+		(IORESOURCE_IO | IORESOURCE_PCI_FIXED | IORESOURCE_SIZEALIGN);
-+	region &= ~(size - 1);
-+
-+	/* Convert from PCI bus to resource space */
-+	bus_region.start = region;
-+	bus_region.end = region + size - 1;
-+	pcibios_bus_to_resource(dev->bus, res, &bus_region);
-+
-+	dev_info(&dev->dev, FW_BUG "%s quirk: reg 0x%x: %pR\n",
-+		 name, PCI_BASE_ADDRESS_0 + (pos << 2), res);
-+}
-+
- /*
-  * Some CS5536 BIOSes (for example, the Soekris NET5501 board w/ comBIOS
-  * ver. 1.33  20070103) don't set the correct ISA PCI region header info.
-  * BAR0 should be 8 bytes; instead, it may be set to something like 8k
-  * (which conflicts w/ BAR1's memory range).
-+ *
-+ * CS553x's ISA PCI BARs may also be read-only (ref:
-+ * https://bugzilla.kernel.org/show_bug.cgi?id=85991 - Comment #4 forward).
-  */
- static void quirk_cs5536_vsa(struct pci_dev *dev)
- {
-+	static char *name = "CS5536 ISA bridge";
-+
- 	if (pci_resource_len(dev, 0) != 8) {
--		struct resource *res = &dev->resource[0];
--		res->end = res->start + 8 - 1;
--		dev_info(&dev->dev, "CS5536 ISA bridge bug detected (incorrect header); workaround applied\n");
-+		quirk_io(dev, 0,   8, name);
-+		quirk_io(dev, 1, 256, name);
-+		quirk_io(dev, 2, 512, name);
-+		dev_info(&dev->dev, "%s bug detected (incorrect header); workaround applied\n",
-+			 name);
- 	}
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
 
+>
+> Just to be exhaustive, can you also stash the "lspci -vvv" output for the
+> entire system somewhere (again, before clearing the error).
+>
+http://pastebin.com/K4iPhGcq
+
+not sure if this is relevant but for debugging sake here is the output 
+of the card when left out during boot (no UnsupReq error)...
+
+05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI 
+to PCIe Bridge (prog-if 00 [Normal decode])
+	Physical Slot: 3
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
+	I/O behind bridge: 00002000-00002fff
+	Memory behind bridge: f8000000-f80fffff
+	Prefetchable memory behind bridge: 00000000f4000000-00000000f40fffff
+	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+		Bridge: PM- B3+
+	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+		Address: 0000000000000000  Data: 0000
+	Capabilities: [80] Subsystem: Creative Labs Device 0040
+	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
+		DevCap:	MaxPayload 512 bytes, PhantFunc 0
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency 
+L0s <512ns, L1 <16us
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
+BWMgmt- ABWMgmt-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+
+
+>>> The device is at [mem 0xf4300000-0xf4303fff], so anything in that region
+>>> should respond.  Why don't you try this, which should dump the whole
+>>> region:
+>>>
+>>>    ./mem -N -m -s 0xf4300000 -l 0x4000
+>>>
+>>
+>> http://pastebin.com/eHEsZNmU
+>
+> The data there looks fine, at least from a PCI perspective:
+>
+>    F4300000:00 33 00 01 3C 00 1D 00 01 00 00 00 00 00 00 00
+>    F4300010:00 00 00 00 00 00 00 00 3C 00 1D 00 00 00 00 00
+>    F4300020:00 00 00 C0 00 00 00 00 00 00 00 00 00 00 00 00
+>    F4300030:0F FA 24 A8 00 00 00 00 00 00 00 00 00 00 00 00
+>    ...
+>
+> That means the device itself seems happy and is responding to read
+> requests.
+>
+> The only thing left I can think of to do is to instrument the driver and
+> see where it gets data that it doesn't expect.  So I'm going to punt this
+> back to you, Takashi :)  Don't hesitate to send it back to me if you find
+> something that looks like a PCI problem, but I don't see one yet.
+>
+> Bjorn
+>
