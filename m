@@ -1,69 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:56151 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbbBCBCh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 20:02:37 -0500
-Received: by mail-qc0-f173.google.com with SMTP id m20so32979749qcx.4
-        for <linux-pci@vger.kernel.org>; Mon, 02 Feb 2015 17:02:36 -0800 (PST)
-Date: Tue, 3 Feb 2015 09:02:30 +0800
-From: Kevin Hao <haokexin@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/15] PCI: introduce pci_device_to_OF_node() for
- !CONFIG_OF
-Message-ID: <20150203010230.GA28170@pek-khao-d1.corp.ad.wrs.com>
-References: <1422712065-9403-1-git-send-email-haokexin@gmail.com>
- <1422712065-9403-2-git-send-email-haokexin@gmail.com>
- <1422844101.11325.4.camel@ellerman.id.au>
- <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 27 Feb 2015 09:06:19 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH pci] PCI: pci_bus_max_busnr() can be static
+Message-ID: <20150227010619.GA43777@lkp-sb04.lkp.intel.com>
+References: <201502270911.8Duq6eJc%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8t9RHnE3ZwKMSgU+"
-In-Reply-To: <CAErSpo7B3yDQiD0XA9nBxb4tFW0BktT0EZ3HCZENOYQqMy0m_Q@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201502270911.8Duq6eJc%fengguang.wu@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+drivers/pci/pci.c:111:15: sparse: symbol 'pci_bus_max_busnr' was not declared. Should it be static?
 
---8t9RHnE3ZwKMSgU+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+ pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Mon, Feb 02, 2015 at 09:47:57AM -0600, Bjorn Helgaas wrote:
-> I think it makes more sense to merge this along with the other 14
-> patches that remove the #ifdefs (at least, I assume that's what they
-> do; I haven't seen them).
->=20
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->=20
-> But please edit the subject line so it is capitalized consistently
-> with the rest of the history.  And it'd be nice if the changelog were
-> a complete sentence all by itself, e.g.,
->=20
->     PCI: Add pci_device_to_OF_node() stub for !CONFIG_OF
->=20
->     Add a stub for pci_device_to_OF_node() so drivers don't need to use
->     #ifdef CONFIG_OF around calls to it.
-
-Will update. Thanks Bjorn.
-
-Kevin
-
---8t9RHnE3ZwKMSgU+
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBAgAGBQJU0B4mAAoJEJNY7TDerrFxhFsH/iR0SsCZ6DK6wrj8AE+Qb1yH
-yO4nPpZkoZzLMociB6IP9WmOAyQbGKy9IN2Sz8XO7DlB1ZRVYHqyWw1zyKmK9VDk
-Ja2j4srmqlhlm1vClCgfjxYEqnI9r2V8QR2mjwf5fVjDf76PXbdsDObMiN2aEJT1
-N7he2z+v9zrnw/1ELmBcZK0kHfPwINfdh4W6jWHEymrCFtciQ4W9vKuFE5OvYmWC
-jBYrT6i3ccvMmuXLgoxTGJkc3uL1lRn8tl9cZN6WcYiPG5DkY6a1r3E9kGJ3dbkK
-Hsirbkzep80nSbrtHi75/zE6uXxN8XhawSYcA/wDX1OW4wLwJ2hsIS0I+xwTV8s=
-=fM4q
------END PGP SIGNATURE-----
-
---8t9RHnE3ZwKMSgU+--
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2abac8f..51b24f3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
+  * Given a PCI bus, returns the highest PCI bus number present in the set
+  * including the given PCI bus and its list of child PCI buses.
+  */
+-unsigned char pci_bus_max_busnr(struct pci_bus *bus)
++static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+ {
+ 	struct pci_bus *tmp;
+ 	unsigned char max, n;
