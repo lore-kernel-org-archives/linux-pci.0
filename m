@@ -1,41 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:39284 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644AbbBRRL4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Feb 2015 12:11:56 -0500
-Date: Wed, 18 Feb 2015 18:11:51 +0100
-From: Ingo Molnar <mingo@kernel.org>
-To: Nicholas Krause <xerofoify@gmail.com>
-Cc: bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2] x86:pci: Change  sta2x11_dma_ops stucture to use
- switolb_dma_supported as it's dma_supported function in sta2x11-fixup.c
-Message-ID: <20150218171151.GA29241@gmail.com>
-References: <1424132571-32018-1-git-send-email-xerofoify@gmail.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:43366 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169AbbB0AV4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 19:21:56 -0500
+Received: by iebtr6 with SMTP id tr6so23297843ieb.10
+        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 16:21:55 -0800 (PST)
+Date: Thu, 26 Feb 2015 18:21:51 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Feng Kan <fkan@apm.com>
+Cc: patches@apm.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, robh@kernel.org,
+	linux-arm-kernel@lists.infradead.org, tinamdar@apm.com
+Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by
+ map_bus
+Message-ID: <20150227002151.GG25765@google.com>
+References: <1424214840-26498-1-git-send-email-fkan@apm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424132571-32018-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1424214840-26498-1-git-send-email-fkan@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
+> The generic accessor functions for pci-xgene uses map_bus
+> call that returns the base address but did not add the additional
+> offset.
+> 
+> Signed-off-by: Feng Kan <fkan@apm.com>
+> ---
+>  drivers/pci/host/pci-xgene.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index aab5547..ee082c0 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+>  	return false;
+>  }
+>  
+> -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>  			      int offset)
+>  {
+>  	struct xgene_pcie_port *port = bus->sysdata;
+> @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>  		return NULL;
+>  
+>  	xgene_pcie_set_rtdid_reg(bus, devfn);
+> -	return xgene_pcie_get_cfg_base(bus);
+> +	return xgene_pcie_get_cfg_base(bus) + offset;
 
-* Nicholas Krause <xerofoify@gmail.com> wrote:
+Where's the locking here?  ECAM doesn't need locking because the
+bus/dev/fn/offset is all encoded in the MMIO address.  But it looks
+like X-Gene doesn't work that way and bus/dev/fn is in the RTDID register.
 
-> This changes the structure sta2x11_dma_ops stucture to use switolb_dma_supported
-> as it's function for dma_supported hardware verus setting this value to NULL as
-> this should be set correctly for when dma_supported function needs to be called
-> for this hardware. Otherwise this will cause a bug that will crash a operation
-> needing to access this function if an intended hardware operation needs to call
-> it but the kernel has the function pointer for this structure set to NULL
-> incorrectly.
+So it seems like X-Gene needs locking that not everybody needs.  Are you
+relying on higher-level locking somewhere?
 
-Hm, I have asked a question for the v1 patch already:
-
-  https://lkml.org/lkml/2015/2/16/30
-
-is there an answer to my question?
-
-Thanks,
-
-	Ingo
+>  }
+>  
+>  static struct pci_ops xgene_pcie_ops = {
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
