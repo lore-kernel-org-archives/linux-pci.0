@@ -1,74 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:38642 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752831AbbB0PAF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Feb 2015 10:00:05 -0500
-Received: by lbiz11 with SMTP id z11so17840211lbi.5
-        for <linux-pci@vger.kernel.org>; Fri, 27 Feb 2015 07:00:03 -0800 (PST)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v2 0/9] PCI: MMCONFIG clean up
-Date: Fri, 27 Feb 2015 16:00:35 +0100
-Message-Id: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
+Subject: Re: regression in 4.0.0-rc1 with r8169 ethernet
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <54F17715.6050506@linux.intel.com>
+Date: Sat, 28 Feb 2015 00:36:34 -0800
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Voegtle <tv@lio96.de>, Dave Airlie <airlied@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Message-Id: <32040DE9-54EE-4A7D-883A-F578ACFE4338@holtmann.org>
+References: <CAPM=9tz8HQAZbdfgE15++i++NkArjxqiY3-BjANqDBTo1g-pOw@mail.gmail.com> <CAPM=9txFHJXbhXQsSyL=h2oG83tr5ZnJj7G6cFtVQ+EDWdXv6w@mail.gmail.com> <alpine.LSU.2.11.1502271534570.10799@er-systems.de> <1588858.OaSxSRONoY@vostro.rjw.lan> <54F17715.6050506@linux.intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MCFG ACPI table and PCI ECAM standard have no arch dependencies so it can be
-used across all architectures. Currently MMCONFIG related code resides in
-arch/x86 directories. This patch set is going to isolate non-architecure
-specific code and make it accessible for all architectures.
+Hi Jiang,
 
-v1 -> v2 changes:
-- use generic readb/readw etc. accessors instead of AMD Fam10h workaround
-- separate ACPI and ECAM code
-- improve ECAM code naming
+>>> I have the same problem with a Asrock Q1900B-ITX mainboard with 
+>>> a Intel Celeron J1900 onboard.
+>>> 
+>>> I did a bisect and ended up with:
+>>> 
+>>> 593669c2ac0fe18baee04a3cd5539a148aa48574 is the first bad commit
+>>> 
+>>> commit 593669c2ac0fe18baee04a3cd5539a148aa48574
+>>> Author: Jiang Liu <jiang.liu@linux.intel.com>
+>>> Date:   Thu Feb 5 13:44:46 2015 +0800
+>>> 
+>>>     x86/PCI/ACPI: Use common ACPI resource interfaces to simplify 
+>>> implementation
+>>> 
+>>> 
+>>> I can revert this quite big commit on current git head (4f671fe) with no 
+>>> problems and then everything is fine again.
+>> 
+>> Thanks for nailing this one!
+>> 
+>> It really wasn't supposed to make any functional difference, though, so there
+>> must be some subtle mistake that escaped everyone in it.
+>> 
+>> I'll have a look at that and hopefully Jiang Liu will be able to help in the
+>> meantime too.
+> Hi all,
+> 	Sorry for slow response, just return from Chinese New Holidays:)
+> Hi Thomas,
+> 	Could you please help to provide the dmesgs before and after the
+> revert?
 
-Tomasz Nowicki (9):
-  x86, pci: Clean up comment about buggy MMIO config space access for
-    AMD Fam10h CPUs.
-  x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
-    exclusively.
-  x86, pci: Reorder logic of pci_mmconfig_insert() function
-  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
-    out of arch/x86/ directory
-  pci, acpi, mcfg: Provide generic implementation of MCFG code
-    initialization.
-  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
-    duplication.
-  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
-    driver.
-  pci, acpi, mcfg: Share ACPI PCI config space accessors.
-  pci, ecam: Improve naming for ecam.c content and areas where it is
-    used.
+just grab a Minnowboard Max and test this by yourself. It has the same problem. The MAC address is ff:ff:ff:ff:ff:ff with this patch. Once I reverted it, the MAC address is correctly read again.
 
- arch/x86/Kconfig               |   3 +
- arch/x86/include/asm/pci_x86.h |  34 +---
- arch/x86/pci/Makefile          |   5 +-
- arch/x86/pci/acpi.c            |   3 +-
- arch/x86/pci/mmconfig-shared.c | 340 +++++++++++----------------------------
- arch/x86/pci/mmconfig_32.c     |  47 ++----
- arch/x86/pci/mmconfig_64.c     | 153 ------------------
- arch/x86/pci/numachip.c        |  27 +---
- drivers/acpi/Makefile          |   1 +
- drivers/acpi/mcfg.c            | 121 ++++++++++++++
- drivers/pci/Kconfig            |   7 +
- drivers/pci/Makefile           |   5 +
- drivers/pci/ecam.c             | 356 +++++++++++++++++++++++++++++++++++++++++
- drivers/xen/pci.c              |   6 +-
- include/linux/ecam.h           |  56 +++++++
- 15 files changed, 668 insertions(+), 496 deletions(-)
- delete mode 100644 arch/x86/pci/mmconfig_64.c
- create mode 100644 drivers/acpi/mcfg.c
- create mode 100644 drivers/pci/ecam.c
- create mode 100644 include/linux/ecam.h
+Regards
 
--- 
-1.9.1
+Marcel
 
