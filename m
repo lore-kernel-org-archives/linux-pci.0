@@ -1,69 +1,228 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54D3404D.90404@citrix.com>
-Date: Thu, 5 Feb 2015 10:05:01 +0000
-From: David Vrabel <david.vrabel@citrix.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35506 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753356AbbCACTL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:19:11 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Robert Moore <robert.moore@intel.com>,
-	Clemens Ladisch <clemens@ladisch.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>
-CC: <linux-ia64@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<xen-devel@lists.xenproject.org>, <devel@linuxdriverproject.org>,
-	<devel@acpica.org>
-Subject: Re: [Xen-devel] [Patch v4 01/23] ACPICA: Resources: Provide common
- part for struct acpi_resource_address structures.
-References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com> <1423115089-12904-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1423115089-12904-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 6/8] x86: kill not used setup_data handling code
+Date: Sat, 28 Feb 2015 18:17:37 -0800
+Message-Id: <1425176259-30087-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/02/15 05:44, Jiang Liu wrote:
-> 
-> --- a/drivers/xen/xen-acpi-memhotplug.c
-> +++ b/drivers/xen/xen-acpi-memhotplug.c
-> @@ -117,8 +117,8 @@ acpi_memory_get_resource(struct acpi_resource *resource, void *context)
->  	list_for_each_entry(info, &mem_device->res_list, list) {
->  		if ((info->caching == address64.info.mem.caching) &&
->  		    (info->write_protect == address64.info.mem.write_protect) &&
-> -		    (info->start_addr + info->length == address64.minimum)) {
-> -			info->length += address64.address_length;
-> +		    (info->start_addr + info->length == address64.address.minimum)) {
-> +			info->length += address64.address.address_length;
->  			return AE_OK;
->  		}
->  	}
-> @@ -130,8 +130,8 @@ acpi_memory_get_resource(struct acpi_resource *resource, void *context)
->  	INIT_LIST_HEAD(&new->list);
->  	new->caching = address64.info.mem.caching;
->  	new->write_protect = address64.info.mem.write_protect;
-> -	new->start_addr = address64.minimum;
-> -	new->length = address64.address_length;
-> +	new->start_addr = address64.address.minimum;
-> +	new->length = address64.address.address_length;
->  	list_add_tail(&new->list, &mem_device->res_list);
->  
->  	return AE_OK;
+Cc: Matt Fleming <matt.fleming@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/kernel/kdebugfs.c | 142 ---------------------------------------------
+ arch/x86/kernel/setup.c    |  17 ------
+ 2 files changed, 159 deletions(-)
 
-Xen parts:
+diff --git a/arch/x86/kernel/kdebugfs.c b/arch/x86/kernel/kdebugfs.c
+index dc1404b..c8ca86c 100644
+--- a/arch/x86/kernel/kdebugfs.c
++++ b/arch/x86/kernel/kdebugfs.c
+@@ -21,142 +21,6 @@ struct dentry *arch_debugfs_dir;
+ EXPORT_SYMBOL(arch_debugfs_dir);
+ 
+ #ifdef CONFIG_DEBUG_BOOT_PARAMS
+-struct setup_data_node {
+-	u64 paddr;
+-	u32 type;
+-	u32 len;
+-};
+-
+-static ssize_t setup_data_read(struct file *file, char __user *user_buf,
+-			       size_t count, loff_t *ppos)
+-{
+-	struct setup_data_node *node = file->private_data;
+-	unsigned long remain;
+-	loff_t pos = *ppos;
+-	struct page *pg;
+-	void *p;
+-	u64 pa;
+-
+-	if (pos < 0)
+-		return -EINVAL;
+-
+-	if (pos >= node->len)
+-		return 0;
+-
+-	if (count > node->len - pos)
+-		count = node->len - pos;
+-
+-	pa = node->paddr + sizeof(struct setup_data) + pos;
+-	pg = pfn_to_page((pa + count - 1) >> PAGE_SHIFT);
+-	if (PageHighMem(pg)) {
+-		p = ioremap_cache(pa, count);
+-		if (!p)
+-			return -ENXIO;
+-	} else
+-		p = __va(pa);
+-
+-	remain = copy_to_user(user_buf, p, count);
+-
+-	if (PageHighMem(pg))
+-		iounmap(p);
+-
+-	if (remain)
+-		return -EFAULT;
+-
+-	*ppos = pos + count;
+-
+-	return count;
+-}
+-
+-static const struct file_operations fops_setup_data = {
+-	.read		= setup_data_read,
+-	.open		= simple_open,
+-	.llseek		= default_llseek,
+-};
+-
+-static int __init
+-create_setup_data_node(struct dentry *parent, int no,
+-		       struct setup_data_node *node)
+-{
+-	struct dentry *d, *type, *data;
+-	char buf[16];
+-
+-	sprintf(buf, "%d", no);
+-	d = debugfs_create_dir(buf, parent);
+-	if (!d)
+-		return -ENOMEM;
+-
+-	type = debugfs_create_x32("type", S_IRUGO, d, &node->type);
+-	if (!type)
+-		goto err_dir;
+-
+-	data = debugfs_create_file("data", S_IRUGO, d, node, &fops_setup_data);
+-	if (!data)
+-		goto err_type;
+-
+-	return 0;
+-
+-err_type:
+-	debugfs_remove(type);
+-err_dir:
+-	debugfs_remove(d);
+-	return -ENOMEM;
+-}
+-
+-static int __init create_setup_data_nodes(struct dentry *parent)
+-{
+-	struct setup_data_node *node;
+-	struct setup_data *data;
+-	int error;
+-	struct dentry *d;
+-	struct page *pg;
+-	u64 pa_data;
+-	int no = 0;
+-
+-	d = debugfs_create_dir("setup_data", parent);
+-	if (!d)
+-		return -ENOMEM;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-
+-	while (pa_data) {
+-		node = kmalloc(sizeof(*node), GFP_KERNEL);
+-		if (!node) {
+-			error = -ENOMEM;
+-			goto err_dir;
+-		}
+-
+-		pg = pfn_to_page((pa_data+sizeof(*data)-1) >> PAGE_SHIFT);
+-		if (PageHighMem(pg)) {
+-			data = ioremap_cache(pa_data, sizeof(*data));
+-			if (!data) {
+-				kfree(node);
+-				error = -ENXIO;
+-				goto err_dir;
+-			}
+-		} else
+-			data = __va(pa_data);
+-
+-		node->paddr = pa_data;
+-		node->type = data->type;
+-		node->len = data->len;
+-		error = create_setup_data_node(d, no, node);
+-		pa_data = data->next;
+-
+-		if (PageHighMem(pg))
+-			iounmap(data);
+-		if (error)
+-			goto err_dir;
+-		no++;
+-	}
+-
+-	return 0;
+-
+-err_dir:
+-	debugfs_remove(d);
+-	return error;
+-}
+-
+ static struct debugfs_blob_wrapper boot_params_blob = {
+ 	.data		= &boot_params,
+ 	.size		= sizeof(boot_params),
+@@ -181,14 +45,8 @@ static int __init boot_params_kdebugfs_init(void)
+ 	if (!data)
+ 		goto err_version;
+ 
+-	error = create_setup_data_nodes(dbp);
+-	if (error)
+-		goto err_data;
+-
+ 	return 0;
+ 
+-err_data:
+-	debugfs_remove(data);
+ err_version:
+ 	debugfs_remove(version);
+ err_dir:
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 93c0adb..b9f1687 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -479,20 +479,6 @@ static void __init parse_setup_data(void)
+ 	boot_params.hdr.setup_data = 0; /* all done */
+ }
+ 
+-static void __init memblock_x86_reserve_range_setup_data(void)
+-{
+-	struct setup_data *data;
+-	u64 pa_data;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-	while (pa_data) {
+-		data = early_memremap(pa_data, sizeof(*data));
+-		memblock_reserve(pa_data, sizeof(*data) + data->len);
+-		pa_data = data->next;
+-		early_iounmap(data, sizeof(*data));
+-	}
+-}
+-
+ /*
+  * --------- Crashkernel reservation ------------------------------
+  */
+@@ -999,9 +985,6 @@ void __init setup_arch(char **cmdline_p)
+ 
+ 	x86_report_nx();
+ 
+-	/* after early param, so could get panic from serial */
+-	memblock_x86_reserve_range_setup_data();
+-
+ 	if (acpi_mps_check()) {
+ #ifdef CONFIG_X86_LOCAL_APIC
+ 		disable_apic = 1;
+-- 
+1.8.4.5
 
-Acked-by: David Vrabel <david.vrabel@citrix.com>
-
-David
