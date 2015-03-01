@@ -1,117 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3833 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933302AbbBCB3a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Feb 2015 20:29:30 -0500
-Message-ID: <54D02465.2040800@huawei.com>
-Date: Tue, 3 Feb 2015 09:29:09 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <boris.ostrovsky@oracle.com>,
-	<yinghai@kernel.org>, <xen-devel@lists.xenproject.org>,
-	<konrad.wilk@oracle.com>, <david.vrabel@citrix.com>,
-	<alex.williamson@redhat.com>, <kvm@vger.kernel.org>,
-	Jan Beulich <JBeulich@suse.com>
-Subject: Re: [PATCH v3] PCI: Add guard to avoid mapping a invalid msix base
- address
-References: <1422503683-19709-1-git-send-email-wangyijing@huawei.com> <20150202210626.GC5176@google.com>
-In-Reply-To: <20150202210626.GC5176@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from userp1040.oracle.com ([156.151.31.81]:35397 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247AbbCACSq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:18:46 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/8] x86, efi: copy SETUP_EFI data and access directly
+Date: Sat, 28 Feb 2015 18:17:34 -0800
+Message-Id: <1425176259-30087-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> I applied this to pci/msi for v3.20, thanks!  I reworked the changelog as
-> follows; let me know if it still doesn't make things clear:
-> 
+the copy will be in __initdata, and it is small.
 
-It's more clear, thanks for your improvement very much!
+We can use pointer to access the setup_data instead of keeping on
+early_memmap and early_memunmap everywhere.
 
-Thanks!
-Yijing.
+Cc: Matt Fleming <matt.fleming@intel.com>
+Cc: linux-efi@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/efi.h     |  2 +-
+ arch/x86/platform/efi/efi.c    | 13 ++-----------
+ arch/x86/platform/efi/efi_64.c | 13 ++++++++++++-
+ arch/x86/platform/efi/quirks.c | 23 ++++++-----------------
+ 4 files changed, 21 insertions(+), 30 deletions(-)
 
-> 
-> commit 6a878e5085fe97bd1e222b7883a1b815fcbbe4ed
-> Author: Yijing Wang <wangyijing@huawei.com>
-> Date:   Wed Jan 28 09:52:17 2015 +0800
-> 
->     PCI: Fail MSI-X mappings if there's no space assigned to MSI-X BAR
->     
->     Unlike MSI, which is configured via registers in the MSI capability in
->     Configuration Space, MSI-X is configured via tables in Memory Space.
->     These MSI-X tables are mapped by a device BAR, and if no Memory Space
->     has been assigned to the BAR, MSI-X cannot be used.
->     
->     Fail MSI-X setup if no space has been assigned for the BAR.
->     
->     Previously, we ioremapped the MSI-X table even if the resource hadn't been
->     assigned.  In this case, the resource address is undefined (and is often
->     zero), which may lead to warnings or oopses in this path:
->     
->       pci_enable_msix
->         msix_capability_init
->           msix_map_region
->             ioremap_nocache
->     
->     The PCI core sets resource flags to zero when it can't assign space for the
->     resource (see reset_resource()).  There are also some cases where it sets
->     the IORESOURCE_UNSET flag, e.g., pci_reassigndev_resource_alignment(),
->     pci_assign_resource(), etc.  So we must check for both cases.
->     
->     [bhelgaas: changelog]
->     Reported-by: Zhang Jukuo <zhangjukuo@huawei.com>
->     Tested-by: Zhang Jukuo <zhangjukuo@huawei.com>
->     Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index c489ef2c1a39..34fc4189ebf0 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -298,12 +298,16 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  			map_irq.entry_nr = nvec;
->  		} else if (type == PCI_CAP_ID_MSIX) {
->  			int pos;
-> +			unsigned long flags;
->  			u32 table_offset, bir;
->  
->  			pos = dev->msix_cap;
->  			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
->  					      &table_offset);
->  			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
-> +			flags = pci_resource_flags(dev, bir);
-> +			if (!flags || (flags & IORESOURCE_UNSET))
-> +				return -EINVAL;
->  
->  			map_irq.table_base = pci_resource_start(dev, bir);
->  			map_irq.entry_nr = msidesc->msi_attrib.entry_nr;
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index fd60806d3fd0..c3e7dfcf9ff5 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -694,11 +694,16 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
->  {
->  	resource_size_t phys_addr;
->  	u32 table_offset;
-> +	unsigned long flags;
->  	u8 bir;
->  
->  	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
->  			      &table_offset);
->  	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
-> +	flags = pci_resource_flags(dev, bir);
-> +	if (!flags || (flags & IORESOURCE_UNSET))
-> +		return NULL;
-> +
->  	table_offset &= PCI_MSIX_TABLE_OFFSET;
->  	phys_addr = pci_resource_start(dev, bir) + table_offset;
->  
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/include/asm/efi.h b/arch/x86/include/asm/efi.h
+index 25bce45..edbecd6 100644
+--- a/arch/x86/include/asm/efi.h
++++ b/arch/x86/include/asm/efi.h
+@@ -114,7 +114,7 @@ struct efi_setup_data {
+ 	u64 reserved[8];
+ };
+ 
+-extern u64 efi_setup;
++extern struct efi_setup_data *efi_setup;
+ 
+ #ifdef CONFIG_EFI
+ 
+diff --git a/arch/x86/platform/efi/efi.c b/arch/x86/platform/efi/efi.c
+index dbc8627..1cd38e8 100644
+--- a/arch/x86/platform/efi/efi.c
++++ b/arch/x86/platform/efi/efi.c
+@@ -68,7 +68,7 @@ static efi_config_table_type_t arch_tables[] __initdata = {
+ 	{NULL_GUID, NULL, NULL},
+ };
+ 
+-u64 efi_setup;		/* efi setup_data physical address */
++struct efi_setup_data *efi_setup __initdata; /* cached efi setup_data pointer */
+ 
+ static int add_efi_memmap __initdata;
+ static int __init setup_add_efi_memmap(char *arg)
+@@ -225,20 +225,13 @@ static int __init efi_systab_init(void *phys)
+ {
+ 	if (efi_enabled(EFI_64BIT)) {
+ 		efi_system_table_64_t *systab64;
+-		struct efi_setup_data *data = NULL;
++		struct efi_setup_data *data = efi_setup;
+ 		u64 tmp = 0;
+ 
+-		if (efi_setup) {
+-			data = early_memremap(efi_setup, sizeof(*data));
+-			if (!data)
+-				return -ENOMEM;
+-		}
+ 		systab64 = early_memremap((unsigned long)phys,
+ 					 sizeof(*systab64));
+ 		if (systab64 == NULL) {
+ 			pr_err("Couldn't map the system table!\n");
+-			if (data)
+-				early_memunmap(data, sizeof(*data));
+ 			return -ENOMEM;
+ 		}
+ 
+@@ -271,8 +264,6 @@ static int __init efi_systab_init(void *phys)
+ 		tmp |= data ? data->tables : systab64->tables;
+ 
+ 		early_memunmap(systab64, sizeof(*systab64));
+-		if (data)
+-			early_memunmap(data, sizeof(*data));
+ #ifdef CONFIG_X86_32
+ 		if (tmp >> 32) {
+ 			pr_err("EFI data located above 4GB, disabling EFI.\n");
+diff --git a/arch/x86/platform/efi/efi_64.c b/arch/x86/platform/efi/efi_64.c
+index 17e80d8..a541c6c 100644
+--- a/arch/x86/platform/efi/efi_64.c
++++ b/arch/x86/platform/efi/efi_64.c
+@@ -292,9 +292,20 @@ void __iomem *__init efi_ioremap(unsigned long phys_addr, unsigned long size,
+ 	return (void __iomem *)__va(phys_addr);
+ }
+ 
++static struct efi_setup_data efi_setup_data __initdata;
++
+ void __init parse_efi_setup(u64 phys_addr, u32 data_len)
+ {
+-	efi_setup = phys_addr + sizeof(struct setup_data);
++	struct efi_setup_data *data;
++
++	data = early_memremap(phys_addr + sizeof(struct setup_data),
++			      sizeof(*data));
++	if (!data)
++		return;
++
++	efi_setup_data = *data;
++	early_memunmap(data, sizeof(*data));
++	efi_setup = &efi_setup_data;
+ }
+ 
+ void __init efi_runtime_mkexec(void)
+diff --git a/arch/x86/platform/efi/quirks.c b/arch/x86/platform/efi/quirks.c
+index 1c7380d..45fec7d 100644
+--- a/arch/x86/platform/efi/quirks.c
++++ b/arch/x86/platform/efi/quirks.c
+@@ -203,9 +203,8 @@ void __init efi_free_boot_services(void)
+  */
+ int __init efi_reuse_config(u64 tables, int nr_tables)
+ {
+-	int i, sz, ret = 0;
++	int i, sz;
+ 	void *p, *tablep;
+-	struct efi_setup_data *data;
+ 
+ 	if (!efi_setup)
+ 		return 0;
+@@ -213,22 +212,15 @@ int __init efi_reuse_config(u64 tables, int nr_tables)
+ 	if (!efi_enabled(EFI_64BIT))
+ 		return 0;
+ 
+-	data = early_memremap(efi_setup, sizeof(*data));
+-	if (!data) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	if (!data->smbios)
+-		goto out_memremap;
++	if (!efi_setup->smbios)
++		return 0;
+ 
+ 	sz = sizeof(efi_config_table_64_t);
+ 
+ 	p = tablep = early_memremap(tables, nr_tables * sz);
+ 	if (!p) {
+ 		pr_err("Could not map Configuration table!\n");
+-		ret = -ENOMEM;
+-		goto out_memremap;
++		return -ENOMEM;
+ 	}
+ 
+ 	for (i = 0; i < efi.systab->nr_tables; i++) {
+@@ -237,15 +229,12 @@ int __init efi_reuse_config(u64 tables, int nr_tables)
+ 		guid = ((efi_config_table_64_t *)p)->guid;
+ 
+ 		if (!efi_guidcmp(guid, SMBIOS_TABLE_GUID))
+-			((efi_config_table_64_t *)p)->table = data->smbios;
++			((efi_config_table_64_t *)p)->table = efi_setup->smbios;
+ 		p += sz;
+ 	}
+ 	early_memunmap(tablep, nr_tables * sz);
+ 
+-out_memremap:
+-	early_memunmap(data, sizeof(*data));
+-out:
+-	return ret;
++	return 0;
+ }
+ 
+ void __init efi_apply_memmap_quirks(void)
 -- 
-Thanks!
-Yijing
+1.8.4.5
 
