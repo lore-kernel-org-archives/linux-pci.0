@@ -1,71 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55006F56.8010201@ti.com>
-Date: Wed, 11 Mar 2015 12:37:42 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:42621 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbbCAT1t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 14:27:49 -0500
 MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+In-Reply-To: <20150301152351.GA17391@gmail.com>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
+	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+	<20150301094557.GA7748@pd.tnic>
+	<20150301152351.GA17391@gmail.com>
+Date: Sun, 1 Mar 2015 11:27:48 -0800
+Message-ID: <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Borislav Petkov <bp@suse.de>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH] pci: of : fix BUG: unable to handle kernel
-References: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com> <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com> <20150311124911.GA8656@n2100.arm.linux.org.uk> <55005F0F.5080302@ti.com> <CAL_JsqLi+bo=zEobrduWW9D1KtTGtfO17XYw6jGjh_u_foy_VA@mail.gmail.com>
-In-Reply-To: <CAL_JsqLi+bo=zEobrduWW9D1KtTGtfO17XYw6jGjh_u_foy_VA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/11/2015 11:59 AM, Rob Herring wrote:
-> On Wed, Mar 11, 2015 at 10:28 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
->> On 03/11/2015 08:49 AM, Russell King - ARM Linux wrote:
->>>
->>> On Wed, Mar 11, 2015 at 07:35:45AM -0500, Rob Herring wrote:
->>>>
->>>> On Tue, Mar 10, 2015 at 10:25 AM, Murali Karicheri<m-karicheri2@ti.com>
->>>> wrote:
->>>>>
->>>>> On some platforms such as that based on x86, ia64 etc, root bus is
->>>>> created with parent node passed in as NULL to pci_create_root_bus().
->>>>> On these platforms, the patch series "PCI: get DMA configuration from
->>>>> parent device" when applied causes kernel crash. So add a check for this
->>>>> in of_pci_dma_configure()
->>>>
->>>>
->>>> Wouldn't these arches have OF disabled and call an empty function?
->>>> Regardless, we still need this.
->>>>
->>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>>
->>>>
->>>> I'm assuming Bjorn will apply this.
->>>>
->>>> Acked-by: Rob Herring<robh@kernel.org>
->>>
->>>
->>> It might be an idea to read the subject line...
->>>
->>> "fix BUG: unable to handle kernel"
->>
->> Russell,
->>
->> I will fix the subject as "fix BUG: unable to handle kernel NULL pointer"
->> and re-send.
+On Sun, Mar 1, 2015 at 7:23 AM, Ingo Molnar <mingo@kernel.org> wrote:
 >
-> Russell's point is the subject applies to every fix for a BUG.
-> Something like "of/pci: fix of_pci_dma_configure parent ptr NULL
-> dereference".
-Ok. Got it.
+> I think that's a different bug.
 >
-> Rob
+> parse_kaslr_setup() is simply bogus, it does:
+>
+>         kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
+>
+> which makes no sense whatsoever: it randomly enables (or disables,
+> depending on the physical address of the setup page) KASLR when it
+> meets a SETUP_KASLR record.
+>
 
+Yes, you are right.
 
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+there are 8 patches in this series.
+  x86, kaslr: get kaslr_enabled back correctly
+  x86: Kill E820_RESERVED_KERN
+  x86, efi: copy SETUP_EFI data and access directly
+  x86, of: let add_dtb reserve by itself
+  x86, boot: Add add_pci handler for SETUP_PCI
+  x86: kill not used setup_data handling code
+  x86, pci: convert SETUP_PCI data to list
+  x86, pci: export SETUP_PCI data via sysfs
+
+other 7 should also address the problem in
+   http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
+
+the root cause is E820_RESERVED_KERN and setup_data handling
+will make E820 are not page aligned anymore.
+
+We should change setup_data handling.
+
+Please check updated version at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-x86-4.0
+
+(with a fix for config without CONFIG_PCI).
+
+Thanks
+
+Yinghai
