@@ -1,43 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Mar 2015 16:42:49 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: [PATCH v3 07/10] ntb: drop pci_msi_off call on probe
-Message-ID: <1427211032-2270-8-git-send-email-mst@redhat.com>
-References: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:53474 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750794AbbCAJrI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Mar 2015 04:47:08 -0500
+Date: Sun, 1 Mar 2015 10:45:57 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150301094557.GA7748@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+ <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci core now disables msi on probe automatically,
-drop this from device-specific code.
+On Sat, Feb 28, 2015 at 06:40:39PM -0800, Yinghai Lu wrote:
+> oh, no. the offending commit already got into linus tree.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/ntb/ntb_hw.c | 2 --
- 1 file changed, 2 deletions(-)
+We're working on it, follow this thread:
 
-diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-index cd29b10..8225cbc 100644
---- a/drivers/ntb/ntb_hw.c
-+++ b/drivers/ntb/ntb_hw.c
-@@ -1313,8 +1313,6 @@ static int ntb_setup_intx(struct ntb_device *ndev)
- 	struct pci_dev *pdev = ndev->pdev;
- 	int rc;
- 
--	pci_msi_off(pdev);
--
- 	/* Verify intx is enabled */
- 	pci_intx(pdev, 1);
- 
+http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
+
 -- 
-MST
+Regards/Gruss,
+    Boris.
 
+ECO tip #101: Trim your mails when you reply.
+--
