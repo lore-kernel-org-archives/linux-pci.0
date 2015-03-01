@@ -1,187 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:41772 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753471AbbBZSI6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 13:08:58 -0500
-Received: by iecrd18 with SMTP id rd18so18714650iec.8
-        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 10:08:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5a2GnYH01U0OyA0G4Z7yyzqE8Dxt1TKXygifXY0zF_qQ@mail.gmail.com>
-References: <CAE9FiQUT5j1PDw5c0X-k_E+0TbwCdrX1nbqk8rKzxAKxRLqvEg@mail.gmail.com>
-	<54D160B5.70006@nwtrail.com>
-	<CAE9FiQVjiCSj21eqevBOYz42o=aiPPMLM_g+65v8CJWgcdq=pg@mail.gmail.com>
-	<54D6C6CB.6060904@nwtrail.com>
-	<CAE9FiQW+z0GtUXCTnr42N7pQ-3xVTe_3EsmkAhWk7ehkZDq_Qw@mail.gmail.com>
-	<54D7AE67.1090007@nwtrail.com>
-	<CAErSpo4ZYfs9EhdZMXGdjbDY4WUfTNFz+CPBq-Gx3eQ563Fogw@mail.gmail.com>
-	<54DB7F39.8030306@nwtrail.com>
-	<CAErSpo6z1GmTkLQJDhBZxRU2wjCZiYsFBETi18vsYVNzOBi6VA@mail.gmail.com>
-	<54E67479.3020906@nwtrail.com>
-	<20150226002833.GS6220@google.com>
-	<CAE9FiQXgX4iJSvgRaBq9Xk-0jWZHPmshU8dgWyqKsNOG1zgXJA@mail.gmail.com>
-	<CAErSpo5a2GnYH01U0OyA0G4Z7yyzqE8Dxt1TKXygifXY0zF_qQ@mail.gmail.com>
-Date: Thu, 26 Feb 2015 10:08:56 -0800
-Message-ID: <CAE9FiQW=uDAdtwZt7j4uWgsCYoH3Oti76dqDCht4_neeWc3mVQ@mail.gmail.com>
-Subject: Re: [problem] mpt2sas load fails with LSISAS2008
+Received: from userp1040.oracle.com ([156.151.31.81]:35535 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753356AbbCACTU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Feb 2015 21:19:20 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Johnson <pjay@nwtrail.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b10cb2d4fd8b6051001a518
+To: Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 7/8] x86, pci: convert SETUP_PCI data to list
+Date: Sat, 28 Feb 2015 18:17:38 -0800
+Message-Id: <1425176259-30087-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b10cb2d4fd8b6051001a518
-Content-Type: text/plain; charset=UTF-8
+So we could avoid ioremap every time later.
 
-On Thu, Feb 26, 2015 at 7:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c | 77 +++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 63 insertions(+), 14 deletions(-)
 
-> Can you be any more specific?  What I'm looking for is:
->
->   - this worked at commit X
->   - commit Y broke it
->   - commit Z fixes it
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 4846db7..7b6fb94 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -680,10 +680,41 @@ void __init add_pci(u64 pa_data)
+ 	early_memunmap(data, sizeof(*data));
+ }
+ 
+-int pcibios_add_device(struct pci_dev *dev)
++struct firmware_setup_pci_entry {
++	struct list_head list;
++	uint16_t vendor;
++	uint16_t devid;
++	uint64_t pcilen;
++	unsigned long segment;
++	unsigned long bus;
++	unsigned long device;
++	unsigned long function;
++	phys_addr_t rom;
++};
++
++static LIST_HEAD(setup_pci_entries);
++
++static void __init firmware_setup_pci_add_entry(struct pci_setup_rom *rom,
++					u64 pa_data,
++					struct firmware_setup_pci_entry *entry)
++{
++	entry->segment = rom->segment;
++	entry->bus = rom->bus;
++	entry->device = rom->device;
++	entry->function = rom->function;
++	entry->vendor = rom->vendor;
++	entry->devid = rom->devid;
++	entry->rom = pa_data + offsetof(struct pci_setup_rom, romdata);
++	entry->pcilen = rom->pcilen;
++
++	list_add(&entry->list, &setup_pci_entries);
++}
++
++static __init int fill_setup_pci_entries(void)
+ {
+ 	struct setup_data *data;
+ 	struct pci_setup_rom *rom;
++	struct firmware_setup_pci_entry *entry;
+ 	u64 pa_data;
+ 
+ 	pa_data = pci_setup_data;
+@@ -692,24 +723,42 @@ int pcibios_add_device(struct pci_dev *dev)
+ 		if (!data)
+ 			return -ENOMEM;
+ 
+-		rom = (struct pci_setup_rom *)data;
+-
+-		if ((pci_domain_nr(dev->bus) == rom->segment) &&
+-		    (dev->bus->number == rom->bus) &&
+-		    (PCI_SLOT(dev->devfn) == rom->device) &&
+-		    (PCI_FUNC(dev->devfn) == rom->function) &&
+-		    (dev->vendor == rom->vendor) &&
+-		    (dev->device == rom->devid)) {
+-			dev->rom = pa_data +
+-			      offsetof(struct pci_setup_rom, romdata);
+-			dev->romlen = rom->pcilen;
++		entry = kzalloc(sizeof(struct firmware_setup_pci_entry),
++				GFP_ATOMIC);
++		if (!entry) {
++			iounmap(data);
++			return -ENOMEM;
++		}
++
++		firmware_setup_pci_add_entry((struct pci_setup_rom *)data,
++					     pa_data, entry);
++		pa_data = data->next;
++		iounmap(data);
++	}
++
++	return 0;
++}
++postcore_initcall(fill_setup_pci_entries);
++
++int pcibios_add_device(struct pci_dev *dev)
++{
++	struct firmware_setup_pci_entry *entry;
++
++	list_for_each_entry(entry, &setup_pci_entries, list) {
++		if ((pci_domain_nr(dev->bus) == entry->segment) &&
++		    (dev->bus->number == entry->bus) &&
++		    (PCI_SLOT(dev->devfn) == entry->device) &&
++		    (PCI_FUNC(dev->devfn) == entry->function) &&
++		    (dev->vendor == entry->vendor) &&
++		    (dev->device == entry->devid)) {
++			dev->rom = entry->rom;
++			dev->romlen = entry->pcilen;
+ 			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
+ 				   (unsigned long)dev->rom,
+ 				   (unsigned long)(dev->rom + dev->romlen - 1));
+ 		}
+-		pa_data = data->next;
+-		iounmap(data);
+ 	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.4.5
 
-3.4:
-[    0.339990] Some PCI device resources are unassigned, try booting
-with pci=realloc
-
-3.4.1
-[    0.337460] PCI: No. 2 try to assign unassigned res
-[    0.337463] release child resource [mem 0xfbd00000-0xfbd3ffff 64bit]
-[    0.337465] release child resource [mem 0xfbd80000-0xfbdbffff 64bit]
-[    0.337468] release child resource [mem 0xfbdfc000-0xfbdfffff 64bit]
-
-commit Y is there for v3.4 and v3.4.1 both.
-
-| commit b07f2ebc109b607789f648dedcff4b125f9afec6
-| Author: Yinghai Lu <yinghai@kernel.org>
-| Date:   Thu Feb 23 19:23:32 2012 -0800
-|
-|    PCI: add a PCI resource reallocation config option
-|
-|    Add a new config option, PCI_REALLOC_ENABLE_AUTO, which will
-|    automatically try to re-allocate PCI resources if PCI_IOV support is
-|    enabled and the SR-IOV resources are unassigned.  Behavior can still be
-|    controlled using the pci=realloc= parameter.
-|
-|    -v2: According to Jesse, adding one CONFIG option for distribution to
-|         disable it or enable it.
-|    -v3: update Kconfig text (jbarnes)
-
-
-but v3.4 has PCI_REALLOC_ENABLE_AUTO not set.
-and v3.4.1 has that set.
-
-so solution would be:
-1. revert Y and following
-2. introduce commit X: set fixed resource if there is LSI card found
-like attached two patches.
-
---047d7b10cb2d4fd8b6051001a518
-Content-Type: text/x-patch; charset=US-ASCII; name="not_touch_fixed_res_1.patch"
-Content-Disposition: attachment; filename="not_touch_fixed_res_1.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i6mgs09h0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IGRvbid0IHJlbGVhc2UgZml4ZWQgcmVzb3VyY2UgZm9yIHBj
-aT1yZWFsbG9jCgpXZSBzaG91bGQgbm90IHJlbGVhc2UgYnJpZGdlIHJlc291cmNlIGlmIHRoZXJl
-IGlzIGZpeGVkIHJlc291cmNlcwp1bmRlciBpdCwgb3RoZXJ3aXNlIHRoZSBjaGlsZHJlbiB3aWxs
-IG5vdCB3b3JrIHdpdGggbmV3IGJyaWRnZQpyZXNvdXJjZXMuCgpSZXBvcnRlZC1ieTogUGF1bCBK
-b2huc29uIDxwamF5QG53dHJhaWwuY29tPgpTdWdnZXN0ZWQtYnk6IEJqb3JuIEhlbGdhYXMgPGJo
-ZWxnYWFzQGdvb2dsZS5jb20+CkJ1Z3ppbGxhOiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcv
-c2hvd19idWcuY2dpP2lkPTkyMzUxClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlA
-a2VybmVsLm9yZz4KQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcKCi0tLQogZHJpdmVycy9wY2kv
-c2V0dXAtYnVzLmMgfCAgICA2ICsrKystLQogaW5jbHVkZS9saW51eC9pb3BvcnQuaCAgfCAgICAy
-ICstCiBrZXJuZWwvcmVzb3VyY2UuYyAgICAgICB8ICAgMjggKysrKysrKysrKysrKysrKysrKysr
-KysrKystLQogMyBmaWxlcyBjaGFuZ2VkLCAzMSBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygt
-KQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
-LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2Ry
-aXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC0xMzg0LDE0ICsxMzg0LDE2IEBAIHN0YXRpYyB2b2lk
-IHBjaV9icmlkZ2VfcmVsZWFzZV9yZXNvdXJjZXMKIAogCXIgPSAmYl9yZXNbaWR4XTsKIAotCWlm
-ICghci0+cGFyZW50KQorCWlmICghci0+cGFyZW50IHx8IHItPmZsYWdzICYgSU9SRVNPVVJDRV9Q
-Q0lfRklYRUQpCiAJCXJldHVybjsKIAogCS8qCiAJICogaWYgdGhlcmUgYXJlIGNoaWxkcmVuIHVu
-ZGVyIHRoYXQsIHdlIHNob3VsZCByZWxlYXNlIHRoZW0KIAkgKiAgYWxsCiAJICovCi0JcmVsZWFz
-ZV9jaGlsZF9yZXNvdXJjZXMocik7CisJaWYgKCFyZWxlYXNlX2NoaWxkX3Jlc291cmNlcyhyKSkK
-KwkJcmV0dXJuOworCiAJaWYgKCFyZWxlYXNlX3Jlc291cmNlKHIpKSB7CiAJCXR5cGUgPSBvbGRf
-ZmxhZ3MgPSByLT5mbGFncyAmIHR5cGVfbWFzazsKIAkJZGV2X3ByaW50ayhLRVJOX0RFQlVHLCAm
-ZGV2LT5kZXYsICJyZXNvdXJjZSAlZCAlcFIgcmVsZWFzZWRcbiIsCkluZGV4OiBsaW51eC0yLjYv
-aW5jbHVkZS9saW51eC9pb3BvcnQuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9pbmNs
-dWRlL2xpbnV4L2lvcG9ydC5oCisrKyBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9pb3BvcnQuaApA
-QCAtMTQxLDcgKzE0MSw3IEBAIGV4dGVybiBzdHJ1Y3QgcmVzb3VyY2UgaW9tZW1fcmVzb3VyY2U7
-CiBleHRlcm4gc3RydWN0IHJlc291cmNlICpyZXF1ZXN0X3Jlc291cmNlX2NvbmZsaWN0KHN0cnVj
-dCByZXNvdXJjZSAqcm9vdCwgc3RydWN0IHJlc291cmNlICpuZXcpOwogZXh0ZXJuIGludCByZXF1
-ZXN0X3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZSAqcm9vdCwgc3RydWN0IHJlc291cmNlICpuZXcp
-OwogZXh0ZXJuIGludCByZWxlYXNlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZSAqbmV3KTsKLXZv
-aWQgcmVsZWFzZV9jaGlsZF9yZXNvdXJjZXMoc3RydWN0IHJlc291cmNlICpuZXcpOworYm9vbCBy
-ZWxlYXNlX2NoaWxkX3Jlc291cmNlcyhzdHJ1Y3QgcmVzb3VyY2UgKm5ldyk7CiBleHRlcm4gdm9p
-ZCByZXNlcnZlX3JlZ2lvbl93aXRoX3NwbGl0KHN0cnVjdCByZXNvdXJjZSAqcm9vdCwKIAkJCSAg
-ICAgcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LCByZXNvdXJjZV9zaXplX3QgZW5kLAogCQkJICAgICBj
-b25zdCBjaGFyICpuYW1lKTsKSW5kZXg6IGxpbnV4LTIuNi9rZXJuZWwvcmVzb3VyY2UuYwo9PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9rZXJuZWwvcmVzb3VyY2UuYworKysgbGludXgtMi42
-L2tlcm5lbC9yZXNvdXJjZS5jCkBAIC0yNzUsMTEgKzI3NSwzNSBAQCBzdGF0aWMgdm9pZCBfX3Jl
-bGVhc2VfY2hpbGRfcmVzb3VyY2VzKHN0CiAJfQogfQogCi12b2lkIHJlbGVhc2VfY2hpbGRfcmVz
-b3VyY2VzKHN0cnVjdCByZXNvdXJjZSAqcikKK3N0YXRpYyBib29sIF9faGFzX2ZpeGVkX2NoaWxk
-X3Jlc291cmNlcyhzdHJ1Y3QgcmVzb3VyY2UgKnIpCiB7CisJc3RydWN0IHJlc291cmNlICpwOwor
-CisJcCA9IHItPmNoaWxkOworCXdoaWxlIChwKSB7CisJCWlmIChwLT5mbGFncyAmIElPUkVTT1VS
-Q0VfUENJX0ZJWEVEKQorCQkJcmV0dXJuIHRydWU7CisKKwkJaWYgKF9faGFzX2ZpeGVkX2NoaWxk
-X3Jlc291cmNlcyhwKSkKKwkJCXJldHVybiB0cnVlOworCisJCXAgPSBwLT5zaWJsaW5nOworCX0K
-KworCXJldHVybiBmYWxzZTsKK30KKworYm9vbCByZWxlYXNlX2NoaWxkX3Jlc291cmNlcyhzdHJ1
-Y3QgcmVzb3VyY2UgKnIpCit7CisJYm9vbCBmaXhlZDsKKwogCXdyaXRlX2xvY2soJnJlc291cmNl
-X2xvY2spOwotCV9fcmVsZWFzZV9jaGlsZF9yZXNvdXJjZXMocik7CisJZml4ZWQgPSBfX2hhc19m
-aXhlZF9jaGlsZF9yZXNvdXJjZXMocik7CisJaWYgKCFmaXhlZCkKKwkJX19yZWxlYXNlX2NoaWxk
-X3Jlc291cmNlcyhyKTsKIAl3cml0ZV91bmxvY2soJnJlc291cmNlX2xvY2spOworCisJcmV0dXJu
-ICFmaXhlZDsKIH0KIAogLyoqCg==
---047d7b10cb2d4fd8b6051001a518
-Content-Type: text/x-patch; charset=US-ASCII; name="not_touch_fixed_res_2.patch"
-Content-Disposition: attachment; filename="not_touch_fixed_res_2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i6mgsaae1
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IHNldCByZXNvdXJjZSB0byBmaXhlZCBmb3IgbHNpIGRldmlj
-ZXMKCkxTSSBjYXJkcyBkbyBub3Qgd29yayBpZiBwY2kgY29yZSBjaGFuZ2UgcGNpIGJhciB2YXVs
-ZXMuCgpTZXQgdGhlaXIgcmVzb3VyY2UgdG8gZml4ZWQsIHNvIHdpbGwgYWxsb3cgcmVhbGxvYyB0
-byBza2lwIHRoZW0uCgpSZXBvcnRlZC1ieTogUGF1bCBKb2huc29uIDxwamF5QG53dHJhaWwuY29t
-PgpTdWdnZXN0ZWQtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+CkJ1Z3pp
-bGxhOiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTkyMzUxClNp
-Z25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KQ2M6IHN0YWJsZUB2
-Z2VyLmtlcm5lbC5vcmcKCi0tLQogZHJpdmVycy9wY2kvcGNpLmggICAgICAgfCAgICAxICsKIGRy
-aXZlcnMvcGNpL3F1aXJrcy5jICAgIHwgICAyMCArKysrKysrKysrKysrKysrKysrKwogZHJpdmVy
-cy9wY2kvc2V0dXAtYnVzLmMgfCAgICA0ICsrKysKIDMgZmlsZXMgY2hhbmdlZCwgMjUgaW5zZXJ0
-aW9ucygrKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2kuaAo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
-LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9wY2kuaAorKysgbGludXgtMi42L2RyaXZlcnMv
-cGNpL3BjaS5oCkBAIC0xNDcsNiArMTQ3LDcgQEAgc3RhdGljIGlubGluZSB2b2lkIHBjaV9tc2lf
-aW5pdF9wY2lfZGV2KAogI2VuZGlmCiAKIHZvaWQgcGNpX3JlYWxsb2NfZ2V0X29wdChjaGFyICop
-OworYm9vbCBwY2lfcmVhbGxvY191c2VyX2VuYWJsZWQodm9pZCk7CiAKIHN0YXRpYyBpbmxpbmUg
-aW50IHBjaV9ub19kMWQyKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CkluZGV4OiBsaW51eC0yLjYv
-ZHJpdmVycy9wY2kvcXVpcmtzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVy
-cy9wY2kvcXVpcmtzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9xdWlya3MuYwpAQCAtMzI0
-LDYgKzMyNCwyNiBAQCBzdGF0aWMgdm9pZCBxdWlya19zM182NE0oc3RydWN0IHBjaV9kZXYKIERF
-Q0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX1MzLAlQQ0lfREVWSUNFX0lEX1Mz
-Xzg2OCwJCXF1aXJrX3MzXzY0TSk7CiBERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRP
-Ul9JRF9TMywJUENJX0RFVklDRV9JRF9TM185NjgsCQlxdWlya19zM182NE0pOwogCisvKgorICog
-TFNJIGRldmljZXMgZmlybXdhcmUgZG9lcyBub3QgbGlrZSBCQVIgZ2V0IGNoYW5nZWQKKyAqLwor
-c3RhdGljIHZvaWQgcXVpcmtfYmFyX2ZpeGVkKHN0cnVjdCBwY2lfZGV2ICpkZXYpCit7CisJaW50
-IGk7CisKKwlpZiAocGNpX3JlYWxsb2NfdXNlcl9lbmFibGVkKCkpCisJCXJldHVybjsKKworCWZv
-ciAoaSA9IDA7IGkgPCBQQ0lfU1REX1JFU09VUkNFX0VORDsgaSsrKSB7CisJCXN0cnVjdCByZXNv
-dXJjZSAqciA9ICZkZXYtPnJlc291cmNlW2ldOworCisJCWlmICghci0+ZmxhZ3MgfHwgci0+Zmxh
-Z3MgJiBJT1JFU09VUkNFX1VOU0VUKQorCQkJY29udGludWU7CisJCXItPmZsYWdzIHw9IElPUkVT
-T1VSQ0VfUENJX0ZJWEVEOworCX0KK30KK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVO
-RE9SX0lEX0xTSV9MT0dJQywJUENJX0FOWV9JRCwJcXVpcmtfYmFyX2ZpeGVkKTsKKwogc3RhdGlj
-IHZvaWQgcXVpcmtfaW8oc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IHBvcywgdW5zaWduZWQgc2l6
-ZSwKIAkJICAgICBjb25zdCBjaGFyICpuYW1lKQogewpJbmRleDogbGludXgtMi42L2RyaXZlcnMv
-cGNpL3NldHVwLWJ1cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNp
-L3NldHVwLWJ1cy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTE1
-MjEsNiArMTUyMSwxMCBAQCB2b2lkIF9faW5pdCBwY2lfcmVhbGxvY19nZXRfb3B0KGNoYXIgKnN0
-CiAJZWxzZSBpZiAoIXN0cm5jbXAoc3RyLCAib24iLCAyKSkKIAkJcGNpX3JlYWxsb2NfZW5hYmxl
-ID0gdXNlcl9lbmFibGVkOwogfQorYm9vbCBwY2lfcmVhbGxvY191c2VyX2VuYWJsZWQodm9pZCkK
-K3sKKwlyZXR1cm4gcGNpX3JlYWxsb2NfZW5hYmxlID09IHVzZXJfZW5hYmxlZDsKK30KIHN0YXRp
-YyBib29sIHBjaV9yZWFsbG9jX2VuYWJsZWQoZW51bSBlbmFibGVfdHlwZSBlbmFibGUpCiB7CiAJ
-cmV0dXJuIGVuYWJsZSA+PSB1c2VyX2VuYWJsZWQ7Cg==
---047d7b10cb2d4fd8b6051001a518--
