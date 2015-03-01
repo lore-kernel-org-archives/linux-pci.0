@@ -1,84 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:35404 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753450AbbCWV1B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 17:27:01 -0400
-Received: by qgf74 with SMTP id 74so40506265qgf.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:27:01 -0700 (PDT)
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:36332 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbbCAPX5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 10:23:57 -0500
+Date: Sun, 1 Mar 2015 16:23:51 +0100
+From: Ingo Molnar <mingo@kernel.org>
+To: Borislav Petkov <bp@suse.de>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150301152351.GA17391@gmail.com>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+ <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+ <20150301094557.GA7748@pd.tnic>
 MIME-Version: 1.0
-In-Reply-To: <20150320182722.5362.75868.stgit@gimli.home>
-References: <20150320182722.5362.75868.stgit@gimli.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 23 Mar 2015 16:26:40 -0500
-Message-ID: <CAErSpo5geLrWsDi24aYgnRrLV_RwoK-H=kPLd1unA3VPqmzzOg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add ACS quirks for Intel 1G NICs
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150301094557.GA7748@pd.tnic>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 20, 2015 at 1:27 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> Intel has verified that there is no peer-to-peer between functions for
-> the below selection of 82580, 82576, 82575, I350, and 82571 multi-port
-> devices.  This adds the necessary quirks to consider the functions
-> isolated from each other.  82571 quad-port devices are omitted due to
-> likely lack of ACS/isolation in the onboard switch, rendering quirks
-> for the downstream endpoints useless.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: John Ronciak <john.ronciak@intel.com>
 
-Applied to pci/virtualization for v4.1, thanks!
+(Cc:-ed Jiri and Kees as well.)
 
-> ---
->  drivers/pci/quirks.c |   32 ++++++++++++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 85f247e..1bde397 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3822,6 +3822,38 @@ static const struct pci_dev_acs_enabled {
->         { PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
->         { PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
->         { PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
-> +       /* 82580 */
-> +       { PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x150F, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1510, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1511, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1516, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1527, pci_quirk_mf_endpoint_acs },
-> +       /* 82576 */
-> +       { PCI_VENDOR_ID_INTEL, 0x10C9, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x10E6, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x10E7, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x10E8, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x150A, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x150D, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1518, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1526, pci_quirk_mf_endpoint_acs },
-> +       /* 82575 */
-> +       { PCI_VENDOR_ID_INTEL, 0x10A7, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x10A9, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x10D6, pci_quirk_mf_endpoint_acs },
-> +       /* I350 */
-> +       { PCI_VENDOR_ID_INTEL, 0x1521, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1522, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1523, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1524, pci_quirk_mf_endpoint_acs },
-> +       /* 82571 (Quads omitted due to non-ACS switch) */
-> +       { PCI_VENDOR_ID_INTEL, 0x105E, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x105F, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x1060, pci_quirk_mf_endpoint_acs },
-> +       { PCI_VENDOR_ID_INTEL, 0x10D9, pci_quirk_mf_endpoint_acs },
-> +       /* Intel PCH root ports */
->         { PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->         { 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
->         { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
->
+* Borislav Petkov <bp@suse.de> wrote:
+
+> On Sat, Feb 28, 2015 at 06:40:39PM -0800, Yinghai Lu wrote:
+> >
+> > oh, no. the offending commit already got into linus tree.
+> 
+> We're working on it, follow this thread:
+> 
+> http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
+
+I think that's a different bug.
+
+parse_kaslr_setup() is simply bogus, it does:
+
+        kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
+
+which makes no sense whatsoever: it randomly enables (or disables, 
+depending on the physical address of the setup page) KASLR when it 
+meets a SETUP_KASLR record.
+
+So I'm inclined to apply Yinghai's fix, with a better changelog that 
+explains what happened ...
+
+Agreed?
+
+Thanks,
+
+	Ingo
