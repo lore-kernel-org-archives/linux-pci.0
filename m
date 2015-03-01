@@ -1,55 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:38860 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757384AbbCDTuA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:50:00 -0500
-Received: by padfa1 with SMTP id fa1so35985693pad.9
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2015 11:49:59 -0800 (PST)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
-Subject: [PATCH v2 4/4] PCI: X-Gene: Add the MAINTAINERS entry for APM X-Gene v1 PCIe MSI driver
-Date: Wed,  4 Mar 2015 11:40:00 -0800
-Message-Id: <474d683f92125442811a3778e7f29acedb9b1e77.1425497218.git.dhdang@apm.com>
-In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
-References: <cover.1425497218.git.dhdang@apm.com>
-In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
-References: <1678162.2PJ2o1jRen@wuerfel> <cover.1425497218.git.dhdang@apm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:46595 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751166AbbCATuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:50:13 -0500
+Date: Sun, 1 Mar 2015 20:49:04 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150301194904.GC7748@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+ <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+ <20150301094557.GA7748@pd.tnic>
+ <20150301152351.GA17391@gmail.com>
+ <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds information of maintainers for APM X-Gene v1 PCIe
-MSI/MSIX termination driver
+On Sun, Mar 01, 2015 at 11:27:48AM -0800, Yinghai Lu wrote:
+> other 7 should also address the problem in
+>    http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+No, they don't:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ddc5a8c..a1b119b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7490,6 +7490,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
- 
-+PCI MSI DRIVER FOR APPLIEDMICRO XGENE
-+M:	Duc Dang <dhdang@apm.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-+F:	drivers/pci/host/pci-xgene-msi.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
+[    0.000000] parse_setup_data: data: 0x2206e50 (va: ffffffffff200e50) { next: 0x0, type: 0x0, len: 16, data[0]: 0x0 }
+[    0.000000] Unknown setup_data type: 0 ignored!
+
 -- 
-1.9.1
+Regards/Gruss,
+    Boris.
 
+ECO tip #101: Trim your mails when you reply.
+--
