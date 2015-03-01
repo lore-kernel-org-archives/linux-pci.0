@@ -1,184 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:47522 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbbCYI3z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:29:55 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:29:53 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 9EB9C2BB004D
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:49 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8Tfnj38600928
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:49 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8TFQl025975
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:16 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 13/20] powerpc/powernv: Allocate struct pnv_ioda_pe iommu_table dynamically
-Date: Wed, 25 Mar 2015 16:23:54 +0800
-Message-Id: <1427271841-28749-14-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:46220 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751143AbbCATkl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:40:41 -0500
+Date: Sun, 1 Mar 2015 20:39:29 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Jiri Kosina <jkosina@suse.cz>, Kees Cook <keescook@chromium.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150301193929.GB7748@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+ <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+ <20150301094557.GA7748@pd.tnic>
+ <20150301152351.GA17391@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150301152351.GA17391@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously the iommu_table had the same lifetime as a struct pnv_ioda_pe
-and was embedded in it. The pnv_ioda_pe was assigned to a PE on the bootup
-stage. Since PEs are based on the hardware layout which is static in the
-system, they will never get released. This means the iommu_table in the
-pnv_ioda_pe will never get released either.
+On Sun, Mar 01, 2015 at 04:23:51PM +0100, Ingo Molnar wrote:
+> I think that's a different bug.
+> 
+> parse_kaslr_setup() is simply bogus, it does:
+> 
+>         kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
 
-This no longer works for VF PE. VF PEs are created and released dynamically
-when VFs are created and released. So we need to assign pnv_ioda_pe to VF
-PEs respectively when VFs are enabled and clean up those resources for VF
-PE when VFs are disabled. And iommu_table is one of the resources we need
-to handle dynamically.
+Well, we found that while debugging the other issue too:
 
-Current iommu_table is a static field in pnv_ioda_pe, which will face a
-problem when freeing it. During the disabling of a VF,
-pnv_pci_ioda2_release_dma_pe will call iommu_free_table to release the
-iommu_table for this PE. A static iommu_table will fail in
-iommu_free_table.
+https://lkml.kernel.org/r/20150228105049.GA11038@pd.tnic
 
-According to these requirement, this patch allocates iommu_table
-dynamically.
+Scroll to the end.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/iommu.h          |    3 +++
- arch/powerpc/platforms/powernv/pci-ioda.c |   26 ++++++++++++++------------
- arch/powerpc/platforms/powernv/pci.h      |    2 +-
- 3 files changed, 18 insertions(+), 13 deletions(-)
+> So I'm inclined to apply Yinghai's fix, with a better changelog that 
+> explains what happened ...
+> 
+> Agreed?
 
-diff --git a/arch/powerpc/include/asm/iommu.h b/arch/powerpc/include/asm/iommu.h
-index f1ea597..e2abbe8 100644
---- a/arch/powerpc/include/asm/iommu.h
-+++ b/arch/powerpc/include/asm/iommu.h
-@@ -78,6 +78,9 @@ struct iommu_table {
- 	struct iommu_group *it_group;
- #endif
- 	void (*set_bypass)(struct iommu_table *tbl, bool enable);
-+#ifdef CONFIG_PPC_POWERNV
-+	void           *data;
-+#endif
- };
- 
- /* Pure 2^n version of get_order */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 7f58f19..9447ee9 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -916,6 +916,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
- 		return;
- 	}
- 
-+	pe->tce32_table = kzalloc_node(sizeof(struct iommu_table),
-+			GFP_KERNEL, hose->node);
-+	pe->tce32_table->data = pe;
-+
- 	/* Associate it with all child devices */
- 	pnv_ioda_setup_same_PE(bus, pe);
- 
-@@ -1005,7 +1009,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev
- 
- 	pe = &phb->ioda.pe_array[pdn->pe_number];
- 	WARN_ON(get_dma_ops(&pdev->dev) != &dma_iommu_ops);
--	set_iommu_table_base_and_group(&pdev->dev, &pe->tce32_table);
-+	set_iommu_table_base_and_group(&pdev->dev, pe->tce32_table);
- }
- 
- static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
-@@ -1032,7 +1036,7 @@ static int pnv_pci_ioda_dma_set_mask(struct pnv_phb *phb,
- 	} else {
- 		dev_info(&pdev->dev, "Using 32-bit DMA via iommu\n");
- 		set_dma_ops(&pdev->dev, &dma_iommu_ops);
--		set_iommu_table_base(&pdev->dev, &pe->tce32_table);
-+		set_iommu_table_base(&pdev->dev, pe->tce32_table);
- 	}
- 	*pdev->dev.dma_mask = dma_mask;
- 	return 0;
-@@ -1069,9 +1073,9 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (add_to_iommu_group)
- 			set_iommu_table_base_and_group(&dev->dev,
--						       &pe->tce32_table);
-+						       pe->tce32_table);
- 		else
--			set_iommu_table_base(&dev->dev, &pe->tce32_table);
-+			set_iommu_table_base(&dev->dev, pe->tce32_table);
- 
- 		if (dev->subordinate)
- 			pnv_ioda_setup_bus_dma(pe, dev->subordinate,
-@@ -1161,8 +1165,7 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
- void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
- 				 __be64 *startp, __be64 *endp, bool rm)
- {
--	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
--					      tce32_table);
-+	struct pnv_ioda_pe *pe = tbl->data;
- 	struct pnv_phb *phb = pe->phb;
- 
- 	if (phb->type == PNV_PHB_IODA1)
-@@ -1228,7 +1231,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	}
- 
- 	/* Setup linux iommu table */
--	tbl = &pe->tce32_table;
-+	tbl = pe->tce32_table;
- 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
- 				  base << 28, IOMMU_PAGE_SHIFT_4K);
- 
-@@ -1266,8 +1269,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 
- static void pnv_pci_ioda2_set_bypass(struct iommu_table *tbl, bool enable)
- {
--	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
--					      tce32_table);
-+	struct pnv_ioda_pe *pe = tbl->data;
- 	uint16_t window_id = (pe->pe_number << 1 ) + 1;
- 	int64_t rc;
- 
-@@ -1312,10 +1314,10 @@ static void pnv_pci_ioda2_setup_bypass_pe(struct pnv_phb *phb,
- 	pe->tce_bypass_base = 1ull << 59;
- 
- 	/* Install set_bypass callback for VFIO */
--	pe->tce32_table.set_bypass = pnv_pci_ioda2_set_bypass;
-+	pe->tce32_table->set_bypass = pnv_pci_ioda2_set_bypass;
- 
- 	/* Enable bypass by default */
--	pnv_pci_ioda2_set_bypass(&pe->tce32_table, true);
-+	pnv_pci_ioda2_set_bypass(pe->tce32_table, true);
- }
- 
- static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
-@@ -1363,7 +1365,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 	}
- 
- 	/* Setup linux iommu table */
--	tbl = &pe->tce32_table;
-+	tbl = pe->tce32_table;
- 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
- 			IOMMU_PAGE_SHIFT_4K);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 1f0cb66..8428047 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -53,7 +53,7 @@ struct pnv_ioda_pe {
- 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
- 	int			tce32_seg;
- 	int			tce32_segcount;
--	struct iommu_table	tce32_table;
-+	struct iommu_table	*tce32_table;
- 	phys_addr_t		tce_inval_reg_phys;
- 
- 	/* 64-bit TCE bypass region */
+Yes, this fix needs a commit message which actually explains what's it
+fixing before it gets applied.
+
+Thanks.
+
 -- 
-1.7.9.5
+Regards/Gruss,
+    Boris.
 
+ECO tip #101: Trim your mails when you reply.
+--
