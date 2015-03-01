@@ -1,48 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:21837 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873AbbCYHFp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 03:05:45 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v2 1/2] pci: iproc: fix PCIE_IPROC in Kconfig
-Date: Wed, 25 Mar 2015 00:08:12 -0700
-Message-ID: <1427267293-29585-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
-References: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
+Received: from cantor2.suse.de ([195.135.220.15]:47586 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751182AbbCAUat (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Mar 2015 15:30:49 -0500
+Date: Sun, 1 Mar 2015 21:29:38 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150301202938.GD7748@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+ <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+ <20150301094557.GA7748@pd.tnic>
+ <20150301152351.GA17391@gmail.com>
+ <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+ <20150301194904.GC7748@pd.tnic>
+ <CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make PCIE_IPROC depending on both OF and ARM and default to be disabled,
-so it cannot be accidentally enabled by other platforms
+On Sun, Mar 01, 2015 at 12:24:08PM -0800, Yinghai Lu wrote:
+> static allocation in misc.c can not be used to kernel/head_64.S stage safely.
 
-PCIE_IPROC is meant to be enabled by a front-end bus driver. Curenntly
-it's enabled by PCIE_IPROC_PLTFM driver
+Correct. One possibility that works is sticking it right below
+LOAD_PHYSICAL_ADDR:
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
----
- drivers/pci/host/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
++static void add_kaslr_setup_data(struct boot_params *params,
++				 u8 *output, __u8 enabled)
+ {
++	/*
++	 * Stick it right under LOAD_PHYSICAL_ADDR
++	 */
++	ksd = (struct setup_data *)(output - 2 * sizeof(struct setup_data));
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index feccd0d..963b507 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -108,6 +108,8 @@ config PCI_VERSATILE
- 
- config PCIE_IPROC
- 	tristate "Broadcom iProc PCIe controller"
-+	depends on OF && ARM
-+	default n
- 	help
- 	  This enables the iProc PCIe core controller support for Broadcom's
- 	  iProc family of SoCs. An appropriate bus interface driver also needs
+output is LOAD_PHYSICAL_ADDR AFAICT and is the minimum kASLR considers
+so right below it should work:
+
+https://lkml.kernel.org/r/20150228105049.GA11038@pd.tnic
+
 -- 
-1.7.9.5
+Regards/Gruss,
+    Boris.
 
+ECO tip #101: Trim your mails when you reply.
+--
