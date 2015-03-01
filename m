@@ -1,112 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:60688 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212AbbBZIPr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 03:15:47 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"Fenghua Yu" <fenghua.yu@intel.com>
-Subject: [PATCH v4 15/30] PCI/IA64: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Thu, 26 Feb 2015 16:12:09 +0800
-Message-ID: <1424938344-4017-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	David Vrabel <david.vrabel@citrix.com>
+Subject: [PATCH 4/8] x86, of: let add_dtb reserve by itself
+Date: Sat, 28 Feb 2015 18:17:35 -0800
+Message-Id: <1425176259-30087-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+We will not reserve setup_data in general code. Every handler
+need to reserve and copy.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Fenghua Yu <fenghua.yu@intel.com>
-CC: linux-ia64@vger.kernel.org
+Current dtd handling already have code copying, just add reserve code ...
+
+also simplify code a bit with storing real dtb size.
+
+Cc: Rob Herring <robh@kernel.org>
+Cc: David Vrabel <david.vrabel@citrix.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
- 1 files changed, 18 insertions(+), 16 deletions(-)
+ arch/x86/include/asm/prom.h  |  9 ++++++---
+ arch/x86/kernel/devicetree.c | 39 +++++++++++++++++++++------------------
+ 2 files changed, 27 insertions(+), 21 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index e4cda61..dc5354d 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	return 0;
+diff --git a/arch/x86/include/asm/prom.h b/arch/x86/include/asm/prom.h
+index 1d081ac..fb716eddc 100644
+--- a/arch/x86/include/asm/prom.h
++++ b/arch/x86/include/asm/prom.h
+@@ -24,17 +24,20 @@
+ 
+ #ifdef CONFIG_OF
+ extern int of_ioapic;
+-extern u64 initial_dtb;
+-extern void add_dtb(u64 data);
+ void x86_of_pci_init(void);
+ void x86_dtb_init(void);
+ #else
+-static inline void add_dtb(u64 data) { }
+ static inline void x86_of_pci_init(void) { }
+ static inline void x86_dtb_init(void) { }
+ #define of_ioapic 0
+ #endif
+ 
++#ifdef CONFIG_OF_FLATTREE
++extern void add_dtb(u64 data);
++#else
++static inline void add_dtb(u64 data) { }
++#endif
++
+ extern char cmd_line[COMMAND_LINE_SIZE];
+ 
+ #endif /* __ASSEMBLY__ */
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 3d35033..cc2fb61 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -2,6 +2,7 @@
+  * Architecture specific OF callbacks.
+  */
+ #include <linux/bootmem.h>
++#include <linux/memblock.h>
+ #include <linux/export.h>
+ #include <linux/io.h>
+ #include <linux/irqdomain.h>
+@@ -23,7 +24,6 @@
+ #include <asm/setup.h>
+ #include <asm/i8259.h>
+ 
+-__initdata u64 initial_dtb;
+ char __initdata cmd_line[COMMAND_LINE_SIZE];
+ 
+ int __initdata of_ioapic;
+@@ -43,11 +43,23 @@ void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
+ 	return __alloc_bootmem(size, align, __pa(MAX_DMA_ADDRESS));
  }
  
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *controller = bridge->bus->sysdata;
-+
-+	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops phb_ops = {
-+	.phb_prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
++#ifdef CONFIG_OF_FLATTREE
++static u64 initial_dtb __initdata;
++static u32 initial_dtb_size __initdata;
+ void __init add_dtb(u64 data)
  {
- 	struct acpi_device *device = root->device;
-@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_controller *controller;
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
--	struct pci_bus *pbus;
-+	struct pci_host_bridge *host;
- 	int ret;
- 
- 	controller = alloc_pci_controller(domain);
-@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * should handle the case here, but it appears that IA64 hasn't
- 	 * such quirk. So we just ignore the case now.
- 	 */
--	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus), 
--			&pci_root_ops, controller, &info->resources);
--	if (!pbus) {
-+	host = pci_scan_root_bridge(NULL, PCI_DOMBUS(domain, bus), 
-+			&pci_root_ops, controller, &info->resources, &phb_ops);
-+	if (!host) {
- 		pci_free_resource_list(&info->resources);
- 		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
--	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
--			release_pci_root_info, info);
--	pci_scan_child_bus(pbus);
--	return pbus;
++	u32 map_len;
++
+ 	initial_dtb = data + offsetof(struct setup_data, data);
 -}
--
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	struct pci_controller *controller = bridge->bus->sysdata;
--
--	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
--	return 0;
-+	pci_set_host_bridge_release(host, release_pci_root_info, info);
-+	return host->bus;
+ 
++	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
++	initial_boot_params = early_memremap(initial_dtb, map_len);
++	initial_dtb_size = of_get_flat_dt_size();
++	early_memunmap(initial_boot_params, map_len);
++	initial_boot_params = NULL;
++	memblock_reserve(initial_dtb, initial_dtb_size);
++}
++#endif
+ /*
+  * CE4100 ids. Will be moved to machine_device_initcall() once we have it.
+  */
+@@ -272,31 +284,22 @@ static void __init dtb_apic_setup(void)
+ 	dtb_ioapic_setup();
  }
  
- void pcibios_fixup_device_resources(struct pci_dev *dev)
+-#ifdef CONFIG_OF_FLATTREE
+ static void __init x86_flattree_get_config(void)
+ {
+-	u32 size, map_len;
++#ifdef CONFIG_OF_FLATTREE
+ 	void *dt;
+ 
+ 	if (!initial_dtb)
+ 		return;
+ 
+-	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
+-
+-	initial_boot_params = dt = early_memremap(initial_dtb, map_len);
+-	size = of_get_flat_dt_size();
+-	if (map_len < size) {
+-		early_iounmap(dt, map_len);
+-		initial_boot_params = dt = early_memremap(initial_dtb, size);
+-		map_len = size;
+-	}
+-
++	initial_boot_params = dt = early_memremap(initial_dtb,
++						  initial_dtb_size);
+ 	unflatten_and_copy_device_tree();
+-	early_iounmap(dt, map_len);
+-}
+-#else
+-static inline void x86_flattree_get_config(void) { }
++	early_memunmap(dt, initial_dtb_size);
++
++	memblock_free(initial_dtb, initial_dtb_size);
+ #endif
++}
+ 
+ void __init x86_dtb_init(void)
+ {
 -- 
-1.7.1
+1.8.4.5
 
