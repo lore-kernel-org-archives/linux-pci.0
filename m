@@ -1,126 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23994 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339AbbCICnS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:18 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	<linux-parisc@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 22/30] parisc/PCI: Use pci_scan_root_bus() for simplicity
-Date: Mon, 9 Mar 2015 10:34:19 +0800
-Message-ID: <1425868467-9667-23-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:43916 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166AbbCAUYK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 15:24:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150301194904.GC7748@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
+	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+	<20150301094557.GA7748@pd.tnic>
+	<20150301152351.GA17391@gmail.com>
+	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+	<20150301194904.GC7748@pd.tnic>
+Date: Sun, 1 Mar 2015 12:24:08 -0800
+Message-ID: <CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Borislav Petkov <bp@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+On Sun, Mar 1, 2015 at 11:49 AM, Borislav Petkov <bp@suse.de> wrote:
+> On Sun, Mar 01, 2015 at 11:27:48AM -0800, Yinghai Lu wrote:
+>> other 7 should also address the problem in
+>>    http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
+>
+> No, they don't:
+>
+> [    0.000000] parse_setup_data: data: 0x2206e50 (va: ffffffffff200e50) { next: 0x0, type: 0x0, len: 16, data[0]: 0x0 }
+> [    0.000000] Unknown setup_data type: 0 ignored!
+>
+> --
 
-Now pci_bus_add_devices() has been ripped out
-from pci_scan_root_bus(), we could use pci_scan_root_bus()
-instead of pci_create_root_bus() + pci_scan_child_bus()
-for simplicity.
+ok, i get your point.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
-CC: linux-parisc@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/parisc/dino.c    |    8 +++-----
- drivers/parisc/lba_pci.c |    7 ++-----
- 2 files changed, 5 insertions(+), 10 deletions(-)
+static allocation in misc.c can not be used to kernel/head_64.S stage safely.
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index a0580af..eb76a9d 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -981,11 +981,12 @@ static int __init dino_probe(struct parisc_device *dev)
- 	dino_dev->hba.bus_num.end = 255;
- 	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
- 	pci_add_resource(&resources, &dino_dev->hba.bus_num);
-+
- 	/*
- 	** It's not used to avoid chicken/egg problems
- 	** with configuration accessor functions.
- 	*/
--	dino_dev->hba.hba_bus = bus = pci_create_root_bus(&dev->dev,
-+	dino_dev->hba.hba_bus = bus = pci_scan_root_bus(&dev->dev,
- 			 dino_current_bus, &dino_cfg_ops, NULL, &resources);
- 	if (!bus) {
- 		printk(KERN_ERR "ERROR: failed to scan PCI bus on %s (duplicate bus number %d?)\n",
-@@ -996,13 +997,10 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
--	max = pci_scan_child_bus(bus);
--	pci_bus_update_busn_res_end(bus, max);
--
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
- 	 */
--	dino_current_bus = max + 1;
-+	dino_current_bus = bus->busn_res.end + 1;
- 	pci_bus_assign_resources(bus);
- 	pci_bus_add_devices(bus);
- 	return 0;
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index dceb9dd..ba6daec 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1422,7 +1422,6 @@ lba_driver_probe(struct parisc_device *dev)
- 	void *tmp_obj;
- 	char *version;
- 	void __iomem *addr = ioremap_nocache(dev->hpa.start, 4096);
--	int max;
- 
- 	/* Read HW Rev First */
- 	func_class = READ_REG32(addr + LBA_FCLASS);
-@@ -1563,15 +1562,13 @@ lba_driver_probe(struct parisc_device *dev)
- 
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
--		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
-+		pci_scan_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
- 				    cfg_ops, NULL, &resources);
- 	if (!lba_bus) {
- 		pci_free_resource_list(&resources);
- 		return 0;
- 	}
- 
--	max = pci_scan_child_bus(lba_bus);
--
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
- 	if (is_pdc_pat()) {
- 		/* assign resources to un-initialized devices */
-@@ -1599,7 +1596,7 @@ lba_driver_probe(struct parisc_device *dev)
- 		lba_dev->flags |= LBA_FLAG_SKIP_PROBE;
- 	}
- 
--	lba_next_bus = max + 1;
-+	lba_next_bus = pci_bus_child_max_busnr(lba_bus) + 1;
- 	pci_bus_add_devices(lba_bus);
- 
- 	/* Whew! Finally done! Tell services we got this one covered. */
--- 
-1.7.1
+Thanks
 
+Yinghai
