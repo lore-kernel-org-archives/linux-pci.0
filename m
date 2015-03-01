@@ -1,209 +1,199 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:39629 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718AbbB0Aew (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Feb 2015 19:34:52 -0500
-Received: by iecvy18 with SMTP id vy18so23453780iec.6
-        for <linux-pci@vger.kernel.org>; Thu, 26 Feb 2015 16:34:51 -0800 (PST)
-Date: Thu, 26 Feb 2015 18:34:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alnie <memobook80@comcast.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: PCI Issues with ExpressCard/54 Audio Device
-Message-ID: <20150227003448.GH25765@google.com>
-References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net>
- <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net>
- <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com>
- <54EED7D2.7000205@comcast.net>
- <20150226174635.GA25765@google.com>
- <54EF74CF.7050909@comcast.net>
- <20150226231843.GC25765@google.com>
- <54EFB400.4000904@comcast.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54EFB400.4000904@comcast.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	"Lee, Chun-Yi" <jlee@suse.com>, stable@vger.kernel.org
+Subject: [PATCH 2/8] x86: Kill E820_RESERVED_KERN
+Date: Sat, 28 Feb 2015 18:17:33 -0800
+Message-Id: <1425176259-30087-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:02:08PM -0800, Alnie wrote:
-> 
-> 
-> On 02/26/2015 03:18 PM, Bjorn Helgaas wrote:
-> >On Thu, Feb 26, 2015 at 11:32:31AM -0800, Alnie wrote:
-> >>On 02/26/2015 09:46 AM, Bjorn Helgaas wrote:
-> >>>On Thu, Feb 26, 2015 at 12:22:42AM -0800, Alnie wrote:
-> >
-> >>>>	Capabilities: [100 v1] Advanced Error Reporting
-> >>>>		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> >>>>MalfTLP- ECRC- UnsupReq+ ACSViol-
-> >>>
-> >>>This looks suspicious: the bridge logged an Unsupported Request error.
-> >>>Let's see if we can figure out if this error is left there by BIOS or if
-> >>>the PCI core or the driver or rdwrmem is doing something that causes it.
-> >>>
-> >>>Can you try this:
-> >>>
-> >>>   - Boot without the snd_hda_intel driver at all
-> >>>   - Collect "lspci -vvs05:00.0" output
-> >>
-> >>blacklist snd_hda_intel
-> >>
-> >>05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
-> >>PCI to PCIe Bridge (prog-if 00 [Normal decode])
-> >>...
-> >>	Capabilities: [100 v1] Advanced Error Reporting
-> >>		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> >>MalfTLP- ECRC- UnsupReq+ ACSViol-
-> >
-> >All three of your lspci outputs are identical, so it looks like the BIOS
-> >probably left UnsupReq set.  Maybe the kernel should log that and clear it
-> >at boot.  I sort of doubt this is the problem, but we can try clearing
-> >those errors manually:
-> >
-> >   lspci -vvs05:00.0
-> 
-> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
-> PCI to PCIe Bridge (prog-if 00 [Normal decode])
-> 	Physical Slot: 3
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr-
-> Stepping- SERR+ FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 64 bytes
-> 	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
-> 	Memory behind bridge: f4300000-f43fffff
-> 	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort+ <SERR- <PERR-
-> 	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
-> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> 	Capabilities: [50] Power Management version 3
-> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> 		Bridge: PM- B3+
-> 	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-> 		Address: 0000000000000000  Data: 0000
-> 	Capabilities: [80] Subsystem: Creative Labs Device 0040
-> 	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
-> 		DevCap:	MaxPayload 512 bytes, PhantFunc 0
-> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
-> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> 		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
-> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
-> Latency L0s <512ns, L1 <16us
-> 			ClockPM- Surprise- LLActRep- BwNot-
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
-> BWMgmt- ABWMgmt-
-> 	Capabilities: [100 v1] Advanced Error Reporting
-> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> MalfTLP- ECRC- UnsupReq+ ACSViol-
-> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> MalfTLP- ECRC- UnsupReq- ACSViol-
-> 		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-> MalfTLP+ ECRC- UnsupReq- ACSViol-
-> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> 		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
-> 
-> 
-> >   setpci -s05:00.0 0x9a.w=0x0a		# clear UncorrErr UnsuppReq
-> >   setpci -s05:00.0 0x104.l=0x00100000	# clear AER UnsupReq
-> >   lspci -vvs05:00.0
-> 
-> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG
-> PCI to PCIe Bridge (prog-if 00 [Normal decode])
-> 	Physical Slot: 3
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr-
-> Stepping- SERR+ FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 64 bytes
-> 	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=36
-> 	Memory behind bridge: f4300000-f43fffff
-> 	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort+ <SERR- <PERR-
-> 	BridgeCtl: Parity- SERR- NoISA+ VGA- MAbort- >Reset- FastB2B-
-> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> 	Capabilities: [50] Power Management version 3
-> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> 		Bridge: PM- B3+
-> 	Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
-> 		Address: 0000000000000000  Data: 0000
-> 	Capabilities: [80] Subsystem: Creative Labs Device 0040
-> 	Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
-> 		DevCap:	MaxPayload 512 bytes, PhantFunc 0
-> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
-> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
-> Latency L0s <512ns, L1 <16us
-> 			ClockPM- Surprise- LLActRep- BwNot-
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
-> BWMgmt- ABWMgmt-
-> 	Capabilities: [100 v1] Advanced Error Reporting
-> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> MalfTLP- ECRC- UnsupReq- ACSViol-
-> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> MalfTLP- ECRC- UnsupReq- ACSViol-
-> 		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-> MalfTLP+ ECRC- UnsupReq- ACSViol-
-> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> 		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
-> 
-> >   modprobe snd-hda-intel
-> >
-> 
-> Same complaint comes up (no codecs found)
+Now we are using memblock to do early resource reserver/allocation
+instead of using e820 map directly, and setup_data is reserved in
+memblock early already.
+Also kexec will generate setup_data and pass pointer to second kernel,
+so second kernel will reserve setup_data by their own.
 
-So it looks like the Unsupported Request error is unrelated to the problem
-you're seeing.  Probably left over from something the BIOS did when it
-enumerated devices.
+We can kill E820_RESERVED_KERN and not touch e820 map at all.
 
-You could look at "lspci -vv" again after clearing the errors and loading
-the driver.  But I think it will be the same as it was after you manually
-cleared the errors.
+That will fix bug in mark_nonsave_region that can not handle that
+case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
+boundary is not page aligned.
 
-Oh, one more idea: *before* clearing the errors, can you collect
-"lspci -xxxxs05:00.0" output?  That will give us more AER log registers,
-and it's possible there's a clue there.  It's conceivable that we have
-an MPS issue that causes the Unsupported Request error.
+Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
+Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
+Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
+Cc: "Lee, Chun-Yi" <jlee@suse.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ arch/x86/include/uapi/asm/e820.h |  9 ---------
+ arch/x86/kernel/e820.c           |  6 ++----
+ arch/x86/kernel/setup.c          | 26 --------------------------
+ arch/x86/kernel/tboot.c          |  3 +--
+ arch/x86/mm/init_64.c            | 11 ++++-------
+ 5 files changed, 7 insertions(+), 48 deletions(-)
 
-Just to be exhaustive, can you also stash the "lspci -vvv" output for the
-entire system somewhere (again, before clearing the error).
+diff --git a/arch/x86/include/uapi/asm/e820.h b/arch/x86/include/uapi/asm/e820.h
+index d993e33..edc8a71 100644
+--- a/arch/x86/include/uapi/asm/e820.h
++++ b/arch/x86/include/uapi/asm/e820.h
+@@ -33,15 +33,6 @@
+ #define E820_NVS	4
+ #define E820_UNUSABLE	5
+ 
+-
+-/*
+- * reserved RAM used by kernel itself
+- * if CONFIG_INTEL_TXT is enabled, memory of this type will be
+- * included in the S3 integrity calculation and so should not include
+- * any memory that BIOS might alter over the S3 transition
+- */
+-#define E820_RESERVED_KERN        128
+-
+ #ifndef __ASSEMBLY__
+ #include <linux/types.h>
+ struct e820entry {
+diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
+index 46201de..2a6bed9 100644
+--- a/arch/x86/kernel/e820.c
++++ b/arch/x86/kernel/e820.c
+@@ -134,7 +134,6 @@ static void __init e820_print_type(u32 type)
+ {
+ 	switch (type) {
+ 	case E820_RAM:
+-	case E820_RESERVED_KERN:
+ 		printk(KERN_CONT "usable");
+ 		break;
+ 	case E820_RESERVED:
+@@ -688,7 +687,7 @@ void __init e820_mark_nosave_regions(unsigned long limit_pfn)
+ 			register_nosave_region(pfn, PFN_UP(ei->addr));
+ 
+ 		pfn = PFN_DOWN(ei->addr + ei->size);
+-		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
++		if (ei->type != E820_RAM)
+ 			register_nosave_region(PFN_UP(ei->addr), pfn);
+ 
+ 		if (pfn >= limit_pfn)
+@@ -902,7 +901,6 @@ void __init finish_e820_parsing(void)
+ static inline const char *e820_type_to_string(int e820_type)
+ {
+ 	switch (e820_type) {
+-	case E820_RESERVED_KERN:
+ 	case E820_RAM:	return "System RAM";
+ 	case E820_ACPI:	return "ACPI Tables";
+ 	case E820_NVS:	return "ACPI Non-volatile Storage";
+@@ -1077,7 +1075,7 @@ void __init memblock_x86_fill(void)
+ 		if (end != (resource_size_t)end)
+ 			continue;
+ 
+-		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
++		if (ei->type != E820_RAM)
+ 			continue;
+ 
+ 		memblock_add(ei->addr, ei->size);
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 05d444f..c9b3e2f 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -473,30 +473,6 @@ static void __init parse_setup_data(void)
+ 	}
+ }
+ 
+-static void __init e820_reserve_setup_data(void)
+-{
+-	struct setup_data *data;
+-	u64 pa_data;
+-	int found = 0;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-	while (pa_data) {
+-		data = early_memremap(pa_data, sizeof(*data));
+-		e820_update_range(pa_data, sizeof(*data)+data->len,
+-			 E820_RAM, E820_RESERVED_KERN);
+-		found = 1;
+-		pa_data = data->next;
+-		early_iounmap(data, sizeof(*data));
+-	}
+-	if (!found)
+-		return;
+-
+-	sanitize_e820_map(e820.map, ARRAY_SIZE(e820.map), &e820.nr_map);
+-	memcpy(&e820_saved, &e820, sizeof(struct e820map));
+-	printk(KERN_INFO "extended physical RAM map:\n");
+-	e820_print_map("reserve setup_data");
+-}
+-
+ static void __init memblock_x86_reserve_range_setup_data(void)
+ {
+ 	struct setup_data *data;
+@@ -1032,8 +1008,6 @@ void __init setup_arch(char **cmdline_p)
+ 		early_dump_pci_devices();
+ #endif
+ 
+-	/* update the e820_saved too */
+-	e820_reserve_setup_data();
+ 	finish_e820_parsing();
+ 
+ 	if (efi_enabled(EFI_BOOT))
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 91a4496..3c2752a 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -195,8 +195,7 @@ static int tboot_setup_sleep(void)
+ 	tboot->num_mac_regions = 0;
+ 
+ 	for (i = 0; i < e820.nr_map; i++) {
+-		if ((e820.map[i].type != E820_RAM)
+-		 && (e820.map[i].type != E820_RESERVED_KERN))
++		if (e820.map[i].type != E820_RAM)
+ 			continue;
+ 
+ 		add_mac_region(e820.map[i].addr, e820.map[i].size);
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index 30eb05a..19430d5 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -426,8 +426,7 @@ phys_pte_init(pte_t *pte_page, unsigned long addr, unsigned long end,
+ 		next = (addr & PAGE_MASK) + PAGE_SIZE;
+ 		if (addr >= end) {
+ 			if (!after_bootmem &&
+-			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RESERVED_KERN))
++			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM))
+ 				set_pte(pte, __pte(0));
+ 			continue;
+ 		}
+@@ -473,9 +472,8 @@ phys_pmd_init(pmd_t *pmd_page, unsigned long address, unsigned long end,
+ 
+ 		next = (address & PMD_MASK) + PMD_SIZE;
+ 		if (address >= end) {
+-			if (!after_bootmem &&
+-			    !e820_any_mapped(address & PMD_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(address & PMD_MASK, next, E820_RESERVED_KERN))
++			if (!after_bootmem && !e820_any_mapped(
++					address & PMD_MASK, next, E820_RAM))
+ 				set_pmd(pmd, __pmd(0));
+ 			continue;
+ 		}
+@@ -548,8 +546,7 @@ phys_pud_init(pud_t *pud_page, unsigned long addr, unsigned long end,
+ 		next = (addr & PUD_MASK) + PUD_SIZE;
+ 		if (addr >= end) {
+ 			if (!after_bootmem &&
+-			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(addr & PUD_MASK, next, E820_RESERVED_KERN))
++			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM))
+ 				set_pud(pud, __pud(0));
+ 			continue;
+ 		}
+-- 
+1.8.4.5
 
-> >The device is at [mem 0xf4300000-0xf4303fff], so anything in that region
-> >should respond.  Why don't you try this, which should dump the whole
-> >region:
-> >
-> >   ./mem -N -m -s 0xf4300000 -l 0x4000
-> >
-> 
-> http://pastebin.com/eHEsZNmU
-
-The data there looks fine, at least from a PCI perspective:
-
-  F4300000:00 33 00 01 3C 00 1D 00 01 00 00 00 00 00 00 00
-  F4300010:00 00 00 00 00 00 00 00 3C 00 1D 00 00 00 00 00
-  F4300020:00 00 00 C0 00 00 00 00 00 00 00 00 00 00 00 00
-  F4300030:0F FA 24 A8 00 00 00 00 00 00 00 00 00 00 00 00
-  ...
-
-That means the device itself seems happy and is responding to read
-requests.
-
-The only thing left I can think of to do is to instrument the driver and
-see where it gets data that it doesn't expect.  So I'm going to punt this
-back to you, Takashi :)  Don't hesitate to send it back to me if you find
-something that looks like a PCI problem, but I don't see one yet.
-
-Bjorn
