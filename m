@@ -1,115 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:60832 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932219AbbCFLAo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 06:00:44 -0500
-Message-ID: <1425639640.24292.271.camel@x220>
-Subject: Re: [PATCH v3 2/3] pci: iproc: Add Broadcom iProc PCIe support
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
-Date: Fri, 06 Mar 2015 12:00:40 +0100
-In-Reply-To: <1425603699-13416-3-git-send-email-rjui@broadcom.com>
-References: <1425603699-13416-1-git-send-email-rjui@broadcom.com>
-	 <1425603699-13416-3-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:39123 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201AbbCAUlL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 15:41:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <20150301202938.GD7748@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
+	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+	<20150301094557.GA7748@pd.tnic>
+	<20150301152351.GA17391@gmail.com>
+	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+	<20150301194904.GC7748@pd.tnic>
+	<CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
+	<20150301202938.GD7748@pd.tnic>
+Date: Sun, 1 Mar 2015 12:41:10 -0800
+Message-ID: <CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Borislav Petkov <bp@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-03-05 at 17:01 -0800, Ray Jui wrote:
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -106,4 +106,21 @@ config PCI_VERSATILE
->  	bool "ARM Versatile PB PCI controller"
->  	depends on ARCH_VERSATILE
->  
-> +config PCIE_IPROC
-> +	bool "Broadcom iProc PCIe controller"
+On Sun, Mar 1, 2015 at 12:29 PM, Borislav Petkov <bp@suse.de> wrote:
+> On Sun, Mar 01, 2015 at 12:24:08PM -0800, Yinghai Lu wrote:
+>> static allocation in misc.c can not be used to kernel/head_64.S stage safely.
+>
+> Correct. One possibility that works is sticking it right below
+> LOAD_PHYSICAL_ADDR:
+>
+> +static void add_kaslr_setup_data(struct boot_params *params,
+> +                                u8 *output, __u8 enabled)
+>  {
+> +       /*
+> +        * Stick it right under LOAD_PHYSICAL_ADDR
+> +        */
+> +       ksd = (struct setup_data *)(output - 2 * sizeof(struct setup_data));
+>
+> output is LOAD_PHYSICAL_ADDR AFAICT and is the minimum kASLR considers
+> so right below it should work:
 
-bool symbol.
+Does not look safe yet...
 
-> +	help
-> +	  This enables the iProc PCIe core controller support for Broadcom's
-> +	  iProc family of SoCs. An appropriate bus interface driver also needs
-> +	  to be enabled
-> +
-> +config PCIE_IPROC_PLTFM
-> +	bool "Broadcom iProc PCIe platform bus driver"
+Let me think about it more.
 
-Another bool symbol.
+Thanks
 
-> +	depends on ARCH_BCM_IPROC || COMPILE_TEST
-> +	depends on OF
-> +	select PCIE_IPROC
-> +	default ARCH_BCM_IPROC
-> +	help
-> +	  Say Y here if you want to use the Broadcom iProc PCIe controller
-> +	  through the generic platform bus interface
-> +
->  endmenu
-
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-
-> +obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
-> +obj-$(CONFIG_PCIE_IPROC_PLTFM) += pcie-iproc-pltfm.o
-
-Both objectfiles will never be part of a module.
-
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-iproc-pltfm.c
-
-> +#include <linux/module.h>
-
-Is this needed?
-
-> +MODULE_DEVICE_TABLE(of, iproc_pcie_of_match_table);
-
-This macro will be preprocessed away, won't it?
-
-> +static struct platform_driver iproc_pcie_pltfm_driver = {
-> +	.driver = {
-> +		.name = "iproc-pcie",
-> +		.of_match_table = of_match_ptr(iproc_pcie_of_match_table),
-> +		.suppress_bind_attrs = true,
-> +	},
-> +	.probe = iproc_pcie_pltfm_probe,
-> +};
-> +module_platform_driver(iproc_pcie_pltfm_driver);
-
-Perhaps it's clearer to have make this a call to
-platform_driver_register(), put that in a wrapper function, and invoke
-that wrapper function through device_initcall() or similar. I haven't
-actually tested that, so the details could be off.
-
-> +MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
-> +MODULE_DESCRIPTION("Broadcom iPROC PCIe platform driver");
-> +MODULE_LICENSE("GPL v2");
-
-And these three macros will, effectively, be preprocessed away.
-
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-iproc.c
-
-> +#include <linux/module.h>
-
-See above.
-
-> +MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
-> +MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
-> +MODULE_LICENSE("GPL v2");
-
-Ditto.
-
-
-Paul Bolle
-
+Yinghai
