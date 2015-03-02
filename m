@@ -1,133 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15967 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302AbbCXDhi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:38 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 27/30] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Tue, 24 Mar 2015 11:34:21 +0800
-Message-ID: <1427168064-8657-28-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Voegtle <tv@lio96.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Dave Airlie <airlied@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: [Debug 0/2] Debug PCI root resource parsing failure
+Date: Mon,  2 Mar 2015 12:33:19 +0800
+Message-Id: <1425270801-20270-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <alpine.LSU.2.11.1502281100540.15780@er-systems.de>
+References: <alpine.LSU.2.11.1502281100540.15780@er-systems.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
+Hi Thomas,
+	I still can't figure out why the last resource entry "pci_bus
+0000:00: root bus resource [mem 0x80000000-0xd0716ffe]" gets ignored
+by new code. Could you please help to apply these two patches and send
+me back dmesg?
+Thanks!
+Gerry
 
-Signed-off-by: wangyijing@huawei.com
----
- drivers/pci/probe.c |   35 +++++++++--------------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 9 insertions(+), 29 deletions(-)
+Jiang Liu (2):
+  x86/PCI/ACPI: Ignore resources consumed by host bridge itself
+  x86/PCI/ACPI: Gather debug info
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7796bf8..cb0237f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1937,24 +1937,6 @@ put_dev:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent,
--		int domain, int bus, struct pci_ops *ops, void *sysdata,
--		struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources, NULL);
--	if (!host)
--		return NULL;
--
--	host->bus = __pci_create_root_bus(host, ops);
--	if (!host->bus)
--		pci_free_host_bridge(host);
--
--	return host->bus;
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2030,7 +2012,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 	struct pci_bus *b;
- 	int max;
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b)
- 		return NULL;
- 
-@@ -2093,19 +2075,20 @@ struct pci_bus *pci_scan_bus(int domain, int bus,
- 		struct pci_ops *ops, void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, domain, bus, ops, sysdata,
--			&resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, domain, bus, sysdata,
-+			&resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 61e0853..62333ff 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -782,9 +782,6 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus(int domain, int bus, struct pci_ops *ops,
- 					void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, int domain, int bus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
+ arch/x86/pci/acpi.c     |   13 ++++++++++---
+ drivers/acpi/resource.c |    2 ++
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
 -- 
-1.7.1
+1.7.10.4
 
