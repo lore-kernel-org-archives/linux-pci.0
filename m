@@ -1,168 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:44691 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752581AbbCKOMt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:49 -0400
-Received: by lbvn10 with SMTP id n10so9095607lbv.11
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:48 -0700 (PDT)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v4 6/9] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
-Date: Wed, 11 Mar 2015 15:12:46 +0100
-Message-Id: <1426083169-8698-7-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:58002 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbbCBHm2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 02:42:28 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 2 Mar 2015 17:42:25 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 26427357804F
+	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2015 18:42:23 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t227gEPw43909234
+	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:42:23 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t227fnwl013955
+	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:41:49 +1100
+Date: Mon, 2 Mar 2015 15:41:32 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 15/21] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+Message-ID: <20150302074132.GG21571@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083442.32124.96716.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224085234.GJ6220@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150224085234.GJ6220@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmconfig_64.c version is going to be default implementation for arch
-agnostic low-level direct PCI config space accessors for ECAM dirver.
-However, now it initialize raw_pci_ext_ops pointer which is x86 specific
-code only. Moreover, mmconfig_32.c is doing the same thing at the same time.
+On Tue, Feb 24, 2015 at 02:52:34AM -0600, Bjorn Helgaas wrote:
+>On Tue, Feb 24, 2015 at 02:34:42AM -0600, Bjorn Helgaas wrote:
+>> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> 
+>> On PHB3, PF IOV BAR will be covered by M64 window to have better PE
+>> isolation.  The total_pe number is usually different from total_VFs, which
+>> can lead to a conflict between MMIO space and the PE number.
+>> 
+>> For example, if total_VFs is 128 and total_pe is 256, the second half of
+>> M64 window will be part of other PCI device, which may already belong
+>> to other PEs.
+>
+>I'm still trying to wrap my mind around the explanation here.
+>
+>I *think* what's going on is that the M64 window must be a power-of-two
+>size.  If the VF(n) BAR space doesn't completely fill it, we might allocate
+>the leftover space to another device.  Then the M64 window for *this*
+>device may cause the other device to be associated with a PE it didn't
+>expect.
 
-Move it to mmconfig_shared.c so it becomes common for both and
-mmconfig_64.c turns out to be purely arch agnostic.
+Yes, this is the exact reason.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
----
- arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
- arch/x86/pci/mmconfig_32.c     | 10 ++--------
- arch/x86/pci/mmconfig_64.c     | 11 ++---------
- include/linux/ecam.h           |  5 +++++
- 4 files changed, 17 insertions(+), 19 deletions(-)
+>
+>But I don't understand this well enough to describe it clearly.
+>
+>More serious code question below...
+>
+>> Prevent the conflict by reserving additional space for the PF IOV BAR,
+>> which is total_pe number of VF's BAR size.
+>> 
+>> [bhelgaas: make dev_printk() output more consistent, index resource[]
+>> conventionally]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/powerpc/include/asm/machdep.h        |    4 ++
+>>  arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+>>  arch/powerpc/kernel/pci-common.c          |    5 +++
+>>  arch/powerpc/platforms/powernv/pci-ioda.c |   58 +++++++++++++++++++++++++++++
+>>  4 files changed, 70 insertions(+)
+>> 
+>> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+>> index c8175a3fe560..965547c58497 100644
+>> --- a/arch/powerpc/include/asm/machdep.h
+>> +++ b/arch/powerpc/include/asm/machdep.h
+>> @@ -250,6 +250,10 @@ struct machdep_calls {
+>>  	/* Reset the secondary bus of bridge */
+>>  	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  	/* Called to shutdown machine specific hardware not already controlled
+>>  	 * by other drivers.
+>>  	 */
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index 513f8f27060d..de11de7d4547 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -175,6 +175,9 @@ struct pci_dn {
+>>  #define IODA_INVALID_PE		(-1)
+>>  #ifdef CONFIG_PPC_POWERNV
+>>  	int	pe_number;
+>> +#ifdef CONFIG_PCI_IOV
+>> +	u16     max_vfs;		/* number of VFs IOV BAR expended */
+>> +#endif /* CONFIG_PCI_IOV */
+>>  #endif
+>>  	struct list_head child_list;
+>>  	struct list_head list;
+>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>> index 82031011522f..022e9feeb1f2 100644
+>> --- a/arch/powerpc/kernel/pci-common.c
+>> +++ b/arch/powerpc/kernel/pci-common.c
+>> @@ -1646,6 +1646,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+>>  	if (ppc_md.pcibios_fixup_phb)
+>>  		ppc_md.pcibios_fixup_phb(hose);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	if (ppc_md.pcibios_fixup_sriov)
+>> +		ppc_md.pcibios_fixup_sriov(bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  	/* Configure PCI Express settings */
+>>  	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>  		struct pci_bus *child;
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index cd1a56160ded..36c533da5ccb 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -1749,6 +1749,61 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+>>  static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+>>  #endif /* CONFIG_PCI_MSI */
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>> +{
+>> +	struct pci_controller *hose;
+>> +	struct pnv_phb *phb;
+>> +	struct resource *res;
+>> +	int i;
+>> +	resource_size_t size;
+>> +	struct pci_dn *pdn;
+>> +
+>> +	if (!pdev->is_physfn || pdev->is_added)
+>> +		return;
+>> +
+>> +	hose = pci_bus_to_host(pdev->bus);
+>> +	phb = hose->private_data;
+>> +
+>> +	pdn = pci_get_pdn(pdev);
+>> +	pdn->max_vfs = 0;
+>> +
+>> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+>> +		if (!res->flags || res->parent)
+>> +			continue;
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+>> +			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
+>> +				 i, res);
+>> +			continue;
+>> +		}
+>> +
+>> +		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+>> +		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+>> +		res->end = res->start + size * phb->ioda.total_pe - 1;
+>> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
+>> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+>> +				i, res, phb->ioda.total_pe);
+>> +	}
+>> +	pdn->max_vfs = phb->ioda.total_pe;
+>> +}
+>> +
+>> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+>> +{
+>> +	struct pci_dev *pdev;
+>> +	struct pci_bus *b;
+>> +
+>> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
+>> +		b = pdev->subordinate;
+>> +
+>> +		if (b)
+>> +			pnv_pci_ioda_fixup_sriov(b);
+>> +
+>> +		pnv_pci_ioda_fixup_iov_resources(pdev);
+>
+>I'm not sure this happens at the right time.  We have this call chain:
+>
+>  pcibios_scan_phb
+>    pci_create_root_bus
+>    pci_scan_child_bus
+>    pnv_pci_ioda_fixup_sriov
+>      pnv_pci_ioda_fixup_iov_resources
+>	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+>	  increase res->size to accomodate 256 PEs (or roundup(totalVFs)
+>
+>so we only do the fixup_iov_resources() when we scan the PHB, and we
+>wouldn't do it at all for hot-added devices.
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 5064302..6dfe614 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -29,6 +29,11 @@
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- 
-+const struct pci_raw_ops pci_mmcfg = {
-+	.read =		pci_mmcfg_read,
-+	.write =	pci_mmcfg_write,
-+};
-+
- static u32
- pci_mmconfig_amd_read(int len, void __iomem *addr)
- {
-@@ -532,9 +537,10 @@ static void __init __pci_mmcfg_init(int early)
- 		}
- 	}
- 
--	if (pci_mmcfg_arch_init())
-+	if (pci_mmcfg_arch_init()) {
-+		raw_pci_ext_ops = &pci_mmcfg;
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
--	else {
-+	} else {
- 		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5cf6291..7a050cb 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
- 	}
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	unsigned long flags;
-@@ -79,7 +79,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	unsigned long flags;
-@@ -106,15 +106,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- int __init pci_mmcfg_arch_init(void)
- {
- 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
--	raw_pci_ext_ops = &pci_mmcfg;
- 	return 1;
- }
- 
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index b62ff18..fd857ea 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
- 	return NULL;
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	char __iomem *addr;
-@@ -49,7 +49,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	char __iomem *addr;
-@@ -71,11 +71,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
- {
- 	void __iomem *addr;
-@@ -101,8 +96,6 @@ int __init pci_mmcfg_arch_init(void)
- 			return 0;
- 		}
- 
--	raw_pci_ext_ops = &pci_mmcfg;
--
- 	return 1;
- }
- 
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index 2387df5..fba5d6b 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -47,5 +47,10 @@ extern struct list_head pci_mmcfg_list;
- 
- #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
- 
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+		   unsigned int devfn, int reg, int len, u32 *value);
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+		    unsigned int devfn, int reg, int len, u32 value);
-+
- #endif  /* __KERNEL__ */
- #endif  /* __ECAM_H */
+Yep, you are right :-)
+
+I had a separate patch to do this in pcibios_add_pci_devices(). Looks we could
+merge them.
+
+>
+>> +	}
+>> +}
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  /*
+>>   * This function is supposed to be called on basis of PE from top
+>>   * to bottom style. So the the I/O or MMIO segment assigned to
+>> @@ -2125,6 +2180,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+>>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+>>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+>> +#ifdef CONFIG_PCI_IOV
+>> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
+>> +#endif /* CONFIG_PCI_IOV */
+>>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>>  
+>>  	/* Reset IODA tables to a clean state */
+>> 
+
 -- 
-1.9.1
+Richard Yang
+Help you, Help me
 
