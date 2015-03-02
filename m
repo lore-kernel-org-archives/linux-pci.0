@@ -1,139 +1,213 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:34916 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbbC1F0y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 01:26:54 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 2 Mar 2015 17:41:47 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>, sparclinux@vger.kernel.org
+Subject: Re: [PATCH v4 01/30] PCI: Rip out pci_bus_add_devices() from
+ pci_scan_bus()
+Message-ID: <20150302234147.GA11978@google.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+ <1424938344-4017-2-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <551623C1.2040300@oracle.com>
-References: <5514391F.2030300@oracle.com>
-	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
-	<5515F6B8.8020606@oracle.com>
-	<5515F782.7060301@oracle.com>
-	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
-	<551623C1.2040300@oracle.com>
-Date: Fri, 27 Mar 2015 22:26:53 -0700
-Message-ID: <CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Ahern <david.ahern@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a113fb98e285fbb0512527f30
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424938344-4017-2-git-send-email-wangyijing@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a113fb98e285fbb0512527f30
-Content-Type: text/plain; charset=UTF-8
+On Thu, Feb 26, 2015 at 04:11:55PM +0800, Yijing Wang wrote:
+> Pci_bus_add_devices() should not be placed in pci_scan_bus().
+> Now pci device will be added to driver core once its
+> creation. All things left in pci_bus_add_devices() are
+> driver attachment and other trivial sysfs things.
+> Pci_scan_bus() should be the function responsible for
+> scanning PCI devices, not including driver attachment.
+> Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
+> will call pci_bus_size_bridges() and pci_bus_assign_resources()
+> after pci_scan_bus().
+> 
+> E.g.
+> In m68k
+> mcf_pci_init()
+> 	pci_scan_bus()
+> 		...
+> 		pci_bus_add_devices() --- try to attach driver
+> 	pci_fixup_irqs()
+> 	pci_bus_size_bridges()
+> 	pci_bus_assign_resources()
+> 
+> Above code flow make pci scan logic obscure, resources should
+> be assigned correctly before attaching driver. Because
+> pci_scan_bus() mostly be called in system boot path, when
+> before drivers are loaded(in module_init), so no pci scan
+> issues will occur. Most pci_scan_bus() callers additionally
+> call pci_bus_size_bridges() and pci_bus_assign_resources()
+> after pci_scan_bus(), we could rip out pci_bus_add_devices()
+> for better code readability. After applied this patch,
+> pci_scan_bus() should be used like:
+> 
+> pci_scan_bus() (mandatory)
+> pci_fixup_irqs() (optional)
+> pci_bus_size_bridges() (optional)
+> pci_pci_bus_assign_resources() (optional)
+> pci_bus_add_devices() (mandatory)
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: "David S. Miller" <davem@davemloft.net>
+> CC: Geert Uytterhoeven <geert@linux-m68k.org>
+> CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
+> CC: Richard Henderson <rth@twiddle.net>
+> CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> CC: Matt Turner <mattst88@gmail.com>
+> CC: linux-alpha@vger.kernel.org
+> CC: linux-m68k@lists.linux-m68k.org
+> CC: sparclinux@vger.kernel.org
+> ---
+>  arch/alpha/kernel/sys_nautilus.c  |    1 +
+>  arch/m68k/coldfire/pci.c          |    1 +
+>  arch/sparc/kernel/pcic.c          |    2 ++
+>  arch/unicore32/kernel/pci.c       |   11 +++--------
+>  drivers/pci/hotplug/ibmphp_core.c |    6 ++++--
+>  drivers/pci/probe.c               |    1 -
+>  6 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+> index 837c0fa..4ae4a40 100644
+> --- a/arch/alpha/kernel/sys_nautilus.c
+> +++ b/arch/alpha/kernel/sys_nautilus.c
+> @@ -253,6 +253,7 @@ nautilus_init_pci(void)
+>  	   for the root bus, so just clear it. */
+>  	bus->self = NULL;
+>  	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
+> +	pci_bus_add_devices(bus);
+>  }
+>  
+>  /*
+> diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+> index df96792..d45f087 100644
+> --- a/arch/m68k/coldfire/pci.c
+> +++ b/arch/m68k/coldfire/pci.c
+> @@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
+>  	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+>  	pci_bus_size_bridges(rootbus);
+>  	pci_bus_assign_resources(rootbus);
+> +	pci_bus_add_devices(rootbus);
+>  	return 0;
+>  }
+>  
+> diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+> index 6cc78c2..7a82fe2 100644
+> --- a/arch/sparc/kernel/pcic.c
+> +++ b/arch/sparc/kernel/pcic.c
+> @@ -391,6 +391,8 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+>  	struct linux_pbm_info *pbm = &pcic->pbm;
+>  
+>  	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
+> +	if (pbm->pci_bus)
+> +		pci_bus_add_devices(pbm->pci_bus);
+>  #if 0 /* deadwood transplanted from sparc64 */
+>  	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
+>  	pci_record_assignments(pbm, pbm->pci_bus);
 
-On Fri, Mar 27, 2015 at 8:45 PM, David Ahern <david.ahern@oracle.com> wrote:
-> On 3/27/15 9:19 PM, Yinghai Lu wrote:
->>
->> Good. But we still have annoying warning about "no compatible window".
->>
->> Please try attached patch that support 64bit pci mem space for sparc.
->>
->> BTW, looks like you still do not have   CONFIG_PCI_DEBUG=y in your
->> .config.
->> otherwise we should more verbose print out.
->> Or did you have DYNAMIC_DEBUG enabled ?
->> If it is that case, can you remove that?
->>
->
-> done. attached.
->
+This is correct, but it should look like this instead:
 
-ok, we are almost there.
+    if (!pbm->pci_bus)
+      return;
+  #if 0 /* deadwood ... */
+  ...
+  #endif
+    pci_bus_add_devices(pbm->pci_bus);
+  }
 
-[99510.956337] pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-[99511.025812] pci_bus 0000:00: root bus resource [io
-0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
-[99511.151039] pci_bus 0000:00: root bus resource [mem
-0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
-[99511.282693] pci_bus 0000:00: root bus resource [mem
-0x800100000000-0x8007ffffffff] (bus address [0x00000000-0x6ffffffff])
-[99511.414878] pci_bus 0000:00: root bus resource [bus 00-77]
+That way the mainline code is the normal path, and pci_bus_add_devices() is
+in the correct place even if the "deadwood" code is resurrected.
 
 
-looks like the offset for mem64 is not right.
+> diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+> index 374a055..3d82024 100644
+> --- a/arch/unicore32/kernel/pci.c
+> +++ b/arch/unicore32/kernel/pci.c
+> @@ -266,17 +266,12 @@ static int __init pci_common_init(void)
+>  	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+>  
+>  	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> -		/*
+> -		 * Size the bridge windows.
+> -		 */
+> +		/* Size the bridge windows. */
+>  		pci_bus_size_bridges(puv3_bus);
+> -
+> -		/*
+> -		 * Assign resources.
+> -		 */
+> +		/* Assign resources. */
+>  		pci_bus_assign_resources(puv3_bus);
+>  	}
+> -
+> +	pci_bus_add_devices(puv3_bus);
+>  	return 0;
+>  }
+>  subsys_initcall(pci_common_init);
+> diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+> index 96c5c72..86e3bfd 100644
+> --- a/drivers/pci/hotplug/ibmphp_core.c
+> +++ b/drivers/pci/hotplug/ibmphp_core.c
+> @@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
+>   */
+>  static u8 bus_structure_fixup(u8 busno)
+>  {
+> -	struct pci_bus *bus;
+> +	struct pci_bus *bus, *b;
+>  	struct pci_dev *dev;
+>  	u16 l;
+>  
+> @@ -765,7 +765,9 @@ static u8 bus_structure_fixup(u8 busno)
+>  					(l != 0x0000) && (l != 0xffff)) {
+>  			debug("%s - Inside bus_structure_fixup()\n",
+>  							__func__);
+> -			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
+> +			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
+> +			if (b)
+> +				pci_bus_add_devices(b);
 
-Please try attached v2.
+Use this:
 
-Thanks
+    if (!b)
+      continue;
+    pci_bus_add_devices(b);
 
-Yinghai
+for the same reason as above.
 
---001a113fb98e285fbb0512527f30
-Content-Type: text/x-patch; charset=US-ASCII; name="sparc_sun4v_mem64_v2.patch"
-Content-Disposition: attachment; filename="sparc_sun4v_mem64_v2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i7skofxn1
-
-U3ViamVjdDogW1JGQyBQQVRDSCB2Ml0gc3BhcmMvUENJOiBBZGQgbWVtNjQgcmVzb3VyY2UgcGFy
-c2luZyBmb3Igcm9vdCBidXMKCkZvdW5kIG5vIGNvbXBhdGlibGUgYnJpZGdlIHdpbmRvdyB3YXJu
-aW5nIGluIGJvb3QgbG9nIGZyb20gVDUtOC4KCnBjaSAwMDAwOjAwOjAxLjA6IGNhbid0IGNsYWlt
-IEJBUiAxNSBbbWVtIDB4MTAwMDAwMDAwLTB4NGFmZmZmZmZmIHByZWZdOiBubyBjb21wYXRpYmxl
-IGJyaWRnZSB3aW5kb3cKCmFuZCByb290IGJ1cyBvbmx5IHJlcG9ydCBpbyBhbmQgbWVtMzIuCgpw
-Y2lfc3VuNHYgZjAyZGJjZmM6IFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMDowMApwY2lfYnVz
-IDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFtpbyAgMHg4MDQwMDAwMDAwMDAtMHg4MDQwMGZm
-ZmZmZmZdIChidXMgYWRkcmVzcyBbMHgwMDAwLTB4ZmZmZmZmZl0pCnBjaV9idXMgMDAwMDowMDog
-cm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDgwMDAwMDAwMDAwMC0weDgwMDA3ZWZmZmZmZl0gKGJ1
-cyBhZGRyZXNzIFsweDAwMDAwMDAwLTB4N2VmZmZmZmZdKQpwY2lfYnVzIDAwMDA6MDA6IHJvb3Qg
-YnVzIHJlc291cmNlIFtidXMgMDAtNzddCgpBZGQgbWVtNjQgaGFuZGxpbmcgaW4gcGNpX2NvbW1v
-biBmb3Igc3BhcmMsIHNvIHdlIGNhbiBoYXZlIDY0Yml0IHJlc291cmNlCnJlZ2lzdGVyZWQgZm9y
-IGJ1cyBhdCBmaXJzdC4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVs
-Lm9yZz4KCi0tLQotdjI6IG1lbTY0X3NwYWNlIHNob3VsZCB1c2UgbWVtX3NwYWNlLnN0YXJ0IGFz
-IG9mZnNldC4KLS0tCiBhcmNoL3NwYXJjL2tlcm5lbC9wY2kuYyAgICAgICAgfCAgICAzICsrKwog
-YXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jIHwgICAxNSArKysrKysrKysrKysrLS0KIGFy
-Y2gvc3BhcmMva2VybmVsL3BjaV9pbXBsLmggICB8ICAgIDEgKwogMyBmaWxlcyBjaGFuZ2VkLCAx
-NyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3Nw
-YXJjL2tlcm5lbC9wY2kuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3NwYXJj
-L2tlcm5lbC9wY2kuYworKysgbGludXgtMi42L2FyY2gvc3BhcmMva2VybmVsL3BjaS5jCkBAIC02
-NjMsNiArNjYzLDkgQEAgc3RydWN0IHBjaV9idXMgKnBjaV9zY2FuX29uZV9wYm0oc3RydWN0CiAJ
-CQkJcGJtLT5pb19zcGFjZS5zdGFydCk7CiAJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQoJnJlc291
-cmNlcywgJnBibS0+bWVtX3NwYWNlLAogCQkJCXBibS0+bWVtX3NwYWNlLnN0YXJ0KTsKKwlpZiAo
-cGJtLT5tZW02NF9zcGFjZS5mbGFncykKKwkJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQoJnJlc291
-cmNlcywgJnBibS0+bWVtNjRfc3BhY2UsCisJCQkJCXBibS0+bWVtX3NwYWNlLnN0YXJ0KTsKIAlw
-Ym0tPmJ1c24uc3RhcnQgPSBwYm0tPnBjaV9maXJzdF9idXNubzsKIAlwYm0tPmJ1c24uZW5kCT0g
-cGJtLT5wY2lfbGFzdF9idXNubzsKIAlwYm0tPmJ1c24uZmxhZ3MJPSBJT1JFU09VUkNFX0JVUzsK
-SW5kZXg6IGxpbnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfY29tbW9uLmMKPT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jCisrKyBs
-aW51eC0yLjYvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jCkBAIC00MDYsNiArNDA2LDcg
-QEAgdm9pZCBwY2lfZGV0ZXJtaW5lX21lbV9pb19zcGFjZShzdHJ1Y3QgcAogCX0KIAogCW51bV9w
-Ym1fcmFuZ2VzID0gaSAvIHNpemVvZigqcGJtX3Jhbmdlcyk7CisJbWVtc2V0KCZwYm0tPm1lbTY0
-X3NwYWNlLCAwLCBzaXplb2Yoc3RydWN0IHJlc291cmNlKSk7CiAKIAlmb3IgKGkgPSAwOyBpIDwg
-bnVtX3BibV9yYW5nZXM7IGkrKykgewogCQljb25zdCBzdHJ1Y3QgbGludXhfcHJvbV9wY2lfcmFu
-Z2VzICpwciA9ICZwYm1fcmFuZ2VzW2ldOwpAQCAtNDUxLDcgKzQ1MiwxMSBAQCB2b2lkIHBjaV9k
-ZXRlcm1pbmVfbWVtX2lvX3NwYWNlKHN0cnVjdCBwCiAJCQlicmVhazsKIAogCQljYXNlIDM6Ci0J
-CQkvKiBYWFggNjQtYml0IE1FTSBoYW5kbGluZyBYWFggKi8KKwkJCS8qIDY0LWJpdCBNRU0gaGFu
-ZGxpbmcgKi8KKwkJCXBibS0+bWVtNjRfc3BhY2Uuc3RhcnQgPSBhOworCQkJcGJtLT5tZW02NF9z
-cGFjZS5lbmQgPSBhICsgc2l6ZSAtIDFVTDsKKwkJCXBibS0+bWVtNjRfc3BhY2UuZmxhZ3MgPSBJ
-T1JFU09VUkNFX01FTTsKKwkJCWJyZWFrOwogCiAJCWRlZmF1bHQ6CiAJCQlicmVhazsKQEAgLTQ2
-NSwxNSArNDcwLDIxIEBAIHZvaWQgcGNpX2RldGVybWluZV9tZW1faW9fc3BhY2Uoc3RydWN0IHAK
-IAkJcHJvbV9oYWx0KCk7CiAJfQogCi0JcHJpbnRrKCIlczogUENJIElPWyVsbHhdIE1FTVslbGx4
-XVxuIiwKKwlwcmludGsoIiVzOiBQQ0kgSU9bJWxseF0gTUVNWyVsbHhdIiwKIAkgICAgICAgcGJt
-LT5uYW1lLAogCSAgICAgICBwYm0tPmlvX3NwYWNlLnN0YXJ0LAogCSAgICAgICBwYm0tPm1lbV9z
-cGFjZS5zdGFydCk7CisJaWYgKHBibS0+bWVtNjRfc3BhY2UuZmxhZ3MpCisJCXByaW50aygiIE1F
-TTY0WyVsbHhdIiwKKwkJICAgICAgIHBibS0+bWVtNjRfc3BhY2Uuc3RhcnQpOworCXByaW50aygi
-XG4iKTsKIAogCXBibS0+aW9fc3BhY2UubmFtZSA9IHBibS0+bWVtX3NwYWNlLm5hbWUgPSBwYm0t
-Pm5hbWU7CiAKIAlyZXF1ZXN0X3Jlc291cmNlKCZpb3BvcnRfcmVzb3VyY2UsICZwYm0tPmlvX3Nw
-YWNlKTsKIAlyZXF1ZXN0X3Jlc291cmNlKCZpb21lbV9yZXNvdXJjZSwgJnBibS0+bWVtX3NwYWNl
-KTsKKwlpZiAocGJtLT5tZW02NF9zcGFjZS5mbGFncykKKwkJcmVxdWVzdF9yZXNvdXJjZSgmaW9t
-ZW1fcmVzb3VyY2UsICZwYm0tPm1lbTY0X3NwYWNlKTsKIAogCXBjaV9yZWdpc3Rlcl9sZWdhY3lf
-cmVnaW9ucygmcGJtLT5pb19zcGFjZSwKIAkJCQkgICAgJnBibS0+bWVtX3NwYWNlKTsKSW5kZXg6
-IGxpbnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfaW1wbC5oCj09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxp
-bnV4LTIuNi5vcmlnL2FyY2gvc3BhcmMva2VybmVsL3BjaV9pbXBsLmgKKysrIGxpbnV4LTIuNi9h
-cmNoL3NwYXJjL2tlcm5lbC9wY2lfaW1wbC5oCkBAIC05Nyw2ICs5Nyw3IEBAIHN0cnVjdCBwY2lf
-cGJtX2luZm8gewogCS8qIFBCTSBJL08gYW5kIE1lbW9yeSBzcGFjZSByZXNvdXJjZXMuICovCiAJ
-c3RydWN0IHJlc291cmNlCQkJaW9fc3BhY2U7CiAJc3RydWN0IHJlc291cmNlCQkJbWVtX3NwYWNl
-OworCXN0cnVjdCByZXNvdXJjZQkJCW1lbTY0X3NwYWNlOwogCXN0cnVjdCByZXNvdXJjZQkJCWJ1
-c247CiAKIAkvKiBCYXNlIG9mIFBDSSBDb25maWcgc3BhY2UsIGNhbiBiZSBwZXItUEJNIG9yIHNo
-YXJlZC4gKi8K
---001a113fb98e285fbb0512527f30--
+>  			break;
+>  		}
+>  	}
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8d2f400..88604f2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+>  	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+>  	if (b) {
+>  		pci_scan_child_bus(b);
+> -		pci_bus_add_devices(b);
+>  	} else {
+>  		pci_free_resource_list(&resources);
+>  	}
+> -- 
+> 1.7.1
+> 
