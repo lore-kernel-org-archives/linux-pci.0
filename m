@@ -1,89 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bernhard Thaler <bernhard.thaler@wvnet.at>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: lenb@kernel.org, linux-acpi@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:43691 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750802AbbCBJjg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Mar 2015 04:39:36 -0500
+Date: Mon, 2 Mar 2015 10:39:33 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
-Date: Sat, 21 Mar 2015 01:47:14 +0100
-Message-ID: <2663880.nZ5V9XMenj@vostro.rjw.lan>
-In-Reply-To: <550C5A08.3020302@wvnet.at>
-References: <550A7674.6070306@wvnet.at> <4317184.19IeWuljky@vostro.rjw.lan> <550C5A08.3020302@wvnet.at>
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+In-Reply-To: <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.LNX.2.00.1503021038401.9089@pobox.suse.cz>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org> <1425176259-30087-2-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 20, 2015 06:34:00 PM Bernhard Thaler wrote:
-> This is a multi-part message in MIME format.
-> --------------000805070501000906050700
-> Content-Type: text/plain; charset=windows-1252
-> Content-Transfer-Encoding: 7bit
-> 
-> 
-> On 19.03.2015 12:27, Rafael J. Wysocki wrote:
-> > On Thursday, March 19, 2015 08:10:44 AM Bernhard Thaler wrote:
-> > > This is a multi-part message in MIME format.
-> > > --------------000809080900050004000900
-> > > Content-Type: text/plain; charset=windows-1252
-> > > Content-Transfer-Encoding: 7bit
-> > >
-> > > Hi,
-> > >
-> > > I think this regression is not yet solved.
-> >
-> > First off, it is good to CC the commit author too (CCed now).
-> >
-> > > I encounter this or a similar problem with an PC Engines APU.1C device
-> > > (see: http://pcengines.ch/apu.htm). It has 3 network interfaces each
-> > > requiring the r8169 kernel module.
-> > >
-> > > With 4.0.0-rc4 I get this error message at boot (for each of the 3 devices):
-> > >
-> > > [    3.562301] r8169 0000:01:00.0 (unnamed net_device) (uninitialized):
-> > > rtl_chipcmd_cond == 1 (loop: 100, delay: 100).
-> > >
-> > > "ifconfig -a" shows ff:ff:ff:ff:ff:ff as MAC address for each of the
-> > > interfaces (see eth0 as example):
-> > >
-> > > eth0      Link encap:Ethernet  HWaddr ff:ff:ff:ff:ff:ff
-> > >           BROADCAST PROMISC MULTICAST  MTU:1500  Metric:1
-> > >           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-> > >           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-> > >           collisions:0 txqueuelen:1000
-> > >           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-> > >
-> > > The network interfaces cannot be brought up/used.
-> > >
-> > > The same device and setup did work with a previously used 3.18.0-rc5
-> > > kernel. When I boot it with this 3.18.0-rc5 kernel everything i OK,
-> > > interfaces come up and work.
-> >
-> > Second, it is not entirely clear to me that what you're seeing is actually
-> > the same regression.  Have you tested 4.0.0-rc4 with commit 593669c2ac0f
-> > reverted?
-> >
-> You are right, I was a bit quick about this conclusion. I based it on
-> Thomas Voegtle
-> bisect in http://www.spinics.net/lists/linux-pci/msg39014.html and my own
-> observation of the same problem situation with 4.0.0-rc4.
-> 
-> Test Results:
-> 
-> * Everything works fine before 593669c2ac0f, network interfaces are
-> available
->    and usable e.g. with 812dbd9.
-> 
-> * The problem starts for me with 593669c2ac0f as, errors at boot, network
->    interfaces unusable as stated above.
+On Sat, 28 Feb 2015, Yinghai Lu wrote:
 
-And it doesn't go away in 4.0-rc4 which indicates that the fixes applied
-so far do not work for you.
+> We should access variable with referrence instead of using physical
+> address as value.
+> 
+> Cc: Matt Fleming <matt.fleming@intel.com>
+> Cc: Borislav Petkov <bp@suse.de>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Gerry, can you please help here?
+	Acked-by: Jiri Kosina <jkosina@suse.cz>
 
+
+Thanks for fixing my brainfart. This is not fixing the problem with the 
+later variable overwrite, but definitely needs to go in as well.
+
+Thanks.
+
+> ---
+>  arch/x86/kernel/setup.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+> index 98dc931..05d444f 100644
+> --- a/arch/x86/kernel/setup.c
+> +++ b/arch/x86/kernel/setup.c
+> @@ -429,7 +429,13 @@ static void __init reserve_initrd(void)
+>  
+>  static void __init parse_kaslr_setup(u64 pa_data, u32 data_len)
+>  {
+> -	kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
+> +	/* kaslr_setup_data is defined in aslr.c */
+> +	unsigned char *data;
+> +	unsigned long offset = sizeof(struct setup_data);
+> +
+> +	data = early_memremap(pa_data, offset + 1);
+> +	kaslr_enabled = *(data + offset);
+> +	early_memunmap(data, offset + 1);
+>  }
+>  
+>  static void __init parse_setup_data(void)
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Jiri Kosina
+SUSE Labs
