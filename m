@@ -1,85 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:36051 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651AbbCWMoO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:14 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:59599 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805AbbCBH4q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 02:56:46 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 2 Mar 2015 17:56:39 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id F024C3578048
+	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2015 18:56:35 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t227uRPG46661654
+	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:56:35 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t227u16w001948
+	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:56:02 +1100
+Date: Mon, 2 Mar 2015 15:55:45 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-tegra@vger.kernel.org>
-Subject: [PATCH v7 24/31] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-Date: Mon, 23 Mar 2015 20:40:50 +0800
-Message-ID: <1427114457-16687-25-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 18/21] powerpc/powernv: Reserve additional space for
+ IOV BAR, with m64_per_iov supported
+Message-ID: <20150302075545.GI21571@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083504.32124.23374.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224090657.GM6220@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150224090657.GM6220@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_scan_root_bus() is almost similar to
-pci_create_root_bus() + pci_scan_child_bus().
-So we could use common pci_scan_root_bus() in
-pci_common_init_dev() to scan pci busses.
-tegra_pcie_scan_bus() is redundant, remove it.
+On Tue, Feb 24, 2015 at 03:06:57AM -0600, Bjorn Helgaas wrote:
+>On Tue, Feb 24, 2015 at 02:35:04AM -0600, Bjorn Helgaas wrote:
+>> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> 
+>> M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
+>> will exceed the limitation and failed to be assigned.
+>> 
+>> Introduce a different mechanism based on the IOV BAR size:
+>> 
+>>   - if IOV BAR size is smaller than 64MB, expand to total_pe
+>>   - if IOV BAR size is bigger than 64MB, roundup power2
+>> 
+>> [bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+>>  arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+>>  2 files changed, 32 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index 011340df8583..d824bb184ab8 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -179,6 +179,8 @@ struct pci_dn {
+>>  	u16     max_vfs;		/* number of VFs IOV BAR expended */
+>>  	u16     vf_pes;			/* VF PE# under this PF */
+>>  	int     offset;			/* PE# for the first VF PE */
+>> +#define M64_PER_IOV 4
+>> +	int     m64_per_iov;
+>>  #define IODA_INVALID_M64        (-1)
+>>  	int     m64_wins[PCI_SRIOV_NUM_BARS];
+>>  #endif /* CONFIG_PCI_IOV */
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index a3c2fbe35fc8..30b7c3909746 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -2242,6 +2242,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>>  	int i;
+>>  	resource_size_t size;
+>>  	struct pci_dn *pdn;
+>> +	int mul, total_vfs;
+>>  
+>>  	if (!pdev->is_physfn || pdev->is_added)
+>>  		return;
+>> @@ -2252,6 +2253,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>>  	pdn = pci_get_pdn(pdev);
+>>  	pdn->max_vfs = 0;
+>>  
+>> +	total_vfs = pci_sriov_get_totalvfs(pdev);
+>> +	pdn->m64_per_iov = 1;
+>> +	mul = phb->ioda.total_pe;
+>> +
+>> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+>> +		if (!res->flags || res->parent)
+>> +			continue;
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+>> +			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
+>> +				 i, res);
+>
+>Why is this a dev_warn()?  Can the user do anything about it?  Do you want
+>bug reports if users see this message?  There are several other instances
+>of this in the other patches, too.
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thierry Reding <thierry.reding@gmail.com>
-CC: linux-tegra@vger.kernel.org
----
- drivers/pci/host/pci-tegra.c |   16 ----------------
- 1 files changed, 0 insertions(+), 16 deletions(-)
+Thanks for your question.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 94e9362..10c0571 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -630,21 +630,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- 	return irq;
- }
- 
--static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct tegra_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(pcie->dev, -1, sys->busnr, &tegra_pcie_ops,
--			sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static irqreturn_t tegra_pcie_isr(int irq, void *arg)
- {
- 	const char *err_msg[] = {
-@@ -1831,7 +1816,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 	hw.private_data = (void **)&pcie;
- 	hw.setup = tegra_pcie_setup;
- 	hw.map_irq = tegra_pcie_map_irq;
--	hw.scan = tegra_pcie_scan_bus;
- 	hw.ops = &tegra_pcie_ops;
- 
- 	pci_common_init_dev(pcie->dev, &hw);
+Actually, on current implementation, powernv platform can't support a SRIOV
+device with non M64 IOV BAR, since we map the IOV BAR with M64 BAR on PHB.
+Actually, I am not sure which one is better.
+
+>> +			continue;
+>> +		}
+>> +
+>> +		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+>> +
+>> +		/* bigger than 64M */
+>> +		if (size > (1 << 26)) {
+>> +			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
+>> +				 i, res);
+>> +			pdn->m64_per_iov = M64_PER_IOV;
+>> +			mul = __roundup_pow_of_two(total_vfs);
+>
+>Why is this __roundup_pow_of_two() instead of roundup_pow_of_two()?
+>I *think* __roundup_pow_of_two() is basically a helper function for
+>implementing roundup_pow_of_two() and not intended to be used by itself.
+>
+>I think there are other patches that use __roundup_pow_of_two(), too.
+
+Got it, will change it.
+
+>
+>> +			break;
+>> +		}
+>> +	}
+>> +
+>>  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>>  		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+>>  		if (!res->flags || res->parent)
+>> @@ -2264,12 +2291,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>>  
+>>  		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+>>  		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+>> -		res->end = res->start + size * phb->ioda.total_pe - 1;
+>> +		res->end = res->start + size * mul - 1;
+>>  		dev_dbg(&pdev->dev, "                       %pR\n", res);
+>>  		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+>> -				i, res, phb->ioda.total_pe);
+>> +			 i, res, mul);
+>>  	}
+>> -	pdn->max_vfs = phb->ioda.total_pe;
+>> +	pdn->max_vfs = mul;
+>>  }
+>>  
+>>  static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+>> 
+
 -- 
-1.7.1
+Richard Yang
+Help you, Help me
 
