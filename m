@@ -1,83 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:50703 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbbCSFhL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:11 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v9 01/10] iommu/vt-d: New function to attach domain with id
-Date: Thu, 19 Mar 2015 13:36:19 +0800
-Message-Id: <1426743388-26908-2-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Voegtle <tv@lio96.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Dave Airlie <airlied@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Lv Zheng <lv.zheng@intel.com>
+Subject: [Debug 1/2] x86/PCI/ACPI: Ignore resources consumed by host bridge itself
+Date: Mon,  2 Mar 2015 12:33:20 +0800
+Message-Id: <1425270801-20270-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1425270801-20270-1-git-send-email-jiang.liu@linux.intel.com>
+References: <alpine.LSU.2.11.1502281100540.15780@er-systems.de>
+ <1425270801-20270-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow specification of the domain-id for the new domain.
-This patch only adds a new function iommu_attach_domain_with_id, it is like
-the function iommu_attach_domain(), only adding a parameter "did".
+When parsing resources for PCI host bridge, we should ignore resources
+consumed by host bridge itself and only report window resources available
+to child PCI busses.
 
-Bill Sumner:
-    (In older versions) Add new 'did' parameter to iommu_attach_domain();
-    The caller of this function.
-
-Li, Zhenhua:
-    New function iommu_attach_domain_with_id(), instead of updating funtion
-    iommu_attach_domain();
-
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel-iommu.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ arch/x86/pci/acpi.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index ae4c1a8..76674a1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1558,6 +1558,16 @@ static int iommu_attach_domain(struct dmar_domain *domain,
- 	return num;
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 6ac273832f28..ddafc9e8b9b3 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -331,7 +331,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 				struct list_head *list)
+ {
+ 	int ret;
+-	struct resource_entry *entry;
++	struct resource_entry *entry, *tmp;
+ 
+ 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
+@@ -345,8 +345,12 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 		dev_dbg(&device->dev,
+ 			"no IO and memory resources present in _CRS\n");
+ 	else
+-		resource_list_for_each_entry(entry, list)
+-			entry->res->name = info->name;
++		resource_list_for_each_entry_safe(entry, tmp, list) {
++			if (entry->res->flags & IORESOURCE_WINDOW)
++				entry->res->name = info->name;
++			else
++				resource_list_destroy_entry(entry);
++		}
  }
  
-+static int iommu_attach_domain_with_id(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu,
-+			       int domain_number)
-+{
-+	if (domain_number >= 0)
-+		return domain_number;
-+
-+	return iommu_attach_domain(domain, iommu);
-+}
-+
- static int iommu_attach_vm_domain(struct dmar_domain *domain,
- 				  struct intel_iommu *iommu)
- {
-@@ -2225,6 +2235,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	u16 dma_alias;
- 	unsigned long flags;
- 	u8 bus, devfn;
-+	int did = -1;   /* Default to "no domain_id supplied" */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2258,7 +2269,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
--	domain->id = iommu_attach_domain(domain, iommu);
-+	domain->id = iommu_attach_domain_with_id(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		return NULL;
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
 -- 
-2.0.0-rc0
+1.7.10.4
 
