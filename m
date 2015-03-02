@@ -1,94 +1,276 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52203 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752080AbbCPMOM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Mar 2015 08:14:12 -0400
-Date: Mon, 16 Mar 2015 13:14:06 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Fam Zheng <famz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, yhlu.kernel.send@gmail.com
-Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
-Message-ID: <20150316062407-mutt-send-email-mst@redhat.com>
-References: <1426137682-12287-1-git-send-email-famz@redhat.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:37016 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbbCBHdo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 02:33:44 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 2 Mar 2015 17:33:42 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 53FA52CE8040
+	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2015 18:33:39 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t227XTVT42663958
+	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:33:39 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t227X3NX002335
+	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:33:04 +1100
+Date: Mon, 2 Mar 2015 15:32:47 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 10/21] PCI: Consider additional PF's IOV BAR
+ alignment in sizing and assigning
+Message-ID: <20150302073247.GE21571@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224084152.GG6220@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426137682-12287-1-git-send-email-famz@redhat.com>
+In-Reply-To: <20150224084152.GG6220@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 01:21:22PM +0800, Fam Zheng wrote:
-> If the device doesn't support shutdown, disabling interrupts may cause
-> trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
-> after we disable MSI-X, futher notifications from device will be
-> delivered to IRQ, which is unexpected.
+On Tue, Feb 24, 2015 at 02:41:52AM -0600, Bjorn Helgaas wrote:
+>On Tue, Feb 24, 2015 at 02:34:06AM -0600, Bjorn Helgaas wrote:
+>> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> 
+>> When sizing and assigning resources, we divide the resources into two
+>> lists: the requested list and the additional list.  We don't consider the
+>> alignment of additional VF(n) BAR space.
+>> 
+>> This is reasonable because the alignment required for the VF(n) BAR space
+>> is the size of an individual VF BAR, not the size of the space for *all*
+>> VFs.  But some platforms, e.g., PowerNV, require additional alignment.
+>> 
+>> Consider the additional IOV BAR alignment when sizing and assigning
+>> resources.  When there is not enough system MMIO space, the PF's IOV BAR
+>> alignment will not contribute to the bridge.  When there is enough system
+>> MMIO space, the additional alignment will contribute to the bridge.
+>
+>I don't understand the ""when there is not enough system MMIO space" part.
+>How do we tell if there's enough MMIO space?
+>
 
+In __assign_resources_sorted(), it has two resources list, one for requested
+(head) and one for additional (realloc_head). This function will first try to
+combine them and assign. If failed, this means we don't have enough MMIO
+space.
 
-> This IRQ will not be cleared, and
-> may prevent us from making progress, by keep triggering interrupts.
+>> Also, take advantage of pci_dev_resource::min_align to store this
+>> additional alignment.
+>
+>This comment doesn't seem to make sense; this patch doesn't save anything
+>in min_align.
+>
 
-I would say:
-	Since there's no handler, the interrupt line will never be cleared,
-	causing a deadlock.
+At the end of this patch:
 
-> 
-> Signed-off-by: Fam Zheng <famz@redhat.com>
+   add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
 
-However, see below:
+The add_align is stored in pci_dev_resource::min_align in add_to_list(). And
+retrieved by get_res_add_align() in below code. This field is not used
+previously, so I took advantage of this field to store the alignment of the
+additional resources.
 
-> ---
->  drivers/pci/pci-driver.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3cb2210..fb29c96 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
->  
->  	pm_runtime_resume(dev);
->  
-> -	if (drv && drv->shutdown)
-> +	if (drv && drv->shutdown) {
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
-> +		pci_msi_shutdown(pci_dev);
-> +		pci_msix_shutdown(pci_dev);
-> +	}
->  
+>Another question below...
+>
+>> [bhelgaas: changelog, printk cast]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/pci/setup-bus.c |   83 ++++++++++++++++++++++++++++++++++++++++-------
+>>  1 file changed, 70 insertions(+), 13 deletions(-)
+>> 
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index e3e17f3c0f0f..affbceae560f 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
+>>  	}
+>>  }
+>>  
+>> -static resource_size_t get_res_add_size(struct list_head *head,
+>> -					struct resource *res)
+>> +static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
+>> +					       struct resource *res)
+>>  {
+>>  	struct pci_dev_resource *dev_res;
+>>  
+>> @@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
+>>  			int idx = res - &dev_res->dev->resource[0];
+>>  
+>>  			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+>> -				 "res[%d]=%pR get_res_add_size add_size %llx\n",
+>> +				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+>>  				 idx, dev_res->res,
+>> -				 (unsigned long long)dev_res->add_size);
+>> +				 (unsigned long long)dev_res->add_size,
+>> +				 (unsigned long long)dev_res->min_align);
+>>  
+>> -			return dev_res->add_size;
+>> +			return dev_res;
+>>  		}
+>>  	}
+>>  
+>> -	return 0;
+>> +	return NULL;
+>> +}
+>> +
+>> +static resource_size_t get_res_add_size(struct list_head *head,
+>> +					struct resource *res)
+>> +{
+>> +	struct pci_dev_resource *dev_res;
+>> +
+>> +	dev_res = res_to_dev_res(head, res);
+>> +	return dev_res ? dev_res->add_size : 0;
+>> +}
+>> +
+>> +static resource_size_t get_res_add_align(struct list_head *head,
+>> +					 struct resource *res)
+>> +{
+>> +	struct pci_dev_resource *dev_res;
+>> +
+>> +	dev_res = res_to_dev_res(head, res);
+>> +	return dev_res ? dev_res->min_align : 0;
+>>  }
+>>  
+>> +
+>>  /* Sort resources by alignment */
+>>  static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+>>  {
+>> @@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
+>>  	LIST_HEAD(save_head);
+>>  	LIST_HEAD(local_fail_head);
+>>  	struct pci_dev_resource *save_res;
+>> -	struct pci_dev_resource *dev_res, *tmp_res;
+>> +	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+>>  	unsigned long fail_type;
+>> +	resource_size_t add_align, align;
+>>  
+>>  	/* Check if optional add_size is there */
+>>  	if (!realloc_head || list_empty(realloc_head))
+>> @@ -384,10 +405,38 @@ static void __assign_resources_sorted(struct list_head *head,
+>>  	}
+>>  
+>>  	/* Update res in head list with add_size in realloc_head list */
+>> -	list_for_each_entry(dev_res, head, list)
+>> +	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+>>  		dev_res->res->end += get_res_add_size(realloc_head,
+>>  							dev_res->res);
+>>  
+>> +		/*
+>> +		 * There are two kinds of additional resources in the list:
+>> +		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+>> +		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+>> +		 * Here just fix the additional alignment for bridge
+>> +		 */
+>> +		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+>> +			continue;
+>> +
+>> +		add_align = get_res_add_align(realloc_head, dev_res->res);
+>> +
+>> +		/* Reorder the list by their alignment */
+>
+>Why do we need to reorder the list by alignment?
 
-So the following bus reset will disable msi anyway,
-IMHO there's no need to do it in software.
-kexec is more interesting. This is an attempt to leave
-device in a consistent state:
+Resource list "head" is sorted by the alignment, while the alignment would be
+changed after we considering the additional resource.
 
-	commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-	Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
-	Date:   Wed Apr 23 14:58:09 2008 -0700
-	    pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
+Take powernv platform as an example. The IOV BAR is expanded and need to be
+aligned with its total size instead of the individual VF BAR size. If we don't
+reorder it, the IOV BAR would be assigned after some other resources, which
+may cause the real assignment fail even the total size is enough.
 
-but arguably, it's better to disable msi/msix when kexec
-starts - for example, kexec might run after a crash (kdump)
-and shutdown callbacks are not invoked in that case.
+>
+>> +		if (add_align > dev_res->res->start) {
+>> +			dev_res->res->start = add_align;
+>> +			dev_res->res->end = add_align +
+>> +				            resource_size(dev_res->res);
+>> +
+>> +			list_for_each_entry(dev_res2, head, list) {
+>> +				align = pci_resource_alignment(dev_res2->dev,
+>> +							       dev_res2->res);
+>> +				if (add_align > align)
+>> +					list_move_tail(&dev_res->list,
+>> +						       &dev_res2->list);
+>> +			}
+>> +               }
+>> +
+>> +	}
+>> +
+>>  	/* Try updated head list with add_size added */
+>>  	assign_requested_resources_sorted(head, &local_fail_head);
+>>  
+>> @@ -962,6 +1011,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  	struct resource *b_res = find_free_bus_resource(bus,
+>>  					mask | IORESOURCE_PREFETCH, type);
+>>  	resource_size_t children_add_size = 0;
+>> +	resource_size_t children_add_align = 0;
+>> +	resource_size_t add_align = 0;
+>>  
+>>  	if (!b_res)
+>>  		return -ENOSPC;
+>> @@ -986,6 +1037,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  			/* put SRIOV requested res to the optional list */
+>>  			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+>>  					i <= PCI_IOV_RESOURCE_END) {
+>> +				add_align = max(pci_resource_alignment(dev, r), add_align);
+>>  				r->end = r->start - 1;
+>>  				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+>>  				children_add_size += r_size;
+>> @@ -1016,19 +1068,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  			if (order > max_order)
+>>  				max_order = order;
+>>  
+>> -			if (realloc_head)
+>> +			if (realloc_head) {
+>>  				children_add_size += get_res_add_size(realloc_head, r);
+>> +				children_add_align = get_res_add_align(realloc_head, r);
+>> +				add_align = max(add_align, children_add_align);
+>> +			}
+>>  		}
+>>  	}
+>>  
+>>  	min_align = calculate_mem_align(aligns, max_order);
+>>  	min_align = max(min_align, window_alignment(bus, b_res->flags));
+>>  	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
+>> +	add_align = max(min_align, add_align);
+>>  	if (children_add_size > add_size)
+>>  		add_size = children_add_size;
+>>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+>>  		calculate_memsize(size, min_size, add_size,
+>> -				resource_size(b_res), min_align);
+>> +				resource_size(b_res), add_align);
+>>  	if (!size0 && !size1) {
+>>  		if (b_res->start || b_res->end)
+>>  			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+>> @@ -1040,10 +1096,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>>  	b_res->end = size0 + min_align - 1;
+>>  	b_res->flags |= IORESOURCE_STARTALIGN;
+>>  	if (size1 > size0 && realloc_head) {
+>> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+>> -		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+>> +		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
+>> +		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+>>  			   b_res, &bus->busn_res,
+>> -			   (unsigned long long)size1-size0);
+>> +			   (unsigned long long) (size1 - size0),
+>> +			   (unsigned long long) add_align);
+>>  	}
+>>  	return 0;
+>>  }
+>> 
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-The reason this does not trigger for MPT is because
-it has an intx handler so that gets invoked.
-
-So here's my proposal:
-- for 4.0, let's just do a virtio specific work-around,
-  this seems safer.
-- for 4.1, let's disable msi/msix first thing on
-  kexec startup, before driver probe.
-
-I'll post both patches shortly.
-
->  #ifdef CONFIG_KEXEC
->  	/*
-> -- 
-> 1.9.3
-
-
-
+-- 
+Richard Yang
+Help you, Help me
 
