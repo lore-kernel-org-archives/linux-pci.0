@@ -1,102 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-Date: Mon, 9 Mar 2015 10:34:01 +0800
-Message-ID: <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:41239 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbbCBLEb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 06:04:31 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150302085654.GA17532@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
+	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+	<20150301094557.GA7748@pd.tnic>
+	<20150301152351.GA17391@gmail.com>
+	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+	<20150301194904.GC7748@pd.tnic>
+	<CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
+	<20150301202938.GD7748@pd.tnic>
+	<CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
+	<20150302085654.GA17532@pd.tnic>
+Date: Mon, 2 Mar 2015 03:04:30 -0800
+Message-ID: <CAE9FiQVS0ai2k-WNfsbwvOkj8YUxzaZJN5XDTMu1Ukhot7zOTw@mail.gmail.com>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Borislav Petkov <bp@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=089e01634f58b4cd6205104c2e10
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
+--089e01634f58b4cd6205104c2e10
+Content-Type: text/plain; charset=UTF-8
 
-Use pci_scan_root_bus() instead of deprecated function
-pci_scan_bus_parented().
+On Mon, Mar 2, 2015 at 12:56 AM, Borislav Petkov <bp@suse.de> wrote:
+> On Sun, Mar 01, 2015 at 12:41:10PM -0800, Yinghai Lu wrote:
+>> Does not look safe yet...
+>
+> Why?
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: xen-devel@lists.xenproject.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/xen-pcifront.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+We can not assume that range is safe to use.
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index b1ffebe..9e7c28b 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -21,6 +21,7 @@
- #include <linux/bitops.h>
- #include <linux/time.h>
- #include <xen/platform_pci.h>
-+#include "pci.h"
- 
- #include <asm/xen/swiotlb-xen.h>
- #define INVALID_GRANT_REF (0)
-@@ -446,6 +447,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 				 unsigned int domain, unsigned int bus)
- {
- 	struct pci_bus *b;
-+	LIST_HEAD(resources);
- 	struct pcifront_sd *sd = NULL;
- 	struct pci_bus_entry *bus_entry = NULL;
- 	int err = 0;
-@@ -470,17 +472,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_resource);
- 	pcifront_init_sd(sd, domain, bus, pdev);
- 
- 	pci_lock_rescan_remove();
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-+				  &pcifront_bus_ops, sd, &resources);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
- 		err = -ENOMEM;
- 		pci_unlock_rescan_remove();
-+		pci_free_resource_list(&resources);
- 		goto err_out;
- 	}
- 
-@@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 
- 	list_add(&bus_entry->list, &pdev->root_buses);
- 
--	/* pci_scan_bus_parented skips devices which do not have a have
-+	/* pci_scan_root_bus skips devices which do not have a
- 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
--- 
-1.7.1
+Please check attach one that should fix the problem really.
 
+Thanks
+
+Yinghai
+
+--089e01634f58b4cd6205104c2e10
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_decompress_offset.patch"
+Content-Disposition: attachment; filename="fix_decompress_offset.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i6rrdrur0
+
+U3ViamVjdDogW1BBVENIXSB4ODYsIGJvb3Q6IGtlZXAgZGF0YSBmcm9tIGJvb3Qgc3RhZ2UgdG8g
+a2VybmVsIHN0YWdlLgoKTmVlZCB0bwoxLiBtb3ZlIGNvbXByZXNzZWQga2VybmVsIGNsb3NlIHRo
+ZSBlbmQgb2YgYnVmZmVyIGluc3RlYWQgb2YgbWlkZGxlIG9mIGl0LgoyLiB1c2UgQlJLIHRvIGV4
+dGVuZCBpbml0X3NpemUgc28gbm8gb25lIGZyb20ga2VybmVsIGJzcyBhbmQgYnJrIHdpbGwKICAg
+dG91Y2ggdGhlIGRhdGEgcmVnaW9uIGZyb20gYm9vdC9jb21wcmVzc2VkL21pc2MuYwoKU2lnbmVk
+LW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBhcmNoL3g4Ni9i
+b290L2NvbXByZXNzZWQvaGVhZF8zMi5TIHwgICAxMyArKysrKysrKysrKy0tCiBhcmNoL3g4Ni9i
+b290L2NvbXByZXNzZWQvaGVhZF82NC5TIHwgICAxMCArKysrKysrKy0tCiBhcmNoL3g4Ni9ib290
+L2NvbXByZXNzZWQvbWlzYy5jICAgIHwgICAgNCArKysrCiBhcmNoL3g4Ni9ib290L2NvbXByZXNz
+ZWQvbWtwaWdneS5jIHwgICAgMyAtLS0KIGFyY2gveDg2L2luY2x1ZGUvYXNtL2Jvb3QuaCAgICAg
+ICAgfCAgICAyICsrCiBhcmNoL3g4Ni9rZXJuZWwvYXNtLW9mZnNldHMuYyAgICAgIHwgICAgMSAr
+CiBhcmNoL3g4Ni9rZXJuZWwvc2V0dXAuYyAgICAgICAgICAgIHwgICAgMyArKysKIDcgZmlsZXMg
+Y2hhbmdlZCwgMjkgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0y
+LjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL2hlYWRfNjQuUwo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
+eC0yLjYub3JpZy9hcmNoL3g4Ni9ib290L2NvbXByZXNzZWQvaGVhZF82NC5TCisrKyBsaW51eC0y
+LjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL2hlYWRfNjQuUwpAQCAtMTAyLDcgKzEwMiwxMCBA
+QCBFTlRSWShzdGFydHVwXzMyKQogMToKIAogCS8qIFRhcmdldCBhZGRyZXNzIHRvIHJlbG9jYXRl
+IHRvIGZvciBkZWNvbXByZXNzaW9uICovCi0JYWRkbAkkel9leHRyYWN0X29mZnNldCwgJWVieAor
+CW1vdmwJQlBfaW5pdF9zaXplKCVlc2kpLCAlZWF4CisJc3VibAkkX2VuZCwgJWVheAorCWFuZGwJ
+JCh+KDQwOTYtMSkpLCAlZWF4CisJYWRkbAklZWF4LCAlZWJ4CiAKIC8qCiAgKiBQcmVwYXJlIGZv
+ciBlbnRlcmluZyA2NCBiaXQgbW9kZQpAQCAtMzMwLDcgKzMzMywxMCBAQCBwcmVmZXJyZWRfYWRk
+cjoKIDE6CiAKIAkvKiBUYXJnZXQgYWRkcmVzcyB0byByZWxvY2F0ZSB0byBmb3IgZGVjb21wcmVz
+c2lvbiAqLwotCWxlYXEJel9leHRyYWN0X29mZnNldCglcmJwKSwgJXJieAorCW1vdmwJQlBfaW5p
+dF9zaXplKCVyc2kpLCAlZWJ4CisJc3VibAkkX2VuZCwgJWVieAorCWFuZGwJJCh+KDQwOTYtMSkp
+LCAlZWJ4CisJYWRkcQklcmJwLCAlcmJ4CiAKIAkvKiBTZXQgdXAgdGhlIHN0YWNrICovCiAJbGVh
+cQlib290X3N0YWNrX2VuZCglcmJ4KSwgJXJzcApJbmRleDogbGludXgtMi42L2FyY2gveDg2L2tl
+cm5lbC9hc20tb2Zmc2V0cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2
+L2tlcm5lbC9hc20tb2Zmc2V0cy5jCisrKyBsaW51eC0yLjYvYXJjaC94ODYva2VybmVsL2FzbS1v
+ZmZzZXRzLmMKQEAgLTY2LDYgKzY2LDcgQEAgdm9pZCBjb21tb24odm9pZCkgewogCU9GRlNFVChC
+UF9oYXJkd2FyZV9zdWJhcmNoLCBib290X3BhcmFtcywgaGRyLmhhcmR3YXJlX3N1YmFyY2gpOwog
+CU9GRlNFVChCUF92ZXJzaW9uLCBib290X3BhcmFtcywgaGRyLnZlcnNpb24pOwogCU9GRlNFVChC
+UF9rZXJuZWxfYWxpZ25tZW50LCBib290X3BhcmFtcywgaGRyLmtlcm5lbF9hbGlnbm1lbnQpOwor
+CU9GRlNFVChCUF9pbml0X3NpemUsIGJvb3RfcGFyYW1zLCBoZHIuaW5pdF9zaXplKTsKIAlPRkZT
+RVQoQlBfcHJlZl9hZGRyZXNzLCBib290X3BhcmFtcywgaGRyLnByZWZfYWRkcmVzcyk7CiAJT0ZG
+U0VUKEJQX2NvZGUzMl9zdGFydCwgYm9vdF9wYXJhbXMsIGhkci5jb2RlMzJfc3RhcnQpOwogCklu
+ZGV4OiBsaW51eC0yLjYvYXJjaC94ODYva2VybmVsL3NldHVwLmMKPT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGlu
+dXgtMi42Lm9yaWcvYXJjaC94ODYva2VybmVsL3NldHVwLmMKKysrIGxpbnV4LTIuNi9hcmNoL3g4
+Ni9rZXJuZWwvc2V0dXAuYwpAQCAtMTExLDYgKzExMSw3IEBACiAjaW5jbHVkZSA8YXNtL21jZS5o
+PgogI2luY2x1ZGUgPGFzbS9hbHRlcm5hdGl2ZS5oPgogI2luY2x1ZGUgPGFzbS9wcm9tLmg+Cisj
+aW5jbHVkZSA8YXNtL2Jvb3QuaD4KIAogLyoKICAqIG1heF9sb3dfcGZuX21hcHBlZDogaGlnaGVz
+dCBkaXJlY3QgbWFwcGVkIHBmbiB1bmRlciA0R0IKQEAgLTE0NCw2ICsxNDUsOCBAQCBpbnQgZGVm
+YXVsdF9jaGVja19waHlzX2FwaWNpZF9wcmVzZW50KGluCiB9CiAjZW5kaWYKIAorUkVTRVJWRV9C
+UksoYWRkb25fem8sIEJPT1RfQURET05fWk9fU0laRSk7CisKIHN0cnVjdCBib290X3BhcmFtcyBi
+b290X3BhcmFtczsKIAogLyoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXByZXNz
+ZWQvaGVhZF8zMi5TCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L2Jvb3Qv
+Y29tcHJlc3NlZC9oZWFkXzMyLlMKKysrIGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXByZXNz
+ZWQvaGVhZF8zMi5TCkBAIC0xNDgsNyArMTQ4LDEwIEBAIHByZWZlcnJlZF9hZGRyOgogMToKIAog
+CS8qIFRhcmdldCBhZGRyZXNzIHRvIHJlbG9jYXRlIHRvIGZvciBkZWNvbXByZXNzaW9uICovCi0J
+YWRkbAkkel9leHRyYWN0X29mZnNldCwgJWVieAorCW1vdmwgICAgQlBfaW5pdF9zaXplKCVlc2kp
+LCAlZWF4CisJc3VibCAgICAkX2VuZCwgJWVheAorCWFuZGwgICAgJCh+KDQwOTYtMSkpLCAlZWF4
+CisJYWRkbCAgICAlZWF4LCAlZWJ4CiAKIAkvKiBTZXQgdXAgdGhlIHN0YWNrICovCiAJbGVhbAli
+b290X3N0YWNrX2VuZCglZWJ4KSwgJWVzcApAQCAtMjEwLDggKzIxMywxNCBAQCByZWxvY2F0ZWQ6
+CiAJCQkJLyogcHVzaCBhcmd1bWVudHMgZm9yIGRlY29tcHJlc3Nfa2VybmVsOiAqLwogCXB1c2hs
+CSR6X3J1bl9zaXplCS8qIHNpemUgb2Yga2VybmVsIHdpdGggLmJzcyBhbmQgLmJyayAqLwogCXB1
+c2hsCSR6X291dHB1dF9sZW4JLyogZGVjb21wcmVzc2VkIGxlbmd0aCwgZW5kIG9mIHJlbG9jcyAq
+LwotCWxlYWwJel9leHRyYWN0X29mZnNldF9uZWdhdGl2ZSglZWJ4KSwgJWVicAorCisJbW92bCAg
+ICBCUF9pbml0X3NpemUoJWVzaSksICVlYXgKKwlzdWJsICAgICRfZW5kLCAlZWF4CisJYW5kbCAg
+ICAkKH4oNDA5Ni0xKSksICVlYXgKKwltb3ZsCSVlYngsICVlYnAKKwlzdWJsCSVlYXgsICVlYnAK
+IAlwdXNobAklZWJwCQkvKiBvdXRwdXQgYWRkcmVzcyAqLworCiAJcHVzaGwJJHpfaW5wdXRfbGVu
+CS8qIGlucHV0X2xlbiAqLwogCWxlYWwJaW5wdXRfZGF0YSglZWJ4KSwgJWVheAogCXB1c2hsCSVl
+YXgJCS8qIGlucHV0X2RhdGEgKi8KSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXBy
+ZXNzZWQvbWtwaWdneS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L2Jv
+b3QvY29tcHJlc3NlZC9ta3BpZ2d5LmMKKysrIGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXBy
+ZXNzZWQvbWtwaWdneS5jCkBAIC04NSw5ICs4NSw2IEBAIGludCBtYWluKGludCBhcmdjLCBjaGFy
+ICphcmd2W10pCiAJcHJpbnRmKCJ6X291dHB1dF9sZW4gPSAlbHVcbiIsICh1bnNpZ25lZCBsb25n
+KW9sZW4pOwogCXByaW50ZigiLmdsb2JsIHpfZXh0cmFjdF9vZmZzZXRcbiIpOwogCXByaW50Zigi
+el9leHRyYWN0X29mZnNldCA9IDB4JWx4XG4iLCBvZmZzKTsKLQkvKiB6X2V4dHJhY3Rfb2Zmc2V0
+X25lZ2F0aXZlIGFsbG93cyBzaW1wbGlmaWNhdGlvbiBvZiBoZWFkXzMyLlMgKi8KLQlwcmludGYo
+Ii5nbG9ibCB6X2V4dHJhY3Rfb2Zmc2V0X25lZ2F0aXZlXG4iKTsKLQlwcmludGYoInpfZXh0cmFj
+dF9vZmZzZXRfbmVnYXRpdmUgPSAtMHglbHhcbiIsIG9mZnMpOwogCXByaW50ZigiLmdsb2JsIHpf
+cnVuX3NpemVcbiIpOwogCXByaW50Zigiel9ydW5fc2l6ZSA9ICVsdVxuIiwgcnVuX3NpemUpOwog
+CkluZGV4OiBsaW51eC0yLjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL21pc2MuYwo9PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3g4Ni9ib290L2NvbXByZXNzZWQvbWlzYy5jCisr
+KyBsaW51eC0yLjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL21pc2MuYwpAQCAtMzY2LDYgKzM2
+Niw4IEBAIHN0YXRpYyB2b2lkIHBhcnNlX2VsZih2b2lkICpvdXRwdXQpCiAJZnJlZShwaGRycyk7
+CiB9CiAKK2V4dGVybiBjaGFyIF9yb2RhdGFbXSwgX2VuZFtdOworCiBhc21saW5rYWdlIF9fdmlz
+aWJsZSB2b2lkICpkZWNvbXByZXNzX2tlcm5lbCh2b2lkICpybW9kZSwgbWVtcHRyIGhlYXAsCiAJ
+CQkJICB1bnNpZ25lZCBjaGFyICppbnB1dF9kYXRhLAogCQkJCSAgdW5zaWduZWQgbG9uZyBpbnB1
+dF9sZW4sCkBAIC0zOTIsNiArMzk0LDggQEAgYXNtbGlua2FnZSBfX3Zpc2libGUgdm9pZCAqZGVj
+b21wcmVzc19rZQogCiAJY29uc29sZV9pbml0KCk7CiAJZGVidWdfcHV0c3RyKCJlYXJseSBjb25z
+b2xlIGluIGRlY29tcHJlc3Nfa2VybmVsXG4iKTsKKwlpZiAoX2VuZCAtIF9yb2RhdGEgPiBCT09U
+X0FERE9OX1pPX1NJWkUpCisJCWRlYnVnX3B1dHN0cigiQk9PVF9BRERPTl9aT19TSVpFIHRvbyBz
+bWFsbFxuIik7CiAKIAlmcmVlX21lbV9wdHIgICAgID0gaGVhcDsJLyogSGVhcCAqLwogCWZyZWVf
+bWVtX2VuZF9wdHIgPSBoZWFwICsgQk9PVF9IRUFQX1NJWkU7CkluZGV4OiBsaW51eC0yLjYvYXJj
+aC94ODYvaW5jbHVkZS9hc20vYm9vdC5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2Fy
+Y2gveDg2L2luY2x1ZGUvYXNtL2Jvb3QuaAorKysgbGludXgtMi42L2FyY2gveDg2L2luY2x1ZGUv
+YXNtL2Jvb3QuaApAQCAtMzcsNCArMzcsNiBAQAogI2RlZmluZSBCT09UX1NUQUNLX1NJWkUJMHgx
+MDAwCiAjZW5kaWYKIAorI2RlZmluZSBCT09UX0FERE9OX1pPX1NJWkUgMHg0MDAwMAorCiAjZW5k
+aWYgLyogX0FTTV9YODZfQk9PVF9IICovCg==
+--089e01634f58b4cd6205104c2e10--
