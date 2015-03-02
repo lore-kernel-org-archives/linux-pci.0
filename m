@@ -1,85 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:33348 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbbC2GSn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Mar 2015 02:18:43 -0400
-Received: by iecvj10 with SMTP id vj10so96675581iec.0
-        for <linux-pci@vger.kernel.org>; Sat, 28 Mar 2015 23:18:42 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:40808 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750911AbbCBI6J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 Mar 2015 03:58:09 -0500
+Date: Mon, 2 Mar 2015 09:56:54 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
+	Kees Cook <keescook@chromium.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150302085654.GA17532@pd.tnic>
+References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
+ <1425176259-30087-2-git-send-email-yinghai@kernel.org>
+ <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
+ <20150301094557.GA7748@pd.tnic>
+ <20150301152351.GA17391@gmail.com>
+ <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+ <20150301194904.GC7748@pd.tnic>
+ <CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
+ <20150301202938.GD7748@pd.tnic>
+ <CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <55167C1C.6010001@huawei.com>
-References: <55167C1C.6010001@huawei.com>
-Date: Sat, 28 Mar 2015 23:18:41 -0700
-Message-ID: <CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
-Subject: Re: Assign mem resource fail after remove and rescan
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	PCI <linux-pci@vger.kernel.org>,
-	"Herui (Ray)" <Ray.herui@huawei.com>
-Content-Type: multipart/mixed; boundary=20cf304352b64ccc5605126756aa
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---20cf304352b64ccc5605126756aa
-Content-Type: text/plain; charset=UTF-8
+On Sun, Mar 01, 2015 at 12:41:10PM -0800, Yinghai Lu wrote:
+> Does not look safe yet...
 
-On Sat, Mar 28, 2015 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> ...
->
-> I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
-> and when system boot up, it requested only 0x4800000.
->
-> In hotplug(remove and rescan) path, we would call calculate_mem_align() function which would align the resource at 0x2000000.
+Why?
 
-Looks like we align the size too early. Please check if attach patch
-could fix the problem.
+-- 
+Regards/Gruss,
+    Boris.
 
-Thanks
-
-Yinghai
-
---20cf304352b64ccc5605126756aa
-Content-Type: text/x-patch; charset=US-ASCII; name="align_size_later.patch"
-Content-Disposition: attachment; filename="align_size_later.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i7u22fh10
-
-U3ViamVjdDogW1JGVCBQQVRDSF0gUENJOiBBbGlnbiByZXNvdXJjZSBzaXplIGxhdGVyIGluIGJ1
-cyBtZW0gc2l6aW5nCgpURVNUIG9ubHkuCgpXZSBvbmx5IG5lZWQgdG8gYWxpZ24gdGhlIHNpemUg
-b24gYnJpZGdlIHVwIG9uZSBsZXZlbCBsYXRlci4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVz
-LmMgfCAgIDE1ICsrKysrKystLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygr
-KSwgOCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVz
-LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMK
-KysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtNzgzLDggKzc4Myw3IEBA
-IHN0YXRpYyByZXNvdXJjZV9zaXplX3QgY2FsY3VsYXRlX2lvc2l6ZSgKIHN0YXRpYyByZXNvdXJj
-ZV9zaXplX3QgY2FsY3VsYXRlX21lbXNpemUocmVzb3VyY2Vfc2l6ZV90IHNpemUsCiAJCXJlc291
-cmNlX3NpemVfdCBtaW5fc2l6ZSwKIAkJcmVzb3VyY2Vfc2l6ZV90IHNpemUxLAotCQlyZXNvdXJj
-ZV9zaXplX3Qgb2xkX3NpemUsCi0JCXJlc291cmNlX3NpemVfdCBhbGlnbikKKwkJcmVzb3VyY2Vf
-c2l6ZV90IG9sZF9zaXplKQogewogCWlmIChzaXplIDwgbWluX3NpemUpCiAJCXNpemUgPSBtaW5f
-c2l6ZTsKQEAgLTc5Miw4ICs3OTEsOCBAQCBzdGF0aWMgcmVzb3VyY2Vfc2l6ZV90IGNhbGN1bGF0
-ZV9tZW1zaXplCiAJCW9sZF9zaXplID0gMDsKIAlpZiAoc2l6ZSA8IG9sZF9zaXplKQogCQlzaXpl
-ID0gb2xkX3NpemU7Ci0Jc2l6ZSA9IEFMSUdOKHNpemUgKyBzaXplMSwgYWxpZ24pOwotCXJldHVy
-biBzaXplOworCisJcmV0dXJuIHNpemUgKyBzaXplMTsKIH0KIAogcmVzb3VyY2Vfc2l6ZV90IF9f
-d2VhayBwY2liaW9zX3dpbmRvd19hbGlnbm1lbnQoc3RydWN0IHBjaV9idXMgKmJ1cywKQEAgLTEw
-MDgsMTAgKzEwMDcsMTAgQEAgc3RhdGljIGludCBwYnVzX3NpemVfbWVtKHN0cnVjdCBwY2lfYnVz
-CiAJCQkJci0+ZmxhZ3MgPSAwOwogCQkJCWNvbnRpbnVlOwogCQkJfQotCQkJc2l6ZSArPSByX3Np
-emU7CisJCQlzaXplICs9IEFMSUdOKHJfc2l6ZSwgYWxpZ24pOwogCQkJLyogRXhjbHVkZSByYW5n
-ZXMgd2l0aCBzaXplID4gYWxpZ24gZnJvbQogCQkJICAgY2FsY3VsYXRpb24gb2YgdGhlIGFsaWdu
-bWVudC4gKi8KLQkJCWlmIChyX3NpemUgPT0gYWxpZ24pCisJCQlpZiAocl9zaXplIDw9IGFsaWdu
-KQogCQkJCWFsaWduc1tvcmRlcl0gKz0gYWxpZ247CiAJCQlpZiAob3JkZXIgPiBtYXhfb3JkZXIp
-CiAJCQkJbWF4X29yZGVyID0gb3JkZXI7CkBAIC0xMDIzLDEyICsxMDIyLDEyIEBAIHN0YXRpYyBp
-bnQgcGJ1c19zaXplX21lbShzdHJ1Y3QgcGNpX2J1cwogCiAJbWluX2FsaWduID0gY2FsY3VsYXRl
-X21lbV9hbGlnbihhbGlnbnMsIG1heF9vcmRlcik7CiAJbWluX2FsaWduID0gbWF4KG1pbl9hbGln
-biwgd2luZG93X2FsaWdubWVudChidXMsIGJfcmVzLT5mbGFncykpOwotCXNpemUwID0gY2FsY3Vs
-YXRlX21lbXNpemUoc2l6ZSwgbWluX3NpemUsIDAsIHJlc291cmNlX3NpemUoYl9yZXMpLCBtaW5f
-YWxpZ24pOworCXNpemUwID0gY2FsY3VsYXRlX21lbXNpemUoc2l6ZSwgbWluX3NpemUsIDAsIHJl
-c291cmNlX3NpemUoYl9yZXMpKTsKIAlpZiAoY2hpbGRyZW5fYWRkX3NpemUgPiBhZGRfc2l6ZSkK
-IAkJYWRkX3NpemUgPSBjaGlsZHJlbl9hZGRfc2l6ZTsKIAlzaXplMSA9ICghcmVhbGxvY19oZWFk
-IHx8IChyZWFsbG9jX2hlYWQgJiYgIWFkZF9zaXplKSkgPyBzaXplMCA6CiAJCWNhbGN1bGF0ZV9t
-ZW1zaXplKHNpemUsIG1pbl9zaXplLCBhZGRfc2l6ZSwKLQkJCQlyZXNvdXJjZV9zaXplKGJfcmVz
-KSwgbWluX2FsaWduKTsKKwkJCQlyZXNvdXJjZV9zaXplKGJfcmVzKSk7CiAJaWYgKCFzaXplMCAm
-JiAhc2l6ZTEpIHsKIAkJaWYgKGJfcmVzLT5zdGFydCB8fCBiX3Jlcy0+ZW5kKQogCQkJZGV2X2lu
-Zm8oJmJ1cy0+c2VsZi0+ZGV2LCAiZGlzYWJsaW5nIGJyaWRnZSB3aW5kb3cgJXBSIHRvICVwUiAo
-dW51c2VkKVxuIiwK
---20cf304352b64ccc5605126756aa--
+ECO tip #101: Trim your mails when you reply.
+--
