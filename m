@@ -1,86 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:35815 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697AbbCJBgc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 21:36:32 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0NKZ006Z634UHKD0@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Tue, 10 Mar 2015 10:36:30 +0900 (KST)
-Message-id: <54FE4A9D.5010001@samsung.com>
-Date: Tue, 10 Mar 2015 10:36:29 +0900
-From: Jaehoon Chung <jh80.chung@samsung.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:50306 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbbCCJcH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 04:32:07 -0500
+Message-ID: <54F57F80.6050205@huawei.com>
+Date: Tue, 3 Mar 2015 17:31:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	cpGS <cpgs@samsung.com>
-Subject: Re: [RFC] Build with arm64 configuration
-References: <54FD8F94.20305@samsung.com>
- <CAErSpo6jOJUcvStVk=9=xUBb7E2E-MCRcFqBmV1o0X2pULAW6Q@mail.gmail.com>
-In-reply-to: <CAErSpo6jOJUcvStVk=9=xUBb7E2E-MCRcFqBmV1o0X2pULAW6Q@mail.gmail.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing0307@gmail.com>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	<linux-parisc@vger.kernel.org>
+Subject: Re: [PATCH v4 22/30] PCI/Parisc: Use pci_scan_root_bus() for simplicity
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-23-git-send-email-wangyijing@huawei.com> <20150303032412.GK11978@google.com>
+In-Reply-To: <20150303032412.GK11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear, Bjorn.
+On 2015/3/3 11:24, Bjorn Helgaas wrote:
+> On Thu, Feb 26, 2015 at 04:12:16PM +0800, Yijing Wang wrote:
+>> From: Yijing Wang <wangyijing0307@gmail.com>
+> 
+> When you write subject lines, I think it's friendly to run
+> "git log --oneline" on the file you're changing, and make yours
+> match the previous ones.
+> 
+>   $ git log --oneline drivers/parisc/dino.c
+>   3f05536d226d PCI/Parisc: Use pci_scan_root_bus() for simplicity
+>   3335f75a8877 parisc: dino: fix %d confusingly prefixed with 0x in format string
+>   3fad9b8d597f drivers/parisc: Use printf extension %pR for struct resource
+>   0fe763c570ad Drivers: misc: remove __dev* attributes.
+>   0b79ca2a800d parisc/PCI: Use list_for_each_entry() for bus->devices traversal
+>   30aa80da43a5 parisc/PCI: register busn_res for root buses
+>   ...
+> 
+> Yours doesn't match any of them, but "parisc/PCI" seems the best match.
 
-Thanks for reply.
+OK, I will refresh the title, sorry.
 
-On 03/10/2015 08:35 AM, Bjorn Helgaas wrote:
-> On Mon, Mar 9, 2015 at 7:18 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
->> Hi,
+> 
+>> Now pci_bus_add_devices() has been ripped out
+>> from pci_scan_root_bus(), we could use pci_scan_root_bus()
+>> instead of pci_create_root_bus() + pci_scan_child_bus()
+>> for simplicity. We could also remove the pci bus
+>> resource(dino_current_bus,255) and pci_bus_update_busn_res_end(),
+>> because pci_scan_root_bus() would do the same thing.
 >>
->> I have a question for building arm64.
->> (Actually, i didn't have many knowledges for PCIe.)
->> When i built with arm64 configuration, then i always found the compiler errors.
-> 
-> The kernel does build for arm64, so you'll have to be more specific
-> about the problem you're seeing.
-
-I built the pcie-designware.c and pci-exynos.c.
-
-When pcie-designware.c is built, i found the below error message.
-drivers/pci/host/pcie-designware.c:74:52: warning: ˜struct pci_sys_data™ declared inside parameter list
- static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-                                                    ^
-drivers/pci/host/pcie-designware.c:74:52: warning: its scope is only this definition or declaration, which is probably not what you want
-In file included from include/uapi/linux/stddef.h:1:0,
-                 from include/linux/stddef.h:4,
-                 from ./include/uapi/linux/posix_types.h:4,
-                 from include/uapi/linux/types.h:13,
-                 from include/linux/types.h:5,
-                 from include/linux/smp.h:10,
-                 from include/linux/irq.h:12,
-                 from drivers/pci/host/pcie-designware.c:14:
-drivers/pci/host/pcie-designware.c: In function ˜sys_to_pcie":
-drivers/pci/host/pcie-designware.c:76:13: error: dereferencing pointer to incomplete type
-  BUG_ON(!sys->private_data);
-
-I found it's located at arch/arm/include/asm/mach/pci.h.
-It can't refer when do build for arm64.
-So I think that i missed something..I have also searched the patches relevant to this at patchwork.
-Some patch have copied header files relevant to "pci" to "arch/arm64/include/".
-(This is not solution.)
-
-And i don't want to add #ifdef CONFIG_ARM64 into pcie-designware.c
-I think mailing should know the graceful solution.
-
-If i can solve this problem, i will contribute for pci-exynos.c.
-
-Best Regards,
-Jaehoon Chung
-
-> 
->> Since some header file has dependency on structure of architecture.
->> I think it's not solution that it copies from arch/arm/... to arch/arm64/...
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
+>> CC: linux-parisc@vger.kernel.org
+>> ---
+>>  drivers/parisc/dino.c    |   11 ++---------
+>>  drivers/parisc/lba_pci.c |    7 ++-----
+>>  2 files changed, 4 insertions(+), 14 deletions(-)
 >>
->> So i want to get advise at mailing. how can i solve it?
->> If my understanding is right, after enabled PCIe at bootloader, then it bridges at kernel. right?
+>> diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+>> index a0580af..e5ee339 100644
+>> --- a/drivers/parisc/dino.c
+>> +++ b/drivers/parisc/dino.c
+>> @@ -977,15 +977,11 @@ static int __init dino_probe(struct parisc_device *dev)
+>>  	if (dino_dev->hba.gmmio_space.flags)
+>>  		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
+>>  
+>> -	dino_dev->hba.bus_num.start = dino_current_bus;
+>> -	dino_dev->hba.bus_num.end = 255;
+>> -	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
+>> -	pci_add_resource(&resources, &dino_dev->hba.bus_num);
 > 
-> I don't know how to parse this question.  Can you rephrase it?
+> I know pci_scan_root_bus() does default to bus 0-255, but I don't really
+> like that behavior, and I think it's a bug for drivers like this to rely on
+> that.  The PCI core has no way to discover the actual bus number range, and
+> the only reason it supplies a default is because it was inconvenient to
+> change all the callers.  The host bridge driver is the only code that has
+> any chance of discovering and/or configuring the correct range.
 > 
-> Bjorn
+> So I think it's more correct to leave the existing code here, even though
+> this code is is likely incorrect.  At least then if we trip over an issue
+> with the bus range being incorrect, it will be clear that the fix should
+> be in dino.c rather than the PCI core.
+
+OK, I would keep this code here, thanks!
+
 > 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
