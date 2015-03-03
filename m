@@ -1,158 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33857 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531AbbCYWOQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 18:14:16 -0400
-Received: by pacwe9 with SMTP id we9so42437749pac.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 15:14:15 -0700 (PDT)
-Message-ID: <1427321631.2575.3.camel@axtens.net>
-Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
- simplicity
-From: Daniel Axtens <dja@axtens.net>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Liviu Dudau <liviu@dudau.co.uk>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linux-ia64@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linuxppc-dev@lists.ozlabs.org, linux-m68k@lists.linux-m68k.org,
-	Tony Luck <tony.luck@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-alpha@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:35284 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757316AbbCCUtS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 15:49:18 -0500
+Received: by oifz81 with SMTP id z81so1858216oif.2
+        for <linux-pci@vger.kernel.org>; Tue, 03 Mar 2015 12:49:17 -0800 (PST)
+Date: Tue, 3 Mar 2015 14:49:12 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Thu, 26 Mar 2015 09:13:51 +1100
-In-Reply-To: <551266DE.3030609@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-		 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
-	 <1427241523.2685.18.camel@axtens.net> <551266DE.3030609@huawei.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-kGkB4ipJ9dr1gy57APLQ"
-Mime-Version: 1.0
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [PATCH v1] of: calculate masks of the device based on dma-range
+ size
+Message-ID: <20150303204912.GA22299@google.com>
+References: <1423677215-28968-1-git-send-email-m-karicheri2@ti.com>
+ <20150226002033.GR6220@google.com>
+ <54F5F698.6000604@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54F5F698.6000604@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Mar 03, 2015 at 12:59:52PM -0500, Murali Karicheri wrote:
+> On 02/25/2015 07:20 PM, Bjorn Helgaas wrote:
+> >[+cc Catalin]
+> >
+> >On Wed, Feb 11, 2015 at 12:53:35PM -0500, Murali Karicheri wrote:
+> >>This patch update of_dma_configure() API to calculate the
+> >>masks (dma_mask and coherent_dma_mask) based on the dma-range
+> >>values set in DT for the device. Also limit the mask to lower
+> >>of the default mask and mask calculated.
+> >>
+> >>Cc: Joerg Roedel<joro@8bytes.org>
+> >>Cc: Grant Likely<grant.likely@linaro.org>
+> >>Cc: Rob Herring<robh+dt@kernel.org>
+> >>Cc: Bjorn Helgaas<bhelgaas@google.com>
+> >>Cc: Will Deacon<will.deacon@arm.com>
+> >>Cc: Russell King<linux@arm.linux.org.uk>
+> >>Cc: Arnd Bergmann<arnd@arndb.de>
+> >>Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+> >>
+> >>Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >
+> >Applied with Catalin's reviewed-by to pci/iommu for v4.1, thanks!
+> Bjorn,
+> 
+> Could you point me to this? I didn't see it on pci/iommu of your repo below.
+> 
+> arm-pci	git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+> (fetch)
+> 
+> a0868495@ula0868495 ~/Project/linux-keystone $ gitlog arm-pci/pci/iommu
+> dd8a11b0f0d4ed0ad87c8d09e650f354021d7953 arm: dma-mapping: limit
+> IOMMU mapping size
+> 2a101e79dcd8733e3a353b0df2fa384980f94e1e PCI: Update DMA
+> configuration from DT
+> 3fd29d06e9aa92d9a4513e14b2dd3f0d69d4d2b7 of/pci: Add
+> of_pci_dma_configure() to update DMA configuration
+> 8243352097c468f982a9f386cb1f455672b473a2 PCI: Add helper functions
+> pci_get[put]_host_bridge_device()
+> 039f346ac880d4f894425ef6c540f3ff5c1b8dcf of: Fix size when dma-range
+> is not used
+> 2743a957f6a6317be06d02cc93d78bb2a847e427 of: Move of_dma_configure()
+> to device.c to help re-use
+> f454cd01b5bdffb1bf26a5cddac30439fa5f27a1 of: iommu: Add ptr to OF
+> node arg to of_iommu_configure()
+> c517d838eb7d07bbe9507871fab3931deccff539 Linux 4.0-rc1
 
---=-kGkB4ipJ9dr1gy57APLQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I had applied it to my local branch, but not pushed it to kernel.org.
+I applied it along with the "get DMA configuration from parent device"
+series to pci/murali-v8 and pushed it for build testing.
 
-Hi Yijing,
-
-I wasn't quite sure I understood your comments, so I was trying to apply
-your patch series and test it, but patch 3 doesn't apply cleanly to
-4.0-rc5 or master. Can you respin the series?
-
-Thanks,
-Daniel
-
-
-> Hi Daniel, thanks for your review and comments. We want to make a generic=
- pci_host_bridge,
-> which would hold the common host information, for example, pci domain is =
-common info for
-> pci host bridge, this series saved domain in pci_host_bridge, then we no =
-need to
-> extract out domain by pci_bus->sysdata by platform specific pci_domain_nr=
-().
-> Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is th=
-e platform
-> interface, I think use the common interface would be better.
->=20
-> >> +
-> >> +	/* Get probe mode and perform scan */
-> >> +	if (hose->dn && ppc_md.pci_probe_mode)
-> >> +		mode =3D ppc_md.pci_probe_mode(bus);
-> >> +
-> >> +	pr_debug("    probe mode: %d\n", mode);
-> >> +	if (mode =3D=3D PCI_PROBE_DEVTREE)
-> >> +		of_scan_bus(hose->dn, bus);
-> >> +
-> >> +	if (mode =3D=3D PCI_PROBE_NORMAL) {
-> >> +		pci_bus_update_busn_res_end(bus, 255);
-> >> +		hose->last_busno =3D pci_scan_child_bus(bus);
-> >> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
-> >> +	}
-> >> +
-> >> +	return pci_bus_child_max_busnr(bus);
-> >> +}
-> >> +
-> > I'm having trouble convincing myself that this patch covers every
-> > variation within our PCI implementations. In particular, there's a
-> > stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
-> > identical to this function. Does that implementation need to be cleaned
-> > up and replaced with this function too?
-> >=20
->=20
-> This is a pci_host_bridge_ops hook function, which would be called in
-> PCI core, and after applied this series, we only need to call pci_scan_ho=
-st_bridge()
-> to scan pci devices, and this function is also extracted from the pcibios=
-_scan_phb(),
-> it's not the redundant code.
->=20
-> >=20
-> >> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hos=
-e)
-> >>  		ppc_md.pcibios_fixup_phb(hose);
-> >> =20
-> >>  	/* Configure PCI Express settings */
-> >> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> >> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> >>  		struct pci_bus *child;
-> >> -		list_for_each_entry(child, &bus->children, node)
-> >> +		list_for_each_entry(child, &host->bus->children, node)
-> >>  			pcie_bus_configure_settings(child);
-> >>  	}
-> >>  }
-> > Two things: Firstly, the function uses hose throughout, not host.
-> > Secondly, you're not deleting the bus variable: what's the purpose of
-> > this change?
->=20
-> host is the common pci_host_bridge which is created by PCI core for pci h=
-ost bridge driver,
-> the hose is the platform data used in powerpc. The purpose of the patch/s=
-eries is to simplify
-> pci enumeration interface, and try to reduce the weak functions which wer=
-e used to setup pci bus/devices
-> during PCI enumeration.
->=20
-> >=20
-> > Regards,
-> > Daniel
-> >=20
->=20
->=20
-
-
---=-kGkB4ipJ9dr1gy57APLQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAABCAAGBQJVEzM2AAoJEPC3R3P2I92FQZwP/R5SRv7SsQeRdyiOrXCMLC7a
-JfCwcSHgDdhyWYCAYuSeOKjJjPiDz9QNm9KS8ntynhe6VJVBGcHpLslWxZTpI9Dl
-PHO/1b4i68YKxmjeXk19bQa38wDmuGxw8+ni1XX2ZzTIvm3fvOy9JZefde2lebi1
-dB/D0GSRQu7CcuKcyEYWEyvqwbfPqb8VbiKpEFUiImjMFjboP6Yl5dOcVye0NNnQ
-J36BOPHBj/FvIwK1ySUe5BE5mHjQUDijj9NkfqE5ED5Inf+/kjRYp9l0uBh3m8O1
-oGbpMp0b/7L0cXk4WuF0UFcaNkkI7+n24O2QJ8tBCIL8B+9U7nb41xqTcI2kbWGE
-9uKGGUDHQI1pERNtDKgLOsD+tFuyHo8oI99Oc8GFfWPnbvr576qEBBQaQI6Dwpdi
-dbejgs48MB8IRVdur3oWu8uibQhUddtk02CIfpTF3OT7rx9ay/CKC8NX/odUGtY6
-AYqqzNF6OxlfZXhrlS1nE1YWFacX+PKRiqulsgDE4peyq9cGse9ZYrOkkyL9VXdy
-ja3H43wace2qaa0JpzOu//uN/vULylpSh8QOfeqgLRCDlF29NbKn23gNbhzr+4yw
-xASO+O4SAR1IKM0hW2mqLE4/1TI8cDj5jX5emAhnCZi3uCnPkEAbq9C9ZqfJ2hEP
-+2/0/9fEImcp/ma9tmc1
-=I0so
------END PGP SIGNATURE-----
-
---=-kGkB4ipJ9dr1gy57APLQ--
-
+Bjorn
