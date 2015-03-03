@@ -1,172 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:36106 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbbCLCzm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 22:55:42 -0400
-Received: by iegc3 with SMTP id c3so12287505ieg.3
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 19:55:42 -0700 (PDT)
-Date: Wed, 11 Mar 2015 21:55:37 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60033 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757846AbbCCRxD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Mar 2015 12:53:03 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 10/30] PCI: Introduce pci_host_bridge_list to manage
- host bridges
-Message-ID: <20150312025537.GD10949@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-11-git-send-email-wangyijing@huawei.com>
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH v8 0/7] PCI: get DMA configuration from parent device
+Date: Tue, 3 Mar 2015 12:52:07 -0500
+Message-ID: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-11-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:07AM +0800, Yijing Wang wrote:
-> Introduce pci_host_bridge_list to manage pci host
-> bridges in system, so we could detect whether
-> the host in domain:bus is alreay registered.
-> Then we could remove bus alreay exist test in
-> __pci_create_root_bus().
+This series is already applied on arm-pci iommu branch for next, but
+kbuild test robot reported build errors on x86_64 and sparc. So I am
+sending v8 to help apply on arm-pci iommu branch.
+ 
+Here is the original cover letter of the series.
 
-It's a nice idea to move this test into the core.  While you're at it, why
-don't you check for any overlap with the bus ranges of existing host
-bridges?  For example, if we're trying to create a new host bridge to
-[bus 40-7f], it should conflict with existing bridges to [bus 00-7f]
-as well as to [bus 40-ff].  I think your current patch will detect the
-latter conflict but not the former.
+This patch add an important capability to PCI driver on Keystone. I hope to
+have this merged to the upstream branch so that it is available for v3.20.
+Also would like thank everyone for the contribution.
 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/host-bridge.c |   24 +++++++++++++++++++++++-
->  drivers/pci/probe.c       |    8 +-------
->  include/linux/pci.h       |    1 +
->  3 files changed, 25 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 3bd45e7..0bb08ef 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -8,6 +8,9 @@
->  
->  #include "pci.h"
->  
-> +static LIST_HEAD(pci_host_bridge_list);
-> +static DEFINE_MUTEX(phb_mutex);
+PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
+add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
+and dma ops etc using the information from DT. The prior RFCs and discussions
+are available at [1] and [2] below.
 
-We don't use the "phb" abbreviation in the PCI core.
+[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
+[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
 
-> +
->  static void pci_release_host_bridge_dev(struct device *dev)
->  {
->  	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> @@ -25,7 +28,7 @@ struct pci_host_bridge *pci_create_host_bridge(
->  	int error;
->  	int bus = PCI_BUSNUM(db);
->  	int domain = PCI_DOMAIN(db);
-> -	struct pci_host_bridge *host;
-> +	struct pci_host_bridge *host, *temp;
->  	struct resource_entry *window, *n;
->  
->  	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> @@ -40,6 +43,18 @@ struct pci_host_bridge *pci_create_host_bridge(
->  	 */
->  	pci_host_assign_domain_nr(host);
->  
-> +	mutex_lock(&phb_mutex);
-> +	list_for_each_entry(temp, &pci_host_bridge_list, list)
-> +		if (temp->domain == host->domain
-> +				&& temp->busnum == host->busnum) {
-> +			dev_dbg(&host->dev, "pci host bridge pci%04x:%02x exist\n",
-> +					host->domain, host->busnum);
+Change history:
+	v8 - On request from Bjorn, I am resending the whole series with also
+	     ack from Rob Herring against 2/7
+	v7 - Used for re-spinning 2/7 and 6/7. Fixed build issues on x86_64 and
+	     sparc reported by kbuild test robot
+	v6 - Rebased to v3.19-v7
+	   - Addressed some minor comments about node name and DT size validation.
+	   - Pulled out 8/8 of v5 and plan to send a patch for enhancing
+	     of_dma_configure() to use size to calculate dma mask.
+	   - Added Acks from reviewers.
+	v5 - moved the dma_mask update in device from ARM specific API to
+	     of_dma_configure to allow this across other architecture as well
+	   - improved sanity check for DT dma-range size in of_dma_configure()
+	   - moved API to get parent bridge device to PCI (host-bridge.c)
+	v4 - moved size adjustments in of_iommu_configure() to a separate patch
+	   - consistent node name comment from Rob
+	   - patch 6 added for dma_mask adjustment and iommu mapping size
+	     limiting.
+	v3 - addressed comments to re-use of_dma_configure() for PCI
+	   - To help re-use, change of_iommu_configure() function argument
+		- Move of_dma_configure to of/device.c
+		- Limit the of_iommu_configure to non pci devices
+	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
+	   - also check the np for null.
+	v1 - updates based on the comments against initial RFC.
+	   - Added a helper function to get the OF node of the parent
+	   - Added an API in of_pci.c to update DMA configuration of the pci
+	     device.
 
-&host->dev hasn't been initialized yet!  And the text of the original
-message was better.
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-> +			mutex_unlock(&phb_mutex);
-> +			kfree(host);
-> +			return NULL;
-> +		}
-> +	mutex_unlock(&phb_mutex);
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Murali Karicheri <m-karicheri2@ti.com>
 
-This is racy.  Two CPUs adding a bridge to [bus 00-7f] at about the same
-time can both succeed.
+Murali Karicheri (7):
+  of: iommu: Add ptr to OF node arg to of_iommu_configure()
+  of: Move of_dma_configure() to device.c to help re-use
+  of: Fix size when dma-range is not used
+  PCI: Add helper functions pci_get[put]_host_bridge_device()
+  of/pci: Add of_pci_dma_configure() to update DMA configuration
+  PCI: Update DMA configuration from DT
+  arm: dma-mapping: limit IOMMU mapping size
 
-And it needs curly braces around the list_for_each_entry() body.
+ arch/arm/mm/dma-mapping.c |    7 +++++
+ drivers/iommu/of_iommu.c  |   10 ++++--
+ drivers/of/device.c       |   74 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/of_pci.c       |   18 +++++++++++
+ drivers/of/platform.c     |   58 ++---------------------------------
+ drivers/pci/host-bridge.c |   14 +++++++++
+ drivers/pci/probe.c       |    2 ++
+ include/linux/of_device.h |    3 ++
+ include/linux/of_iommu.h  |    6 ++--
+ include/linux/of_pci.h    |    3 ++
+ include/linux/pci.h       |    3 ++
+ 11 files changed, 138 insertions(+), 60 deletions(-)
 
-> +
->  	host->dev.parent = parent;
->  	INIT_LIST_HEAD(&host->windows);
->  	host->dev.release = pci_release_host_bridge_dev;
-> @@ -55,11 +70,18 @@ struct pci_host_bridge *pci_create_host_bridge(
->  	resource_list_for_each_entry_safe(window, n, resources)
->  		list_move_tail(&window->node, &host->windows);
->  
-> +	mutex_lock(&phb_mutex);
-> +	list_add_tail(&host->list, &pci_host_bridge_list);
-> +	mutex_unlock(&phb_mutex);
->  	return host;
->  }
->  
->  void pci_free_host_bridge(struct pci_host_bridge *host)
->  {
-> +	mutex_lock(&phb_mutex);
-> +	list_del(&host->list);
-> +	mutex_unlock(&phb_mutex);
-> +
->  	device_unregister(&host->dev);
->  }
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 27ec612..7238fa3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1870,7 +1870,7 @@ static struct pci_bus *__pci_create_root_bus(
->  		void *sysdata)
->  {
->  	int error;
-> -	struct pci_bus *b, *b2;
-> +	struct pci_bus *b;
->  	struct resource_entry *window;
->  	struct device *parent;
->  	struct resource *res;
-> @@ -1887,12 +1887,6 @@ static struct pci_bus *__pci_create_root_bus(
->  	b->ops = ops;
->  	b->number = b->busn_res.start = bridge->busnum;
->  	pci_bus_assign_domain_nr(b, parent);
-> -	b2 = pci_find_bus(pci_domain_nr(b), b->number);
-> -	if (b2) {
-> -		/* If we already got to this bus through a different bridge, ignore it */
-> -		dev_dbg(&b2->dev, "bus already known\n");
-> -		goto err_out;
-> -	}
->  
->  	bridge->bus = b;
->  	b->bridge = get_device(&bridge->dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 463eaa3..b621f5b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -406,6 +406,7 @@ struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
->  	struct list_head windows;	/* resource_entry */
-> +	struct list_head list;
->  	void (*release_fn)(struct pci_host_bridge *);
->  	void *release_data;
->  };
-> -- 
-> 1.7.1
-> 
+-- 
+1.7.9.5
+
