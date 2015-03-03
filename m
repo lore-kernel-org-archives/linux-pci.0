@@ -1,79 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:54941 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbbC3Kga (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 06:36:30 -0400
-Message-ID: <1427711786.3370.3.camel@pengutronix.de>
-Subject: Re: [PATCH v3 1/2] PCI: add helper function to find root port for
- device
-From: Lucas Stach <l.stach@pengutronix.de>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60330 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757064AbbCCSAg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Mar 2015 13:00:36 -0500
+Message-ID: <54F5F698.6000604@ti.com>
+Date: Tue, 3 Mar 2015 12:59:52 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Mon, 30 Mar 2015 12:36:26 +0200
-In-Reply-To: <20150123223424.GN29776@google.com>
-References: <1421179048-25370-1-git-send-email-l.stach@pengutronix.de>
-	 <20150123223424.GN29776@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [PATCH v1] of: calculate masks of the device based on dma-range
+ size
+References: <1423677215-28968-1-git-send-email-m-karicheri2@ti.com> <20150226002033.GR6220@google.com>
+In-Reply-To: <20150226002033.GR6220@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 23.01.2015, 16:34 -0600 schrieb Bjorn Helgaas:
-> On Tue, Jan 13, 2015 at 08:57:27PM +0100, Lucas Stach wrote:
-> > This adds a simple way to get the root port a given device
-> > is connected to.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> > v2: new patch in v2
-> > v3: rename to pci_find_rootport to fit better with other API
-> > ---
-> >  drivers/pci/search.c | 20 ++++++++++++++++++++
-> >  include/linux/pci.h  |  1 +
-> >  2 files changed, 21 insertions(+)
-> > 
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > index a20ce7d5e2a7..7254f126096d 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
-> >  	return 0;
-> >  }
-> >  EXPORT_SYMBOL(pci_dev_present);
-> > +
-> > +/**
-> > + * pci_find_root_port - Returns the root port the given device is connected to.
-> > + * @dev: PCI device for which the root port should be found.
-> > + */
-> > +struct pci_dev *pci_find_root_port(struct pci_dev *dev)
-> 
-> This seems a little too generic.  There are still PCI (non-PCIe) systems,
-> and on those this will return some non-Root Port device, the meaning of
-> which is unclear.  I'm happy to put something like this in pci-tegra.c, but
-> until there are other potential users and we sort out the PCI/PCIe-ness of
-> the interface, I don't really want to make it global and exported.
-> 
-I moved it out of the Tegra PCIe driver on your request. Also I can
-already see this being useful for the Keystone PCI host driver to
-shorten the MTRS quirk function.
+On 02/25/2015 07:20 PM, Bjorn Helgaas wrote:
+> [+cc Catalin]
+>
+> On Wed, Feb 11, 2015 at 12:53:35PM -0500, Murali Karicheri wrote:
+>> This patch update of_dma_configure() API to calculate the
+>> masks (dma_mask and coherent_dma_mask) based on the dma-range
+>> values set in DT for the device. Also limit the mask to lower
+>> of the default mask and mask calculated.
+>>
+>> Cc: Joerg Roedel<joro@8bytes.org>
+>> Cc: Grant Likely<grant.likely@linaro.org>
+>> Cc: Rob Herring<robh+dt@kernel.org>
+>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+>> Cc: Will Deacon<will.deacon@arm.com>
+>> Cc: Russell King<linux@arm.linux.org.uk>
+>> Cc: Arnd Bergmann<arnd@arndb.de>
+>> Cc: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>
+> Applied with Catalin's reviewed-by to pci/iommu for v4.1, thanks!
+Bjorn,
 
-I will rename this to pcie_find_root_port() so it is clear that this is
-PCIe specific, but keep it in the current location.
+Could you point me to this? I didn't see it on pci/iommu of your repo below.
 
-> > +{
-> > +	struct pci_bus *bus = dev->bus;
-> > +
-> > +	/* If there is no bridge on the bus the passed device is a root port. */
-> 
-> This assumption is false -- see the comment at pci_is_root_bus().
-> 
-Right, will change this.
+arm-pci	git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git 
+(fetch)
 
-Regards,
-Lucas
+a0868495@ula0868495 ~/Project/linux-keystone $ gitlog arm-pci/pci/iommu
+dd8a11b0f0d4ed0ad87c8d09e650f354021d7953 arm: dma-mapping: limit IOMMU 
+mapping size
+2a101e79dcd8733e3a353b0df2fa384980f94e1e PCI: Update DMA configuration 
+from DT
+3fd29d06e9aa92d9a4513e14b2dd3f0d69d4d2b7 of/pci: Add 
+of_pci_dma_configure() to update DMA configuration
+8243352097c468f982a9f386cb1f455672b473a2 PCI: Add helper functions 
+pci_get[put]_host_bridge_device()
+039f346ac880d4f894425ef6c540f3ff5c1b8dcf of: Fix size when dma-range is 
+not used
+2743a957f6a6317be06d02cc93d78bb2a847e427 of: Move of_dma_configure() to 
+device.c to help re-use
+f454cd01b5bdffb1bf26a5cddac30439fa5f27a1 of: iommu: Add ptr to OF node 
+arg to of_iommu_configure()
+c517d838eb7d07bbe9507871fab3931deccff539 Linux 4.0-rc1
+
+Murali
+
+>
+> I agree with Catalin's comment about the "size = 1ULL<<  32" line.
+> I don't see how that will make a difference, so I dropped it.  The
+> patch I merged is below.  Let me know if you think we do need that
+> line or any other tweaks.
+>
+> Bjorn
+>
+> commit a5a1dd69080dfcf53bfd6e179f3db68e824aeaae
+> Author: Murali Karicheri<m-karicheri2@ti.com>
+> Date:   Wed Feb 25 17:21:04 2015 -0600
+>
+>      of: Calculate device DMA masks based on DT dma-range size
+>
+>      Calculate the dma_mask and coherent_dma_mask based on the dma-range values
+>      set in DT for the device.
+>
+>      Limit the mask to lower of the default mask and mask calculated.
+>
+>      Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>      Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
+>      Reviewed-by: Catalin Marinas<catalin.marinas@arm.com>
+>      CC: Joerg Roedel<joro@8bytes.org>
+>      CC: Grant Likely<grant.likely@linaro.org>
+>      CC: Rob Herring<robh+dt@kernel.org>
+>      CC: Will Deacon<will.deacon@arm.com>
+>      CC: Russell King<linux@arm.linux.org.uk>
+>      CC: Arnd Bergmann<arnd@arndb.de>
+>      CC: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>
+>
+> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> index 28e743888402..20c1332a0018 100644
+> --- a/drivers/of/device.c
+> +++ b/drivers/of/device.c
+> @@ -90,10 +90,11 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>   	struct iommu_ops *iommu;
+>
+>   	/*
+> -	 * Set default dma-mask to 32 bit.  Drivers are expected to setup
+> -	 * the correct supported dma_mask.
+> +	 * Set default coherent_dma_mask to 32 bit.  Drivers are expected to
+> +	 * setup the correct supported mask.
+>   	 */
+> -	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +	if (!dev->coherent_dma_mask)
+> +		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+>
+>   	/*
+>   	 * Set it to coherent_dma_mask by default if the architecture
+> @@ -128,6 +129,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>
+>   	dev->dma_pfn_offset = offset;
+>
+> +	/*
+> +	 * Limit coherent and dma mask based on size and default mask
+> +	 * set by the driver.
+> +	 */
+> +	dev->coherent_dma_mask = min(dev->coherent_dma_mask,
+> +				     DMA_BIT_MASK(ilog2(dma_addr + size)));
+> +	*dev->dma_mask = min((*dev->dma_mask),
+> +			     DMA_BIT_MASK(ilog2(dma_addr + size)));
+> +
+>   	coherent = of_dma_is_coherent(np);
+>   	dev_dbg(dev, "device is%sdma coherent\n",
+>   		coherent ? " " : " not ");
+
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
