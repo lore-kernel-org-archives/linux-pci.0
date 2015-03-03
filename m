@@ -1,63 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15473 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbbCMARj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:17:39 -0400
-Message-ID: <55022CA0.6080806@broadcom.com>
-Date: Thu, 12 Mar 2015 17:17:36 -0700
-From: Ray Jui <rjui@broadcom.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:46191 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757846AbbCCRw4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Mar 2015 12:52:56 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v8 3/7] of: Fix size when dma-range is not used
+Date: Tue, 3 Mar 2015 12:52:10 -0500
+Message-ID: <1425405134-24707-4-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
+References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
-	"Paul Bolle" <pebolle@tiscali.nl>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH v6 3/4] pci: iproc: Add Broadcom iProc PCIe support
-References: <1426097169-20805-1-git-send-email-rjui@broadcom.com> <1426097169-20805-4-git-send-email-rjui@broadcom.com> <20150312210856.GF7346@google.com>
-In-Reply-To: <20150312210856.GF7346@google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Fix the dma-range size when the DT attribute is missing, i.e., set size to
+dev->coherent_dma_mask + 1 instead of dev->coherent_dma_mask.  Also add
+code to check invalid values of size configured in DT and log error.
 
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/of/device.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-On 3/12/2015 2:08 PM, Bjorn Helgaas wrote:
-> On Wed, Mar 11, 2015 at 11:06:08AM -0700, Ray Jui wrote:
->> This adds the support for Broadcom iProc PCIe controller
->>
->> pcie-iproc.c servers as the common core driver, and front-end bus
->> interface needs to be added to support different bus interfaces
->>
->> pcie-iproc-pltfm.c contains the support for the platform bus interface
->>
->> Signed-off-by: Ray Jui <rjui@broadcom.com>
->> Reviewed-by: Scott Branden <sbranden@broadcom.com>
->> ...
-> 
->> +static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
->> +{
->> +	u8 hdr_type;
->> +	u32 link_ctrl;
->> +	u16 pos, link_status;
->> +	int link_is_active = 0;
->> +
->> +	/* make sure we are not in EP mode */
->> +	pci_bus_read_config_byte(bus, 0, PCI_HEADER_TYPE, &hdr_type);
->> +	if ((hdr_type & 0x7f) != PCI_HEADER_TYPE_BRIDGE) {
->> +		dev_err(pcie->dev, "in EP mode, hdr=0x08%x\n", hdr_type);
-> 
-> "0x08%x" doesn't look right.  I changed it to "%#02x"; is that what you
-> intended?
-> 
-You are right. Will fix it along with the Kconfig fix (so it won't get
-compiled for non-ARM platforms). I'll submit v7?
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 31a7875..28e74388 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -105,9 +105,24 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+ 	if (ret < 0) {
+ 		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask;
++		size = dev->coherent_dma_mask + 1;
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
++
++		/*
++		 * Add a work around to treat the size as mask + 1 in case
++		 * it is defined in DT as a mask.
++		 */
++		if (size & 1) {
++			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
++				 size);
++			size = size + 1;
++		}
++
++		if (!size) {
++			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
++			return;
++		}
+ 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+ 	}
+ 
+-- 
+1.7.9.5
 
-Thanks,
-
-Ray
