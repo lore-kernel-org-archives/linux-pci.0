@@ -1,67 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:36351 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731AbbCSUtc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 16:49:32 -0400
-Received: by obdfc2 with SMTP id fc2so64075489obd.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 13:49:32 -0700 (PDT)
-Date: Thu, 19 Mar 2015 15:49:29 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX
- termination driver
-Message-ID: <20150319204929.GH26935@google.com>
-References: <1678162.2PJ2o1jRen@wuerfel>
- <cover.1425497218.git.dhdang@apm.com>
- <CADaLND=+Aq-zgMWE6vnn1kt1g2iz1k-AxMj4--kejF-q=f=bfg@mail.gmail.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:19829 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755043AbbCCImQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 03:42:16 -0500
+Message-ID: <54F573D2.6010807@huawei.com>
+Date: Tue, 3 Mar 2015 16:41:54 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADaLND=+Aq-zgMWE6vnn1kt1g2iz1k-AxMj4--kejF-q=f=bfg@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4 12/30] PCI: Introduce pci_host_bridge_ops to support
+ host specific operations
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-13-git-send-email-wangyijing@huawei.com> <20150303030301.GI11978@google.com>
+In-Reply-To: <20150303030301.GI11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Marc]
-
-On Wed, Mar 18, 2015 at 10:43:10AM -0700, Duc Dang wrote:
-> On Wed, Mar 4, 2015 at 11:39 AM, Duc Dang <dhdang@apm.com> wrote:
-> > This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
-> > APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
-> > to GIC V2M specification for MSI Termination.
-> >
-> > There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
-> > block supports 2688 MSI termination ports coalesced into 16 physical HW IRQ lines
-> > and shared across all 5 PCIe ports.
-> >
-> > v2 changes:
-> >         1. Use msi_controller structure
-> >         2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
-> >
-> >  .../devicetree/bindings/pci/xgene-pci-msi.txt      |  61 ++++
-> >  MAINTAINERS                                        |   8 +
-> >  arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 ++
-> >  drivers/pci/host/Kconfig                           |   4 +
-> >  drivers/pci/host/Makefile                          |   1 +
-> >  drivers/pci/host/pci-xgene-msi.c                   | 393 +++++++++++++++++++++
-> >  drivers/pci/host/pci-xgene.c                       |  25 ++
-> >  7 files changed, 519 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-> >  create mode 100644 drivers/pci/host/pci-xgene-msi.c
-> >
-> > --
-> > 1.9.1
-> >
-> Hi Bjorn, Arnd, and All,
+On 2015/3/3 11:03, Bjorn Helgaas wrote:
+> On Thu, Feb 26, 2015 at 04:12:06PM +0800, Yijing Wang wrote:
+>> Now we have weak functions like pcibios_root_bridge_prepare()
+>> to setup pci host bridge, We could introduce pci_host_bridge_ops
+>> which contain host bridge specific ops to setup pci_host_bridge.
+>> Then host bridge driver could add pci_host_bridge_ops hooks
+>> intead of weak function to setup pci_host_bridge.
+>> This patch add following pci_host_bridge_ops hooks:
+>>
+>> pci_host_bridge_ops {
+>> 	/* set root bus speed, some platform need this like powerpc */
+>> 	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
+>> 	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
+>> 	int (*phb_prepare)(struct pci_host_bridge *host);
+>> 	/* platform specific of scan hook to scan pci device */
+>> 	void (*phb_of_scan_bus)(struct pci_host_bridge *);
+>> }
+>> We could easily extend it to support different host bridge
+>> specific operations.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ...
 > 
-> Did you have a chance to take a look at this v2 patch set for X-Gene 1
-> MSI support?
+>> @@ -2050,10 +2052,13 @@ static struct pci_bus *__pci_scan_root_bus(
+>>  		pci_bus_insert_busn_res(b, b->number, 255);
+>>  	}
+>>  
+>> -	max = pci_scan_child_bus(b);
+>> -
+>> -	if (!found)
+>> -		pci_bus_update_busn_res_end(b, max);
+>> +	if (host->ops && host->ops->phb_of_scan_bus) {
+>> +		host->ops->phb_of_scan_bus(host);
+> 
+> The important thing here is not the use of OF (Open Firmware/Device Tree),
+> is it?  Why would we want "_of_" in the function name?  I assume the intent
+> is that this host bridge op performs the same function as
+> pci_scan_child_bus(), so I think the op should be called "scan_bus".
 
-Marc had some comments, and as far as I can tell, you haven't addressed
-them yet.  Am I mistaken?
+Yes, because now only OF code need the private scan_child_bus, so I named it
+phb_of_scan_bus(). I agree that rename it to scan_bus.
 
-Bjorn
+> 
+>> +	} else {
+>> +		max = pci_scan_child_bus(b);
+>> +		if (!found)
+>> +			pci_bus_update_busn_res_end(b, max);
+>> +	}
+>>  
+>>  	return b;
+>>  }
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
