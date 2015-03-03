@@ -1,184 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-06v.sys.comcast.net ([96.114.154.165]:54029 "EHLO
-	resqmta-po-06v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753733AbbCCCIK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 21:08:10 -0500
-Message-ID: <54F51787.2060405@comcast.net>
-Date: Mon, 02 Mar 2015 18:08:07 -0800
-From: Alnie <memobook80@comcast.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 3 Mar 2015 16:38:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"x86@kernel.org" <x86@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: PCIe 32-bit MMIO exhaustion
+Message-ID: <20150303223816.GB22299@google.com>
+References: <54C8A10B.3070207@numascale.com>
+ <CAErSpo4t94BXYhhE+bh5-3_PsdKTSa113beqqz14W+_emdCGMQ@mail.gmail.com>
+ <54EC0013.7000100@numascale.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: PCI Issues with ExpressCard/54 Audio Device
-References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net> <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net> <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com> <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com> <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com> <54EFB400.4000904@comcast.net> <20150227003448.GH25765@google.com> <54F00F7D.6040604@comcast.net> <54F4F636.8090907@comcast.net> <CAErSpo61UL8Pj3dA9qGKmzW2fczrAMRij0T0BRa76nD8WxhVeA@mail.gmail.com>
-In-Reply-To: <CAErSpo61UL8Pj3dA9qGKmzW2fczrAMRij0T0BRa76nD8WxhVeA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <54EC0013.7000100@numascale.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/02/2015 05:51 PM, Bjorn Helgaas wrote:
-> On Mon, Mar 2, 2015 at 5:45 PM, Alnie <memobook80@comcast.net> wrote:
->> On 02/26/2015 10:32 PM, Alnie wrote:
->>>
->>> On 02/26/2015 04:34 PM, Bjorn Helgaas wrote:
->>>
->>>>
->>>> So it looks like the Unsupported Request error is unrelated to the
->>>> problem
->>>> you're seeing.  Probably left over from something the BIOS did when it
->>>> enumerated devices.
->>>>
->>>> You could look at "lspci -vv" again after clearing the errors and loading
->>>> the driver.  But I think it will be the same as it was after you manually
->>>> cleared the errors.
->>>
->>>
->>> (after clearing errors) http://pastebin.com/UxdgDyp1
->>>
->>>>
->>>> Oh, one more idea: *before* clearing the errors, can you collect
->>>> "lspci -xxxxs05:00.0" output?  That will give us more AER log registers,
->>>> and it's possible there's a clue there.  It's conceivable that we have
->>>> an MPS issue that causes the Unsupported Request error.
->>>
->>>
->>> (before clearing errors w/ card in @ boot) http://pastebin.com/wTeNjHHT
->>> (before clearing errors w/ card out @ boot) http://pastebin.com/4Q82KNNc
->>>
->>>
->>>>
->>>> Just to be exhaustive, can you also stash the "lspci -vvv" output for the
->>>> entire system somewhere (again, before clearing the error).
->>>>
->>> http://pastebin.com/K4iPhGcq
->>>
->>> not sure if this is relevant but for debugging sake here is the output
->>> of the card when left out during boot (no UnsupReq error)...
->>>
->>> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI
->>> to PCIe Bridge (prog-if 00 [Normal decode])
->>>       Physical Slot: 3
->>>       Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
->>> Stepping- SERR- FastB2B- DisINTx-
->>>       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>       Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
->>>       I/O behind bridge: 00002000-00002fff
->>>       Memory behind bridge: f8000000-f80fffff
->>>       Prefetchable memory behind bridge: 00000000f4000000-00000000f40fffff
->>>       Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort-
->>> <TAbort- <MAbort+ <SERR- <PERR-
->>>       BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->>>           PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->>>       Capabilities: [50] Power Management version 3
->>>           Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
->>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>>           Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->>>           Bridge: PM- B3+
->>>       Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
->>>           Address: 0000000000000000  Data: 0000
->>>       Capabilities: [80] Subsystem: Creative Labs Device 0040
->>>       Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge,
->>> MSI 00
->>>           DevCap:    MaxPayload 512 bytes, PhantFunc 0
->>>               ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
->>>           DevCtl:    Report errors: Correctable- Non-Fatal- Fatal-
->>> Unsupported-
->>>               RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
->>>               MaxPayload 128 bytes, MaxReadReq 512 bytes
->>>           DevSta:    CorrErr- UncorrErr+ FatalErr- UnsuppReq- AuxPwr-
->>> TransPend-
->>>           LnkCap:    Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
->>> Latency L0s <512ns, L1 <16us
->>>               ClockPM- Surprise- LLActRep- BwNot-
->>>           LnkCtl:    ASPM Disabled; RCB 64 bytes Disabled- CommClk+
->>>               ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->>>           LnkSta:    Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
->>> DLActive- BWMgmt- ABWMgmt-
->>>       Capabilities: [100 v1] Advanced Error Reporting
->>>           UESta:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
->>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>>           UEMsk:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
->>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>>           UESvrt:    DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
->>> RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>>           CESta:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->>>           CEMsk:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->>>           AERCap:    First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
->>> ChkEn-
->>>
->>>
->>>>>> The device is at [mem 0xf4300000-0xf4303fff], so anything in that
->>>>>> region
->>>>>> should respond.  Why don't you try this, which should dump the whole
->>>>>> region:
->>>>>>
->>>>>>     ./mem -N -m -s 0xf4300000 -l 0x4000
->>>>>>
->>>>>
->>>>> http://pastebin.com/eHEsZNmU
->>>>
->>>>
->>>> The data there looks fine, at least from a PCI perspective:
->>>>
->>>>     F4300000:00 33 00 01 3C 00 1D 00 01 00 00 00 00 00 00 00
->>>>     F4300010:00 00 00 00 00 00 00 00 3C 00 1D 00 00 00 00 00
->>>>     F4300020:00 00 00 C0 00 00 00 00 00 00 00 00 00 00 00 00
->>>>     F4300030:0F FA 24 A8 00 00 00 00 00 00 00 00 00 00 00 00
->>>>     ...
->>>>
->>>> That means the device itself seems happy and is responding to read
->>>> requests.
->>>>
->>>> The only thing left I can think of to do is to instrument the driver and
->>>> see where it gets data that it doesn't expect.  So I'm going to punt this
->>>> back to you, Takashi :)  Don't hesitate to send it back to me if you find
->>>> something that looks like a PCI problem, but I don't see one yet.
->>>>
->>>> Bjorn
->>
->> Today I booted up into Win 7 and the card wasn't recognized. This is the
->> first time I've noticed this. After re-inserting it, everything was fine,
->> but I thought to take note. Maybe some of the issues coming up are unique to
->> my hardware. Any new ideas? Is there hope for this? Should this conversation
->> be moved elsewhere?
->
-> After you re-inserted the card, does it work after cold-booting Win 7?
->   If so, maybe it's an intermittent problem with the slot connector.
->
-> If you have to remove and re-insert the card *every* time you boot Win
-> 7, maybe there's a problem on the card, e.g., it doesn't come out of
-> reset fast enough.
->
-> I looked again at the Unsupported Request error that was logged, and I
-> really don't think it's related.  The header from the offending
-> transaction was logged, and it looked like a Config Read request.
-> It's normal for these reads to fail during enumeration.  From the PCIe
-> spec (r3.0, sec 2.3.2):
->
->      Some system configuration software depends on reading a data value
->      of all 1â€™s when a Configuration Read Request is terminated as an
->      Unsupported Request, particularly when probing to determine the
->      existence of a device in the system. A Root Complex intended for
->      use with software that depends on a read-data value of all 1â€™s must
->      synthesize this value when UR Completion Status is returned for
->      a Configuration Read Request.
->
-> It is a bit strange that this error is only logged when the card is
-> present.  I suspect the error is always logged during enumeration, but
-> the BIOS may smart enough to clear it from the built-in bridges, but
-> not smart enough to clear it on the bridge that's on the ExpressCard.
->
-> In any event, I still don't see a PCI issue here.  I intended to open
-> a bugzilla and attach the information you've collected in case
-> somebody else can make sense out of it.  But I haven't had time yet.
->
-> Bjorn
->
+[+cc linux-pci, linux-acpi]
 
-Yes, it seems like just a intermittent problem with the slot connector 
-Most of the time it works fine. Thank you very much for being so 
-informative and taking the time to look into this :)
+On Tue, Feb 24, 2015 at 12:37:39PM +0800, Daniel J Blueman wrote:
+> Hi Bjorn, Jiang,
+> 
+> On 29/01/2015 23:23, Bjorn Helgaas wrote:
+> >Hi Daniel,
+> >
+> >On Wed, Jan 28, 2015 at 2:42 AM, Daniel J Blueman <daniel@numascale.com> wrote:
+> >>With systems with a large number of PCI devices, we're seeing lack of 32-bit
+> >>MMIO space, eg one quad-port NetXtreme-2 adapter takes 128MB of space [1].
+> >>
+> >>An errata to the PCIe 2.1 spec provides guidance on limitations with 64-bit
+> >>non-prefetchable BARs (since bridges have only 32-bit non-prefetchable
+> >>ranges) stating that vendors can enable the prefetchable bit in BARs under
+> >>certain circumstances to allow 64-bit allocation [2].
+> >>
+> >>The problem with that, is that vendors can't know apriori what hosts their
+> >>products will be in, so can't just advertise prefetchable 64-bit BARs. What
+> >>can be done, is system firmware can use the 64-bit prefetchable BAR in
+> >>bridges, and assign a 64-bit non-prefetchable device BAR into that area,
+> >>where it is safe to do so (following the guidance).
+> >>
+> >>At present, linux denies such allocations [3] and disables the BARs. It
+> >>seems a practical solution to allow them if the firmware believes it is
+> >>safe.
+> >
+> >This particular message ([3]):
+> >
+> >>pci 0002:01:00.0: BAR 0: [mem size 0x00002000 64bit] conflicts with PCI Bus
+> >>0002:00 [mem 0x10020000000-0x10027ffffff pref]
+> >
+> >is misleading at best and likely a symptom of a bug.  We printed the
+> >*size* of BAR 0, not an address, which means we haven't assigned space
+> >for the BAR.  That means it should not conflict with anything.
+> >
+> >We already do revert to firmware assignments in some situations when
+> >Linux can't figure out how to assign things itself.  But apparently
+> >not in *this* situation.
+> >
+> >Without seeing the whole picture, it's hard for me to figure out
+> >what's going on here.  Could you open a bug report at
+> >http://bugzilla.kernel.org (category drivers/PCI) and attach a
+> >complete dmesg and "lspci -vv" output?  Then we can look at what
+> >firmware did and what Linux thought was wrong with it.
+> 
+> Done a while back:
+> https://bugzilla.kernel.org/show_bug.cgi?id=92671
+> 
+> An interesting question popped up: I find the kernel doesn't accept
+> IO BARs and bridge windows after address 0xffff, though the PCI spec
+> and modern hardware allows 32-bit decode.
+> 
+> Thus for practical reasons, our NumaConnect firmware doesn't setup
+> IO BARs/windows beyond the first PCI domain (which is the only one
+> with legacy support, and no drivers seem to require IO their BARs
+> anyway), ...
 
--Alnie
+If we don't handle IO ports above 0xffff, I think that's broken.  I'm
+pretty sure we do handle that on ia64 (it's done by assigning 64K of IO
+space to each host bridge, and I think it's typically translated by the
+bridge so each root bus sees a 0-64K space on PCI).  We should be able to
+do something similar on x86, but it may not be implemented there yet.
+
+> and we get conflicts and warnings [1]:
+> 
+> pnp 00:00: disabling [io  0x0061] because it overlaps 0001:05:00.0
+> BAR 0 [io  0x0000-0x00ff]
+> pci 0001:03:00.0: BAR 13: no space for [io  size 0x1000]
+> pci 0001:03:00.0: BAR 13: failed to assign [io  size 0x1000]
+> 
+> Is there a cleaner way of dealing with this, in our firmware and/or
+> the kernel? Eg, I guess if IO BARs aren't assigned (value 0) on PCI
+> domains without IO bridge windows in the ACPI AML, no need to
+> conflict/attempt assignment?
+
+Yes, we should be able to deal with this better.
+
+The complaint about disabling the pnp 00:00 resource is bogus because the
+PCI 0001:05:00.0 BAR is not assigned and should never be enabled, so this
+is not a real conflict.  My intent is that the PCI resource corresponding
+to this BAR should have the IORESOURCE_UNSET bit set.  That will prevent
+pci_enable_resources() from setting the PCI_COMMAND_IO bit, which is what
+would enable the BAR.
+
+Can you try the patch below?  I don't think it will work right off the bat
+because I think the fact that we print "[io  0x0000-0x00ff]" instead of
+"[io  size 0x0100]" means we don't have IORESOURCE_UNSET set in the PCI
+resource.  But maybe you can figure out where it *should* be getting
+set?
+
+Bjorn
+
+
+commit fd4888cf942a2ae9cdefc46d1fba86b2c7ec2dbf
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Tue Mar 3 16:13:56 2015 -0600
+
+    PNP: Don't check for overlaps with unassigned PCI BARs
+    
+    After 0509ad5e1a7d ("PNP: disable PNP motherboard resources that overlap
+    PCI BARs"), we disable and warn about PNP resources that overlap PCI BARs.
+    But we assume that all PCI BARs are valid, which is incorrect, because a
+    BAR may not have any space assigned to it.  In that case, we will not
+    enable the BAR, so no other resource can conflict with it.
+    
+    Ignore PCI BARs that are unassigned, as indicated by IORESOURCE_UNSET.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+index ebf0d6710b5a..943c1cb9566c 100644
+--- a/drivers/pnp/quirks.c
++++ b/drivers/pnp/quirks.c
+@@ -246,13 +246,16 @@ static void quirk_system_pci_resources(struct pnp_dev *dev)
+ 	 */
+ 	for_each_pci_dev(pdev) {
+ 		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+-			unsigned long type;
++			unsigned long flags, type;
+ 
+-			type = pci_resource_flags(pdev, i) &
+-					(IORESOURCE_IO | IORESOURCE_MEM);
++			flags = pci_resource_flags(pdev, i);
++			type = flags & (IORESOURCE_IO | IORESOURCE_MEM);
+ 			if (!type || pci_resource_len(pdev, i) == 0)
+ 				continue;
+ 
++			if (flags & IORESOURCE_UNSET)
++				continue;
++
+ 			pci_start = pci_resource_start(pdev, i);
+ 			pci_end = pci_resource_end(pdev, i);
+ 			for (j = 0;
