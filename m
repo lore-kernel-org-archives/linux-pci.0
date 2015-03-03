@@ -1,113 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:38729 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbbCTWH6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 18:07:58 -0400
-Received: by igbqf9 with SMTP id qf9so279841igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 15:07:57 -0700 (PDT)
-Date: Fri, 20 Mar 2015 17:07:53 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de
-Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
-Message-ID: <20150320220753.GN26935@google.com>
-References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
- <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
+Received: from resqmta-po-06v.sys.comcast.net ([96.114.154.165]:54029 "EHLO
+	resqmta-po-06v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753733AbbCCCIK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 21:08:10 -0500
+Message-ID: <54F51787.2060405@comcast.net>
+Date: Mon, 02 Mar 2015 18:08:07 -0800
+From: Alnie <memobook80@comcast.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>
+Subject: Re: PCI Issues with ExpressCard/54 Audio Device
+References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net> <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net> <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com> <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com> <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com> <54EFB400.4000904@comcast.net> <20150227003448.GH25765@google.com> <54F00F7D.6040604@comcast.net> <54F4F636.8090907@comcast.net> <CAErSpo61UL8Pj3dA9qGKmzW2fczrAMRij0T0BRa76nD8WxhVeA@mail.gmail.com>
+In-Reply-To: <CAErSpo61UL8Pj3dA9qGKmzW2fczrAMRij0T0BRa76nD8WxhVeA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
-> Allows to properly set up multiple MSI irqs per device.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> The ifdef is needed to avoid a compile error on
-> !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
-> when the kernel is compiled with MSI support.
-> ---
->  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 46 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 1f4ea6f2d910..8a15ea2e8eab 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->  	}
->  
->  	*pos = pos0;
-> +	desc->nvec_used = no_irqs;
-> +	desc->msi_attrib.multiple = order_base_2(no_irqs);
-> +
->  	return irq;
->  
->  no_valid_irq:
-> @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
->  
->  	return 0;
->  }
-> +#ifdef CONFIG_PCI_MSI
-> +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-> +			     int nvec, int type)
-> +{
-> +	int irq, pos;
-> +	struct msi_desc *desc;
-> +	struct msi_msg msg;
-> +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> +
-> +	/* MSI-X interrupts are not supported */
-> +	if (type == PCI_CAP_ID_MSIX)
-> +		return -EINVAL;
-> +
-> +	WARN_ON(!list_is_singular(&pdev->msi_list));
-> +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
-> +
-> +	irq = assign_irq(nvec, desc, &pos);
-> +	if (irq < 0)
-> +		return irq;
-> +
-> +	if (pp->ops->get_msi_addr)
-> +		msg.address_lo = pp->ops->get_msi_addr(pp);
-> +	else
-> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> +	msg.address_hi = 0x0;
-> +
-> +	if (pp->ops->get_msi_data)
-> +		msg.data = pp->ops->get_msi_data(pp, pos);
-> +	else
-> +		msg.data = pos;
-> +
-> +	pci_write_msi_msg(irq, &msg);
-> +
-> +	return 0;
-> +}
-> +#else
-> +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
-> +			     int nvec, int type)
-> +{
-> +	return -ENOSYS;
-> +}
+On 03/02/2015 05:51 PM, Bjorn Helgaas wrote:
+> On Mon, Mar 2, 2015 at 5:45 PM, Alnie <memobook80@comcast.net> wrote:
+>> On 02/26/2015 10:32 PM, Alnie wrote:
+>>>
+>>> On 02/26/2015 04:34 PM, Bjorn Helgaas wrote:
+>>>
+>>>>
+>>>> So it looks like the Unsupported Request error is unrelated to the
+>>>> problem
+>>>> you're seeing.  Probably left over from something the BIOS did when it
+>>>> enumerated devices.
+>>>>
+>>>> You could look at "lspci -vv" again after clearing the errors and loading
+>>>> the driver.  But I think it will be the same as it was after you manually
+>>>> cleared the errors.
+>>>
+>>>
+>>> (after clearing errors) http://pastebin.com/UxdgDyp1
+>>>
+>>>>
+>>>> Oh, one more idea: *before* clearing the errors, can you collect
+>>>> "lspci -xxxxs05:00.0" output?  That will give us more AER log registers,
+>>>> and it's possible there's a clue there.  It's conceivable that we have
+>>>> an MPS issue that causes the Unsupported Request error.
+>>>
+>>>
+>>> (before clearing errors w/ card in @ boot) http://pastebin.com/wTeNjHHT
+>>> (before clearing errors w/ card out @ boot) http://pastebin.com/4Q82KNNc
+>>>
+>>>
+>>>>
+>>>> Just to be exhaustive, can you also stash the "lspci -vvv" output for the
+>>>> entire system somewhere (again, before clearing the error).
+>>>>
+>>> http://pastebin.com/K4iPhGcq
+>>>
+>>> not sure if this is relevant but for debugging sake here is the output
+>>> of the card when left out during boot (no UnsupReq error)...
+>>>
+>>> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI
+>>> to PCIe Bridge (prog-if 00 [Normal decode])
+>>>       Physical Slot: 3
+>>>       Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
+>>> Stepping- SERR- FastB2B- DisINTx-
+>>>       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>       Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
+>>>       I/O behind bridge: 00002000-00002fff
+>>>       Memory behind bridge: f8000000-f80fffff
+>>>       Prefetchable memory behind bridge: 00000000f4000000-00000000f40fffff
+>>>       Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+>>> <TAbort- <MAbort+ <SERR- <PERR-
+>>>       BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>>>           PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>>>       Capabilities: [50] Power Management version 3
+>>>           Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+>>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>>>           Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>>>           Bridge: PM- B3+
+>>>       Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+>>>           Address: 0000000000000000  Data: 0000
+>>>       Capabilities: [80] Subsystem: Creative Labs Device 0040
+>>>       Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge,
+>>> MSI 00
+>>>           DevCap:    MaxPayload 512 bytes, PhantFunc 0
+>>>               ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
+>>>           DevCtl:    Report errors: Correctable- Non-Fatal- Fatal-
+>>> Unsupported-
+>>>               RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
+>>>               MaxPayload 128 bytes, MaxReadReq 512 bytes
+>>>           DevSta:    CorrErr- UncorrErr+ FatalErr- UnsuppReq- AuxPwr-
+>>> TransPend-
+>>>           LnkCap:    Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
+>>> Latency L0s <512ns, L1 <16us
+>>>               ClockPM- Surprise- LLActRep- BwNot-
+>>>           LnkCtl:    ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+>>>               ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>>>           LnkSta:    Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
+>>> DLActive- BWMgmt- ABWMgmt-
+>>>       Capabilities: [100 v1] Advanced Error Reporting
+>>>           UESta:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+>>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>>           UEMsk:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+>>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>>           UESvrt:    DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+>>> RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>>>           CESta:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>>>           CEMsk:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>>>           AERCap:    First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
+>>> ChkEn-
+>>>
+>>>
+>>>>>> The device is at [mem 0xf4300000-0xf4303fff], so anything in that
+>>>>>> region
+>>>>>> should respond.  Why don't you try this, which should dump the whole
+>>>>>> region:
+>>>>>>
+>>>>>>     ./mem -N -m -s 0xf4300000 -l 0x4000
+>>>>>>
+>>>>>
+>>>>> http://pastebin.com/eHEsZNmU
+>>>>
+>>>>
+>>>> The data there looks fine, at least from a PCI perspective:
+>>>>
+>>>>     F4300000:00 33 00 01 3C 00 1D 00 01 00 00 00 00 00 00 00
+>>>>     F4300010:00 00 00 00 00 00 00 00 3C 00 1D 00 00 00 00 00
+>>>>     F4300020:00 00 00 C0 00 00 00 00 00 00 00 00 00 00 00 00
+>>>>     F4300030:0F FA 24 A8 00 00 00 00 00 00 00 00 00 00 00 00
+>>>>     ...
+>>>>
+>>>> That means the device itself seems happy and is responding to read
+>>>> requests.
+>>>>
+>>>> The only thing left I can think of to do is to instrument the driver and
+>>>> see where it gets data that it doesn't expect.  So I'm going to punt this
+>>>> back to you, Takashi :)  Don't hesitate to send it back to me if you find
+>>>> something that looks like a PCI problem, but I don't see one yet.
+>>>>
+>>>> Bjorn
+>>
+>> Today I booted up into Win 7 and the card wasn't recognized. This is the
+>> first time I've noticed this. After re-inserting it, everything was fine,
+>> but I thought to take note. Maybe some of the issues coming up are unique to
+>> my hardware. Any new ideas? Is there hope for this? Should this conversation
+>> be moved elsewhere?
+>
+> After you re-inserted the card, does it work after cold-booting Win 7?
+>   If so, maybe it's an intermittent problem with the slot connector.
+>
+> If you have to remove and re-insert the card *every* time you boot Win
+> 7, maybe there's a problem on the card, e.g., it doesn't come out of
+> reset fast enough.
+>
+> I looked again at the Unsupported Request error that was logged, and I
+> really don't think it's related.  The header from the offending
+> transaction was logged, and it looked like a Config Read request.
+> It's normal for these reads to fail during enumeration.  From the PCIe
+> spec (r3.0, sec 2.3.2):
+>
+>      Some system configuration software depends on reading a data value
+>      of all 1’s when a Configuration Read Request is terminated as an
+>      Unsupported Request, particularly when probing to determine the
+>      existence of a device in the system. A Root Complex intended for
+>      use with software that depends on a read-data value of all 1’s must
+>      synthesize this value when UR Completion Status is returned for
+>      a Configuration Read Request.
+>
+> It is a bit strange that this error is only logged when the card is
+> present.  I suspect the error is always logged during enumeration, but
+> the BIOS may smart enough to clear it from the built-in bridges, but
+> not smart enough to clear it on the bridge that's on the ExpressCard.
+>
+> In any event, I still don't see a PCI issue here.  I intended to open
+> a bugzilla and attach the information you've collected in case
+> somebody else can make sense out of it.  But I haven't had time yet.
+>
+> Bjorn
+>
 
-Seems strange that we need even this stub function when we don't have
-CONFIG_PCI_MSI.  Is there some way we can fix this so dw_pcie_msi_chip is
-only defined when we have CONFIG_PCI_MSI?
+Yes, it seems like just a intermittent problem with the slot connector 
+Most of the time it works fine. Thank you very much for being so 
+informative and taking the time to look into this :)
 
-> +#endif
->  
->  static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
->  {
-> @@ -317,6 +362,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
->  
->  static struct msi_controller dw_pcie_msi_chip = {
->  	.setup_irq = dw_msi_setup_irq,
-> +	.setup_irqs = dw_msi_setup_irqs,
->  	.teardown_irq = dw_msi_teardown_irq,
->  };
->  
-> -- 
-> 2.1.4
-> 
+-Alnie
