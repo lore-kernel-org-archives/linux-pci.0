@@ -1,122 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:40297 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752428AbbCYIbR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:31:17 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:31:16 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 1163D2CE8040
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:14 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8V5bW24707162
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:14 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8UdfM028443
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:40 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 17/20] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
-Date: Wed, 25 Mar 2015 16:23:58 +0800
-Message-Id: <1427271841-28749-18-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:54581 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932499AbbCCRw7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 12:52:59 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v8 7/7] arm: dma-mapping: limit IOMMU mapping size
+Date: Tue, 3 Mar 2015 12:52:14 -0500
+Message-ID: <1425405134-24707-8-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
+References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
-will exceed the limitation and failed to be assigned.
+arm_iommu_create_mapping() has size parameter of size_t and
+arm_setup_iommu_dma_ops() can take a value higher than that
+when this is called from the OF code.  So limit the size to
+SIZE_MAX.
 
-Introduce a different mechanism based on the IOV BAR size:
-
-  - if IOV BAR size is smaller than 64MB, expand to total_pe
-  - if IOV BAR size is bigger than 64MB, roundup power2
-
-[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 3 deletions(-)
+ arch/arm/mm/dma-mapping.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 8716db4..415df85 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -182,6 +182,8 @@ struct pci_dn {
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
- 	int     offset;			/* PE# for the first VF PE */
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5187d16..b63925f 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2250,6 +2250,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index 170a116..fc81a38 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -2027,6 +2027,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
+ 	if (!iommu)
+ 		return false;
  
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -2260,6 +2261,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->vfs_expanded = 0;
- 
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
++	/*
++	 * currently arm_iommu_create_mapping() takes a max of size_t
++	 * for size param. So check this limit for now.
++	 */
++	if (size > SIZE_MAX)
++		return false;
 +
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
-+				 i, res);
-+			continue;
-+		}
-+
-+		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
-+
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
-+				 i, res);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = roundup_pow_of_two(total_vfs);
-+			break;
-+		}
-+	}
-+
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->flags || res->parent)
-@@ -2272,12 +2299,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 
- 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
- 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
--				i, res, phb->ioda.total_pe);
-+			 i, res, mul);
- 	}
--	pdn->vfs_expanded = phb->ioda.total_pe;
-+	pdn->vfs_expanded = mul;
- }
- #endif /* CONFIG_PCI_IOV */
- 
+ 	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
+ 	if (IS_ERR(mapping)) {
+ 		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
 -- 
 1.7.9.5
 
