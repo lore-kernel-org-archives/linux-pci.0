@@ -1,53 +1,113 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:47903 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751477AbbCCIfe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 03:35:34 -0500
+Message-ID: <54F57243.8040905@huawei.com>
+Date: Tue, 3 Mar 2015 16:35:15 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org>
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
-	<1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org>
-Date: Wed, 11 Mar 2015 12:30:28 -0400
-Message-ID: <CAMzpN2gLjuddMYKJY9z=e=oG0P-NjV-mfjtvYRAY6HXCWn5-UQ@mail.gmail.com>
-Subject: Re: [PATCH v4 7/9] x86, pci, ecam: mmconfig_64.c becomes default
- implementation for ECAM driver.
-From: Brian Gerst <brgerst@gmail.com>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, rjw@rjwysocki.net,
-	al.stone@linaro.org, linux-arm-kernel@lists.infradead.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"the arch/x86 maintainers" <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Fenghua Yu" <fenghua.yu@intel.com>
+Subject: Re: [PATCH v4 16/30] PCI/IA64: Fix the build warning about pci_domain_nr()
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-17-git-send-email-wangyijing@huawei.com> <20150303025622.GH11978@google.com>
+In-Reply-To: <20150303025622.GH11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 10:12 AM, Tomasz Nowicki
-<tomasz.nowicki@linaro.org> wrote:
+On 2015/3/3 10:56, Bjorn Helgaas wrote:
+> On Thu, Feb 26, 2015 at 04:12:10PM +0800, Yijing Wang wrote:
+>> Should pass pci_bus * instead of pci_dev * to pci_domain_nr().
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Tony Luck <tony.luck@intel.com>
+>> CC: Fenghua Yu <fenghua.yu@intel.com>
+>> CC: linux-ia64@vger.kernel.org
+>> ---
+>>  arch/ia64/sn/kernel/io_acpi_init.c |    6 +++---
+>>  arch/ia64/sn/kernel/io_init.c      |    2 +-
+>>  2 files changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
+>> index 0640739..2fd7414 100644
+>> --- a/arch/ia64/sn/kernel/io_acpi_init.c
+>> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
+>> @@ -364,12 +364,12 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+>>          status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
+>>                                         &segment);
+>>          if (ACPI_SUCCESS(status)) {
+>> -		if (segment != pci_domain_nr(dev)) {
+>> +		if (segment != pci_domain_nr(dev->bus)) {
+> 
+> This is completely unrelated to the series, isn't it?  It looks like this
+> is a bug fix that should be handled separately and marked for stable.
 
-> diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
-> index 5c6fc35..35c765b 100644
-> --- a/arch/x86/pci/Makefile
-> +++ b/arch/x86/pci/Makefile
-> @@ -1,7 +1,10 @@
->  obj-y                          := i386.o init.o
->
->  obj-$(CONFIG_PCI_BIOS)         += pcbios.o
-> -obj-$(CONFIG_PCI_MMCONFIG)     += mmconfig_$(BITS).o direct.o mmconfig-shared.o
-> +obj-$(CONFIG_PCI_MMCONFIG)     += direct.o mmconfig-shared.o
-> +ifeq ($(BITS),32)
-> +obj-$(CONFIG_PCI_MMCONFIG)     += mmconfig_32.o
-> +endif
->  obj-$(CONFIG_PCI_DIRECT)       += direct.o
->  obj-$(CONFIG_PCI_OLPC)         += olpc.o
->  obj-$(CONFIG_PCI_XEN)          += xen.o
+Yes, it's a separate patch, I would move it out of this series, and post it out separately.
 
-This would be better written as:
+Thanks!
+Yijing.
 
-mmconfig-y := direct.o mmconfig-shared.o
-mmconfig-$(CONFIG_X86_32) += mmconfig_32.o
-obj-$(CONFIG_PCI_MMCONFIG) += $(mmconfig-y)
+> 
+>>  			acpi_get_name(rootbus_handle, ACPI_FULL_PATHNAME,
+>>  				&name_buffer);
+>>  			printk(KERN_ERR
+>>  			       "%s: Segment number mismatch, 0x%llx vs 0x%x for: %s\n",
+>> -			       __func__, segment, pci_domain_nr(dev),
+>> +			       __func__, segment, pci_domain_nr(dev->bus),
+>>  			       (char *)name_buffer.pointer);
+>>  			kfree(name_buffer.pointer);
+>>  			return 1;
+>> @@ -407,7 +407,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+>>  	/* Build up the pcidev_info.pdi_slot_host_handle */
+>>  	host_devfn = get_host_devfn(pcidev_match.handle, rootbus_handle);
+>>  	(*pcidev_info)->pdi_slot_host_handle =
+>> -			((unsigned long) pci_domain_nr(dev) << 40) |
+>> +			((unsigned long) pci_domain_nr(dev->bus) << 40) |
+>>  					/* bus == 0 */
+>>  					host_devfn;
+>>  	return 0;
+>> diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+>> index bcdc5b8..a97fad4 100644
+>> --- a/arch/ia64/sn/kernel/io_init.c
+>> +++ b/arch/ia64/sn/kernel/io_init.c
+>> @@ -164,7 +164,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
+>>  		panic("%s: Unable to alloc memory for sn_irq_info", __func__);
+>>  
+>>  	/* Call to retrieve pci device information needed by kernel. */
+>> -	status = sal_get_pcidev_info((u64) pci_domain_nr(dev),
+>> +	status = sal_get_pcidev_info((u64) pci_domain_nr(dev->bus),
+>>  		(u64) dev->bus->number,
+>>  		dev->devfn,
+>>  		(u64) __pa(pcidev_info),
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
---
-Brian Gerst
+
+-- 
+Thanks!
+Yijing
+
