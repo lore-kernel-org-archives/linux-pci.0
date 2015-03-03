@@ -1,95 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:56569 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927AbbCCDYR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:24:17 -0500
-Received: by mail-ob0-f172.google.com with SMTP id nt9so35896568obb.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 19:24:17 -0800 (PST)
-Date: Mon, 2 Mar 2015 21:24:12 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	linux-parisc@vger.kernel.org
-Subject: Re: [PATCH v4 22/30] PCI/Parisc: Use pci_scan_root_bus() for
- simplicity
-Message-ID: <20150303032412.GK11978@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
- <1424938344-4017-23-git-send-email-wangyijing@huawei.com>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:46261 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148AbbCCBwK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 20:52:10 -0500
+Received: by qcxr5 with SMTP id r5so28080205qcx.13
+        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 17:52:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-23-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <54F4F636.8090907@comcast.net>
+References: <1703881568.13072732.1424911985807.JavaMail.zimbra@comcast.net>
+ <1602089933.13084034.1424913145538.JavaMail.zimbra@comcast.net>
+ <CAErSpo6E5EMDUA8tHRZYF6rgfRqtHEZtG4EyVcMSRL02T3Ttyg@mail.gmail.com>
+ <54EED7D2.7000205@comcast.net> <20150226174635.GA25765@google.com>
+ <54EF74CF.7050909@comcast.net> <20150226231843.GC25765@google.com>
+ <54EFB400.4000904@comcast.net> <20150227003448.GH25765@google.com>
+ <54F00F7D.6040604@comcast.net> <54F4F636.8090907@comcast.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 2 Mar 2015 19:51:48 -0600
+Message-ID: <CAErSpo61UL8Pj3dA9qGKmzW2fczrAMRij0T0BRa76nD8WxhVeA@mail.gmail.com>
+Subject: Re: PCI Issues with ExpressCard/54 Audio Device
+To: Alnie <memobook80@comcast.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:12:16PM +0800, Yijing Wang wrote:
-> From: Yijing Wang <wangyijing0307@gmail.com>
+On Mon, Mar 2, 2015 at 5:45 PM, Alnie <memobook80@comcast.net> wrote:
+> On 02/26/2015 10:32 PM, Alnie wrote:
+>>
+>> On 02/26/2015 04:34 PM, Bjorn Helgaas wrote:
+>>
+>>>
+>>> So it looks like the Unsupported Request error is unrelated to the
+>>> problem
+>>> you're seeing.  Probably left over from something the BIOS did when it
+>>> enumerated devices.
+>>>
+>>> You could look at "lspci -vv" again after clearing the errors and loading
+>>> the driver.  But I think it will be the same as it was after you manually
+>>> cleared the errors.
+>>
+>>
+>> (after clearing errors) http://pastebin.com/UxdgDyp1
+>>
+>>>
+>>> Oh, one more idea: *before* clearing the errors, can you collect
+>>> "lspci -xxxxs05:00.0" output?  That will give us more AER log registers,
+>>> and it's possible there's a clue there.  It's conceivable that we have
+>>> an MPS issue that causes the Unsupported Request error.
+>>
+>>
+>> (before clearing errors w/ card in @ boot) http://pastebin.com/wTeNjHHT
+>> (before clearing errors w/ card out @ boot) http://pastebin.com/4Q82KNNc
+>>
+>>
+>>>
+>>> Just to be exhaustive, can you also stash the "lspci -vvv" output for the
+>>> entire system somewhere (again, before clearing the error).
+>>>
+>> http://pastebin.com/K4iPhGcq
+>>
+>> not sure if this is relevant but for debugging sake here is the output
+>> of the card when left out during boot (no UnsupReq error)...
+>>
+>> 05:00.0 PCI bridge: Creative Labs [SB X-Fi Xtreme Audio] CA0110-IBG PCI
+>> to PCIe Bridge (prog-if 00 [Normal decode])
+>>      Physical Slot: 3
+>>      Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
+>> Stepping- SERR- FastB2B- DisINTx-
+>>      Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>      Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
+>>      I/O behind bridge: 00002000-00002fff
+>>      Memory behind bridge: f8000000-f80fffff
+>>      Prefetchable memory behind bridge: 00000000f4000000-00000000f40fffff
+>>      Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+>> <TAbort- <MAbort+ <SERR- <PERR-
+>>      BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>>          PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>>      Capabilities: [50] Power Management version 3
+>>          Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>>          Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>>          Bridge: PM- B3+
+>>      Capabilities: [60] MSI: Enable- Count=1/16 Maskable- 64bit+
+>>          Address: 0000000000000000  Data: 0000
+>>      Capabilities: [80] Subsystem: Creative Labs Device 0040
+>>      Capabilities: [90] Express (v1) PCI-Express to PCI/PCI-X Bridge,
+>> MSI 00
+>>          DevCap:    MaxPayload 512 bytes, PhantFunc 0
+>>              ExtTag- AttnBtn- AttnInd- PwrInd- RBE-
+>>          DevCtl:    Report errors: Correctable- Non-Fatal- Fatal-
+>> Unsupported-
+>>              RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ BrConfRtry-
+>>              MaxPayload 128 bytes, MaxReadReq 512 bytes
+>>          DevSta:    CorrErr- UncorrErr+ FatalErr- UnsuppReq- AuxPwr-
+>> TransPend-
+>>          LnkCap:    Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
+>> Latency L0s <512ns, L1 <16us
+>>              ClockPM- Surprise- LLActRep- BwNot-
+>>          LnkCtl:    ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+>>              ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>>          LnkSta:    Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
+>> DLActive- BWMgmt- ABWMgmt-
+>>      Capabilities: [100 v1] Advanced Error Reporting
+>>          UESta:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>          UEMsk:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
+>> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>          UESvrt:    DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
+>> RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>>          CESta:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>>          CEMsk:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>>          AERCap:    First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
+>> ChkEn-
+>>
+>>
+>>>>> The device is at [mem 0xf4300000-0xf4303fff], so anything in that
+>>>>> region
+>>>>> should respond.  Why don't you try this, which should dump the whole
+>>>>> region:
+>>>>>
+>>>>>    ./mem -N -m -s 0xf4300000 -l 0x4000
+>>>>>
+>>>>
+>>>> http://pastebin.com/eHEsZNmU
+>>>
+>>>
+>>> The data there looks fine, at least from a PCI perspective:
+>>>
+>>>    F4300000:00 33 00 01 3C 00 1D 00 01 00 00 00 00 00 00 00
+>>>    F4300010:00 00 00 00 00 00 00 00 3C 00 1D 00 00 00 00 00
+>>>    F4300020:00 00 00 C0 00 00 00 00 00 00 00 00 00 00 00 00
+>>>    F4300030:0F FA 24 A8 00 00 00 00 00 00 00 00 00 00 00 00
+>>>    ...
+>>>
+>>> That means the device itself seems happy and is responding to read
+>>> requests.
+>>>
+>>> The only thing left I can think of to do is to instrument the driver and
+>>> see where it gets data that it doesn't expect.  So I'm going to punt this
+>>> back to you, Takashi :)  Don't hesitate to send it back to me if you find
+>>> something that looks like a PCI problem, but I don't see one yet.
+>>>
+>>> Bjorn
+>
+> Today I booted up into Win 7 and the card wasn't recognized. This is the
+> first time I've noticed this. After re-inserting it, everything was fine,
+> but I thought to take note. Maybe some of the issues coming up are unique to
+> my hardware. Any new ideas? Is there hope for this? Should this conversation
+> be moved elsewhere?
 
-When you write subject lines, I think it's friendly to run
-"git log --oneline" on the file you're changing, and make yours
-match the previous ones.
+After you re-inserted the card, does it work after cold-booting Win 7?
+ If so, maybe it's an intermittent problem with the slot connector.
 
-  $ git log --oneline drivers/parisc/dino.c
-  3f05536d226d PCI/Parisc: Use pci_scan_root_bus() for simplicity
-  3335f75a8877 parisc: dino: fix %d confusingly prefixed with 0x in format string
-  3fad9b8d597f drivers/parisc: Use printf extension %pR for struct resource
-  0fe763c570ad Drivers: misc: remove __dev* attributes.
-  0b79ca2a800d parisc/PCI: Use list_for_each_entry() for bus->devices traversal
-  30aa80da43a5 parisc/PCI: register busn_res for root buses
-  ...
+If you have to remove and re-insert the card *every* time you boot Win
+7, maybe there's a problem on the card, e.g., it doesn't come out of
+reset fast enough.
 
-Yours doesn't match any of them, but "parisc/PCI" seems the best match.
+I looked again at the Unsupported Request error that was logged, and I
+really don't think it's related.  The header from the offending
+transaction was logged, and it looked like a Config Read request.
+It's normal for these reads to fail during enumeration.  From the PCIe
+spec (r3.0, sec 2.3.2):
 
-> Now pci_bus_add_devices() has been ripped out
-> from pci_scan_root_bus(), we could use pci_scan_root_bus()
-> instead of pci_create_root_bus() + pci_scan_child_bus()
-> for simplicity. We could also remove the pci bus
-> resource(dino_current_bus,255) and pci_bus_update_busn_res_end(),
-> because pci_scan_root_bus() would do the same thing.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
-> CC: linux-parisc@vger.kernel.org
-> ---
->  drivers/parisc/dino.c    |   11 ++---------
->  drivers/parisc/lba_pci.c |    7 ++-----
->  2 files changed, 4 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-> index a0580af..e5ee339 100644
-> --- a/drivers/parisc/dino.c
-> +++ b/drivers/parisc/dino.c
-> @@ -977,15 +977,11 @@ static int __init dino_probe(struct parisc_device *dev)
->  	if (dino_dev->hba.gmmio_space.flags)
->  		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
->  
-> -	dino_dev->hba.bus_num.start = dino_current_bus;
-> -	dino_dev->hba.bus_num.end = 255;
-> -	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
-> -	pci_add_resource(&resources, &dino_dev->hba.bus_num);
+    Some system configuration software depends on reading a data value
+    of all 1’s when a Configuration Read Request is terminated as an
+    Unsupported Request, particularly when probing to determine the
+    existence of a device in the system. A Root Complex intended for
+    use with software that depends on a read-data value of all 1’s must
+    synthesize this value when UR Completion Status is returned for
+    a Configuration Read Request.
 
-I know pci_scan_root_bus() does default to bus 0-255, but I don't really
-like that behavior, and I think it's a bug for drivers like this to rely on
-that.  The PCI core has no way to discover the actual bus number range, and
-the only reason it supplies a default is because it was inconvenient to
-change all the callers.  The host bridge driver is the only code that has
-any chance of discovering and/or configuring the correct range.
+It is a bit strange that this error is only logged when the card is
+present.  I suspect the error is always logged during enumeration, but
+the BIOS may smart enough to clear it from the built-in bridges, but
+not smart enough to clear it on the bridge that's on the ExpressCard.
 
-So I think it's more correct to leave the existing code here, even though
-this code is is likely incorrect.  At least then if we trip over an issue
-with the bus range being incorrect, it will be clear that the fix should
-be in dino.c rather than the PCI core.
+In any event, I still don't see a PCI issue here.  I intended to open
+a bugzilla and attach the information you've collected in case
+somebody else can make sense out of it.  But I haven't had time yet.
+
+Bjorn
