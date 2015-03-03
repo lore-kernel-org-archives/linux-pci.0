@@ -1,83 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:53606 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276AbbCYI3f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:29:35 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:29:33 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 97A0E3578048
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:31 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8TNX842926202
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:31 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8SvAx025568
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:28:58 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 12/20] powerpc/pci: Don't unset PCI resources for VFs
-Date: Wed, 25 Mar 2015 16:23:53 +0800
-Message-Id: <1427271841-28749-13-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Voegtle <tv@lio96.de>, Hudd <hedede.l@gmail.com>,
+	Prakash Punnoor <prakash@punnoor.de>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
+Date: Tue,  3 Mar 2015 12:25:39 +0800
+Message-Id: <1425356741-26789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Flag PCI_REASSIGN_ALL_RSRC is used to ignore resources information setup by
-firmware, so that kernel would re-assign all resources of pci devices.
+Commit 593669c2ac0f (x86/PCI/ACPI: Use common ACPI resource interfaces
+to simplify implementation) causes regression to several platforms,
+which is caused by stricter checks in new ACPI resource parsing code
+and BIOSes report incorrect ACPI resource descriptors.  So try to relax
+the check to avoid regressions.
 
-On powerpc arch, this happens in a header fixup function
-pcibios_fixup_resources(), which will clean up the resources if this flag
-is set. This works fine for PFs, since after clean up, kernel will
-re-assign the resources in pcibios_resource_survey().
+Jiang Liu (2):
+  x86/PCI/ACPI: Ignore resources consumed by host bridge itself
+  x86/PCI/ACPI: Relax ACPI resource descriptor checks to work around
+    BIOS bugs
 
-Below is a simple call flow on how it works:
+ arch/x86/pci/acpi.c     |   11 ++++++++---
+ drivers/acpi/resource.c |    4 +++-
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-    pcibios_init
-      pcibios_scan_phb
-        pci_scan_child_bus
-          ...
-            pci_device_add
-              pci_fixup_device(pci_fixup_header)
-                pcibios_fixup_resources                     # header fixup
-                  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
-                    dev->resource[i].start = 0
-      pcibios_resource_survey                               # re-assign
-        pcibios_allocate_resources
-
-However, the VF resources won't be re-assigned, since the VF resources are
-completely determined by the PF resources, and the PF resources have
-already been reassigned. This means we need to leave VF's resources
-un-cleared in pcibios_fixup_resources().
-
-In this patch, we skip the resource unset process in
-pcibios_fixup_resources(), if the pci_dev is a VF.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-common.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 2a525c9..8203101 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
- 		       pci_name(dev));
- 		return;
- 	}
-+
-+	if (dev->is_virtfn)
-+		return;
-+
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
- 		struct resource *res = dev->resource + i;
- 		struct pci_bus_region reg;
 -- 
-1.7.9.5
+1.7.10.4
 
