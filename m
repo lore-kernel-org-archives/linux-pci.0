@@ -1,62 +1,237 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v3 0/3] pci: iproc: Add Broadcom iProc PCIe support
-Date: Thu, 5 Mar 2015 17:01:35 -0800
-Message-ID: <1425603699-13416-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:43276 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757844AbbCCRw5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Mar 2015 12:52:57 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v8 2/7] of: Move of_dma_configure() to device.c to help re-use
+Date: Tue, 3 Mar 2015 12:52:09 -0500
+Message-ID: <1425405134-24707-3-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
+References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds the support for Broadcom iProc PCIe controller
+Move of_dma_configure() to device.c so it can be re-used for PCI devices to
+obtain DMA configuration from DT.  Also add a second argument so that for
+PCI, the DT node of root bus host bridge can be used to obtain the DMA
+configuration for the slave PCI device.
 
-pcie-iproc.c servers as the common core driver, and front-end bus
-interface needs to be added to support different bus interfaces
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Acked-by: Rob Herring <robh+dt@kernel.org>
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/of/device.c       |   59 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/of/platform.c     |   58 ++------------------------------------------
+ include/linux/of_device.h |    3 +++
+ 3 files changed, 64 insertions(+), 56 deletions(-)
 
-pcie-iproc-pltfm.c contains the support for the platform bus interface
-
-Changes from v2:
- - Major rework of the PCIe driver to factor out common generic code from
-   front-end bus interface. Support for generic platform bus interface is
-   also added
- - Adapt to several new PCI APIs that have been introduced lately
-
-Changes from v1:
- - Add standard PCI interrupt DT properties "#interrupt-cells",
-   "interrupt-map-mask" and "interrupt-map" so legacy INTx interrupts can be
-   supported by using standard PCI OF IRQ parsing function
- - Get rid of custom IRQ mapping function in the driver. Use
-   of_irq_parse_and_map_pci instead
-
-Ray Jui (3):
-  pci: iProc: define iProc PCIe platform bus binding
-  pci: iproc: Add Broadcom iProc PCIe support
-  ARM: dts: enable PCIe support for Cygnus
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++
- arch/arm/boot/dts/bcm-cygnus.dtsi                  |   42 +++
- arch/arm/boot/dts/bcm958300k.dts                   |    8 +
- drivers/pci/host/Kconfig                           |   17 +
- drivers/pci/host/Makefile                          |    2 +
- drivers/pci/host/pcie-iproc-pltfm.c                |  101 ++++++
- drivers/pci/host/pcie-iproc.c                      |  337 ++++++++++++++++++++
- drivers/pci/host/pcie-iproc.h                      |   39 +++
- 8 files changed, 609 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
- create mode 100644 drivers/pci/host/pcie-iproc-pltfm.c
- create mode 100644 drivers/pci/host/pcie-iproc.c
- create mode 100644 drivers/pci/host/pcie-iproc.h
-
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 46d6c75c..31a7875 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -2,6 +2,9 @@
+ #include <linux/kernel.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
++#include <linux/of_address.h>
++#include <linux/of_iommu.h>
++#include <linux/dma-mapping.h>
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/mod_devicetable.h>
+@@ -66,6 +69,62 @@ int of_device_add(struct platform_device *ofdev)
+ 	return device_add(&ofdev->dev);
+ }
+ 
++/**
++ * of_dma_configure - Setup DMA configuration
++ * @dev:	Device to apply DMA configuration
++ * @np:		Pointer to OF node having DMA configuration
++ *
++ * Try to get devices's DMA configuration from DT and update it
++ * accordingly.
++ *
++ * If platform code needs to use its own special DMA configuration, it
++ * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
++ * to fix up DMA configuration.
++ */
++void of_dma_configure(struct device *dev, struct device_node *np)
++{
++	u64 dma_addr, paddr, size;
++	int ret;
++	bool coherent;
++	unsigned long offset;
++	struct iommu_ops *iommu;
++
++	/*
++	 * Set default dma-mask to 32 bit.  Drivers are expected to setup
++	 * the correct supported dma_mask.
++	 */
++	dev->coherent_dma_mask = DMA_BIT_MASK(32);
++
++	/*
++	 * Set it to coherent_dma_mask by default if the architecture
++	 * code has not set it.
++	 */
++	if (!dev->dma_mask)
++		dev->dma_mask = &dev->coherent_dma_mask;
++
++	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
++	if (ret < 0) {
++		dma_addr = offset = 0;
++		size = dev->coherent_dma_mask;
++	} else {
++		offset = PFN_DOWN(paddr - dma_addr);
++		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
++	}
++
++	dev->dma_pfn_offset = offset;
++
++	coherent = of_dma_is_coherent(np);
++	dev_dbg(dev, "device is%sdma coherent\n",
++		coherent ? " " : " not ");
++
++	iommu = of_iommu_configure(dev, np);
++	dev_dbg(dev, "device is%sbehind an iommu\n",
++		iommu ? " " : " not ");
++
++	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
++}
++EXPORT_SYMBOL_GPL(of_dma_configure);
++
+ int of_device_register(struct platform_device *pdev)
+ {
+ 	device_initialize(&pdev->dev);
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index 667c6f1..a01f57c 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -19,7 +19,6 @@
+ #include <linux/slab.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
+-#include <linux/of_iommu.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
+ }
+ EXPORT_SYMBOL(of_device_alloc);
+ 
+-/**
+- * of_dma_configure - Setup DMA configuration
+- * @dev:	Device to apply DMA configuration
+- *
+- * Try to get devices's DMA configuration from DT and update it
+- * accordingly.
+- *
+- * In case if platform code need to use own special DMA configuration,it
+- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
+- * to fix up DMA configuration.
+- */
+-static void of_dma_configure(struct device *dev)
+-{
+-	u64 dma_addr, paddr, size;
+-	int ret;
+-	bool coherent;
+-	unsigned long offset;
+-	struct iommu_ops *iommu;
+-
+-	/*
+-	 * Set default dma-mask to 32 bit. Drivers are expected to setup
+-	 * the correct supported dma_mask.
+-	 */
+-	dev->coherent_dma_mask = DMA_BIT_MASK(32);
+-
+-	/*
+-	 * Set it to coherent_dma_mask by default if the architecture
+-	 * code has not set it.
+-	 */
+-	if (!dev->dma_mask)
+-		dev->dma_mask = &dev->coherent_dma_mask;
+-
+-	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
+-	if (ret < 0) {
+-		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask;
+-	} else {
+-		offset = PFN_DOWN(paddr - dma_addr);
+-		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+-	}
+-	dev->dma_pfn_offset = offset;
+-
+-	coherent = of_dma_is_coherent(dev->of_node);
+-	dev_dbg(dev, "device is%sdma coherent\n",
+-		coherent ? " " : " not ");
+-
+-	iommu = of_iommu_configure(dev, dev->of_node);
+-	dev_dbg(dev, "device is%sbehind an iommu\n",
+-		iommu ? " " : " not ");
+-
+-	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
+-}
+-
+ static void of_dma_deconfigure(struct device *dev)
+ {
+ 	arch_teardown_dma_ops(dev);
+@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
+ 
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+-	of_dma_configure(&dev->dev);
++	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+ 		of_dma_deconfigure(&dev->dev);
+@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
+ 		dev_set_name(&dev->dev, "%s", bus_id);
+ 	else
+ 		of_device_make_bus_id(&dev->dev);
+-	of_dma_configure(&dev->dev);
++	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	/* Allow the HW Peripheral ID to be overridden */
+ 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
+diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+index ef37021..22801b1 100644
+--- a/include/linux/of_device.h
++++ b/include/linux/of_device.h
+@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ 	return of_node_get(cpu_dev->of_node);
+ }
+ 
++void of_dma_configure(struct device *dev, struct device_node *np);
+ #else /* CONFIG_OF */
+ 
+ static inline int of_driver_match_device(struct device *dev,
+@@ -90,6 +91,8 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ {
+ 	return NULL;
+ }
++static inline void of_dma_configure(struct device *dev, struct device_node *np)
++{}
+ #endif /* CONFIG_OF */
+ 
+ #endif /* _LINUX_OF_DEVICE_H */
 -- 
 1.7.9.5
 
