@@ -1,170 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37419 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113AbbDAC6I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 22:58:08 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>
-Cc: David Ahern <david.ahern@oracle.com>, linux-pci@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
-Subject: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
-Date: Tue, 31 Mar 2015 19:57:47 -0700
-Message-Id: <1427857069-6789-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:26549 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbbCCIuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 03:50:06 -0500
+Message-ID: <54F575AA.6050409@huawei.com>
+Date: Tue, 3 Mar 2015 16:49:46 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<sparclinux@vger.kernel.org>
+Subject: Re: [PATCH v4 20/30] PCI/sparc: Use pci_scan_root_bridge() for simplicity
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-21-git-send-email-wangyijing@huawei.com> <20150303031059.GJ11978@google.com>
+In-Reply-To: <20150303031059.GJ11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-David Ahern found commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
-to fit in upstream windows") broke booting on sparc/T5-8.
+>> -	pci_of_scan_bus(pbm, node, bus);
+>> -	pci_bus_add_devices(bus);
+>> -	pci_bus_register_of_sysfs(bus);
+>> +	pci_bus_add_devices(host->bus);
+>> +	pci_bus_register_of_sysfs(host->bus);
+>>  
+>> -	pci_claim_bus_resources(bus);
+>> +	pci_claim_bus_resources(host->bus);
+> 
+> Isn't this a case where pci_claim_bus_resources() should be done before
+> pci_bus_add_devices()?  You didn't introduce this problem, but since you're
+> fixing similar issues, seems like we should fix this one, too.  In a patch
+> of its own, of course.
 
-In the boot log, there is
-  pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
-  0x110204000)
-but that only could happen when dma_addr_t is 32-bit.
+OK, will fix in a another patch.
 
-According to David Miller, all DMA occurs behind an IOMMU and these
-IOMMUs only support 32-bit addressing, therefore dma_addr_t is
-32-bit on sparc64.
+> 
+>>  
+>> -	return bus;
+>> +	return host->bus;
+>>  }
+>>  
+>>  void pcibios_fixup_bus(struct pci_bus *pbus)
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
 
-Let's introduce pci_bus_addr_t instead of using dma_addr_t,
-and pci_bus_addr_t will be 64-bit on 64-bit platform or X86_PAE.
 
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Fixes: commit 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: <stable@vger.kernel.org> #3.19
----
- drivers/pci/Kconfig |  4 ++++
- drivers/pci/bus.c   | 10 +++++-----
- drivers/pci/probe.c | 12 ++++++------
- include/linux/pci.h | 12 +++++++++---
- 4 files changed, 24 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 7a8f1c5..6a5a269 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -1,6 +1,10 @@
- #
- # PCI configuration
- #
-+config PCI_BUS_ADDR_T_64BIT
-+	def_bool y if (64BIT || X86_PAE)
-+	depends on PCI
-+
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 90fa3a7..6fbd3f2 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -92,11 +92,11 @@ void pci_bus_remove_resources(struct pci_bus *bus)
- }
- 
- static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
--#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-+#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- static struct pci_bus_region pci_64_bit = {0,
--				(dma_addr_t) 0xffffffffffffffffULL};
--static struct pci_bus_region pci_high = {(dma_addr_t) 0x100000000ULL,
--				(dma_addr_t) 0xffffffffffffffffULL};
-+				(pci_bus_addr_t) 0xffffffffffffffffULL};
-+static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
-+				(pci_bus_addr_t) 0xffffffffffffffffULL};
- #endif
- 
- /*
-@@ -200,7 +200,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 					  resource_size_t),
- 		void *alignf_data)
- {
--#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-+#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..f71cb7c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -253,8 +253,8 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	}
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
--		if ((sizeof(dma_addr_t) < 8 || sizeof(resource_size_t) < 8) &&
--		    sz64 > 0x100000000ULL) {
-+		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
-+		    && sz64 > 0x100000000ULL) {
- 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 			res->start = 0;
- 			res->end = 0;
-@@ -263,7 +263,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			goto out;
- 		}
- 
--		if ((sizeof(dma_addr_t) < 8) && l) {
-+		if ((sizeof(pci_bus_addr_t) < 8) && l) {
- 			/* Above 32-bit boundary; try to reallocate */
- 			res->flags |= IORESOURCE_UNSET;
- 			res->start = 0;
-@@ -398,7 +398,7 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
- 	struct pci_dev *dev = child->self;
- 	u16 mem_base_lo, mem_limit_lo;
- 	u64 base64, limit64;
--	dma_addr_t base, limit;
-+	pci_bus_addr_t base, limit;
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
-@@ -425,8 +425,8 @@ static void pci_read_bridge_mmio_pref(struct pci_bus *child)
- 		}
- 	}
- 
--	base = (dma_addr_t) base64;
--	limit = (dma_addr_t) limit64;
-+	base = (pci_bus_addr_t) base64;
-+	limit = (pci_bus_addr_t) limit64;
- 
- 	if (base != base64) {
- 		dev_err(&dev->dev, "can't handle bridge window above 4GB (bus address %#010llx)\n",
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..6021bbe 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -573,9 +573,15 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
- int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
- 		  int reg, int len, u32 val);
- 
-+#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+typedef u64 pci_bus_addr_t;
-+#else
-+typedef u32 pci_bus_addr_t;
-+#endif
-+
- struct pci_bus_region {
--	dma_addr_t start;
--	dma_addr_t end;
-+	pci_bus_addr_t start;
-+	pci_bus_addr_t end;
- };
- 
- struct pci_dynids {
-@@ -1124,7 +1130,7 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
- 
--static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
-+static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
- 	struct pci_bus_region region;
- 
 -- 
-1.8.4.5
+Thanks!
+Yijing
 
