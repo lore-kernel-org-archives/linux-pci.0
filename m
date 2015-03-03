@@ -1,169 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 23 Mar 2015 21:52:47 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH v2 1/4] pci: disable msi/msix at probe time
-Message-ID: <20150323215107-mutt-send-email-mst@redhat.com>
-References: <1426786724-22241-1-git-send-email-mst@redhat.com>
- <1426786724-22241-2-git-send-email-mst@redhat.com>
- <20150323185006.GT26935@google.com>
- <20150323201237-mutt-send-email-mst@redhat.com>
- <20150323204534.GU26935@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <54F54080.2060403@linux.intel.com>
+Date: Tue, 03 Mar 2015 13:02:56 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150323204534.GU26935@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Dave Airlie <airlied@gmail.com>
+CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Voegtle <tv@lio96.de>, Hudd <hedede.l@gmail.com>,
+	Prakash Punnoor <prakash@punnoor.de>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
+References: <1425356741-26789-1-git-send-email-jiang.liu@linux.intel.com> <CAPM=9txLQMWzEw0M6v0J8wdCtmH17NMMY_jckiBmAC+keHSTHw@mail.gmail.com>
+In-Reply-To: <CAPM=9txLQMWzEw0M6v0J8wdCtmH17NMMY_jckiBmAC+keHSTHw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 23, 2015 at 03:45:34PM -0500, Bjorn Helgaas wrote:
-> On Mon, Mar 23, 2015 at 08:22:39PM +0100, Michael S. Tsirkin wrote:
-> > On Mon, Mar 23, 2015 at 01:50:06PM -0500, Bjorn Helgaas wrote:
-> > > Hi Michael,
-> > > 
-> > > On Thu, Mar 19, 2015 at 07:57:52PM +0100, Michael S. Tsirkin wrote:
-> > > > commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-> > > >     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
-> > > > 
-> > > > attempted to address the problem of kexec getting
-> > > > started after linux enabled msi/msix for a device,
-> > > > and drivers being confused by msi being enabled,
-> > > > by disabling msi at shutdown.
-> > > > 
-> > > > But arguably, it's better to disable msi/msix when kexec
-> > > > starts - for example, kexec might run after a crash (kdump)
-> > > > and shutdown callbacks are not always invoked in that case.
-> > > > 
-> > > > Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> > > > Cc: Ulrich Obergfell <uobergfe@redhat.com>
-> > > > Cc: Fam Zheng <famz@redhat.com>
-> > > > Cc: Rusty Russell <rusty@rustcorp.com.au>
-> > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > ---
-> > > >  drivers/pci/pci-driver.c | 6 ++++++
-> > > >  1 file changed, 6 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > > > index 3cb2210..2ebd2a8 100644
-> > > > --- a/drivers/pci/pci-driver.c
-> > > > +++ b/drivers/pci/pci-driver.c
-> > > > @@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
-> > > >  	 */
-> > > >  	pm_runtime_get_sync(dev);
-> > > >  	pci_dev->driver = pci_drv;
-> > > > +	/*
-> > > > +	 * When using kexec, msi might be left enabled by the previous kernel,
-> > > > +	 * this breaks things as some drivers assume msi/msi-x is off at boot.
-> > > > +	 * Fix this by forcing msi off at startup.
-> > > > +	 */
-> > > > +	pci_msi_off(pci_dev);
-> > > 
-> > > I think this makes sense, but I have a few questions.  This is a device
-> > > initialization thing, so it seems like a better fit for the enumeration
-> > > path, e.g,. pci_msi_init_pci_dev(), than for the driver binding path.
-> > > 
-> > > But when CONFIG_PCI_MSI=y, pci_msi_init_pci_dev() already does basically
-> > > the same thing, so we shouldn't need this change unless CONFIG_PCI_MSI is
-> > > not set in the kdump kernel.
-> > > 
-> > > If this is a problem just with kexeced kernels that don't have
-> > > CONFIG_PCI_MSI=y, I think I would prefer to fix this by moving
-> > > pci_msi_init_pci_dev() outside the #ifdef so it works regardless of
-> > > CONFIG_PCI_MSI.  That would also be nice because we could clean up the
-> > > duplication between pci_msi_off() and pci_msi_init_pci_dev().  It would
-> > > also make the starting machine state less dependent on the new kernel,
-> > > which seems like a good thing.
-> > 
-> > What you say above makes sense.
-> > OK so the simplest fix is something like below then.
-> > Fixes the duplication and kexec for CONFIG_PCI_MSI=n.
-> > Acceptable? Pls let me know, if yes I'll test and
-> > resubmit properly.
-> > 
-> > > Are there any bugzillas we could reference here?
-> > 
-> > I'll check this point. Maybe not - the real bugfix is
-> > patch 2/4, this was just found by reading code,
-> > but it's a dependency to make sure 2/4 does not
-> > introduce regressions.
-> 
-> OK, can you add the bugzilla link to that patch, if there is one?
-> 
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index 0e037af..2ab59d4 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -1062,18 +1062,8 @@ EXPORT_SYMBOL(pci_msi_enabled);
-> >  void pci_msi_init_pci_dev(struct pci_dev *dev)
-> >  {
-> >  	INIT_LIST_HEAD(&dev->msi_list);
-> > -
-> > -	/* Disable the msi hardware to avoid screaming interrupts
-> > -	 * during boot.  This is the power on reset default so
-> > -	 * usually this should be a noop.
-> > -	 */
-> >  	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> > -	if (dev->msi_cap)
-> > -		msi_set_enable(dev, 0);
-> > -
-> >  	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> > -	if (dev->msix_cap)
-> > -		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> >  }
-> >  
-> >  /**
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 8d2f400..c455501 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1485,6 +1485,12 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
-> >  
-> >  static void pci_init_capabilities(struct pci_dev *dev)
-> >  {
-> > +	/* Disable the msi hardware to avoid screaming interrupts
-> > +	 * during boot.  This is the power on reset default so
-> > +	 * usually this should be a noop.
-> > +	 */
-> > +	pci_msi_off(dev);
-> > +
-> >  	/* MSI/MSI-X list */
-> >  	pci_msi_init_pci_dev(dev);
-> 
-> Could we move pci_msi_init_pci_dev() from msi.c to pci.c and make it look
-> something like the following?
-> 
->   void pci_msi_off(struct pci_dev *dev)
->   {
->     if (dev->msi_cap) {
->       ...
->     }
->     if (dev->msix_cap) {
->       ...
->     }
->   }
-> 
->   void pci_msi_init_pci_dev(struct pci_dev *dev)
->   {
->   #ifdef CONFIG_PCI_MSI
->     INIT_LIST_HEAD(&dev->msi_list);
->   #endif
-> 
->     dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
->     dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
->     pci_msi_off(dev);
->   }
-> 
-> Then I think we could remove pci_msi_off() calls from a couple quirks as
-> well.  And we'd only have one MSI-related callout from
-> pci_init_capabilities().
-> 
-> Bjorn
 
-OK I was under the impression msi_cap/msix_cap aren't there
-when CONFIG_PCI_MSI is not set, but I checked and they
-actually are, so yes, will do.
 
+On 2015/3/3 12:34, Dave Airlie wrote:
+> On 3 March 2015 at 14:25, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> Commit 593669c2ac0f (x86/PCI/ACPI: Use common ACPI resource interfaces
+>> to simplify implementation) causes regression to several platforms,
+>> which is caused by stricter checks in new ACPI resource parsing code
+>> and BIOSes report incorrect ACPI resource descriptors.  So try to relax
+>> the check to avoid regressions.
+>>
+>> Jiang Liu (2):
+>>   x86/PCI/ACPI: Ignore resources consumed by host bridge itself
+>>   x86/PCI/ACPI: Relax ACPI resource descriptor checks to work around
+>>     BIOS bugs
+> 
+> I've booted my machine with that lost its r8169 and it appears to be
+> working now.
+> 
+> So from the regression POV:
+> Tested-by: Dave Airlie <airlied@redhat.com>
+Thanks for testing, Dave:)
+> 
+> Dave.
+> 
