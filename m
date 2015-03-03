@@ -1,110 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23754 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753064AbbCICnO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:14 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:42855 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754217AbbCCCCy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 21:02:54 -0500
+Received: by mail-oi0-f49.google.com with SMTP id v63so30567169oia.8
+        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 18:02:53 -0800 (PST)
+Date: Mon, 2 Mar 2015 20:02:49 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<sparclinux@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 20/30] sparc/PCI: Use pci_scan_host_bridge() for simplicity
-Date: Mon, 9 Mar 2015 10:34:17 +0800
-Message-ID: <1425868467-9667-21-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v4 03/30] xen/PCI: Don't use deprecated function
+ pci_scan_bus_parented()
+Message-ID: <20150303020249.GC11978@google.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+ <1424938344-4017-4-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424938344-4017-4-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_host_bridge() to scan
-pci buses, provide sparc specific pci_host_bridge_ops.
+On Thu, Feb 26, 2015 at 04:11:57PM +0800, Yijing Wang wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Use pci_scan_root_bus() instead of deprecated function
+> pci_scan_bus_parented().
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: xen-devel@lists.xenproject.org
+> ---
+>  drivers/pci/xen-pcifront.c |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index b1ffebe..240ddbc 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -446,6 +446,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  				 unsigned int domain, unsigned int bus)
+>  {
+>  	struct pci_bus *b;
+> +	LIST_HEAD(resources);
+>  	struct pcifront_sd *sd = NULL;
+>  	struct pci_bus_entry *bus_entry = NULL;
+>  	int err = 0;
+> @@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  		err = -ENOMEM;
+>  		goto err_out;
+>  	}
+> +	pci_add_resource(&resources, &ioport_resource);
+> +	pci_add_resource(&resources, &iomem_resource);
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: sparclinux@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/sparc/kernel/pci.c |   32 ++++++++++++++++++++++----------
- 1 files changed, 22 insertions(+), 10 deletions(-)
+This doesn't add &busn_resource like pci_scan_bus_parented() does.
+That might be OK, but I think we'll now emit "No busn resource found for
+root bus, will use [bus %02x-ff]" when we didn't before.  I don't know how
+xen-pcifront works; it would be nice if it could supply the correct
+bus resource (and ioport and iomem).
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 21f804a..7e28f74 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -650,12 +650,25 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
- 		pci_claim_bus_resources(child_bus);
- }
- 
-+static void pci_host_bridge_of_scan_bus(
-+		struct pci_host_bridge *host)
-+{
-+	struct pci_pbm_info *pbm = dev_get_drvdata(&host->dev);
-+	struct device_node *node = pbm->op->dev.of_node;
-+
-+	pci_of_scan_bus(pbm, node, host->bus);
-+}
-+
-+static struct pci_host_bridge_ops phb_ops = {
-+	.scan_bus = pci_host_bridge_of_scan_bus,
-+};
-+
- struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 				 struct device *parent)
- {
- 	LIST_HEAD(resources);
- 	struct device_node *node = pbm->op->dev.of_node;
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host;
- 
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
-@@ -667,22 +680,21 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
- 	pci_add_resource(&resources, &pbm->busn);
--	bus = pci_create_root_bus(parent,
-+	host = pci_scan_host_bridge(parent,
- 			PCI_DOMBUS(pbm->index, pbm->pci_first_busno),
--			pbm->pci_ops, pbm, &resources);
--	if (!bus) {
--		printk(KERN_ERR "Failed to create bus for %s\n",
-+			pbm->pci_ops, pbm, &resources, &phb_ops);
-+	if (!host) {
-+		printk(KERN_ERR "Failed to create host bridge for %s\n",
- 		       node->full_name);
- 		pci_free_resource_list(&resources);
- 		return NULL;
- 	}
- 
--	pci_of_scan_bus(pbm, node, bus);
--	pci_bus_register_of_sysfs(bus);
-+	pci_bus_register_of_sysfs(host->bus);
- 
--	pci_claim_bus_resources(bus);
--	pci_bus_add_devices(bus);
--	return bus;
-+	pci_claim_bus_resources(host->bus);
-+	pci_bus_add_devices(host->bus);
-+	return host->bus;
- }
- 
- void pcibios_fixup_bus(struct pci_bus *pbus)
--- 
-1.7.1
+>  	pcifront_init_sd(sd, domain, bus, pdev);
+>  
+>  	pci_lock_rescan_remove();
+>  
+> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> -				  &pcifront_bus_ops, sd);
+> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+> +				  &pcifront_bus_ops, sd, &resources);
+>  	if (!b) {
+>  		dev_err(&pdev->xdev->dev,
+>  			"Error creating PCI Frontend Bus!\n");
+>  		err = -ENOMEM;
+>  		pci_unlock_rescan_remove();
+> +		pci_free_resource_list(&resources);
+>  		goto err_out;
+>  	}
+>  
+> @@ -488,7 +492,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  
+>  	list_add(&bus_entry->list, &pdev->root_buses);
+>  
+> -	/* pci_scan_bus_parented skips devices which do not have a have
+> +	/* pci_scan_root_bus skips devices which do not have a have
 
+Please fix the comment typo at the same time ("have a have").
+
+>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+>  	err = pcifront_scan_bus(pdev, domain, bus, b);
+>  
+> -- 
+> 1.7.1
+> 
