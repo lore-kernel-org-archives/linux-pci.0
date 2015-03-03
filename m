@@ -1,166 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:34304 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbbCTDM7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:12:59 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:12:58 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7C51D2BB004D
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:12:56 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3Cm0k4587610
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:12:56 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3CMtV008864
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:12:23 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 09/21] PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
-Date: Fri, 20 Mar 2015 11:06:25 +0800
-Message-Id: <1426820797-6267-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:35758 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755715AbbCCDm2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:42:28 -0500
+Message-ID: <54F52D72.7070305@huawei.com>
+Date: Tue, 3 Mar 2015 11:41:38 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4 05/30] PCI: Rename pci_scan_bus() to pci_scan_bus_legacy()
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-6-git-send-email-wangyijing@huawei.com> <20150303020607.GD11978@google.com>
+In-Reply-To: <20150303020607.GD11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PowerNV, some resource reservation is needed for SR-IOV VFs that don't
-exist at the bootup stage.  To do the match between resources and VFs, the
-code need to get the VF's BDF in advance.
+On 2015/3/3 10:06, Bjorn Helgaas wrote:
+> On Thu, Feb 26, 2015 at 04:11:59PM +0800, Yijing Wang wrote:
+>> Pci_scan_bus() is called by legacy pci host drivers,
+>> the legacy host drivers mean they use NULL as parent
+>> device, use all IO/MEM as default resources. Rename
+>> pci_scan_bus() to pci_scan_bus_legacy() for better
+>> readability.
+> 
+> We should mention that this changes an exported symbol, because that's
+> potentially an issue for distros.
+> 
+> I'm not saying we can't change it, but I don't want to do it unless there's
+> real benefit.  I'm not convinced of the benefit yet, but maybe I will be by
+> the end of the series.
+>
 
-Rename virtfn_bus() and virtfn_devfn() to pci_iov_virtfn_bus() and
-pci_iov_virtfn_devfn() and export them.
+Ok, I would move this one out of this series temporarily.
 
-[bhelgaas: changelog, make "busnr" int]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   28 ++++++++++++++++------------
- include/linux/pci.h |   11 +++++++++++
- 2 files changed, 27 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2ae921f..5643a10 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,16 +19,20 @@
- 
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
--				    dev->sriov->stride * id) >> 8);
-+				    dev->sriov->stride * vf_id) >> 8);
- }
- 
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return (dev->devfn + dev->sriov->offset +
--		dev->sriov->stride * id) & 0xff;
-+		dev->sriov->stride * vf_id) & 0xff;
- }
- 
- /*
-@@ -58,11 +62,11 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
- 	struct pci_sriov *iov = dev->sriov;
- 	int nr_virtfn;
- 	u8 max = 0;
--	u8 busnr;
-+	int busnr;
- 
- 	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
- 		pci_iov_set_numvfs(dev, nr_virtfn);
--		busnr = virtfn_bus(dev, nr_virtfn - 1);
-+		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -124,7 +128,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -186,8 +190,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -226,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
--	u8 bus;
-+	int bus;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -263,7 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	bus = virtfn_bus(dev, nr_virtfn - 1);
-+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 	if (bus > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
- 			nr_virtfn, bus, &dev->bus->busn_res);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1559658..99ea948 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1669,6 +1669,9 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
-+
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1677,6 +1680,14 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  arch/alpha/kernel/sys_nautilus.c  |    2 +-
+>>  arch/m68k/coldfire/pci.c          |    2 +-
+>>  arch/sparc/kernel/pcic.c          |    2 +-
+>>  arch/unicore32/kernel/pci.c       |    2 +-
+>>  drivers/pci/hotplug/ibmphp_core.c |    2 +-
+>>  drivers/pci/probe.c               |    4 ++--
+>>  include/linux/pci.h               |    2 +-
+>>  7 files changed, 8 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+>> index 4ae4a40..2c864bb 100644
+>> --- a/arch/alpha/kernel/sys_nautilus.c
+>> +++ b/arch/alpha/kernel/sys_nautilus.c
+>> @@ -206,7 +206,7 @@ nautilus_init_pci(void)
+>>  	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
+>>  
+>>  	/* Scan our single hose.  */
+>> -	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
+>> +	bus = pci_scan_bus_legacy(0, alpha_mv.pci_ops, hose);
+>>  	hose->bus = bus;
+>>  	pcibios_claim_one_bus(bus);
+>>  
+>> diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+>> index d45f087..0ef4dd4 100644
+>> --- a/arch/m68k/coldfire/pci.c
+>> +++ b/arch/m68k/coldfire/pci.c
+>> @@ -312,7 +312,7 @@ static int __init mcf_pci_init(void)
+>>  	set_current_state(TASK_UNINTERRUPTIBLE);
+>>  	schedule_timeout(msecs_to_jiffies(200));
+>>  
+>> -	rootbus = pci_scan_bus(0, &mcf_pci_ops, NULL);
+>> +	rootbus = pci_scan_bus_legacy(0, &mcf_pci_ops, NULL);
+>>  	rootbus->resource[0] = &mcf_pci_io;
+>>  	rootbus->resource[1] = &mcf_pci_mem;
+>>  
+>> diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+>> index 7a82fe2..f7edc97 100644
+>> --- a/arch/sparc/kernel/pcic.c
+>> +++ b/arch/sparc/kernel/pcic.c
+>> @@ -390,7 +390,7 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+>>  {
+>>  	struct linux_pbm_info *pbm = &pcic->pbm;
+>>  
+>> -	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
+>> +	pbm->pci_bus = pci_scan_bus_legacy(pbm->pci_first_busno, &pcic_ops, pbm);
+>>  	if (pbm->pci_bus)
+>>  		pci_bus_add_devices(pbm->pci_bus);
+>>  #if 0 /* deadwood transplanted from sparc64 */
+>> diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+>> index 3d82024..2e238b4 100644
+>> --- a/arch/unicore32/kernel/pci.c
+>> +++ b/arch/unicore32/kernel/pci.c
+>> @@ -258,7 +258,7 @@ static int __init pci_common_init(void)
+>>  
+>>  	pci_puv3_preinit();
+>>  
+>> -	puv3_bus = pci_scan_bus(0, &pci_puv3_ops, NULL);
+>> +	puv3_bus = pci_scan_bus_legacy(0, &pci_puv3_ops, NULL);
+>>  
+>>  	if (!puv3_bus)
+>>  		panic("PCI: unable to scan bus!");
+>> diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+>> index 86e3bfd..4ade1b4 100644
+>> --- a/drivers/pci/hotplug/ibmphp_core.c
+>> +++ b/drivers/pci/hotplug/ibmphp_core.c
+>> @@ -765,7 +765,7 @@ static u8 bus_structure_fixup(u8 busno)
+>>  					(l != 0x0000) && (l != 0xffff)) {
+>>  			debug("%s - Inside bus_structure_fixup()\n",
+>>  							__func__);
+>> -			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
+>> +			b = pci_scan_bus_legacy(busno, ibmphp_pci_bus->ops, NULL);
+>>  			if (b)
+>>  				pci_bus_add_devices(b);
+>>  			break;
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 699a238..ccab9b1 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -2091,7 +2091,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>>  }
+>>  EXPORT_SYMBOL(pci_scan_root_bus);
+>>  
+>> -struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+>> +struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops,
+>>  					void *sysdata)
+>>  {
+>>  	LIST_HEAD(resources);
+>> @@ -2108,7 +2108,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+>>  	}
+>>  	return b;
+>>  }
+>> -EXPORT_SYMBOL(pci_scan_bus);
+>> +EXPORT_SYMBOL(pci_scan_bus_legacy);
+>>  
+>>  /**
+>>   * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 36effb8..6dffc57 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -769,7 +769,7 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>>  void pcibios_scan_specific_bus(int busn);
+>>  struct pci_bus *pci_find_bus(int domain, int busnr);
+>>  void pci_bus_add_devices(const struct pci_bus *bus);
+>> -struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>> +struct pci_bus *pci_scan_bus_legacy(int bus, struct pci_ops *ops, void *sysdata);
+>>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>  				    struct pci_ops *ops, void *sysdata,
+>>  				    struct list_head *resources);
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
+
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
