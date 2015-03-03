@@ -1,49 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53869 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935504AbbCPRUw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Mar 2015 13:20:52 -0400
-Date: Mon, 16 Mar 2015 18:20:41 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:61086 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbbCCDLE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:11:04 -0500
+Received: by mail-ob0-f179.google.com with SMTP id wp4so35799367obc.10
+        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 19:11:02 -0800 (PST)
+Date: Mon, 2 Mar 2015 21:10:59 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	virtualization@lists.linux-foundation.org
-Subject: [PATCH RFC 4/4] virtio_pci: drop msi_off on probe
-Message-ID: <1426526415-13299-5-git-send-email-mst@redhat.com>
-References: <1426526415-13299-1-git-send-email-mst@redhat.com>
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	sparclinux@vger.kernel.org
+Subject: Re: [PATCH v4 20/30] PCI/sparc: Use pci_scan_root_bridge() for
+ simplicity
+Message-ID: <20150303031059.GJ11978@google.com>
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
+ <1424938344-4017-21-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426526415-13299-1-git-send-email-mst@redhat.com>
+In-Reply-To: <1424938344-4017-21-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci core now disables msi on probe automatically,
-drop this from device-specific code.
+On Thu, Feb 26, 2015 at 04:12:14PM +0800, Yijing Wang wrote:
+> Now we could use pci_scan_root_bridge() to scan
+> pci buses, provide sparc specific pci_host_bridge_ops.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: "David S. Miller" <davem@davemloft.net>
+> CC: sparclinux@vger.kernel.org
+> ---
+>  arch/sparc/kernel/pci.c |   32 ++++++++++++++++++++++----------
+>  1 files changed, 22 insertions(+), 10 deletions(-)
+> 
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index 0af7c58..03e7376 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -650,12 +650,25 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
+>  		pci_claim_bus_resources(child_bus);
+>  }
+>  
+> +static void pci_host_bridge_of_scan_bus(
+> +		struct pci_host_bridge *host)
+> +{
+> +	struct pci_pbm_info *pbm = dev_get_drvdata(&host->dev);
+> +	struct device_node *node = pbm->op->dev.of_node;
+> +
+> +	pci_of_scan_bus(pbm, node, host->bus);
+> +}
+> +
+> +static struct pci_host_bridge_ops phb_ops = {
+> +	.phb_of_scan_bus = pci_host_bridge_of_scan_bus,
+> +};
+> +
+>  struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+>  				 struct device *parent)
+>  {
+>  	LIST_HEAD(resources);
+>  	struct device_node *node = pbm->op->dev.of_node;
+> -	struct pci_bus *bus;
+> +	struct pci_host_bridge *host;
+>  
+>  	printk("PCI: Scanning PBM %s\n", node->full_name);
+>  
+> @@ -667,23 +680,22 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+>  	pbm->busn.end	= pbm->pci_last_busno;
+>  	pbm->busn.flags	= IORESOURCE_BUS;
+>  	pci_add_resource(&resources, &pbm->busn);
+> -	bus = pci_create_root_bus(parent, 
+> +	host = pci_scan_root_bridge(parent, 
+>  			PCI_DOMBUS(pbm->index, pbm->pci_first_busno), 
+> -			pbm->pci_ops, pbm, &resources);
+> -	if (!bus) {
+> -		printk(KERN_ERR "Failed to create bus for %s\n",
+> +			pbm->pci_ops, pbm, &resources, &phb_ops);
+> +	if (!host) {
+> +		printk(KERN_ERR "Failed to create host bridge for %s\n",
+>  		       node->full_name);
+>  		pci_free_resource_list(&resources);
+>  		return NULL;
+>  	}
+>  
+> -	pci_of_scan_bus(pbm, node, bus);
+> -	pci_bus_add_devices(bus);
+> -	pci_bus_register_of_sysfs(bus);
+> +	pci_bus_add_devices(host->bus);
+> +	pci_bus_register_of_sysfs(host->bus);
+>  
+> -	pci_claim_bus_resources(bus);
+> +	pci_claim_bus_resources(host->bus);
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/virtio/virtio_pci_common.c | 3 ---
- 1 file changed, 3 deletions(-)
+Isn't this a case where pci_claim_bus_resources() should be done before
+pci_bus_add_devices()?  You didn't introduce this problem, but since you're
+fixing similar issues, seems like we should fix this one, too.  In a patch
+of its own, of course.
 
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index a0723d1..f506571 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -501,9 +501,6 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
- 	INIT_LIST_HEAD(&vp_dev->virtqueues);
- 	spin_lock_init(&vp_dev->lock);
- 
--	/* Disable MSI/MSIX to bring device to a known good state. */
--	pci_msi_off(pci_dev);
--
- 	/* enable the device */
- 	rc = pci_enable_device(pci_dev);
- 	if (rc)
--- 
-MST
-
+>  
+> -	return bus;
+> +	return host->bus;
+>  }
+>  
+>  void pcibios_fixup_bus(struct pci_bus *pbus)
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
