@@ -1,48 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og122.obsmtp.com ([64.18.0.192]:46388 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1759303AbbCDTmP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:42:15 -0500
-Received: by pdbfl12 with SMTP id fl12so28676805pdb.9
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2015 11:42:14 -0800 (PST)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
-Subject: [PATCH v2 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
-Date: Wed,  4 Mar 2015 11:39:56 -0800
-Message-Id: <cover.1425497218.git.dhdang@apm.com>
-In-Reply-To: <1678162.2PJ2o1jRen@wuerfel>
-References: <1678162.2PJ2o1jRen@wuerfel>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:57803 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbbCCIIs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 03:08:48 -0500
+Message-ID: <54F56BFD.2060008@huawei.com>
+Date: Tue, 3 Mar 2015 16:08:29 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4 12/30] PCI: Introduce pci_host_bridge_ops to support
+ host specific operations
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-13-git-send-email-wangyijing@huawei.com> <20150303025020.GF11978@google.com>
+In-Reply-To: <20150303025020.GF11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
-APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
-to GIC V2M specification for MSI Termination.
+>> +	if (host->ops && host->ops->phb_prepare) {
+>> +		error = host->ops->phb_prepare(host);
+>> +		if(error) {
+> 
+> Whitespace error.
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
-block supports 2688 MSI termination ports coalesced into 16 physical HW IRQ lines
-and shared across all 5 PCIe ports.
+Will fix.
 
-v2 changes:
-        1. Use msi_controller structure
-        2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
+> 
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+>>  	return (pdev->error_state != pci_channel_io_normal);
+>>  }
+>>  
+>> +struct pci_host_bridge;
+>> +struct pci_host_bridge_ops {
+>> +	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
+>> +	int (*phb_prepare)(struct pci_host_bridge *host);
+>> +	void (*phb_of_scan_bus)(struct pci_host_bridge *);
+> 
+> These function pointers don't need a "phb_" prefix.
 
- .../devicetree/bindings/pci/xgene-pci-msi.txt      |  61 ++++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 ++
- drivers/pci/host/Kconfig                           |   4 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-xgene-msi.c                   | 393 +++++++++++++++++++++
- drivers/pci/host/pci-xgene.c                       |  25 ++
- 7 files changed, 519 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- create mode 100644 drivers/pci/host/pci-xgene-msi.c
+Will update them.
+
+> 
+> .
+> 
+
 
 -- 
-1.9.1
+Thanks!
+Yijing
 
