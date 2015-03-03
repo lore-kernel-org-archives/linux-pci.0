@@ -1,93 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:43884 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236AbbC3QJ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 12:09:58 -0400
-Message-ID: <1427731601.3370.14.camel@pengutronix.de>
-Subject: Re: [PATCH v4 1/2] PCI: add helper function to find root port for
- device
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Mon, 30 Mar 2015 18:06:41 +0200
-In-Reply-To: <1427726038.3643.913.camel@redhat.com>
-References: <1427712913-13678-1-git-send-email-l.stach@pengutronix.de>
-	 <1427726038.3643.913.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga03-in.huawei.com ([119.145.14.66]:29908 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754064AbbCCDdz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:33:55 -0500
+Message-ID: <54F52B8B.1010309@huawei.com>
+Date: Tue, 3 Mar 2015 11:33:31 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH v4 03/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-4-git-send-email-wangyijing@huawei.com> <20150303020249.GC11978@google.com>
+In-Reply-To: <20150303020249.GC11978@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 30.03.2015, 08:33 -0600 schrieb Alex Williamson:
-> On Mon, 2015-03-30 at 12:55 +0200, Lucas Stach wrote:
-> > This adds a simple way to get the root port a given device
-> > is connected to.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> > v2: new patch in v2
-> > v3: rename to pci_find_rootport to fit better with other API
-> > v4: - rename to make it obvious that this function is PCIe specific
-> >     - fixes wrong assumption about what is a root bus in the presence
-> >       virtual buses
-> > ---
-> >  drivers/pci/search.c | 20 ++++++++++++++++++++
-> >  include/linux/pci.h  |  1 +
-> >  2 files changed, 21 insertions(+)
-> > 
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > index a20ce7d5e2a7..d7c599103ae1 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
-> >  	return 0;
-> >  }
-> >  EXPORT_SYMBOL(pci_dev_present);
-> > +
-> > +/**
-> > + * pcie_find_root_port - Returns the root port the given device is connected to.
-> > + * @dev: PCI device for which the root port should be found.
-> > + */
-> > +struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
-> > +{
-> > +	struct pci_bus *bus = dev->bus;
-> > +
-> > +	/* if this device is located on the root bus, it is a root port */
-> > +	if (pci_is_root_bus(bus))
-> > +		return dev;
+>> --- a/drivers/pci/xen-pcifront.c
+>> +++ b/drivers/pci/xen-pcifront.c
+>> @@ -446,6 +446,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>>  				 unsigned int domain, unsigned int bus)
+>>  {
+>>  	struct pci_bus *b;
+>> +	LIST_HEAD(resources);
+>>  	struct pcifront_sd *sd = NULL;
+>>  	struct pci_bus_entry *bus_entry = NULL;
+>>  	int err = 0;
+>> @@ -470,17 +471,20 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>>  		err = -ENOMEM;
+>>  		goto err_out;
+>>  	}
+>> +	pci_add_resource(&resources, &ioport_resource);
+>> +	pci_add_resource(&resources, &iomem_resource);
 > 
-> It could also be a root complex endpoint or a conventional PCI
-> device/bridge sitting on the host bridge bus.
+> This doesn't add &busn_resource like pci_scan_bus_parented() does.
+> That might be OK, but I think we'll now emit "No busn resource found for
+> root bus, will use [bus %02x-ff]" when we didn't before.  I don't know how
+> xen-pcifront works; it would be nice if it could supply the correct
+> bus resource (and ioport and iomem).
 
-> > +
-> > +	/* walk up the PCI hierarchy to the first level below the root */
-> > +	while (bus->parent && bus->parent->parent)
-> > +		bus = bus->parent;
-> > +
-> > +	return bus->self;
-> > +}
-> > +EXPORT_SYMBOL(pcie_find_root_port);
+Because the pci_scan_bus_parented() add the default busn_resource for it,
+I would add the default busn_resource in pcifront_scan_root() too to fix the
+"No busn resource found ..." debug info.
+
 > 
-> IMHO, this makes too many assumptions about the topology that it's
-> working with for a generic interface.  Your usage may be fairly fixed,
-> but there are too many cases where it could return something that's not
-> a root port as a general interface.  Thanks,
+>>  	pcifront_init_sd(sd, domain, bus, pdev);
+>>  
+>>  	pci_lock_rescan_remove();
+>>  
+>> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+>> -				  &pcifront_bus_ops, sd);
+>> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+>> +				  &pcifront_bus_ops, sd, &resources);
+>>  	if (!b) {
+>>  		dev_err(&pdev->xdev->dev,
+>>  			"Error creating PCI Frontend Bus!\n");
+>>  		err = -ENOMEM;
+>>  		pci_unlock_rescan_remove();
+>> +		pci_free_resource_list(&resources);
+>>  		goto err_out;
+>>  	}
+>>  
+>> @@ -488,7 +492,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>>  
+>>  	list_add(&bus_entry->list, &pdev->root_buses);
+>>  
+>> -	/* pci_scan_bus_parented skips devices which do not have a have
+>> +	/* pci_scan_root_bus skips devices which do not have a have
 > 
-I'm open to suggestions on how to improve the detection. I really need
-something which works reliable in the majority of cases, as the Tegra
-quirk should not be executed on other platforms.
+> Please fix the comment typo at the same time ("have a have").
 
-Do you think filtering out EP devices and conventional PCI bridges on
-the root bus is enough?
+Ok.
 
-Regards,
-Lucas
+> 
+>>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+>>  	err = pcifront_scan_bus(pdev, domain, bus, b);
+>>  
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
+
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+Thanks!
+Yijing
 
