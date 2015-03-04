@@ -1,133 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:37123 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753090AbbCWMp5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:45:57 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v7 27/31] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Mon, 23 Mar 2015 20:40:53 +0800
-Message-ID: <1427114457-16687-28-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:41643 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932976AbbCDRW6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 12:22:58 -0500
+Received: by qgea108 with SMTP id a108so730469qge.8
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2015 09:22:57 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1425449804-28887-1-git-send-email-wangyijing@huawei.com>
+References: <1425449804-28887-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 4 Mar 2015 11:22:37 -0600
+Message-ID: <CAErSpo76ap_3LB7PVoQL-ngdrMc39KiuRbMnuQSHpcyCdjJUag@mail.gmail.com>
+Subject: Re: [PATCH] ia64/PCI: Fix the build warning of pci_domain_nr()
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
+On Wed, Mar 4, 2015 at 12:16 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> We should pass pci_bus * instead of pci_dev * to pci_domain_nr().
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Tony Luck <tony.luck@intel.com>
+> CC: Fenghua Yu <fenghua.yu@intel.com>
+> CC: linux-ia64@vger.kernel.org
+> CC: stable@vger.kernel.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: wangyijing@huawei.com
----
- drivers/pci/probe.c |   35 +++++++++--------------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 9 insertions(+), 29 deletions(-)
+I think this seems correct, at least in terms of fixing a build issue.
+But it changes some behavior too.  It would be nice to have
+confirmation that the change *fixes* something rather than breaking
+something.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7796bf8..cb0237f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1937,24 +1937,6 @@ put_dev:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent,
--		int domain, int bus, struct pci_ops *ops, void *sysdata,
--		struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources, NULL);
--	if (!host)
--		return NULL;
--
--	host->bus = __pci_create_root_bus(host, ops);
--	if (!host->bus)
--		pci_free_host_bridge(host);
--
--	return host->bus;
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2030,7 +2012,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 	struct pci_bus *b;
- 	int max;
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b)
- 		return NULL;
- 
-@@ -2093,19 +2075,20 @@ struct pci_bus *pci_scan_bus(int domain, int bus,
- 		struct pci_ops *ops, void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, domain, bus, ops, sysdata,
--			&resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, domain, bus, sysdata,
-+			&resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 61e0853..62333ff 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -782,9 +782,6 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus(int domain, int bus, struct pci_ops *ops,
- 					void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, int domain, int bus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-1.7.1
+It looks like this code has been this way since 6f09a9250a5d ("Altix:
+ACPI SSDT PCI device support") in 2007.  So if it really is broken
+without this fix, it seems strange that we wouldn't have noticed until
+now.
 
+Tony, since I can't test this, and the rest of Yijing's PCI series
+doesn't depend on this, do you want to take care of this?  You can
+drop my Signed-off-by in that case.
+
+Bjorn
+
+> ---
+>  arch/ia64/sn/kernel/io_acpi_init.c |    6 +++---
+>  arch/ia64/sn/kernel/io_init.c      |    2 +-
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
+> index 0640739..2fd7414 100644
+> --- a/arch/ia64/sn/kernel/io_acpi_init.c
+> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
+> @@ -364,12 +364,12 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+>          status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
+>                                         &segment);
+>          if (ACPI_SUCCESS(status)) {
+> -               if (segment != pci_domain_nr(dev)) {
+> +               if (segment != pci_domain_nr(dev->bus)) {
+>                         acpi_get_name(rootbus_handle, ACPI_FULL_PATHNAME,
+>                                 &name_buffer);
+>                         printk(KERN_ERR
+>                                "%s: Segment number mismatch, 0x%llx vs 0x%x for: %s\n",
+> -                              __func__, segment, pci_domain_nr(dev),
+> +                              __func__, segment, pci_domain_nr(dev->bus),
+>                                (char *)name_buffer.pointer);
+>                         kfree(name_buffer.pointer);
+>                         return 1;
+> @@ -407,7 +407,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+>         /* Build up the pcidev_info.pdi_slot_host_handle */
+>         host_devfn = get_host_devfn(pcidev_match.handle, rootbus_handle);
+>         (*pcidev_info)->pdi_slot_host_handle =
+> -                       ((unsigned long) pci_domain_nr(dev) << 40) |
+> +                       ((unsigned long) pci_domain_nr(dev->bus) << 40) |
+>                                         /* bus == 0 */
+>                                         host_devfn;
+>         return 0;
+> diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+> index 55776df..19506a5 100644
+> --- a/arch/ia64/sn/kernel/io_init.c
+> +++ b/arch/ia64/sn/kernel/io_init.c
+> @@ -164,7 +164,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
+>                 panic("%s: Unable to alloc memory for sn_irq_info", __func__);
+>
+>         /* Call to retrieve pci device information needed by kernel. */
+> -       status = sal_get_pcidev_info((u64) pci_domain_nr(dev),
+> +       status = sal_get_pcidev_info((u64) pci_domain_nr(dev->bus),
+>                 (u64) dev->bus->number,
+>                 dev->devfn,
+>                 (u64) __pa(pcidev_info),
+> --
+> 1.7.1
+>
