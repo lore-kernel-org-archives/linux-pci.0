@@ -1,49 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23628 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbbC0QYH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 12:24:07 -0400
-Message-ID: <55158425.3020608@broadcom.com>
-Date: Fri, 27 Mar 2015 09:24:05 -0700
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [PATCH v2 0/2] iProc PCIe driver Kconfig changes
-References: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:47241 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbbCDFXZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:23:25 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:23:24 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9646F3578053
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:23:21 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245NDqA33685708
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:23:21 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245MlLI028827
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:48 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 07/21] PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
+Date: Wed,  4 Mar 2015 13:18:59 +0800
+Message-Id: <1425446353-30513-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On PowerNV, some resource reservation is needed for SR-IOV VFs that don't
+exist at the bootup stage.  To do the match between resources and VFs, the
+code need to get the VF's BDF in advance.
 
-Do you think the following changes are okay? If so, could you pull them in?
+Rename virtfn_bus() and virtfn_devfn() to pci_iov_virtfn_bus() and
+pci_iov_virtfn_devfn() and export them.
 
-Thanks!
+[bhelgaas: changelog, make "busnr" int]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   28 ++++++++++++++++------------
+ include/linux/pci.h |   11 +++++++++++
+ 2 files changed, 27 insertions(+), 12 deletions(-)
 
-Ray
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2ae921f..5643a10 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -19,16 +19,20 @@
+ 
+ #define VIRTFN_ID_LEN	16
+ 
+-static inline u8 virtfn_bus(struct pci_dev *dev, int id)
++int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+-				    dev->sriov->stride * id) >> 8);
++				    dev->sriov->stride * vf_id) >> 8);
+ }
+ 
+-static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return (dev->devfn + dev->sriov->offset +
+-		dev->sriov->stride * id) & 0xff;
++		dev->sriov->stride * vf_id) & 0xff;
+ }
+ 
+ /*
+@@ -58,11 +62,11 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int nr_virtfn;
+ 	u8 max = 0;
+-	u8 busnr;
++	int busnr;
+ 
+ 	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+ 		pci_iov_set_numvfs(dev, nr_virtfn);
+-		busnr = virtfn_bus(dev, nr_virtfn - 1);
++		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 		if (busnr > max)
+ 			max = busnr;
+ 	}
+@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_bus *bus;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+ 
+@@ -124,7 +128,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	if (!virtfn)
+ 		goto failed0;
+ 
+-	virtfn->devfn = virtfn_devfn(dev, id);
++	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+@@ -186,8 +190,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     virtfn_bus(dev, id),
+-					     virtfn_devfn(dev, id));
++					     pci_iov_virtfn_bus(dev, id),
++					     pci_iov_virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -226,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+-	u8 bus;
++	int bus;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -263,7 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	bus = virtfn_bus(dev, nr_virtfn - 1);
++	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 	if (bus > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+ 			nr_virtfn, bus, &dev->bus->busn_res);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1559658..99ea948 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1669,6 +1669,9 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
+ #ifdef CONFIG_PCI_IOV
++int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
++
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+@@ -1677,6 +1680,14 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
+-- 
+1.7.9.5
 
-On 3/25/2015 12:08 AM, Ray Jui wrote:
-> This patch series contains two patches to address iProc PCIe Kconfig related
-> issues. The first patch adds more protection to PCIE_IPROC so it cannot be
-> accidentally enabled for non-ARM based platforms. The second patch changes the
-> config name of the iProc PCIe platform driver from PCIE_IPROC_PLTFM to
-> PCIE_IPROC_PLATFORM. The driver name is also changed from pcie-iproc-pltfm.c
-> to pcie-iproc-platform.c so it's consistent with the config name change.
-> 
-> Changes from v1:
->  - Changes the driver name from pcie-iproc-pltfm.c to pcie-iproc-platform.c
-> 
-> Ray Jui (2):
->   pci: iproc: fix PCIE_IPROC in Kconfig
->   pci: iproc: change PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM
-> 
->  drivers/pci/host/Kconfig                           |    4 +++-
->  drivers/pci/host/Makefile                          |    2 +-
->  .../{pcie-iproc-pltfm.c => pcie-iproc-platform.c}  |    0
->  3 files changed, 4 insertions(+), 2 deletions(-)
->  rename drivers/pci/host/{pcie-iproc-pltfm.c => pcie-iproc-platform.c} (100%)
-> 
