@@ -1,25 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:14779 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752932AbbCFFYR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 00:24:17 -0500
-From: Hariprasad S <hariprasad@chelsio.com>
-To: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: PCIE link reset in older kernels < 2.6.33
-Date: Fri, 6 Mar 2015 05:24:12 +0000
-Message-ID: <26E3F92EC670BD429DB5CB319D773C13C9E62D@nice.asicdesigners.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:42624 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935885AbbCDIBg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:36 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	David Vrabel <david.vrabel@citrix.com>
+Subject: [PATCH v2 10/15] x86, of: let add_dtb reserve by itself
+Date: Wed,  4 Mar 2015 00:00:43 -0800
+Message-Id: <1425456048-16236-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+We will not reserve setup_data in general code. Every handler
+need to reserve and copy.
 
-I am a newbie to PCIE driver. 
-How can we achieve PCIE link reset in older kernels?
+Current dtd handling already have code copying, just add reserve code ...
 
-I do see that in newer kernels we can achieve it by pci_try_reset_slot(). Is there a similar API available for older kernels.
+also simplify code a bit with storing real dtb size.
 
-Thanks,
-Hariprasad
+Cc: Rob Herring <robh@kernel.org>
+Cc: David Vrabel <david.vrabel@citrix.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/prom.h  |  9 ++++++---
+ arch/x86/kernel/devicetree.c | 39 +++++++++++++++++++++------------------
+ 2 files changed, 27 insertions(+), 21 deletions(-)
+
+diff --git a/arch/x86/include/asm/prom.h b/arch/x86/include/asm/prom.h
+index 1d081ac..fb716eddc 100644
+--- a/arch/x86/include/asm/prom.h
++++ b/arch/x86/include/asm/prom.h
+@@ -24,17 +24,20 @@
+ 
+ #ifdef CONFIG_OF
+ extern int of_ioapic;
+-extern u64 initial_dtb;
+-extern void add_dtb(u64 data);
+ void x86_of_pci_init(void);
+ void x86_dtb_init(void);
+ #else
+-static inline void add_dtb(u64 data) { }
+ static inline void x86_of_pci_init(void) { }
+ static inline void x86_dtb_init(void) { }
+ #define of_ioapic 0
+ #endif
+ 
++#ifdef CONFIG_OF_FLATTREE
++extern void add_dtb(u64 data);
++#else
++static inline void add_dtb(u64 data) { }
++#endif
++
+ extern char cmd_line[COMMAND_LINE_SIZE];
+ 
+ #endif /* __ASSEMBLY__ */
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 3d35033..cc2fb61 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -2,6 +2,7 @@
+  * Architecture specific OF callbacks.
+  */
+ #include <linux/bootmem.h>
++#include <linux/memblock.h>
+ #include <linux/export.h>
+ #include <linux/io.h>
+ #include <linux/irqdomain.h>
+@@ -23,7 +24,6 @@
+ #include <asm/setup.h>
+ #include <asm/i8259.h>
+ 
+-__initdata u64 initial_dtb;
+ char __initdata cmd_line[COMMAND_LINE_SIZE];
+ 
+ int __initdata of_ioapic;
+@@ -43,11 +43,23 @@ void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
+ 	return __alloc_bootmem(size, align, __pa(MAX_DMA_ADDRESS));
+ }
+ 
++#ifdef CONFIG_OF_FLATTREE
++static u64 initial_dtb __initdata;
++static u32 initial_dtb_size __initdata;
+ void __init add_dtb(u64 data)
+ {
++	u32 map_len;
++
+ 	initial_dtb = data + offsetof(struct setup_data, data);
+-}
+ 
++	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
++	initial_boot_params = early_memremap(initial_dtb, map_len);
++	initial_dtb_size = of_get_flat_dt_size();
++	early_memunmap(initial_boot_params, map_len);
++	initial_boot_params = NULL;
++	memblock_reserve(initial_dtb, initial_dtb_size);
++}
++#endif
+ /*
+  * CE4100 ids. Will be moved to machine_device_initcall() once we have it.
+  */
+@@ -272,31 +284,22 @@ static void __init dtb_apic_setup(void)
+ 	dtb_ioapic_setup();
+ }
+ 
+-#ifdef CONFIG_OF_FLATTREE
+ static void __init x86_flattree_get_config(void)
+ {
+-	u32 size, map_len;
++#ifdef CONFIG_OF_FLATTREE
+ 	void *dt;
+ 
+ 	if (!initial_dtb)
+ 		return;
+ 
+-	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
+-
+-	initial_boot_params = dt = early_memremap(initial_dtb, map_len);
+-	size = of_get_flat_dt_size();
+-	if (map_len < size) {
+-		early_iounmap(dt, map_len);
+-		initial_boot_params = dt = early_memremap(initial_dtb, size);
+-		map_len = size;
+-	}
+-
++	initial_boot_params = dt = early_memremap(initial_dtb,
++						  initial_dtb_size);
+ 	unflatten_and_copy_device_tree();
+-	early_iounmap(dt, map_len);
+-}
+-#else
+-static inline void x86_flattree_get_config(void) { }
++	early_memunmap(dt, initial_dtb_size);
++
++	memblock_free(initial_dtb, initial_dtb_size);
+ #endif
++}
+ 
+ void __init x86_dtb_init(void)
+ {
+-- 
+1.8.4.5
+
