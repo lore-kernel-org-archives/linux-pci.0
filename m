@@ -1,82 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:35683 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755360AbbCLTcY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 15:32:24 -0400
-Received: by oigh136 with SMTP id h136so5113923oig.2
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 12:32:23 -0700 (PDT)
-Date: Thu, 12 Mar 2015 14:32:19 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 03/30] PCI: Export busn_resource to drivers/pci
-Message-ID: <20150312193219.GA7346@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-4-git-send-email-wangyijing@huawei.com>
- <20150311222835.GA1082@google.com>
- <55017BA1.7020700@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55017BA1.7020700@huawei.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:46972 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917AbbCDFVN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:21:13 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:21:11 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 959832BB0051
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:21:08 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245L04i32964674
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:21:08 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245KYHl025394
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:20:35 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 02/21] PCI: Print PF SR-IOV resource that contains all VF(n) BAR space
+Date: Wed,  4 Mar 2015 13:18:54 +0800
+Message-Id: <1425446353-30513-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 07:42:25PM +0800, Yijing Wang wrote:
-> >> -static struct resource busn_resource = {
-> >> +struct resource busn_resource = {
-> >>  	.name	= "PCI busn",
-> >>  	.start	= 0,
-> >>  	.end	= 255,
-> >>  	.flags	= IORESOURCE_BUS,
-> >>  };
-> >> +EXPORT_SYMBOL(busn_resource);
-> > 
-> > I don't think this is a good idea.  We support multiple PCI domains, and
-> > each domain has its own 0-255 bus number range.  This busn_resource is
-> > only for domain 0 and probably should be handled in arch code instead of
-> > the PCI core.
-> > 
-> > Right now, I think it's possible to call pci_scan_bus_parented() or
-> > pci_scan_bus() several times for buses in different domains, and they would
-> > all share the same busn_resource, which would cause corruption.
-> > 
-> > So it's already broken, but I don't want to make it harder to fix by
-> > exporting this stuff.
-> 
-> Hi Bjorn, busn_resource may would not be shared by multi domains,
-> 
-> We insert bus number resource like:
-> 
-> pci_add_resource(&resources, &busn_resource);	
-> 	pci_bus_insert_busn_res(root_bus, start, bus_max);	//start is the root bus number provided by arch pci host driver, bus max here == 255
-> 		get_pci_domain_busn_res(domain)	//for root bus	//try to get a domain specific pci_domain_busn_res, if not exist, create it.
-> 			request_resource_conflict(domain_specific_busn_res, res)   //request busn res(start, bus_max) from the pci_domain_busn_res.
-> 
-> So every domain has its own pci_domain_busn_res , different domain would not share the same bus number resource.
+When we size VF BAR0, VF BAR1, etc., from the SR-IOV Capability of a PF, we
+learn the alignment requirement and amount of space consumed by a single
+VF.  But when VFs are enabled, *each* of the NumVFs consumes that amount of
+space, so the total size of the PF resource is "VF BAR size * NumVFs".
 
-The intent of pci_add_resource() and passing the resulting resource list
-into pci_scan_root_bus(), etc., is that the host bridge may consume any
-resources described by the list.  If we pass the same resource to multiple
-calls, that means the resource must be shared between the multiple host
-bridges involved.  For bus numbers, that makes some sense if the platform
-considers the bridges to be in the same domain, but not if they are in
-different domains.
+Add a printk of the total space consumed by the VFs corresponding to what
+we already do for normal non-IOV BARs.
 
-If we export busn_resource, we have no control over what domains it becomes
-associated with because the domain is passed into pci_scan_root_bus() by
-the caller.
+No functional change; new message only.
 
-Bjorn
+[bhelgaas: split out into its own patch]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c4c33ea..05f9d97 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -372,6 +372,8 @@ found:
+ 			goto failed;
+ 		}
+ 		res->end = res->start + resource_size(res) * total - 1;
++		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
++			 i, res, i, total);
+ 		nres++;
+ 	}
+ 
+-- 
+1.7.9.5
+
