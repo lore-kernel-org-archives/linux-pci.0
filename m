@@ -1,113 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:35941 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756106AbbCLTfO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 15:35:14 -0400
-Received: by oiav1 with SMTP id v1so13308078oia.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 12:35:13 -0700 (PDT)
-Date: Thu, 12 Mar 2015 14:35:05 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function
- pci_scan_bus_parented()
-Message-ID: <20150312193505.GB7346@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
- <20150311223211.GB1082@google.com>
- <55017CA5.2010502@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55017CA5.2010502@huawei.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:28912 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935912AbbCDIBo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:44 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 13/15] x86, pci: convert SETUP_PCI data to list
+Date: Wed,  4 Mar 2015 00:00:46 -0800
+Message-Id: <1425456048-16236-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 07:46:45PM +0800, Yijing Wang wrote:
-> >>  	struct pci_bus *b;
-> >> +	LIST_HEAD(resources);
-> >>  	struct pcifront_sd *sd = NULL;
-> >>  	struct pci_bus_entry *bus_entry = NULL;
-> >>  	int err = 0;
-> >> @@ -470,17 +472,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
-> >>  		err = -ENOMEM;
-> >>  		goto err_out;
-> >>  	}
-> >> +	pci_add_resource(&resources, &ioport_resource);
-> >> +	pci_add_resource(&resources, &iomem_resource);
-> >> +	pci_add_resource(&resources, &busn_resource);
-> > 
-> > Since I don't want to export busn_resource, you might have to allocate your
-> > own struct resource for it here.  And, of course, figure out the details of
-> > which PCI domain you're in and whether you need to share one struct
-> > resource across several host bridges in the same domain.
-> 
-> Allocate its own resource here is ok for me, as I mentioned in previous reply,
-> so do we still need to add additional info to figure out which domain own the bus resource ?
+So we could avoid ioremap every time later.
 
-That's up to the caller.  Only the platform knows which bridges it wants to
-have in the same domain.  In principle, every host bridge could be in its
-own domain, since each bridge is the root of a unique PCI hierarchy.  But
-some platforms have firmware that assumes otherwise.  I have no idea what
-xen assumes.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/pci.h |  2 ++
+ arch/x86/kernel/setup.c    |  1 +
+ arch/x86/pci/common.c      | 77 +++++++++++++++++++++++++++++++++++++---------
+ 3 files changed, 65 insertions(+), 15 deletions(-)
 
-> >>  	pcifront_init_sd(sd, domain, bus, pdev);
-> >>  
-> >>  	pci_lock_rescan_remove();
-> >>  
-> >> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
-> >> -				  &pcifront_bus_ops, sd);
-> >> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-> >> +				  &pcifront_bus_ops, sd, &resources);
-> >>  	if (!b) {
-> >>  		dev_err(&pdev->xdev->dev,
-> >>  			"Error creating PCI Frontend Bus!\n");
-> >>  		err = -ENOMEM;
-> >>  		pci_unlock_rescan_remove();
-> >> +		pci_free_resource_list(&resources);
-> >>  		goto err_out;
-> >>  	}
-> >>  
-> >> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
-> >>  
-> >>  	list_add(&bus_entry->list, &pdev->root_buses);
-> >>  
-> >> -	/* pci_scan_bus_parented skips devices which do not have a have
-> >> +	/* pci_scan_root_bus skips devices which do not have a
-> >>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
-> >>  	err = pcifront_scan_bus(pdev, domain, bus, b);
-> >>  
-> >> -- 
-> >> 1.7.1
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > .
-> > 
-> 
-> 
-> -- 
-> Thanks!
-> Yijing
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 7fbd5f3..99b261f 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -88,9 +88,11 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ 	*strategy_parameter = ~0UL;
+ }
+ void add_pci(u64 pa_data);
++int fill_setup_pci_entries(void);
+ #else
+ static inline void early_quirks(void) { }
+ static inline void add_pci(u64 pa_data) { }
++static inline int fill_setup_pci_entries(void) { }
+ #endif
+ 
+ extern void pci_iommu_alloc(void);
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 9a18078..215bea8 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -1190,6 +1190,7 @@ void __init setup_arch(char **cmdline_p)
+ 	acpi_boot_init();
+ 	sfi_init();
+ 	x86_dtb_init();
++	fill_setup_pci_entries();
+ 
+ 	/*
+ 	 * get boot-time SMP configuration:
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 4846db7..93577fb 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -668,7 +668,7 @@ unsigned int pcibios_assign_all_busses(void)
+ 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
+ }
+ 
+-static u64 pci_setup_data;
++static u64 pci_setup_data __initdata;
+ void __init add_pci(u64 pa_data)
+ {
+ 	struct setup_data *data;
+@@ -680,36 +680,83 @@ void __init add_pci(u64 pa_data)
+ 	early_memunmap(data, sizeof(*data));
+ }
+ 
+-int pcibios_add_device(struct pci_dev *dev)
++struct firmware_setup_pci_entry {
++	struct list_head list;
++	uint16_t vendor;
++	uint16_t devid;
++	uint64_t pcilen;
++	unsigned long segment;
++	unsigned long bus;
++	unsigned long device;
++	unsigned long function;
++	phys_addr_t romdata;
++};
++
++static LIST_HEAD(setup_pci_entries);
++
++int __init fill_setup_pci_entries(void)
+ {
+ 	struct setup_data *data;
+ 	struct pci_setup_rom *rom;
++	struct firmware_setup_pci_entry *entry;
++	phys_addr_t pa_entry;
+ 	u64 pa_data;
+ 
+ 	pa_data = pci_setup_data;
+ 	while (pa_data) {
+-		data = ioremap(pa_data, sizeof(*rom));
++		data  = early_memremap(pa_data, sizeof(*rom));
+ 		if (!data)
+ 			return -ENOMEM;
+-
+ 		rom = (struct pci_setup_rom *)data;
+ 
+-		if ((pci_domain_nr(dev->bus) == rom->segment) &&
+-		    (dev->bus->number == rom->bus) &&
+-		    (PCI_SLOT(dev->devfn) == rom->device) &&
+-		    (PCI_FUNC(dev->devfn) == rom->function) &&
+-		    (dev->vendor == rom->vendor) &&
+-		    (dev->device == rom->devid)) {
+-			dev->rom = pa_data +
+-			      offsetof(struct pci_setup_rom, romdata);
+-			dev->romlen = rom->pcilen;
++		pa_entry = memblock_alloc(sizeof(*entry), sizeof(long));
++		if (!pa_entry) {
++			early_memunmap(data, sizeof(*rom));
++			return -ENOMEM;
++		}
++
++		entry = phys_to_virt(pa_entry);
++		entry->segment = rom->segment;
++		entry->bus = rom->bus;
++		entry->device = rom->device;
++		entry->function = rom->function;
++		entry->vendor = rom->vendor;
++		entry->devid = rom->devid;
++		entry->pcilen = rom->pcilen;
++		entry->romdata = pa_data +
++				 offsetof(struct pci_setup_rom, romdata);
++
++		list_add(&entry->list, &setup_pci_entries);
++
++		memblock_free(pa_data, sizeof(*rom));
++		pa_data = data->next;
++		early_memunmap(data, sizeof(*rom));
++	}
++
++	pci_setup_data = 0;
++
++	return 0;
++}
++
++int pcibios_add_device(struct pci_dev *dev)
++{
++	struct firmware_setup_pci_entry *entry;
++
++	list_for_each_entry(entry, &setup_pci_entries, list) {
++		if ((pci_domain_nr(dev->bus) == entry->segment) &&
++		    (dev->bus->number == entry->bus) &&
++		    (PCI_SLOT(dev->devfn) == entry->device) &&
++		    (PCI_FUNC(dev->devfn) == entry->function) &&
++		    (dev->vendor == entry->vendor) &&
++		    (dev->device == entry->devid)) {
++			dev->rom = entry->romdata;
++			dev->romlen = entry->pcilen;
+ 			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
+ 				   (unsigned long)dev->rom,
+ 				   (unsigned long)(dev->rom + dev->romlen - 1));
+ 		}
+-		pa_data = data->next;
+-		iounmap(data);
+ 	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.4.5
+
