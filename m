@@ -1,77 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:37830 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbbCJCR3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 22:17:29 -0400
-Received: by qcxr5 with SMTP id r5so11773328qcx.4
-        for <linux-pci@vger.kernel.org>; Mon, 09 Mar 2015 19:17:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <54FE4A9D.5010001@samsung.com>
-References: <54FD8F94.20305@samsung.com> <CAErSpo6jOJUcvStVk=9=xUBb7E2E-MCRcFqBmV1o0X2pULAW6Q@mail.gmail.com>
- <54FE4A9D.5010001@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Mar 2015 21:17:08 -0500
-Message-ID: <CAErSpo4Fx6BGEtBwJB4c=q_QMm+x0Xd3k=Gs9mJV9JnQE6YiuA@mail.gmail.com>
-Subject: Re: [RFC] Build with arm64 configuration
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	cpGS <cpgs@samsung.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit Kumar <mohit.kumar@st.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:44189 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758099AbbCDF0L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:26:11 -0500
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:26:08 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1C9C82BB0051
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:26:06 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245Pwj136962482
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:26:06 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245PWww001045
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:25:32 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 15/21] powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
+Date: Wed,  4 Mar 2015 13:19:07 +0800
+Message-Id: <1425446353-30513-16-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo, Mohit]
+On PHB3, PF IOV BAR will be covered by M64 window to have better PE
+isolation.  The total_pe number is usually different from total_VFs, which
+can lead to a conflict between MMIO space and the PE number.
 
-On Mon, Mar 9, 2015 at 8:36 PM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
-> Dear, Bjorn.
->
-> Thanks for reply.
->
-> On 03/10/2015 08:35 AM, Bjorn Helgaas wrote:
->> On Mon, Mar 9, 2015 at 7:18 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
->>> Hi,
->>>
->>> I have a question for building arm64.
->>> (Actually, i didn't have many knowledges for PCIe.)
->>> When i built with arm64 configuration, then i always found the compiler errors.
->>
->> The kernel does build for arm64, so you'll have to be more specific
->> about the problem you're seeing.
->
-> I built the pcie-designware.c and pci-exynos.c.
->
-> When pcie-designware.c is built, i found the below error message.
-> drivers/pci/host/pcie-designware.c:74:52: warning: ˜struct pci_sys_data™ declared inside parameter list
->  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
->                                                     ^
-> drivers/pci/host/pcie-designware.c:74:52: warning: its scope is only this definition or declaration, which is probably not what you want
-> In file included from include/uapi/linux/stddef.h:1:0,
->                  from include/linux/stddef.h:4,
->                  from ./include/uapi/linux/posix_types.h:4,
->                  from include/uapi/linux/types.h:13,
->                  from include/linux/types.h:5,
->                  from include/linux/smp.h:10,
->                  from include/linux/irq.h:12,
->                  from drivers/pci/host/pcie-designware.c:14:
-> drivers/pci/host/pcie-designware.c: In function ˜sys_to_pcie":
-> drivers/pci/host/pcie-designware.c:76:13: error: dereferencing pointer to incomplete type
->   BUG_ON(!sys->private_data);
->
-> I found it's located at arch/arm/include/asm/mach/pci.h.
-> It can't refer when do build for arm64.
-> So I think that i missed something..I have also searched the patches relevant to this at patchwork.
-> Some patch have copied header files relevant to "pci" to "arch/arm64/include/".
-> (This is not solution.)
->
-> And i don't want to add #ifdef CONFIG_ARM64 into pcie-designware.c
-> I think mailing should know the graceful solution.
->
-> If i can solve this problem, i will contribute for pci-exynos.c.
+For example, if total_VFs is 128 and total_pe is 256, the second half of
+M64 window will be part of other PCI device, which may already belong
+to other PEs.
 
-Oh, I think pcie-designware.c and pci-exynos.c currently only work on
-arm, not on arm64.  I don't know enough about them to know whether
-they could be made to work on arm64.  But Jingoo and Mohit probably
-do.
+Prevent the conflict by reserving additional space for the PF IOV BAR,
+which is total_pe number of VF's BAR size.
 
-Bjorn
+[bhelgaas: make dev_printk() output more consistent, index resource[]
+conventionally]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    4 ++
+ arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+ arch/powerpc/kernel/pci-common.c          |    5 +++
+ arch/powerpc/kernel/pci-hotplug.c         |    4 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   61 +++++++++++++++++++++++++++++
+ 5 files changed, 77 insertions(+)
+
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index c8175a3..965547c 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -250,6 +250,10 @@ struct machdep_calls {
+ 	/* Reset the secondary bus of bridge */
+ 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+ 
++#ifdef CONFIG_PCI_IOV
++	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
++#endif /* CONFIG_PCI_IOV */
++
+ 	/* Called to shutdown machine specific hardware not already controlled
+ 	 * by other drivers.
+ 	 */
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 513f8f2..de11de7 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -175,6 +175,9 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++#ifdef CONFIG_PCI_IOV
++	u16     max_vfs;		/* number of VFs IOV BAR expended */
++#endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 8203101..022e9fe 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1646,6 +1646,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	if (ppc_md.pcibios_fixup_phb)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
++#ifdef CONFIG_PCI_IOV
++	if (ppc_md.pcibios_fixup_sriov)
++		ppc_md.pcibios_fixup_sriov(bus);
++#endif /* CONFIG_PCI_IOV */
++
+ 	/* Configure PCI Express settings */
+ 	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 5b78917..7d238ae 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -94,6 +94,10 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
+ 		 */
+ 		slotno = PCI_SLOT(PCI_DN(dn->child)->devfn);
+ 		pci_scan_slot(bus, PCI_DEVFN(slotno, 0));
++#ifdef CONFIG_PCI_IOV
++		if (ppc_md.pcibios_fixup_sriov)
++			ppc_md.pcibios_fixup_sriov(bus);
++#endif /* CONFIG_PCI_IOV */
+ 		pcibios_setup_bus_devices(bus);
+ 		max = bus->busn_res.start;
+ 		for (pass = 0; pass < 2; pass++) {
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 1b37066..958c7a3 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1749,6 +1749,64 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+ #endif /* CONFIG_PCI_MSI */
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct resource *res;
++	int i;
++	resource_size_t size;
++	struct pci_dn *pdn;
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++
++	pdn = pci_get_pdn(pdev);
++	pdn->max_vfs = 0;
++
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++		res = &pdev->resource[i + PCI_IOV_RESOURCES];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
++				 i, res);
++			continue;
++		}
++
++		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
++		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++		res->end = res->start + size * phb->ioda.total_pe - 1;
++		dev_dbg(&pdev->dev, "                       %pR\n", res);
++		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
++				i, res, phb->ioda.total_pe);
++	}
++	pdn->max_vfs = phb->ioda.total_pe;
++}
++
++static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
++{
++	struct pci_dev *pdev;
++	struct pci_bus *b;
++
++	list_for_each_entry(pdev, &bus->devices, bus_list) {
++		b = pdev->subordinate;
++
++		if (b)
++			pnv_pci_ioda_fixup_sriov(b);
++
++		if (pdev->is_added)
++			continue;
++
++		pnv_pci_ioda_fixup_iov_resources(pdev);
++	}
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /*
+  * This function is supposed to be called on basis of PE from top
+  * to bottom style. So the the I/O or MMIO segment assigned to
+@@ -2125,6 +2183,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+ 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
++#ifdef CONFIG_PCI_IOV
++	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
++#endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
+-- 
+1.7.9.5
+
