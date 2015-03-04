@@ -1,84 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55024212.50309@linux.intel.com>
-Date: Fri, 13 Mar 2015 09:49:06 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: "Luck, Tony" <tony.luck@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33365 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752677AbbCDPyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 10:54:36 -0500
+Date: Wed, 4 Mar 2015 16:54:33 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Borislav Petkov <bp@alien8.de>
+cc: Yinghai Lu <yinghai@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"mingo@redhat.com" <mingo@redhat.com>,
-	"bp@alien8.de" <bp@alien8.de>, "Zheng, Lv" <lv.zheng@intel.com>,
-	"hpa@zytor.com" <hpa@zytor.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"lenb@kernel.org" <lenb@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86/PCI: Fully disable devices before releasing IRQ resource
-References: <20150305210529.6393.29546.stgit@gimli.home> <6862626.yP8c2o2fAj@vostro.rjw.lan> <5500EEC1.9000902@linux.intel.com> <20677458.zLzU1h62B0@vostro.rjw.lan>
-In-Reply-To: <20677458.zLzU1h62B0@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
+	Baoquan He <bhe@redhat.com>, linux-kernel@vger.kernel.org,
+	linux-efi@vger.kernel.org, linux-pci@vger.kernel.org,
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+In-Reply-To: <20150304101649.GA3663@pd.tnic>
+Message-ID: <alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org> <1425456048-16236-5-git-send-email-yinghai@kernel.org> <20150304101649.GA3663@pd.tnic>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 4 Mar 2015, Borislav Petkov wrote:
 
+> On Wed, Mar 04, 2015 at 12:00:37AM -0800, Yinghai Lu wrote:
+> > commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+> > is using address as value for kaslr_enabled.
+> > 
+> > That will random kaslr_enabled get that set or cleared.
+> > Will have problem for system really have kaslr enabled.
+> > 
+> > -v2: update changelog.
+> 
+> This is still not good enough. Please do this:
+> 
+> In commit f47233c2d34f we did A. The problem with that is B. Change the
+> code to do C.
+> 
+> Now you only have to fill out the A,B and C variables with the
+> respective text which is understandable even for people who don't know
+> this code.
 
-On 2015/3/13 0:08, Rafael J. Wysocki wrote:
-> On Thursday, March 12, 2015 09:41:21 AM Jiang Liu wrote:
->> On 2015/3/12 9:17, Rafael J. Wysocki wrote:
->>> On Wednesday, March 11, 2015 10:04:42 PM Luck, Tony wrote:
->>>>>> Unfortunately there's a long standing comment in pci_device_remove():
->>>>>>
->>>>>>         /*
->>>>>>          * We would love to complain here if pci_dev->is_enabled is set, that
->>>>>>          * the driver should have called pci_disable_device(), but the
->>>>>>          * unfortunate fact is there are too many odd BIOS and bridge setups
->>>>>>          * that don't like drivers doing that all of the time.
->>>>>>          * Oh well, we can dream of sane hardware when we sleep, no matter how
->>>>>>          * horrible the crap we have to deal with is when we are awake...
->>>>>>          */
->>>>>>
->>>>>> So, unless we can somehow ignore that comment, I suspect forcing the
->>>>>> device to be disabled on driver remove, whether done from pci-core or
->>>>>> from x86/pci, is going to cause all sorts of breakage.  Are the
->>>>>> expectations set by b4b55cda5874 really valid?  It seems like something
->>>>>> needs to be done to allow the IRQ to be automatically re-established on
->>>>>> x86 regardless of the driver doing the right thing when releasing the
->>>>>> device.  We're still looking at a regression for v4.0 as a result of
->>>>>> b4b55cda5874.
->>>>>
->>>>> In which case we probably should revert commit b4b55cda5874 for the time being.
->>>>>
->>>>> At least I'd be very nervous about any ad-hoc fixes at this stage of the cycle.
->>>>
->>>> The comment goes back to the dawn of "git" time ... not sure how much further
->>>> back.
->>>>
->>>> Is this actually still an issue on modern systems?  Maybe we need a black list
->>>> or white list to separate the good from bad systems?
->>>
->>> The answer to that is "We don't know" and in my not so humble opinion it is too
->>> risky to try to find out at the end of the cycle.
->> Hi Rafael and Alex,
->> How about a patch which:
->> 1) gives a warning if PCI device is still enabled when unloading driver
-> 
-> That may become sort of noisy.  I really would prefer to introduce things like
-> that by the beginning of the cycle, not by the end of it.
-Will try this on next merging window.
+Also this 15-patch series needs to be separated into two patchsets. The 
+whole series is not appropriate for -rc3, but this particular one at least 
+is a regression fix that has to go in.
 
->> 2) release PCI interrupt only if PCI device is disabled.
->> By this way, we could support IOAPIC hot-removal on latest platforms and
->> avoid regressions on old platforms.
-> 
-> Well, please submit a patch for discussion.
-> 
-> I would like to know Bjorn's opinion about that too at least.
-Still testing the patch, will send it out soon.
+Thanks,
 
-> 
-> Rafael
-> 
+-- 
+Jiri Kosina
+SUSE Labs
