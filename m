@@ -1,49 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57736 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754099AbbCRUNO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Mar 2015 16:13:14 -0400
-Subject: [PATCH v2 1/6] vgaarb: Stub vga_set_legacy_decoding()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: alex.williamson@redhat.com, kvm@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, bsd@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Wed, 18 Mar 2015 14:13:12 -0600
-Message-ID: <20150318201312.24807.70196.stgit@gimli.home>
-In-Reply-To: <20150318200053.24807.74115.stgit@gimli.home>
-References: <20150318200053.24807.74115.stgit@gimli.home>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:36857 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757870AbbCDTlj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:41:39 -0500
+Date: Wed, 4 Mar 2015 20:41:33 +0100
+From: Ingo Molnar <mingo@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
+	Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150304194133.GA6276@gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+ <1425456048-16236-5-git-send-email-yinghai@kernel.org>
+ <20150304101649.GA3663@pd.tnic>
+ <alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
+ <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-vga_set_legacy_decoding() is defined in drivers/gpu/vga/vgaarb.c,
-which is only compiled with CONFIG_VGA_ARB.  A caller would
-therefore get an undefined symbol if the VGA arbiter is not
-enabled.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Dave Airlie <airlied@redhat.com>
----
- include/linux/vgaarb.h |    5 +++++
- 1 file changed, 5 insertions(+)
+* Yinghai Lu <yinghai@kernel.org> wrote:
 
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index c37bd4d..8c3b412 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -65,8 +65,13 @@ struct pci_dev;
-  *     out of the arbitration process (and can be safe to take
-  *     interrupts at any time.
-  */
-+#if defined(CONFIG_VGA_ARB)
- extern void vga_set_legacy_decoding(struct pci_dev *pdev,
- 				    unsigned int decodes);
-+#else
-+static inline void vga_set_legacy_decoding(struct pci_dev *pdev,
-+					   unsigned int decodes) { };
-+#endif
- 
- /**
-  *     vga_get         - acquire & locks VGA resources
+> On Wed, Mar 4, 2015 at 7:54 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+> 
+> >
+> > Also this 15-patch series needs to be separated into two patchsets. The
+> > whole series is not appropriate for -rc3, but this particular one at least
+> > is a regression fix that has to go in.
+> 
+> The first 4 should go v4.0.
+> 
+> could leave others to v4.1
 
+Then please submit the first 4 only for the time being, and submit the 
+rest once Boris has accepted and applied the fixes.
+
+Thanks,
+
+	Ingo
