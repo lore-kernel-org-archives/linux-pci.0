@@ -1,171 +1,200 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39256 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750938AbbC3KrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Mar 2015 06:47:13 -0400
-Date: Mon, 30 Mar 2015 12:46:36 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330123051-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-2-git-send-email-mst@redhat.com>
- <20150329204047.GA5902@kroah.com>
- <20150330083707-mutt-send-email-mst@redhat.com>
- <20150330065522.GA10105@kroah.com>
- <20150330085617-mutt-send-email-mst@redhat.com>
- <20150330075331.GA17823@kroah.com>
- <20150330101830-mutt-send-email-mst@redhat.com>
- <20150330100744.GA16291@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150330100744.GA16291@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	"Lee, Chun-Yi" <jlee@suse.com>, stable@vger.kernel.org
+Subject: [PATCH v2 08/15] x86: Kill E820_RESERVED_KERN
+Date: Wed,  4 Mar 2015 00:00:41 -0800
+Message-Id: <1425456048-16236-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 12:07:44PM +0200, Greg KH wrote:
-> On Mon, Mar 30, 2015 at 10:31:54AM +0200, Michael S. Tsirkin wrote:
-> > On Mon, Mar 30, 2015 at 09:53:31AM +0200, Greg KH wrote:
-> > > On Mon, Mar 30, 2015 at 09:15:26AM +0200, Michael S. Tsirkin wrote:
-> > > > On Mon, Mar 30, 2015 at 08:55:22AM +0200, Greg KH wrote:
-> > > > > On Mon, Mar 30, 2015 at 08:48:44AM +0200, Michael S. Tsirkin wrote:
-> > > > > > On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
-> > > > > > > On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
-> > > > > > > > The macros in pci_ids.h are pretty useful for userspace
-> > > > > > > > using the pci sysfs interface.
-> > > > > > > > At the moment userspace is forced to duplicate these macros
-> > > > > > > > (e.g. QEMU does this), it is better to expose them in
-> > > > > > > > /usr/include/linux/pci_ids.h so everyone can just include
-> > > > > > > > this header.
-> > > > > > > > 
-> > > > > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > > > > > ---
-> > > > > > > >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
-> > > > > > > >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
-> > > > > > > 
-> > > > > > > No, please use the pci ids file from the upstream pci id database
-> > > > > > > instead.
-> > > > > > 
-> > > > > > 
-> > > > > > >  We shouldn't be putting these all in one file,
-> > > > > > 
-> > > > > > pci.txt says:
-> > > > > > 	Please add PCI_VENDOR_ID_xxx for vendors
-> > > > > > You want to change this policy, and get rid of
-> > > > > > vendor ids in pci_ids.h completely?
-> > > > > 
-> > > > > Please read the top of pci_ids.h.  It hasn't had new ids added to it in
-> > > > > a long time.
-> > > > 
-> > > > OK, looks like pci.txt should be fixed then.
-> > > 
-> > > Please send a patch.  As the original PCI kernel maintainer, I don't
-> > > think I ever noticed pci.txt.  It was last "updated" in 2006...
-> > > 
-> > > > > Why would userspace need the pci id of anything?
-> > > > 
-> > > > Look at how they are used e.g. by QEMU, seabios, gpxe.
-> > > > People want to say e.g. "find all network class devices".
-> > > 
-> > > Then use libpci.
-> > > 
-> > > > >  Again, just use
-> > > > > libpci, isn't it fast enough?  Don't duplicate existing logic.
-> > > > 
-> > > > This really depends on whether you want something else that
-> > > > libpci provides. But if I just want e.g. standard class IDs,
-> > > > I don't want to depend on libpci.
-> > > 
-> > > Why not?  Don't duplicate things that already are there just for this
-> > > very use.
-> > > 
-> > > Don't make us do kernel changes just because you don't want to depend on
-> > > either of the two different userspace packages that provide this
-> > > information in a standard way for userspace.  Your system will have one
-> > > of those two packages in it, depending on it isn't a "burden" at all.
-> > > 
-> > > > > Or use the hw database that libudev exports, which is already on your
-> > > > > machine and exports all of the pci ids from libpci directly.
-> > > > 
-> > > > Same argument really.
-> > > 
-> > > Because you don't want to depend on existing packages, doesn't mean we
-> > > have to accept kernel changes and maintain them for forever, as you are
-> > > now creating a new api that we will have to keep up to date and correct
-> > > for all time.
-> > > 
-> > > Again, depend on the packages that are already doing this work please.
-> > > 
-> > 
-> > Maintaining correct class IDs is more or less a requirement
-> > for kernel to work properly, isn't it?
-> 
-> Yes, but maintaining them internally, not externally.
+Now we are using memblock to do early resource reserver/allocation
+instead of using e820 map directly, and setup_data is reserved in
+memblock early already.
+Also kexec will generate setup_data and pass pointer to second kernel,
+so second kernel will reserve setup_data by their own.
 
-Sorry about keeping this thread alive, I'm just trying
-to wrap my head around what you consider a sane API.
+We can kill E820_RESERVED_KERN and not touch e820 map at all.
 
-Linux used not to export headers automatically, generally.
-It used to be "just use libc". Why is this header different?
+That will fix bug in mark_nonsave_region that can not handle that
+case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
+boundary is not page aligned.
 
-These constants are required to use the interfaces
-linux does export to userspace, including VFIO and sysfs.
-No one maintains them really, though libpci has a copy
-of these.
+Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
+Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
+Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
+Cc: "Lee, Chun-Yi" <jlee@suse.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ arch/x86/include/uapi/asm/e820.h |  9 ---------
+ arch/x86/kernel/e820.c           |  6 ++----
+ arch/x86/kernel/setup.c          | 26 --------------------------
+ arch/x86/kernel/tboot.c          |  3 +--
+ arch/x86/mm/init_64.c            | 11 ++++-------
+ 5 files changed, 7 insertions(+), 48 deletions(-)
 
-Some people believe headers are copyrighteable, for them, licensing is
-also problematic: libpci is under plain GPL, Linux needs the exception
-for user programs.  Does not this mean that we can't depend on libpci to
-provide parts of linux/userspace interface?
-
-
-> > Wouldn't the same thing apply to pci_regs.h?
-> > Why does it make sense to export PCI_CLASS_REVISION
-> > so I know where to read the class value from
-> > configuration, but not what the values are?
-> 
-> That's just due to history, we made the mistake to export those a long
-> time ago, I wouldn't recommend doing any more, and again, instead rely
-> on the programs that properly maintain that for you.
-
-So add libpci dependency just for the headers?  No one wants to do this.
-Case in point, Linux doesn't want to depend on libpci headers either, right?
-Why not? why not make it a build dependency? I don't really propose this,
-but exactly the same logic applies to gpxe or seabios.
-People that don't link with libpci don't want to make it
-a build dependency.
-
-> > What's the work you refer to?  This is just hardware description it
-> > can't change and doesn't need to be maintained.
-> 
-> Hardware descriptions always change over time and need to be
-> maintained...
-> 
-> thanks,
-> 
-> greg k-h
-
-I don't think class IDs or vendor IDs ever did or can change.
-New stuff is added, we add it as we add Linux support.
-Isn't this a good reason to include this? Will push
-vendors to work with the community instead of
-around it using userspace drivers.
-
+diff --git a/arch/x86/include/uapi/asm/e820.h b/arch/x86/include/uapi/asm/e820.h
+index d993e33..edc8a71 100644
+--- a/arch/x86/include/uapi/asm/e820.h
++++ b/arch/x86/include/uapi/asm/e820.h
+@@ -33,15 +33,6 @@
+ #define E820_NVS	4
+ #define E820_UNUSABLE	5
+ 
+-
+-/*
+- * reserved RAM used by kernel itself
+- * if CONFIG_INTEL_TXT is enabled, memory of this type will be
+- * included in the S3 integrity calculation and so should not include
+- * any memory that BIOS might alter over the S3 transition
+- */
+-#define E820_RESERVED_KERN        128
+-
+ #ifndef __ASSEMBLY__
+ #include <linux/types.h>
+ struct e820entry {
+diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
+index 46201de..2a6bed9 100644
+--- a/arch/x86/kernel/e820.c
++++ b/arch/x86/kernel/e820.c
+@@ -134,7 +134,6 @@ static void __init e820_print_type(u32 type)
+ {
+ 	switch (type) {
+ 	case E820_RAM:
+-	case E820_RESERVED_KERN:
+ 		printk(KERN_CONT "usable");
+ 		break;
+ 	case E820_RESERVED:
+@@ -688,7 +687,7 @@ void __init e820_mark_nosave_regions(unsigned long limit_pfn)
+ 			register_nosave_region(pfn, PFN_UP(ei->addr));
+ 
+ 		pfn = PFN_DOWN(ei->addr + ei->size);
+-		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
++		if (ei->type != E820_RAM)
+ 			register_nosave_region(PFN_UP(ei->addr), pfn);
+ 
+ 		if (pfn >= limit_pfn)
+@@ -902,7 +901,6 @@ void __init finish_e820_parsing(void)
+ static inline const char *e820_type_to_string(int e820_type)
+ {
+ 	switch (e820_type) {
+-	case E820_RESERVED_KERN:
+ 	case E820_RAM:	return "System RAM";
+ 	case E820_ACPI:	return "ACPI Tables";
+ 	case E820_NVS:	return "ACPI Non-volatile Storage";
+@@ -1077,7 +1075,7 @@ void __init memblock_x86_fill(void)
+ 		if (end != (resource_size_t)end)
+ 			continue;
+ 
+-		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
++		if (ei->type != E820_RAM)
+ 			continue;
+ 
+ 		memblock_add(ei->addr, ei->size);
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 05d444f..c9b3e2f 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -473,30 +473,6 @@ static void __init parse_setup_data(void)
+ 	}
+ }
+ 
+-static void __init e820_reserve_setup_data(void)
+-{
+-	struct setup_data *data;
+-	u64 pa_data;
+-	int found = 0;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-	while (pa_data) {
+-		data = early_memremap(pa_data, sizeof(*data));
+-		e820_update_range(pa_data, sizeof(*data)+data->len,
+-			 E820_RAM, E820_RESERVED_KERN);
+-		found = 1;
+-		pa_data = data->next;
+-		early_iounmap(data, sizeof(*data));
+-	}
+-	if (!found)
+-		return;
+-
+-	sanitize_e820_map(e820.map, ARRAY_SIZE(e820.map), &e820.nr_map);
+-	memcpy(&e820_saved, &e820, sizeof(struct e820map));
+-	printk(KERN_INFO "extended physical RAM map:\n");
+-	e820_print_map("reserve setup_data");
+-}
+-
+ static void __init memblock_x86_reserve_range_setup_data(void)
+ {
+ 	struct setup_data *data;
+@@ -1032,8 +1008,6 @@ void __init setup_arch(char **cmdline_p)
+ 		early_dump_pci_devices();
+ #endif
+ 
+-	/* update the e820_saved too */
+-	e820_reserve_setup_data();
+ 	finish_e820_parsing();
+ 
+ 	if (efi_enabled(EFI_BOOT))
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 91a4496..3c2752a 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -195,8 +195,7 @@ static int tboot_setup_sleep(void)
+ 	tboot->num_mac_regions = 0;
+ 
+ 	for (i = 0; i < e820.nr_map; i++) {
+-		if ((e820.map[i].type != E820_RAM)
+-		 && (e820.map[i].type != E820_RESERVED_KERN))
++		if (e820.map[i].type != E820_RAM)
+ 			continue;
+ 
+ 		add_mac_region(e820.map[i].addr, e820.map[i].size);
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index c30efb6..63520ec 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -354,8 +354,7 @@ phys_pte_init(pte_t *pte_page, unsigned long addr, unsigned long end,
+ 		next = (addr & PAGE_MASK) + PAGE_SIZE;
+ 		if (addr >= end) {
+ 			if (!after_bootmem &&
+-			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RESERVED_KERN))
++			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM))
+ 				set_pte(pte, __pte(0));
+ 			continue;
+ 		}
+@@ -401,9 +400,8 @@ phys_pmd_init(pmd_t *pmd_page, unsigned long address, unsigned long end,
+ 
+ 		next = (address & PMD_MASK) + PMD_SIZE;
+ 		if (address >= end) {
+-			if (!after_bootmem &&
+-			    !e820_any_mapped(address & PMD_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(address & PMD_MASK, next, E820_RESERVED_KERN))
++			if (!after_bootmem && !e820_any_mapped(
++					address & PMD_MASK, next, E820_RAM))
+ 				set_pmd(pmd, __pmd(0));
+ 			continue;
+ 		}
+@@ -476,8 +474,7 @@ phys_pud_init(pud_t *pud_page, unsigned long addr, unsigned long end,
+ 		next = (addr & PUD_MASK) + PUD_SIZE;
+ 		if (addr >= end) {
+ 			if (!after_bootmem &&
+-			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(addr & PUD_MASK, next, E820_RESERVED_KERN))
++			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM))
+ 				set_pud(pud, __pud(0));
+ 			continue;
+ 		}
 -- 
-MST
+1.8.4.5
+
