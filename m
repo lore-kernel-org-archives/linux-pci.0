@@ -1,129 +1,105 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v9 05/10] iommu/vt-d: Add functions to load and save old re
-Date: Thu, 19 Mar 2015 13:36:23 +0800
-Message-Id: <1426743388-26908-6-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: [PATCH v2 03/15] x86, boot: keep data from ZO boot stage to VO kernel stage.
+Date: Wed,  4 Mar 2015 00:00:36 -0800
+Message-Id: <1425456048-16236-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions to load root entry table from old kernel, and to save updated
-root entry table.
-Add two member in struct intel_iommu, to store the RTA in old kernel, and
-the mapped virt address of it.
+bp found data from boot stage can not be used kernel stage.
 
-We use the old RTA in dump kernel, and when the iommu->root_entry is used as
-a cache in kdump kernel, its phys address will not be save to RTA register,
-but when its data is changed, we will save the new data to old root entry table.
+Actually those data area is overlapped with kernel bss stage, and clear_bss()
+clear them before code in arch/x86/kernel/setup.c access them.
 
-Li, Zhen-hua:
-    The functions and logics.
+To make the data survive that later, we should avoid the overlapping.
 
-Takao Indoh:
-    Add __iommu_flush_cache.
+We already move compressed kernel close the end of buffer instead of middle of
+buffer. But there will have overlapping beween VO BRK with ZO data/bss range.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+Extend init_size so no one from kernel bss and brk will touch the data
+region of boot/compressed/misc.c
+
+The increase is from _rodata to _end in arch/x86/boot/compressed/vmlinux.
+
+-v2: add init_size in arch/x86/boot/header.S instead of BRK.
+-v3: split code that move Zo to end of buffer to another patch.
+
+Fixes: f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Matt Fleming <matt.fleming@intel.com>
+Cc: Kees Cook <keescook@chromium.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/iommu/intel-iommu.c | 52 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h |  5 +++++
- 2 files changed, 57 insertions(+)
+ arch/x86/boot/Makefile                 | 2 +-
+ arch/x86/boot/compressed/vmlinux.lds.S | 2 ++
+ arch/x86/boot/header.S                 | 7 +++++--
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 7f3484a..1cb9780 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -373,6 +373,9 @@ static struct context_entry *device_to_existing_context_entry(
- 				struct intel_iommu *iommu,
- 				u8 bus, u8 devfn);
+diff --git a/arch/x86/boot/Makefile b/arch/x86/boot/Makefile
+index 57bbf2f..863ef25 100644
+--- a/arch/x86/boot/Makefile
++++ b/arch/x86/boot/Makefile
+@@ -86,7 +86,7 @@ targets += voffset.h
+ $(obj)/voffset.h: vmlinux FORCE
+ 	$(call if_changed,voffset)
  
-+static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
-+
-+static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
+-sed-zoffset := -e 's/^\([0-9a-fA-F]*\) [ABCDGRSTVW] \(startup_32\|startup_64\|efi32_stub_entry\|efi64_stub_entry\|efi_pe_entry\|input_data\|_end\|z_.*\)$$/\#define ZO_\2 0x\1/p'
++sed-zoffset := -e 's/^\([0-9a-fA-F]*\) [ABCDGRSTVW] \(startup_32\|startup_64\|efi32_stub_entry\|efi64_stub_entry\|efi_pe_entry\|input_data\|_end\|_rodata\|z_.*\)$$/\#define ZO_\2 0x\1/p'
  
- /*
-  * A structure used to store the address allocated by ioremap();
-@@ -4924,4 +4927,53 @@ int __iommu_free_mapped_mem(void)
- 	return 0;
- }
- 
-+/*
-+ * Load the old root entry table to new root entry table.
-+ */
-+static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
-+{
-+	if ((!iommu)
-+		|| (!iommu->root_entry)
-+		|| (!iommu->root_entry_old_virt)
-+		|| (!iommu->root_entry_old_phys))
-+		return;
-+	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
-+
-+	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
-+}
-+
-+/*
-+ * When the data in new root entry table is changed, this function
-+ * must be called to save the updated data to old root entry table.
-+ */
-+static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
-+{
-+	u8 start;
-+	unsigned long size;
-+	void __iomem *to;
-+	void *from;
-+
-+	if ((!iommu)
-+		|| (!iommu->root_entry)
-+		|| (!iommu->root_entry_old_virt)
-+		|| (!iommu->root_entry_old_phys))
-+		return;
-+
-+	if (index < -1 || index >= ROOT_ENTRY_NR)
-+		return;
-+
-+	if (index == -1) {
-+		start = 0;
-+		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
-+	} else {
-+		start = index * sizeof(struct root_entry);
-+		size = sizeof(struct root_entry);
-+	}
-+	to = iommu->root_entry_old_virt;
-+	from = iommu->root_entry;
-+	memcpy(to + start, from + start, size);
-+
-+	__iommu_flush_cache(iommu, to + start, size);
-+}
-+
- #endif /* CONFIG_CRASH_DUMP */
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 8ffa523..8e29b97 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -329,6 +329,11 @@ struct intel_iommu {
- 	spinlock_t	lock; /* protect context, domain ids */
- 	struct root_entry *root_entry; /* virtual address */
- 
-+#ifdef CONFIG_CRASH_DUMP
-+	void __iomem *root_entry_old_virt; /* mapped from old root entry */
-+	unsigned long root_entry_old_phys; /* root entry in old kernel */
-+#endif
-+
- 	struct iommu_flush flush;
+ quiet_cmd_zoffset = ZOFFSET $@
+       cmd_zoffset = $(NM) $< | sed -n $(sed-zoffset) > $@
+diff --git a/arch/x86/boot/compressed/vmlinux.lds.S b/arch/x86/boot/compressed/vmlinux.lds.S
+index 34d047c..805d6ad 100644
+--- a/arch/x86/boot/compressed/vmlinux.lds.S
++++ b/arch/x86/boot/compressed/vmlinux.lds.S
+@@ -35,6 +35,7 @@ SECTIONS
+ 		*(.text.*)
+ 		_etext = . ;
+ 	}
++        . = ALIGN(PAGE_SIZE); /* keep ADDON_ZO_SIZE page aligned */
+ 	.rodata : {
+ 		_rodata = . ;
+ 		*(.rodata)	 /* read-only data */
+@@ -70,5 +71,6 @@ SECTIONS
+ 		_epgtable = . ;
+ 	}
  #endif
- 	struct q_inval  *qi;            /* Queued invalidation info */
++        . = ALIGN(PAGE_SIZE);  /* keep ADDON_ZO_SIZE page aligned */
+ 	_end = .;
+ }
+diff --git a/arch/x86/boot/header.S b/arch/x86/boot/header.S
+index 16ef025..44359bd 100644
+--- a/arch/x86/boot/header.S
++++ b/arch/x86/boot/header.S
+@@ -440,12 +440,15 @@ setup_data:		.quad 0			# 64-bit physical pointer to
+ 
+ pref_address:		.quad LOAD_PHYSICAL_ADDR	# preferred load addr
+ 
++# don't overlap data area of ZO with VO
++#define ADDON_ZO_SIZE (ZO__end - ZO__rodata)
++
+ #define ZO_INIT_SIZE	(ZO__end - ZO_startup_32 + ZO_z_extract_offset)
+ #define VO_INIT_SIZE	(VO__end - VO__text)
+ #if ZO_INIT_SIZE > VO_INIT_SIZE
+-#define INIT_SIZE ZO_INIT_SIZE
++#define INIT_SIZE (ZO_INIT_SIZE + ADDON_ZO_SIZE)
+ #else
+-#define INIT_SIZE VO_INIT_SIZE
++#define INIT_SIZE (VO_INIT_SIZE + ADDON_ZO_SIZE)
+ #endif
+ init_size:		.long INIT_SIZE		# kernel initialization size
+ handover_offset:	.long 0			# Filled in by build.c
 -- 
-2.0.0-rc0
+1.8.4.5
 
