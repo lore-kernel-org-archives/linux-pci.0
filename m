@@ -1,130 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28777 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933320AbbCDIBa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:30 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Subject: [PATCH v2 02/15] x86, boot: move ZO to end of buffer
-Date: Wed,  4 Mar 2015 00:00:35 -0800
-Message-Id: <1425456048-16236-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48780 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759942AbbCDUDJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 15:03:09 -0500
+Subject: [PATCH 5/5] vfio-pci: Add VGA arbiter client
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 04 Mar 2015 13:03:06 -0700
+Message-ID: <20150304200306.26766.98019.stgit@gimli.home>
+In-Reply-To: <20150304194711.26766.75450.stgit@gimli.home>
+References: <20150304194711.26766.75450.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-bp found data from boot stage can not be used kernel stage.
+If VFIO VGA access is disabled for the user, either by CONFIG option
+or module parameter, we can often opt-out of VGA arbitration.  We can
+do this when PCI bridge control of VGA routing is possible.  This
+means that we must have a parent bridge and there must only be a
+single VGA device below that bridge.  Fortunately this is the typical
+case for discrete GPUs.
 
-Actually those data area is overlapped with VO kernel bss stage, and clear_bss()
-clear them before code in arch/x86/kernel/setup.c access them.
+Doing this allows us to minimize the impact of additional GPUs, in
+terms of VGA arbitration, when they are only used via vfio-pci for
+non-VGA applications.
 
-To make the data survive that later, we should avoid the overlapping.
-
-At first move compressed kernel close the end of buffer instead of middle
-of the buffer.
-
-Fixes: f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Matt Fleming <matt.fleming@intel.com>
-Cc: Kees Cook <keescook@chromium.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/x86/boot/compressed/head_32.S | 11 +++++++++--
- arch/x86/boot/compressed/head_64.S |  8 ++++++--
- arch/x86/boot/compressed/mkpiggy.c |  3 ---
- arch/x86/kernel/asm-offsets.c      |  1 +
- 4 files changed, 16 insertions(+), 7 deletions(-)
+ drivers/vfio/pci/vfio_pci.c |   67 ++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 63 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/boot/compressed/head_32.S b/arch/x86/boot/compressed/head_32.S
-index cbed140..a9b56f1 100644
---- a/arch/x86/boot/compressed/head_32.S
-+++ b/arch/x86/boot/compressed/head_32.S
-@@ -147,7 +147,9 @@ preferred_addr:
- 1:
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 2133b74..2522d7c 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/types.h>
+ #include <linux/uaccess.h>
+ #include <linux/vfio.h>
++#include <linux/vgaarb.h>
  
- 	/* Target address to relocate to for decompression */
--	addl	$z_extract_offset, %ebx
-+	movl    BP_init_size(%esi), %eax
-+	subl    $_end, %eax
-+	addl    %eax, %ebx
+ #include "vfio_pci_private.h"
  
- 	/* Set up the stack */
- 	leal	boot_stack_end(%ebx), %esp
-@@ -208,8 +210,13 @@ relocated:
-  */
- 				/* push arguments for decompress_kernel: */
- 	pushl	$z_output_len	/* decompressed length */
--	leal	z_extract_offset_negative(%ebx), %ebp
+@@ -64,6 +65,50 @@ static inline bool vfio_vga_disabled(void)
+ #endif
+ }
+ 
++/*
++ * Our VGA arbiter participation is limited since we don't know anything
++ * about the device itself.  However, if the device is the only VGA device
++ * downstream of a bridge and VFIO VGA support is disabled, then we can
++ * safely return legacy VGA IO and memory as not decoded since the user
++ * has no way to get to it and routing can be disabled externally at the
++ * bridge.
++ */
++static unsigned int vfio_pci_set_vga_decode(void *opaque, bool single_vga)
++{
++	struct vfio_pci_device *vdev = opaque;
++	struct pci_dev *tmp = NULL, *pdev = vdev->pdev;
++	unsigned char max_busnr;
++	unsigned int decodes;
 +
-+	movl    BP_init_size(%esi), %eax
-+	subl    $_end, %eax
-+	movl    %ebx, %ebp
-+	subl    %eax, %ebp
- 	pushl	%ebp		/* output address */
++	if (single_vga || !vfio_vga_disabled() || pci_is_root_bus(pdev->bus))
++		return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
++		       VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
 +
- 	pushl	$z_input_len	/* input_len */
- 	leal	input_data(%ebx), %eax
- 	pushl	%eax		/* input_data */
-diff --git a/arch/x86/boot/compressed/head_64.S b/arch/x86/boot/compressed/head_64.S
-index 2884e0c..69015b5 100644
---- a/arch/x86/boot/compressed/head_64.S
-+++ b/arch/x86/boot/compressed/head_64.S
-@@ -101,7 +101,9 @@ ENTRY(startup_32)
- 1:
++	max_busnr = pci_bus_max_busnr(pdev->bus);
++	decodes = VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
++
++	while ((tmp = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, tmp)) != NULL) {
++		if (tmp == pdev ||
++		    pci_domain_nr(tmp->bus) != pci_domain_nr(pdev->bus) ||
++		    pci_is_root_bus(tmp->bus))
++			continue;
++
++		if (tmp->bus->number >= pdev->bus->number &&
++		    tmp->bus->number <= max_busnr) {
++			pci_dev_put(tmp);
++			decodes |= VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
++			break;
++		}
++	}
++
++	return decodes;
++}
++
++static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
++{
++	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
++}
++
+ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
  
- 	/* Target address to relocate to for decompression */
--	addl	$z_extract_offset, %ebx
-+	movl	BP_init_size(%esi), %eax
-+	subl	$_end, %eax
-+	addl	%eax, %ebx
+ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+@@ -120,7 +165,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 	} else
+ 		vdev->msix_bar = 0xFF;
  
- /*
-  * Prepare for entering 64 bit mode
-@@ -329,7 +331,9 @@ preferred_addr:
- 1:
+-	if (!vfio_vga_disabled() && (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
++	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
+ 		vdev->has_vga = true;
  
- 	/* Target address to relocate to for decompression */
--	leaq	z_extract_offset(%rbp), %rbx
-+	movl	BP_init_size(%rsi), %ebx
-+	subl	$_end, %ebx
-+	addq	%rbp, %rbx
+ 	return 0;
+@@ -909,6 +954,12 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		kfree(vdev);
+ 	}
  
- 	/* Set up the stack */
- 	leaq	boot_stack_end(%rbx), %rsp
-diff --git a/arch/x86/boot/compressed/mkpiggy.c b/arch/x86/boot/compressed/mkpiggy.c
-index b669ab6..652879b 100644
---- a/arch/x86/boot/compressed/mkpiggy.c
-+++ b/arch/x86/boot/compressed/mkpiggy.c
-@@ -82,9 +82,6 @@ int main(int argc, char *argv[])
- 	printf("z_output_len = %lu\n", (unsigned long)olen);
- 	printf(".globl z_extract_offset\n");
- 	printf("z_extract_offset = 0x%lx\n", offs);
--	/* z_extract_offset_negative allows simplification of head_32.S */
--	printf(".globl z_extract_offset_negative\n");
--	printf("z_extract_offset_negative = -0x%lx\n", offs);
++	if (vfio_pci_is_vga(pdev)) {
++		vga_client_register(pdev, vdev, NULL, vfio_pci_set_vga_decode);
++		vga_set_legacy_decoding(pdev,
++					vfio_pci_set_vga_decode(vdev, false));
++	}
++
+ 	if (!disable_idle_pm) {
+ 		/*
+ 		 * pci-core sets the device power state to an unknown value at
+@@ -928,9 +979,17 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	struct vfio_pci_device *vdev;
  
- 	printf(".globl input_data, input_data_end\n");
- 	printf("input_data:\n");
-diff --git a/arch/x86/kernel/asm-offsets.c b/arch/x86/kernel/asm-offsets.c
-index 9f6b934..0e8e4f7 100644
---- a/arch/x86/kernel/asm-offsets.c
-+++ b/arch/x86/kernel/asm-offsets.c
-@@ -66,6 +66,7 @@ void common(void) {
- 	OFFSET(BP_hardware_subarch, boot_params, hdr.hardware_subarch);
- 	OFFSET(BP_version, boot_params, hdr.version);
- 	OFFSET(BP_kernel_alignment, boot_params, hdr.kernel_alignment);
-+	OFFSET(BP_init_size, boot_params, hdr.init_size);
- 	OFFSET(BP_pref_address, boot_params, hdr.pref_address);
- 	OFFSET(BP_code32_start, boot_params, hdr.code32_start);
+ 	vdev = vfio_del_group_dev(&pdev->dev);
+-	if (vdev) {
+-		iommu_group_put(pdev->dev.iommu_group);
+-		kfree(vdev);
++	if (!vdev)
++		return;
++
++	iommu_group_put(pdev->dev.iommu_group);
++	kfree(vdev);
++
++	if (vfio_pci_is_vga(pdev)) {
++		vga_client_register(pdev, NULL, NULL, NULL);
++		vga_set_legacy_decoding(pdev,
++				VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
++				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
+ 	}
  
--- 
-1.8.4.5
+ 	if (!disable_idle_pm)
 
