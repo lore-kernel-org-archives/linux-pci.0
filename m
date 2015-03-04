@@ -1,152 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42043 "EHLO mx2.suse.de"
+Received: from mga01.intel.com ([192.55.52.88]:23688 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754726AbbCBU0V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Mar 2015 15:26:21 -0500
-Date: Mon, 2 Mar 2015 21:25:08 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	id S1760564AbbCDIol (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 03:44:41 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Voegtle <tv@lio96.de>, Hudd <hedede.l@gmail.com>,
+	Prakash Punnoor <prakash@punnoor.de>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-Message-ID: <20150302202507.GD17532@pd.tnic>
-References: <20150301152351.GA17391@gmail.com>
- <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
- <20150301194904.GC7748@pd.tnic>
- <CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
- <20150301202938.GD7748@pd.tnic>
- <CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
- <20150302085654.GA17532@pd.tnic>
- <CAE9FiQVS0ai2k-WNfsbwvOkj8YUxzaZJN5XDTMu1Ukhot7zOTw@mail.gmail.com>
- <20150302145313.GC17532@pd.tnic>
- <CAE9FiQV-xSqi-KqgafFL87epGobKmz6Ci_ood3ZtDSFPgSuG6Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAE9FiQV-xSqi-KqgafFL87epGobKmz6Ci_ood3ZtDSFPgSuG6Q@mail.gmail.com>
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: [Bugfix 2/2] x86/PCI/ACPI: Relax ACPI resource descriptor checks to work around BIOS bugs
+Date: Wed,  4 Mar 2015 16:47:12 +0800
+Message-Id: <1425458832-28777-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1425458832-28777-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1425458832-28777-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 02, 2015 at 10:58:23AM -0800, Yinghai Lu wrote:
-> On Mon, Mar 2, 2015 at 6:53 AM, Borislav Petkov <bp@suse.de> wrote:
-> > Well, it seems to work here but it still doesn't look reliable enough to
-> > me. And this addon_zo thing of arbitrary 256K is strange.
-> 
-> Thanks for check that out.
-> 
-> That is not arbitrary number. Need to make that bigger than _end - _rodata
-> 
-> > objdump -t arch/x86/boot/compressed/vmlinux | grep \ _end
-> 0000000000996000 g       .pgtable    0000000000000000 _end
-> > objdump -t arch/x86/boot/compressed/vmlinux | grep \ _rodata
-> 0000000000981780 g       .rodata    0000000000000000 _rodata
-> 
-> We only get that size after arch/x86/boot/compressed/vmlinux
-> 
-> but need number during building kernel vmlinux.
-> 
-> other way would be just increase init_size in arch/x86/boot/header.S
-> instead of put it BRK area.
+Some BIOSes report incorrect length for ACPI address space descriptors,
+so relax the checks to avoid regressions. This issue has appeared several
+times as:
+3162b6f0c5e1 ("PNPACPI: truncate _CRS windows with _LEN > _MAX - _MIN + 1")
+d558b483d5a7 ("x86/PCI: truncate _CRS windows with _LEN > _MAX - _MIN + 1")
+f238b414a74a ("PNPACPI: compute Address Space length rather than using _LEN")
+48728e077480 ("x86/PCI: compute Address Space length rather than using _LEN")
 
-Ok, I'll take a look at this more tomorrow, on a clear head, but why
-can't we make a special, explicit section which is not touched by
-the early decompression and relocation code and which we can use for
-setup_data only?
+Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=94221
+for more details and example malformed ACPI resource descriptors.
 
-IOW, something like that although that doesn't work yet:
-
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Tested-by: Dave Airlie <airlied@redhat.com>
+Tested-by: Prakash Punnoor <prakash@punnoor.de>
 ---
-diff --git a/arch/x86/boot/compressed/aslr.c b/arch/x86/boot/compressed/aslr.c
-index 7083c16cccba..01d5ddf1d22f 100644
---- a/arch/x86/boot/compressed/aslr.c
-+++ b/arch/x86/boot/compressed/aslr.c
-@@ -14,12 +14,12 @@
- static const char build_str[] = UTS_RELEASE " (" LINUX_COMPILE_BY "@"
- 		LINUX_COMPILE_HOST ") (" LINUX_COMPILER ") " UTS_VERSION;
- 
--struct kaslr_setup_data {
--	__u64 next;
--	__u32 type;
--	__u32 len;
--	__u8 data[1];
--} kaslr_setup_data;
-+extern char _setup_data[];
-+struct setup_data __attribute__((section (".setup_data"))) ksd = {
-+	.type	= SETUP_KASLR,
-+	.len	= 1,
-+	.next	= 0,
-+};
- 
- #define I8254_PORT_CONTROL	0x43
- #define I8254_PORT_COUNTER0	0x40
-@@ -306,10 +306,7 @@ static void add_kaslr_setup_data(struct boot_params *params, __u8 enabled)
- {
- 	struct setup_data *data;
- 
--	kaslr_setup_data.type = SETUP_KASLR;
--	kaslr_setup_data.len = 1;
--	kaslr_setup_data.next = 0;
--	kaslr_setup_data.data[0] = enabled;
-+	ksd.data[0] = enabled;
- 
- 	data = (struct setup_data *)(unsigned long)params->hdr.setup_data;
- 
-@@ -317,10 +314,9 @@ static void add_kaslr_setup_data(struct boot_params *params, __u8 enabled)
- 		data = (struct setup_data *)(unsigned long)data->next;
- 
- 	if (data)
--		data->next = (unsigned long)&kaslr_setup_data;
-+		data->next = (unsigned long)&ksd;
- 	else
--		params->hdr.setup_data = (unsigned long)&kaslr_setup_data;
--
-+		params->hdr.setup_data = (unsigned long)&ksd;
- }
- 
- unsigned char *choose_kernel_location(struct boot_params *params,
-diff --git a/arch/x86/boot/compressed/vmlinux.lds.S b/arch/x86/boot/compressed/vmlinux.lds.S
-index 34d047c98284..26d62f4b27b9 100644
---- a/arch/x86/boot/compressed/vmlinux.lds.S
-+++ b/arch/x86/boot/compressed/vmlinux.lds.S
-@@ -29,6 +29,10 @@ SECTIONS
- 	.rodata..compressed : {
- 		*(.rodata..compressed)
- 	}
-+	.setup_data : {
-+		_setup_data = . ;
-+		*(.setup_data)
-+	}
- 	.text :	{
- 		_text = .; 	/* Text */
- 		*(.text)
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 98dc9317286e..0978c61f84bd 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -429,7 +429,11 @@ static void __init reserve_initrd(void)
- 
- static void __init parse_kaslr_setup(u64 pa_data, u32 data_len)
- {
--	kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
-+	struct setup_data *kdata;
-+
-+	kdata = early_memremap(pa_data, data_len);
-+	kaslr_enabled = kdata->data[0];
-+	early_iounmap(kdata, data_len);
- }
- 
- static void __init parse_setup_data(void)
+ drivers/acpi/resource.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index c723668e3e27..5589a6e2a023 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -42,8 +42,10 @@ static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+ 	 * CHECKME: len might be required to check versus a minimum
+ 	 * length as well. 1 for io is fine, but for memory it does
+ 	 * not make any sense at all.
++	 * Note: some BIOSes report incorrect length for ACPI address space
++	 * descriptor, so remove check of 'reslen == len' to avoid regression.
+ 	 */
+-	if (len && reslen && reslen == len && start <= end)
++	if (len && reslen && start <= end)
+ 		return true;
+ 
+ 	pr_debug("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
 -- 
-Regards/Gruss,
-    Boris.
+1.7.10.4
 
-ECO tip #101: Trim your mails when you reply.
---
