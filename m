@@ -1,225 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42571 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934322AbbCDIBb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:31 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 06/15] x86, boot: split kernel_ident_mapping_init into another file
-Date: Wed,  4 Mar 2015 00:00:39 -0800
-Message-Id: <1425456048-16236-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:56503 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146AbbCDFYr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:24:47 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:24:45 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 67CB43578047
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:24:43 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245OZ4Q18809054
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:24:43 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245O9iq031419
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:24:09 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 11/21] powerpc/pci: Don't unset PCI resources for VFs
+Date: Wed,  4 Mar 2015 13:19:03 +0800
+Message-Id: <1425446353-30513-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to include that in boot::decompress_kernel stage to set new mapping.
+Flag PCI_REASSIGN_ALL_RSRC is used to ignore resources information setup by
+firmware, so that kernel would re-assign all resources of pci devices.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On powerpc arch, this happens in a header fixup function
+pcibios_fixup_resources(), which will clean up the resources if this flag
+is set. This works fine for PFs, since after clean up, kernel will
+re-assign the resources in pcibios_resource_survey().
+
+Below is a simple call flow on how it works:
+
+    pcibios_init
+      pcibios_scan_phb
+        pci_scan_child_bus
+          ...
+            pci_device_add
+              pci_fixup_device(pci_fixup_header)
+                pcibios_fixup_resources                     # header fixup
+                  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
+                    dev->resource[i].start = 0
+      pcibios_resource_survey                               # re-assign
+        pcibios_allocate_resources
+
+However, the VF resources won't be re-assigned, since the VF resources are
+completely determined by the PF resources, and the PF resources have
+already been reassigned. This means we need to leave VF's resources
+un-cleared in pcibios_fixup_resources().
+
+In this patch, we skip the resource unset process in
+pcibios_fixup_resources(), if the pci_dev is a VF.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/x86/include/asm/page.h |  5 +++
- arch/x86/mm/ident_map.c     | 74 +++++++++++++++++++++++++++++++++++++++++++++
- arch/x86/mm/init_64.c       | 74 +--------------------------------------------
- 3 files changed, 80 insertions(+), 73 deletions(-)
- create mode 100644 arch/x86/mm/ident_map.c
+ arch/powerpc/kernel/pci-common.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/arch/x86/include/asm/page.h b/arch/x86/include/asm/page.h
-index 802dde3..cf8f619 100644
---- a/arch/x86/include/asm/page.h
-+++ b/arch/x86/include/asm/page.h
-@@ -37,7 +37,10 @@ static inline void copy_user_page(void *to, void *from, unsigned long vaddr,
- 	alloc_page_vma(GFP_HIGHUSER | __GFP_ZERO | movableflags, vma, vaddr)
- #define __HAVE_ARCH_ALLOC_ZEROED_USER_HIGHPAGE
- 
-+#ifndef __pa
- #define __pa(x)		__phys_addr((unsigned long)(x))
-+#endif
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 2a525c9..8203101 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+ 		       pci_name(dev));
+ 		return;
+ 	}
 +
- #define __pa_nodebug(x)	__phys_addr_nodebug((unsigned long)(x))
- /* __pa_symbol should be used for C visible symbols.
-    This seems to be the official gcc blessed way to do such arithmetic. */
-@@ -51,7 +54,9 @@ static inline void copy_user_page(void *to, void *from, unsigned long vaddr,
- #define __pa_symbol(x) \
- 	__phys_addr_symbol(__phys_reloc_hide((unsigned long)(x)))
- 
-+#ifndef __va
- #define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
-+#endif
- 
- #define __boot_va(x)		__va(x)
- #define __boot_pa(x)		__pa(x)
-diff --git a/arch/x86/mm/ident_map.c b/arch/x86/mm/ident_map.c
-new file mode 100644
-index 0000000..751ca92
---- /dev/null
-+++ b/arch/x86/mm/ident_map.c
-@@ -0,0 +1,74 @@
++	if (dev->is_virtfn)
++		return;
 +
-+static void ident_pmd_init(unsigned long pmd_flag, pmd_t *pmd_page,
-+			   unsigned long addr, unsigned long end)
-+{
-+	addr &= PMD_MASK;
-+	for (; addr < end; addr += PMD_SIZE) {
-+		pmd_t *pmd = pmd_page + pmd_index(addr);
-+
-+		if (!pmd_present(*pmd))
-+			set_pmd(pmd, __pmd(addr | pmd_flag));
-+	}
-+}
-+static int ident_pud_init(struct x86_mapping_info *info, pud_t *pud_page,
-+			  unsigned long addr, unsigned long end)
-+{
-+	unsigned long next;
-+
-+	for (; addr < end; addr = next) {
-+		pud_t *pud = pud_page + pud_index(addr);
-+		pmd_t *pmd;
-+
-+		next = (addr & PUD_MASK) + PUD_SIZE;
-+		if (next > end)
-+			next = end;
-+
-+		if (pud_present(*pud)) {
-+			pmd = pmd_offset(pud, 0);
-+			ident_pmd_init(info->pmd_flag, pmd, addr, next);
-+			continue;
-+		}
-+		pmd = (pmd_t *)info->alloc_pgt_page(info->context);
-+		if (!pmd)
-+			return -ENOMEM;
-+		ident_pmd_init(info->pmd_flag, pmd, addr, next);
-+		set_pud(pud, __pud(__pa(pmd) | _KERNPG_TABLE));
-+	}
-+
-+	return 0;
-+}
-+
-+int kernel_ident_mapping_init(struct x86_mapping_info *info, pgd_t *pgd_page,
-+			      unsigned long addr, unsigned long end)
-+{
-+	unsigned long next;
-+	int result;
-+	int off = info->kernel_mapping ? pgd_index(__PAGE_OFFSET) : 0;
-+
-+	for (; addr < end; addr = next) {
-+		pgd_t *pgd = pgd_page + pgd_index(addr) + off;
-+		pud_t *pud;
-+
-+		next = (addr & PGDIR_MASK) + PGDIR_SIZE;
-+		if (next > end)
-+			next = end;
-+
-+		if (pgd_present(*pgd)) {
-+			pud = pud_offset(pgd, 0);
-+			result = ident_pud_init(info, pud, addr, next);
-+			if (result)
-+				return result;
-+			continue;
-+		}
-+
-+		pud = (pud_t *)info->alloc_pgt_page(info->context);
-+		if (!pud)
-+			return -ENOMEM;
-+		result = ident_pud_init(info, pud, addr, next);
-+		if (result)
-+			return result;
-+		set_pgd(pgd, __pgd(__pa(pud) | _KERNPG_TABLE));
-+	}
-+
-+	return 0;
-+}
-diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
-index 30eb05a..c30efb6 100644
---- a/arch/x86/mm/init_64.c
-+++ b/arch/x86/mm/init_64.c
-@@ -56,79 +56,7 @@
- 
- #include "mm_internal.h"
- 
--static void ident_pmd_init(unsigned long pmd_flag, pmd_t *pmd_page,
--			   unsigned long addr, unsigned long end)
--{
--	addr &= PMD_MASK;
--	for (; addr < end; addr += PMD_SIZE) {
--		pmd_t *pmd = pmd_page + pmd_index(addr);
--
--		if (!pmd_present(*pmd))
--			set_pmd(pmd, __pmd(addr | pmd_flag));
--	}
--}
--static int ident_pud_init(struct x86_mapping_info *info, pud_t *pud_page,
--			  unsigned long addr, unsigned long end)
--{
--	unsigned long next;
--
--	for (; addr < end; addr = next) {
--		pud_t *pud = pud_page + pud_index(addr);
--		pmd_t *pmd;
--
--		next = (addr & PUD_MASK) + PUD_SIZE;
--		if (next > end)
--			next = end;
--
--		if (pud_present(*pud)) {
--			pmd = pmd_offset(pud, 0);
--			ident_pmd_init(info->pmd_flag, pmd, addr, next);
--			continue;
--		}
--		pmd = (pmd_t *)info->alloc_pgt_page(info->context);
--		if (!pmd)
--			return -ENOMEM;
--		ident_pmd_init(info->pmd_flag, pmd, addr, next);
--		set_pud(pud, __pud(__pa(pmd) | _KERNPG_TABLE));
--	}
--
--	return 0;
--}
--
--int kernel_ident_mapping_init(struct x86_mapping_info *info, pgd_t *pgd_page,
--			      unsigned long addr, unsigned long end)
--{
--	unsigned long next;
--	int result;
--	int off = info->kernel_mapping ? pgd_index(__PAGE_OFFSET) : 0;
--
--	for (; addr < end; addr = next) {
--		pgd_t *pgd = pgd_page + pgd_index(addr) + off;
--		pud_t *pud;
--
--		next = (addr & PGDIR_MASK) + PGDIR_SIZE;
--		if (next > end)
--			next = end;
--
--		if (pgd_present(*pgd)) {
--			pud = pud_offset(pgd, 0);
--			result = ident_pud_init(info, pud, addr, next);
--			if (result)
--				return result;
--			continue;
--		}
--
--		pud = (pud_t *)info->alloc_pgt_page(info->context);
--		if (!pud)
--			return -ENOMEM;
--		result = ident_pud_init(info, pud, addr, next);
--		if (result)
--			return result;
--		set_pgd(pgd, __pgd(__pa(pud) | _KERNPG_TABLE));
--	}
--
--	return 0;
--}
-+#include "ident_map.c"
- 
- static int __init parse_direct_gbpages_off(char *arg)
- {
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		struct resource *res = dev->resource + i;
+ 		struct pci_bus_region reg;
 -- 
-1.8.4.5
+1.7.9.5
 
