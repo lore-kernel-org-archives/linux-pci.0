@@ -1,66 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:45676 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbbCKMgH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 08:36:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com>
-References: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 11 Mar 2015 07:35:45 -0500
-Message-ID: <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com>
-Subject: Re: [PATCH] pci: of : fix BUG: unable to handle kernel
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1425510083.5200.312.camel@redhat.com>
+Subject: Re: [PATCH 1/5] vfio-pci: Allow PCI IDs to be specified as module
+ options
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 04 Mar 2015 16:01:23 -0700
+In-Reply-To: <jpg8ufc75sk.fsf@redhat.com>
+References: <20150304194711.26766.75450.stgit@gimli.home>
+	 <20150304200243.26766.556.stgit@gimli.home> <jpgy4ncv681.fsf@redhat.com>
+	 <1425507522.5200.311.camel@redhat.com> <jpg8ufc75sk.fsf@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 10:25 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On some platforms such as that based on x86, ia64 etc, root bus is
-> created with parent node passed in as NULL to pci_create_root_bus().
-> On these platforms, the patch series "PCI: get DMA configuration from
-> parent device" when applied causes kernel crash. So add a check for this
-> in of_pci_dma_configure()
+On Wed, 2015-03-04 at 17:32 -0500, Bandan Das wrote:
+> Alex Williamson <alex.williamson@redhat.com> writes:
+> 
+> > On Wed, 2015-03-04 at 15:49 -0500, Bandan Das wrote:
+> >> Hi Alex,
+> >> 
+> >> Alex Williamson <alex.williamson@redhat.com> writes:
+> >> ...
+> >> > +		if (fields < 2) {
+> >> > +			pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
+> >> > +			continue;
+> >> > +		}
+> >> > +
+> >> > +		pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
+> >> > +			vendor, device, subvendor, subdevice,
+> >> > +			class, class_mask);
+> >> > +
+> >> > +		rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
+> >> > +				   subvendor, subdevice, class, class_mask, 0);
+> >> > +		if (rc)
+> >> > +			pr_warn("vfio-pci: failed to add dynamic id (%d)\n",
+> >> > +				rc);
+> >> Just a minor observation - maybe we should print out the
+> >> vendor/device/subvendor/subdevice as part of the failure message too. The info
+> >> message could potentially get lost in a system with high syslog traffic.
+> >
+> > Thanks for the comment.  I don't think we want to duplicate the pr_info
+> > above it, so are you thinking something like this?
+> >
+> >                 if (fields < 2) {
+> >                         pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
+> >                         continue;
+> >                 }
+> >
+> >                 rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
+> >                                    subvendor, subdevice, class, class_mask, 0);
+> >                 if (rc)
+> >                         pr_warn("vfio-pci: failed to add dynamic id: %04X:%04X sub=%04X:%04X cls=%08X/%08X (%d)\n",
+> >                                 vendor, device, subvendor, subdevice,
+> >                                 class, class_mask, rc);
+> >                 else
+> >                         pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
+> >                                 vendor, device, subvendor, subdevice,
+> >                                 class, class_mask);
+> >         }
+> 
+> Yep, this is good. (BTW, we can define pr_fmt at the top of the file and avoid
+> the "vfio-pci" prefix)
 
-Wouldn't these arches have OF disabled and call an empty function?
-Regardless, we still need this.
+Cool, I'll remove the "vfio-pci: " prefixes and define the standard:
 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-I'm assuming Bjorn will apply this.
+Thanks!
 
-Acked-by: Rob Herring <robh@kernel.org>
-
-> ---
->  drivers/of/of_pci.c |    4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 86d3c38..a8e485c 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -129,6 +129,10 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
->         struct device *dev = &pci_dev->dev;
->         struct device *bridge = pci_get_host_bridge_device(pci_dev);
->
-> +       /* Some platforms can have bridge->parent set to NULL */
-> +       if (!bridge->parent)
-> +               return;
-> +
->         of_dma_configure(dev, bridge->parent->of_node);
->         pci_put_host_bridge_device(bridge);
->  }
+> >> > +	}
+> >> > +}
+> >> > +
+> >> >  static int __init vfio_pci_init(void)
+> >> >  {
+> >> >  	int ret;
+> >> > @@ -1053,6 +1097,8 @@ static int __init vfio_pci_init(void)
+> >> >  	if (ret)
+> >> >  		goto out_driver;
+> >> >  
+> >> > +	vfio_pci_fill_ids();
+> >> > +
+> >> >  	return 0;
+> >> >  
+> >> >  out_driver:
+> >> >
+> >> > --
+> >> > To unsubscribe from this list: send the line "unsubscribe kvm" in
+> >> > the body of a message to majordomo@vger.kernel.org
+> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe kvm" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
-> 1.7.9.5
->
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
+
