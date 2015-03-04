@@ -1,120 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5510D327.5060400@linux.intel.com>
-References: <1427095334-7430-1-git-send-email-jiang.liu@linux.intel.com>
- <20150323164809.GS26935@google.com> <5510CA69.30309@linux.intel.com>
- <CAErSpo72DoOu1XR8jYW_VsEKfnhcL9ydqtkjwBTUSm-mN-Rn2A@mail.gmail.com> <5510D327.5060400@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Mar 2015 08:18:35 -0500
-Message-ID: <CAErSpo6uBK2FWK838BUob+54T1NHoak9HiO34TstPwGPazp72A@mail.gmail.com>
-Subject: Re: [Bugfix] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:57608 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbbCDFXo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:23:44 -0500
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:23:42 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A4C8A357804C
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:23:39 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245NVYl26738774
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:23:39 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245N5KG029620
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:23:06 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 08/21] PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
+Date: Wed,  4 Mar 2015 13:19:00 +0800
+Message-Id: <1425446353-30513-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 23, 2015 at 9:59 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> On 2015/3/24 10:42, Bjorn Helgaas wrote:
->> On Mon, Mar 23, 2015 at 9:22 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>> On 2015/3/24 0:48, Bjorn Helgaas wrote:
->>>> On Mon, Mar 23, 2015 at 03:22:14PM +0800, Jiang Liu wrote:
->>>>> Commit 63f1789ec716("Ignore resources consumed by host bridge itself")
->>>>> tries to ignore resources consumed by PCI host bridge itself by
->>>>> checking IORESOURCE_WINDOW flag, which causes regression on some
->>>>> platforms.
->>>>
->>>> "Do.  Or do not.  There is no try."
->>>> [http://www.starwars.com/video/do-or-do-not]
->>>>
->>>> That commit doesn't *try* to do something.  It *does* something.  Just
->>>> explain what it does and what's wrong with what it does.
->>>>
->>>>> For example, PC Engines APU.1C platform defines PCI MMIO resources with
->>>>> ACPI Memory32Fixed operator as below:
->>>>> Name (CRES, ResourceTemplate ()
->>>>> {
->>>>>     ...
->>>>>     WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
->>>>>         0x0000,             // Granularity
->>>>>         0x0D00,             // Range Minimum
->>>>>         0xFFFF,             // Range Maximum
->>>>>         0x0000,             // Translation Offset
->>>>>         0xF300,             // Length
->>>>>         ,, , TypeStatic)
->>>>>     Memory32Fixed (ReadOnly,
->>>>>         0x000A0000,         // Address Base
->>>>>         0x00020000,         // Address Length
->>>>>         )
->>>>>     Memory32Fixed (ReadOnly,
->>>>>         0x00000000,         // Address Base
->>>>>         0x00000000,         // Address Length
->>>>>         _Y00)
->>>>> })
->>>>>
->>>>> Memory32Fixed operator doesn't support concept of "producer/consumer"
->>>>> and it will be treated as "consumer" by the ACPI resource parsing
->>>>> interface, thus cause regression. So the fix is only to check
->>>>> "producer/consumer" flag for resources having "producer/consumer" flag.
->>>>
->>>> Apparently the problem is with the Memory32Fixed resources above; it sounds
->>>> like we ignore them after 63f1789ec716?  I don't quite understand how this
->>>> fix works.  acpi_dev_filter_resource_type() has cases for both
->>>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 and ACPI_RESOURCE_TYPE_ADDRESSxx, but
->>>> this patch only touches the latter, not the
->>>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 case.
->>> The idea is:
->>> 1) caller specifies IORESOURCE_WINDOW to query resources provided
->>>    by the device, otherwise it's querying resources consumed by
->>>    the device.
->>> 2) For resource descriptors having producer/consumer flag, such as
->>>     ACPI_RESOURCE_TYPE_ADDRESSxx, we check the producer/consumer flag.
->>> 3) For resource descriptors not having producer/consumer flag, such
->>>    as ACPI_RESOURCE_TYPE_FIXED_MEMORY32, we skip checking the
->>>    producer/consumer flag.
->>
->> I figured out that much by reading the code.  But I think the code is
->> very hard to read, and I still don't really understand how it works.
->>
->> Before this fix, we ignore Memory32Fixed resources.  After this fix,
->> we use Memory32Fixed as a window.  I think that's an incorrect
->> interpretation of Memory32Fixed.
-> Hi Bjorn,
->         I think it's illegal to use Memory32Fixed for PCI host
-> bridge resource window too. The fix is to solve the regression
-> by relaxing constraints, but that may not be the right solution.
+VFs are dynamically created when a driver enables them.  On some platforms,
+like PowerNV, special resources are necessary to enable VFs.
 
-Relaxing the constraint for all platforms is only a solution if we're
-confident that it works for all platforms.  I'm not confident because
-I don't know what effect this patch has on systems that use
-Memory32Fixed correctly.
+Add platform hooks for enabling and disabling VFs.
 
-It's possible that you can analyze the behavior and explain that if
-you relax the constraint, the Memory32Fixed handling (both for bridge
-and non-bridge devices) will be the same as it was before
-63f1789ec716.  If you can do that, I think it would be reasonable
-because you'd be preserving the previous, known-working behavior.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-If you go that route, I'd like to see a patch that explicitly touches
-the Memory32Fixed handling.  The current patch claims to change the
-way we handle Memory32Fixed, but nothing in the code change is
-directly related to Memory32Fixed, so it's very confusing.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5643a10..64c4692 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	pci_dev_put(dev);
+ }
+ 
++int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++       return 0;
++}
++
+ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ {
+ 	int rc;
+@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+ 	int bus;
++	int retval;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
+ 
++	if ((retval = pcibios_sriov_enable(dev, initial))) {
++		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
++			retval);
++		return retval;
++	}
++
+ 	for (i = 0; i < initial; i++) {
+ 		rc = virtfn_add(dev, i, 0);
+ 		if (rc)
+@@ -335,6 +347,11 @@ failed:
+ 	return rc;
+ }
+ 
++int __weak pcibios_sriov_disable(struct pci_dev *pdev)
++{
++       return 0;
++}
++
+ static void sriov_disable(struct pci_dev *dev)
+ {
+ 	int i;
+@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
+ 	for (i = 0; i < iov->num_VFs; i++)
+ 		virtfn_remove(dev, i, 0);
+ 
++	pcibios_sriov_disable(dev);
++
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-- 
+1.7.9.5
 
->         How about waiting for a while to see whether there are more
-> bug reports related to this. If only limited platform affected,
-> we could treat it as BIOS bugs and use quirk to handle it.
-> Otherwise we may need to relax the constraint.
-
-I don't think waiting is a good strategy.  We know we have a
-regression, and I think we need to fix that ASAP without waiting for
-more failure reports.
-
-Bjorn
