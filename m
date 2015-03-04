@@ -1,167 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:48574 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976AbbCKBMC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 21:12:02 -0400
-Message-ID: <54FF9655.7080604@huawei.com>
-Date: Wed, 11 Mar 2015 09:11:49 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>
-CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
-	"Paul Bolle" <pebolle@tiscali.nl>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	"Dmitry Torokhov" <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Rob Herring" <robh@kernel.org>
-Subject: Re: [PATCH v5 3/4] pci: iproc: Add Broadcom iProc PCIe support
-References: <1425947886-23705-1-git-send-email-rjui@broadcom.com> <1425947886-23705-4-git-send-email-rjui@broadcom.com> <20150310214010.GB32204@google.com>
-In-Reply-To: <20150310214010.GB32204@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from userp1040.oracle.com ([156.151.31.81]:28788 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934232AbbCDIBb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:31 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: [PATCH v2 05/15] x86, kaslr: consolidate the mem_avoid filling
+Date: Wed,  4 Mar 2015 00:00:38 -0800
+Message-Id: <1425456048-16236-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-...
->> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
->> +				  &pcie->sysdata, pcie->resources);
->> +	if (!bus) {
->> +		dev_err(pcie->dev, "unable to create PCI root bus\n");
->> +		ret = -ENOMEM;
->> +		goto err_power_off_phy;
->> +	}
->> +	pcie->root_bus = bus;
->> +
->> +	ret = iproc_pcie_check_link(pcie, bus);
->> +	if (ret) {
->> +		dev_err(pcie->dev, "no PCIe EP device detected\n");
->> +		goto err_rm_root_bus;
->> +	}
->> +
->> +	iproc_pcie_enable(pcie);
->> +
->> +	pci_scan_child_bus(bus);
->> +	pci_assign_unassigned_bus_resources(bus);
->> +	pci_bus_add_devices(bus);
->> +
->> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> 
-> I think the IRQ fixup should be before pci_bus_add_devices().  CC'd Yijing,
-> who's been fixing similar issues.
-> 
-> pci_bus_add_devices() is the point where drivers can claim these devices,
-> and we don't want to change things after a driver claims the device.
+Now ZO sit end of the buffer, we can find out where is ZO text
+and data/bss etc.
 
-Yes, we should call pci_bus_add_devices() at last, after all resources(mem/io/irq) are
-configured properly. Otherwise, this code could not be run normally in non system boot up path.
+[input, input+input_size) is copied compressed kernel, not the whole ZO.
+[output, output+init_size) is the buffer for VO.
 
-Thanks!
-Yijing.
+[input+input_size, output+init_size) is [_text, _end) for ZO.
+that will be first range in mem_avoid. we don't need to guess that anymore.
 
+That area aleady include heap and stack. So we don't need to put
+them into mem_avoid array.
 
-> 
->> +
->> +	return 0;
->> +
->> +err_rm_root_bus:
->> +	pci_stop_root_bus(bus);
->> +	pci_remove_root_bus(bus);
->> +
->> +err_power_off_phy:
->> +	if (pcie->phy)
->> +		phy_power_off(pcie->phy);
->> +err_exit_phy:
->> +	if (pcie->phy)
->> +		phy_exit(pcie->phy);
->> +
->> +	return ret;
->> +}
->> +EXPORT_SYMBOL(iproc_pcie_setup);
->> +
->> +int iproc_pcie_remove(struct iproc_pcie *pcie)
->> +{
->> +	pci_stop_root_bus(pcie->root_bus);
->> +	pci_remove_root_bus(pcie->root_bus);
->> +
->> +	if (pcie->phy) {
->> +		phy_power_off(pcie->phy);
->> +		phy_exit(pcie->phy);
->> +	}
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL(iproc_pcie_remove);
-> 
-> These exports wouldn't be needed if this were all squashed into one file.
-> 
->> +
->> +MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
->> +MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
->> +MODULE_LICENSE("GPL v2");
->> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
->> new file mode 100644
->> index 0000000..569bc04
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-iproc.h
->> @@ -0,0 +1,42 @@
->> +/*
->> + * Copyright (C) 2014-2015 Broadcom Corporation
->> + *
->> + * This program is free software; you can redistribute it and/or
->> + * modify it under the terms of the GNU General Public License as
->> + * published by the Free Software Foundation version 2.
->> + *
->> + * This program is distributed "as is" WITHOUT ANY WARRANTY of any
->> + * kind, whether express or implied; without even the implied warranty
->> + * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + */
->> +
->> +#ifndef _PCIE_IPROC_H
->> +#define _PCIE_IPROC_H
->> +
->> +#define IPROC_PCIE_MAX_NUM_IRQS 6
->> +
->> +/**
->> + * iProc PCIe device
->> + * @dev: pointer to device data structure
->> + * @base: PCIe host controller I/O register base
->> + * @resources: linked list of all PCI resources
->> + * @sysdata: Per PCI controller data
->> + * @root_bus: pointer to root bus
->> + * @phy: optional PHY device that controls the Serdes
->> + * @irqs: interrupt IDs
->> + */
->> +struct iproc_pcie {
->> +	struct device *dev;
->> +	void __iomem *base;
->> +	struct list_head *resources;
->> +	struct pci_sys_data sysdata;
->> +	struct pci_bus *root_bus;
->> +	struct phy *phy;
->> +	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
->> +};
->> +
->> +extern int iproc_pcie_setup(struct iproc_pcie *pcie);
->> +extern int iproc_pcie_remove(struct iproc_pcie *pcie);
-> 
-> Hopefully you can squash this all into one file, but if you can't, my
-> preference is to omit "extern" on function declarations.
-> 
->> +
->> +#endif /* _PCIE_IPROC_H */
->> -- 
->> 1.7.9.5
->>
-> 
-> .
-> 
+Also we need to put boot_params into the mem_avoid too.
+as with 64bit boot loader will put them above 4G.
 
+Also change output_size to init_size, as we pass that instead already.
 
+Cc: Kees Cook <keescook@chromium.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/boot/compressed/aslr.c | 29 ++++++++++++++---------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
+
+diff --git a/arch/x86/boot/compressed/aslr.c b/arch/x86/boot/compressed/aslr.c
+index 7083c16..e8486a5 100644
+--- a/arch/x86/boot/compressed/aslr.c
++++ b/arch/x86/boot/compressed/aslr.c
+@@ -116,7 +116,7 @@ struct mem_vector {
+ 	unsigned long size;
+ };
+ 
+-#define MEM_AVOID_MAX 5
++#define MEM_AVOID_MAX 4
+ static struct mem_vector mem_avoid[MEM_AVOID_MAX];
+ 
+ static bool mem_contains(struct mem_vector *region, struct mem_vector *item)
+@@ -142,7 +142,7 @@ static bool mem_overlaps(struct mem_vector *one, struct mem_vector *two)
+ }
+ 
+ static void mem_avoid_init(unsigned long input, unsigned long input_size,
+-			   unsigned long output, unsigned long output_size)
++			   unsigned long output, unsigned long init_size)
+ {
+ 	u64 initrd_start, initrd_size;
+ 	u64 cmd_line, cmd_line_size;
+@@ -151,10 +151,13 @@ static void mem_avoid_init(unsigned long input, unsigned long input_size,
+ 
+ 	/*
+ 	 * Avoid the region that is unsafe to overlap during
+-	 * decompression (see calculations at top of misc.c).
++	 * decompression.
++	 * As we already move compressed to the end of buffer,
++	 * [input+input_size, output+init_size) has [_text, _end)
++	 * for arch/x86/boot/compressed/vmlinux.
+ 	 */
+-	unsafe_len = (output_size >> 12) + 32768 + 18;
+-	unsafe = (unsigned long)input + input_size - unsafe_len;
++	unsafe_len = output + init_size - (input + input_size);
++	unsafe = (unsigned long)input + input_size;
+ 	mem_avoid[0].start = unsafe;
+ 	mem_avoid[0].size = unsafe_len;
+ 
+@@ -176,13 +179,9 @@ static void mem_avoid_init(unsigned long input, unsigned long input_size,
+ 	mem_avoid[2].start = cmd_line;
+ 	mem_avoid[2].size = cmd_line_size;
+ 
+-	/* Avoid heap memory. */
+-	mem_avoid[3].start = (unsigned long)free_mem_ptr;
+-	mem_avoid[3].size = BOOT_HEAP_SIZE;
+-
+-	/* Avoid stack memory. */
+-	mem_avoid[4].start = (unsigned long)free_mem_end_ptr;
+-	mem_avoid[4].size = BOOT_STACK_SIZE;
++	/* Avoid params */
++	mem_avoid[3].start = (unsigned long)real_mode;
++	mem_avoid[3].size = sizeof(*real_mode);
+ }
+ 
+ /* Does this memory vector overlap a known avoided area? */
+@@ -327,7 +326,7 @@ unsigned char *choose_kernel_location(struct boot_params *params,
+ 				      unsigned char *input,
+ 				      unsigned long input_size,
+ 				      unsigned char *output,
+-				      unsigned long output_size)
++				      unsigned long init_size)
+ {
+ 	unsigned long choice = (unsigned long)output;
+ 	unsigned long random;
+@@ -349,10 +348,10 @@ unsigned char *choose_kernel_location(struct boot_params *params,
+ 
+ 	/* Record the various known unsafe memory ranges. */
+ 	mem_avoid_init((unsigned long)input, input_size,
+-		       (unsigned long)output, output_size);
++		       (unsigned long)output, init_size);
+ 
+ 	/* Walk e820 and find a random address. */
+-	random = find_random_addr(choice, output_size);
++	random = find_random_addr(choice, init_size);
+ 	if (!random) {
+ 		debug_putstr("KASLR could not find suitable E820 region...\n");
+ 		goto out;
 -- 
-Thanks!
-Yijing
+1.8.4.5
 
