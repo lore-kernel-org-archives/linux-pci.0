@@ -1,67 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53517 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751659AbbC3LmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Mar 2015 07:42:01 -0400
-Date: Mon, 30 Mar 2015 13:41:28 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330134002-mutt-send-email-mst@redhat.com>
-References: <20150330083707-mutt-send-email-mst@redhat.com>
- <20150330065522.GA10105@kroah.com>
- <20150330085617-mutt-send-email-mst@redhat.com>
- <20150330075331.GA17823@kroah.com>
- <20150330101830-mutt-send-email-mst@redhat.com>
- <20150330100744.GA16291@kroah.com>
- <20150330123051-mutt-send-email-mst@redhat.com>
- <20150330105707.GA17979@kroah.com>
- <20150330130020-mutt-send-email-mst@redhat.com>
- <20150330113516.GA19501@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150330113516.GA19501@kroah.com>
+Received: from exprod5og120.obsmtp.com ([64.18.0.137]:49449 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758748AbbCDTsV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:48:21 -0500
+Received: by pdbfp1 with SMTP id fp1so8912027pdb.2
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2015 11:48:20 -0800 (PST)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
+Subject: [PATCH v2 3/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node.
+Date: Wed,  4 Mar 2015 11:39:59 -0800
+Message-Id: <d44b9e71443b7b151de385f05211afd75f426035.1425497218.git.dhdang@apm.com>
+In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
+References: <cover.1425497218.git.dhdang@apm.com>
+In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
+References: <1678162.2PJ2o1jRen@wuerfel> <cover.1425497218.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 01:35:16PM +0200, Greg KH wrote:
-> On Mon, Mar 30, 2015 at 01:19:14PM +0200, Michael S. Tsirkin wrote:
-> > Why there much more that two packages, I can find
-> > at least 5 copies in the wild. Why? I think it's because it's part of
-> > linux ABI that doesn't have matching headers. People are asked to build
-> > their own, so of course they copy each other.
-> > 
-> > Once linux exports these headers everyone can stop
-> > duplicating each other and others, and just use linux headers too.
-> 
-> As I'm not the PCI maintainer anymore, I'll let Bjorn decide about this.
-> 
-> But, your original patch series isn't ok, we don't want to export the
-> pci vendor/device ids to userspace, that isn't the job of the kernel to
-> do so.  If we should be exporting the pci class and config structures or
-> not is Bjorn's decision.
-> 
-> greg k-h
+The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
 
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      | 61 ++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
 
-I sent v2 doing exactly that.
-Thanks a lot for the review.
-
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+new file mode 100644
+index 0000000..fdd55d6
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+@@ -0,0 +1,61 @@
++* AppliedMicro X-Gene PCIe MSI interface
++
++Required properties:
++
++- compatible: should contain "apm,xgene1-msi" to identify the core.
++- msi-controller: indicates that this is X-Gene1 PCIe MSI controller node
++- reg: A list of physical base address and length for each set of controller
++       registers.
++- interrupts: A list of interrupt outputs of the controller.
++
++Each PCIe node needs to have property msi-parent that points to msi controller node
++
++Examples:
++
++SoC DTSI:
++
++	msi@79000000 {
++		compatible = "apm,xgene1-msi";
++		msi-controller;
++		reg = <0x00 0x79000000 0x0 0x900000>;
++		interrupts = <  0x0 0x10 0x4
++				0x0 0x11 0x4
++				0x0 0x12 0x4
++				0x0 0x13 0x4
++				0x0 0x14 0x4
++				0x0 0x15 0x4
++				0x0 0x16 0x4
++				0x0 0x17 0x4
++				0x0 0x18 0x4
++				0x0 0x19 0x4
++				0x0 0x1a 0x4
++				0x0 0x1b 0x4
++				0x0 0x1c 0x4
++				0x0 0x1d 0x4
++				0x0 0x1e 0x4
++				0x0 0x1f 0x4>;
++	};
++
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		dma-coherent;
++		clocks = <&pcie0clk 0>;
++		msi-parent= <&msi>;
++	};
 -- 
-MST
+1.9.1
+
