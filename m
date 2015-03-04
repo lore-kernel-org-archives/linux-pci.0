@@ -1,100 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 30 Mar 2015 12:57:07 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330105707.GA17979@kroah.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-2-git-send-email-mst@redhat.com>
- <20150329204047.GA5902@kroah.com>
- <20150330083707-mutt-send-email-mst@redhat.com>
- <20150330065522.GA10105@kroah.com>
- <20150330085617-mutt-send-email-mst@redhat.com>
- <20150330075331.GA17823@kroah.com>
- <20150330101830-mutt-send-email-mst@redhat.com>
- <20150330100744.GA16291@kroah.com>
- <20150330123051-mutt-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150330123051-mutt-send-email-mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:42248 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859AbbCDFWv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:22:51 -0500
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:22:49 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id C19AA3578047
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:22:45 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245MbwM40632390
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:45 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245MB5D028006
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:12 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 05/21] PCI: Refresh First VF Offset and VF Stride when updating NumVFs
+Date: Wed,  4 Mar 2015 13:18:57 +0800
+Message-Id: <1425446353-30513-6-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 12:46:36PM +0200, Michael S. Tsirkin wrote:
-> Sorry about keeping this thread alive, I'm just trying
-> to wrap my head around what you consider a sane API.
-> 
-> Linux used not to export headers automatically, generally.
-> It used to be "just use libc". Why is this header different?
+The First VF Offset and VF Stride fields depend on the NumVFs setting, so
+refresh the cached fields in struct pci_sriov when updating NumVFs.  See
+the SR-IOV spec r1.1, sec 3.3.9 and 3.3.10.
 
-You are now exporting things from the kernel that were not being
-exported in the past.  When you do that, you are now guaranteeing that
-this api will be present for forever in the future.
+[bhelgaas: changelog, remove kernel-doc comment marker]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |   23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-> These constants are required to use the interfaces
-> linux does export to userspace, including VFIO and sysfs.
-> No one maintains them really, though libpci has a copy
-> of these.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 27b98c3..a8752c2 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 		dev->sriov->stride * id) & 0xff;
+ }
+ 
++/*
++ * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
++ * change when NumVFs changes.
++ *
++ * Update iov->offset and iov->stride when NumVFs is written.
++ */
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
++}
++
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -253,7 +268,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -282,7 +297,7 @@ failed:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
+ 
+@@ -313,7 +328,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+ 	iov->num_VFs = 0;
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ }
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+@@ -452,7 +467,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+ 		pci_update_resource(dev, i);
+ 
+ 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
++	pci_iov_set_numvfs(dev, iov->num_VFs);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
+ 		msleep(100);
+-- 
+1.7.9.5
 
-Also libudev, which takes them from the "master" copy that libpci pulls
-from.
-
-> Some people believe headers are copyrighteable, for them, licensing is
-> also problematic: libpci is under plain GPL, Linux needs the exception
-> for user programs.  Does not this mean that we can't depend on libpci to
-> provide parts of linux/userspace interface?
-
-This makes no sense at all.  If you have legal questions, ask a lawyer,
-not a programmer.  Would you ask me medical questions as well?
-
-> > > Wouldn't the same thing apply to pci_regs.h?
-> > > Why does it make sense to export PCI_CLASS_REVISION
-> > > so I know where to read the class value from
-> > > configuration, but not what the values are?
-> > 
-> > That's just due to history, we made the mistake to export those a long
-> > time ago, I wouldn't recommend doing any more, and again, instead rely
-> > on the programs that properly maintain that for you.
-> 
-> So add libpci dependency just for the headers?  No one wants to do this.
-> Case in point, Linux doesn't want to depend on libpci headers either, right?
-
-The kernel is self-contained, and has to be, don't be foolish.
-
-> I don't think class IDs or vendor IDs ever did or can change.
-
-Then you haven't tracked what has happened over time.  They do change,
-they are sometimes incorrect, they are extended, and stuff is modified.
-
-> New stuff is added, we add it as we add Linux support.
-> Isn't this a good reason to include this? Will push
-> vendors to work with the community instead of
-> around it using userspace drivers.
-
-This has nothing to do with "pushing vendors" to do anything.
-
-Again, if you have a userspace program that needs these headers, then
-use one of the _two_ different packages that userspace already provides
-that has them, don't make the kernel become the third provider of the
-same header information, that's major duplication of effort for no
-reason at all.
-
-thanks,
-
-greg k-h
