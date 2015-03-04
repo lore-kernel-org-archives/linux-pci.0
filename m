@@ -1,134 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45057 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752804AbbC2PEL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Mar 2015 11:04:11 -0400
-Date: Sun, 29 Mar 2015 17:04:07 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 03/10] pci: drop some duplicate code
-Message-ID: <1427641227-7574-4-git-send-email-mst@redhat.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:37796 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757280AbbCDUAG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 15:00:06 -0500
+Date: Wed, 4 Mar 2015 21:00:00 +0100
+From: Ingo Molnar <mingo@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150304200000.GB6276@gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+ <1425456048-16236-5-git-send-email-yinghai@kernel.org>
+ <20150304101649.GA3663@pd.tnic>
+ <CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
+In-Reply-To: <CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_msi_setup_pci_dev and pci_msi_off share a lot of code.
-This used to be justified since pci_msi_setup_pci_dev
-wasn't compiled in when CONFIG_PCI_MSI is off.
-Now that it is, let's reuse code.
 
-Since pci_msi_off is used by early quirks, doing this requires calling
-pci_msi_setup_pci_dev early after device allocation, so move the call to
-pci_setup_device.
+* Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/pci/pci.c   | 23 ++++-------------------
- drivers/pci/probe.c | 31 +++++++++++++++----------------
- 2 files changed, 19 insertions(+), 35 deletions(-)
+> On Wed, Mar 4, 2015 at 2:16 AM, Borislav Petkov <bp@alien8.de> wrote:
+> > On Wed, Mar 04, 2015 at 12:00:37AM -0800, Yinghai Lu wrote:
+> >> commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+> >> is using address as value for kaslr_enabled.
+> >>
+> >> That will random kaslr_enabled get that set or cleared.
+> >> Will have problem for system really have kaslr enabled.
+> >>
+> >> -v2: update changelog.
+> >
+> > This is still not good enough. Please do this:
+> >
+> > In commit f47233c2d34f we did A. The problem with that is B. Change the
+> > code to do C.
+> >
+> > Now you only have to fill out the A,B and C variables with the
+> > respective text which is understandable even for people who don't know
+> > this code.
+> >
+> 
+> I don't know, that is trivial and obvious.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..fcee8ea 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3106,26 +3106,11 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
-  */
- void pci_msi_off(struct pci_dev *dev)
- {
--	int pos;
--	u16 control;
-+	if (dev->msi_cap)
-+		pci_msi_set_enable(dev, 0);
- 
--	/*
--	 * This looks like it could go in msi.c, but we need it even when
--	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
--	 * dev->msi_cap or dev->msix_cap here.
--	 */
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (pos) {
--		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
--		control &= ~PCI_MSI_FLAGS_ENABLE;
--		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
--	}
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--	if (pos) {
--		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
--		control &= ~PCI_MSIX_FLAGS_ENABLE;
--		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
--	}
-+	if (dev->msix_cap)
-+		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
- }
- EXPORT_SYMBOL_GPL(pci_msi_off);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 50dd934..120772c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1084,6 +1084,18 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 
- #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
- 
-+static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-+{
-+	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-+
-+	/* Disable the msi hardware to avoid screaming interrupts
-+	 * during boot.  This is the power on reset default so
-+	 * usually this should be a noop.
-+	 */
-+	pci_msi_off(dev);
-+}
-+
- /**
-  * pci_setup_device - fill in class and map information of a device
-  * @dev: the device structure to fill
-@@ -1139,6 +1151,9 @@ int pci_setup_device(struct pci_dev *dev)
- 	/* "Unknown power state" */
- 	dev->current_state = PCI_UNKNOWN;
- 
-+	/* MSI/MSI-X setup has to be done early since it's used by quirks. */
-+	pci_msi_setup_pci_dev(dev);
-+
- 	/* Early fixups, before probing the BARs */
- 	pci_fixup_device(pci_fixup_early, dev);
- 	/* device class may be changed after fixup */
-@@ -1483,26 +1498,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	return dev;
- }
- 
--static void pci_msi_setup_pci_dev(struct pci_dev *dev)
--{
--	/* Disable the msi hardware to avoid screaming interrupts
--	 * during boot.  This is the power on reset default so
--	 * usually this should be a noop.
--	 */
--	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (dev->msi_cap)
--		pci_msi_set_enable(dev, 0);
--
--	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--	if (dev->msix_cap)
--		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
--}
--
- static void pci_init_capabilities(struct pci_dev *dev)
- {
- 	/* MSI/MSI-X list */
- 	pci_msi_init_pci_dev(dev);
--	pci_msi_setup_pci_dev(dev);
- 
- 	/* Buffers for saving PCIe and PCI-X capabilities */
- 	pci_allocate_cap_save_buffers(dev);
--- 
-MST
+The fix might be obvious, the effects of the bug are not obvious at 
+all, as you yourself show that you don't understand your own change, 
+which is evident from the changelog you've written:
 
+> Please check if it is ok:
+> 
+> Subject: [PATCH v3] x86, kaslr: get kaslr_enabled back correctly
+
+Missing capitalization.
+
+> 
+> commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+> is using address as value for kaslr_enabled.
+
+Missing capitalization. Do you really expect maintainers to fix up 
+every single sentence of yours??
+
+> That will get wrong value for kaslr_enabled, so have problem for 
+> system really have kaslr enabled.
+
+This sentence does not parse, nor is it correct: the bug isn't just 
+triggering on systems that want to have kaslr enabled - but also on 
+bootloaders that happen to pass in a kaslr boot parameter but have the 
+switch value disabled...
+
+You also need to point out the important fact that bootloaders that 
+don't try to use the kaslr extension (i.e. that don't use SETUP_KASLR) 
+work just fine - this is why the bug was not noticed to begin with, 
+i.e. the overwhelming majority of systems out there.
+
+> This patch change to using early map and accessing the value.
+
+s/change to using/changes the code to use/
+
+It is totally unacceptable that you don't do proper analysis of the 
+patches you submit, and that you don't bother writing proper, readable 
+changelogs.
+
+Your flippant "that is trivial and obvious" attitude towards 
+changelogs is unacceptable as well. And this is not about English 
+knowledge: missing capitalization is a very simple concept any 
+beginning coder should be able to graps the first time it's pointed 
+out... yet for the past 3 years half of your patches had totally 
+careless, often unreadable changelogs.
+
+These subpar changelogs and patches show plain laziness, sloppiness 
+and lack of care to write clean changelogs - and that sloppiness not 
+only makes it much harder for maintainers to process your patches, but 
+also tends to creep over into your patches as well, causing repeat 
+problems again and again...
+
+Thanks,
+
+	Ingo
