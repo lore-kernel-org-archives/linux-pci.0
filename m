@@ -1,61 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:34519 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755951AbbCPRyB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2015 13:54:01 -0400
-Received: by wibg7 with SMTP id g7so34232512wib.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Mar 2015 10:54:00 -0700 (PDT)
-Message-ID: <550718B4.5090406@linaro.org>
-Date: Mon, 16 Mar 2015 17:53:56 +0000
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-MIME-Version: 1.0
-To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
-CC: devicetree@vger.kernel.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Lee Jones <lee.jones@linaro.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 4/5] PCI: designware: Add disable IO support
-References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org> <1426515635-9466-5-git-send-email-gabriel.fernandez@linaro.org>
-In-Reply-To: <1426515635-9466-5-git-send-email-gabriel.fernandez@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:33369 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758194AbbCDF00 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:26:26 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:26:24 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 050692BB0051
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:26:23 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245QEAo46137408
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:26:22 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245PnCG001566
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:25:49 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 16/21] powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
+Date: Wed,  4 Mar 2015 13:19:08 +0800
+Message-Id: <1425446353-30513-17-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Implement pcibios_iov_resource_alignment() on powernv platform.
 
+On PowerNV platform, there are 3 cases for the IOV BAR:
+1. initial state, the IOV BAR size is multiple times of VF BAR size
+2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
+3. sizing stage, the IOV BAR is truncated to 0
 
-On 16/03/15 14:20, Gabriel FERNANDEZ wrote:
->   - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
->     specify this property, to keep backwards compatibility a range of 0x00-0xff
->     is assumed if not present)
-> +- disable_io_support: set this property for PCIe host controller without IO
-> +  port access
-Shouldn't dt properties use hyphens rather than under scores ?
+pnv_pci_iov_resource_alignment() handle these three cases respectively.
+
+[bhelgaas: adjust to drop "align" parameter, return pci_iov_resource_size()
+if no ppc_md machdep_call version]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    1 +
+ arch/powerpc/kernel/pci-common.c          |   10 ++++++++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
+ 3 files changed, 31 insertions(+)
+
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 965547c..045448f 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -252,6 +252,7 @@ struct machdep_calls {
+ 
+ #ifdef CONFIG_PCI_IOV
+ 	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
++	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
+ #endif /* CONFIG_PCI_IOV */
+ 
+ 	/* Called to shutdown machine specific hardware not already controlled
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 022e9fe..b91eff3 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -130,6 +130,16 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ 	pci_reset_secondary_bus(dev);
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
++{
++	if (ppc_md.pcibios_iov_resource_alignment)
++		return ppc_md.pcibios_iov_resource_alignment(pdev, resno);
++
++	return pci_iov_resource_size(pdev, resno);
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+ {
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 958c7a3..50155c9 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1983,6 +1983,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+ 	return phb->ioda.io_segsize;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
++						      int resno)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	resource_size_t align, iov_align;
++
++	iov_align = resource_size(&pdev->resource[resno]);
++	if (iov_align)
++		return iov_align;
++
++	align = pci_iov_resource_size(pdev, resno);
++	if (pdn->max_vfs)
++		return pdn->max_vfs * align;
++
++	return align;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /* Prevent enabling devices for which we couldn't properly
+  * assign a PE
+  */
+@@ -2185,6 +2204,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+ #ifdef CONFIG_PCI_IOV
+ 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
++	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
+ #endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+-- 
+1.7.9.5
+
