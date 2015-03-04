@@ -1,93 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63859 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbbCKSD5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 14:03:57 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v6 0/4] pci: iproc: Add Broadcom iProc PCIe support
-Date: Wed, 11 Mar 2015 11:06:05 -0700
-Message-ID: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:39484 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757677AbbCDDCU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 22:02:20 -0500
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 13:02:18 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 86C6A3578047
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 14:02:16 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t24328RN38600946
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 14:02:16 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2431gtv022363
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 14:01:42 +1100
+Date: Wed, 4 Mar 2015 11:01:24 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 17/21] powerpc/powernv: Shift VF resource with an
+ offset
+Message-ID: <20150304030051.GA10797@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083457.32124.55534.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224090037.GK6220@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150224090037.GK6220@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds the support for Broadcom iProc PCIe controller
+On Tue, Feb 24, 2015 at 03:00:37AM -0600, Bjorn Helgaas wrote:
+>On Tue, Feb 24, 2015 at 02:34:57AM -0600, Bjorn Helgaas wrote:
+>> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> 
+>> On PowerNV platform, resource position in M64 implies the PE# the resource
+>> belongs to.  In some cases, adjustment of a resource is necessary to locate
+>> it to a correct position in M64.
+>> 
+>> Add pnv_pci_vf_resource_shift() to shift the 'real' PF IOV BAR address
+>> according to an offset.
+>> 
+>> [bhelgaas: rework loops, rework overlap check, index resource[]
+>> conventionally, remove pci_regs.h include, squashed with next patch]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+>...
+>
+>> +#ifdef CONFIG_PCI_IOV
+>> +static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>> +{
+>> +	struct pci_dn *pdn = pci_get_pdn(dev);
+>> +	int i;
+>> +	struct resource *res, res2;
+>> +	resource_size_t size;
+>> +	u16 vf_num;
+>> +
+>> +	if (!dev->is_physfn)
+>> +		return -EINVAL;
+>> +
+>> +	/*
+>> +	 * "offset" is in VFs.  The M64 windows are sized so that when they
+>> +	 * are segmented, each segment is the same size as the IOV BAR.
+>> +	 * Each segment is in a separate PE, and the high order bits of the
+>> +	 * address are the PE number.  Therefore, each VF's BAR is in a
+>> +	 * separate PE, and changing the IOV BAR start address changes the
+>> +	 * range of PEs the VFs are in.
+>> +	 */
+>> +	vf_num = pdn->vf_pes;
+>> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +		res = &dev->resource[i + PCI_IOV_RESOURCES];
+>> +		if (!res->flags || !res->parent)
+>> +			continue;
+>> +
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags))
+>> +			continue;
+>> +
+>> +		/*
+>> +		 * The actual IOV BAR range is determined by the start address
+>> +		 * and the actual size for vf_num VFs BAR.  This check is to
+>> +		 * make sure that after shifting, the range will not overlap
+>> +		 * with another device.
+>> +		 */
+>> +		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+>> +		res2.flags = res->flags;
+>> +		res2.start = res->start + (size * offset);
+>> +		res2.end = res2.start + (size * vf_num) - 1;
+>> +
+>> +		if (res2.end > res->end) {
+>> +			dev_err(&dev->dev, "VF BAR%d: %pR would extend past %pR (trying to enable %d VFs shifted by %d)\n",
+>> +				i, &res2, res, vf_num, offset);
+>> +			return -EBUSY;
+>> +		}
+>> +	}
+>> +
+>> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +		res = &dev->resource[i + PCI_IOV_RESOURCES];
+>> +		if (!res->flags || !res->parent)
+>> +			continue;
+>> +
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags))
+>> +			continue;
+>> +
+>> +		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+>> +		res2 = *res;
+>> +		res->start += size * offset;
+>
+>I'm still not happy about this fiddling with res->start.
+>
+>Increasing res->start means that in principle, the "size * offset" bytes
+>that we just removed from res are now available for allocation to somebody
+>else.  I don't think we *will* give that space to anything else because of
+>the alignment restrictions you're enforcing, but "res" now doesn't
+>correctly describe the real resource map.
+>
+>Would you be able to just update the BAR here while leaving the struct
+>resource alone?  In that case, it would look a little funny that lspci
+>would show a BAR value in the middle of the region in /proc/iomem, but
+>the /proc/iomem region would be more correct.
 
-pcie-iproc.c servers as the common core driver, and front-end bus
-interface needs to be added to support different bus interfaces
+Bjorn,
 
-pcie-iproc-pltfm.c contains the support for the platform bus interface
+I did some tests, while the result is not good.
 
-Changes from v5:
- - Sync code base to v4.0-rc2
- - Change export symbols of common PCI functions to GPL only
- - Add comment to describe how configuration register access are protected
-   at the higher layer through 'pci_lock'
- - Use generic PCI functions for configuration register access and implement
-   'map_bus' callback to support it
- - Move 'pci_fixup_irqs' to before devices are added to the bus
- - Remove 'extern' from function prototype declared in the header
+What I did is still write the shifted resource address to the device by
+pci_update_resource(), but I revert the res->start to the original one. If
+this step is not correct, please let me know.
 
-Changes from v4:
- - iProc PCIe driver module support was not included in patch series v4.
-   This patch series (v5) fixes it
+This can't work since after we revert the res->start, those VFs will be given
+resources from res->start instead of (res->start + offset * size). This is not
+what we expect.
 
-Changes from v3:
- - Export symbols of several PCI functions so they can be used by drivers
-   compiled as kernel module
- - Add additional support to the Broadcom iProc PCIe driver so it can be
-   installed/uninstalled as kernel loadable module
+I have rebased/clean/change the code according to your comments based on this
+patch set. Will send it out v13 soon.
 
-Changes from v2:
- - Major rework of the PCIe driver to factor out common generic code from
-   front-end bus interface. Support for generic platform bus interface is
-   also added
- - Adapt to several new PCI APIs that have been introduced lately
-
-Changes from v1:
- - Add standard PCI interrupt DT properties "#interrupt-cells",
-   "interrupt-map-mask" and "interrupt-map" so legacy INTx interrupts can be
-   supported by using standard PCI OF IRQ parsing function
- - Get rid of custom IRQ mapping function in the driver. Use
-   of_irq_parse_and_map_pci instead
-
-Ray Jui (4):
-  PCI: Export symbols of PCI functions
-  pci: iProc: define iProc PCIe platform bus binding
-  pci: iproc: Add Broadcom iProc PCIe support
-  ARM: dts: enable PCIe support for Cygnus
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 +++++
- arch/arm/boot/dts/bcm-cygnus.dtsi                  |   42 +++
- arch/arm/boot/dts/bcm958300k.dts                   |    8 +
- drivers/pci/host/Kconfig                           |   17 ++
- drivers/pci/host/Makefile                          |    2 +
- drivers/pci/host/pcie-iproc-pltfm.c                |  108 ++++++++
- drivers/pci/host/pcie-iproc.c                      |  268 ++++++++++++++++++++
- drivers/pci/host/pcie-iproc.h                      |   42 +++
- drivers/pci/pci.c                                  |    1 +
- drivers/pci/probe.c                                |    1 +
- drivers/pci/remove.c                               |    2 +
- drivers/pci/setup-bus.c                            |    1 +
- drivers/pci/setup-irq.c                            |    1 +
- 13 files changed, 556 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
- create mode 100644 drivers/pci/host/pcie-iproc-pltfm.c
- create mode 100644 drivers/pci/host/pcie-iproc.c
- create mode 100644 drivers/pci/host/pcie-iproc.h
+>
+>> +
+>> +		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (enabling %d VFs shifted by %d)\n",
+>> +			 i, &res2, res, vf_num, offset);
+>> +		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+>> +	}
+>> +	pdn->max_vfs -= offset;
+>> +	return 0;
+>> +}
+>> +#endif /* CONFIG_PCI_IOV */
 
 -- 
-1.7.9.5
+Richard Yang
+Help you, Help me
 
