@@ -1,93 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15373 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277AbbCXDhX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:23 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 15/30] PCI: Introduce new scan function pci_scan_host_bridge()
-Date: Tue, 24 Mar 2015 11:34:09 +0800
-Message-ID: <1427168064-8657-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56045 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759282AbbCDUCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 15:02:44 -0500
+Subject: [PATCH 1/5] vfio-pci: Allow PCI IDs to be specified as module
+ options
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 04 Mar 2015 13:02:43 -0700
+Message-ID: <20150304200243.26766.556.stgit@gimli.home>
+In-Reply-To: <20150304194711.26766.75450.stgit@gimli.home>
+References: <20150304194711.26766.75450.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new scan function pci_scan_host_bridge() to
-support host bridge drivers that need to provide platform
-own pci_host_bridge_ops.
+This copies the same support from pci-stub for exactly the same
+purpose, enabling a set of PCI IDs to be automatically added to the
+driver's dynamic ID table at module load time.  The code here is
+pretty simple and both vfio-pci and pci-stub are fairly unique in
+being meta drivers, capable of attaching to any device, so there's no
+attempt made to generalize the code into pci-core.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/probe.c |   22 ++++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 25 insertions(+), 0 deletions(-)
+ drivers/vfio/pci/vfio_pci.c |   46 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 36dfee0..b3d9b1b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2064,6 +2064,28 @@ static struct pci_bus *__pci_scan_root_bus(
- 	return b;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index f8a1863..b3bae4c 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -32,6 +32,10 @@
+ #define DRIVER_AUTHOR   "Alex Williamson <alex.williamson@redhat.com>"
+ #define DRIVER_DESC     "VFIO PCI - User Level meta-driver"
+ 
++static char ids[1024] __initdata;
++module_param_string(ids, ids, sizeof(ids), 0);
++MODULE_PARM_DESC(ids, "Initial PCI IDs to add to the vfio driver, format is \"vendor:device[:subvendor[:subdevice[:class[:class_mask]]]]\" and multiple comma separated entries can be specified");
++
+ static bool nointxmask;
+ module_param_named(nointxmask, nointxmask, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(nointxmask,
+@@ -1034,6 +1038,46 @@ static void __exit vfio_pci_cleanup(void)
+ 	vfio_pci_uninit_perm_bits();
  }
  
-+struct pci_host_bridge *pci_scan_host_bridge(
-+		struct device *parent, int domain, int bus,
-+		void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops)
++static void __init vfio_pci_fill_ids(void)
 +{
-+	struct pci_host_bridge *host;
++	char *p, *id;
++	int rc;
 +
-+	host = pci_create_host_bridge(parent, domain, bus, sysdata,
-+			resources, ops);
-+	if (!host)
-+		return NULL;
++	/* no ids passed actually */
++	if (ids[0] == '\0')
++		return;
 +
-+	host->bus = __pci_scan_root_bus(host, ops->pci_ops);
-+	if (!host->bus) {
-+		pci_free_host_bridge(host);
-+		return NULL;
++	/* add ids specified in the module parameter */
++	p = ids;
++	while ((id = strsep(&p, ","))) {
++		unsigned int vendor, device, subvendor = PCI_ANY_ID,
++			subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
++		int fields;
++
++		if (!strlen(id))
++			continue;
++
++		fields = sscanf(id, "%x:%x:%x:%x:%x:%x",
++				&vendor, &device, &subvendor, &subdevice,
++				&class, &class_mask);
++
++		if (fields < 2) {
++			pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
++			continue;
++		}
++
++		pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
++			vendor, device, subvendor, subdevice,
++			class, class_mask);
++
++		rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
++				   subvendor, subdevice, class, class_mask, 0);
++		if (rc)
++			pr_warn("vfio-pci: failed to add dynamic id (%d)\n",
++				rc);
 +	}
-+
-+	return host;
 +}
-+EXPORT_SYMBOL(pci_scan_host_bridge);
 +
- struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 		int bus, struct pci_ops *ops, void *sysdata,
- 		struct list_head *resources)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2702a51..7f4f182 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, int domain, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent, int domain,
-+		int bus, void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
--- 
-1.7.1
+ static int __init vfio_pci_init(void)
+ {
+ 	int ret;
+@@ -1053,6 +1097,8 @@ static int __init vfio_pci_init(void)
+ 	if (ret)
+ 		goto out_driver;
+ 
++	vfio_pci_fill_ids();
++
+ 	return 0;
+ 
+ out_driver:
 
