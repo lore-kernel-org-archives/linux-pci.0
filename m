@@ -1,89 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v7 15/31] PCI: Introduce new scan function pci_scan_host_bridge()
-Date: Mon, 23 Mar 2015 20:40:41 +0800
-Message-ID: <1427114457-16687-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43311 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753124AbbCDWSn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 17:18:43 -0500
+Message-ID: <1425507522.5200.311.camel@redhat.com>
+Subject: Re: [PATCH 1/5] vfio-pci: Allow PCI IDs to be specified as module
+ options
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 04 Mar 2015 15:18:42 -0700
+In-Reply-To: <jpgy4ncv681.fsf@redhat.com>
+References: <20150304194711.26766.75450.stgit@gimli.home>
+	 <20150304200243.26766.556.stgit@gimli.home> <jpgy4ncv681.fsf@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new scan function pci_scan_host_bridge() to
-support host bridge drivers that need to provide platform
-own pci_host_bridge_ops.
+On Wed, 2015-03-04 at 15:49 -0500, Bandan Das wrote:
+> Hi Alex,
+> 
+> Alex Williamson <alex.williamson@redhat.com> writes:
+> ...
+> > +		if (fields < 2) {
+> > +			pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
+> > +			continue;
+> > +		}
+> > +
+> > +		pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
+> > +			vendor, device, subvendor, subdevice,
+> > +			class, class_mask);
+> > +
+> > +		rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
+> > +				   subvendor, subdevice, class, class_mask, 0);
+> > +		if (rc)
+> > +			pr_warn("vfio-pci: failed to add dynamic id (%d)\n",
+> > +				rc);
+> Just a minor observation - maybe we should print out the
+> vendor/device/subvendor/subdevice as part of the failure message too. The info
+> message could potentially get lost in a system with high syslog traffic.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   22 ++++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 25 insertions(+), 0 deletions(-)
+Thanks for the comment.  I don't think we want to duplicate the pr_info
+above it, so are you thinking something like this?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 36dfee0..b3d9b1b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2064,6 +2064,28 @@ static struct pci_bus *__pci_scan_root_bus(
- 	return b;
- }
- 
-+struct pci_host_bridge *pci_scan_host_bridge(
-+		struct device *parent, int domain, int bus,
-+		void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops)
-+{
-+	struct pci_host_bridge *host;
-+
-+	host = pci_create_host_bridge(parent, domain, bus, sysdata,
-+			resources, ops);
-+	if (!host)
-+		return NULL;
-+
-+	host->bus = __pci_scan_root_bus(host, ops->pci_ops);
-+	if (!host->bus) {
-+		pci_free_host_bridge(host);
-+		return NULL;
-+	}
-+
-+	return host;
-+}
-+EXPORT_SYMBOL(pci_scan_host_bridge);
-+
- struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 		int bus, struct pci_ops *ops, void *sysdata,
- 		struct list_head *resources)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2702a51..7f4f182 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, int domain, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent, int domain,
-+		int bus, void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
--- 
-1.7.1
+                if (fields < 2) {
+                        pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
+                        continue;
+                }
+
+                rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
+                                   subvendor, subdevice, class, class_mask, 0);
+                if (rc)
+                        pr_warn("vfio-pci: failed to add dynamic id: %04X:%04X sub=%04X:%04X cls=%08X/%08X (%d)\n",
+                                vendor, device, subvendor, subdevice,
+                                class, class_mask, rc);
+                else
+                        pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
+                                vendor, device, subvendor, subdevice,
+                                class, class_mask);
+        }
+
+
+> > +	}
+> > +}
+> > +
+> >  static int __init vfio_pci_init(void)
+> >  {
+> >  	int ret;
+> > @@ -1053,6 +1097,8 @@ static int __init vfio_pci_init(void)
+> >  	if (ret)
+> >  		goto out_driver;
+> >  
+> > +	vfio_pci_fill_ids();
+> > +
+> >  	return 0;
+> >  
+> >  out_driver:
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe kvm" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
