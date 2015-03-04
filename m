@@ -1,65 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:40885 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755530AbbCFEzH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 23:55:07 -0500
-Received: by oiba3 with SMTP id a3so15839212oib.7
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2015 20:55:06 -0800 (PST)
-Date: Thu, 5 Mar 2015 22:54:56 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Feng Kan <fkan@apm.com>
-Cc: patches@apm.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, robh@kernel.org,
-	linux-arm-kernel@lists.infradead.org, tinamdar@apm.com
-Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by
- map_bus
-Message-ID: <20150306045456.GC20077@google.com>
-References: <1424214840-26498-1-git-send-email-fkan@apm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59341 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755424AbbCDUCi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 15:02:38 -0500
+Subject: [PATCH 0/5] vfio-pci: Misc enhancements
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 04 Mar 2015 13:02:37 -0700
+Message-ID: <20150304194711.26766.75450.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424214840-26498-1-git-send-email-fkan@apm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
-> The generic accessor functions for pci-xgene uses map_bus
-> call that returns the base address but did not add the additional
-> offset.
-> 
-> Signed-off-by: Feng Kan <fkan@apm.com>
+Each of these patches stands on it's own, but they all touch the
+same file and therefore build on each other to some extent.  The first
+patch allows vfio-pci to accept a list of IDs as a module parameter,
+exactly like pci-stub.  This is really useful to get vfio-pci bound to
+devices that are intended to be used exclusively by userspace without
+more complex scripts (particuarly with modprobe.d softdep, pre
+loading).
 
-Applied to for-linus for v4.0, with acks from Tanmay and Rob.  Thanks!
+The 2nd patch allows a module option to disable VGA access if vfio-pci
+is configured with VGA support.  By itself this doesn't do much, but
+with patch 5, we add a VGA arbiter client that will opt-out devices
+from arbitration if the user cannot access VGA regions of the device.
+If you have extra GPUs in your system exclusively for use via vfio-pci
+and don't depend on VGA resource access, this opt-out can allow host
+graphics to enable DRI2 support as if the additional GPUs weren't
+there.  This depends on https://lkml.org/lkml/2015/2/24/430 or else
+vga arbiter support gets ugly (still looking for an Ack there).
 
-> ---
->  drivers/pci/host/pci-xgene.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index aab5547..ee082c0 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
->  	return false;
->  }
->  
-> -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->  			      int offset)
->  {
->  	struct xgene_pcie_port *port = bus->sysdata;
-> @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->  		return NULL;
->  
->  	xgene_pcie_set_rtdid_reg(bus, devfn);
-> -	return xgene_pcie_get_cfg_base(bus);
-> +	return xgene_pcie_get_cfg_base(bus) + offset;
->  }
->  
->  static struct pci_ops xgene_pcie_ops = {
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The other interesting feature here is idle power management.  It's
+possible that there are extra devices in a host that are used
+exclusively via vfio-pci and that those devices are not used 100% of
+the time.  To be power conscious we can put devices into a low power
+state when they're not actively being used.  This doesn't always save
+much, or necessarily any power, but we can at least try.
+
+I'll also note that the last patch makes use of pci_bus_max_busnr()
+which seems to be in flux with some current upstream patches.  I don't
+really care if we use pci_bus_max_busnr() or some replacement for it,
+so long as pci-core allows a way to determine the bus number range
+below a bridge so I can determine if there's more than one VGA device
+below it.  Comments welcome.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (5):
+      vfio-pci: Allow PCI IDs to be specified as module options
+      vfio-pci: Add module option to disable VGA region access
+      vfio-pci: Remove warning if try-reset fails
+      vfio-pci: Move idle devices to D3hot power state
+      vfio-pci: Add VGA arbiter client
+
+
+ drivers/vfio/pci/vfio_pci.c |  174 +++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 157 insertions(+), 17 deletions(-)
