@@ -1,111 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0114.outbound.protection.outlook.com ([157.56.110.114]:33616
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751778AbbCUXWI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 21 Mar 2015 19:22:08 -0400
-Message-ID: <550DFD13.9080505@amd.com>
-Date: Sat, 21 Mar 2015 18:21:55 -0500
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1425512923.5200.318.camel@redhat.com>
+Subject: Re: [Patch v4 21/23] x86/PCI: Refine the way to release PCI IRQ
+ resources
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 09/30] PCI: Separate pci_host_bridge creation out of
- pci_create_root_bus()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-10-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-10-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Tony Luck <tony.luck@intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Date: Wed, 04 Mar 2015 16:48:43 -0700
+In-Reply-To: <1425485213.5200.230.camel@redhat.com>
+References: <1423115089-12904-1-git-send-email-jiang.liu@linux.intel.com>
+	 <1423115089-12904-22-git-send-email-jiang.liu@linux.intel.com>
+	 <1425485213.5200.230.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 2015-03-04 at 09:06 -0700, Alex Williamson wrote:
+> Hi,
+> 
+> I'm getting a regression from this patch when using VFIO for device
+> assignment to a QEMU VM.  I have a device initially bound to the nouveau
+> driver, which is unbound from that driver and bound to vfio-pci for use
+> by userspace.  vfio-pci calls pci_enable_device, but when userspace
+> attempts to setup the legacy INTx interrupt, pci_dev->irq is zero and
+> vfio-pci errors with -ENODEV.
+> 
+> Where is pci_dev->irq supposed to be getting re-initialized in this
+> case?  Am I missing an important initialization step in vfio-pci?  I
+> certainly don't think I should be calling request_irq(pci_dev->irq, ...
+> when pci_dev->irq is zero.  Thanks,
 
+It looks like the imbalance is in pci_dev->enable_cnt.  Any call to
+pci_disable_device() will clear pci_dev->irq, but pci_enable_device()
+does effectively nothing unless it's called with enable_cnt == zero.  So
+I'm at the mercy of the previous driver behaving relatively sanely in
+order to re-enable legacy interrupts for a device :-\  Maybe the unbound
+notifier needs to do some sanitizing of the device?  Thanks,
 
-On 3/8/15 21:34, Yijing Wang wrote:
-> This patch separate pci_host_bridge creation out
-> of pci_create_root_bus(), and try to make a generic
-> pci_host_bridge, then we could place generic PCI
-> infos like domain number in it. Also Ripping out
-> pci_host_bridge creation from pci_create_root_bus()
-> make code more better readability. Further more,
-> we could use the generic pci_host_bridge to hold
-> host bridge specific operations like
-> pcibios_root_bridge_prepare(). The changes are
-> transparent to platform host bridge drivers.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->   drivers/pci/host-bridge.c |   55 ++++++++++++++++++++++
->   drivers/pci/pci.h         |    3 +
->   drivers/pci/probe.c       |  114 ++++++++++++++++++++-------------------------
->   include/linux/pci.h       |    1 +
->   4 files changed, 109 insertions(+), 64 deletions(-)
->
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 39b2dbe..3bd45e7 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -8,6 +8,61 @@
->
->   #include "pci.h"
->
-> +static void pci_release_host_bridge_dev(struct device *dev)
-> +{
-> +	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> +
-> +	if (bridge->release_fn)
-> +		bridge->release_fn(bridge);
-> +
-> +	pci_free_resource_list(&bridge->windows);
-> +	kfree(bridge);
-> +}
-> +
-> +struct pci_host_bridge *pci_create_host_bridge(
-> +		struct device *parent, u32 db, struct list_head *resources)
-> +{
-> +	int error;
-> +	int bus = PCI_BUSNUM(db);
-> +	int domain = PCI_DOMAIN(db);
-> +	struct pci_host_bridge *host;
-> +	struct resource_entry *window, *n;
-> +
-> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return NULL;
-> +
-> +	host->busnum = bus;
-> +	host->domain = domain;
-> +	/* If support CONFIG_PCI_DOMAINS_GENERIC, use
-> +	 * pci_host_assign_domain_nr() to assign domain
-> +	 * number instead PCI_DOMAIN(db).
-> +	 */
-> +	pci_host_assign_domain_nr(host);
+Alex
 
-At this point, host->dev.parent has not been assigned. However, when 
-calling pci_host_assign_domain_nr(host), it calls 
-pci_assign_domain_nr(host->dev.parent), which uses parent->of_node 
-directly w/o checking if parent is NULL. This ended up causing NULL 
-pointer exception when I do the test.
-
-I think we need to moveo host->dev.parent = parent before calling 
-pci_host_assign_domain_nr(host).
-
-Thanks,
-
-Suravee
