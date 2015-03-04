@@ -1,113 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60993 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755716AbbCMAqm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:46:42 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rob Herring" <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v7 2/4] pci: iProc: define iProc PCIe platform bus binding
-Date: Thu, 12 Mar 2015 17:48:50 -0700
-Message-ID: <1426207732-31625-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
-References: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
+Received: from mail.skyhub.de ([78.46.96.112]:36668 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754527AbbCDKSG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 05:18:06 -0500
+Date: Wed, 4 Mar 2015 11:16:49 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150304101649.GA3663@pd.tnic>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+ <1425456048-16236-5-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1425456048-16236-5-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document the Broadcom iProc PCIe platform interface device tree binding
+On Wed, Mar 04, 2015 at 12:00:37AM -0800, Yinghai Lu wrote:
+> commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+> is using address as value for kaslr_enabled.
+> 
+> That will random kaslr_enabled get that set or cleared.
+> Will have problem for system really have kaslr enabled.
+> 
+> -v2: update changelog.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+This is still not good enough. Please do this:
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-new file mode 100644
-index 0000000..f7ce50e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -0,0 +1,63 @@
-+* Broadcom iProc PCIe controller with the platform bus interface
-+
-+Required properties:
-+- compatible: Must be "brcm,iproc-pcie"
-+- reg: base address and length of the PCIe controller I/O register space
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+  mapping of the PCIe interface to interrupt numbers
-+- linux,pci-domain: PCI domain ID. Should be unique for each host controller
-+- bus-range: PCI bus numbers covered
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
-+
-+Optional properties:
-+- phys: phandle of the PCIe PHY device
-+- phy-names: must be "pcie-phy"
-+
-+Example:
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <0>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
-+
-+		phys = <&phy 0 5>;
-+		phy-names = "pcie-phy";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <1>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+
-+		phys = <&phy 1 6>;
-+		phy-names = "pcie-phy";
-+	};
+In commit f47233c2d34f we did A. The problem with that is B. Change the
+code to do C.
+
+Now you only have to fill out the A,B and C variables with the
+respective text which is understandable even for people who don't know
+this code.
+
+> 
+> Fixes: f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+> Cc: Matt Fleming <matt.fleming@intel.com>
+> Cc: Borislav Petkov <bp@suse.de>
+> Cc: Kees Cook <keescook@chromium.org>
+> Cc: Jiri Kosina <jkosina@suse.cz>
+> Acked-by: Jiri Kosina <jkosina@suse.cz>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/x86/kernel/setup.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+> index 98dc931..05d444f 100644
+> --- a/arch/x86/kernel/setup.c
+> +++ b/arch/x86/kernel/setup.c
+> @@ -429,7 +429,13 @@ static void __init reserve_initrd(void)
+>  
+>  static void __init parse_kaslr_setup(u64 pa_data, u32 data_len)
+>  {
+> -	kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
+> +	/* kaslr_setup_data is defined in aslr.c */
+> +	unsigned char *data;
+> +	unsigned long offset = sizeof(struct setup_data);
+> +
+> +	data = early_memremap(pa_data, offset + 1);
+
+early_memremap() needs its retval checked before accessing it.
+
+> +	kaslr_enabled = *(data + offset);
+> +	early_memunmap(data, offset + 1);
+>  }
+>  
+>  static void __init parse_setup_data(void)
+> -- 
+> 1.8.4.5
+> 
+
 -- 
-1.7.9.5
+Regards/Gruss,
+    Boris.
 
+ECO tip #101: Trim your mails when you reply.
+--
