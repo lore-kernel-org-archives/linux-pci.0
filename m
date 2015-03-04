@@ -1,68 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32284 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751644AbbC0CcB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 22:32:01 -0400
-Message-ID: <5514C101.8070705@huawei.com>
-Date: Fri, 27 Mar 2015 10:31:29 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 4 Mar 2015 11:01:59 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Daniel J Blueman <daniel@numascale.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>,
+	"x86@kernel.org" <x86@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: PCIe 32-bit MMIO exhaustion
+Message-ID: <20150304170159.GC22299@google.com>
+References: <54C8A10B.3070207@numascale.com>
+ <CAErSpo4t94BXYhhE+bh5-3_PsdKTSa113beqqz14W+_emdCGMQ@mail.gmail.com>
+ <54EC0013.7000100@numascale.com>
+ <20150303223816.GB22299@google.com>
+ <54F6B044.7000609@numascale.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	the arch/x86 maintainers <x86@kernel.org>,
-	"Thomas Gleixner" <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v8 10/30] PCI: Introduce pci_host_bridge_list to manage
- host bridges
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>	<1427168064-8657-11-git-send-email-wangyijing@huawei.com> <CAE9FiQVgXfViM22qhB-sKDSTtnhvLDMk0NTiK_G88UogVMuM_w@mail.gmail.com>
-In-Reply-To: <CAE9FiQVgXfViM22qhB-sKDSTtnhvLDMk0NTiK_G88UogVMuM_w@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54F6B044.7000609@numascale.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/27 0:31, Yinghai Lu wrote:
-> On Mon, Mar 23, 2015 at 8:34 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Introduce pci_host_bridge_list to manage pci host
->> bridges in system, this make us have the ability
->> to check whether the new host would conflict with
->> existing one. Then we could remove bus alreay exist
->> check in __pci_create_root_bus().
+On Wed, Mar 04, 2015 at 03:12:04PM +0800, Daniel J Blueman wrote:
+> Your patch solves the conflicts nicely [1] with:
 > 
-> Can we use bus_type instead?
-> Then we can use bus_find_device for the host_bridge enumeration.
+> From f835b16b0758a1dde6042a0e4c8aa5a2e8be5f21 Mon Sep 17 00:00:00 2001
+> From: Daniel J Blueman <daniel@numascale.com>
+> Date: Wed, 4 Mar 2015 14:53:00 +0800
+> Subject: [PATCH] Mark PCI BARs with address 0 as unset
 > 
-> Please refer the patches that I sent out couple years ago.
+> Allow the kernel to activate the unset flag for PCI BAR resources if
+> the firmware assigns address 0 (invalid as legacy IO is in this range).
+> 
+> This allows preventing conflicts with legacy IO/ACPI PNP resources in
+> this range.
+> 
+> Signed-off-by: Daniel J Blueman <daniel@numascale.com>
+> ---
+>  drivers/pci/probe.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8d2f400..ef43652 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -281,6 +281,13 @@ int __pci_read_base(struct pci_dev *dev, enum
+> pci_bar_type type,
+>  	pcibios_resource_to_bus(dev->bus, &inverted_region, res);
+> 
+>  	/*
+> +	 * If firmware doesn't assign a valid PCI address (as legacy IO is below
+> +	 * PCI IO), mark resource unset to prevent later resource conflicts
+> +	 */
+> +	if (region.start == 0)
+> +		res->flags |= IORESOURCE_UNSET;
 
-HI Yinghai,
-   I think your changes is good, but in this series, we only iterate the pci_host_bridge
-in drivers/pci/host-bridge.c. The simple list is enough, of course, if we want to export
-this list and support to host bridge hotplug, we must need a new iteration for host bridge,
-and your series looks good to me, I read your series history, found Bjorn comment a lot.
+It's true that an uninitialized BAR should contain zero.  But an
+initialized BAR may also contain zero, since zero is a valid PCI memory or
+I/O address, so I don't really want to preclude that here.  On large
+systems with host bridges that support address translation, it would be
+reasonable to have something like this:
 
-So I think Bjorn may have some comments for this.
+  pci_bus 0001:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus address [0x00000000-0xffffffff])
 
-Thanks!
-Yijing.
+In that case, an initialized BAR may contain zero and that should not be an
+error.
+
+On your system, I don't think you advertise an I/O aperture to bus 0001:00.
+I'd like to make the PCI core smart enough to notice that and just ignore
+any I/O BARs on that bus.
+
+There's an argument for doing this immediately, here inside
+__pci_read_base(): we could look for an upstream window that contains the
+BAR we're reading.  I'd like to be able to do that someday, but I'm not
+sure we have enough of the upstream topology set up to do that.
+
+Can you try the patch below, which tries to do it a little later?
+
+> +	/*
+>  	 * If "A" is a BAR value (a bus address), "bus_to_resource(A)" is
+>  	 * the corresponding resource address (the physical address used by
+>  	 * the CPU.  Converting that resource address back to a bus address
+> 
+> [1] https://resource.numascale.com/dmesg-4.0.0-rc2.txt
+
+This URL doesn't work for me.
+
+Bjorn
 
 
+commit 66c15b678466cb217f2615d4078d12a2ee4c99ac
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Mar 4 10:47:35 2015 -0600
 
+    PCI: Mark invalid BARs as unassigned
+    
+    If a BAR is not inside any upstream bridge window, or if it conflicts with
+    another resource, mark it as IORESOURCE_UNSET so we don't try to use it.
+    We may be able to assign a different address for it.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
--- 
-Thanks!
-Yijing
-
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b7c3a5ea1fca..232f9254c11a 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -120,6 +120,7 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
+ 	if (!root) {
+ 		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
+ 			 resource, res);
++		res->flags |= IORESOURCE_UNSET;
+ 		return -EINVAL;
+ 	}
+ 
+@@ -127,6 +128,7 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
+ 	if (conflict) {
+ 		dev_info(&dev->dev, "can't claim BAR %d %pR: address conflict with %s %pR\n",
+ 			 resource, res, conflict->name, conflict);
++		res->flags |= IORESOURCE_UNSET;
+ 		return -EBUSY;
+ 	}
+ 
