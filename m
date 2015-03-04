@@ -1,72 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:36323 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932183AbbCWMqY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:46:24 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v7 28/31] PCI: rename to pci_find_host_bridge()
-Date: Mon, 23 Mar 2015 20:40:54 +0800
-Message-ID: <1427114457-16687-29-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:43962 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752966AbbCDWY5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Mar 2015 17:24:57 -0500
+From: Mark Salter <msalter@redhat.com>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Mark Salter <msalter@redhat.com>
+Subject: [PATCH] PCI: xgene: fix breakage from generic config usage
+Date: Wed,  4 Mar 2015 17:24:24 -0500
+Message-Id: <1425507864-22055-1-git-send-email-msalter@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Commit 350f8be5bb402 ("PCI: xgene: Convert to use generic config
+accessors") breaks PCI on the X-Gene platform. It creates two
+problems with the xgene_pcie_map_bus() function. First, it returns
+an int but should return a void __iomem *, but that's just a
+compile-time warning. The breakage is caused by the offset not
+being added to the base of the config map. So all config reads
+and writes operate on the first four bytes of config space. This
+patch fixes both issues.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 919ba4d..8efb3a7 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -144,7 +144,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- 	return bus;
+Signed-off-by: Mark Salter <msalter@redhat.com>
+---
+ drivers/pci/host/pci-xgene.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 52bb25c..b87f80b 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -129,17 +129,21 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+ 	return false;
  }
  
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-+struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
+-static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+-			      int offset)
++static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
++					int offset)
  {
- 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 	struct xgene_pcie_port *port = bus->sysdata;
++	void __iomem *base;
  
-@@ -162,7 +162,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
- 	struct resource_entry *window;
- 	resource_size_t offset = 0;
+ 	if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up ||
+ 	    xgene_pcie_hide_rc_bars(bus, offset))
+ 		return NULL;
  
-@@ -187,7 +187,7 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
- 	struct resource_entry *window;
- 	resource_size_t offset = 0;
+ 	xgene_pcie_set_rtdid_reg(bus, devfn);
+-	return xgene_pcie_get_cfg_base(bus);
++	base = xgene_pcie_get_cfg_base(bus);
++	if (base)
++		base += offset;
++	return base;
+ }
  
+ static struct pci_ops xgene_pcie_ops = {
 -- 
-1.7.1
+1.8.3.1
 
