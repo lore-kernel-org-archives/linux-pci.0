@@ -1,193 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46639 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752077AbbCLP0J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Mar 2015 11:26:09 -0400
-Date: Thu, 12 Mar 2015 16:26:07 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: David Rientjes <rientjes@google.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bhelgaas@google.com,
-	mingo@redhat.com, tglx@linutronix.de, hpa@zytor.com,
-	pure.logic@nexus-software.ie, jgross@suse.com, luto@amacapital.net,
-	andy.shevchenko@gmail.com, thomas.petazzoni@free-electrons.com,
-	JBeulich@suse.com, bp@suse.de, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v1 1/2] x86: kconfig: remove X86_UP_IOAPIC
-Message-ID: <20150312152607.GM25035@wotan.suse.de>
-References: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com>
- <1426115422-1823-2-git-send-email-mcgrof@do-not-panic.com>
- <alpine.DEB.2.10.1503112232230.8492@chino.kir.corp.google.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:34455 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbbCDVcy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 16:32:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.10.1503112232230.8492@chino.kir.corp.google.com>
+In-Reply-To: <20150304200000.GB6276@gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
+	<20150304101649.GA3663@pd.tnic>
+	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
+	<20150304200000.GB6276@gmail.com>
+Date: Wed, 4 Mar 2015 13:32:53 -0800
+Message-ID: <CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 10:36:41PM -0700, David Rientjes wrote:
-> On Wed, 11 Mar 2015, Luis R. Rodriguez wrote:
-> 
-> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> > 
-> > X86_UP_IOAPIC is a way so that 32-bit UP systems can enable
-> > X86_IOAPIC. X86_UP_IOAPIC is only as a visible user option if
-> > you are on a 32-bit system but have X86_UP_APIC enabled. X86_UP_APIC
-> > will be enabled by force if you have PCI_MSI on 32-bit systems
-> > now, X86_UP_APIC will now only be user selectable if you didn't
-> > have PCI_MSI enabled and are also not on a X86_32_NON_STANDARD
-> > system. Bryan's original patch (refactored commit log in commit
-> > 38a1dfda) [0] describes that Intel CE, Intel MID and Intel Quark
-> > are all 32-bit uniprocessor systems with IO-APICs, the code change
-> > however only *re-enabled* UP_IOAPIC as an *option* when PCI_MSI
-> > was enabled, but given that:
-> > 
-> > 1) enabling X86_IOAPIC is the real end goal here
-> > 2) enabling X86_IOAPIC only increases the kernel only by 12064 bytes (~12 KiB)
-> > 3) enabling X86_IOAPIC will in no way slow down your kernel
-> > 
-> > Let's make a compromise for 32-bit systems and always enable X86_IOAPIC
-> > when X86_UP_IOAPIC is enabled as 32-bit systems are not in a state
-> > of flux and the price for the size is small with no performance impact.
-> > 
-> > Using:
-> > 
-> > export ARCH=i386
-> > make allnoconfig
-> > --> Enabling PCI_MSI
-> > make localyesconfig
-> > 
-> > With X86_IO_APIC:
-> > mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
-> > 734608  arch/x86/boot/bzImage
-> > 
-> > Without X86_IO_APIC:
-> > mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
-> > 722544  arch/x86/boot/bzImage
-> > 
-> 
-> 1.6% increase.
+On Wed, Mar 4, 2015 at 12:00 PM, Ingo Molnar <mingo@kernel.org> wrote:
+>
+> It is totally unacceptable that you don't do proper analysis of the
+> patches you submit, and that you don't bother writing proper, readable
+> changelogs.
 
-Indeed, but we are talking about x86-32 bit and the question these
-two patches bring up is -- is the gains of the cleanup from the
-removal of these two worth the compromise? I think it is, but
-if there is active interest in keeping 32-bit x86 builds tiny
-I understand if this is not desirable.
+Sorry, please check it again:
 
-> > [0] https://lkml.org/lkml/2015/1/22/718
-> > 
-> > Cc: David Rientjes <rientjes@google.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Bryan O'Donoghue <pure.logic@nexus-software.ie>
-> > Cc: Thomas Gleixner <tglx@linutronix.de>
-> > Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-> > Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > Cc: Ingo Molnar <mingo@kernel.org>
-> > Cc: Borislav Petkov <bp@suse.de>
-> > Cc: H. Peter Anvin <hpa@zytor.com>
-> > Cc: Jan Beulich <JBeulich@suse.com>
-> > Cc: Juergen Gross <jgross@suse.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: x86@kernel.org
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> > ---
-> >  arch/x86/Kconfig | 15 ++-------------
-> >  1 file changed, 2 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> > index 110f6ae..b17a8ea 100644
-> > --- a/arch/x86/Kconfig
-> > +++ b/arch/x86/Kconfig
-> > @@ -899,6 +899,7 @@ config X86_UP_APIC
-> >  	bool "Local APIC support on uniprocessors" if !PCI_MSI
-> >  	default PCI_MSI
-> >  	depends on X86_32 && !SMP && !X86_32_NON_STANDARD
-> > +	select X86_IO_APIC
-> >  	---help---
-> >  	  A local APIC (Advanced Programmable Interrupt Controller) is an
-> >  	  integrated interrupt controller in the CPU. If you have a single-CPU
-> > @@ -909,18 +910,6 @@ config X86_UP_APIC
-> >  	  performance counters), and the NMI watchdog which detects hard
-> >  	  lockups.
-> >  
-> > -config X86_UP_IOAPIC
-> > -	bool "IO-APIC support on uniprocessors"
-> > -	depends on X86_UP_APIC
-> > -	---help---
-> > -	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
-> > -	  SMP-capable replacement for PC-style interrupt controllers. Most
-> > -	  SMP systems and many recent uniprocessor systems have one.
-> > -
-> > -	  If you have a single-CPU system with an IO-APIC, you can say Y here
-> > -	  to use it. If you say Y here even though your machine doesn't have
-> > -	  an IO-APIC, then the kernel will still run with no slowdown at all.
-> > -
-> >  config X86_LOCAL_APIC
-> >  	def_bool y
-> >  	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
-> > @@ -928,7 +917,7 @@ config X86_LOCAL_APIC
-> >  
-> >  config X86_IO_APIC
-> >  	def_bool y
-> > -	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
-> > +	depends on X86_LOCAL_APIC
-> >  	select IRQ_DOMAIN
-> >  
-> >  config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
-> 
-> I think it would be best to remove the "select" so the "depends" for both 
-> config options won't diverge in the future.  This should be equivalent, 
-> right?
+Subject: [PATCH v4] x86, kaslr: Get kaslr_enabled back correctly
 
-Do you mean remove the "select IRQ_DOMAIN" ? If so the "select" does not imply
-"depends" though, it simply will peg it on if its own dependencies are met.
+commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+is using address as value for kaslr_enabled.
 
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -909,18 +909,6 @@ config X86_UP_APIC
->  	  performance counters), and the NMI watchdog which detects hard
->  	  lockups.
->  
-> -config X86_UP_IOAPIC
-> -	bool "IO-APIC support on uniprocessors"
-> -	depends on X86_UP_APIC
-> -	---help---
-> -	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
-> -	  SMP-capable replacement for PC-style interrupt controllers. Most
-> -	  SMP systems and many recent uniprocessor systems have one.
-> -
-> -	  If you have a single-CPU system with an IO-APIC, you can say Y here
-> -	  to use it. If you say Y here even though your machine doesn't have
-> -	  an IO-APIC, then the kernel will still run with no slowdown at all.
-> -
->  config X86_LOCAL_APIC
->  	def_bool y
->  	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
-> @@ -928,7 +916,7 @@ config X86_LOCAL_APIC
->  
->  config X86_IO_APIC
->  	def_bool y
-> -	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
-> +	depends on X86_LOCAL_APIC || X86_UP_APIC
->  	select IRQ_DOMAIN
->  
->  config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
-> 
-> And then the second patch adds a 3.8% increase on top of this (and the two 
-> "select" statements in that patch shouldn't be necessary, both 
-> X86_LOCAL_APIC and X86_IO_APIC are def_bool y for PCI_MSI configs).
+That will get wrong value back for kaslr_enabled in kernel stage.
+1. When kaslr is not enabled at boot/choose_kernel_location, if kaslr_enabled
+get set wrongly in setup.c, late in module.c::get_module_load_offset
+will return not wanted random module load offset.
+That change behavior when HIBERNATION is defined or nokaslr is passed.
 
-This is one way to express that and the trick is the depends are carried over
-this way.
+2. When kaslr is enabled at boot/choose_kernel_location, if kaslr_enabled
+get cleared wrongly in setup.c, late in module.c::get_module_load_offset
+will not return wanted random module load offset.
 
->  If these are just cleanup patches, I'm not sure I understand why a
->  considerable kernel text size increase is worth it.
+This patch changes the code to use early_memmap and access the value,
+and will keep boot and kernel consistent with kaslr.
 
-The patches pose the question if the cleanup of the removal of both
-is worth the compromise to always enable thes two for PCI_MSI and remove
-the option to enable/disable it on platform where the depends match out.
-The later would also imply that platforms that need it will need to
-ensure its components select them, but historically it seems we can
-only deduce these both are required for PCI_MSI 32-bit platforms.
+-v3: add checking return from early_memmap according to bp.
 
-  Luis
+Fixes: f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+Cc: Matt Fleming <matt.fleming@intel.com>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Jiri Kosina <jkosina@suse.cz>
+Acked-by: Jiri Kosina <jkosina@suse.cz>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ arch/x86/kernel/setup.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+Index: linux-2.6/arch/x86/kernel/setup.c
+===================================================================
+--- linux-2.6.orig/arch/x86/kernel/setup.c
++++ linux-2.6/arch/x86/kernel/setup.c
+@@ -429,7 +429,18 @@ static void __init reserve_initrd(void)
+
+ static void __init parse_kaslr_setup(u64 pa_data, u32 data_len)
+ {
+-    kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
++    /* kaslr_setup_data is defined in aslr.c */
++    unsigned char *data;
++    unsigned long offset = sizeof(struct setup_data);
++
++    data = early_memremap(pa_data, offset + 1);
++    if (!data) {
++        kaslr_enabled = true;
++        return;
++    }
++
++    kaslr_enabled = *(data + offset);
++    early_memunmap(data, offset + 1);
+ }
+
+ static void __init parse_setup_data(void)
