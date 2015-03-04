@@ -1,122 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:57203 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752332AbbCYF5O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:57:14 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 15:57:12 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 5918F2CE8040
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:57:11 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5v3m023330952
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:57:11 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5ubrY030396
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:56:38 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V15 18/21] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
-Date: Wed, 25 Mar 2015 13:44:54 +0800
-Message-Id: <1427262297-5694-19-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from exprod5og125.obsmtp.com ([64.18.0.245]:51995 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757790AbbCDTtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:49:36 -0500
+Received: by padet14 with SMTP id et14so12117661pad.11
+        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2015 11:49:35 -0800 (PST)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
+Subject: [PATCH v2 2/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node.
+Date: Wed,  4 Mar 2015 11:39:58 -0800
+Message-Id: <18fd1d4b65bb5997062d5ceef52dfa0c5d4c49b9.1425497218.git.dhdang@apm.com>
+In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
+References: <cover.1425497218.git.dhdang@apm.com>
+In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
+References: <1678162.2PJ2o1jRen@wuerfel> <cover.1425497218.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
-will exceed the limitation and failed to be assigned.
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-Introduce a different mechanism based on the IOV BAR size:
-
-  - if IOV BAR size is smaller than 64MB, expand to total_pe
-  - if IOV BAR size is bigger than 64MB, roundup power2
-
-[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 3 deletions(-)
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 3c95097..d6942c9 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -179,6 +179,8 @@ struct pci_dn {
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
- 	int     offset;			/* PE# for the first VF PE */
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 11262df..2c13a39 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2250,6 +2250,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index f1ad9c2..0fe05dc 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -354,6 +354,28 @@
+ 			};
+ 		};
  
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -2260,6 +2261,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->vfs_expanded = 0;
++		msi: msi@79000000 {
++			compatible = "apm,xgene1-msi";
++			msi-controller;
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		pcie0: pcie@1f2b0000 {
+ 			status = "disabled";
+ 			device_type = "pci";
+@@ -375,6 +397,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie0clk 0>;
++			msi-parent= <&msi>;
+ 		};
  
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
-+
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
-+				 i, res);
-+			continue;
-+		}
-+
-+		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
-+
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
-+				 i, res);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = roundup_pow_of_two(total_vfs);
-+			break;
-+		}
-+	}
-+
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->flags || res->parent)
-@@ -2272,12 +2299,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 		pcie1: pcie@1f2c0000 {
+@@ -398,6 +421,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie1clk 0>;
++			msi-parent= <&msi>;
+ 		};
  
- 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
- 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
--				i, res, phb->ioda.total_pe);
-+			 i, res, mul);
- 	}
--	pdn->vfs_expanded = phb->ioda.total_pe;
-+	pdn->vfs_expanded = mul;
- }
- #endif /* CONFIG_PCI_IOV */
+ 		pcie2: pcie@1f2d0000 {
+@@ -421,6 +445,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie2clk 0>;
++			msi-parent= <&msi>;
+ 		};
  
+ 		pcie3: pcie@1f500000 {
+@@ -444,6 +469,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie3clk 0>;
++			msi-parent= <&msi>;
+ 		};
+ 
+ 		pcie4: pcie@1f510000 {
+@@ -467,6 +493,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie4clk 0>;
++			msi-parent= <&msi>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
 -- 
-1.7.9.5
+1.9.1
 
