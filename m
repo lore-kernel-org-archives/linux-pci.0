@@ -1,70 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:40664 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbbCKP7i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 11:59:38 -0400
+Received: from mga11.intel.com ([192.55.52.93]:57015 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754190AbbCDC32 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Mar 2015 21:29:28 -0500
+Message-ID: <54F66E02.5090408@linux.intel.com>
+Date: Wed, 04 Mar 2015 10:29:22 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <55005F0F.5080302@ti.com>
-References: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com>
- <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com>
- <20150311124911.GA8656@n2100.arm.linux.org.uk> <55005F0F.5080302@ti.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 11 Mar 2015 10:59:16 -0500
-Message-ID: <CAL_JsqLi+bo=zEobrduWW9D1KtTGtfO17XYw6jGjh_u_foy_VA@mail.gmail.com>
-Subject: Re: [PATCH] pci: of : fix BUG: unable to handle kernel
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Voegtle <tv@lio96.de>, Hudd <hedede.l@gmail.com>,
+	Prakash Punnoor <prakash@punnoor.de>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Len Brown <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset=UTF-8
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [Debug 2/2] x86/PCI/ACPI: Relax ACPI resource descriptor checks
+ to work around BIOS bugs
+References: <1425356741-26789-1-git-send-email-jiang.liu@linux.intel.com> <1425356741-26789-3-git-send-email-jiang.liu@linux.intel.com> <CAErSpo6MtTj+DM0dtm0QxUXGV=rC7a0Sygs03sU0617mWO-DpA@mail.gmail.com>
+In-Reply-To: <CAErSpo6MtTj+DM0dtm0QxUXGV=rC7a0Sygs03sU0617mWO-DpA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 10:28 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> On 03/11/2015 08:49 AM, Russell King - ARM Linux wrote:
+On 2015/3/3 23:18, Bjorn Helgaas wrote:
+> On Mon, Mar 2, 2015 at 10:25 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> Some BIOSes report incorrect length for ACPI address space descriptors,
+>> so relax the checks to avoid regressions.
 >>
->> On Wed, Mar 11, 2015 at 07:35:45AM -0500, Rob Herring wrote:
->>>
->>> On Tue, Mar 10, 2015 at 10:25 AM, Murali Karicheri<m-karicheri2@ti.com>
->>> wrote:
->>>>
->>>> On some platforms such as that based on x86, ia64 etc, root bus is
->>>> created with parent node passed in as NULL to pci_create_root_bus().
->>>> On these platforms, the patch series "PCI: get DMA configuration from
->>>> parent device" when applied causes kernel crash. So add a check for this
->>>> in of_pci_dma_configure()
->>>
->>>
->>> Wouldn't these arches have OF disabled and call an empty function?
->>> Regardless, we still need this.
->>>
->>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>
->>>
->>> I'm assuming Bjorn will apply this.
->>>
->>> Acked-by: Rob Herring<robh@kernel.org>
->>
->>
->> It might be an idea to read the subject line...
->>
->> "fix BUG: unable to handle kernel"
->
-> Russell,
->
-> I will fix the subject as "fix BUG: unable to handle kernel NULL pointer"
-> and re-send.
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> 
+> It'd be nice to have a DSDT archived and referenced in this changelog
+> for future reference.  This sounds similar to previous issues:
+Hi all,
+	Could anybody help to dump an ACPI table from those failure
+systems so we could archive it?
+Thanks!
+Gerry
 
-Russell's point is the subject applies to every fix for a BUG.
-Something like "of/pci: fix of_pci_dma_configure parent ptr NULL
-dereference".
-
-Rob
+> 
+> 3162b6f0c5e1 ("PNPACPI: truncate _CRS windows with _LEN > _MAX - _MIN + 1")
+> d558b483d5a7 ("x86/PCI: truncate _CRS windows with _LEN > _MAX - _MIN + 1")
+> f238b414a74a ("PNPACPI: compute Address Space length rather than using _LEN")
+> 48728e077480 ("x86/PCI: compute Address Space length rather than using _LEN")
+> 
+> I assume your work fixes both these paths and avoids the issues we fixed above.
+> 
+>> ---
+>>  drivers/acpi/resource.c |    4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index c723668e3e27..5589a6e2a023 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -42,8 +42,10 @@ static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+>>          * CHECKME: len might be required to check versus a minimum
+>>          * length as well. 1 for io is fine, but for memory it does
+>>          * not make any sense at all.
+>> +        * Note: some BIOSes report incorrect length for ACPI address space
+>> +        * descriptor, so remove check of 'reslen == len' to avoid regression.
+>>          */
+>> -       if (len && reslen && reslen == len && start <= end)
+>> +       if (len && reslen && start <= end)
+>>                 return true;
+>>
+>>         pr_debug("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
+>> --
+>> 1.7.10.4
+>>
