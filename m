@@ -1,82 +1,230 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:28913 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935885AbbCDIBo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:44 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 27/29] PCI: Export find_pci_host_bridge() and rename to pci_find_host_bridge()
-Date: Fri, 6 Mar 2015 17:33:44 +0800
-Message-ID: <1425634426-437-28-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 15/15] x86, pci: export SETUP_PCI data via sysfs
+Date: Wed,  4 Mar 2015 00:00:48 -0800
+Message-Id: <1425456048-16236-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host-bridge.c |    6 +++---
- drivers/pci/pci.h         |    2 ++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+So we could let kexec-tools to rebuild SETUP_PCI and pass it to
+second kernel.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index bc1de59..51f0a82 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -103,7 +103,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- 	return bus;
+Now kexec-tools already build SETUP_EFI and SETUP_E820EXT.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c | 175 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 175 insertions(+)
+
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index a5de331..fb4765b 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -682,6 +682,8 @@ void __init add_pci(u64 pa_data)
+ 
+ struct firmware_setup_pci_entry {
+ 	struct list_head list;
++	struct kobject kobj;
++	struct bin_attribute *rom_attr;
+ 	uint16_t vendor;
+ 	uint16_t devid;
+ 	uint64_t pcilen;
+@@ -803,6 +805,179 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	return 0;
  }
  
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-+struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
- {
- 	struct pci_bus *root_bus = find_pci_root_bus(bus);
- 
-@@ -121,7 +121,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
- 	struct resource_entry *window;
- 	resource_size_t offset = 0;
- 
-@@ -146,7 +146,7 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
- 	struct resource_entry *window;
- 	resource_size_t offset = 0;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 8bf5be7..ca9fc51 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -326,4 +326,6 @@ struct pci_host_bridge *pci_create_host_bridge(
- 		void *sysdata, struct pci_host_bridge_ops *ops);
- 
- void pci_free_host_bridge(struct pci_host_bridge *host);
-+struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
++#ifdef CONFIG_SYSFS
++static inline struct firmware_setup_pci_entry *
++to_setup_pci_entry(struct kobject *kobj)
++{
++	return container_of(kobj, struct firmware_setup_pci_entry, kobj);
++}
 +
- #endif /* DRIVERS_PCI_H */
++static ssize_t vendor_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->vendor);
++}
++
++static ssize_t devid_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->devid);
++}
++
++static ssize_t pcilen_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
++			(unsigned long long)entry->pcilen);
++}
++
++static ssize_t segment_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->segment);
++}
++
++static ssize_t bus_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
++			(unsigned long long)entry->bus);
++}
++
++static ssize_t device_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
++			(unsigned long long)entry->device);
++}
++
++static ssize_t function_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%1llx\n",
++			(unsigned long long)entry->function);
++}
++
++struct setup_pci_attribute {
++	struct attribute attr;
++	ssize_t (*show)(struct firmware_setup_pci_entry *entry, char *buf);
++};
++
++static inline struct setup_pci_attribute *to_setup_pci_attr(
++							struct attribute *attr)
++{
++	return container_of(attr, struct setup_pci_attribute, attr);
++}
++
++static ssize_t setup_pci_attr_show(struct kobject *kobj,
++				   struct attribute *attr, char *buf)
++{
++	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
++	struct setup_pci_attribute *setup_pci_attr = to_setup_pci_attr(attr);
++
++	return setup_pci_attr->show(entry, buf);
++}
++
++static struct setup_pci_attribute setup_pci_vendor_attr = __ATTR_RO(vendor);
++static struct setup_pci_attribute setup_pci_devid_attr = __ATTR_RO(devid);
++static struct setup_pci_attribute setup_pci_pcilen_attr = __ATTR_RO(pcilen);
++static struct setup_pci_attribute setup_pci_segment_attr = __ATTR_RO(segment);
++static struct setup_pci_attribute setup_pci_bus_attr = __ATTR_RO(bus);
++static struct setup_pci_attribute setup_pci_device_attr = __ATTR_RO(device);
++static struct setup_pci_attribute setup_pci_function_attr = __ATTR_RO(function);
++
++/*
++ * These are default attributes that are added for every memmap entry.
++ */
++static struct attribute *def_attrs[] = {
++	&setup_pci_vendor_attr.attr,
++	&setup_pci_devid_attr.attr,
++	&setup_pci_pcilen_attr.attr,
++	&setup_pci_segment_attr.attr,
++	&setup_pci_bus_attr.attr,
++	&setup_pci_device_attr.attr,
++	&setup_pci_function_attr.attr,
++	NULL
++};
++
++static const struct sysfs_ops setup_pci_attr_ops = {
++	.show = setup_pci_attr_show,
++};
++
++static struct kobj_type __refdata setup_pci_ktype = {
++	.sysfs_ops      = &setup_pci_attr_ops,
++	.default_attrs  = def_attrs,
++};
++
++static ssize_t setup_pci_rom_read(struct file *filp, struct kobject *kobj,
++				  struct bin_attribute *bin_attr, char *buf,
++				  loff_t off, size_t count)
++{
++	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
++
++	if (off >= entry->pcilen)
++		count = 0;
++	else {
++		unsigned char *rom = phys_to_virt(entry->romdata);
++
++		if (off + count > entry->pcilen)
++			count = entry->pcilen - off;
++
++		memcpy(buf, rom + off, count);
++	}
++
++	return count;
++}
++
++static int __init add_sysfs_fw_setup_pci_entry(
++					struct firmware_setup_pci_entry *entry)
++{
++	int retval = 0;
++	static int setup_pci_entries_nr;
++	static struct kset *setup_pci_kset;
++	struct bin_attribute *attr;
++
++	kobject_init(&entry->kobj, &setup_pci_ktype);
++
++	if (!setup_pci_kset) {
++		setup_pci_kset = kset_create_and_add("setup_pci", NULL,
++						     firmware_kobj);
++		if (!setup_pci_kset)
++			return -ENOMEM;
++	}
++
++	entry->kobj.kset = setup_pci_kset;
++	retval = kobject_add(&entry->kobj, NULL, "%d", setup_pci_entries_nr++);
++	if (retval) {
++		kobject_put(&entry->kobj);
++		return retval;
++	}
++
++	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
++	if (!attr)
++		return -ENOMEM;
++
++	sysfs_bin_attr_init(attr);
++	attr->size = entry->pcilen;
++	attr->attr.name = "rom";
++	attr->attr.mode = S_IRUSR;
++	attr->read = setup_pci_rom_read;
++	retval = sysfs_create_bin_file(&entry->kobj, attr);
++	if (retval)
++		kfree(attr);
++	entry->rom_attr = attr;
++
++	return retval;
++}
++
++static int __init firmware_setup_pci_init(void)
++{
++	struct firmware_setup_pci_entry *entry;
++
++	list_for_each_entry(entry, &setup_pci_entries, list)
++		add_sysfs_fw_setup_pci_entry(entry);
++
++	return 0;
++}
++late_initcall(firmware_setup_pci_init);
++#endif
++
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+ 	int err;
 -- 
-1.7.1
+1.8.4.5
 
