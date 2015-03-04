@@ -1,155 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:43393 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451AbbCQLmS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2015 07:42:18 -0400
-Date: Tue, 17 Mar 2015 11:42:14 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
-	Lee Jones <lee.jones@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 2/5] PCI: st: Add Device Tree bindings for sti pcie
-Message-ID: <20150317114213.GH27081@e106497-lin.cambridge.arm.com>
-References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
- <1426515635-9466-3-git-send-email-gabriel.fernandez@linaro.org>
-MIME-Version: 1.0
-In-Reply-To: <1426515635-9466-3-git-send-email-gabriel.fernandez@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 00/15] x86, boot: clean up kasl and setup_data handling
+Date: Wed,  4 Mar 2015 00:00:33 -0800
+Message-Id: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriel,
+patch 1-7: are kasl related.
+1. make ZO: arch/x86/boot/compressed/vmlinux data region is not
+overwritten by final VO: vmlinux after decompress.
+so could pass data from ZO to VO
+2. create new ident mapping for kasl 64bit, so we can cover
+   above 4G random kernel base, also don't need to track pagetable
+   for 64bit bootloader (patched grub2 or kexec).
+   that will make mem_avoid handling simple.
 
-On Mon, Mar 16, 2015 at 02:20:32PM +0000, Gabriel FERNANDEZ wrote:
-> sti pcie is built around a Synopsis Designware PCIe IP.
-> 
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-> ---
->  Documentation/devicetree/bindings/pci/st-pcie.txt | 54 +++++++++++++++++++++++
->  1 file changed, 54 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
-> new file mode 100644
-> index 0000000..94aae2d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
-> @@ -0,0 +1,54 @@
-> +STMicroelectronics STi PCIe controller
-> +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> +and thus inherits all the common properties defined in designware-pcie.txt.
-> +
-> +Required properties:
-> + - compatible: "st,stih407-pcie"
-> + - reg: base address and length of the pcie controller, mem-window address
-> +   and length available to the controller.
-> + - interrupts: A list of interrupt outputs of the controller. Must contain an
-> +   entry for each entry in the interrupt-names property.
-> + - interrupt-names: Should be "msi". STi interrupt that is asserted when an
-> +   MSI is received.
-> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
-> +   offset for IP configuration.
-> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
-> +   Associated names must be "powerdown" and "softreset".
-> + - phys, phy-names: the phandle for the PHY device.
-> +   Associated name must be "pcie"
-> +
-> +Optional properties:
-> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
-> +
-> +Example:
-> +
-> +pcie0: pcie@9b00000 {
-> +	compatible = "st,stih407-pcie", "snps,dw-pcie";
-> +	device_type = "pci";
-> +	reg = <0x09b00000 0x4000>,	/* dbi cntrl registers */
-> +	      <0x2fff0000 0x00010000>,	/* configuration space */
-> +	      <0x40000000 0x80000000>;	/* lmi mem window */
-> +	reg-names = "dbi", "config", "mem-window";
-> +	st,syscfg = <&syscfg_core 0xd8 0xe0>;
-> +	#address-cells = <3>;
-> +	#size-cells = <2>;
-> +	ranges = <0x00000800 0 0x2fff0000 0x2fff0000 0 0x00010000   /* configuration space */
+patch 8-15: setup_data related.
 
-Unless you are trying to support some legacy code please remove the configuration space from the ranges.
-There is no resource type associated with config space and the generic parser will give you back an
-invalid resource type. The other reason for that is that if you really claim to be ECAM compliant by
-adding the config space here you need way more than 64K of space.
+Now we setup_data is reserved via memblock and e820 and different
+handlers have different ways, and it is confusing.
+1. SETUP_E820_EXT: is consumed early and will not copy or access again.
+        have memory wasted.
+2. SETUP_EFI: is accessed via ioremap every time at early stage.
+        have memory wasted.
+3. SETUP_DTB: is copied locally.
+        have memory wasted.
+4. SETUP_PCI: is accessed via ioremap for every pci devices, even run-time.
+5. SETUP_KASLR: is accessed early, will not copy or access again.
+        have memory wasted.
 
-Best regards,
-Liviu
+Also setup_data is exported to debugfs for debug purpose.
 
-> +		  0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
-> +	num-lanes = <1>;
-> +	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
-> +	interrupt-names = "msi";
-> +	#interrupt-cells = <1>;
-> +	interrupt-map-mask = <0 0 0 7>;
-> +	interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
-> +			<0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
-> +			<0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
-> +			<0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
-> +
-> +	resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
-> +		 <&softreset STIH407_PCIE0_SOFTRESET>;
-> +	reset-names = "powerdown",
-> +		      "softreset";
-> +	phys = <&phy_port0 PHY_TYPE_PCIE>;
-> +	phy-names = "pcie";
-> +};
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
+Here will convert to let every handler to decide how to handle it.
+and will not reserve the setup_data generally, so will not
+waste memory and also make memblock/e820 keep page aligned.
+1. not touch E820 anymore.
+2. copy SETUP_EFI to __initdata variable and access it without ioremap.
+3. SETUP_DTB: reserver and copy to local and free.
+4. SETUP_PCI: reverve localy and convert to list, to avoid keeping ioremap.
+5. SETUP_KASLR: fix accessing kaslr_enabled accessing...
+6. export SETUP_PCI via sysfs.
+
+Yinghai Lu (15):
+  x86, kaslr: Use init_size instead of run_size
+  x86, boot: move ZO to end of buffer
+  x86, boot: keep data from ZO boot stage to VO kernel stage.
+  x86, kaslr: get kaslr_enabled back correctly
+  x86, kaslr: consolidate the mem_avoid filling
+  x86, boot: split kernel_ident_mapping_init into another file
+  x86, kaslr, 64bit: set new or extra ident_mapping
+  x86: Kill E820_RESERVED_KERN
+  x86, efi: copy SETUP_EFI data and access directly
+  x86, of: let add_dtb reserve by itself
+  x86, boot: Add add_pci handler for SETUP_PCI
+  x86: kill not used setup_data handling code
+  x86, pci: convert SETUP_PCI data to list
+  x86, boot: copy rom to kernel space
+  x86, pci: export SETUP_PCI data via sysfs
+
+ arch/x86/boot/Makefile                 |   2 +-
+ arch/x86/boot/compressed/Makefile      |   4 +-
+ arch/x86/boot/compressed/aslr.c        |  55 ++++--
+ arch/x86/boot/compressed/head_32.S     |  16 +-
+ arch/x86/boot/compressed/head_64.S     |  17 +-
+ arch/x86/boot/compressed/misc.c        |  15 +-
+ arch/x86/boot/compressed/misc_pgt.c    |  96 ++++++++++
+ arch/x86/boot/compressed/mkpiggy.c     |  12 +-
+ arch/x86/boot/compressed/vmlinux.lds.S |   2 +
+ arch/x86/boot/header.S                 |   7 +-
+ arch/x86/include/asm/boot.h            |  13 ++
+ arch/x86/include/asm/efi.h             |   2 +-
+ arch/x86/include/asm/page.h            |   5 +
+ arch/x86/include/asm/pci.h             |   4 +
+ arch/x86/include/asm/prom.h            |   9 +-
+ arch/x86/include/uapi/asm/e820.h       |   9 -
+ arch/x86/kernel/asm-offsets.c          |   1 +
+ arch/x86/kernel/devicetree.c           |  39 ++--
+ arch/x86/kernel/e820.c                 |   6 +-
+ arch/x86/kernel/kdebugfs.c             | 142 ---------------
+ arch/x86/kernel/setup.c                |  60 ++-----
+ arch/x86/kernel/tboot.c                |   3 +-
+ arch/x86/mm/ident_map.c                |  74 ++++++++
+ arch/x86/mm/init_64.c                  |  85 +--------
+ arch/x86/pci/common.c                  | 313 +++++++++++++++++++++++++++++++--
+ arch/x86/platform/efi/efi.c            |  13 +-
+ arch/x86/platform/efi/efi_64.c         |  13 +-
+ arch/x86/platform/efi/quirks.c         |  23 +--
+ arch/x86/tools/calc_run_size.sh        |  42 -----
+ 29 files changed, 640 insertions(+), 442 deletions(-)
+ create mode 100644 arch/x86/boot/compressed/misc_pgt.c
+ create mode 100644 arch/x86/mm/ident_map.c
+ delete mode 100644 arch/x86/tools/calc_run_size.sh
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.8.4.5
 
