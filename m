@@ -1,116 +1,267 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:33207 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855AbbCSOI7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 10:08:59 -0400
-Received: by qgfa8 with SMTP id a8so65799088qgf.0
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 07:08:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2835680.pSPaYk3eSL@vostro.rjw.lan>
-References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com>
- <20150318221152.GA2495@google.com> <550A7F8D.90404@linux.intel.com> <2835680.pSPaYk3eSL@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 19 Mar 2015 09:08:38 -0500
-Message-ID: <CAErSpo4r+Brx0fgpwQ=Wr_1wxBNvuAy0cJxYBSR6hBLt=d=e8Q@mail.gmail.com>
-Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is
- disabled when unbinding
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	"yinghai @ kernel . org" <yinghai@kernel.org>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:35645 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753818AbbCDFZg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:25:36 -0500
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 4 Mar 2015 15:25:34 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id EE7692BB0040
+	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:25:31 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245PNsn48103628
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:25:31 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245OwMk032761
+	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:24:58 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V13 13/21] powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+Date: Wed,  4 Mar 2015 13:19:05 +0800
+Message-Id: <1425446353-30513-14-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 19, 2015 at 6:29 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Thursday, March 19, 2015 03:49:33 PM Jiang Liu wrote:
->> On 2015/3/19 6:11, Bjorn Helgaas wrote:
->> > On Tue, Mar 17, 2015 at 03:37:12PM +0800, Jiang Liu wrote:
->> >> To support IOAPIC hot-removal, we need to release PCI interrupt resource
->> >> when unbinding PCI device driver. But due to historical reason,
->> >> /*
->> >>  * We would love to complain here if pci_dev->is_enabled is set, that
->> >>  * the driver should have called pci_disable_device(), but the
->> >>  * unfortunate fact is there are too many odd BIOS and bridge setups
->> >>  * that don't like drivers doing that all of the time.
->> >>  * Oh well, we can dream of sane hardware when we sleep, no matter how
->> >>  * horrible the crap we have to deal with is when we are awake...
->> >>  */
->> >
->> > Quoting the comment here (especially the last two lines) is overkill and
->> > obscures the real point.  The important thing is that some drivers have
->> > legitimate reasons for not calling pci_disable_device().
->> Hi Bjorn,
->>       Thanks for review. I will rewrite the commit message.
->> >> some drivers don't call pci_disable_device() when unloading, which
->> >> prevents us from reallocating PCI interrupt resource on reloading
->> >> PCI driver and causes regressions.
->> >
->> > This isn't very clear.  I can believe that "drivers not calling
->> > pci_disable_device()" means we don't release IRQ resources, which might
->> > prevent you from hot-removing an IOAPIC.
->> >
->> > But "drivers not calling pci_disable_device()" doesn't cause regressions.
->> >
->> >> So release PCI interrupt resource only if PCI device is disabled when
->> >> unbinding. By this way, we could support IOAPIC hot-removal on latest
->> >> platforms and avoid regressions on old platforms.
->> >
->> > Does this mean you can only hot-remove IOAPICs if all drivers for devices
->> > using the IOAPIC call pci_disable_device()?  If so, it seems sort of
->> > dubious that we have to rely on drivers for that.
->> This is a quickfix for v4.0 merging window. We will try to solve this
->> issue for next merging window.
->
-> If that is the plan, then I'd rather revert the offending commit and try
-> again in the next cycle.
->
-> Bjorn, what do you think?
+The PCI config accessors previously relied on device_node.  Unfortunately,
+VFs don't have a corresponding device_node, so change the accessors to use
+pci_dn instead.
 
-I don't know how hard it is to just revert that one commit at this
-point, but I would be in favor of doing that if it's feasible.
+[bhelgaas: changelog]
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
+ arch/powerpc/platforms/powernv/pci.h         |    4 +-
+ 3 files changed, 40 insertions(+), 47 deletions(-)
 
-We're headed toward a real morass of changelogs for a design that
-seems destined for overhaul.  That makes it really hard to backport
-and rework things later.
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index e261869..7a5021b 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -430,21 +430,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
+ static int powernv_eeh_read_config(struct device_node *dn,
+ 				   int where, int size, u32 *val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn)) {
+ 		*val = 0xFFFFFFFF;
+ 		return PCIBIOS_SET_FAILED;
+ 	}
+ 
+-	return pnv_pci_cfg_read(dn, where, size, val);
++	return pnv_pci_cfg_read(pdn, where, size, val);
+ }
+ 
+ static int powernv_eeh_write_config(struct device_node *dn,
+ 				    int where, int size, u32 val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn))
+ 		return PCIBIOS_SET_FAILED;
+ 
+-	return pnv_pci_cfg_write(dn, where, size, val);
++	return pnv_pci_cfg_write(pdn, where, size, val);
+ }
+ 
+ /**
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index e69142f..6c20d6e 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
+ 	spin_unlock_irqrestore(&phb->lock, flags);
+ }
+ 
+-static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+-				     struct device_node *dn)
++static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
+ {
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u8	fstate;
+ 	__be16	pcierr;
+ 	int	pe_no;
+@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	 * setup that yet. So all ER errors should be mapped to
+ 	 * reserved PE.
+ 	 */
+-	pe_no = PCI_DN(dn)->pe_number;
++	pe_no = pdn->pe_number;
+ 	if (pe_no == IODA_INVALID_PE) {
+ 		if (phb->type == PNV_PHB_P5IOC2)
+ 			pe_no = 0;
+@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ 
+ 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
+-		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
+-		pe_no, fstate);
++		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
+ 
+ 	/* Clear the frozen state if applicable */
+ 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
+@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ }
+ 
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 	s64 rc;
+@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 
+@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
+ }
+ 
+ #if CONFIG_EEH
+-static bool pnv_pci_cfg_check(struct pci_controller *hose,
+-			      struct device_node *dn)
++static bool pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = NULL;
+-	struct pnv_phb *phb = hose->private_data;
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 
+ 	/* EEH not enabled ? */
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+ 		return true;
+ 
+ 	/* PE reset or device removed ? */
+-	edev = of_node_to_eeh_dev(dn);
++	edev = pdn->edev;
+ 	if (edev) {
+ 		if (edev->pe &&
+ 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
+@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
+ 	return true;
+ }
+ #else
+-static inline pnv_pci_cfg_check(struct pci_controller *hose,
+-				struct device_node *dn)
++static inline pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	return true;
+ }
+@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
+ 			       unsigned int devfn,
+ 			       int where, int size, u32 *val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+ 	*val = 0xFFFFFFFF;
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_read(dn, where, size, val);
+-	if (phb->flags & PNV_PHB_FLAG_EEH) {
++	ret = pnv_pci_cfg_read(pdn, where, size, val);
++	phb = pdn->phb->private_data;
++	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
+ 		if (*val == EEH_IO_ERROR_VALUE(size) &&
+-		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
++		    eeh_dev_check_failure(pdn->edev))
+                         return PCIBIOS_DEVICE_NOT_FOUND;
+ 	} else {
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 	}
+ 
+ 	return ret;
+@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
+ 				unsigned int devfn,
+ 				int where, int size, u32 val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_write(dn, where, size, val);
++	ret = pnv_pci_cfg_write(pdn, where, size, val);
++	phb = pdn->phb->private_data;
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 
+ 	return ret;
+ }
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 6c02ff8..e5b75b2 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
+ 
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val);
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val);
+ extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
+ 				      void *tce_mem, u64 tce_size,
+-- 
+1.7.9.5
 
->From the revised changelog:
-
->> When suspending, PCI
->> device driver may call pci_disable_device() and eventually release
->> IOAPIC pin. When resuming, PCI device driver call pci_enable_device()
->> and reallocating IOAPIC pin. Since v3.19, IOAPIC driver dynamically
->> allocates IRQ number for IOAPIC pin. So when resuming, a different
->> IRQ number may assigned, which breaks some PCI drivers' suspend/resume
->> implementation.
-
-It seems like you're really standing on your head to make this
-situation work, and I think the result is too complicated and
-error-prone.  One test is to see whether you can write a short, simple
-description of how driver writers need to manage IRQs with respect to
-probe/remove/suspend/remove.
-
-There are two other possibilities I can see:
-
-1) Decide that a driver that captures the IRQ and then calls
-pci_enable_device() is just broken, and fix those drivers to
-re-capture the IRQ every time they call pci_enable_device().  I assume
-you've looked at this already and concluded it's not practical?
-
-2) Configure the IRQ in pci_device_probe().  Then it would be
-configured before the driver sees the device, and you could dispose of
-it in pci_device_remove() when the driver is unbound.
-
-Does either of those make sense?
-
-Bjorn
