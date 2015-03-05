@@ -1,175 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28912 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935912AbbCDIBo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:44 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 13/15] x86, pci: convert SETUP_PCI data to list
-Date: Wed,  4 Mar 2015 00:00:46 -0800
-Message-Id: <1425456048-16236-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:43542 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989AbbCEQ22 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 11:28:28 -0500
+Received: by qcxr5 with SMTP id r5so43954014qcx.10
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2015 08:28:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7NB25yNaHu8VOujUN1NUTyr4FM+jUA8gsbVSx0ZC1USg@mail.gmail.com>
+References: <54EB81B2.4050904@pobox.com> <54F10D0F.9080309@pobox.com> <CAErSpo7NB25yNaHu8VOujUN1NUTyr4FM+jUA8gsbVSx0ZC1USg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 5 Mar 2015 10:28:06 -0600
+Message-ID: <CAErSpo744fff2Lyv+dJ8ST1KKCWuR1aY5DcoKJv+P_zho4S2vQ@mail.gmail.com>
+Subject: Re: NULL Pointer in 3.x during PCI bus enumeration
+To: Robert White <rwhite@pobox.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could avoid ioremap every time later.
+On Sat, Feb 28, 2015 at 4:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Feb 27, 2015 at 4:34 PM, Robert White <rwhite@pobox.com> wrote:
+>> Eh, wrong mailing list the first time...?
+>
+> Yep, I browse linux-kernel sometimes, but not enough to catch
+> everything.  Anyway, thanks a lot for the problem report.
+>
+> Would you mind opening a bug report at http://bugzilla.kernel.org,
+> drivers/pci component, and attaching
+>
+>   - a completely dmesg log from your most recent kernel (it probably
+> doesn't boot, which it makes it hard to get an actual dmesg log; a
+> complete console log with "ignore_loglevel" is fine, too).
+>   - complete "lspci -vv" output from a working system (v2.x is fine).
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/pci.h |  2 ++
- arch/x86/kernel/setup.c    |  1 +
- arch/x86/pci/common.c      | 77 +++++++++++++++++++++++++++++++++++++---------
- 3 files changed, 65 insertions(+), 15 deletions(-)
+Ping, I'd like to debug this, but I'd like to start with a little more
+information.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 7fbd5f3..99b261f 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -88,9 +88,11 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- 	*strategy_parameter = ~0UL;
- }
- void add_pci(u64 pa_data);
-+int fill_setup_pci_entries(void);
- #else
- static inline void early_quirks(void) { }
- static inline void add_pci(u64 pa_data) { }
-+static inline int fill_setup_pci_entries(void) { }
- #endif
- 
- extern void pci_iommu_alloc(void);
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 9a18078..215bea8 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -1190,6 +1190,7 @@ void __init setup_arch(char **cmdline_p)
- 	acpi_boot_init();
- 	sfi_init();
- 	x86_dtb_init();
-+	fill_setup_pci_entries();
- 
- 	/*
- 	 * get boot-time SMP configuration:
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 4846db7..93577fb 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -668,7 +668,7 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
--static u64 pci_setup_data;
-+static u64 pci_setup_data __initdata;
- void __init add_pci(u64 pa_data)
- {
- 	struct setup_data *data;
-@@ -680,36 +680,83 @@ void __init add_pci(u64 pa_data)
- 	early_memunmap(data, sizeof(*data));
- }
- 
--int pcibios_add_device(struct pci_dev *dev)
-+struct firmware_setup_pci_entry {
-+	struct list_head list;
-+	uint16_t vendor;
-+	uint16_t devid;
-+	uint64_t pcilen;
-+	unsigned long segment;
-+	unsigned long bus;
-+	unsigned long device;
-+	unsigned long function;
-+	phys_addr_t romdata;
-+};
-+
-+static LIST_HEAD(setup_pci_entries);
-+
-+int __init fill_setup_pci_entries(void)
- {
- 	struct setup_data *data;
- 	struct pci_setup_rom *rom;
-+	struct firmware_setup_pci_entry *entry;
-+	phys_addr_t pa_entry;
- 	u64 pa_data;
- 
- 	pa_data = pci_setup_data;
- 	while (pa_data) {
--		data = ioremap(pa_data, sizeof(*rom));
-+		data  = early_memremap(pa_data, sizeof(*rom));
- 		if (!data)
- 			return -ENOMEM;
--
- 		rom = (struct pci_setup_rom *)data;
- 
--		if ((pci_domain_nr(dev->bus) == rom->segment) &&
--		    (dev->bus->number == rom->bus) &&
--		    (PCI_SLOT(dev->devfn) == rom->device) &&
--		    (PCI_FUNC(dev->devfn) == rom->function) &&
--		    (dev->vendor == rom->vendor) &&
--		    (dev->device == rom->devid)) {
--			dev->rom = pa_data +
--			      offsetof(struct pci_setup_rom, romdata);
--			dev->romlen = rom->pcilen;
-+		pa_entry = memblock_alloc(sizeof(*entry), sizeof(long));
-+		if (!pa_entry) {
-+			early_memunmap(data, sizeof(*rom));
-+			return -ENOMEM;
-+		}
-+
-+		entry = phys_to_virt(pa_entry);
-+		entry->segment = rom->segment;
-+		entry->bus = rom->bus;
-+		entry->device = rom->device;
-+		entry->function = rom->function;
-+		entry->vendor = rom->vendor;
-+		entry->devid = rom->devid;
-+		entry->pcilen = rom->pcilen;
-+		entry->romdata = pa_data +
-+				 offsetof(struct pci_setup_rom, romdata);
-+
-+		list_add(&entry->list, &setup_pci_entries);
-+
-+		memblock_free(pa_data, sizeof(*rom));
-+		pa_data = data->next;
-+		early_memunmap(data, sizeof(*rom));
-+	}
-+
-+	pci_setup_data = 0;
-+
-+	return 0;
-+}
-+
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	struct firmware_setup_pci_entry *entry;
-+
-+	list_for_each_entry(entry, &setup_pci_entries, list) {
-+		if ((pci_domain_nr(dev->bus) == entry->segment) &&
-+		    (dev->bus->number == entry->bus) &&
-+		    (PCI_SLOT(dev->devfn) == entry->device) &&
-+		    (PCI_FUNC(dev->devfn) == entry->function) &&
-+		    (dev->vendor == entry->vendor) &&
-+		    (dev->device == entry->devid)) {
-+			dev->rom = entry->romdata;
-+			dev->romlen = entry->pcilen;
- 			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
- 				   (unsigned long)dev->rom,
- 				   (unsigned long)(dev->rom + dev->romlen - 1));
- 		}
--		pa_data = data->next;
--		iounmap(data);
- 	}
-+
- 	return 0;
- }
- 
--- 
-1.8.4.5
+Bjorn
 
+>> -------- Forwarded Message --------
+>> Subject: NULL Pointer in 3.x during PCI bus enumeration
+>> Date: Mon, 23 Feb 2015 11:38:26 -0800
+>> From: Robert White <rwhite@pobox.com>
+>> To: Linux Kernel <linux-kernel@vger.kernel.org>
+>>
+>> The below BUG event happens during PCI bus enumeration on some of my
+>> gear. In particular the Advanced Telecommunications Architecture (ATCA)
+>> has carrier cards that contain Field Replaceable Units (FRUs). FRUs
+>> are all attached by PCI-to-PCI bridges and some may be empty.
+>>
+>> So architecturally the main card is just an array of eight bridges
+>> and the CPU/computer is just in one slot.
+>>
+>> carrier |--- adapter 1
+>> PCI     |--- (empty)
+>> bus     |--- CPU (fru)
+>>         |--- adapter 4
+>>        ... etc.
+>>
+>> The CPU module sees this as a PCI bus with all the normal things
+>> on the local PCI bus within its FRU and then a bridge to a
+>> tree of bridges, and some of those bridges go nowhere.
+>>
+>> CPU -|--- memory controller
+>>      |--- whatever
+>>      |--- PCI bridge(#) -|--- PCI bridge -|--- adapter 1 item 1
+>>                          |                |--- adapter 1 item 2
+>>                          |
+>>                          |--- PCI bridge -|--- adapter 4 item 1
+>>                                           |--- adapter 4 item 2
+>>
+>> (#)Actually I think there is another layer of bridges in there
+>> but I am running out of ASCII art space.
+>>
+>> The longest link is something like
+>> CPU to local bus
+>> local bus to plug bus
+>> plug bus to backplane
+>> backplane to other plug bus
+>> other plug bus to target local bus
+>> target local bus to device.
+>>
+>> Anyway, I am taking a system that is working under 2.x where this
+>> bridge to bridge (to bridge?) thing worked and it's bugging out
+>> on 3.x (at least 3.18 and 3.19, I have no knowledge of 3.x for
+>> x less than 18).
+>>
+>> I got as far as seeing that its a composite pointer deref thats
+>> going bad in pci_aspm_init_link_state according to gdb
+>>
+>> parent = pdev->bus->parent->self->link_state;
+>>
+>> but the sequencing dependency (e.g. when "self", "parent"
+>> and "bus" is really set for each item) is making my brain hurt.
+>>
+>>
+>>
+>> [    1.590865] BUG: unable to handle kernel NULL pointer dereference at
+>> 0000000000000088
+>> [    1.606588] IP: [<ffffffff81550324>]
+>> pcie_aspm_init_link_state+0x744/0x850
+>> [    1.620375] PGD 0
+>> [    1.624436] Oops: 0000 [#1] PREEMPT SMP
+>> [    1.632387] Modules linked in:
+>> [    1.638536] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.19.0-gentoo #9
+>> [    1.651590] Hardware name: Kontron B3001/B3001, BIOS 4.6.3 08/07/2012
+>> [    1.664472] task: ffff880116b20000 ti: ffff880116b28000 task.ti:
+>> ffff880116b28000
+>> [    1.679436] RIP: 0010:[<ffffffff81550324>]  [<ffffffff81550324>]
+>> pcie_aspm_init_link_state+0x744/0x850
+>> [    1.698084] RSP: 0000:ffff880116b2b958  EFLAGS: 00010246
+>> [    1.708707] RAX: 0000000000000000 RBX: 0000000000000000 RCX:
+>> ffff8801165aae78
+>> [    1.722978] RDX: ffff8801165aae58 RSI: 0000000000000000 RDI:
+>> ffff8801165aaf00
+>> [    1.737250] RBP: ffff880116b2b9c8 R08: 0000000000015b80 R09:
+>> ffff8801165aae40
+>> [    1.751520] R10: ffff8801165aae40 R11: 000000000000000f R12:
+>> ffff8801165aae40
+>> [    1.765791] R13: ffff8801165e8000 R14: 0000000000000000 R15:
+>> ffff88011643fc00
+>> [    1.780063] FS:  0000000000000000(0000) GS:ffff88011bc00000(0000)
+>> knlGS:0000000000000000
+>> [    1.796243] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>> [    1.807738] CR2: 0000000000000088 CR3: 0000000002412000 CR4:
+>> 00000000000007f0
+>> [    1.822007] Stack:
+>> [    1.826036]  ffff880116b2b988 ffffffff8153b682 ffff8801165e9000
+>> ffff8801165e9000
+>> [    1.840966]  ffff880117038400 0000000000000000 ffff880116b2b9c8
+>> ffffffff8153b761
+>> [    1.855896]  ffff880116b2b9b8 ffff880117038400 0000000000000001
+>> 0000000000000000
+>> [    1.870828] Call Trace:
+>> [    1.875727]  [<ffffffff8153b682>] ? pci_device_add+0x122/0x170
+>> [    1.887392]  [<ffffffff8153b761>] ? pci_scan_single_device+0x91/0xc0
+>> [    1.900099]  [<ffffffff8153b865>] pci_scan_slot+0xd5/0x120
+>> [    1.911071]  [<ffffffff8153ca1d>] pci_scan_child_bus+0x2d/0xd0
+>> [    1.922738]  [<ffffffff8153c733>] pci_scan_bridge+0x383/0x640
+>> [    1.934233]  [<ffffffff8153ca75>] pci_scan_child_bus+0x85/0xd0
+>> [    1.945900]  [<ffffffff8153c733>] pci_scan_bridge+0x383/0x640
+>> [    1.957391]  [<ffffffff8153b724>] ? pci_scan_single_device+0x54/0xc0
+>> [    1.970101]  [<ffffffff8153ca75>] pci_scan_child_bus+0x85/0xd0
+>> [    1.981770]  [<ffffffff81b26357>] pci_acpi_scan_root+0x317/0x520
+>> [    1.993784]  [<ffffffff8158c8a3>] acpi_pci_root_add+0x3c9/0x4db
+>> [    2.005623]  [<ffffffff8158e44e>] ? acpi_pnp_match+0x2c/0xa4
+>> [    2.016943]  [<ffffffff825bb3c6>] ? acpi_sleep_proc_init+0x2a/0x2a
+>> [    2.029303]  [<ffffffff81588f15>] acpi_bus_attach+0xcf/0x1bf
+>> [    2.040621]  [<ffffffff825bb3c6>] ? acpi_sleep_proc_init+0x2a/0x2a
+>> [    2.052985]  [<ffffffff817d1f85>] ? device_attach+0x45/0xb0
+>> [    2.064128]  [<ffffffff81588f8f>] acpi_bus_attach+0x149/0x1bf
+>> [    2.075622]  [<ffffffff825bb3c6>] ? acpi_sleep_proc_init+0x2a/0x2a
+>> [    2.087984]  [<ffffffff817d1f85>] ? device_attach+0x45/0xb0
+>> [    2.099130]  [<ffffffff81588f8f>] acpi_bus_attach+0x149/0x1bf
+>> [    2.110623]  [<ffffffff825bb3c6>] ? acpi_sleep_proc_init+0x2a/0x2a
+>> [    2.122983]  [<ffffffff815890f4>] acpi_bus_scan+0x5c/0x67
+>> [    2.133782]  [<ffffffff825bb7e6>] acpi_scan_init+0x6b/0x1a1
+>> [    2.144929]  [<ffffffff825bb617>] acpi_init+0x251/0x26e
+>> [    2.155379]  [<ffffffff825bb3c6>] ? acpi_sleep_proc_init+0x2a/0x2a
+>> [    2.167741]  [<ffffffff810002d8>] do_one_initcall+0x98/0x1e0
+>> [    2.179063]  [<ffffffff810e6900>] ? parse_args+0x150/0x430
+>> [    2.190036]  [<ffffffff8257907c>] kernel_init_freeable+0x17e/0x20b
+>> [    2.202394]  [<ffffffff81d884f0>] ? rest_init+0x90/0x90
+>> [    2.212846]  [<ffffffff81d884f9>] kernel_init+0x9/0xf0
+>> [    2.223125]  [<ffffffff81d9b4ac>] ret_from_fork+0x7c/0xb0
+>> [    2.233922]  [<ffffffff81d884f0>] ? rest_init+0x90/0x90
+>> [    2.244372] Code: 0f 85 e2 fa ff ff 41 80 4c 24 4a 03 b8 01 00 00 00 41
+>> 0f b6 54 24 49 e9 4b fb ff ff 0f 1f 00 49 8b 45 10 48 8b 40 10 48 8b 40 38
+>> <48> 8b 80 88 00 00 00 48 85 c0 0f
+>> [    2.284338] RIP  [<ffffffff81550324>]
+>> pcie_aspm_init_link_state+0x744/0x850
+>> [    2.298296]  RSP <ffff880116b2b958>
+>> [    2.305276] CR2: 0000000000000088
+>> [    2.311913] ---[ end trace 153b3907ad1e19ba ]---
+>>
+>>
+>> (gdb) list *0xffffffff815502ba
+>> 0xffffffff815502ba is in pcie_aspm_init_link_state
+>> (drivers/pci/pcie/aspm.c:530).
+>> 525             INIT_LIST_HEAD(&link->children);
+>> 526             INIT_LIST_HEAD(&link->link);
+>> 527             link->pdev = pdev;
+>> 528             if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+>> 529                     struct pcie_link_state *parent;
+>> 530                     parent = pdev->bus->parent->self->link_state;
+>> 531                     if (!parent) {
+>> 532                             kfree(link);
+>> 533                             return NULL;
+>> 534                     }
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
