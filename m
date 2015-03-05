@@ -1,71 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55125679.1080201@intel.com>
-Date: Wed, 25 Mar 2015 14:32:25 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:36410 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753960AbbCEDUR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 22:20:17 -0500
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH v3 2/3] PCI: rename find_pci_host_bridge and export it
-References: <54FD4FB9.2060802@intel.com> <55125611.8040507@intel.com>
-In-Reply-To: <55125611.8040507@intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20150305025809.GA28401@linux-rxt1.site>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
+	<20150304101649.GA3663@pd.tnic>
+	<alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
+	<CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
+	<20150305025809.GA28401@linux-rxt1.site>
+Date: Wed, 4 Mar 2015 19:20:15 -0800
+Message-ID: <CAE9FiQWa13Z1Eixwsjku5X_CxLpfSk+QFCOooC59YeH7dAqHgA@mail.gmail.com>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: joeyli <jlee@suse.com>
+Cc: Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
+	Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The find_pci_host_bridge function can be useful to other PCI code so
-export it. In the meantime, change its name to more like other interfaces
-as pci_find_host_bridge.
+On Wed, Mar 4, 2015 at 6:58 PM, joeyli <jlee@suse.com> wrote:
+>
+> After 84c91b7ae merged to v3.17 kernel, hibernate code checks the e280 regions
+> should not be changed when doing hibernate resume. Without your patch 8,
+> the hibernate resume checking will randomly fail on the machines that reserved
+> setup_data in e820 regions.
+>
+> Could you please consider to put "[PATCH v2 08/15] x86: Kill E820_RESERVED_KERN"
+> to v4.0 kernel?
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/pci/host-bridge.c | 6 +++---
- drivers/pci/pci.h         | 2 ++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+That will trigger SETUP_PCI ioremap warning.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 3e5bbf9e8889..5f4a2e04c8d7 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- 	return bus;
- }
- 
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-+struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
- {
- 	struct pci_bus *root_bus = find_pci_root_bus(bus);
- 
-@@ -48,7 +48,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
- 	struct resource_entry *window;
- 	resource_size_t offset = 0;
- 
-@@ -73,7 +73,7 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
- 	struct resource_entry *window;
- 	resource_size_t offset = 0;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4091f82239cd..d72f849174a4 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -321,4 +321,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
-+
- #endif /* DRIVERS_PCI_H */
--- 
-2.1.0
+That is the reason I want to put it with other setup_data fix.
 
+Thanks
+
+Yinghai
