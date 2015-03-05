@@ -1,60 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:39123 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbbCAUlL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 15:41:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150301202938.GD7748@pd.tnic>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
-	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
-	<20150301094557.GA7748@pd.tnic>
-	<20150301152351.GA17391@gmail.com>
-	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
-	<20150301194904.GC7748@pd.tnic>
-	<CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
-	<20150301202938.GD7748@pd.tnic>
-Date: Sun, 1 Mar 2015 12:41:10 -0800
-Message-ID: <CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
+Received: from smtp.nue.novell.com ([195.135.221.5]:56896 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966AbbCEC6e (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:0:0>);
+	Wed, 4 Mar 2015 21:58:34 -0500
+Date: Thu, 5 Mar 2015 10:58:09 +0800
+From: joeyli <jlee@suse.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@alien8.de>,
 	Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
+	Baoquan He <bhe@redhat.com>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150305025809.GA28401@linux-rxt1.site>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+ <1425456048-16236-5-git-send-email-yinghai@kernel.org>
+ <20150304101649.GA3663@pd.tnic>
+ <alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
+ <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 1, 2015 at 12:29 PM, Borislav Petkov <bp@suse.de> wrote:
-> On Sun, Mar 01, 2015 at 12:24:08PM -0800, Yinghai Lu wrote:
->> static allocation in misc.c can not be used to kernel/head_64.S stage safely.
->
-> Correct. One possibility that works is sticking it right below
-> LOAD_PHYSICAL_ADDR:
->
-> +static void add_kaslr_setup_data(struct boot_params *params,
-> +                                u8 *output, __u8 enabled)
->  {
-> +       /*
-> +        * Stick it right under LOAD_PHYSICAL_ADDR
-> +        */
-> +       ksd = (struct setup_data *)(output - 2 * sizeof(struct setup_data));
->
-> output is LOAD_PHYSICAL_ADDR AFAICT and is the minimum kASLR considers
-> so right below it should work:
+Hi Yinghai,
 
-Does not look safe yet...
+On Wed, Mar 04, 2015 at 10:12:58AM -0800, Yinghai Lu wrote:
+> On Wed, Mar 4, 2015 at 7:54 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+> 
+> >
+> > Also this 15-patch series needs to be separated into two patchsets. The
+> > whole series is not appropriate for -rc3, but this particular one at least
+> > is a regression fix that has to go in.
+> 
+> The first 4 should go v4.0.
+> 
+> could leave others to v4.1
+> 
+> Thanks
+> 
+> Yinghai
 
-Let me think about it more.
+After 84c91b7ae merged to v3.17 kernel, hibernate code checks the e280 regions
+should not be changed when doing hibernate resume. Without your patch 8,
+the hibernate resume checking will randomly fail on the machines that reserved
+setup_data in e820 regions.
 
-Thanks
+Could you please consider to put "[PATCH v2 08/15] x86: Kill E820_RESERVED_KERN"
+to v4.0 kernel?
 
-Yinghai
+
+Thanks a lot!
+Joey Lee
