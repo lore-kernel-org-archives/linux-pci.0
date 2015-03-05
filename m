@@ -1,41 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26478 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbbCaWmq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 18:42:46 -0400
-Message-ID: <551B22E0.6040600@oracle.com>
-Date: Tue, 31 Mar 2015 16:42:40 -0600
-From: David Ahern <david.ahern@oracle.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:45788 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758682AbbCEU6R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 15:58:17 -0500
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: David Miller <davem@davemloft.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <20150305163822.GA3048@google.com>
+References: <1424214840-26498-1-git-send-email-fkan@apm.com>
+ <20150227002151.GG25765@google.com> <20150305163822.GA3048@google.com>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 5 Mar 2015 14:57:55 -0600
+Message-ID: <CAL_JsqJZ2JN8ZyUeLBbJqRV9bjHBCEs8JZRx=47sFrJL-QEgbQ@mail.gmail.com>
+Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by map_bus
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Feng Kan <fkan@apm.com>, "patches@apm.com" <patches@apm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-References: <5514391F.2030300@oracle.com>	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>	<5515F6B8.8020606@oracle.com>	<5515F782.7060301@oracle.com>	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>	<551623C1.2040300@oracle.com>	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>	<5516BF4B.9030901@oracle.com>	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>	<55181065.8090807@oracle.com>	<CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>	<5519D40D.20903@oracle.com>	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>	<551A1E32.1010309@oracle.com>	<CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>	<551AD384.50000@oracle.com>	<CAE9FiQU=9_NBiPNgaEBa3nOPBnCwGyj0ppOyVnf7RduKRe8K=A@mail.gmail.com>	<551B1FB2.3020203@oracle.com> <CAE9FiQVTBWQnH_UcVtg3Z38=+qwJXvx8aLoTFF_2JaTY3zi8pw@mail.gm!
- ail.com>
-In-Reply-To: <CAE9FiQVTBWQnH_UcVtg3Z38=+qwJXvx8aLoTFF_2JaTY3zi8pw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Mark Salter <msalter@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/31/15 4:38 PM, Yinghai Lu wrote:
-> On Tue, Mar 31, 2015 at 3:29 PM, David Ahern <david.ahern@oracle.com> wrote:
->>>
->>> Please check attached three patches on top of current linus tree.
->>>
->>
->> new log. Same as before -- PCI_DEBUG, ignore_loglevel ofpci_debug=1
->>
+On Thu, Mar 5, 2015 at 10:38 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Mark]
 >
-> Good, it is clean now.
+> On Thu, Feb 26, 2015 at 06:21:51PM -0600, Bjorn Helgaas wrote:
+>> On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
+>> > The generic accessor functions for pci-xgene uses map_bus
+>> > call that returns the base address but did not add the additional
+>> > offset.
+>> >
+>> > Signed-off-by: Feng Kan <fkan@apm.com>
+>> > ---
+>> >  drivers/pci/host/pci-xgene.c | 4 ++--
+>> >  1 file changed, 2 insertions(+), 2 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+>> > index aab5547..ee082c0 100644
+>> > --- a/drivers/pci/host/pci-xgene.c
+>> > +++ b/drivers/pci/host/pci-xgene.c
+>> > @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+>> >     return false;
+>> >  }
+>> >
+>> > -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>> > +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>> >                           int offset)
+>> >  {
+>> >     struct xgene_pcie_port *port = bus->sysdata;
+>> > @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>> >             return NULL;
+>> >
+>> >     xgene_pcie_set_rtdid_reg(bus, devfn);
+>> > -   return xgene_pcie_get_cfg_base(bus);
+>> > +   return xgene_pcie_get_cfg_base(bus) + offset;
+>>
+>> Where's the locking here?  ECAM doesn't need locking because the
+>> bus/dev/fn/offset is all encoded in the MMIO address.  But it looks
+>> like X-Gene doesn't work that way and bus/dev/fn is in the RTDID register.
+>>
+>> So it seems like X-Gene needs locking that not everybody needs.  Are you
+>> relying on higher-level locking somewhere?
+>
+> Ping, what's going on here?  I've gotten at least three patches for this
+> offset issue, so we need to get it resolved.
+>
+> If there's no locking problem, I can just apply this and we'll be finished.
+> Actually, I think Mark's patch is better, because it correctly returns NULL
+> (failure) if xgene_pcie_get_cfg_base() fails.  So please review and ack
+> that one or explain why this one is better.
+>
+> But if there *is* a locking problem, we should fix that, too.  That should
+> be a separate patch, so I guess I can apply the one to fix the offset
+> problem first, and we'll at least be no worse off with respect to locking
+> than we are today.
 
-Yes. You can add a Tested-by to all 3. These are all 4.0 material I hope 
-with a mark for 3.19 stable?
+There's no locking problem. The config accesses are all within the
+pci_lock spinlock and nothing else touches that register.
 
-Thanks, Yinghai.
-
-David
-
+Rob
