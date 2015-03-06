@@ -1,112 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41216 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221AbbCJAgK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 20:36:10 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v5 4/4] ARM: dts: enable PCIe support for Cygnus
-Date: Mon, 9 Mar 2015 17:38:06 -0700
-Message-ID: <1425947886-23705-5-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
-References: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:40885 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755530AbbCFEzH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 23:55:07 -0500
+Received: by oiba3 with SMTP id a3so15839212oib.7
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2015 20:55:06 -0800 (PST)
+Date: Thu, 5 Mar 2015 22:54:56 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Feng Kan <fkan@apm.com>
+Cc: patches@apm.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, robh@kernel.org,
+	linux-arm-kernel@lists.infradead.org, tinamdar@apm.com
+Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by
+ map_bus
+Message-ID: <20150306045456.GC20077@google.com>
+References: <1424214840-26498-1-git-send-email-fkan@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424214840-26498-1-git-send-email-fkan@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCIe device nodes in bcm-cygnus.dtsi but keep them disabled there.
-Only enable them for bcm958300k where PCIe interfaces are populated
+On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
+> The generic accessor functions for pci-xgene uses map_bus
+> call that returns the base address but did not add the additional
+> offset.
+> 
+> Signed-off-by: Feng Kan <fkan@apm.com>
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbraden@broadcom.com>
----
- arch/arm/boot/dts/bcm-cygnus.dtsi |   42 +++++++++++++++++++++++++++++++++++++
- arch/arm/boot/dts/bcm958300k.dts  |    8 +++++++
- 2 files changed, 50 insertions(+)
+Applied to for-linus for v4.0, with acks from Tanmay and Rob.  Thanks!
 
-diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
-index ff5fb6a..ee0c6e4 100644
---- a/arch/arm/boot/dts/bcm-cygnus.dtsi
-+++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
-@@ -90,6 +90,48 @@
- 		status = "disabled";
- 	};
- 
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <0>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
-+
-+		status = "disabled";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <1>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+
-+		status = "disabled";
-+	};
-+
- 	uart0: serial@18020000 {
- 		compatible = "snps,dw-apb-uart";
- 		reg = <0x18020000 0x100>;
-diff --git a/arch/arm/boot/dts/bcm958300k.dts b/arch/arm/boot/dts/bcm958300k.dts
-index f1bb36f..c9eb856 100644
---- a/arch/arm/boot/dts/bcm958300k.dts
-+++ b/arch/arm/boot/dts/bcm958300k.dts
-@@ -47,6 +47,14 @@
- 		bootargs = "console=ttyS0,115200";
- 	};
- 
-+	pcie0: pcie@18012000 {
-+		status = "okay";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		status = "okay";
-+	};
-+
- 	uart3: serial@18023000 {
- 		status = "okay";
- 	};
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/host/pci-xgene.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index aab5547..ee082c0 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+>  	return false;
+>  }
+>  
+> -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>  			      int offset)
+>  {
+>  	struct xgene_pcie_port *port = bus->sysdata;
+> @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>  		return NULL;
+>  
+>  	xgene_pcie_set_rtdid_reg(bus, devfn);
+> -	return xgene_pcie_get_cfg_base(bus);
+> +	return xgene_pcie_get_cfg_base(bus) + offset;
+>  }
+>  
+>  static struct pci_ops xgene_pcie_ops = {
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
