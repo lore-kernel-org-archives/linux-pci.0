@@ -1,107 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:40814 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754722AbbCFEM7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 23:12:59 -0500
+Received: by oiba3 with SMTP id a3so15723429oib.7
+        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2015 20:12:59 -0800 (PST)
+Date: Thu, 5 Mar 2015 22:12:43 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Feng Kan <fkan@apm.com>
+Cc: patches <patches@apm.com>, linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 08/30] PCI: Introduce pci_host_assign_domain_nr() to assign domain
-Date: Mon, 9 Mar 2015 10:34:05 +0800
-Message-ID: <1425868467-9667-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Mark Salter <msalter@redhat.com>
+Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by
+ map_bus
+Message-ID: <20150306041243.GA20077@google.com>
+References: <1424214840-26498-1-git-send-email-fkan@apm.com>
+ <20150227002151.GG25765@google.com>
+ <20150305163822.GA3048@google.com>
+ <CAL85gmABrzMGfnxP=xgOi=cwxXoEo0=WFYE_XOzpyjtntURO-A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL85gmABrzMGfnxP=xgOi=cwxXoEo0=WFYE_XOzpyjtntURO-A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_host_assign_domain_nr() to assign domain
-number for pci_host_bridge. Later we will remove
-pci_bus_assign_domain_nr().
+On Thu, Mar 05, 2015 at 08:53:38AM -0800, Feng Kan wrote:
+> Please take Mark's patch if you think it is better.
+> 
+> 
+> 
+> On Thu, Mar 5, 2015 at 8:38 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > [+cc Mark]
+> >
+> > On Thu, Feb 26, 2015 at 06:21:51PM -0600, Bjorn Helgaas wrote:
+> >> On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
+> >> > The generic accessor functions for pci-xgene uses map_bus
+> >> > call that returns the base address but did not add the additional
+> >> > offset.
+> >> >
+> >> > Signed-off-by: Feng Kan <fkan@apm.com>
+> >> > ---
+> >> >  drivers/pci/host/pci-xgene.c | 4 ++--
+> >> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> >> > index aab5547..ee082c0 100644
+> >> > --- a/drivers/pci/host/pci-xgene.c
+> >> > +++ b/drivers/pci/host/pci-xgene.c
+> >> > @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+> >> >     return false;
+> >> >  }
+> >> >
+> >> > -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> >> > +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> >> >                           int offset)
+> >> >  {
+> >> >     struct xgene_pcie_port *port = bus->sysdata;
+> >> > @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+> >> >             return NULL;
+> >> >
+> >> >     xgene_pcie_set_rtdid_reg(bus, devfn);
+> >> > -   return xgene_pcie_get_cfg_base(bus);
+> >> > +   return xgene_pcie_get_cfg_base(bus) + offset;
+> >>
+> >> Where's the locking here?  ECAM doesn't need locking because the
+> >> bus/dev/fn/offset is all encoded in the MMIO address.  But it looks
+> >> like X-Gene doesn't work that way and bus/dev/fn is in the RTDID register.
+> >>
+> >> So it seems like X-Gene needs locking that not everybody needs.  Are you
+> >> relying on higher-level locking somewhere?
+> >
+> > Ping, what's going on here?  I've gotten at least three patches for this
+> > offset issue, so we need to get it resolved.
+> >
+> > If there's no locking problem, I can just apply this and we'll be finished.
+> > Actually, I think Mark's patch is better, because it correctly returns NULL
+> > (failure) if xgene_pcie_get_cfg_base() fails.  So please review and ack
+> > that one or explain why this one is better.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c   |   20 +++++++++++++++-----
- include/linux/pci.h |    4 ++++
- 2 files changed, 19 insertions(+), 5 deletions(-)
+Huh, I could swear I saw a failure path in xgene_pcie_get_cfg_base().  But
+I don't see a way it can fail, so I don't think it matters which way we fix
+this.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..c49eec1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4501,10 +4501,10 @@ int pci_get_new_domain_nr(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+static int pci_assign_domain_nr(struct device *dev)
- {
- 	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain = of_get_pci_domain_nr(dev->of_node);
- 
- 	/*
- 	 * Check DT domain and use_dt_domains values.
-@@ -4538,12 +4538,22 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 		use_dt_domains = 0;
- 		domain = pci_get_new_domain_nr();
- 	} else {
--		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
--			parent->of_node->full_name);
-+		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-+			dev->of_node->full_name);
- 		domain = -1;
- 	}
- 
--	bus->domain_nr = domain;
-+	return domain;
-+}
-+
-+void pci_host_assign_domain_nr(struct pci_host_bridge *host)
-+{
-+	host->domain = pci_assign_domain_nr(host->dev.parent);
-+}
-+
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	bus->domain_nr = pci_assign_domain_nr(parent);
- }
- #endif
- #endif
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8b3d245..2b1b998 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1327,11 +1327,15 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- 	return bus->domain_nr;
- }
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
-+void pci_host_assign_domain_nr(struct pci_host_bridge *host);
- #else
- static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
- 					struct device *parent)
- {
- }
-+static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
-+{
-+}
- #endif
- 
- /* some architectures require additional setup to direct VGA traffic */
--- 
-1.7.1
-
+Bjorn
