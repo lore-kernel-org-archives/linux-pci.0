@@ -1,213 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:22962 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345AbbCICnC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:02 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Richard Henderson <rth@twiddle.net>,
-	"Ivan Kokshaysky" <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>, <sparclinux@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 01/30] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-Date: Mon, 9 Mar 2015 10:33:58 +0800
-Message-ID: <1425868467-9667-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Date: Fri, 6 Mar 2015 16:16:57 +0100
+Message-ID: <CAJZ5v0htZRux=ZADN8+k3VcNsyadhQiv2iOpBz6zhNO3VDp7VQ@mail.gmail.com>
+Subject: [GIT PULL] Power management and ACPI fixes for 4.0-rc3
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_bus_add_devices() should not be placed in pci_scan_bus().
-Now pci device will be added to driver core once its
-creation. All things left in pci_bus_add_devices() are
-driver attachment and other trivial sysfs things.
-Pci_scan_bus() should be the function responsible for
-scanning PCI devices, not including driver attachment.
-Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
-will call pci_bus_size_bridges() and pci_bus_assign_resources()
-after pci_scan_bus().
+Hi Linus,
 
-E.g.
-In m68k
-mcf_pci_init()
-	pci_scan_bus()
-		...
-		pci_bus_add_devices() --- try to attach driver
-	pci_fixup_irqs()
-	pci_bus_size_bridges()
-	pci_bus_assign_resources()
+Please pull from
 
-Above code flow make pci scan logic obscure, resources should
-be assigned correctly before attaching driver. Because
-pci_scan_bus() mostly be called in system boot path, when
-before drivers are loaded(in module_init), so no pci scan
-issues will occur. Most pci_scan_bus() callers additionally
-call pci_bus_size_bridges() and pci_bus_assign_resources()
-after pci_scan_bus(), we could rip out pci_bus_add_devices()
-for better code readability. After applied this patch,
-pci_scan_bus() should be used like:
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm+acpi-4.0-rc3
 
-pci_scan_bus() (mandatory)
-pci_fixup_irqs() (optional)
-pci_bus_size_bridges() (optional)
-pci_pci_bus_assign_resources() (optional)
-pci_bus_add_devices() (mandatory)
+to receive power management and ACPI fixes for v4.0-rc1 with top-most
+commit e178e7d6df38dab67f51df4282927c4c7392879f
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-CC: Richard Henderson <rth@twiddle.net>
-CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-CC: Matt Turner <mattst88@gmail.com>
-CC: linux-alpha@vger.kernel.org
-CC: linux-m68k@lists.linux-m68k.org
-CC: sparclinux@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/alpha/kernel/sys_nautilus.c  |    4 ++++
- arch/m68k/coldfire/pci.c          |    1 +
- arch/sparc/kernel/pcic.c          |    3 +++
- arch/unicore32/kernel/pci.c       |   11 +++--------
- drivers/pci/hotplug/ibmphp_core.c |    8 ++++++--
- drivers/pci/probe.c               |    1 -
- 6 files changed, 17 insertions(+), 11 deletions(-)
+ Merge branches 'pm-domains' and 'pm-cpufreq'
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 837c0fa..700686d 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -207,6 +207,9 @@ nautilus_init_pci(void)
- 
- 	/* Scan our single hose.  */
- 	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
-+	if (!bus)
-+		return;
-+
- 	hose->bus = bus;
- 	pcibios_claim_one_bus(bus);
- 
-@@ -253,6 +256,7 @@ nautilus_init_pci(void)
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
- 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
-+	pci_bus_add_devices(bus);
- }
- 
- /*
-diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
-index df96792..d45f087 100644
---- a/arch/m68k/coldfire/pci.c
-+++ b/arch/m68k/coldfire/pci.c
-@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
- 	pci_bus_size_bridges(rootbus);
- 	pci_bus_assign_resources(rootbus);
-+	pci_bus_add_devices(rootbus);
- 	return 0;
- }
- 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 6cc78c2..0f4dc6b 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -391,12 +391,15 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
- 	struct linux_pbm_info *pbm = &pcic->pbm;
- 
- 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
-+	if (!pbm->pci_bus)
-+		return;
- #if 0 /* deadwood transplanted from sparc64 */
- 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
- 	pci_record_assignments(pbm, pbm->pci_bus);
- 	pci_assign_unassigned(pbm, pbm->pci_bus);
- 	pci_fixup_irq(pbm, pbm->pci_bus);
- #endif
-+	pci_bus_add_devices(pbm->pci_bus);
- }
- 
- /*
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 374a055..3d82024 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
- 
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		/*
--		 * Size the bridge windows.
--		 */
-+		/* Size the bridge windows. */
- 		pci_bus_size_bridges(puv3_bus);
--
--		/*
--		 * Assign resources.
--		 */
-+		/* Assign resources. */
- 		pci_bus_assign_resources(puv3_bus);
- 	}
--
-+	pci_bus_add_devices(puv3_bus);
- 	return 0;
- }
- subsys_initcall(pci_common_init);
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 96c5c72..1530247 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
-  */
- static u8 bus_structure_fixup(u8 busno)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *b;
- 	struct pci_dev *dev;
- 	u16 l;
- 
-@@ -765,7 +765,11 @@ static u8 bus_structure_fixup(u8 busno)
- 					(l != 0x0000) && (l != 0xffff)) {
- 			debug("%s - Inside bus_structure_fixup()\n",
- 							__func__);
--			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			if (!b)
-+				continue;
-+
-+			pci_bus_add_devices(b);
- 			break;
- 		}
- 	}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..88604f2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
- 		pci_scan_child_bus(b);
--		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--- 
-1.7.1
+on top of commit 13a7a6ac0a11197edcd0f756a035f472b42cdf8b
 
+ Linux 4.0-rc2
+
+These are fixes for recent regressions (ACPI resources management,
+suspend-to-idle), stable-candidate fixes (ACPI backlight), fixes
+related to the wakeup IRQ management changes made in v3.18, other
+fixes (suspend-to-idle, cpufreq ppc driver) and a couple of cleanups
+(suspend-to-idle, generic power domains, ACPI backlight).
+
+Specifics:
+
+ - Fix ACPI resources management problems introduced by the recent
+   rework of the code in question (Jiang Liu) and a build issue
+   introduced by those changes (Joachim Nilsson).
+
+ - Fix a recent suspend-to-idle regression on systems where entering
+   idle states causes local timers to stop, prevent suspend-to-idle
+   from crashing in restricted configurations (no cpuidle driver,
+   cpuidle disabled etc.) and clean up the idle loop somewhat while
+   at it (Rafael J Wysocki).
+
+ - Fix build problem in the cpufreq ppc driver (Geert Uytterhoeven).
+
+ - Allow the ACPI backlight driver module to be loaded if ACPI is
+   disabled which helps the i915 driver in those configurations
+   (stable-candidate) and change the code to help debug unusual use
+   cases (Chris Wilson).
+
+ - Wakeup IRQ management changes in v3.18 caused some drivers on the
+   at91 platform to trigger a warning from the IRQ core related to
+   an unexpected combination of interrupt action handler flags.
+   However, on at91 a timer IRQ is shared with some other devices
+   (including system wakeup ones) and that leads to the unusual
+   combination of flags in question.  To make it possible to avoid
+   the warning introduce a new interrupt action handler flag (which
+   can be used by drivers to indicate the special case to the core)
+   and rework the problematic at91 drivers to use it and work as
+   expected during system suspend/resume.  From Boris Brezillon,
+   Rafael J Wysocki and Mark Rutland.
+
+ - Clean up the generic power domains subsystem's debugfs interface
+   (Kevin Hilman).
+
+Thanks!
+
+
+---------------
+
+Boris BREZILLON (6):
+      PM / wakeup: export pm_system_wakeup symbol
+      rtc: at91sam9: rework wakeup and interrupt handling
+      rtc: at91rm9200: rework wakeup and interrupt handling
+      clk: at91: implement suspend/resume for the PMC irqchip
+      watchdog: at91sam9: request the irq with IRQF_NO_SUSPEND
+      tty: serial: atmel: rework interrupt and wakeup handling
+
+Chris Wilson (2):
+      ACPI / video: Load the module even if ACPI is disabled
+      ACPI / video: Propagate the error code for acpi_video_register
+
+Geert Uytterhoeven (1):
+      cpufreq: ppc: Add missing #include <asm/smp.h>
+
+Jiang Liu (2):
+      x86/PCI/ACPI: Ignore resources consumed by host bridge itself
+      x86/PCI/ACPI: Relax ACPI resource descriptor checks to work
+around BIOS bugs
+
+Joachim Nilsson (1):
+      PCI: versatile: Update for list_for_each_entry() API change
+
+Kevin Hilman (1):
+      PM / Domains: cleanup: rename gpd -> genpd in debugfs interface
+
+Mark Rutland (2):
+      genirq / PM: better describe IRQF_NO_SUSPEND semantics
+      genirq / PM: describe IRQF_COND_SUSPEND
+
+Rafael J. Wysocki (5):
+      idle / sleep: Avoid excessive disabling and enabling interrupts
+      cpuidle / sleep: Do sanity checks in cpuidle_enter_freeze() too
+      cpuidle: Clean up fallback handling in cpuidle_idle_call()
+      genirq / PM: Add flag for shared NO_SUSPEND interrupt lines
+      cpuidle / sleep: Use broadcast timer for states that stop local timer
+
+---------------
+
+ Documentation/power/suspend-and-interrupts.txt | 22 ++++++--
+ arch/x86/pci/acpi.c                            | 11 ++--
+ drivers/acpi/resource.c                        |  4 +-
+ drivers/acpi/video.c                           | 20 +++++--
+ drivers/base/power/domain.c                    | 24 ++++-----
+ drivers/base/power/wakeup.c                    |  1 +
+ drivers/clk/at91/pmc.c                         | 20 ++++++-
+ drivers/clk/at91/pmc.h                         |  1 +
+ drivers/cpufreq/ppc-corenet-cpufreq.c          |  2 +
+ drivers/cpuidle/cpuidle.c                      | 61 +++++++++------------
+ drivers/pci/host/pci-versatile.c               |  2 +-
+ drivers/rtc/rtc-at91rm9200.c                   | 62 +++++++++++++++++-----
+ drivers/rtc/rtc-at91sam9.c                     | 73 +++++++++++++++++++++-----
+ drivers/tty/serial/atmel_serial.c              | 49 +++++++++++++++--
+ drivers/watchdog/at91sam9_wdt.c                |  3 +-
+ include/linux/cpuidle.h                        | 17 +++++-
+ include/linux/interrupt.h                      |  9 +++-
+ include/linux/irqdesc.h                        |  1 +
+ kernel/irq/manage.c                            |  7 ++-
+ kernel/irq/pm.c                                |  7 ++-
+ kernel/sched/idle.c                            | 54 +++++++++++--------
+ 21 files changed, 331 insertions(+), 119 deletions(-)
