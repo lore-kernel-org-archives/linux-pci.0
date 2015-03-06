@@ -1,149 +1,213 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <550D890C.5090900@linux.intel.com>
-Date: Sat, 21 Mar 2015 23:06:52 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:27586 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932564AbbCFJgM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:12 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Richard Henderson <rth@twiddle.net>,
+	"Ivan Kokshaysky" <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>, <sparclinux@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 01/29] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+Date: Fri, 6 Mar 2015 17:33:18 +0800
+Message-ID: <1425634426-437-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bernhard Thaler <bernhard.thaler@wvnet.at>
-CC: lenb@kernel.org, linux-acpi@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
-References: <550A7674.6070306@wvnet.at> <4317184.19IeWuljky@vostro.rjw.lan> <550C5A08.3020302@wvnet.at> <2663880.nZ5V9XMenj@vostro.rjw.lan>
-In-Reply-To: <2663880.nZ5V9XMenj@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/21 8:47, Rafael J. Wysocki wrote:
-> On Friday, March 20, 2015 06:34:00 PM Bernhard Thaler wrote:
->> This is a multi-part message in MIME format.
->> --------------000805070501000906050700
->> Content-Type: text/plain; charset=windows-1252
->> Content-Transfer-Encoding: 7bit
->>
->>
->> On 19.03.2015 12:27, Rafael J. Wysocki wrote:
->>> On Thursday, March 19, 2015 08:10:44 AM Bernhard Thaler wrote:
->>>> This is a multi-part message in MIME format.
->>>> --------------000809080900050004000900
->>>> Content-Type: text/plain; charset=windows-1252
->>>> Content-Transfer-Encoding: 7bit
->>>>
->>>> Hi,
->>>>
->>>> I think this regression is not yet solved.
->>>
->>> First off, it is good to CC the commit author too (CCed now).
->>>
->>>> I encounter this or a similar problem with an PC Engines APU.1C device
->>>> (see: http://pcengines.ch/apu.htm). It has 3 network interfaces each
->>>> requiring the r8169 kernel module.
->>>>
->>>> With 4.0.0-rc4 I get this error message at boot (for each of the 3 devices):
->>>>
->>>> [    3.562301] r8169 0000:01:00.0 (unnamed net_device) (uninitialized):
->>>> rtl_chipcmd_cond == 1 (loop: 100, delay: 100).
->>>>
->>>> "ifconfig -a" shows ff:ff:ff:ff:ff:ff as MAC address for each of the
->>>> interfaces (see eth0 as example):
->>>>
->>>> eth0      Link encap:Ethernet  HWaddr ff:ff:ff:ff:ff:ff
->>>>           BROADCAST PROMISC MULTICAST  MTU:1500  Metric:1
->>>>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->>>>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->>>>           collisions:0 txqueuelen:1000
->>>>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
->>>>
->>>> The network interfaces cannot be brought up/used.
->>>>
->>>> The same device and setup did work with a previously used 3.18.0-rc5
->>>> kernel. When I boot it with this 3.18.0-rc5 kernel everything i OK,
->>>> interfaces come up and work.
->>>
->>> Second, it is not entirely clear to me that what you're seeing is actually
->>> the same regression.  Have you tested 4.0.0-rc4 with commit 593669c2ac0f
->>> reverted?
->>>
->> You are right, I was a bit quick about this conclusion. I based it on
->> Thomas Voegtle
->> bisect in http://www.spinics.net/lists/linux-pci/msg39014.html and my own
->> observation of the same problem situation with 4.0.0-rc4.
->>
->> Test Results:
->>
->> * Everything works fine before 593669c2ac0f, network interfaces are
->> available
->>    and usable e.g. with 812dbd9.
->>
->> * The problem starts for me with 593669c2ac0f as, errors at boot, network
->>    interfaces unusable as stated above.
-> 
-> And it doesn't go away in 4.0-rc4 which indicates that the fixes applied
-> so far do not work for you.
-> 
-> Gerry, can you please help here?
-Hi Bernhard,
-	Thanks for providing acpi data. I have figured out the cause of
-the regression. Your platform defines PCI host bridge MMIO resources as:
-            Name (CRES, ResourceTemplate ()
-            {
-                IO (Decode16,
-                    0x0CF8,             // Range Minimum
-                    0x0CF8,             // Range Maximum
-                    0x01,               // Alignment
-                    0x08,               // Length
-                    )
-                WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
-EntireRange,
-                    0x0000,             // Granularity
-                    0x0000,             // Range Minimum
-                    0x0CF7,             // Range Maximum
-                    0x0000,             // Translation Offset
-                    0x0CF8,             // Length
-                    ,, , TypeStatic)
-                WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
-EntireRange,
-                    0x0000,             // Granularity
-                    0x0D00,             // Range Minimum
-                    0xFFFF,             // Range Maximum
-                    0x0000,             // Translation Offset
-                    0xF300,             // Length
-                    ,, , TypeStatic)
-                Memory32Fixed (ReadOnly,
-                    0x000A0000,         // Address Base
-                    0x00020000,         // Address Length
-                    )
-                Memory32Fixed (ReadOnly,
-                    0x00000000,         // Address Base
-                    0x00000000,         // Address Length
-                    _Y00)
-            })
+Pci_bus_add_devices() should not be placed in pci_scan_bus().
+Now pci device will be added to driver core once its
+creation. All things left in pci_bus_add_devices() are
+driver attachment and other trivial sysfs things.
+Pci_scan_bus() should be the function responsible for
+scanning PCI devices, not including driver attachment.
+Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
+will call pci_bus_size_bridges() and pci_bus_assign_resources()
+after pci_scan_bus().
 
-With commit (x86/PCI/ACPI: Ignore resources consumed by host bridge
-itself), all resources without PRODUCER flag will be ignored, so
-MMIO defined by Memory32Fixed operator gets ignored. The fix is only
-to ignore IO resources without PRODUCER flag and keeps all MMIO
-resources no matter PRODUCER is set or not.
-Could you please help to try following patch?
-Regards!
-Gerry
+E.g.
+In m68k
+mcf_pci_init()
+	pci_scan_bus()
+		...
+		pci_bus_add_devices() --- try to attach driver
+	pci_fixup_irqs()
+	pci_bus_size_bridges()
+	pci_bus_assign_resources()
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index e4695985f9de..66d7dbe56926 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -346,7 +346,7 @@ static void probe_pci_root_info(struct pci_root_info
-*info,
-                        "no IO and memory resources present in _CRS\n");
-        else
-                resource_list_for_each_entry_safe(entry, tmp, list) {
--                       if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
-+                       if ((entry->res->flags & (IORESOURCE_WINDOW |
-IORESOURCE_IO)) == IORESOURCE_IO ||
-                            (entry->res->flags & IORESOURCE_DISABLED))
-                                resource_list_destroy_entry(entry);
-                        else
+Above code flow make pci scan logic obscure, resources should
+be assigned correctly before attaching driver. Because
+pci_scan_bus() mostly be called in system boot path, when
+before drivers are loaded(in module_init), so no pci scan
+issues will occur. Most pci_scan_bus() callers additionally
+call pci_bus_size_bridges() and pci_bus_assign_resources()
+after pci_scan_bus(), we could rip out pci_bus_add_devices()
+for better code readability. After applied this patch,
+pci_scan_bus() should be used like:
 
-> 
-> 
+pci_scan_bus() (mandatory)
+pci_fixup_irqs() (optional)
+pci_bus_size_bridges() (optional)
+pci_pci_bus_assign_resources() (optional)
+pci_bus_add_devices() (mandatory)
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
+CC: Richard Henderson <rth@twiddle.net>
+CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+CC: Matt Turner <mattst88@gmail.com>
+CC: linux-alpha@vger.kernel.org
+CC: linux-m68k@lists.linux-m68k.org
+CC: sparclinux@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/alpha/kernel/sys_nautilus.c  |    4 ++++
+ arch/m68k/coldfire/pci.c          |    1 +
+ arch/sparc/kernel/pcic.c          |    3 +++
+ arch/unicore32/kernel/pci.c       |   11 +++--------
+ drivers/pci/hotplug/ibmphp_core.c |    8 ++++++--
+ drivers/pci/probe.c               |    1 -
+ 6 files changed, 17 insertions(+), 11 deletions(-)
+
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 837c0fa..700686d 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -207,6 +207,9 @@ nautilus_init_pci(void)
+ 
+ 	/* Scan our single hose.  */
+ 	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
++	if (!bus)
++		return;
++
+ 	hose->bus = bus;
+ 	pcibios_claim_one_bus(bus);
+ 
+@@ -253,6 +256,7 @@ nautilus_init_pci(void)
+ 	   for the root bus, so just clear it. */
+ 	bus->self = NULL;
+ 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
++	pci_bus_add_devices(bus);
+ }
+ 
+ /*
+diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+index df96792..d45f087 100644
+--- a/arch/m68k/coldfire/pci.c
++++ b/arch/m68k/coldfire/pci.c
+@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
++	pci_bus_add_devices(rootbus);
+ 	return 0;
+ }
+ 
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index 6cc78c2..0f4dc6b 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -391,12 +391,15 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+ 	struct linux_pbm_info *pbm = &pcic->pbm;
+ 
+ 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
++	if (!pbm->pci_bus)
++		return;
+ #if 0 /* deadwood transplanted from sparc64 */
+ 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
+ 	pci_record_assignments(pbm, pbm->pci_bus);
+ 	pci_assign_unassigned(pbm, pbm->pci_bus);
+ 	pci_fixup_irq(pbm, pbm->pci_bus);
+ #endif
++	pci_bus_add_devices(pbm->pci_bus);
+ }
+ 
+ /*
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 374a055..3d82024 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+ 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		/*
+-		 * Size the bridge windows.
+-		 */
++		/* Size the bridge windows. */
+ 		pci_bus_size_bridges(puv3_bus);
+-
+-		/*
+-		 * Assign resources.
+-		 */
++		/* Assign resources. */
+ 		pci_bus_assign_resources(puv3_bus);
+ 	}
+-
++	pci_bus_add_devices(puv3_bus);
+ 	return 0;
+ }
+ subsys_initcall(pci_common_init);
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 96c5c72..1530247 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
+  */
+ static u8 bus_structure_fixup(u8 busno)
+ {
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *b;
+ 	struct pci_dev *dev;
+ 	u16 l;
+ 
+@@ -765,7 +765,11 @@ static u8 bus_structure_fixup(u8 busno)
+ 					(l != 0x0000) && (l != 0xffff)) {
+ 			debug("%s - Inside bus_structure_fixup()\n",
+ 							__func__);
+-			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			if (!b)
++				continue;
++
++			pci_bus_add_devices(b);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..88604f2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+ 	if (b) {
+ 		pci_scan_child_bus(b);
+-		pci_bus_add_devices(b);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+-- 
+1.7.1
+
