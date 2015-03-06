@@ -1,127 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:44947 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751012AbbCKChC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 22:37:02 -0400
-Received: by oifu20 with SMTP id u20so5323372oif.11
-        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 19:37:01 -0700 (PDT)
-Date: Tue, 10 Mar 2015 21:36:58 -0500
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:42541 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbbCFSQY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 13:16:24 -0500
+Received: by obcuz6 with SMTP id uz6so22251819obc.9
+        for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2015 10:16:23 -0800 (PST)
+Date: Fri, 6 Mar 2015 12:16:20 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v12 10/21] PCI: Consider additional PF's IOV BAR
- alignment in sizing and assigning
-Message-ID: <20150311023658.GA10994@google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224084152.GG6220@google.com>
- <20150302073247.GE21571@richard>
+To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
+Cc: mohit.kumar@st.com, viresh.kumar@linaro.org,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	linux-kernel@vger.kernel.org, svarbanov@mm-sol.com
+Subject: Re: [PATCH v3] pci: spear: Drop __initdata from spear13xx_pcie_driver
+Message-ID: <20150306181620.GE20077@google.com>
+References: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150302073247.GE21571@richard>
+In-Reply-To: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 02, 2015 at 03:32:47PM +0800, Wei Yang wrote:
-> On Tue, Feb 24, 2015 at 02:41:52AM -0600, Bjorn Helgaas wrote:
-> >On Tue, Feb 24, 2015 at 02:34:06AM -0600, Bjorn Helgaas wrote:
-> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
-> >> 
-> >> When sizing and assigning resources, we divide the resources into two
-> >> lists: the requested list and the additional list.  We don't consider the
-> >> alignment of additional VF(n) BAR space.
-> >> 
-> >> This is reasonable because the alignment required for the VF(n) BAR space
-> >> is the size of an individual VF BAR, not the size of the space for *all*
-> >> VFs.  But some platforms, e.g., PowerNV, require additional alignment.
-> >> 
-> >> Consider the additional IOV BAR alignment when sizing and assigning
-> >> resources.  When there is not enough system MMIO space, the PF's IOV BAR
-> >> alignment will not contribute to the bridge.  When there is enough system
-> >> MMIO space, the additional alignment will contribute to the bridge.
-> >
-> >I don't understand the ""when there is not enough system MMIO space" part.
-> >How do we tell if there's enough MMIO space?
-> >
+On Thu, Feb 19, 2015 at 08:41:48PM +0300, Matwey V. Kornilov wrote:
+> spear13xx_pcie_driver.driver is allocated in text.init section
+> and then the pointer to it is passed futher. This patch is to avoid
+> crashes like the following, when freed memory is used.
 > 
-> In __assign_resources_sorted(), it has two resources list, one for requested
-> (head) and one for additional (realloc_head). This function will first try to
-> combine them and assign. If failed, this means we don't have enough MMIO
-> space.
-
-How about this text:
-
-  This is because the alignment required for the VF(n) BAR space is the size
-  of an individual VF BAR, not the size of the space for *all* VFs.  But we
-  want additional alignment to support partitioning on PowerNV.
-
-  Consider the additional IOV BAR alignment when sizing and assigning
-  resources.  When there is not enough system MMIO space to accomodate both
-  the requested list and the additional list, the PF's IOV BAR alignment will
-  not contribute to the bridge.  When there is enough system MMIO space for
-  both lists, the additional alignment will contribute to the bridge.
-
-We're doing something specifically for PowerNV.  I would really like to be
-able to read this patch and say "Oh, here's the hook where we get the
-PowerNV behavior, and it's obvious that other platforms are unaffected."
-But I don't see a pcibios or similar hook, so I don't know where that
-PowerNV behavior is.
-
-Is it something to do with get_res_add_align()?  That uses min_align, but I
-don't know how that's connected ...  ah, I see, "add_align" is computed
-from pci_resource_alignment(), which has this path:
-
-  pci_resource_alignment
-    pci_sriov_resource_alignment
-      pcibios_iov_resource_alignment
-
-and powerpc has a special pcibios_iov_resource_alignment() for PowerNV.
-
-> >> Also, take advantage of pci_dev_resource::min_align to store this
-> >> additional alignment.
-> >
-> >This comment doesn't seem to make sense; this patch doesn't save anything
-> >in min_align.
+> Also, __init has been dropped from the probe() function referred from the struct
+> and all called functions.
 > 
-> At the end of this patch:
+>  #0  __device_attach (drv=0xc0ed5608 <spear13xx_pcie_driver+20>, data=0xdb622610) at ../drivers/base/dd.c:409
+>  #1  0xc07a4798 in bus_for_each_drv (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a6740 <__device_attach>)
+>     at ../drivers/base/bus.c:463
+>  #2  0xc07a6324 in device_attach (dev=0xdb622610) at ../drivers/base/dd.c:447
+>  #3  0xc07a5814 in bus_probe_device (dev=0xdb622610) at ../drivers/base/bus.c:558
+>  #4  0xc07a38d8 in device_add (dev=<optimized out>) at ../drivers/base/core.c:1058
+>  #5  0xc08b6a5c in of_device_add (ofdev=<optimized out>) at ../drivers/of/device.c:66
+>  #6  0xc08b742c in of_platform_device_create_pdata (np=<optimized out>, bus_id=0x0 <__vectors_start>, platform_data=0x0 <__vectors_start>,
+>     parent=<optimized out>) at ../drivers/of/platform.c:241
+>  #7  0xc08b7568 in of_platform_bus_create (bus=0xdfa46780, matches=0x0 <__vectors_start>, lookup=0x0 <__vectors_start>, parent=0xdb183410,
+>     strict=true) at ../drivers/of/platform.c:414
+>  #8  0xc08b79bc in of_platform_populate (root=0xc0ed5608 <spear13xx_pcie_driver+20>, matches=0xdb622610, lookup=0xda0,
+>     parent=0xc07a6740 <__device_attach>) at ../drivers/of/platform.c:501
+>  #9  0xbf000030 in am335x_child_probe (pdev=0xdb183400) at ../drivers/usb/musb/musb_am335x.c:12
+>  #10 0xc07a83f0 in platform_drv_probe (_dev=0xdb183410) at ../drivers/base/platform.c:512
+>  #11 0xc07a64e8 in really_probe (drv=<optimized out>, dev=<optimized out>) at ../drivers/base/dd.c:302
+>  #12 driver_probe_device (drv=0xbf000234, dev=0xdb183410) at ../drivers/base/dd.c:399
+>  #13 0xc07a6820 in __driver_attach (dev=0xdb183410, data=0xbf000234) at ../drivers/base/dd.c:477
+>  #14 0xc07a46e8 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a83a4 <platform_drv_probe>)
+>     at ../drivers/base/bus.c:313
+>  #15 0xc07a5ebc in driver_attach (drv=<optimized out>) at ../drivers/base/dd.c:496
+>  #16 0xc07a5af0 in bus_add_driver (drv=0xbf000234) at ../drivers/base/bus.c:694
+>  #17 0xc07a6fec in driver_register (drv=0xbf000234) at ../drivers/base/driver.c:167
+>  #18 0xc0209c34 in do_one_initcall (fn=0xbf002000) at ../init/main.c:801
+>  #19 0xc02e0494 in do_init_module (mod=<optimized out>) at ../kernel/module.c:3142
+>  #20 load_module (info=0xdb6b1f54, uargs=<optimized out>, flags=<optimized out>) at ../kernel/module.c:3461
+>  #21 0xc02e0a44 in SYSC_finit_module (flags=<optimized out>, uargs=<optimized out>, fd=<optimized out>) at ../kernel/module.c:3537
+>  #22 SyS_finit_module (fd=7, uargs=-1225602132, flags=0) at ../kernel/module.c:3518
+>  #23 0xc021a680 in ?? ()
 > 
->    add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
+> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
+
+Applied with Viresh's ack to for-linus for v4.0, thanks!
+
+Mohit, chime in if you disagree.
+
+> ---
+> Changes from v2:
+>  - Drop __init from all probing functions to allow deferred probing.
+> Changes from v1:
+>  - Use platform_driver_probe instead of platform_driver_register to make linker happy.
 > 
-> The add_align is stored in pci_dev_resource::min_align in add_to_list(). And
-> retrieved by get_res_add_align() in below code. This field is not used
-> previously, so I took advantage of this field to store the alignment of the
-> additional resources.
-
-Hmm.  pci_dev_resource::min_align *is* already used in
-reassign_resources_sorted().  Maybe there's no overlap; I gave up the
-analysis before I could convince myself.
-
-The changelog needs to mention the add_to_list() connection.
-
-> >> +		/*
-> >> +		 * There are two kinds of additional resources in the list:
-> >> +		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
-> >> +		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
-> >> +		 * Here just fix the additional alignment for bridge
-> >> +		 */
-> >> +		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-> >> +			continue;
-> >> +
-> >> +		add_align = get_res_add_align(realloc_head, dev_res->res);
-> >> +
-> >> +		/* Reorder the list by their alignment */
-> >
-> >Why do we need to reorder the list by alignment?
+>  drivers/pci/host/pcie-designware.c | 2 +-
+>  drivers/pci/host/pcie-spear13xx.c  | 6 +++---
+>  2 files changed, 4 insertions(+), 4 deletions(-)
 > 
-> Resource list "head" is sorted by the alignment, while the alignment would be
-> changed after we considering the additional resource.
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index df781cd..5b8a056 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -339,7 +339,7 @@ static const struct irq_domain_ops msi_domain_ops = {
+>  	.map = dw_pcie_msi_map,
+>  };
+>  
+> -int __init dw_pcie_host_init(struct pcie_port *pp)
+> +int dw_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct device_node *np = pp->dev->of_node;
+>  	struct platform_device *pdev = to_platform_device(pp->dev);
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 866465f..020d788 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -269,7 +269,7 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
+>  	.host_init = spear13xx_pcie_host_init,
+>  };
+>  
+> -static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
+> +static int spear13xx_add_pcie_port(struct pcie_port *pp,
+>  					 struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+> @@ -299,7 +299,7 @@ static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
+>  	return 0;
+>  }
+>  
+> -static int __init spear13xx_pcie_probe(struct platform_device *pdev)
+> +static int spear13xx_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct spear13xx_pcie *spear13xx_pcie;
+>  	struct pcie_port *pp;
+> @@ -370,7 +370,7 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
+>  
+> -static struct platform_driver spear13xx_pcie_driver __initdata = {
+> +static struct platform_driver spear13xx_pcie_driver = {
+>  	.probe		= spear13xx_pcie_probe,
+>  	.driver = {
+>  		.name	= "spear-pcie",
+> -- 
+> 2.1.4
 > 
-> Take powernv platform as an example. The IOV BAR is expanded and need to be
-> aligned with its total size instead of the individual VF BAR size. If we don't
-> reorder it, the IOV BAR would be assigned after some other resources, which
-> may cause the real assignment fail even the total size is enough.
-
-This is worthy of a comment in the code.
-
-Bjorn
