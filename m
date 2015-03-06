@@ -1,111 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:35321 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755364AbbCFEyF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 23:54:05 -0500
-Received: by oifz81 with SMTP id z81so15825230oif.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2015 20:54:04 -0800 (PST)
-Date: Thu, 5 Mar 2015 22:53:48 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Feng Kan <fkan@apm.com>, "patches@apm.com" <patches@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from szxga03-in.huawei.com ([119.145.14.66]:30053 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932566AbbCFJgb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:31 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Mark Salter <msalter@redhat.com>
-Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by
- map_bus
-Message-ID: <20150306045348.GB20077@google.com>
-References: <1424214840-26498-1-git-send-email-fkan@apm.com>
- <20150227002151.GG25765@google.com>
- <20150305163822.GA3048@google.com>
- <CAL_JsqJZ2JN8ZyUeLBbJqRV9bjHBCEs8JZRx=47sFrJL-QEgbQ@mail.gmail.com>
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 15/29] powerpc/pci: Rename pcibios_root_bridge_prepare()
+Date: Fri, 6 Mar 2015 17:33:32 +0800
+Message-ID: <1425634426-437-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqJZ2JN8ZyUeLBbJqRV9bjHBCEs8JZRx=47sFrJL-QEgbQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 05, 2015 at 02:57:55PM -0600, Rob Herring wrote:
-> On Thu, Mar 5, 2015 at 10:38 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > [+cc Mark]
-> >
-> > On Thu, Feb 26, 2015 at 06:21:51PM -0600, Bjorn Helgaas wrote:
-> >> On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
-> >> > The generic accessor functions for pci-xgene uses map_bus
-> >> > call that returns the base address but did not add the additional
-> >> > offset.
-> >> >
-> >> > Signed-off-by: Feng Kan <fkan@apm.com>
-> >> > ...
+Pcibios_root_bridge_prepare() in powerpc is used
+to set root bus speed. Rename it to
+pcibios_set_root_bus_speed() for better readability.
 
-> >> > @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> >> >             return NULL;
-> >> >
-> >> >     xgene_pcie_set_rtdid_reg(bus, devfn);
-> >> > -   return xgene_pcie_get_cfg_base(bus);
-> >> > +   return xgene_pcie_get_cfg_base(bus) + offset;
-> >>
-> >> Where's the locking here?  ECAM doesn't need locking because the
-> >> bus/dev/fn/offset is all encoded in the MMIO address.  But it looks
-> >> like X-Gene doesn't work that way and bus/dev/fn is in the RTDID register.
-> >>
-> >> So it seems like X-Gene needs locking that not everybody needs.  Are you
-> >> relying on higher-level locking somewhere?
-> >> ...
-> 
-> There's no locking problem. The config accesses are all within the
-> pci_lock spinlock and nothing else touches that register.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |    4 ++--
+ arch/powerpc/platforms/pseries/pci.c     |    2 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
-Mmmmm.  Yes, you're right.  pci_bus_{read,write}_config_{byte,word,dword}()
-all acquire pci_lock.  For anybody following along at home, here's the
-path I was concerned about:
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index c8175a3..8e7f2a8 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
++	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
+ 
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index a467aca..0d8b369 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -769,8 +769,8 @@ int pci_proc_domain(struct pci_bus *bus)
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ {
+-	if (ppc_md.pcibios_root_bridge_prepare)
+-		return ppc_md.pcibios_root_bridge_prepare(bridge);
++	if (ppc_md.pcibios_set_root_bus_speed)
++		return ppc_md.pcibios_set_root_bus_speed(bridge);
+ 
+ 	return 0;
+ }
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index fe16a50..af685d6 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
++int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 1796c54..5d0be3a 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
++int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index e445b67..b196c0d 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
+ 	}
+ 
+-	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
++	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
+ 
+ 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
+ 		long rc;
+-- 
+1.7.1
 
-    pci_read_config_byte
-      pci_bus_read_config_byte
-        lock(&pci_lock)                         # acquire pci_lock
-        bus->ops->read/write                    # struct pci_ops
-          pci_generic_config_read               # gen_pci_ops
-            bus->ops->map_bus
-              xgene_pcie_map_bus                # xgene_pcie_ops
-                xgene_pcie_set_rtdid_reg
-                  writel                        # requires mutex
-            readb                               # config read
-
-I'm not exactly sure *why* we do locking there, other than we're just
-too scared to change it.  As far as I know, methods like ECAM shouldn't
-require that lock, so it's sort of a shame to do it at the top level
-like that.
-
-Some of the low-level routines, like pci_{conf1,conf2,bios}, also use a
-lock (pci_config_lock in these cases).  We do need it there because a
-few paths do call the low-level routines directly.
-
-Here's a typical path on x86:
-
-    pci_read_config_byte
-      pci_bus_read_config_byte
-        lock(&pci_lock)                         # acquire pci_lock
-        bus->ops->read/write                    # struct pci_ops
-          pci_read                              # x86 pci_root_ops
-            raw_pci_read
-              raw_pci_ops->read
-                pci_conf1_read                  # x86 raw_pci_ops
-                  lock(&pci_config_lock)        # acquire pci_config_lock
-
-And here's a path on x86 that uses the low-level routines directly and
-requires the locking there:
-
-    acpi_os_read_pci_configuration
-      raw_pci_read
-        raw_pci_ops->read
-          pci_conf1_read
-            lock(&pci_config_lock)
-
-So ideally I think the locking would be done in the low-level routines
-that need it, and we could do without pci_lock.  But I don't know
-whether that's practical at this point or not.
-
-Bjorn
