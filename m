@@ -1,45 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:38684 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbbCHGvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 01:51:55 -0500
+Received: from bh-25.webhostbox.net ([208.91.199.152]:52580 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863AbbCFQzN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 11:55:13 -0500
+Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
+	(envelope-from <linux@roeck-us.net>)
+	id 1YTvWq-000eRS-TW
+	for linux-pci@vger.kernel.org; Fri, 06 Mar 2015 16:55:13 +0000
+Date: Fri, 6 Mar 2015 08:55:04 -0800
+From: Guenter Roeck <linux@roeck-us.net>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, LKP <lkp@01.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PCI] BUG: unable to handle kernel
+Message-ID: <20150306165504.GA30094@roeck-us.net>
+References: <20150306060631.GD28187@wfg-t540p.sh.intel.com>
+ <54F9C407.5020602@ti.com>
+ <54F9CC6B.5070803@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.10.1503071748530.5739@chino.kir.corp.google.com>
-References: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
-	<1425776181-10219-2-git-send-email-yinghai@kernel.org>
-	<alpine.DEB.2.10.1503071748530.5739@chino.kir.corp.google.com>
-Date: Sat, 7 Mar 2015 22:51:53 -0800
-Message-ID: <CAE9FiQWd71SxCf9=Nh_dBSKK2ecHC=s3-2R7dZJM9PGuR7ybzw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/8] x86: Kill E820_RESERVED_KERN
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Rientjes <rientjes@google.com>
-Cc: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiri Kosina <jkosina@suse.cz>, Chun-Yi Lee <jlee@suse.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54F9CC6B.5070803@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 7, 2015 at 5:59 PM, David Rientjes <rientjes@google.com> wrote:
->
-> Hmm, although the bug is reported for a 3.12 kernel, I assume this is for
-> stable 3.10+?  If so, it should apply fine with the exception of removing
-> e820_reserve_setup_data() from setup_arch() rather than
-> memblock_x86_reserve_range_setup_data().  Or is it for 3.2 as well and
-> needs to be completely rebased for that kernel?
+On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
+[ ... ]
 
-For 3.10+, we will need to following patches, otherwise will have warning for
-SETUP_PCI with ioremap.
+> >From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17 00:00:00 2001
+> From: Murali Karicheri <m-karicheri2@ti.com>
+> Date: Fri, 6 Mar 2015 10:23:08 -0500
+> Subject: [PATCH] pci: of : fix kernel crash
+> 
+> This is a debug patch to root cause the kernel crash
+> 
+> 	commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
+> 
+> 	PCI: Update DMA configuration from DT
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/of/of_pci.c       |    8 ++++++++
+>  drivers/pci/host-bridge.c |    5 +++++
+>  2 files changed, 13 insertions(+)
+> 
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 86d3c38..5a59fb8 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
+>  	struct device *dev = &pci_dev->dev;
+>  	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>  
+> +	if (!bridge || !bridge->parent) {
+> +		if (!bridge)
+> +			pr_err("PCI bridge not found\n");
+> +		if (!bridge->parent)
+> +			pr_err("PCI bridge parent not found\n");
 
-for 3.2 that does not SETUP_PCI, should be ok, but will need rebase.
+You'll see a crash here if bridge is NULL. Maybe add an else before the second
+if statement ? Also, dev_err might be a bit more useful and would be available.
 
-Thanks
+Thanks,
+Guenter
 
-Yinghai
+> +		return;
+> +	}
+> +
+>  	of_dma_configure(dev, bridge->parent->of_node);
+>  	pci_put_host_bridge_device(bridge);
+>  }
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 3e5bbf9..ef2ab51 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
+>  	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>  	struct device *bridge = root_bus->bridge;
+>  
+> +	if (!bridge) {
+> +		pr_err("PCI: bridge not found\n");
+> +		return NULL;
+> +	}
+> +
+>  	kobject_get(&bridge->kobj);
+>  	return bridge;
+>  }
+> -- 
+> 1.7.9.5
+> 
+
