@@ -1,52 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 24 Mar 2015 17:10:39 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
-Message-ID: <20150324221039.GE2495@google.com>
-References: <54FD4FB9.2060802@intel.com>
- <5222588.FaRe37n2T1@vostro.rjw.lan>
- <54FE93A4.9040908@intel.com>
- <20150320210354.GK26935@google.com>
- <550FDA38.2090505@intel.com>
- <20150323150955.GR26935@google.com>
- <551128BA.7070508@intel.com>
- <20150324140812.GB2495@google.com>
- <5511849F.3050903@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:30268 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268AbbCFJgh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:37 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v5 18/29] sparc/PCI: Claim bus resources before pci_bus_add_devices()
+Date: Fri, 6 Mar 2015 17:33:35 +0800
+Message-ID: <1425634426-437-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5511849F.3050903@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 24, 2015 at 11:37:03PM +0800, Aaron Lu wrote:
-> On 03/24/2015 10:08 PM, Bjorn Helgaas wrote:
-> > On Tue, Mar 24, 2015 at 05:04:58PM +0800, Aaron Lu wrote:
-> >> @@ -575,6 +637,9 @@ static void pci_acpi_setup(struct device *dev)
-> >>  	if (!adev)
-> >>  		return;
-> >>  
-> >> +	if (pci_dev->pm_cap)
-> >> +		pci_acpi_delay_optimize(pci_dev, adev->handle);
-> > 
-> > Is the "pm_cap" test really necessary?  If we do it this way, we then have
-> > to convince ourselves that pdev->d3cold_delay and pdev->d3_delay are only
-> > needed when pdev has a pm_cap.
-> > 
-> > If we *always* fill in the delay values, it's possible they won't be used,
-> > but we don't have to prove any connection between them and a pm_cap, so
-> > the code is easier to analyze.
-> 
-> I remembered why I did the pm_cap test: the d3cold_delay and d3_delay is
-> only filled when pm_cap is set in pci_pm_init - if the device doesn't
-> have PCI_CAP_ID_PM set, its pm_cap will be 0 and d3cold_delay, d3_delay
-> will not be assigned.
+Pci_claim_bus_resources() should be called before
+pci_bus_add_devices(), or driver may failed to
+load, because the resources had not claimed.
 
-Yes, that's true, so I can see why you'd test pm_cap here, too.  But I
-don't think it's necessary to propagate that connection here, so I'd omit
-the test.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/sparc/kernel/pci.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Bjorn
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 838fe1e..21f804a 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -678,11 +678,10 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	}
+ 
+ 	pci_of_scan_bus(pbm, node, bus);
+-	pci_bus_add_devices(bus);
+ 	pci_bus_register_of_sysfs(bus);
+ 
+ 	pci_claim_bus_resources(bus);
+-
++	pci_bus_add_devices(bus);
+ 	return bus;
+ }
+ 
+-- 
+1.7.1
+
