@@ -1,150 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23374 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752101AbbCICnI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 10/30] PCI: Introduce pci_host_bridge_list to manage host bridges
-Date: Mon, 9 Mar 2015 10:34:07 +0800
-Message-ID: <1425868467-9667-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:34734 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413AbbCFSzM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 13:55:12 -0500
+Received: by mail-vc0-f180.google.com with SMTP id hq12so1002377vcb.11
+        for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2015 10:55:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAE9FiQXzv7TPMRA+RqSdV0ERiW3KYA-2KOyDKBrZDn3Zd5RcrQ@mail.gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-2-git-send-email-yinghai@kernel.org>
+	<20150306135534.GD4259@pd.tnic>
+	<CAE9FiQXzv7TPMRA+RqSdV0ERiW3KYA-2KOyDKBrZDn3Zd5RcrQ@mail.gmail.com>
+Date: Fri, 6 Mar 2015 10:55:11 -0800
+Message-ID: <CAGXu5jLf+=CMs0qj4nRG-kw1YiQ-eMFHFpAE8uVUitqmGOG7gA@mail.gmail.com>
+Subject: Re: [PATCH v2 01/15] x86, kaslr: Use init_size instead of run_size
+From: Kees Cook <keescook@chromium.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Junjie Mao <eternal.n08@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_host_bridge_list to manage pci host
-bridges in system, so we could detect whether
-the host in domain:bus is alreay registered.
-Then we could remove bus alreay exist test in
-__pci_create_root_bus().
+On Fri, Mar 6, 2015 at 10:44 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Mar 6, 2015 at 5:55 AM, Borislav Petkov <bp@alien8.de> wrote:
+>> On Wed, Mar 04, 2015 at 12:00:34AM -0800, Yinghai Lu wrote:
+>>> commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+>>>
+>>> introduced one run_size for kaslr.
+>>>
+>>> We do not need to have home grown run_size.
+>>>
+>>> We should use real runtime size (include copy/decompress) aka init_size
+>>
+>> Why?
+>
+> New change log:
+>
+> Subject: [PATCH] x86, kaslr: Use init_size instead of run_size
+>
+> commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+> introduced one run_size for kaslr.
+> We should use real runtime size (include copy/decompress) aka init_size.
+>
+> run_size is size of VO (vmlinux).
+> init_size is the size needed for decompress and it is bigger than run_size
+> when decompress need more buff.
+>
+> According to arch/x86/boot/header.S:
+> | #define ZO_INIT_SIZE    (ZO__end - ZO_startup_32 + ZO_z_extract_offset)
+> | #define VO_INIT_SIZE    (VO__end - VO__text)
+> | #if ZO_INIT_SIZE > VO_INIT_SIZE
+> | #define INIT_SIZE ZO_INIT_SIZE
+> | #else
+> | #define INIT_SIZE VO_INIT_SIZE
+> | #endif
+> | init_size:              .long INIT_SIZE         # kernel initialization size
+>
+> Bootloader allocate buffer according to init_size in hdr, and load the
+> ZO (arch/x86/boot/compressed/vmlinux) from start of that buffer.
+> During running of ZO, ZO move itself to the middle of buffer at
+> z_extract_offset to make sure that decompressor would not have output
+> overwrite input data before input data get consumed.
+> But z_extract_offset calculating is based on size of VO (vmlinux) and size
+> of compressed VO only at first.
+> So need to make [z_extra_offset, init_size) will fit ZO, that means
+> init_size need to be adjusted according to ZO size.
+> That make init_size is always >= run_size.
+>
+> During aslr buffer searching, we need to make sure the buffer is bigger
+> enough for decompress at first. So use init_size instead, and kill not
+> needed run_size related code.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host-bridge.c |   24 +++++++++++++++++++++++-
- drivers/pci/probe.c       |    8 +-------
- include/linux/pci.h       |    1 +
- 3 files changed, 25 insertions(+), 8 deletions(-)
+I don't see how bss and brk are related to these sizes. Can you
+explain how bss, brk, and initrd factor into these sizes? Those were
+what run_size was created to represent. I don't want to accidentally
+start stomping on bss and brk again. :)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 3bd45e7..0bb08ef 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,6 +8,9 @@
- 
- #include "pci.h"
- 
-+static LIST_HEAD(pci_host_bridge_list);
-+static DEFINE_MUTEX(phb_mutex);
-+
- static void pci_release_host_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-@@ -25,7 +28,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	int error;
- 	int bus = PCI_BUSNUM(db);
- 	int domain = PCI_DOMAIN(db);
--	struct pci_host_bridge *host;
-+	struct pci_host_bridge *host, *temp;
- 	struct resource_entry *window, *n;
- 
- 	host = kzalloc(sizeof(*host), GFP_KERNEL);
-@@ -40,6 +43,18 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	 */
- 	pci_host_assign_domain_nr(host);
- 
-+	mutex_lock(&phb_mutex);
-+	list_for_each_entry(temp, &pci_host_bridge_list, list)
-+		if (temp->domain == host->domain
-+				&& temp->busnum == host->busnum) {
-+			dev_dbg(&host->dev, "pci host bridge pci%04x:%02x exist\n",
-+					host->domain, host->busnum);
-+			mutex_unlock(&phb_mutex);
-+			kfree(host);
-+			return NULL;
-+		}
-+	mutex_unlock(&phb_mutex);
-+
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-@@ -55,11 +70,18 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	resource_list_for_each_entry_safe(window, n, resources)
- 		list_move_tail(&window->node, &host->windows);
- 
-+	mutex_lock(&phb_mutex);
-+	list_add_tail(&host->list, &pci_host_bridge_list);
-+	mutex_unlock(&phb_mutex);
- 	return host;
- }
- 
- void pci_free_host_bridge(struct pci_host_bridge *host)
- {
-+	mutex_lock(&phb_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&phb_mutex);
-+
- 	device_unregister(&host->dev);
- }
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27ec612..7238fa3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1870,7 +1870,7 @@ static struct pci_bus *__pci_create_root_bus(
- 		void *sysdata)
- {
- 	int error;
--	struct pci_bus *b, *b2;
-+	struct pci_bus *b;
- 	struct resource_entry *window;
- 	struct device *parent;
- 	struct resource *res;
-@@ -1887,12 +1887,6 @@ static struct pci_bus *__pci_create_root_bus(
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
--	b2 = pci_find_bus(pci_domain_nr(b), b->number);
--	if (b2) {
--		/* If we already got to this bus through a different bridge, ignore it */
--		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
--	}
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 463eaa3..b621f5b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -406,6 +406,7 @@ struct pci_host_bridge {
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
-+	struct list_head list;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
+-Kees
+
 -- 
-1.7.1
-
+Kees Cook
+Chrome OS Security
