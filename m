@@ -1,95 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:53716 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132AbbCCJfj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 04:35:39 -0500
-Message-ID: <54F5805A.7080000@huawei.com>
-Date: Tue, 3 Mar 2015 17:35:22 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:40188 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753761AbbCFSob (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 13:44:31 -0500
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+In-Reply-To: <20150306135534.GD4259@pd.tnic>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-2-git-send-email-yinghai@kernel.org>
+	<20150306135534.GD4259@pd.tnic>
+Date: Fri, 6 Mar 2015 10:44:29 -0800
+Message-ID: <CAE9FiQXzv7TPMRA+RqSdV0ERiW3KYA-2KOyDKBrZDn3Zd5RcrQ@mail.gmail.com>
+Subject: Re: [PATCH v2 01/15] x86, kaslr: Use init_size instead of run_size
+From: Yinghai Lu <yinghai@kernel.org>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v4 28/30] PCI: Export find_pci_host_bridge()
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-29-git-send-email-wangyijing@huawei.com> <20150303034048.GM11978@google.com>
-In-Reply-To: <20150303034048.GM11978@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Kees Cook <keescook@chromium.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Junjie Mao <eternal.n08@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/3 11:40, Bjorn Helgaas wrote:
-> On Thu, Feb 26, 2015 at 04:12:22PM +0800, Yijing Wang wrote:
->> Export find_pci_host_bridge().
+On Fri, Mar 6, 2015 at 5:55 AM, Borislav Petkov <bp@alien8.de> wrote:
+> On Wed, Mar 04, 2015 at 12:00:34AM -0800, Yinghai Lu wrote:
+>> commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
 >>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/host-bridge.c |    2 +-
->>  include/linux/pci.h       |    1 +
->>  2 files changed, 2 insertions(+), 1 deletions(-)
+>> introduced one run_size for kaslr.
 >>
->> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> index 4a2baa2..51e24f8 100644
->> --- a/drivers/pci/host-bridge.c
->> +++ b/drivers/pci/host-bridge.c
->> @@ -104,7 +104,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->>  	return bus;
->>  }
->>  
->> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
->> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> 
-> Please name this "pci_find_host_bridge()" or similar so it looks like other
-> PCI functions.
-
-OK, will rename it to "pci_find_host_bridge()" like others.
-
-
-> 
->>  {
->>  	struct pci_bus *root_bus = find_pci_root_bus(bus);
->>  
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 2f29e95..6ac7926 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -426,6 +426,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->>  struct pci_host_bridge *pci_create_host_bridge(
->>  		struct device *parent, u32 dombus, struct list_head *resources, 
->>  		void *sysdata, struct pci_host_bridge_ops *ops);
->> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus* bus);
-> 
-> I'm not sure this needs to be in include/linux/pci.h.  Wouldn't
-> drivers/pci/pci.h be enough?
-
-It's enough for this series, so I would move it to drivers/pci/pci.h, thanks!
-
-
-> 
->>  /*
->>   * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
->>   * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
->> -- 
->> 1.7.1
+>> We do not need to have home grown run_size.
 >>
-> 
-> .
-> 
+>> We should use real runtime size (include copy/decompress) aka init_size
+>
+> Why?
 
+New change log:
 
--- 
-Thanks!
-Yijing
+Subject: [PATCH] x86, kaslr: Use init_size instead of run_size
 
+commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+introduced one run_size for kaslr.
+We should use real runtime size (include copy/decompress) aka init_size.
+
+run_size is size of VO (vmlinux).
+init_size is the size needed for decompress and it is bigger than run_size
+when decompress need more buff.
+
+According to arch/x86/boot/header.S:
+| #define ZO_INIT_SIZE    (ZO__end - ZO_startup_32 + ZO_z_extract_offset)
+| #define VO_INIT_SIZE    (VO__end - VO__text)
+| #if ZO_INIT_SIZE > VO_INIT_SIZE
+| #define INIT_SIZE ZO_INIT_SIZE
+| #else
+| #define INIT_SIZE VO_INIT_SIZE
+| #endif
+| init_size:              .long INIT_SIZE         # kernel initialization size
+
+Bootloader allocate buffer according to init_size in hdr, and load the
+ZO (arch/x86/boot/compressed/vmlinux) from start of that buffer.
+During running of ZO, ZO move itself to the middle of buffer at
+z_extract_offset to make sure that decompressor would not have output
+overwrite input data before input data get consumed.
+But z_extract_offset calculating is based on size of VO (vmlinux) and size
+of compressed VO only at first.
+So need to make [z_extra_offset, init_size) will fit ZO, that means
+init_size need to be adjusted according to ZO size.
+That make init_size is always >= run_size.
+
+During aslr buffer searching, we need to make sure the buffer is bigger
+enough for decompress at first. So use init_size instead, and kill not
+needed run_size related code.
