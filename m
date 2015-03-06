@@ -1,108 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:37986 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbbCJATU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 20:19:20 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v4 1/4] PCI: Export symbols of PCI functions
-Date: Mon, 9 Mar 2015 17:21:14 -0700
-Message-ID: <1425946878-13169-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1425946878-13169-1-git-send-email-rjui@broadcom.com>
-References: <1425946878-13169-1-git-send-email-rjui@broadcom.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:36269 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755288AbbCFTxX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 14:53:23 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
+	<20150304101649.GA3663@pd.tnic>
+	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
+	<20150304200000.GB6276@gmail.com>
+	<CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+	<20150306133312.GC4259@pd.tnic>
+	<CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
+Date: Fri, 6 Mar 2015 11:53:22 -0800
+Message-ID: <CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Borislav Petkov <bp@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export symbols of the following PCI functions so they can be referenced
-by a PCI driver compiled as a kernel loadable module:
+On Fri, Mar 6, 2015 at 11:50 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Mar 6, 2015 at 5:33 AM, Borislav Petkov <bp@suse.de> wrote:
+>
+>>
+>> "However, the setup_data linked list and thus the element which contains
+>> kaslr_enabled is chained together using physical addresses. At the
+>> time when we access it in the kernel proper, we're already running
+>> with paging enabled and therefore must access it through its virtual
+>> address."
+>>
+>> That's it, now how hard was to explain it that way?
+>
+> No, I don't think your change log is right.
+>
+> Actually the old code is using address as value.
+>
+> if the old code would be like:
+>
+> kaslr_enabled = (bool)(*(unsigned char *)(pa_data + sizeof(struct setup_data)));
+>
+> then your change log would be good, but the old code is
+>
+> kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
 
-pci_common_swizzle
-pci_create_root_bus
-pci_stop_root_bus
-pci_remove_root_bus
-pci_assign_unassigned_bus_resources
-pci_fixup_irqs
+Please check if you are ok with this:
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
----
- drivers/pci/pci.c       |    1 +
- drivers/pci/probe.c     |    1 +
- drivers/pci/remove.c    |    2 ++
- drivers/pci/setup-bus.c |    1 +
- drivers/pci/setup-irq.c |    1 +
- 5 files changed, 6 insertions(+)
+Subject: [PATCH v4] x86, kaslr: Access the correct kaslr_enabled variable
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..fb4a3da 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
- 	*pinp = pin;
- 	return PCI_SLOT(dev->devfn);
- }
-+EXPORT_SYMBOL(pci_common_swizzle);
- 
- /**
-  *	pci_release_region - Release a PCI bar
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..eb24ef9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1993,6 +1993,7 @@ err_out:
- 	kfree(b);
- 	return NULL;
- }
-+EXPORT_SYMBOL(pci_create_root_bus);
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8bd76c9..c523159 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
- 	/* stop the host bridge */
- 	device_release_driver(&host_bridge->dev);
- }
-+EXPORT_SYMBOL(pci_stop_root_bus);
- 
- void pci_remove_root_bus(struct pci_bus *bus)
- {
-@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	/* remove the host bridge */
- 	device_unregister(&host_bridge->dev);
- }
-+EXPORT_SYMBOL(pci_remove_root_bus);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e3e17f3..932c9e5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
- }
-+EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 4e2d595..9d2bbb6 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	for_each_pci_dev(dev)
- 		pdev_fixup_irq(dev, swizzle, map_irq);
- }
-+EXPORT_SYMBOL(pci_fixup_irqs);
--- 
-1.7.9.5
+commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+started passing KASLR status to kernel proper, but it uses address as
+the vaule.
 
+That will get wrong value back for kaslr_enabled in kernel stage.
+1. When kaslr is not enabled at boot/choose_kernel_location, if kaslr_enabled
+get set wrongly in setup.c, late in module.c::get_module_load_offset
+will return not wanted random module load offset.
+That change behavior when HIBERNATION is defined or nokaslr is passed.
+
+2. When kaslr is enabled at boot/choose_kernel_location, if kaslr_enabled
+get cleared wrongly in setup.c, late in module.c::get_module_load_offset
+will not return wanted random module load offset.
+
+The setup_data linked list and thus the element which contains
+kaslr_enabled is chained together using physical addresses. At the
+time when we access it in the kernel proper, we're already running
+with paging enabled and therefore must access it through its virtual
+address.
+
+This patch changes the code to use early_memmap and access the value,
+and will keep boot and kernel consistent with kaslr.
+
+-v3: add checking return from early_memmap according to Boris.
