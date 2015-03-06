@@ -1,146 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:38275 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbbCKCv2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 22:51:28 -0400
-Received: by oiax69 with SMTP id x69so5416590oia.5
-        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 19:51:28 -0700 (PDT)
-Date: Tue, 10 Mar 2015 21:51:25 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v12 15/21] powerpc/powernv: Reserve additional space for
- IOV BAR according to the number of total_pe
-Message-ID: <20150311025125.GC10994@google.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083442.32124.96716.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224085234.GJ6220@google.com>
- <20150302074132.GG21571@richard>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:30046 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288AbbCFJib (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:38:31 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 16/29] powerpc/pci: Use pci_scan_host_bridge() for simplicity
+Date: Fri, 6 Mar 2015 17:33:33 +0800
+Message-ID: <1425634426-437-17-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150302074132.GG21571@richard>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 02, 2015 at 03:41:32PM +0800, Wei Yang wrote:
-> On Tue, Feb 24, 2015 at 02:52:34AM -0600, Bjorn Helgaas wrote:
-> >On Tue, Feb 24, 2015 at 02:34:42AM -0600, Bjorn Helgaas wrote:
-> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
-> >> 
-> >> On PHB3, PF IOV BAR will be covered by M64 window to have better PE
-> >> isolation.  The total_pe number is usually different from total_VFs, which
-> >> can lead to a conflict between MMIO space and the PE number.
-> >> 
-> >> For example, if total_VFs is 128 and total_pe is 256, the second half of
-> >> M64 window will be part of other PCI device, which may already belong
-> >> to other PEs.
-> >
-> >I'm still trying to wrap my mind around the explanation here.
-> >
-> >I *think* what's going on is that the M64 window must be a power-of-two
-> >size.  If the VF(n) BAR space doesn't completely fill it, we might allocate
-> >the leftover space to another device.  Then the M64 window for *this*
-> >device may cause the other device to be associated with a PE it didn't
-> >expect.
-> 
-> Yes, this is the exact reason.
+Now we could use pci_scan_host_bridge() to scan
+pci buses, provide powerpc specific pci_host_bridge_ops.
 
-Can you include some of this text in your changelog, then?  I can wordsmith
-it and try to make it fit together better.
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |   63 ++++++++++++++++++------------
+ arch/powerpc/platforms/pseries/pci.c     |    8 ++--
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ 4 files changed, 44 insertions(+), 31 deletions(-)
 
-> >> +#ifdef CONFIG_PCI_IOV
-> >> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-> >> +{
-> >> +	struct pci_controller *hose;
-> >> +	struct pnv_phb *phb;
-> >> +	struct resource *res;
-> >> +	int i;
-> >> +	resource_size_t size;
-> >> +	struct pci_dn *pdn;
-> >> +
-> >> +	if (!pdev->is_physfn || pdev->is_added)
-> >> +		return;
-> >> +
-> >> +	hose = pci_bus_to_host(pdev->bus);
-> >> +	phb = hose->private_data;
-> >> +
-> >> +	pdn = pci_get_pdn(pdev);
-> >> +	pdn->max_vfs = 0;
-> >> +
-> >> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> >> +		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-> >> +		if (!res->flags || res->parent)
-> >> +			continue;
-> >> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-> >> +			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
-> >> +				 i, res);
-> >> +			continue;
-> >> +		}
-> >> +
-> >> +		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
-> >> +		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
-> >> +		res->end = res->start + size * phb->ioda.total_pe - 1;
-> >> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
-> >> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
-> >> +				i, res, phb->ioda.total_pe);
-> >> +	}
-> >> +	pdn->max_vfs = phb->ioda.total_pe;
-> >> +}
-> >> +
-> >> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
-> >> +{
-> >> +	struct pci_dev *pdev;
-> >> +	struct pci_bus *b;
-> >> +
-> >> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
-> >> +		b = pdev->subordinate;
-> >> +
-> >> +		if (b)
-> >> +			pnv_pci_ioda_fixup_sriov(b);
-> >> +
-> >> +		pnv_pci_ioda_fixup_iov_resources(pdev);
-> >
-> >I'm not sure this happens at the right time.  We have this call chain:
-> >
-> >  pcibios_scan_phb
-> >    pci_create_root_bus
-> >    pci_scan_child_bus
-> >    pnv_pci_ioda_fixup_sriov
-> >      pnv_pci_ioda_fixup_iov_resources
-> >	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-> >	  increase res->size to accomodate 256 PEs (or roundup(totalVFs)
-> >
-> >so we only do the fixup_iov_resources() when we scan the PHB, and we
-> >wouldn't do it at all for hot-added devices.
-> 
-> Yep, you are right :-)
-> 
-> I had a separate patch to do this in pcibios_add_pci_devices(). Looks we could
-> merge them.
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 8e7f2a8..b811d12 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
++	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
+ 
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0d8b369..71f0077 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -767,14 +767,37 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++static void pci_host_bridge_set_root_bus_speed(
++		struct pci_host_bridge *bridge)
+ {
+ 	if (ppc_md.pcibios_set_root_bus_speed)
+-		return ppc_md.pcibios_set_root_bus_speed(bridge);
++		ppc_md.pcibios_set_root_bus_speed(bridge);
+ 
+ 	return 0;
+ }
+ 
++static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
++{
++	int mode = PCI_PROBE_NORMAL;
++	struct pci_bus *bus = host->bus;
++	struct pci_controller *hose = dev_get_drvdata(&host->dev);
++
++	/* Get probe mode and perform scan */
++	if (hose->dn && ppc_md.pci_probe_mode)
++		mode = ppc_md.pci_probe_mode(bus);
++
++	pr_debug("    probe mode: %d\n", mode);
++	if (mode == PCI_PROBE_DEVTREE)
++		of_scan_bus(hose->dn, bus);
++
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
++		hose->last_busno = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, hose->last_busno);
++	}
++}
++
++
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -1587,6 +1610,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ 	return of_node_get(hose->dn);
+ }
+ 
++static struct pci_host_bridge_ops phb_ops = {
++	.set_root_bus_speed = pci_host_bridge_set_root_bus_speed,
++	.scan_bus = pci_host_bridge_of_scan_bus,
++};
++
+ /**
+  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
+  * @hose: Pointer to the PCI host controller instance structure
+@@ -1594,9 +1622,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ void pcibios_scan_phb(struct pci_controller *hose)
+ {
+ 	LIST_HEAD(resources);
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host;
+ 	struct device_node *node = hose->dn;
+-	int mode;
+ 
+ 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
+ 
+@@ -1612,30 +1639,16 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	pci_add_resource(&resources, &hose->busn);
+ 
+ 	/* Create an empty bus for the toplevel */
+-	bus = pci_create_root_bus(hose->parent,
++	host = pci_scan_host_bridge(hose->parent,
+ 			PCI_DOMBUS(hose->global_number, hose->first_busno),
+-			hose->ops, hose, &resources);
+-	if (bus == NULL) {
+-		pr_err("Failed to create bus for PCI domain %04x\n",
++			hose->ops, hose, &resources, &phb_ops);
++	if (host == NULL) {
++		pr_err("Failed to create host bridge for PCI domain %04x\n",
+ 			hose->global_number);
+ 		pci_free_resource_list(&resources);
+ 		return;
+ 	}
+-	hose->bus = bus;
+-
+-	/* Get probe mode and perform scan */
+-	mode = PCI_PROBE_NORMAL;
+-	if (node && ppc_md.pci_probe_mode)
+-		mode = ppc_md.pci_probe_mode(bus);
+-	pr_debug("    probe mode: %d\n", mode);
+-	if (mode == PCI_PROBE_DEVTREE)
+-		of_scan_bus(node, bus);
+-
+-	if (mode == PCI_PROBE_NORMAL) {
+-		pci_bus_update_busn_res_end(bus, 255);
+-		hose->last_busno = pci_scan_child_bus(bus);
+-		pci_bus_update_busn_res_end(bus, hose->last_busno);
+-	}
++	hose->bus = host->bus;
+ 
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+@@ -1644,9 +1657,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
+ 	/* Configure PCI Express settings */
+-	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node)
++		list_for_each_entry(child, &host->bus->children, node)
+ 			pcie_bus_configure_settings(child);
+ 	}
+ }
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index af685d6..89ff79c 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+@@ -121,7 +121,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 
+ 	dn = pcibios_get_phb_of_node(bus);
+ 	if (!dn)
+-		return 0;
++		return;
+ 
+ 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
+ 		rc = of_property_read_u32_array(pdn,
+@@ -135,7 +135,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 
+ 	if (rc) {
+ 		pr_debug("no ibm,pcie-link-speed-stats property\n");
+-		return 0;
++		return;
+ 	}
+ 
+ 	switch (pcie_link_speed_stats[0]) {
+@@ -168,5 +168,5 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 		break;
+ 	}
+ 
+-	return 0;
++	return;
+ }
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 5d0be3a..9aa9c13 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
+-- 
+1.7.1
 
-Did you fix this in v13?  I don't see the change if you did.
-
-> >> +	}
-> >> +}
-> >> +#endif /* CONFIG_PCI_IOV */
-> >> +
-> >>  /*
-> >>   * This function is supposed to be called on basis of PE from top
-> >>   * to bottom style. So the the I/O or MMIO segment assigned to
-> >> @@ -2125,6 +2180,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
-> >>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
-> >>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
-> >>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
-> >> +#ifdef CONFIG_PCI_IOV
-> >> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
-> >> +#endif /* CONFIG_PCI_IOV */
-> >>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-> >>  
-> >>  	/* Reset IODA tables to a clean state */
-> >> 
-> 
-> -- 
-> Richard Yang
-> Help you, Help me
-> 
