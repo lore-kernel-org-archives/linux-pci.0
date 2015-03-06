@@ -1,104 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38096 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932631AbbCIORx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Mar 2015 10:17:53 -0400
-Message-ID: <54FDAB8B.3010404@ti.com>
-Date: Mon, 9 Mar 2015 10:17:47 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v3 1/3] pci: iProc: define iProc PCIe platform bus binding
+Date: Thu, 5 Mar 2015 17:01:36 -0800
+Message-ID: <1425603699-13416-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1425603699-13416-1-git-send-email-rjui@broadcom.com>
+References: <1425603699-13416-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PCI] BUG: unable to handle kernel
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com>
-In-Reply-To: <54F9EAA8.30007@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/06/2015 12:58 PM, Murali Karicheri wrote:
-> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
->> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
->> [ ... ]
->>
->>> > From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17 00:00:00 2001
->>> From: Murali Karicheri<m-karicheri2@ti.com>
->>> Date: Fri, 6 Mar 2015 10:23:08 -0500
->>> Subject: [PATCH] pci: of : fix kernel crash
->>>
->>> This is a debug patch to root cause the kernel crash
->>>
->>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
->>>
->>> PCI: Update DMA configuration from DT
->>>
->>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>> ---
->>> drivers/of/of_pci.c | 8 ++++++++
->>> drivers/pci/host-bridge.c | 5 +++++
->>> 2 files changed, 13 insertions(+)
->>>
->>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>> index 86d3c38..5a59fb8 100644
->>> --- a/drivers/of/of_pci.c
->>> +++ b/drivers/of/of_pci.c
->>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
->>> struct device *dev =&pci_dev->dev;
->>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
->>>
->>> + if (!bridge || !bridge->parent) {
->>> + if (!bridge)
->>> + pr_err("PCI bridge not found\n");
->>> + if (!bridge->parent)
->>> + pr_err("PCI bridge parent not found\n");
->>
->> You'll see a crash here if bridge is NULL. Maybe add an else before
->> the second
->> if statement ? Also, dev_err might be a bit more useful and would be
->> available.
->>
-> Fixed and attached.
->
-> Murali
->> Thanks,
->> Guenter
->>
->>> + return;
->>> + }
->>> +
->>> of_dma_configure(dev, bridge->parent->of_node);
->>> pci_put_host_bridge_device(bridge);
->>> }
->>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->>> index 3e5bbf9..ef2ab51 100644
->>> --- a/drivers/pci/host-bridge.c
->>> +++ b/drivers/pci/host-bridge.c
->>> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct
->>> pci_dev *dev)
->>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>> struct device *bridge = root_bus->bridge;
->>>
->>> + if (!bridge) {
->>> + pr_err("PCI: bridge not found\n");
->>> + return NULL;
->>> + }
->>> +
->>> kobject_get(&bridge->kobj);
->>> return bridge;
->>> }
->>> --
->>> 1.7.9.5
->>>
->>
->
-BJorn,
+Document the Broadcom iProc PCIe platform interface device tree binding
 
-Any chance of applying the attached debug patch to see if this fixes and 
-provide some additional information on this BUG? Not sure who will pick 
-this one and apply.
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbraden@broadcom.com>
+---
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
 
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+new file mode 100644
+index 0000000..f7ce50e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -0,0 +1,63 @@
++* Broadcom iProc PCIe controller with the platform bus interface
++
++Required properties:
++- compatible: Must be "brcm,iproc-pcie"
++- reg: base address and length of the PCIe controller I/O register space
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map, standard PCI properties to define the
++  mapping of the PCIe interface to interrupt numbers
++- linux,pci-domain: PCI domain ID. Should be unique for each host controller
++- bus-range: PCI bus numbers covered
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions
++
++Optional properties:
++- phys: phandle of the PCIe PHY device
++- phy-names: must be "pcie-phy"
++
++Example:
++	pcie0: pcie@18012000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18012000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <0>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
++			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++
++		phys = <&phy 0 5>;
++		phy-names = "pcie-phy";
++	};
++
++	pcie1: pcie@18013000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18013000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <1>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
++			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
++
++		phys = <&phy 1 6>;
++		phy-names = "pcie-phy";
++	};
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.9.5
+
