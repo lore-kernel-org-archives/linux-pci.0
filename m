@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:27614 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932586AbbCFJgM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:12 -0500
+Received: from szxga03-in.huawei.com ([119.145.14.66]:30275 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754315AbbCFJgh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:37 -0500
 From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
@@ -20,154 +20,139 @@ CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
 	"Arnd Bergmann" <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v5 00/29] Refine PCI scan interfaces and make generic pci host bridge
-Date: Fri, 6 Mar 2015 17:33:17 +0800
-Message-ID: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Fengguang Wu" <fengguang.wu@intel.com>
+Subject: [PATCH v5 20/29] PCI: Introduce pci_bus_child_max_busnr()
+Date: Fri, 6 Mar 2015 17:33:37 +0800
+Message-ID: <1425634426-437-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v4-v5:
-	Fix some code style issues and rename some functions suggested by Bjorn.
-	Fix some code flaw(Eg. call pci_bus_add_devices() before resources claim
-	or lack the return checking).
-v3->v4:
-	Fix the rebase issue.
-v2->v3:
-	Rebase this series on v4.0-rc1.
-v1->v2:
-	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
-	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
-	Arnd. Refresh some patch description log, and add a new patch to fix
-	build warning in ia64.
+Sometimes, we need to know the highest reserved
+busnr for children bus. Because parent's
+bus->busn_res could have padding in it.
+This function return the max child busnr as
+pci_scan_child_bus().
 
-This series is based on Bjorn's pci-next branch.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
+ drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
+ include/linux/pci.h                |    2 +-
+ 3 files changed, 27 insertions(+), 31 deletions(-)
 
-Patch 1-4 ripped out pci_bus_add_devices() from pci scan interfaces
-for better pci scan flow.
-
-Patch 5-11 make a generic pci_host_bridge to hold pci_host_bridge
-related informations, and introduce a pci_host_bridge_ops to 
-support platform host drivers provide its own pci_host_bridge 
-related operations to setup pci_host_bridge during pci enumeration.
-
-Patch 12-28 apply the new pci scan interfaces to platform pci host
-bridge drivers.
-
-Now in kernel, we scan pci bus use the following ways:
-1. pci_scan_bus. 
-	parent = NULL, default io/mem/bus resources
-	call pci_bus_add_devices()
-
-2. pci_scan_bus_parented() + pci_bus_add_devices()
-	default io/mem/bus resources, only used by xen
-
-3. pci_scan_root_bus() + pci_bus_add_devices()
-
-4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
-
-5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
-
-And we have a lot of arch specific pci_domain_nr() and other platform
-specific weak function like pcibios_root_bridge_prepare().
-
-After applied this series, we have following scan interfaces:
-
-1. pci_scan_bus() 
-	parent = NULL, default io/mem/bus resources.
-	for legacy pci scan
-
-2. pci_scan_root_bus()
-	for callers provide its own parent and io/mem/bus resources
-	but no platform specific pci_host_bridge operations
-
-3. pci_scan_root_bridge()
-	for callers provide its own parent and io/mem/bus resources
-
-
-
-Arnd Bergmann (1):
-  xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-
-Yijing Wang (28):
-  PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-  PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
-  PCI: Remove deprecated pci_scan_bus_parented()
-  PCI: Combine PCI domain and bus number in u32 arg
-  PCI: Pass PCI domain number combined with root bus number
-  PCI: Introduce pci_host_assign_domain_nr() to assign domain
-  PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-  PCI: Introduce pci_host_bridge_list to manage host bridges
-  PCI: Save sysdata in pci_host_bridge drvdata
-  PCI: Introduce pci_host_bridge_ops to support host specific
-    operations
-  PCI: Introduce new scan function pci_scan_host_bridge()
-  x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-  ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-  powerpc/pci: Rename pcibios_root_bridge_prepare()
-  powerpc/pci: Use pci_scan_host_bridge() for simplicity
-  PCI: Remove weak pcibios_root_bridge_prepare()
-  sparc/PCI: Claim bus resources before pci_bus_add_devices()
-  sparc/PCI: Use pci_scan_host_bridge() for simplicity
-  PCI: Introduce pci_bus_child_max_busnr()
-  parisc/PCI: Use pci_scan_root_bus() for simplicity
-  PCI/mvebu: Use pci_common_init_dev() to simplify code
-  PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-  PCI/designware: Use pci_scan_root_bus() for simplicity
-  PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-  PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-  PCI: Export find_pci_host_bridge() and rename to
-    pci_find_host_bridge()
-  PCI: Remove platform specific pci_domain_nr()
-  PCI: Remove pci_bus_assign_domain_nr()
-
- arch/alpha/include/asm/pci.h             |    2 -
- arch/alpha/kernel/pci.c                  |   14 ++-
- arch/alpha/kernel/sys_nautilus.c         |    6 +-
- arch/frv/mb93090-mb00/pci-vdk.c          |    8 +-
- arch/ia64/include/asm/pci.h              |    1 -
- arch/ia64/pci/pci.c                      |   34 +++---
- arch/ia64/sn/kernel/io_init.c            |    7 +-
- arch/m68k/coldfire/pci.c                 |    1 +
- arch/microblaze/pci/pci-common.c         |   19 +--
- arch/mips/include/asm/pci.h              |    2 -
- arch/mips/pci/pci.c                      |    5 +-
- arch/mn10300/unit-asb2305/pci.c          |    7 +-
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |   77 ++++++------
- arch/powerpc/platforms/pseries/pci.c     |    8 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- arch/s390/pci/pci.c                      |   13 +--
- arch/sh/drivers/pci/pci.c                |    6 +-
- arch/sh/include/asm/pci.h                |    2 -
- arch/sparc/kernel/leon_pci.c             |    1 +
- arch/sparc/kernel/pci.c                  |   51 ++++-----
- arch/sparc/kernel/pcic.c                 |    3 +
- arch/tile/include/asm/pci.h              |    2 -
- arch/tile/kernel/pci.c                   |    6 +-
- arch/tile/kernel/pci_gx.c                |    7 +-
- arch/unicore32/kernel/pci.c              |   11 +--
- arch/x86/include/asm/pci.h               |    6 -
- arch/x86/pci/acpi.c                      |   38 ++++---
- arch/x86/pci/common.c                    |    4 +-
- arch/xtensa/kernel/pci.c                 |   11 ++-
- drivers/parisc/dino.c                    |    8 +-
- drivers/parisc/lba_pci.c                 |    7 +-
- drivers/pci/host-bridge.c                |   93 ++++++++++++++-
- drivers/pci/host/pci-mvebu.c             |   18 +---
- drivers/pci/host/pci-tegra.c             |   16 ---
- drivers/pci/host/pci-xgene.c             |    3 +-
- drivers/pci/host/pcie-designware.c       |    4 +-
- drivers/pci/hotplug/acpiphp_glue.c       |   29 +-----
- drivers/pci/hotplug/ibmphp_core.c        |    8 +-
- drivers/pci/pci.c                        |   50 +++++++-
- drivers/pci/pci.h                        |    7 +
- drivers/pci/probe.c                      |  192 ++++++++++++------------------
- drivers/pci/xen-pcifront.c               |   12 ++-
- include/linux/pci.h                      |   41 ++++---
- include/uapi/linux/pci.h                 |    3 +
- 46 files changed, 450 insertions(+), 399 deletions(-)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index bcb90e4..84f2584 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+ 	acpi_unlock_hp_context();
+ }
+ 
+-/**
+- * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
+- * @bus: bus to start search with
+- */
+-static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
+-{
+-	struct pci_bus *tmp;
+-	unsigned char max, n;
+-
+-	/*
+-	 * pci_bus_max_busnr will return the highest
+-	 * reserved busnr for all these children.
+-	 * that is equivalent to the bus->subordinate
+-	 * value.  We don't want to use the parent's
+-	 * bus->subordinate value because it could have
+-	 * padding in it.
+-	 */
+-	max = bus->busn_res.start;
+-
+-	list_for_each_entry(tmp, &bus->children, node) {
+-		n = pci_bus_max_busnr(tmp);
+-		if (n > max)
+-			max = n;
+-	}
+-	return max;
+-}
+-
+ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+ {
+ 	struct acpiphp_func *func;
+@@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 	LIST_HEAD(add_list);
+ 
+ 	acpiphp_rescan_slot(slot);
+-	max = acpiphp_max_busnr(bus);
++	max = pci_bus_child_max_busnr(bus);
+ 	for (pass = 0; pass < 2; pass++) {
+ 		list_for_each_entry(dev, &bus->devices, bus_list) {
+ 			if (PCI_SLOT(dev->devfn) != slot->device)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c49eec1..0001896 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
+  * Given a PCI bus, returns the highest PCI bus number present in the set
+  * including the given PCI bus and its list of child PCI buses.
+  */
+-unsigned char pci_bus_max_busnr(struct pci_bus *bus)
++static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+ {
+ 	struct pci_bus *tmp;
+ 	unsigned char max, n;
+@@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+ 	}
+ 	return max;
+ }
+-EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
++
++unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
++{
++	struct pci_bus *tmp;
++	unsigned char max, n;
++
++	/*
++	 * pci_bus_max_busnr will return the highest
++	 * reserved busnr for all these children.
++	 * that is equivalent to the bus->subordinate
++	 * value.  We don't want to use the parent's
++	 * bus->subordinate value because it could have
++	 * padding in it.
++	 */
++	max = bus->busn_res.start;
++
++	list_for_each_entry(tmp, &bus->children, node) {
++		n = pci_bus_max_busnr(tmp);
++		if (n > max)
++			max = n;
++	}
++	return max;
++}
++EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
+ 
+ #ifdef CONFIG_HAS_IOMEM
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index cfaf217..261b8de 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1181,7 +1181,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		  void *userdata);
+ int pci_cfg_space_size(struct pci_dev *dev);
+-unsigned char pci_bus_max_busnr(struct pci_bus *bus);
++unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
+-- 
+1.7.1
 
