@@ -1,71 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 12 Mar 2015 16:35:35 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Bryan O'Donoghue <pure.logic@nexus-software.ie>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, rientjes@google.com,
-	bhelgaas@google.com, mingo@redhat.com, tglx@linutronix.de,
-	hpa@zytor.com, jgross@suse.com, luto@amacapital.net,
-	andy.shevchenko@gmail.com, thomas.petazzoni@free-electrons.com,
-	JBeulich@suse.com, bp@suse.de, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v1 1/2] x86: kconfig: remove X86_UP_IOAPIC
-Message-ID: <20150312153535.GN25035@wotan.suse.de>
-References: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com>
- <1426115422-1823-2-git-send-email-mcgrof@do-not-panic.com>
- <5500E992.60505@nexus-software.ie>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:29988 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932636AbbCFJg3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:29 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 13/29] x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Fri, 6 Mar 2015 17:33:30 +0800
+Message-ID: <1425634426-437-14-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5500E992.60505@nexus-software.ie>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 01:19:14AM +0000, Bryan O'Donoghue wrote:
-> On 11/03/15 23:10, Luis R. Rodriguez wrote:
-> 
-> ACK the concept - the logic to compile up APIC support is circuitous
-> to say the least.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86@kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |   36 ++++++++++++++++++++----------------
+ 1 files changed, 20 insertions(+), 16 deletions(-)
 
-It took me a while to grok this and indeed the goal was to make it
-much simpler to read, but at the same time to see if we can reach
-a compromise to simplify it for 32-bit.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index ad0e926..e730d31 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -349,6 +349,18 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 			entry->res->name = info->name;
+ }
+ 
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
++
++	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops phb_ops = {
++	.prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -359,6 +371,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	LIST_HEAD(crs_res);
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *host = NULL;
+ 	struct pci_sysdata *sd;
+ 	int node;
+ 
+@@ -425,14 +438,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+ 				(u8)root->secondary.end, root->mcfg_addr))
+-			bus = pci_create_root_bus(NULL,
+-				PCI_DOMBUS(domain, busnum), &pci_root_ops,
+-				sd, &resources);
+-
+-		if (bus) {
+-			pci_scan_child_bus(bus);
+-			pci_set_host_bridge_release(
+-				to_pci_host_bridge(bus->bridge),
++			host = pci_scan_host_bridge(NULL,
++				PCI_DOMBUS(domain, busnum),
++				&pci_root_ops, sd, &resources, &phb_ops);
++
++		if (host) {
++			bus = host->bus;
++			pci_set_host_bridge_release(host,
+ 				release_pci_root_info, info);
+ 		} else {
+ 			resource_list_free(&resources);
+@@ -456,14 +468,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_sysdata *sd = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	return 0;
+-}
+-
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
+-- 
+1.7.1
 
-> Personally think we should just always compile up the APIC code if
-> the arch declares support and let the bootstrap code interrogate
-> CPUID.
-
-This would be the *next* level of compromise to make, I felt comfortable
-in raising the size compromise question for 32-bit but its not clear
-to me if this is a general question which we can address for all x86.
-There is indeed no performance pentalty for both so the question comes
-down to tex size increase, and its why I provided the numbers.
-
-My preference was to leave the optimization question for all x86 as
-a rather secondary question *iff* we can agree on something for 32-bit.
-
-> Who in 2015 is really running a system without an
-> APIC/IO-APIC and tip-of-tree Linux and does that one user care about
-> adding 12k to her kernel ? I suspect not and in any case can force
-> the APIC off with a command line argument
-
-I also figured this was the case, but figured it was safer to pose
-the question for 32-bit. If indeed folks who produce the hardware
-can conclude the size increase is reasonable for all platforms
-given no performance penalty then we can surely keep this even
-simpler -- I think its safer to ask this question for 32-bit and
-leave only the larger picture questoin as an evolutionairy question.
-
-> >@@ -899,6 +899,7 @@ config X86_UP_APIC
-> >  	bool "Local APIC support on uniprocessors" if !PCI_MSI
-> 
-> Tried to apply this to torvalds-master to test :( Should it ? Which
-> branch are you on here ?
-> 
-> Applying: x86: kconfig: remove X86_UP_IOAPIC
-> error: patch failed: arch/x86/Kconfig:899
-> error: arch/x86/Kconfig: patch does not apply
-> Patch failed at 0001 x86: kconfig: remove X86_UP_IOAPIC
-
-linux-next tag next-20150311
-
-  Luis
