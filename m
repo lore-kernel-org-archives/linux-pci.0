@@ -1,86 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH v8 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify code
-Date: Tue, 24 Mar 2015 11:34:17 +0800
-Message-ID: <1427168064-8657-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:38936 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbbCFRt0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 12:49:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150306133312.GC4259@pd.tnic>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
+	<20150304101649.GA3663@pd.tnic>
+	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
+	<20150304200000.GB6276@gmail.com>
+	<CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+	<20150306133312.GC4259@pd.tnic>
+Date: Fri, 6 Mar 2015 09:49:25 -0800
+Message-ID: <CAE9FiQVux0j=3MOj1V-hAfVtbPGUCtAyzBpkQyjr8iUchFBmOg@mail.gmail.com>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+From: Yinghai Lu <yinghai@kernel.org>
+To: Borislav Petkov <bp@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mvebu_pcie_scan_bus() is not necessary, we could use
-pci_common_init_dev() instead of pci_common_init(),
-and pass the device pointer as the parent. Then
-pci_scan_root_bus() will be called to scan the pci busses.
+On Fri, Mar 6, 2015 at 5:33 AM, Borislav Petkov <bp@suse.de> wrote:
+> Please use checkpatch before submitting patches:
+>
+> WARNING: please, no spaces at the start of a line
+> #71: FILE: arch/x86/kernel/setup.c:433:
+> +    unsigned char *data;$
+>
+> WARNING: please, no spaces at the start of a line
+> #72: FILE: arch/x86/kernel/setup.c:434:
+> +    unsigned long offset = sizeof(struct setup_data);$
+>
+> WARNING: please, no spaces at the start of a line
+> #74: FILE: arch/x86/kernel/setup.c:436:
+> +    data = early_memremap(pa_data, offset + 1);$
+>
+> WARNING: please, no spaces at the start of a line
+> #75: FILE: arch/x86/kernel/setup.c:437:
+> +    if (!data) {$
+>
+> ERROR: code indent should use tabs where possible
+> #76: FILE: arch/x86/kernel/setup.c:438:
+> +        kaslr_enabled = true;$
+>
+> WARNING: please, no spaces at the start of a line
+> #76: FILE: arch/x86/kernel/setup.c:438:
+> +        kaslr_enabled = true;$
+>
+> ERROR: code indent should use tabs where possible
+> #77: FILE: arch/x86/kernel/setup.c:439:
+> +        return;$
+>
+> WARNING: please, no spaces at the start of a line
+> #77: FILE: arch/x86/kernel/setup.c:439:
+> +        return;$
+>
+> WARNING: please, no spaces at the start of a line
+> #78: FILE: arch/x86/kernel/setup.c:440:
+> +    }$
+>
+> WARNING: please, no spaces at the start of a line
+> #80: FILE: arch/x86/kernel/setup.c:442:
+> +    kaslr_enabled = *(data + offset);$
+>
+> WARNING: please, no spaces at the start of a line
+> #81: FILE: arch/x86/kernel/setup.c:443:
+> +    early_memunmap(data, offset + 1);$
+>
+> total: 2 errors, 9 warnings, 19 lines checked
+>
+> NOTE: whitespace errors detected, you may wish to use scripts/cleanpatch or
+>       scripts/cleanfile
+>
+> Your patch has style problems, please review.
+>
+> If any of these errors are false positives, please report
+> them to the maintainer, see CHECKPATCH in MAINTAINERS.
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Jason Cooper <jason@lakedaemon.net>
----
- drivers/pci/host/pci-mvebu.c |   18 +-----------------
- 1 files changed, 1 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 0cfc494..d5a2b70 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
--				  &mvebu_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
--	hw.scan           = mvebu_pcie_scan_bus;
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev->dev, &hw);
- }
- 
- /*
--- 
-1.7.1
-
+That is "copy and paste" instead of attachment for easy review.
+but gmail web client convert tab to spaces.
