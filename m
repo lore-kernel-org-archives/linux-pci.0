@@ -1,125 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 29/29] PCI: Remove pci_bus_assign_domain_nr()
-Date: Fri, 6 Mar 2015 17:33:46 +0800
-Message-ID: <1425634426-437-30-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:62726 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754450AbbCFT4u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 14:56:50 -0500
+Received: by mail-vc0-f178.google.com with SMTP id id10so5967205vcb.9
+        for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2015 11:56:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQU3jKn260cce7Zvo0Qy0ksDKB=-o2m_drBmO4fpBv8Wow@mail.gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-2-git-send-email-yinghai@kernel.org>
+	<20150306135534.GD4259@pd.tnic>
+	<CAE9FiQXzv7TPMRA+RqSdV0ERiW3KYA-2KOyDKBrZDn3Zd5RcrQ@mail.gmail.com>
+	<CAGXu5jLf+=CMs0qj4nRG-kw1YiQ-eMFHFpAE8uVUitqmGOG7gA@mail.gmail.com>
+	<CAE9FiQU3jKn260cce7Zvo0Qy0ksDKB=-o2m_drBmO4fpBv8Wow@mail.gmail.com>
+Date: Fri, 6 Mar 2015 11:56:49 -0800
+Message-ID: <CAGXu5jLk-qeHLqejR47TmT8wzrkjF9eQhfGPJYDoejD+AdkmOQ@mail.gmail.com>
+Subject: Re: [PATCH v2 01/15] x86, kaslr: Use init_size instead of run_size
+From: Kees Cook <keescook@chromium.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Junjie Mao <eternal.n08@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus.
+On Fri, Mar 6, 2015 at 11:28 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Mar 6, 2015 at 10:55 AM, Kees Cook <keescook@chromium.org> wrote:
+>> On Fri, Mar 6, 2015 at 10:44 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>>
+>> I don't see how bss and brk are related to these sizes. Can you
+>> explain how bss, brk, and initrd factor into these sizes? Those were
+>> what run_size was created to represent. I don't want to accidentally
+>> start stomping on bss and brk again. :)
+>
+> VO (vlinux) init size aka VO_INIT_SIZE already inlude that.
+>
+> Please check update version.
+>
+>
+> commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+> introduced one run_size for kaslr.
+> We should use real runtime size (include copy/decompress) aka init_size.
+>
+> run_size is VO (vmlinux) init size include bss and brk.
+> init_size is the size needed for decompress and it is bigger than run_size
+> when decompress need more buff.
+>
+> According to arch/x86/boot/header.S:
+> | #define ZO_INIT_SIZE    (ZO__end - ZO_startup_32 + ZO_z_extract_offset)
+> | #define VO_INIT_SIZE    (VO__end - VO__text)
+> | #if ZO_INIT_SIZE > VO_INIT_SIZE
+> | #define INIT_SIZE ZO_INIT_SIZE
+> | #else
+> | #define INIT_SIZE VO_INIT_SIZE
+> | #endif
+> | init_size:              .long INIT_SIZE         # kernel initialization size
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c   |    5 -----
- drivers/pci/probe.c |   12 ++++--------
- include/linux/pci.h |    3 ---
- 3 files changed, 4 insertions(+), 16 deletions(-)
+Okay, I've proven this to myself now. :) I think it would be valuable
+to call out that brk and bss are included in the _end calculation. For
+others:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dd8aebc..a545d1e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4581,11 +4581,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- {
- 	host->domain = pci_assign_domain_nr(host->dev.parent);
- }
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
- #endif
- #endif
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index aae911a..facb0e5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -495,10 +495,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
-+
- 	return b;
- }
- 
-@@ -645,7 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1865,14 +1862,13 @@ static struct pci_bus *pci_create_root_bus(
- 	char *fmt;
- 
- 	parent = bridge->dev.parent;
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index dc1c710..ebc70bb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -467,9 +467,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
+$ objdump -h vmlinux | egrep '\.(bss|brk)'
+ 25 .bss          00da7000  ffffffff82436000  0000000002436000  01836000  2**12
+ 26 .brk          00026000  ffffffff831dd000  00000000031dd000  01836000  2**0
+$ nm vmlinux | egrep ' _(text|end)'
+ffffffff83203000 B _end
+ffffffff81000000 T _text
+$ objdump -h vmlinux | bash arch/x86/tools/calc_run_size.sh
+39858176
+$ bc
+obase=16
+39858176
+2603000
+ibase=16
+81000000 + 2603000
+83603000
+
+So, _end - _text does equal _text + bss offset + bss size + brk size
+
+Thanks! It'll be nice to lose the run_size hack. Adding some
+documentation to the code here would help others in the future trying
+to find this value, I think. :)
+
+-Kees
+
+>
+> Bootloader allocate buffer according to init_size in hdr, and load the
+> ZO (arch/x86/boot/compressed/vmlinux) from start of that buffer.
+> init_size first should come from VO (vmlinux) init size. That VO init size
+> is from VO _end to VO _end and include VO bss and brk area.
+>
+> During running of ZO, ZO move itself to the middle of buffer at
+> z_extract_offset to make sure that decompressor would not have output
+> overwrite input data before input data get consumed.
+> But z_extract_offset calculating is based on size of VO (vmlinux) and size
+> of compressed VO only at first.
+> So need to make sure [z_extra_offset, init_size) will fit ZO, that means
+> init_size need to be adjusted according to ZO size.
+> That make init_size is always >= run_size.
+>
+> During aslr buffer searching, we need to make sure the buffer is bigger
+> enough for decompress at first. So use init_size instead, and kill not
+> needed run_size related code.
+
+
+
 -- 
-1.7.1
-
+Kees Cook
+Chrome OS Security
