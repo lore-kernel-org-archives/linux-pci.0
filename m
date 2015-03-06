@@ -1,124 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:61086 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbbCCDLE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:11:04 -0500
-Received: by mail-ob0-f179.google.com with SMTP id wp4so35799367obc.10
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 19:11:02 -0800 (PST)
-Date: Mon, 2 Mar 2015 21:10:59 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	sparclinux@vger.kernel.org
-Subject: Re: [PATCH v4 20/30] PCI/sparc: Use pci_scan_root_bridge() for
- simplicity
-Message-ID: <20150303031059.GJ11978@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
- <1424938344-4017-21-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:33823 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932173AbbCFT20 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 14:28:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <CAGXu5jLf+=CMs0qj4nRG-kw1YiQ-eMFHFpAE8uVUitqmGOG7gA@mail.gmail.com>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-2-git-send-email-yinghai@kernel.org>
+	<20150306135534.GD4259@pd.tnic>
+	<CAE9FiQXzv7TPMRA+RqSdV0ERiW3KYA-2KOyDKBrZDn3Zd5RcrQ@mail.gmail.com>
+	<CAGXu5jLf+=CMs0qj4nRG-kw1YiQ-eMFHFpAE8uVUitqmGOG7gA@mail.gmail.com>
+Date: Fri, 6 Mar 2015 11:28:25 -0800
+Message-ID: <CAE9FiQU3jKn260cce7Zvo0Qy0ksDKB=-o2m_drBmO4fpBv8Wow@mail.gmail.com>
+Subject: Re: [PATCH v2 01/15] x86, kaslr: Use init_size instead of run_size
+From: Yinghai Lu <yinghai@kernel.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Borislav Petkov <bp@alien8.de>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Junjie Mao <eternal.n08@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:12:14PM +0800, Yijing Wang wrote:
-> Now we could use pci_scan_root_bridge() to scan
-> pci buses, provide sparc specific pci_host_bridge_ops.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: "David S. Miller" <davem@davemloft.net>
-> CC: sparclinux@vger.kernel.org
-> ---
->  arch/sparc/kernel/pci.c |   32 ++++++++++++++++++++++----------
->  1 files changed, 22 insertions(+), 10 deletions(-)
-> 
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index 0af7c58..03e7376 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -650,12 +650,25 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
->  		pci_claim_bus_resources(child_bus);
->  }
->  
-> +static void pci_host_bridge_of_scan_bus(
-> +		struct pci_host_bridge *host)
-> +{
-> +	struct pci_pbm_info *pbm = dev_get_drvdata(&host->dev);
-> +	struct device_node *node = pbm->op->dev.of_node;
-> +
-> +	pci_of_scan_bus(pbm, node, host->bus);
-> +}
-> +
-> +static struct pci_host_bridge_ops phb_ops = {
-> +	.phb_of_scan_bus = pci_host_bridge_of_scan_bus,
-> +};
-> +
->  struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->  				 struct device *parent)
->  {
->  	LIST_HEAD(resources);
->  	struct device_node *node = pbm->op->dev.of_node;
-> -	struct pci_bus *bus;
-> +	struct pci_host_bridge *host;
->  
->  	printk("PCI: Scanning PBM %s\n", node->full_name);
->  
-> @@ -667,23 +680,22 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->  	pbm->busn.end	= pbm->pci_last_busno;
->  	pbm->busn.flags	= IORESOURCE_BUS;
->  	pci_add_resource(&resources, &pbm->busn);
-> -	bus = pci_create_root_bus(parent, 
-> +	host = pci_scan_root_bridge(parent, 
->  			PCI_DOMBUS(pbm->index, pbm->pci_first_busno), 
-> -			pbm->pci_ops, pbm, &resources);
-> -	if (!bus) {
-> -		printk(KERN_ERR "Failed to create bus for %s\n",
-> +			pbm->pci_ops, pbm, &resources, &phb_ops);
-> +	if (!host) {
-> +		printk(KERN_ERR "Failed to create host bridge for %s\n",
->  		       node->full_name);
->  		pci_free_resource_list(&resources);
->  		return NULL;
->  	}
->  
-> -	pci_of_scan_bus(pbm, node, bus);
-> -	pci_bus_add_devices(bus);
-> -	pci_bus_register_of_sysfs(bus);
-> +	pci_bus_add_devices(host->bus);
-> +	pci_bus_register_of_sysfs(host->bus);
->  
-> -	pci_claim_bus_resources(bus);
-> +	pci_claim_bus_resources(host->bus);
+On Fri, Mar 6, 2015 at 10:55 AM, Kees Cook <keescook@chromium.org> wrote:
+> On Fri, Mar 6, 2015 at 10:44 AM, Yinghai Lu <yinghai@kernel.org> wrote:
 
-Isn't this a case where pci_claim_bus_resources() should be done before
-pci_bus_add_devices()?  You didn't introduce this problem, but since you're
-fixing similar issues, seems like we should fix this one, too.  In a patch
-of its own, of course.
+>
+> I don't see how bss and brk are related to these sizes. Can you
+> explain how bss, brk, and initrd factor into these sizes? Those were
+> what run_size was created to represent. I don't want to accidentally
+> start stomping on bss and brk again. :)
 
->  
-> -	return bus;
-> +	return host->bus;
->  }
->  
->  void pcibios_fixup_bus(struct pci_bus *pbus)
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+VO (vlinux) init size aka VO_INIT_SIZE already inlude that.
+
+Please check update version.
+
+
+commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+introduced one run_size for kaslr.
+We should use real runtime size (include copy/decompress) aka init_size.
+
+run_size is VO (vmlinux) init size include bss and brk.
+init_size is the size needed for decompress and it is bigger than run_size
+when decompress need more buff.
+
+According to arch/x86/boot/header.S:
+| #define ZO_INIT_SIZE    (ZO__end - ZO_startup_32 + ZO_z_extract_offset)
+| #define VO_INIT_SIZE    (VO__end - VO__text)
+| #if ZO_INIT_SIZE > VO_INIT_SIZE
+| #define INIT_SIZE ZO_INIT_SIZE
+| #else
+| #define INIT_SIZE VO_INIT_SIZE
+| #endif
+| init_size:              .long INIT_SIZE         # kernel initialization size
+
+Bootloader allocate buffer according to init_size in hdr, and load the
+ZO (arch/x86/boot/compressed/vmlinux) from start of that buffer.
+init_size first should come from VO (vmlinux) init size. That VO init size
+is from VO _end to VO _end and include VO bss and brk area.
+
+During running of ZO, ZO move itself to the middle of buffer at
+z_extract_offset to make sure that decompressor would not have output
+overwrite input data before input data get consumed.
+But z_extract_offset calculating is based on size of VO (vmlinux) and size
+of compressed VO only at first.
+So need to make sure [z_extra_offset, init_size) will fit ZO, that means
+init_size need to be adjusted according to ZO size.
+That make init_size is always >= run_size.
+
+During aslr buffer searching, we need to make sure the buffer is bigger
+enough for decompress at first. So use init_size instead, and kill not
+needed run_size related code.
