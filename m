@@ -1,79 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:40292 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363AbbCGVLF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 16:11:05 -0500
+MIME-Version: 1.0
+In-Reply-To: <20150307210514.GC3380@pd.tnic>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
+	<20150304101649.GA3663@pd.tnic>
+	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
+	<20150304200000.GB6276@gmail.com>
+	<CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+	<20150306133312.GC4259@pd.tnic>
+	<CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
+	<CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
+	<20150307210514.GC3380@pd.tnic>
+Date: Sat, 7 Mar 2015 13:11:04 -0800
+Message-ID: <CAE9FiQWVdzX=eDGEz3u906TYTagps0VZsSWKHRqJro8wfgGjeg@mail.gmail.com>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
 From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 0/8] x86, boot: clean up setup_data handling
-Date: Sat,  7 Mar 2015 16:50:01 -0800
-Message-Id: <1425775809-9373-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Borislav Petkov <bp@suse.de>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now setup_data is reserved via memblock and e820 and different
-handlers have different ways, and it is confusing.
-1. SETUP_E820_EXT: is consumed early and will not copy or access again.
-        have memory wasted.
-2. SETUP_EFI: is accessed via ioremap every time at early stage.
-        have memory wasted.
-3. SETUP_DTB: is copied locally.
-        have memory wasted.
-4. SETUP_PCI: is accessed via ioremap for every pci devices, even run-time.
-5. SETUP_KASLR: is accessed early, will not copy or access again.
-        have memory wasted.
+On Sat, Mar 7, 2015 at 1:05 PM, Borislav Petkov <bp@suse.de> wrote:
+> On Fri, Mar 06, 2015 at 11:53:22AM -0800, Yinghai Lu wrote:
+> ---
+> Commit
+>
+>   f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
+>
+> started passing KASLR status to kernel proper, but it uses a physical
+> address as the vaule, leading to parsing bogus KASLR status in kernel
+> proper.
+>
+> The setup_data linked list and thus the element which contains
+> kaslr_enabled is chained together using physical addresses. At the time
+> when we access it in the kernel proper, we're already running with
+> paging enabled and therefore must access it through its virtual address.
+>
+> This patch changes the code to use early_memmap() and access the value.
+> ---
 
-Also setup_data is exported to debugfs for debug purpose.
-
-Here will convert to let every handler to decide how to handle it.
-and will not reserve the setup_data generally, so will not
-waste memory and also make memblock/e820 keep page aligned.
-1. not touch E820 anymore.
-2. copy SETUP_EFI to __initdata variable and access it without ioremap.
-3. SETUP_DTB: reserver and copy to local and free.
-4. SETUP_PCI: reverve localy and convert to list, to avoid keeping ioremap.
-5. export SETUP_PCI via sysfs.
-
-Also put them in:
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-4.0-rc2-setup_data
-
-Should be materials for v4.1.
-
-Thanks
-
-Yinghai Lu
-
--v3: separated with kasl patches, and fix early_ioremap return checking.
-
-Yinghai Lu (8):
-  x86: Kill E820_RESERVED_KERN
-  x86, efi: Copy SETUP_EFI data and access directly
-  x86, of: Let add_dtb reserve setup_data locally
-  x86, boot: Add add_pci handler for SETUP_PCI
-  x86: Kill not used setup_data handling code
-  x86, boot, PCI: Convert SETUP_PCI data to list
-  x86, boot, PCI: Copy SETUP_PCI rom to kernel space
-  x86, boot, PCI: Export SETUP_PCI data via sysfs
-
- arch/x86/include/asm/efi.h       |   2 +-
- arch/x86/include/asm/pci.h       |   4 +
- arch/x86/include/asm/prom.h      |   9 +-
- arch/x86/include/uapi/asm/e820.h |   9 --
- arch/x86/kernel/devicetree.c     |  43 +++---
- arch/x86/kernel/e820.c           |   6 +-
- arch/x86/kernel/kdebugfs.c       | 142 ------------------
- arch/x86/kernel/setup.c          |  52 ++-----
- arch/x86/kernel/tboot.c          |   3 +-
- arch/x86/mm/init_64.c            |  11 +-
- arch/x86/pci/common.c            | 316 ++++++++++++++++++++++++++++++++++++---
- arch/x86/platform/efi/efi.c      |  13 +-
- arch/x86/platform/efi/efi_64.c   |  13 +-
- arch/x86/platform/efi/quirks.c   |  23 +--
- 14 files changed, 371 insertions(+), 275 deletions(-)
-
--- 
-1.8.4.5
-
+Good to me.
