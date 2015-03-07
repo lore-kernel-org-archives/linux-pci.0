@@ -1,157 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54FE9375.5050307@intel.com>
-Date: Tue, 10 Mar 2015 14:47:17 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58745 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750752AbbCGVGe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 7 Mar 2015 16:06:34 -0500
+Date: Sat, 7 Mar 2015 22:05:14 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
+	Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
+Message-ID: <20150307210514.GC3380@pd.tnic>
+References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+ <1425456048-16236-5-git-send-email-yinghai@kernel.org>
+ <20150304101649.GA3663@pd.tnic>
+ <CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
+ <20150304200000.GB6276@gmail.com>
+ <CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+ <20150306133312.GC4259@pd.tnic>
+ <CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
+ <CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: PCI delay optimization from ACPI
-References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan>
-In-Reply-To: <5222588.FaRe37n2T1@vostro.rjw.lan>
 Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/09/2015 10:33 PM, Rafael J. Wysocki wrote:
-> On Monday, March 09, 2015 03:46:01 PM Aaron Lu wrote:
->> An ECN meant to specify possible delay optimizations is available on
->> the PCI website:
->> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
->> where it has defined two functions for an UUID specified _DSM:
->> Function 8: If system firmware assumes the responsibility of post
->> Conventional Reset delay (and informs the Operating System via this DSM
->> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
->> S4 or S3 states), the Operating System may assume sufficient time has
->> elapsed since the end of reset, and devices within the PCI subsystem are
->> ready for Configuration Access.
->> If the system firmware supports runtime power gating on any of the
->> device within PCI subsystem covered by this DSM function, the system
->> firmware is responsible for covering the necessary post power-on reset
->> delay.
->>
->> Function 9: Specify various smaller delay values than required by the
->> SPEC for individual PCI devices like shorter delay values after
->> conventional reset, D3hot to D0 transition, functional level reset, etc.
->>
->> This patch adds support for function 8 and part of function 9. For
->> function 8, the patch will check if the required _DSM function satisfies
->> the requirement and then set the per PCI device's d3cold_delay variable
->> to zero. For function 9, the values affecting delays after conventional
->> reset and D3hot->D0 are examined and the per PCI device's d3cold_delay
->> and d3_delay are updated if the _DSM's return value is smaller than what
->> the SPEC requires.
->>
->> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> ---
->>  drivers/pci/pci-acpi.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 61 insertions(+)
->>
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index 489063987325..c833b054c00c 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -558,6 +558,64 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
->>  				      check_children);
->>  }
->>  
->> +/**
->> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
->> + * @pdev: the PCI device whose delay is to be updated
->> + * @adev: the companion ACPI device of this PCI device
->> + *
->> + * Description:
+On Fri, Mar 06, 2015 at 11:53:22AM -0800, Yinghai Lu wrote:
+> That will get wrong value back for kaslr_enabled in kernel stage.
+> 1. When kaslr is not enabled at boot/choose_kernel_location, if kaslr_enabled
+> get set wrongly in setup.c, late in module.c::get_module_load_offset
+> will return not wanted random module load offset.
+> That change behavior when HIBERNATION is defined or nokaslr is passed.
 > 
-> The word "Description" above is not necessary.
-> 
->> + *   This function is used to update the d3_delay and d3cold_delay of a PCI
-> 
-> I'd simply say
-> 
-> "Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM control
-> method of either its own or its parent bridge."
-> 
-> I'd add an empty line here and then the rest of the below starting with "The UUID ...".
+> 2. When kaslr is enabled at boot/choose_kernel_location, if kaslr_enabled
+> get cleared wrongly in setup.c, late in module.c::get_module_load_offset
+> will not return wanted random module load offset.
 
-OK.
+Now you went from the one extreme to the other. Initially it was
+"trivial and obvious" now it is too much unreadable detail which no one
+needs.
 
-> 
->> + *   device from ACPI _DSM control method of either its own or its parent
->> + *   bridge device. The UUID of the _DSM control method, together with other
->> + *   information like which delay values can be optimized, etc. is defined in
->> + *   the fw_latency_optimization ECN availabe on PCIsig.com.
-> 
-> The ECN has a number or title I suppose?
+How about this:
 
-Yes.
+---
+Commit
 
-Thanks for the review and suggestion, I'll send an updated one.
+  f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
 
-Regards,
-Aaron
+started passing KASLR status to kernel proper, but it uses a physical
+address as the vaule, leading to parsing bogus KASLR status in kernel
+proper.
 
-> 
->> + *   Function 9 of the ACPI _DSM control method, if availabe for a specific PCI
->> + *   device, provides various possible delay values that are less than what the
->> + *   SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
->> + *   can be added later.
->> + *   Function 8 of the ACPI _DSM control method, if availabe for a specific PCI
->> + *   bridge, means all its children devices do not need the reset delay when
->> + *   leaving from D3cold state.
->> + */
->> +static void pci_acpi_delay_optimize(struct pci_dev *pdev, struct acpi_device *adev)
->> +{
->> +	const u8 uuid[] = {
->> +		0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
->> +		0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
->> +	};
->> +	int revision = 3, function = 9, value;
->> +	acpi_handle handle = adev->handle;
->> +	union acpi_object *obj, *elements;
->> +
->> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
->> +	if (obj) {
->> +		if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
->> +			elements = obj->package.elements;
->> +			if (elements[3].type == ACPI_TYPE_INTEGER) {
->> +				value = (int)elements[3].integer.value / 1000;
->> +				if (value < PCI_PM_D3_WAIT)
->> +					pdev->d3_delay = value;
->> +			}
->> +			if (elements[0].type == ACPI_TYPE_INTEGER) {
->> +				value = (int)elements[0].integer.value / 1000;
->> +				if (value < PCI_PM_D3COLD_WAIT)
->> +					pdev->d3cold_delay = value;
->> +			}
->> +		}
->> +		kfree(obj);
->> +	}
->> +
->> +	function = 8;
->> +	handle = ACPI_HANDLE(pdev->bus->bridge);
->> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
->> +	if (!obj)
->> +		return;
->> +
->> +	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
->> +		pdev->d3cold_delay = 0;
->> +	kfree(obj);
->> +}
->> +
->>  static void pci_acpi_setup(struct device *dev)
->>  {
->>  	struct pci_dev *pci_dev = to_pci_dev(dev);
->> @@ -566,6 +624,9 @@ static void pci_acpi_setup(struct device *dev)
->>  	if (!adev)
->>  		return;
->>  
->> +	if (pci_dev->pm_cap)
->> +		pci_acpi_delay_optimize(pci_dev, adev);
->> +
->>  	pci_acpi_add_pm_notifier(adev, pci_dev);
->>  	if (!adev->wakeup.flags.valid)
->>  		return;
->>
-> 
+The setup_data linked list and thus the element which contains
+kaslr_enabled is chained together using physical addresses. At the time
+when we access it in the kernel proper, we're already running with
+paging enabled and therefore must access it through its virtual address.
 
+This patch changes the code to use early_memmap() and access the value.
+---
+
+Complaints?
+
+-- 
+Regards/Gruss,
+    Boris.
+
+ECO tip #101: Trim your mails when you reply.
+--
