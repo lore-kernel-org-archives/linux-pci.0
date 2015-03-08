@@ -1,150 +1,205 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5510D327.5060400@linux.intel.com>
-Date: Tue, 24 Mar 2015 10:59:51 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [Bugfix] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-References: <1427095334-7430-1-git-send-email-jiang.liu@linux.intel.com> <20150323164809.GS26935@google.com> <5510CA69.30309@linux.intel.com> <CAErSpo72DoOu1XR8jYW_VsEKfnhcL9ydqtkjwBTUSm-mN-Rn2A@mail.gmail.com>
-In-Reply-To: <CAErSpo72DoOu1XR8jYW_VsEKfnhcL9ydqtkjwBTUSm-mN-Rn2A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26980 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764AbbCHAvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 19:51:07 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	stable@vger.kernel.org
+Subject: [PATCH v3 1/8] x86: Kill E820_RESERVED_KERN
+Date: Sat,  7 Mar 2015 16:50:02 -0800
+Message-Id: <1425775809-9373-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425775809-9373-1-git-send-email-yinghai@kernel.org>
+References: <1425775809-9373-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/24 10:42, Bjorn Helgaas wrote:
-> On Mon, Mar 23, 2015 at 9:22 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> On 2015/3/24 0:48, Bjorn Helgaas wrote:
->>> On Mon, Mar 23, 2015 at 03:22:14PM +0800, Jiang Liu wrote:
->>>> Commit 63f1789ec716("Ignore resources consumed by host bridge itself")
->>>> tries to ignore resources consumed by PCI host bridge itself by
->>>> checking IORESOURCE_WINDOW flag, which causes regression on some
->>>> platforms.
->>>
->>> "Do.  Or do not.  There is no try."
->>> [http://www.starwars.com/video/do-or-do-not]
->>>
->>> That commit doesn't *try* to do something.  It *does* something.  Just
->>> explain what it does and what's wrong with what it does.
->>>
->>>> For example, PC Engines APU.1C platform defines PCI MMIO resources with
->>>> ACPI Memory32Fixed operator as below:
->>>> Name (CRES, ResourceTemplate ()
->>>> {
->>>>     ...
->>>>     WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
->>>>         0x0000,             // Granularity
->>>>         0x0D00,             // Range Minimum
->>>>         0xFFFF,             // Range Maximum
->>>>         0x0000,             // Translation Offset
->>>>         0xF300,             // Length
->>>>         ,, , TypeStatic)
->>>>     Memory32Fixed (ReadOnly,
->>>>         0x000A0000,         // Address Base
->>>>         0x00020000,         // Address Length
->>>>         )
->>>>     Memory32Fixed (ReadOnly,
->>>>         0x00000000,         // Address Base
->>>>         0x00000000,         // Address Length
->>>>         _Y00)
->>>> })
->>>>
->>>> Memory32Fixed operator doesn't support concept of "producer/consumer"
->>>> and it will be treated as "consumer" by the ACPI resource parsing
->>>> interface, thus cause regression. So the fix is only to check
->>>> "producer/consumer" flag for resources having "producer/consumer" flag.
->>>
->>> Apparently the problem is with the Memory32Fixed resources above; it sounds
->>> like we ignore them after 63f1789ec716?  I don't quite understand how this
->>> fix works.  acpi_dev_filter_resource_type() has cases for both
->>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 and ACPI_RESOURCE_TYPE_ADDRESSxx, but
->>> this patch only touches the latter, not the
->>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 case.
->> The idea is:
->> 1) caller specifies IORESOURCE_WINDOW to query resources provided
->>    by the device, otherwise it's querying resources consumed by
->>    the device.
->> 2) For resource descriptors having producer/consumer flag, such as
->>     ACPI_RESOURCE_TYPE_ADDRESSxx, we check the producer/consumer flag.
->> 3) For resource descriptors not having producer/consumer flag, such
->>    as ACPI_RESOURCE_TYPE_FIXED_MEMORY32, we skip checking the
->>    producer/consumer flag.
-> 
-> I figured out that much by reading the code.  But I think the code is
-> very hard to read, and I still don't really understand how it works.
-> 
-> Before this fix, we ignore Memory32Fixed resources.  After this fix,
-> we use Memory32Fixed as a window.  I think that's an incorrect
-> interpretation of Memory32Fixed.
-Hi Bjorn,
-	I think it's illegal to use Memory32Fixed for PCI host
-bridge resource window too. The fix is to solve the regression
-by relaxing constraints, but that may not be the right solution.
-	How about waiting for a while to see whether there are more
-bug reports related to this. If only limited platform affected,
-we could treat it as BIOS bugs and use quirk to handle it.
-Otherwise we may need to relax the constraint.
-Thanks!
-Gerry
-> 
->>> Is it even legal to use Memory32Fixed for a bridge window?  Is this just a
->>> BIOS bug?  If so, how do we know this workaround won't break something
->>> else for BIOSes that use Memory32Fixed correctly?
->>>
->>> Should this be a BIOS-specific quirk?
->> I have searched ACPI spec 5.0 and PCI firmware spec 3.1, but haven't
->> found any statement tells whether Memory32Fixed could be used for
->> PCI host bridge resources yet. So to be honest, I'm not sure it's
->> legal or illegal:(
-> 
-> I think it could certainly be used for host bridge register space, if
-> the bridge supplied a _HID that a device-specific driver could claim.
-> But I think a generic driver like pci_root.c has to rely on the
-> producer/consumer bit to differentiate windows ("produced" space) from
-> device registers ("consumed" space), so I think Memory32Fixed for a
-> window makes no sense.
-> 
->>> It'd be nice to have Bernhard's logs archived somewhere and referenced
->>> here.  This seems like a dusty corner of the code that might have to be
->>> revisited someday.
->> I have archived the acpidump at:
->> https://bugzilla.kernel.org/show_bug.cgi?id=94221
-> 
-> Yes, I noticed that.  Unfortunately, there is no link to the bugzilla
-> in your changelog.
-> 
->>>> --- a/arch/x86/pci/acpi.c
->>>> +++ b/arch/x86/pci/acpi.c
->>>> @@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
->>>>      info->bridge = device;
->>>>      ret = acpi_dev_get_resources(device, list,
->>>>                                   acpi_dev_filter_resource_type_cb,
->>>> -                                 (void *)(IORESOURCE_IO | IORESOURCE_MEM));
->>>> +                                 (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
->>>
->>> Tangent: I'm disappointed that ia64 didn't get reworked to track the x86
->>> code here.  Is that coming soon?
->> I have checked IA64 when changing the resource parsing interface,
->> but there are obstacle to convert it to the new interface.
->> Will have another try.
-> 
-> Please do.  I think it's extremely important to keep these arches
-> aligned.  And arm64, when similar code gets added to it.  Most of the
-> code in pci_acpi_scan_root() is actually arch-independent, and it
-> should be pulled up into pci_root.c someday.
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Now we are using memblock to do early resource reserver/allocation
+instead of using e820 map directly, and setup_data is reserved in
+memblock early already.
+Also kexec generate setup_data and pass pointer to second kernel,
+so second kernel reserve setup_data by their own.
+(Now kexec-tools create SETUP_EFI and SETUP_E820_EXT).
+
+We can kill E820_RESERVED_KERN and not touch e820 map at all.
+
+That will fix bug in mark_nonsave_region that can not handle that
+case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
+boundary is not page aligned.
+
+Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
+Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
+Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
+Cc: "Lee, Chun-Yi" <jlee@suse.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ arch/x86/include/uapi/asm/e820.h |  9 ---------
+ arch/x86/kernel/e820.c           |  6 ++----
+ arch/x86/kernel/setup.c          | 26 --------------------------
+ arch/x86/kernel/tboot.c          |  3 +--
+ arch/x86/mm/init_64.c            | 11 ++++-------
+ 5 files changed, 7 insertions(+), 48 deletions(-)
+
+diff --git a/arch/x86/include/uapi/asm/e820.h b/arch/x86/include/uapi/asm/e820.h
+index d993e33..edc8a71 100644
+--- a/arch/x86/include/uapi/asm/e820.h
++++ b/arch/x86/include/uapi/asm/e820.h
+@@ -33,15 +33,6 @@
+ #define E820_NVS	4
+ #define E820_UNUSABLE	5
+ 
+-
+-/*
+- * reserved RAM used by kernel itself
+- * if CONFIG_INTEL_TXT is enabled, memory of this type will be
+- * included in the S3 integrity calculation and so should not include
+- * any memory that BIOS might alter over the S3 transition
+- */
+-#define E820_RESERVED_KERN        128
+-
+ #ifndef __ASSEMBLY__
+ #include <linux/types.h>
+ struct e820entry {
+diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
+index 46201de..2a6bed9 100644
+--- a/arch/x86/kernel/e820.c
++++ b/arch/x86/kernel/e820.c
+@@ -134,7 +134,6 @@ static void __init e820_print_type(u32 type)
+ {
+ 	switch (type) {
+ 	case E820_RAM:
+-	case E820_RESERVED_KERN:
+ 		printk(KERN_CONT "usable");
+ 		break;
+ 	case E820_RESERVED:
+@@ -688,7 +687,7 @@ void __init e820_mark_nosave_regions(unsigned long limit_pfn)
+ 			register_nosave_region(pfn, PFN_UP(ei->addr));
+ 
+ 		pfn = PFN_DOWN(ei->addr + ei->size);
+-		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
++		if (ei->type != E820_RAM)
+ 			register_nosave_region(PFN_UP(ei->addr), pfn);
+ 
+ 		if (pfn >= limit_pfn)
+@@ -902,7 +901,6 @@ void __init finish_e820_parsing(void)
+ static inline const char *e820_type_to_string(int e820_type)
+ {
+ 	switch (e820_type) {
+-	case E820_RESERVED_KERN:
+ 	case E820_RAM:	return "System RAM";
+ 	case E820_ACPI:	return "ACPI Tables";
+ 	case E820_NVS:	return "ACPI Non-volatile Storage";
+@@ -1077,7 +1075,7 @@ void __init memblock_x86_fill(void)
+ 		if (end != (resource_size_t)end)
+ 			continue;
+ 
+-		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
++		if (ei->type != E820_RAM)
+ 			continue;
+ 
+ 		memblock_add(ei->addr, ei->size);
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 912f124..aed343b 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -478,30 +478,6 @@ static void __init parse_setup_data(void)
+ 	}
+ }
+ 
+-static void __init e820_reserve_setup_data(void)
+-{
+-	struct setup_data *data;
+-	u64 pa_data;
+-	int found = 0;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-	while (pa_data) {
+-		data = early_memremap(pa_data, sizeof(*data));
+-		e820_update_range(pa_data, sizeof(*data)+data->len,
+-			 E820_RAM, E820_RESERVED_KERN);
+-		found = 1;
+-		pa_data = data->next;
+-		early_iounmap(data, sizeof(*data));
+-	}
+-	if (!found)
+-		return;
+-
+-	sanitize_e820_map(e820.map, ARRAY_SIZE(e820.map), &e820.nr_map);
+-	memcpy(&e820_saved, &e820, sizeof(struct e820map));
+-	printk(KERN_INFO "extended physical RAM map:\n");
+-	e820_print_map("reserve setup_data");
+-}
+-
+ static void __init memblock_x86_reserve_range_setup_data(void)
+ {
+ 	struct setup_data *data;
+@@ -1037,8 +1013,6 @@ void __init setup_arch(char **cmdline_p)
+ 		early_dump_pci_devices();
+ #endif
+ 
+-	/* update the e820_saved too */
+-	e820_reserve_setup_data();
+ 	finish_e820_parsing();
+ 
+ 	if (efi_enabled(EFI_BOOT))
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 91a4496..3c2752a 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -195,8 +195,7 @@ static int tboot_setup_sleep(void)
+ 	tboot->num_mac_regions = 0;
+ 
+ 	for (i = 0; i < e820.nr_map; i++) {
+-		if ((e820.map[i].type != E820_RAM)
+-		 && (e820.map[i].type != E820_RESERVED_KERN))
++		if (e820.map[i].type != E820_RAM)
+ 			continue;
+ 
+ 		add_mac_region(e820.map[i].addr, e820.map[i].size);
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index c30efb6..63520ec 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -354,8 +354,7 @@ phys_pte_init(pte_t *pte_page, unsigned long addr, unsigned long end,
+ 		next = (addr & PAGE_MASK) + PAGE_SIZE;
+ 		if (addr >= end) {
+ 			if (!after_bootmem &&
+-			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RESERVED_KERN))
++			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM))
+ 				set_pte(pte, __pte(0));
+ 			continue;
+ 		}
+@@ -401,9 +400,8 @@ phys_pmd_init(pmd_t *pmd_page, unsigned long address, unsigned long end,
+ 
+ 		next = (address & PMD_MASK) + PMD_SIZE;
+ 		if (address >= end) {
+-			if (!after_bootmem &&
+-			    !e820_any_mapped(address & PMD_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(address & PMD_MASK, next, E820_RESERVED_KERN))
++			if (!after_bootmem && !e820_any_mapped(
++					address & PMD_MASK, next, E820_RAM))
+ 				set_pmd(pmd, __pmd(0));
+ 			continue;
+ 		}
+@@ -476,8 +474,7 @@ phys_pud_init(pud_t *pud_page, unsigned long addr, unsigned long end,
+ 		next = (addr & PUD_MASK) + PUD_SIZE;
+ 		if (addr >= end) {
+ 			if (!after_bootmem &&
+-			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM) &&
+-			    !e820_any_mapped(addr & PUD_MASK, next, E820_RESERVED_KERN))
++			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM))
+ 				set_pud(pud, __pud(0));
+ 			continue;
+ 		}
+-- 
+1.8.4.5
+
