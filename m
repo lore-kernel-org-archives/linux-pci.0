@@ -1,198 +1,225 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:62938 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754067AbbCLNDm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:03:42 -0400
-Message-ID: <55018E90.9030301@huawei.com>
-Date: Thu, 12 Mar 2015 21:03:12 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 10/30] PCI: Introduce pci_host_bridge_list to manage
- host bridges
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-11-git-send-email-wangyijing@huawei.com> <20150312025537.GD10949@google.com>
-In-Reply-To: <20150312025537.GD10949@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 5/8] x86: Kill not used setup_data handling code
+Date: Sat,  7 Mar 2015 16:56:18 -0800
+Message-Id: <1425776181-10219-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
+References: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/12 10:55, Bjorn Helgaas wrote:
-> On Mon, Mar 09, 2015 at 10:34:07AM +0800, Yijing Wang wrote:
->> Introduce pci_host_bridge_list to manage pci host
->> bridges in system, so we could detect whether
->> the host in domain:bus is alreay registered.
->> Then we could remove bus alreay exist test in
->> __pci_create_root_bus().
-> 
-> It's a nice idea to move this test into the core.  While you're at it, why
-> don't you check for any overlap with the bus ranges of existing host
-> bridges?  For example, if we're trying to create a new host bridge to
-> [bus 40-7f], it should conflict with existing bridges to [bus 00-7f]
-> as well as to [bus 40-ff].  I think your current patch will detect the
-> latter conflict but not the former.
+Cc: Matt Fleming <matt.fleming@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/kernel/kdebugfs.c | 142 ---------------------------------------------
+ arch/x86/kernel/setup.c    |  17 ------
+ 2 files changed, 159 deletions(-)
 
-Now pci host bridge may only know its start bus number, like acpi _BBN provided,
-but does not limit the end bus number, Eg. two pci roots report _BBN 0x0 and 0x80,
-so we have two bus number resource (0, 0xff) and (0x80, 0xff), if we check it strictly,
-some pci scan would fail which currently scan success.
-
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/pci/host-bridge.c |   24 +++++++++++++++++++++++-
->>  drivers/pci/probe.c       |    8 +-------
->>  include/linux/pci.h       |    1 +
->>  3 files changed, 25 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> index 3bd45e7..0bb08ef 100644
->> --- a/drivers/pci/host-bridge.c
->> +++ b/drivers/pci/host-bridge.c
->> @@ -8,6 +8,9 @@
->>  
->>  #include "pci.h"
->>  
->> +static LIST_HEAD(pci_host_bridge_list);
->> +static DEFINE_MUTEX(phb_mutex);
-> 
-> We don't use the "phb" abbreviation in the PCI core.
-
-OK
-
-> 
->> +
->>  static void pci_release_host_bridge_dev(struct device *dev)
->>  {
->>  	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
->> @@ -25,7 +28,7 @@ struct pci_host_bridge *pci_create_host_bridge(
->>  	int error;
->>  	int bus = PCI_BUSNUM(db);
->>  	int domain = PCI_DOMAIN(db);
->> -	struct pci_host_bridge *host;
->> +	struct pci_host_bridge *host, *temp;
->>  	struct resource_entry *window, *n;
->>  
->>  	host = kzalloc(sizeof(*host), GFP_KERNEL);
->> @@ -40,6 +43,18 @@ struct pci_host_bridge *pci_create_host_bridge(
->>  	 */
->>  	pci_host_assign_domain_nr(host);
->>  
->> +	mutex_lock(&phb_mutex);
->> +	list_for_each_entry(temp, &pci_host_bridge_list, list)
->> +		if (temp->domain == host->domain
->> +				&& temp->busnum == host->busnum) {
->> +			dev_dbg(&host->dev, "pci host bridge pci%04x:%02x exist\n",
->> +					host->domain, host->busnum);
-> 
-> &host->dev hasn't been initialized yet!  And the text of the original
-> message was better.
-
-Oh, my mistake, good catch.
-
-> 
->> +			mutex_unlock(&phb_mutex);
->> +			kfree(host);
->> +			return NULL;
->> +		}
->> +	mutex_unlock(&phb_mutex);
-> 
-> This is racy.  Two CPUs adding a bridge to [bus 00-7f] at about the same
-> time can both succeed.
-> 
-
-Hmm, I need to unlock after I add the new host bridge to the gloal host bridge list, thanks.
-
-> And it needs curly braces around the list_for_each_entry() body.
-
-OK
-
-> 
->> +
->>  	host->dev.parent = parent;
->>  	INIT_LIST_HEAD(&host->windows);
->>  	host->dev.release = pci_release_host_bridge_dev;
->> @@ -55,11 +70,18 @@ struct pci_host_bridge *pci_create_host_bridge(
->>  	resource_list_for_each_entry_safe(window, n, resources)
->>  		list_move_tail(&window->node, &host->windows);
->>  
->> +	mutex_lock(&phb_mutex);
->> +	list_add_tail(&host->list, &pci_host_bridge_list);
->> +	mutex_unlock(&phb_mutex);
->>  	return host;
->>  }
->>  
->>  void pci_free_host_bridge(struct pci_host_bridge *host)
->>  {
->> +	mutex_lock(&phb_mutex);
->> +	list_del(&host->list);
->> +	mutex_unlock(&phb_mutex);
->> +
->>  	device_unregister(&host->dev);
->>  }
->>  
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 27ec612..7238fa3 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1870,7 +1870,7 @@ static struct pci_bus *__pci_create_root_bus(
->>  		void *sysdata)
->>  {
->>  	int error;
->> -	struct pci_bus *b, *b2;
->> +	struct pci_bus *b;
->>  	struct resource_entry *window;
->>  	struct device *parent;
->>  	struct resource *res;
->> @@ -1887,12 +1887,6 @@ static struct pci_bus *__pci_create_root_bus(
->>  	b->ops = ops;
->>  	b->number = b->busn_res.start = bridge->busnum;
->>  	pci_bus_assign_domain_nr(b, parent);
->> -	b2 = pci_find_bus(pci_domain_nr(b), b->number);
->> -	if (b2) {
->> -		/* If we already got to this bus through a different bridge, ignore it */
->> -		dev_dbg(&b2->dev, "bus already known\n");
->> -		goto err_out;
->> -	}
->>  
->>  	bridge->bus = b;
->>  	b->bridge = get_device(&bridge->dev);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 463eaa3..b621f5b 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -406,6 +406,7 @@ struct pci_host_bridge {
->>  	struct device dev;
->>  	struct pci_bus *bus;		/* root bus */
->>  	struct list_head windows;	/* resource_entry */
->> +	struct list_head list;
->>  	void (*release_fn)(struct pci_host_bridge *);
->>  	void *release_data;
->>  };
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
-
-
+diff --git a/arch/x86/kernel/kdebugfs.c b/arch/x86/kernel/kdebugfs.c
+index dc1404b..c8ca86c 100644
+--- a/arch/x86/kernel/kdebugfs.c
++++ b/arch/x86/kernel/kdebugfs.c
+@@ -21,142 +21,6 @@ struct dentry *arch_debugfs_dir;
+ EXPORT_SYMBOL(arch_debugfs_dir);
+ 
+ #ifdef CONFIG_DEBUG_BOOT_PARAMS
+-struct setup_data_node {
+-	u64 paddr;
+-	u32 type;
+-	u32 len;
+-};
+-
+-static ssize_t setup_data_read(struct file *file, char __user *user_buf,
+-			       size_t count, loff_t *ppos)
+-{
+-	struct setup_data_node *node = file->private_data;
+-	unsigned long remain;
+-	loff_t pos = *ppos;
+-	struct page *pg;
+-	void *p;
+-	u64 pa;
+-
+-	if (pos < 0)
+-		return -EINVAL;
+-
+-	if (pos >= node->len)
+-		return 0;
+-
+-	if (count > node->len - pos)
+-		count = node->len - pos;
+-
+-	pa = node->paddr + sizeof(struct setup_data) + pos;
+-	pg = pfn_to_page((pa + count - 1) >> PAGE_SHIFT);
+-	if (PageHighMem(pg)) {
+-		p = ioremap_cache(pa, count);
+-		if (!p)
+-			return -ENXIO;
+-	} else
+-		p = __va(pa);
+-
+-	remain = copy_to_user(user_buf, p, count);
+-
+-	if (PageHighMem(pg))
+-		iounmap(p);
+-
+-	if (remain)
+-		return -EFAULT;
+-
+-	*ppos = pos + count;
+-
+-	return count;
+-}
+-
+-static const struct file_operations fops_setup_data = {
+-	.read		= setup_data_read,
+-	.open		= simple_open,
+-	.llseek		= default_llseek,
+-};
+-
+-static int __init
+-create_setup_data_node(struct dentry *parent, int no,
+-		       struct setup_data_node *node)
+-{
+-	struct dentry *d, *type, *data;
+-	char buf[16];
+-
+-	sprintf(buf, "%d", no);
+-	d = debugfs_create_dir(buf, parent);
+-	if (!d)
+-		return -ENOMEM;
+-
+-	type = debugfs_create_x32("type", S_IRUGO, d, &node->type);
+-	if (!type)
+-		goto err_dir;
+-
+-	data = debugfs_create_file("data", S_IRUGO, d, node, &fops_setup_data);
+-	if (!data)
+-		goto err_type;
+-
+-	return 0;
+-
+-err_type:
+-	debugfs_remove(type);
+-err_dir:
+-	debugfs_remove(d);
+-	return -ENOMEM;
+-}
+-
+-static int __init create_setup_data_nodes(struct dentry *parent)
+-{
+-	struct setup_data_node *node;
+-	struct setup_data *data;
+-	int error;
+-	struct dentry *d;
+-	struct page *pg;
+-	u64 pa_data;
+-	int no = 0;
+-
+-	d = debugfs_create_dir("setup_data", parent);
+-	if (!d)
+-		return -ENOMEM;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-
+-	while (pa_data) {
+-		node = kmalloc(sizeof(*node), GFP_KERNEL);
+-		if (!node) {
+-			error = -ENOMEM;
+-			goto err_dir;
+-		}
+-
+-		pg = pfn_to_page((pa_data+sizeof(*data)-1) >> PAGE_SHIFT);
+-		if (PageHighMem(pg)) {
+-			data = ioremap_cache(pa_data, sizeof(*data));
+-			if (!data) {
+-				kfree(node);
+-				error = -ENXIO;
+-				goto err_dir;
+-			}
+-		} else
+-			data = __va(pa_data);
+-
+-		node->paddr = pa_data;
+-		node->type = data->type;
+-		node->len = data->len;
+-		error = create_setup_data_node(d, no, node);
+-		pa_data = data->next;
+-
+-		if (PageHighMem(pg))
+-			iounmap(data);
+-		if (error)
+-			goto err_dir;
+-		no++;
+-	}
+-
+-	return 0;
+-
+-err_dir:
+-	debugfs_remove(d);
+-	return error;
+-}
+-
+ static struct debugfs_blob_wrapper boot_params_blob = {
+ 	.data		= &boot_params,
+ 	.size		= sizeof(boot_params),
+@@ -181,14 +45,8 @@ static int __init boot_params_kdebugfs_init(void)
+ 	if (!data)
+ 		goto err_version;
+ 
+-	error = create_setup_data_nodes(dbp);
+-	if (error)
+-		goto err_data;
+-
+ 	return 0;
+ 
+-err_data:
+-	debugfs_remove(data);
+ err_version:
+ 	debugfs_remove(version);
+ err_dir:
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 94f95e0..a7e688c 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -486,20 +486,6 @@ static void __init parse_setup_data(void)
+ 	boot_params.hdr.setup_data = 0; /* all done */
+ }
+ 
+-static void __init memblock_x86_reserve_range_setup_data(void)
+-{
+-	struct setup_data *data;
+-	u64 pa_data;
+-
+-	pa_data = boot_params.hdr.setup_data;
+-	while (pa_data) {
+-		data = early_memremap(pa_data, sizeof(*data));
+-		memblock_reserve(pa_data, sizeof(*data) + data->len);
+-		pa_data = data->next;
+-		early_iounmap(data, sizeof(*data));
+-	}
+-}
+-
+ /*
+  * --------- Crashkernel reservation ------------------------------
+  */
+@@ -1006,9 +992,6 @@ void __init setup_arch(char **cmdline_p)
+ 
+ 	x86_report_nx();
+ 
+-	/* after early param, so could get panic from serial */
+-	memblock_x86_reserve_range_setup_data();
+-
+ 	if (acpi_mps_check()) {
+ #ifdef CONFIG_X86_LOCAL_APIC
+ 		disable_apic = 1;
 -- 
-Thanks!
-Yijing
+1.8.4.5
 
