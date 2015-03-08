@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28023 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448AbbCHA5u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 19:57:50 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Matt Fleming <matt.fleming@intel.com>,
 	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
@@ -11,91 +7,148 @@ To: Matt Fleming <matt.fleming@intel.com>,
 Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
 	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 7/8] x86, boot, PCI: Copy SETUP_PCI rom to kernel space
-Date: Sat,  7 Mar 2015 16:56:20 -0800
-Message-Id: <1425776181-10219-8-git-send-email-yinghai@kernel.org>
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	David Vrabel <david.vrabel@citrix.com>
+Subject: [PATCH v3 3/8] x86, of: Let add_dtb reserve setup_data locally
+Date: Sat,  7 Mar 2015 16:56:16 -0800
+Message-Id: <1425776181-10219-4-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
 References: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As EFI stub code could put them high when on 32bit or with exactmap=
-on 64bit conf.
+We will not reserve setup_data in generic code. Every handler need to
+reserve and copy setup_data locally.
 
-Check if the range is mapped, otherwise allocate new one and have
-the rom data copied. So we could access them directly.
+Current dtd handling already have code for copying, just add reserve code.
 
+Also simplify code a bit by storing real dtb size.
+
+Cc: Rob Herring <robh@kernel.org>
+Cc: David Vrabel <david.vrabel@citrix.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/common.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 45 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/prom.h  |  9 ++++++---
+ arch/x86/kernel/devicetree.c | 43 +++++++++++++++++++++++++------------------
+ 2 files changed, 31 insertions(+), 21 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 67dc2a9..15e1b3f 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -697,6 +697,48 @@ struct firmware_setup_pci_entry {
+diff --git a/arch/x86/include/asm/prom.h b/arch/x86/include/asm/prom.h
+index 1d081ac..fb716eddc 100644
+--- a/arch/x86/include/asm/prom.h
++++ b/arch/x86/include/asm/prom.h
+@@ -24,17 +24,20 @@
  
- static LIST_HEAD(setup_pci_entries);
+ #ifdef CONFIG_OF
+ extern int of_ioapic;
+-extern u64 initial_dtb;
+-extern void add_dtb(u64 data);
+ void x86_of_pci_init(void);
+ void x86_dtb_init(void);
+ #else
+-static inline void add_dtb(u64 data) { }
+ static inline void x86_of_pci_init(void) { }
+ static inline void x86_dtb_init(void) { }
+ #define of_ioapic 0
+ #endif
  
-+static phys_addr_t check_copy(phys_addr_t start, unsigned long size)
-+{
-+	unsigned long start_pfn = PFN_DOWN(start);
-+	unsigned long end_pfn = PFN_UP(start + size);
-+	unsigned char *p, *q;
-+	phys_addr_t pa_p, pa_q;
-+	long sz = size;
++#ifdef CONFIG_OF_FLATTREE
++extern void add_dtb(u64 data);
++#else
++static inline void add_dtb(u64 data) { }
++#endif
 +
-+	if (pfn_range_is_mapped(start_pfn, end_pfn))
-+		return start;
-+
-+	/* allocate and copy */
-+	pa_p = memblock_alloc(size, PAGE_SIZE);
-+	if (!pa_p)
-+		return start;
-+
-+	p = phys_to_virt(pa_p);
-+
-+	pa_q = start;
-+	while (sz > 0) {
-+		long chunk_size = 64<<10;
-+
-+		if (chunk_size > sz)
-+			chunk_size = sz;
-+
-+		q = early_memremap(pa_q, chunk_size);
-+		if (!q) {
-+			memblock_free(pa_p, size);
-+			return start;
-+		}
-+		memcpy(p, q, chunk_size);
-+		early_memunmap(q, chunk_size);
-+		p += chunk_size;
-+		pa_q += chunk_size;
-+		sz -= chunk_size;
-+	}
-+
-+	memblock_free(start, size);
-+
-+	return pa_p;
-+}
-+
- int __init fill_setup_pci_entries(void)
+ extern char cmd_line[COMMAND_LINE_SIZE];
+ 
+ #endif /* __ASSEMBLY__ */
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 3d35033..55cf76a 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -2,6 +2,7 @@
+  * Architecture specific OF callbacks.
+  */
+ #include <linux/bootmem.h>
++#include <linux/memblock.h>
+ #include <linux/export.h>
+ #include <linux/io.h>
+ #include <linux/irqdomain.h>
+@@ -23,7 +24,6 @@
+ #include <asm/setup.h>
+ #include <asm/i8259.h>
+ 
+-__initdata u64 initial_dtb;
+ char __initdata cmd_line[COMMAND_LINE_SIZE];
+ 
+ int __initdata of_ioapic;
+@@ -43,11 +43,27 @@ void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
+ 	return __alloc_bootmem(size, align, __pa(MAX_DMA_ADDRESS));
+ }
+ 
++#ifdef CONFIG_OF_FLATTREE
++static u64 initial_dtb __initdata;
++static u32 initial_dtb_size __initdata;
+ void __init add_dtb(u64 data)
  {
- 	struct setup_data *data;
-@@ -726,8 +768,9 @@ int __init fill_setup_pci_entries(void)
- 		entry->vendor = rom->vendor;
- 		entry->devid = rom->devid;
- 		entry->pcilen = rom->pcilen;
--		entry->romdata = pa_data +
--				 offsetof(struct pci_setup_rom, romdata);
-+		entry->romdata = check_copy(pa_data +
-+				      offsetof(struct pci_setup_rom, romdata),
-+				      rom->pcilen);
++	u32 map_len;
++
+ 	initial_dtb = data + offsetof(struct setup_data, data);
+-}
  
- 		list_add(&entry->list, &setup_pci_entries);
++	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
++	initial_boot_params = early_memremap(initial_dtb, map_len);
++	if (!initial_boot_params) {
++		initial_dtb = 0;
++		return;
++	}
++	initial_dtb_size = of_get_flat_dt_size();
++	early_memunmap(initial_boot_params, map_len);
++	initial_boot_params = NULL;
++	memblock_reserve(initial_dtb, initial_dtb_size);
++}
++#endif
+ /*
+  * CE4100 ids. Will be moved to machine_device_initcall() once we have it.
+  */
+@@ -272,31 +288,22 @@ static void __init dtb_apic_setup(void)
+ 	dtb_ioapic_setup();
+ }
  
+-#ifdef CONFIG_OF_FLATTREE
+ static void __init x86_flattree_get_config(void)
+ {
+-	u32 size, map_len;
++#ifdef CONFIG_OF_FLATTREE
+ 	void *dt;
+ 
+ 	if (!initial_dtb)
+ 		return;
+ 
+-	map_len = max(PAGE_SIZE - (initial_dtb & ~PAGE_MASK), (u64)128);
+-
+-	initial_boot_params = dt = early_memremap(initial_dtb, map_len);
+-	size = of_get_flat_dt_size();
+-	if (map_len < size) {
+-		early_iounmap(dt, map_len);
+-		initial_boot_params = dt = early_memremap(initial_dtb, size);
+-		map_len = size;
+-	}
+-
++	initial_boot_params = dt = early_memremap(initial_dtb,
++						  initial_dtb_size);
+ 	unflatten_and_copy_device_tree();
+-	early_iounmap(dt, map_len);
+-}
+-#else
+-static inline void x86_flattree_get_config(void) { }
++	early_memunmap(dt, initial_dtb_size);
++
++	memblock_free(initial_dtb, initial_dtb_size);
+ #endif
++}
+ 
+ void __init x86_dtb_init(void)
+ {
 -- 
 1.8.4.5
 
