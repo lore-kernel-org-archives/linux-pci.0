@@ -1,69 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:47035 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351AbbCTDJa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:09:30 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:09:28 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 5DE942CE804E
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:25 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K39HCY47317198
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:25 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K38pJl003053
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:51 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V14 03/21] PCI: Print more info in sriov_enable() error message
-Date: Fri, 20 Mar 2015 11:06:19 +0800
-Message-Id: <1426820797-6267-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 0/8] x86, boot: clean up setup_data handling
+Date: Sat,  7 Mar 2015 16:50:01 -0800
+Message-Id: <1425775809-9373-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Now setup_data is reserved via memblock and e820 and different
+handlers have different ways, and it is confusing.
+1. SETUP_E820_EXT: is consumed early and will not copy or access again.
+        have memory wasted.
+2. SETUP_EFI: is accessed via ioremap every time at early stage.
+        have memory wasted.
+3. SETUP_DTB: is copied locally.
+        have memory wasted.
+4. SETUP_PCI: is accessed via ioremap for every pci devices, even run-time.
+5. SETUP_KASLR: is accessed early, will not copy or access again.
+        have memory wasted.
 
-If we don't have space for all the bus numbers required to enable VFs,
-print the largest bus number required and the range available.
+Also setup_data is exported to debugfs for debug purpose.
 
-No functional change; improved error message only.
+Here will convert to let every handler to decide how to handle it.
+and will not reserve the setup_data generally, so will not
+waste memory and also make memblock/e820 keep page aligned.
+1. not touch E820 anymore.
+2. copy SETUP_EFI to __initdata variable and access it without ioremap.
+3. SETUP_DTB: reserver and copy to local and free.
+4. SETUP_PCI: reverve localy and convert to list, to avoid keeping ioremap.
+5. export SETUP_PCI via sysfs.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Also put them in:
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-4.0-rc2-setup_data
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4b3a4ea..c4c33ea 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -180,6 +180,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
-+	u8 bus;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -216,8 +217,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
--		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
-+	bus = virtfn_bus(dev, nr_virtfn - 1);
-+	if (bus > dev->bus->busn_res.end) {
-+		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
-+			nr_virtfn, bus, &dev->bus->busn_res);
- 		return -ENOMEM;
- 	}
- 
+Should be materials for v4.1.
+
+Thanks
+
+Yinghai Lu
+
+-v3: separated with kasl patches, and fix early_ioremap return checking.
+
+Yinghai Lu (8):
+  x86: Kill E820_RESERVED_KERN
+  x86, efi: Copy SETUP_EFI data and access directly
+  x86, of: Let add_dtb reserve setup_data locally
+  x86, boot: Add add_pci handler for SETUP_PCI
+  x86: Kill not used setup_data handling code
+  x86, boot, PCI: Convert SETUP_PCI data to list
+  x86, boot, PCI: Copy SETUP_PCI rom to kernel space
+  x86, boot, PCI: Export SETUP_PCI data via sysfs
+
+ arch/x86/include/asm/efi.h       |   2 +-
+ arch/x86/include/asm/pci.h       |   4 +
+ arch/x86/include/asm/prom.h      |   9 +-
+ arch/x86/include/uapi/asm/e820.h |   9 --
+ arch/x86/kernel/devicetree.c     |  43 +++---
+ arch/x86/kernel/e820.c           |   6 +-
+ arch/x86/kernel/kdebugfs.c       | 142 ------------------
+ arch/x86/kernel/setup.c          |  52 ++-----
+ arch/x86/kernel/tboot.c          |   3 +-
+ arch/x86/mm/init_64.c            |  11 +-
+ arch/x86/pci/common.c            | 316 ++++++++++++++++++++++++++++++++++++---
+ arch/x86/platform/efi/efi.c      |  13 +-
+ arch/x86/platform/efi/efi_64.c   |  13 +-
+ arch/x86/platform/efi/quirks.c   |  23 +--
+ 14 files changed, 371 insertions(+), 275 deletions(-)
+
 -- 
-1.7.9.5
+1.8.4.5
 
