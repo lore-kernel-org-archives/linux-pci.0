@@ -1,276 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:37016 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750839AbbCBHdo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 02:33:44 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 2 Mar 2015 17:33:42 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 53FA52CE8040
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2015 18:33:39 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t227XTVT42663958
-	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:33:39 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t227X3NX002335
-	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 18:33:04 +1100
-Date: Mon, 2 Mar 2015 15:32:47 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v12 10/21] PCI: Consider additional PF's IOV BAR
- alignment in sizing and assigning
-Message-ID: <20150302073247.GE21571@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224084152.GG6220@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150224084152.GG6220@google.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:44859 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366AbbCHA5s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 19:57:48 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 6/8] x86, boot, PCI: Convert SETUP_PCI data to list
+Date: Sat,  7 Mar 2015 16:56:19 -0800
+Message-Id: <1425776181-10219-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
+References: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 02:41:52AM -0600, Bjorn Helgaas wrote:
->On Tue, Feb 24, 2015 at 02:34:06AM -0600, Bjorn Helgaas wrote:
->> From: Wei Yang <weiyang@linux.vnet.ibm.com>
->> 
->> When sizing and assigning resources, we divide the resources into two
->> lists: the requested list and the additional list.  We don't consider the
->> alignment of additional VF(n) BAR space.
->> 
->> This is reasonable because the alignment required for the VF(n) BAR space
->> is the size of an individual VF BAR, not the size of the space for *all*
->> VFs.  But some platforms, e.g., PowerNV, require additional alignment.
->> 
->> Consider the additional IOV BAR alignment when sizing and assigning
->> resources.  When there is not enough system MMIO space, the PF's IOV BAR
->> alignment will not contribute to the bridge.  When there is enough system
->> MMIO space, the additional alignment will contribute to the bridge.
->
->I don't understand the ""when there is not enough system MMIO space" part.
->How do we tell if there's enough MMIO space?
->
+So we could avoid ioremap every time later.
 
-In __assign_resources_sorted(), it has two resources list, one for requested
-(head) and one for additional (realloc_head). This function will first try to
-combine them and assign. If failed, this means we don't have enough MMIO
-space.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/pci.h |  2 ++
+ arch/x86/kernel/setup.c    |  1 +
+ arch/x86/pci/common.c      | 77 +++++++++++++++++++++++++++++++++++++---------
+ 3 files changed, 65 insertions(+), 15 deletions(-)
 
->> Also, take advantage of pci_dev_resource::min_align to store this
->> additional alignment.
->
->This comment doesn't seem to make sense; this patch doesn't save anything
->in min_align.
->
-
-At the end of this patch:
-
-   add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
-
-The add_align is stored in pci_dev_resource::min_align in add_to_list(). And
-retrieved by get_res_add_align() in below code. This field is not used
-previously, so I took advantage of this field to store the alignment of the
-additional resources.
-
->Another question below...
->
->> [bhelgaas: changelog, printk cast]
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/pci/setup-bus.c |   83 ++++++++++++++++++++++++++++++++++++++++-------
->>  1 file changed, 70 insertions(+), 13 deletions(-)
->> 
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index e3e17f3c0f0f..affbceae560f 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
->>  	}
->>  }
->>  
->> -static resource_size_t get_res_add_size(struct list_head *head,
->> -					struct resource *res)
->> +static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
->> +					       struct resource *res)
->>  {
->>  	struct pci_dev_resource *dev_res;
->>  
->> @@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
->>  			int idx = res - &dev_res->dev->resource[0];
->>  
->>  			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
->> -				 "res[%d]=%pR get_res_add_size add_size %llx\n",
->> +				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
->>  				 idx, dev_res->res,
->> -				 (unsigned long long)dev_res->add_size);
->> +				 (unsigned long long)dev_res->add_size,
->> +				 (unsigned long long)dev_res->min_align);
->>  
->> -			return dev_res->add_size;
->> +			return dev_res;
->>  		}
->>  	}
->>  
->> -	return 0;
->> +	return NULL;
->> +}
->> +
->> +static resource_size_t get_res_add_size(struct list_head *head,
->> +					struct resource *res)
->> +{
->> +	struct pci_dev_resource *dev_res;
->> +
->> +	dev_res = res_to_dev_res(head, res);
->> +	return dev_res ? dev_res->add_size : 0;
->> +}
->> +
->> +static resource_size_t get_res_add_align(struct list_head *head,
->> +					 struct resource *res)
->> +{
->> +	struct pci_dev_resource *dev_res;
->> +
->> +	dev_res = res_to_dev_res(head, res);
->> +	return dev_res ? dev_res->min_align : 0;
->>  }
->>  
->> +
->>  /* Sort resources by alignment */
->>  static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
->>  {
->> @@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
->>  	LIST_HEAD(save_head);
->>  	LIST_HEAD(local_fail_head);
->>  	struct pci_dev_resource *save_res;
->> -	struct pci_dev_resource *dev_res, *tmp_res;
->> +	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
->>  	unsigned long fail_type;
->> +	resource_size_t add_align, align;
->>  
->>  	/* Check if optional add_size is there */
->>  	if (!realloc_head || list_empty(realloc_head))
->> @@ -384,10 +405,38 @@ static void __assign_resources_sorted(struct list_head *head,
->>  	}
->>  
->>  	/* Update res in head list with add_size in realloc_head list */
->> -	list_for_each_entry(dev_res, head, list)
->> +	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
->>  		dev_res->res->end += get_res_add_size(realloc_head,
->>  							dev_res->res);
->>  
->> +		/*
->> +		 * There are two kinds of additional resources in the list:
->> +		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
->> +		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
->> +		 * Here just fix the additional alignment for bridge
->> +		 */
->> +		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
->> +			continue;
->> +
->> +		add_align = get_res_add_align(realloc_head, dev_res->res);
->> +
->> +		/* Reorder the list by their alignment */
->
->Why do we need to reorder the list by alignment?
-
-Resource list "head" is sorted by the alignment, while the alignment would be
-changed after we considering the additional resource.
-
-Take powernv platform as an example. The IOV BAR is expanded and need to be
-aligned with its total size instead of the individual VF BAR size. If we don't
-reorder it, the IOV BAR would be assigned after some other resources, which
-may cause the real assignment fail even the total size is enough.
-
->
->> +		if (add_align > dev_res->res->start) {
->> +			dev_res->res->start = add_align;
->> +			dev_res->res->end = add_align +
->> +				            resource_size(dev_res->res);
->> +
->> +			list_for_each_entry(dev_res2, head, list) {
->> +				align = pci_resource_alignment(dev_res2->dev,
->> +							       dev_res2->res);
->> +				if (add_align > align)
->> +					list_move_tail(&dev_res->list,
->> +						       &dev_res2->list);
->> +			}
->> +               }
->> +
->> +	}
->> +
->>  	/* Try updated head list with add_size added */
->>  	assign_requested_resources_sorted(head, &local_fail_head);
->>  
->> @@ -962,6 +1011,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>  	struct resource *b_res = find_free_bus_resource(bus,
->>  					mask | IORESOURCE_PREFETCH, type);
->>  	resource_size_t children_add_size = 0;
->> +	resource_size_t children_add_align = 0;
->> +	resource_size_t add_align = 0;
->>  
->>  	if (!b_res)
->>  		return -ENOSPC;
->> @@ -986,6 +1037,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>  			/* put SRIOV requested res to the optional list */
->>  			if (realloc_head && i >= PCI_IOV_RESOURCES &&
->>  					i <= PCI_IOV_RESOURCE_END) {
->> +				add_align = max(pci_resource_alignment(dev, r), add_align);
->>  				r->end = r->start - 1;
->>  				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
->>  				children_add_size += r_size;
->> @@ -1016,19 +1068,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>  			if (order > max_order)
->>  				max_order = order;
->>  
->> -			if (realloc_head)
->> +			if (realloc_head) {
->>  				children_add_size += get_res_add_size(realloc_head, r);
->> +				children_add_align = get_res_add_align(realloc_head, r);
->> +				add_align = max(add_align, children_add_align);
->> +			}
->>  		}
->>  	}
->>  
->>  	min_align = calculate_mem_align(aligns, max_order);
->>  	min_align = max(min_align, window_alignment(bus, b_res->flags));
->>  	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
->> +	add_align = max(min_align, add_align);
->>  	if (children_add_size > add_size)
->>  		add_size = children_add_size;
->>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->>  		calculate_memsize(size, min_size, add_size,
->> -				resource_size(b_res), min_align);
->> +				resource_size(b_res), add_align);
->>  	if (!size0 && !size1) {
->>  		if (b_res->start || b_res->end)
->>  			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
->> @@ -1040,10 +1096,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>  	b_res->end = size0 + min_align - 1;
->>  	b_res->flags |= IORESOURCE_STARTALIGN;
->>  	if (size1 > size0 && realloc_head) {
->> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
->> -		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
->> +		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
->> +		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
->>  			   b_res, &bus->busn_res,
->> -			   (unsigned long long)size1-size0);
->> +			   (unsigned long long) (size1 - size0),
->> +			   (unsigned long long) add_align);
->>  	}
->>  	return 0;
->>  }
->> 
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 7fbd5f3..99b261f 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -88,9 +88,11 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ 	*strategy_parameter = ~0UL;
+ }
+ void add_pci(u64 pa_data);
++int fill_setup_pci_entries(void);
+ #else
+ static inline void early_quirks(void) { }
+ static inline void add_pci(u64 pa_data) { }
++static inline int fill_setup_pci_entries(void) { }
+ #endif
+ 
+ extern void pci_iommu_alloc(void);
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index a7e688c..39940a7 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -1195,6 +1195,7 @@ void __init setup_arch(char **cmdline_p)
+ 	acpi_boot_init();
+ 	sfi_init();
+ 	x86_dtb_init();
++	fill_setup_pci_entries();
+ 
+ 	/*
+ 	 * get boot-time SMP configuration:
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index f40df5c..67dc2a9 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -668,7 +668,7 @@ unsigned int pcibios_assign_all_busses(void)
+ 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
+ }
+ 
+-static u64 pci_setup_data;
++static u64 pci_setup_data __initdata;
+ void __init add_pci(u64 pa_data)
+ {
+ 	struct setup_data *data;
+@@ -683,36 +683,83 @@ void __init add_pci(u64 pa_data)
+ 	early_memunmap(data, sizeof(*data));
+ }
+ 
+-int pcibios_add_device(struct pci_dev *dev)
++struct firmware_setup_pci_entry {
++	struct list_head list;
++	uint16_t vendor;
++	uint16_t devid;
++	uint64_t pcilen;
++	unsigned long segment;
++	unsigned long bus;
++	unsigned long device;
++	unsigned long function;
++	phys_addr_t romdata;
++};
++
++static LIST_HEAD(setup_pci_entries);
++
++int __init fill_setup_pci_entries(void)
+ {
+ 	struct setup_data *data;
+ 	struct pci_setup_rom *rom;
++	struct firmware_setup_pci_entry *entry;
++	phys_addr_t pa_entry;
+ 	u64 pa_data;
+ 
+ 	pa_data = pci_setup_data;
+ 	while (pa_data) {
+-		data = ioremap(pa_data, sizeof(*rom));
++		data  = early_memremap(pa_data, sizeof(*rom));
+ 		if (!data)
+ 			return -ENOMEM;
+-
+ 		rom = (struct pci_setup_rom *)data;
+ 
+-		if ((pci_domain_nr(dev->bus) == rom->segment) &&
+-		    (dev->bus->number == rom->bus) &&
+-		    (PCI_SLOT(dev->devfn) == rom->device) &&
+-		    (PCI_FUNC(dev->devfn) == rom->function) &&
+-		    (dev->vendor == rom->vendor) &&
+-		    (dev->device == rom->devid)) {
+-			dev->rom = pa_data +
+-			      offsetof(struct pci_setup_rom, romdata);
+-			dev->romlen = rom->pcilen;
++		pa_entry = memblock_alloc(sizeof(*entry), sizeof(long));
++		if (!pa_entry) {
++			early_memunmap(data, sizeof(*rom));
++			return -ENOMEM;
++		}
++
++		entry = phys_to_virt(pa_entry);
++		entry->segment = rom->segment;
++		entry->bus = rom->bus;
++		entry->device = rom->device;
++		entry->function = rom->function;
++		entry->vendor = rom->vendor;
++		entry->devid = rom->devid;
++		entry->pcilen = rom->pcilen;
++		entry->romdata = pa_data +
++				 offsetof(struct pci_setup_rom, romdata);
++
++		list_add(&entry->list, &setup_pci_entries);
++
++		memblock_free(pa_data, sizeof(*rom));
++		pa_data = data->next;
++		early_memunmap(data, sizeof(*rom));
++	}
++
++	pci_setup_data = 0;
++
++	return 0;
++}
++
++int pcibios_add_device(struct pci_dev *dev)
++{
++	struct firmware_setup_pci_entry *entry;
++
++	list_for_each_entry(entry, &setup_pci_entries, list) {
++		if ((pci_domain_nr(dev->bus) == entry->segment) &&
++		    (dev->bus->number == entry->bus) &&
++		    (PCI_SLOT(dev->devfn) == entry->device) &&
++		    (PCI_FUNC(dev->devfn) == entry->function) &&
++		    (dev->vendor == entry->vendor) &&
++		    (dev->device == entry->devid)) {
++			dev->rom = entry->romdata;
++			dev->romlen = entry->pcilen;
+ 			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
+ 				   (unsigned long)dev->rom,
+ 				   (unsigned long)(dev->rom + dev->romlen - 1));
+ 		}
+-		pa_data = data->next;
+-		iounmap(data);
+ 	}
++
+ 	return 0;
+ }
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.8.4.5
 
