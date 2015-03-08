@@ -1,69 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37450 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202AbbCaSQM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 14:16:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150331.110636.1386273674508393491.davem@davemloft.net>
-References: <CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
-	<5519D40D.20903@oracle.com>
-	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
-	<20150331.110636.1386273674508393491.davem@davemloft.net>
-Date: Tue, 31 Mar 2015 11:16:11 -0700
-Message-ID: <CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Miller <davem@davemloft.net>
-Cc: David Ahern <david.ahern@oracle.com>,
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:44277 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbbCHB7R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 20:59:17 -0500
+Received: by igdh15 with SMTP id h15so12952499igd.3
+        for <linux-pci@vger.kernel.org>; Sat, 07 Mar 2015 17:59:16 -0800 (PST)
+Date: Sat, 7 Mar 2015 17:59:14 -0800 (PST)
+From: David Rientjes <rientjes@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiri Kosina <jkosina@suse.cz>, Chun-Yi Lee <jlee@suse.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3 1/8] x86: Kill E820_RESERVED_KERN
+In-Reply-To: <1425776181-10219-2-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.DEB.2.10.1503071748530.5739@chino.kir.corp.google.com>
+References: <1425776181-10219-1-git-send-email-yinghai@kernel.org> <1425776181-10219-2-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 31, 2015 at 8:06 AM, David Miller <davem@davemloft.net> wrote:
-> Your patch only allows the condition behind resources that have 64-bits
-> of significance, but that is not what the document above says about
-> when this situation is allowed.
->
-> Please implement the check either exactly as stated in the errata
-> document, or more loosely if that is not possible, rather than more
-> strictly than allowed.
->
-> Your overly strict and restrictive checks are what got us into this
-> predicament in the first place. :-(
+On Sat, 7 Mar 2015, Yinghai Lu wrote:
 
->From that errata:
----
-Here are criteria that are sufficient to guarantee correctness for a
-given candidate BAR:
-
-The entire path from the host to the adapter is over PCI Express.
-
-No conventional PCI or PCI-X devices do peer-t o-peer reads to the
-range mapped by the BAR.
-
-The PCI Express Host Bridge does no byte merging. (This is believed to
-be true on most
-platforms.)
-
-Any locations with read side-effects are never the target of Memory
-Reads with the TH bit Set.
-See Section 2.2.5
----
+> Now we are using memblock to do early resource reserver/allocation
+> instead of using e820 map directly, and setup_data is reserved in
+> memblock early already.
+> Also kexec generate setup_data and pass pointer to second kernel,
+> so second kernel reserve setup_data by their own.
+> (Now kexec-tools create SETUP_EFI and SETUP_E820_EXT).
+> 
+> We can kill E820_RESERVED_KERN and not touch e820 map at all.
+> 
+> That will fix bug in mark_nonsave_region that can not handle that
+> case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
+> boundary is not page aligned.
+> 
+> Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
 
-We can verify first one that we have all pcie device all the way to
-the hostbridge.
+Is this the bug referenced in the commit message that is fixed?  If so, 
+it's only a bug for resume, correct?  I'm not sure if that's clear enough 
+just from the commit message, I was looking at this patch for an e820 
+problem I'm currently facing on 3.3.
 
-But we can not verify or guarantee other three.
+> Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
+> Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
+> Cc: "Lee, Chun-Yi" <jlee@suse.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: stable@vger.kernel.org
 
-System should get better about the constraints with system design.
-So if it would assign 64bit (and above 4G) mmio to those non-pref 64bit BAR,
-that means it already make sure system design will follow those criteria.
-and then we can safely set pref bit in resource flags.
-
-Thanks
-
-Yinghai
+Hmm, although the bug is reported for a 3.12 kernel, I assume this is for 
+stable 3.10+?  If so, it should apply fine with the exception of removing 
+e820_reserve_setup_data() from setup_arch() rather than 
+memblock_x86_reserve_range_setup_data().  Or is it for 3.2 as well and 
+needs to be completely rebased for that kernel?
