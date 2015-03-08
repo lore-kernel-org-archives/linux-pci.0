@@ -1,228 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49078 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752388AbbC2NhB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Mar 2015 09:37:01 -0400
-Date: Sun, 29 Mar 2015 15:36:55 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 00/86] pci: export pci_ids.h and related cleanups
-Message-ID: <1427635734-24786-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from userp1040.oracle.com ([156.151.31.81]:44903 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbbCHA6A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 19:58:00 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiri Kosina <jkosina@suse.cz>, "Chun-Yi Lee" <jlee@suse.com>,
+	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 8/8] x86, boot, PCI: Export SETUP_PCI data via sysfs
+Date: Sat,  7 Mar 2015 16:56:21 -0800
+Message-Id: <1425776181-10219-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
+References: <1425776181-10219-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The macros in pci_ids.h are pretty useful for userspace
-using the pci sysfs interface, e.g. to decode class
-device and vendor sysfs files.
+So we could let kexec-tools to rebuild SETUP_PCI and pass it to
+second kernel if needed.
 
-At the moment userspace is forced to duplicate these macros (e.g. QEMU does
-this, so does gpxe, seabios, etc), it is better to export them in
-/usr/include/linux/pci_ids.h so everyone can just include this header.
+Now kexec-tools already build SETUP_EFI and SETUP_E820EXT.
 
-This patchset is structured as follows:
-1. include/linux/pci_ids.h is moved to include/uapi/linux/pci_ids.h;
-   a stub file is created in include/linux/pci_ids.h to avoid breaking
-   bisect
-2. all users are converted to use the new header
-3. include/linux/pci_ids.h is removed
-4. cleanups for several issues detected during step 2
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/common.c | 175 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 175 insertions(+)
 
-The patchset was built on several architectures (mips/ppc/x86),
-boot-tested on x86 only - build seems sufficient for this kind of
-change.
-
-I think the pci tree is the most appropriate for this patchset.
-Please review it, and consider for 4.1.
-
-Michael S. Tsirkin (86):
-  pci: export pci_ids.h
-  i2c/i801: linux/pci_ids.h -> uapi/linux/pci_ids.h
-  mips/netlogic: use uapi/linux/pci_ids.h directly
-  powerpc/pci: use uapi/linux/pci_ids.h directly
-  x86/gart: use uapi/linux/pci_ids.h directly
-  x86/microcode/amd: use uapi/linux/pci_ids.h directly
-  x86/quirks: use uapi/linux/pci_ids.h directly
-  x86/printk: use uapi/linux/pci_ids.h directly
-  x86/calgary: use uapi/linux/pci_ids.h directly
-  x86/apic/vsmp: use uapi/linux/pci_ids.h directly
-  x86/mm/numa: use uapi/linux/pci_ids.h directly
-  x86/pci/sta2x11: use uapi/linux/pci_ids.h directly
-  acpi/video: use uapi/linux/pci_ids.h directly
-  crypto/ccp: use uapi/linux/pci_ids.h directly
-  crypto/geode: use uapi/linux/pci_ids.h directly
-  dmaengine: use uapi/linux/pci_ids.h directly
-  dma/ioat: use uapi/linux/pci_ids.h directly
-  edac/amd: use uapi/linux/pci_ids.h directly
-  edac/e7xxx: use uapi/linux/pci_ids.h directly
-  edac/e752x: use uapi/linux/pci_ids.h directly
-  edac/i3000: use uapi/linux/pci_ids.h directly
-  edac/i3200: use uapi/linux/pci_ids.h directly
-  edac/i5000: use uapi/linux/pci_ids.h directly
-  edac/i5100: use uapi/linux/pci_ids.h directly
-  edac/i5400: use uapi/linux/pci_ids.h directly
-  edac/i7300: use uapi/linux/pci_ids.h directly
-  edac/i7core: use uapi/linux/pci_ids.h directly
-  edac/i82443bxgx: use uapi/linux/pci_ids.h directly
-  edac/i82860: use uapi/linux/pci_ids.h directly
-  edac/i82875p: use uapi/linux/pci_ids.h directly
-  edac/i82975x: use uapi/linux/pci_ids.h directly
-  edac/ie31200: use uapi/linux/pci_ids.h directly
-  edac/pasemi: use uapi/linux/pci_ids.h directly
-  edac/r82600: use uapi/linux/pci_ids.h directly
-  edac/sbridge: use uapi/linux/pci_ids.h directly
-  edac/x38_edac: use uapi/linux/pci_ids.h directly
-  firewire/ohci: use uapi/linux/pci_ids.h directly
-  gpio/sch: use uapi/linux/pci_ids.h directly
-  i2c/i801: use uapi/linux/pci_ids.h directly
-  ide/generic: use uapi/linux/pci_ids.h directly
-  input/keyboard: use uapi/linux/pci_ids.h directly
-  input/serio: use uapi/linux/pci_ids.h directly
-  macintosh: use uapi/linux/pci_ids.h directly
-  media/ddbridge: use uapi/linux/pci_ids.h directly
-  media/ngene: use uapi/linux/pci_ids.h directly
-  media/fintek: use uapi/linux/pci_ids.h directly
-  media/ite: use uapi/linux/pci_ids.h directly
-  media/nuvoton: use uapi/linux/pci_ids.h directly
-  media/winbond: use uapi/linux/pci_ids.h directly
-  memstick/r592: use uapi/linux/pci_ids.h directly
-  cxl: use uapi/linux/pci_ids.h directly
-  mtd/maps: use uapi/linux/pci_ids.h directly
-  mtd/nand: use uapi/linux/pci_ids.h directly
-  atheros/atlx: use uapi/linux/pci_ids.h directly
-  chelsio/cxgb: use uapi/linux/pci_ids.h directly
-  intel/ixgb: use uapi/linux/pci_ids.h directly
-  brcm80211: use uapi/linux/pci_ids.h directly
-  pci-label: use uapi/linux/pci_ids.h directly
-  x86/thinkpad_acpi: use uapi/linux/pci_ids.h directly
-  scsi/arcmsr: use uapi/linux/pci_ids.h directly
-  scsi/qla1280: use uapi/linux/pci_ids.h directly
-  staging/comedi: use uapi/linux/pci_ids.h directly
-  staging/olpc: use uapi/linux/pci_ids.h directly
-  tty/serial: comment update
-  usb/dwc3: comment update
-  usb/early: use uapi/linux/pci_ids.h directly
-  usb/gadget: use uapi/linux/pci_ids.h directly
-  usb/host: use uapi/linux/pci_ids.h directly
-  usb/misc: use uapi/linux/pci_ids.h directly
-  fbdev/gxt4500: use uapi/linux/pci_ids.h directly
-  fbdev/i740fb: use uapi/linux/pci_ids.h directly
-  fbdev/i810: use uapi/linux/pci_ids.h directly
-  fbdev/riva: use uapi/linux/pci_ids.h directly
-  w1: use uapi/linux/pci_ids.h directly
-  watchdog: use uapi/linux/pci_ids.h directly
-  sound/pci: use uapi/linux/pci_ids.h directly
-  linux/pci: use uapi/linux/pci_ids.h directly
-  linux/pci: drop include/linux/pci_ids.h
-  x86/microcode/amd: drop pci_ids dependency
-  crypto/ccp: drop linux/pci dependencies
-  input/serio: drop pci_ids dependency
-  media/fintek: drop pci_ids dependency
-  brcm80211: drop pci dependency
-  brcm80211: drop pci_ids include
-  staging/olpc: drop pci dependencies
-  usb/dwc3: move ids to pci_ids.h
-
- arch/powerpc/platforms/embedded6xx/mpc10x.h          |  4 ++--
- drivers/dma/intel_mid_dma_regs.h                     |  2 +-
- drivers/dma/ioat/dma.h                               |  2 +-
- drivers/edac/amd64_edac.h                            |  2 +-
- drivers/net/ethernet/chelsio/cxgb/common.h           |  2 +-
- drivers/net/wireless/brcm80211/include/brcm_hw_ids.h |  2 +-
- drivers/staging/comedi/comedidev.h                   |  2 +-
- include/linux/pci.h                                  |  2 +-
- include/{ => uapi}/linux/pci_ids.h                   |  8 ++++++++
- arch/mips/netlogic/xlp/ahci-init-xlp2.c              |  2 +-
- arch/mips/netlogic/xlp/usb-init-xlp2.c               |  2 +-
- arch/x86/kernel/aperture_64.c                        |  2 +-
- arch/x86/kernel/cpu/microcode/amd.c                  |  1 -
- arch/x86/kernel/early-quirks.c                       |  2 +-
- arch/x86/kernel/early_printk.c                       |  2 +-
- arch/x86/kernel/pci-calgary_64.c                     |  2 +-
- arch/x86/kernel/vsmp_64.c                            |  2 +-
- arch/x86/mm/amdtopology.c                            |  2 +-
- arch/x86/pci/sta2x11-fixup.c                         |  2 +-
- drivers/acpi/video.c                                 |  2 +-
- drivers/crypto/ccp/ccp-ops.c                         |  2 --
- drivers/crypto/ccp/ccp-pci.c                         |  2 +-
- drivers/crypto/geode-aes.c                           |  2 +-
- drivers/edac/amd76x_edac.c                           |  2 +-
- drivers/edac/amd8111_edac.c                          |  2 +-
- drivers/edac/amd8131_edac.c                          |  2 +-
- drivers/edac/e752x_edac.c                            |  2 +-
- drivers/edac/e7xxx_edac.c                            |  2 +-
- drivers/edac/i3000_edac.c                            |  2 +-
- drivers/edac/i3200_edac.c                            |  2 +-
- drivers/edac/i5000_edac.c                            |  2 +-
- drivers/edac/i5100_edac.c                            |  2 +-
- drivers/edac/i5400_edac.c                            |  2 +-
- drivers/edac/i7300_edac.c                            |  2 +-
- drivers/edac/i7core_edac.c                           |  2 +-
- drivers/edac/i82443bxgx_edac.c                       |  2 +-
- drivers/edac/i82860_edac.c                           |  2 +-
- drivers/edac/i82875p_edac.c                          |  2 +-
- drivers/edac/i82975x_edac.c                          |  2 +-
- drivers/edac/ie31200_edac.c                          |  2 +-
- drivers/edac/pasemi_edac.c                           |  2 +-
- drivers/edac/r82600_edac.c                           |  2 +-
- drivers/edac/sb_edac.c                               |  2 +-
- drivers/edac/x38_edac.c                              |  2 +-
- drivers/firewire/ohci.c                              |  2 +-
- drivers/gpio/gpio-sch.c                              |  2 +-
- drivers/i2c/busses/i2c-i801.c                        |  2 +-
- drivers/ide/ide-generic.c                            |  2 +-
- drivers/input/keyboard/hil_kbd.c                     |  2 +-
- drivers/input/keyboard/hilkbd.c                      |  2 +-
- drivers/input/serio/gscps2.c                         |  1 -
- drivers/macintosh/macio_asic.c                       |  2 +-
- drivers/media/pci/ddbridge/ddbridge-core.c           |  2 +-
- drivers/media/pci/ngene/ngene-cards.c                |  2 +-
- drivers/media/pci/ngene/ngene-i2c.c                  |  2 +-
- drivers/media/rc/fintek-cir.c                        |  1 -
- drivers/media/rc/ite-cir.c                           |  2 +-
- drivers/media/rc/nuvoton-cir.c                       |  2 +-
- drivers/media/rc/winbond-cir.c                       |  2 +-
- drivers/memstick/host/r592.c                         |  2 +-
- drivers/misc/cxl/pci.c                               |  2 +-
- drivers/mtd/maps/amd76xrom.c                         |  2 +-
- drivers/mtd/maps/ck804xrom.c                         |  2 +-
- drivers/mtd/maps/esb2rom.c                           |  2 +-
- drivers/mtd/maps/ichxrom.c                           |  2 +-
- drivers/mtd/maps/scb2_flash.c                        |  2 +-
- drivers/mtd/nand/r852.c                              |  2 +-
- drivers/net/ethernet/atheros/atlx/atl1.c             |  2 +-
- drivers/net/ethernet/atheros/atlx/atl2.c             |  2 +-
- drivers/net/ethernet/intel/ixgb/ixgb_hw.c            |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c     |  2 --
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c       |  1 -
- drivers/net/wireless/brcm80211/brcmsmac/main.c       |  2 +-
- drivers/pci/pci-label.c                              |  2 +-
- drivers/platform/x86/thinkpad_acpi.c                 |  2 +-
- drivers/scsi/arcmsr/arcmsr_hba.c                     |  2 +-
- drivers/scsi/qla1280.c                               |  2 +-
- drivers/staging/olpc_dcon/olpc_dcon.c                |  2 --
- drivers/tty/serial/8250/8250_pci.c                   |  2 +-
- drivers/usb/dwc3/dwc3-pci.c                          | 10 +---------
- drivers/usb/early/ehci-dbgp.c                        |  2 +-
- drivers/usb/gadget/udc/bdc/bdc_pci.c                 |  2 +-
- drivers/usb/host/u132-hcd.c                          |  2 +-
- drivers/usb/misc/ftdi-elan.c                         |  2 +-
- drivers/video/fbdev/gxt4500.c                        |  2 +-
- drivers/video/fbdev/i740fb.c                         |  2 +-
- drivers/video/fbdev/i810/i810_main.c                 |  2 +-
- drivers/video/fbdev/riva/nv_driver.c                 |  2 +-
- drivers/video/fbdev/riva/riva_hw.c                   |  2 +-
- drivers/w1/masters/matrox_w1.c                       |  2 +-
- drivers/watchdog/hpwdt.c                             |  2 +-
- sound/pci/ctxfi/xfi.c                                |  2 +-
- Documentation/PCI/pci.txt                            |  4 ++--
- Documentation/i2c/busses/i2c-i801                    |  2 +-
- include/uapi/linux/Kbuild                            |  1 +
- 95 files changed, 97 insertions(+), 106 deletions(-)
- rename include/{ => uapi}/linux/pci_ids.h (99%)
-
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 15e1b3f..502e707 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -685,6 +685,8 @@ void __init add_pci(u64 pa_data)
+ 
+ struct firmware_setup_pci_entry {
+ 	struct list_head list;
++	struct kobject kobj;
++	struct bin_attribute *rom_attr;
+ 	uint16_t vendor;
+ 	uint16_t devid;
+ 	uint64_t pcilen;
+@@ -806,6 +808,179 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_SYSFS
++static inline struct firmware_setup_pci_entry *
++to_setup_pci_entry(struct kobject *kobj)
++{
++	return container_of(kobj, struct firmware_setup_pci_entry, kobj);
++}
++
++static ssize_t vendor_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->vendor);
++}
++
++static ssize_t devid_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->devid);
++}
++
++static ssize_t pcilen_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
++			(unsigned long long)entry->pcilen);
++}
++
++static ssize_t segment_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->segment);
++}
++
++static ssize_t bus_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
++			(unsigned long long)entry->bus);
++}
++
++static ssize_t device_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
++			(unsigned long long)entry->device);
++}
++
++static ssize_t function_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%1llx\n",
++			(unsigned long long)entry->function);
++}
++
++struct setup_pci_attribute {
++	struct attribute attr;
++	ssize_t (*show)(struct firmware_setup_pci_entry *entry, char *buf);
++};
++
++static inline struct setup_pci_attribute *to_setup_pci_attr(
++							struct attribute *attr)
++{
++	return container_of(attr, struct setup_pci_attribute, attr);
++}
++
++static ssize_t setup_pci_attr_show(struct kobject *kobj,
++				   struct attribute *attr, char *buf)
++{
++	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
++	struct setup_pci_attribute *setup_pci_attr = to_setup_pci_attr(attr);
++
++	return setup_pci_attr->show(entry, buf);
++}
++
++static struct setup_pci_attribute setup_pci_vendor_attr = __ATTR_RO(vendor);
++static struct setup_pci_attribute setup_pci_devid_attr = __ATTR_RO(devid);
++static struct setup_pci_attribute setup_pci_pcilen_attr = __ATTR_RO(pcilen);
++static struct setup_pci_attribute setup_pci_segment_attr = __ATTR_RO(segment);
++static struct setup_pci_attribute setup_pci_bus_attr = __ATTR_RO(bus);
++static struct setup_pci_attribute setup_pci_device_attr = __ATTR_RO(device);
++static struct setup_pci_attribute setup_pci_function_attr = __ATTR_RO(function);
++
++/*
++ * These are default attributes that are added for every memmap entry.
++ */
++static struct attribute *def_attrs[] = {
++	&setup_pci_vendor_attr.attr,
++	&setup_pci_devid_attr.attr,
++	&setup_pci_pcilen_attr.attr,
++	&setup_pci_segment_attr.attr,
++	&setup_pci_bus_attr.attr,
++	&setup_pci_device_attr.attr,
++	&setup_pci_function_attr.attr,
++	NULL
++};
++
++static const struct sysfs_ops setup_pci_attr_ops = {
++	.show = setup_pci_attr_show,
++};
++
++static struct kobj_type __refdata setup_pci_ktype = {
++	.sysfs_ops      = &setup_pci_attr_ops,
++	.default_attrs  = def_attrs,
++};
++
++static ssize_t setup_pci_rom_read(struct file *filp, struct kobject *kobj,
++				  struct bin_attribute *bin_attr, char *buf,
++				  loff_t off, size_t count)
++{
++	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
++
++	if (off >= entry->pcilen)
++		count = 0;
++	else {
++		unsigned char *rom = phys_to_virt(entry->romdata);
++
++		if (off + count > entry->pcilen)
++			count = entry->pcilen - off;
++
++		memcpy(buf, rom + off, count);
++	}
++
++	return count;
++}
++
++static int __init add_sysfs_fw_setup_pci_entry(
++					struct firmware_setup_pci_entry *entry)
++{
++	int retval = 0;
++	static int setup_pci_entries_nr;
++	static struct kset *setup_pci_kset;
++	struct bin_attribute *attr;
++
++	kobject_init(&entry->kobj, &setup_pci_ktype);
++
++	if (!setup_pci_kset) {
++		setup_pci_kset = kset_create_and_add("setup_pci", NULL,
++						     firmware_kobj);
++		if (!setup_pci_kset)
++			return -ENOMEM;
++	}
++
++	entry->kobj.kset = setup_pci_kset;
++	retval = kobject_add(&entry->kobj, NULL, "%d", setup_pci_entries_nr++);
++	if (retval) {
++		kobject_put(&entry->kobj);
++		return retval;
++	}
++
++	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
++	if (!attr)
++		return -ENOMEM;
++
++	sysfs_bin_attr_init(attr);
++	attr->size = entry->pcilen;
++	attr->attr.name = "rom";
++	attr->attr.mode = S_IRUSR;
++	attr->read = setup_pci_rom_read;
++	retval = sysfs_create_bin_file(&entry->kobj, attr);
++	if (retval)
++		kfree(attr);
++	entry->rom_attr = attr;
++
++	return retval;
++}
++
++static int __init firmware_setup_pci_init(void)
++{
++	struct firmware_setup_pci_entry *entry;
++
++	list_for_each_entry(entry, &setup_pci_entries, list)
++		add_sysfs_fw_setup_pci_entry(entry);
++
++	return 0;
++}
++late_initcall(firmware_setup_pci_init);
++#endif
++
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+ 	int err;
 -- 
-MST
+1.8.4.5
 
