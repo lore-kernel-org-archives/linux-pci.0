@@ -1,60 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:46342 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753757AbbCBS6Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 13:58:24 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150302145313.GC17532@pd.tnic>
-References: <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
-	<20150301094557.GA7748@pd.tnic>
-	<20150301152351.GA17391@gmail.com>
-	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
-	<20150301194904.GC7748@pd.tnic>
-	<CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
-	<20150301202938.GD7748@pd.tnic>
-	<CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
-	<20150302085654.GA17532@pd.tnic>
-	<CAE9FiQVS0ai2k-WNfsbwvOkj8YUxzaZJN5XDTMu1Ukhot7zOTw@mail.gmail.com>
-	<20150302145313.GC17532@pd.tnic>
-Date: Mon, 2 Mar 2015 10:58:23 -0800
-Message-ID: <CAE9FiQV-xSqi-KqgafFL87epGobKmz6Ci_ood3ZtDSFPgSuG6Q@mail.gmail.com>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
-	Matt Fleming <matt.fleming@intel.com>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:53172 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425AbbCICn3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:29 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 30/30] PCI: Remove pci_bus_assign_domain_nr()
+Date: Mon, 9 Mar 2015 10:34:27 +0800
+Message-ID: <1425868467-9667-31-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 2, 2015 at 6:53 AM, Borislav Petkov <bp@suse.de> wrote:
-> Well, it seems to work here but it still doesn't look reliable enough to
-> me. And this addon_zo thing of arbitrary 256K is strange.
+Now we save the domain number in pci_host_bridge,
+we could remove pci_bus_assign_domain_nr() and
+clean the domain member in pci_bus.
 
-Thanks for check that out.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c   |    5 -----
+ drivers/pci/probe.c |   12 ++++--------
+ include/linux/pci.h |    3 ---
+ 3 files changed, 4 insertions(+), 16 deletions(-)
 
-That is not arbitrary number. Need to make that bigger than _end - _rodata
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2cf942b..4d8dfe4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4581,11 +4581,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ {
+ 	host->domain = pci_assign_domain_nr(host->dev.parent);
+ }
+-
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+-{
+-	bus->domain_nr = pci_assign_domain_nr(parent);
+-}
+ #endif
+ #endif
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 196f08a..9cd3ca2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -481,7 +481,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
++static struct pci_bus *pci_alloc_bus(void)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -496,10 +496,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	if (parent)
+-		b->domain_nr = parent->domain_nr;
+-#endif
++
+ 	return b;
+ }
+ 
+@@ -646,7 +643,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus(parent);
++	child = pci_alloc_bus();
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1866,14 +1863,13 @@ static struct pci_bus *pci_create_root_bus(
+ 	char *fmt;
+ 
+ 	parent = bridge->dev.parent;
+-	b = pci_alloc_bus(NULL);
++	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bridge->busnum;
+-	pci_bus_assign_domain_nr(b, parent);
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index dc1c710..ebc70bb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -467,9 +467,6 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	int		domain_nr;
+-#endif
+ 
+ 	char		name[48];
+ 
+-- 
+1.7.1
 
-> objdump -t arch/x86/boot/compressed/vmlinux | grep \ _end
-0000000000996000 g       .pgtable    0000000000000000 _end
-> objdump -t arch/x86/boot/compressed/vmlinux | grep \ _rodata
-0000000000981780 g       .rodata    0000000000000000 _rodata
-
-We only get that size after arch/x86/boot/compressed/vmlinux
-
-but need number during building kernel vmlinux.
-
-other way would be just increase init_size in arch/x86/boot/header.S
-instead of put it BRK area.
-
-Thanks
-
-Yinghai
