@@ -1,63 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:33641 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbbCTWYe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 18:24:34 -0400
-Received: by obcxo2 with SMTP id xo2so88125832obc.0
-        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 15:24:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150320212045.GL26935@google.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	<20150320212045.GL26935@google.com>
-Date: Sat, 21 Mar 2015 06:24:33 +0800
-Message-ID: <CADLM8XPXViGNVAr4wuf2goS06bY3oq0cHQV1vPimyKNNjZg3=w@mail.gmail.com>
-Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
-From: Wei Yang <weiyang.kernel@gmail.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23392 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbbCICnI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 11/30] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Mon, 9 Mar 2015 10:34:08 +0800
+Message-ID: <1425868467-9667-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2015-03-21 5:20 GMT+08:00 Bjorn Helgaas <bhelgaas@google.com>:
-> On Fri, Mar 20, 2015 at 11:06:16AM +0800, Wei Yang wrote:
->> This patchset enables the SRIOV on POWER8.
->>
->> The general idea is put each VF into one individual PE and allocate required
->> resources like MMIO/DMA/MSI. The major difficulty comes from the MMIO
->> allocation and adjustment for PF's IOV BAR.
->>
->> On P8, we use M64BT to cover a PF's IOV BAR, which could make an individual VF
->> sit in its own PE. This gives more flexiblity, while at the mean time it
->> brings on some restrictions on the PF's IOV BAR size and alignment.
->
-> For patches 03-12 (the "PCI: " ones):
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> It's fine if you want to take all these via the powerpc tree.  I don't see
-> much if anything in my queue that will conflict with them.
->
+Save platform specific sysdata in pci_host_bridge
+drvdata, host bridge specific operation need to
+access it before the pci bus creation.
 
-Thanks, Bjorn :-)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host-bridge.c |    4 +++-
+ drivers/pci/pci.h         |    4 +++-
+ drivers/pci/probe.c       |   18 ++++++++----------
+ 3 files changed, 14 insertions(+), 12 deletions(-)
 
-I will work with Ben/Gavin to merge it on ppc.
-If anything change in PCI core, I will let you know.
-
-Have a nice weekend :-)
-
-> Bjorn
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-
-
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 0bb08ef..3c34c49 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -23,7 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ }
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 db, struct list_head *resources)
++		struct device *parent, u32 db,
++		struct list_head *resources, void *sysdata)
+ {
+ 	int error;
+ 	int bus = PCI_BUSNUM(db);
+@@ -58,6 +59,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	host->dev.parent = parent;
+ 	INIT_LIST_HEAD(&host->windows);
+ 	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
+ 			host->busnum);
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 3de5e51..79a8894 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -324,6 +324,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ #endif
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 dombus, struct list_head *resources);
++		struct device *parent, u32 dombus,
++		struct list_head *resources, void *sysdata);
++
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7238fa3..c8e074d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1866,8 +1866,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ }
+ 
+ static struct pci_bus *__pci_create_root_bus(
+-		struct pci_host_bridge *bridge, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error;
+ 	struct pci_bus *b;
+@@ -1883,7 +1882,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
++	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bridge->busnum;
+ 	pci_bus_assign_domain_nr(b, parent);
+@@ -1955,11 +1954,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources);
++	host = pci_create_host_bridge(parent, db, resources, sysdata);
+ 	if (!host)
+ 		return NULL;
+ 
+-	return __pci_create_root_bus(host, ops, sysdata);
++	return __pci_create_root_bus(host, ops);
+ }
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+@@ -2026,8 +2025,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ }
+ 
+ static struct pci_bus *__pci_scan_root_bus(
+-		struct pci_host_bridge *host, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *host, struct pci_ops *ops)
+ {
+ 	struct resource_entry *window;
+ 	bool found = false;
+@@ -2040,7 +2038,7 @@ static struct pci_bus *__pci_scan_root_bus(
+ 			break;
+ 		}
+ 
+-	b = __pci_create_root_bus(host, ops, sysdata);
++	b = __pci_create_root_bus(host, ops);
+ 	if (!b) {
+ 		pci_free_host_bridge(host);
+ 		return NULL;
+@@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources);
++	host = pci_create_host_bridge(parent, db, resources, sysdata);
+ 	if (!host)
+ 		return NULL;
+ 
+-	return __pci_scan_root_bus(host, ops, sysdata);
++	return __pci_scan_root_bus(host, ops);
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
 -- 
-Richard Yang
-Help You, Help Me
+1.7.1
+
