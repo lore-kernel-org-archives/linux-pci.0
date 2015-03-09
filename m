@@ -1,36 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36080 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753081AbbDACip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 22:38:45 -0400
-Date: Tue, 31 Mar 2015 19:38:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23408 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752468AbbCICnJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:09 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] quirks: fix typo in kernel message
-Message-ID: <20150401023838.GA25795@birch.djwong.org>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"Fenghua Yu" <fenghua.yu@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 15/30] ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Mon, 9 Mar 2015 10:34:12 +0800
+Message-ID: <1425868467-9667-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix a typo in one of the kernel messages.
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Fenghua Yu <fenghua.yu@intel.com>
+CC: linux-ia64@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/quirks.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/ia64/pci/pci.c |   34 ++++++++++++++++++----------------
+ 1 files changed, 18 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85f247e..4c0260c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3182,7 +3182,7 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
- 			|| nhi->subsystem_vendor != 0x2222
- 			|| nhi->subsystem_device != 0x1111)
- 		goto out;
--	dev_info(&dev->dev, "quirk: wating for thunderbolt to reestablish pci tunnels...\n");
-+	dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish pci tunnels...\n");
- 	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
- out:
- 	pci_dev_put(nhi);
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 675749f..0245862 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -420,6 +420,18 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
+ }
+ 
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *controller = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops phb_ops = {
++	.prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -428,7 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
++	struct pci_host_bridge *host;
+ 	int ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+@@ -465,26 +477,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, PCI_DOMBUS(domain, bus),
+-			&pci_root_ops, controller, &info->resources);
+-	if (!pbus) {
++	host = pci_scan_host_bridge(NULL, PCI_DOMBUS(domain, bus),
++			&pci_root_ops, controller, &info->resources, &phb_ops);
++	if (!host) {
+ 		pci_free_resource_list(&info->resources);
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
+-			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
+-}
+-
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_controller *controller = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	return 0;
++	pci_set_host_bridge_release(host, release_pci_root_info, info);
++	return host->bus;
+ }
+ 
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
+-- 
+1.7.1
+
