@@ -1,90 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58498 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbbCKXEB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Mar 2015 19:04:01 -0400
-Date: Thu, 12 Mar 2015 00:03:58 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: David Rientjes <rientjes@google.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>, tglx@linutronix.de,
-	"H. Peter Anvin" <hpa@zytor.com>, pure.logic@nexus-software.ie,
-	jgross@suse.com, luto@amacapital.net, andy.shevchenko@gmail.com,
-	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org, Ingo Molnar <mingo@kernel.org>
-Subject: Re: [RFC v1 1/2] x86: kconfig: simplify enabling [IO]APIC for PCI_MSI
-Message-ID: <20150311230358.GK25035@wotan.suse.de>
-References: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com>
- <1426029275-9594-2-git-send-email-mcgrof@do-not-panic.com>
- <alpine.DEB.2.10.1503101746450.26407@chino.kir.corp.google.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23286 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751667AbbCICnG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:06 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v6 03/30] PCI: Export busn_resource to drivers/pci
+Date: Mon, 9 Mar 2015 10:34:00 +0800
+Message-ID: <1425868467-9667-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.10.1503101746450.26407@chino.kir.corp.google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 05:49:10PM -0700, David Rientjes wrote:
-> On Tue, 10 Mar 2015, Luis R. Rodriguez wrote:
-> 
-> > diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> > index 0d920d5..7306d2c 100644
-> > --- a/Documentation/PCI/MSI-HOWTO.txt
-> > +++ b/Documentation/PCI/MSI-HOWTO.txt
-> > @@ -71,10 +71,7 @@ will simply fail and the device will continue to use pin-based interrupts.
-> >  4.1 Include kernel support for MSIs
-> >  
-> >  To support MSI or MSI-X, the kernel must be built with the CONFIG_PCI_MSI
-> > -option enabled.  This option is only available on some architectures,
-> > -and it may depend on some other options also being set.  For example,
-> > -on x86, you must also enable X86_UP_APIC or SMP in order to see the
-> > -CONFIG_PCI_MSI option.
-> > +option enabled.  This option is only available on some architectures.
-> >  
-> >  4.2 Using MSI
-> >  
-> > diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> > index d038475..0ecdeb1 100644
-> > --- a/arch/x86/Kconfig
-> > +++ b/arch/x86/Kconfig
-> > @@ -902,10 +902,6 @@ config X86_UP_APIC
-> >  	  performance counters), and the NMI watchdog which detects hard
-> >  	  lockups.
-> >  
-> > -config X86_UP_APIC_MSI
-> > -	def_bool y
-> > -	select X86_UP_APIC if X86_32 && !SMP && !X86_32_NON_STANDARD && PCI_MSI
-> > -
-> >  config X86_UP_IOAPIC
-> >  	bool "IO-APIC support on uniprocessors"
-> >  	depends on X86_UP_APIC
-> > @@ -924,7 +920,7 @@ config X86_LOCAL_APIC
-> >  	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-> >  
-> >  config X86_IO_APIC
-> > -	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
-> > +	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC || PCI_MSI
-> >  	depends on X86_LOCAL_APIC
-> >  	select IRQ_DOMAIN
-> >  
-> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> > index 7a8f1c5..01370c0 100644
-> > --- a/drivers/pci/Kconfig
-> > +++ b/drivers/pci/Kconfig
-> > @@ -5,6 +5,8 @@ config PCI_MSI
-> >  	bool "Message Signaled Interrupts (MSI and MSI-X)"
-> >  	depends on PCI
-> >  	select GENERIC_MSI_IRQ
-> > +	select X86_LOCAL_APIC if X86_32 && !SMP && !X86_32_NON_STANDARD
-> > +	select X86_IO_APIC if X86_32 && !SMP && !X86_32_NON_STANDARD
-> >  	help
-> >  	   This allows device drivers to enable MSI (Message Signaled
-> >  	   Interrupts).  Message Signaled Interrupts enable a device to
-> 
-> and I think I prefer the simplification done there over the 
-> additional "select"s for PCI_MSI.
+Export out busn_resource. Xen pcifront module need it.
 
-OK found a way to address that which makes it even easier to read.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.h   |    2 ++
+ drivers/pci/probe.c |    3 ++-
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
- Luis
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82..eeacab9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -10,6 +10,8 @@ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+ 
+ /* Functions internal to the PCI core code */
+ 
++extern struct resource busn_resource;
++
+ int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+ void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+ #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8ef0375..b97ea81 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -17,12 +17,13 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
+ 
+-static struct resource busn_resource = {
++struct resource busn_resource = {
+ 	.name	= "PCI busn",
+ 	.start	= 0,
+ 	.end	= 255,
+ 	.flags	= IORESOURCE_BUS,
+ };
++EXPORT_SYMBOL(busn_resource);
+ 
+ /* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+-- 
+1.7.1
+
