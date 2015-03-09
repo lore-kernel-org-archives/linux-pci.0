@@ -1,183 +1,364 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50542 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752512AbbCWVIV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Mar 2015 17:08:21 -0400
-Message-ID: <1427144881.3643.680.camel@redhat.com>
-Subject: Re: [PATCH v3 1/2] PCI: One more parameter to
- pci_set_pcie_reset_state()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: cascardo@linux.vnet.ibm.com
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Brian King <brking@us.ibm.com>,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Ian Munsie <imunsie@au1.ibm.com>, benh@kernel.crashing.org
-Date: Mon, 23 Mar 2015 15:08:01 -0600
-In-Reply-To: <20150323200729.GB1368@oc0812247204.ltc.br.ibm.com>
-References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1427081673.3643.547.camel@redhat.com> <20150323035656.GA27802@shangw>
-	 <1427083561.3643.551.camel@redhat.com> <20150323044033.GA1874@shangw>
-	 <1427114434.3643.554.camel@redhat.com>
-	 <20150323200729.GB1368@oc0812247204.ltc.br.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23409 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703AbbCICnJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:09 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 09/30] PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+Date: Mon, 9 Mar 2015 10:34:06 +0800
+Message-ID: <1425868467-9667-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-03-23 at 17:07 -0300, cascardo@linux.vnet.ibm.com wrote:
-> On Mon, Mar 23, 2015 at 06:40:34AM -0600, Alex Williamson wrote:
-> > On Mon, 2015-03-23 at 15:40 +1100, Gavin Shan wrote:
-> > > On Sun, Mar 22, 2015 at 10:06:01PM -0600, Alex Williamson wrote:
-> > > >On Mon, 2015-03-23 at 14:56 +1100, Gavin Shan wrote:
-> > > >> On Sun, Mar 22, 2015 at 09:34:33PM -0600, Alex Williamson wrote:
-> > > >> >On Mon, 2015-03-23 at 14:02 +1100, Gavin Shan wrote:
-> > > >> >> The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
-> > > >> >> which allows to check if one particular PCI device can be resetted by the
-> > > >> >> function. The function will be reused to support PCI device specific methods
-> > > >> >> maintained in pci_dev_reset_methods[] in subsequent patch.
-> > > >> >> 
-> > > >> >> Cc: Brian King <brking@us.ibm.com>
-> > > >> >> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-> > > >> >> Cc: Ian Munsie <imunsie@au1.ibm.com>
-> > > >> >> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> > > >> >> ---
-> > > >> >> v3: Fix arguments of pci_set_pcie_reset_state() in cxl driver
-> > > >> >> v2: Reimplemented based on pci_set_pcie_reset_state()
-> > > >> >> ---
-> > > >> >>  arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
-> > > >> >>  drivers/misc/cxl/pci.c          |  2 +-
-> > > >> >>  drivers/misc/genwqe/card_base.c |  9 +++++++--
-> > > >> >>  drivers/pci/pci.c               | 15 +++++++++------
-> > > >> >>  drivers/scsi/ipr.c              |  5 +++--
-> > > >> >>  include/linux/pci.h             |  5 +++--
-> > > >> >>  6 files changed, 33 insertions(+), 17 deletions(-)
-> > > >> >
-> > > >> >
-> > > >> >Argh, you're trying to make pci_set_pcie_reset_state() compatible with
-> > > >> >pci_dev_specific_reset(), so it can be called via pci_reset_function(),
-> > > >> >but the whole point of the pci_reset_function() interface is to reset a
-> > > >> >*single* function without disturbing anything else.  These patches make
-> > > >> >no effort at all to limit the set of affected devices to a single
-> > > >> >function and take great liberties using PCI_ANY_ID for vendors.  My take
-> > > >> >on the powerpc version of pcibios_set_pcie_reset_state() is that it's
-> > > >> >effectively a slot reset, so why not hook into the
-> > > >> >pci_reset_hotplug_slot() via the hotplug slot ops?  Please also use
-> > > >> >cover letters.  Thanks,
-> > > >> >
-> > > >> 
-> > > >> Yep, that's the point and intention of the patches. pcibios_set_pcie_reset_state()
-> > > >> isn't equal to pci_reset_hotplug_slot(). The later one depends on PCI slot, which
-> > > >> wasn't populated on PowerNV platform yet, but pcibios_set_pcie_reseet_state() doesn't.
-> > > >> 
-> > > >> The patchset depends on improved pcibios_set_pcie_reset_state(), which can be seen
-> > > >> from following linked. With it, we don't affect any PCI devices as the config space
-> > > >> is saved/restored accordingly before/after reset:
-> > > >> 
-> > > >> https://patchwork.ozlabs.org/patch/438598/
-> > > >
-> > > >Sorry, that's wrong.  pci_reset_function() can be called while other
-> > > >devices in the same multifunction package are actively in use.  It
-> > > >doesn't matter that you're saving and restoring the external state of
-> > > >the device, the internal state is lost and operation of the device is
-> > > >interrupted.  That is not how pci_reset_function() is supposed to work.
-> > > >Thanks,
-> > > >
-> > > 
-> > > pcibios_set_pcie_reset_state() applies hot reset on PCI bus, or PCI
-> > > slot fundamental reset essentially. It's potentially affecting multiple
-> > > PCI devices (not functions).
-> > > 
-> > > Yes. It's not safe to call pcibios_set_pcie_reset_state() if some of
-> > > the target functions are actively and in use. I also suspect if it
-> > > works to reset function#0 via pci_reset_function() while function#1
-> > > is actively in use? I guess the caller of pci_reset_function() perhaps
-> > > has to ensure there are no active functions/devices.
-> > > 
-> > > One of the issues the patches try to fix: some of broadcom adapters have
-> > > multile functions, which can't support FLR, AF FLR, PM reset. Also, reset
-> > > on parent PCI bus and the corresponding reset can't be applied because of
-> > > they're multi-function package. In summary, pci_reset_function() doesn't
-> > > work on the adapters. That won't give clean state when passing device from
-> > > host to guest, or return it back to host. Sometimes, the host memory gets
-> > > corrupted when destorying the guest. Occasionally, the patches with improved
-> > > pcibios_set_pcie_reset_state() avoided the issue.
-> > > 
-> > > Some adapters might require fundamental reset on the PCI slot, or hot reset
-> > > on parent bus explicitly, in order to successfully reload its firmware after
-> > > reset.
-> > 
-> > This is exactly why we have pci_reset_slot() and pci_reset_bus(), so
-> > that the caller can manage the scope of the reset.  You cannot change
-> > the semantics of pci_reset_function() simply because it's convenient for
-> > your implementation.  This series is wrong and should not be applied.
-> > Thanks,
-> > 
-> > Alex
-> > 
-> 
-> 
-> Alex,
-> 
-> I agree with you here. I think the bigger issue is that we are not
-> making sure VFIO is secure, allowing functions to be assigned separately
-> to different guests, even when we cannot guarantee we can safely reset a
-> single function, and also ignoring the possibility of internal
-> communication between functions. This second problem is real, since some
-> adapters will allow firmware to be loaded or reset, which will affect
-> other functions.
-> 
-> We need to either have in written that this is acceptable and that
-> higher layers should take care of these possibilities, if they care
-> about them, or we need to fix this, by making VFIO only accept a whole
-> group of functions to be assigned to a guest, which will allow the
-> problem described by Gavin to be properly handled, by using slot reset
-> functions, or another way of grouping devices that may be specific to
-> the platform.
-> 
-> Does it make sense?
+This patch separate pci_host_bridge creation out
+of pci_create_root_bus(), and try to make a generic
+pci_host_bridge, then we could place generic PCI
+infos like domain number in it. Also Ripping out
+pci_host_bridge creation from pci_create_root_bus()
+make code more better readability. Further more,
+we could use the generic pci_host_bridge to hold
+host bridge specific operations like
+pcibios_root_bridge_prepare(). The changes are
+transparent to platform host bridge drivers.
 
-I don't know what you're doing on POWER, I thought groups were
-equivalent to PEs, but on x86 we learn about isolation of PCI functions
-by standard PCI properties.  Devices need to tell us that they're
-isolated via ACS capabilities (or quirks, with vendor approval).
-Otherwise we assume there is no isolation and multi-function devices
-will be grouped together, preventing the individual functions from being
-assigned to separate userspace instances.  VFIO does not ignore the
-problem of internal communication between functions, it uses ACS... at
-least on most platforms.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host-bridge.c |   55 ++++++++++++++++++++++
+ drivers/pci/pci.h         |    3 +
+ drivers/pci/probe.c       |  114 ++++++++++++++++++++-------------------------
+ include/linux/pci.h       |    1 +
+ 4 files changed, 109 insertions(+), 64 deletions(-)
 
-Firmware shared between functions is an unsolvable problem outside of
-restricting device assignment only to SR-IOV virtual functions.  We
-cannot know the programming method to block firmware updates of an
-assigned device nor can we control which functions share the firmware.
-If you're worried about this level of attack against the hardware, use
-VFs exclusively.
-
-If you're unsatisfied with the grouping of devices on your platform,
-this is entirely within your control since VFIO relies on IOMMU groups,
-which are managed via the platform IOMMU driver.  If your IOMMU driver
-is arbitrarily splitting each PCI function into a separate group without
-testing the isolation, that's a problem with IOMMU groups on your
-platform.  If you would like to add a reset requirement to a group, you
-have the ability to do that.  On x86, I expect this would be far too
-restrictive.
-
-VFIO also knows how to do bus and slot resets, the pci_reset_bus() and
-pci_reset_slot() interfaces were added by me with vfio-pci as the first
-user.  Resets are generally handled as best effort though and this is
-sometimes a property of a device that might make it unsuitable for
-device assignment.
-
-The fact that you're implying above that the devices covered by the
-device specific reset proposed in this series can be assigned separately
-makes ignoring the scope of pci_reset_function() all the more wrong.  If
-you want to change grouping on POWER to require that a group can be
-reset, that's an IOMMU driver issue.  If you want to make a change to
-VFIO to require an opt-in/out of allowing access to groups without a
-reset, then propose something.  Just please don't ignore the semantics
-of existing functions because it's a quicker and easier hack than doing
-it correctly.  Thanks,
-
-Alex
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 39b2dbe..3bd45e7 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -8,6 +8,61 @@
+ 
+ #include "pci.h"
+ 
++static void pci_release_host_bridge_dev(struct device *dev)
++{
++	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
++
++	if (bridge->release_fn)
++		bridge->release_fn(bridge);
++
++	pci_free_resource_list(&bridge->windows);
++	kfree(bridge);
++}
++
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, u32 db, struct list_head *resources)
++{
++	int error;
++	int bus = PCI_BUSNUM(db);
++	int domain = PCI_DOMAIN(db);
++	struct pci_host_bridge *host;
++	struct resource_entry *window, *n;
++
++	host = kzalloc(sizeof(*host), GFP_KERNEL);
++	if (!host)
++		return NULL;
++
++	host->busnum = bus;
++	host->domain = domain;
++	/* If support CONFIG_PCI_DOMAINS_GENERIC, use
++	 * pci_host_assign_domain_nr() to assign domain
++	 * number instead PCI_DOMAIN(db).
++	 */
++	pci_host_assign_domain_nr(host);
++
++	host->dev.parent = parent;
++	INIT_LIST_HEAD(&host->windows);
++	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
++			host->busnum);
++
++	error = device_register(&host->dev);
++	if (error) {
++		put_device(&host->dev);
++		return NULL;
++	}
++
++	resource_list_for_each_entry_safe(window, n, resources)
++		list_move_tail(&window->node, &host->windows);
++
++	return host;
++}
++
++void pci_free_host_bridge(struct pci_host_bridge *host)
++{
++	device_unregister(&host->dev);
++}
++
+ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+ 	while (bus->parent)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index eeacab9..3de5e51 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -323,4 +323,7 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, u32 dombus, struct list_head *resources);
++void pci_free_host_bridge(struct pci_host_bridge *host);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3d6befd..27ec612 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -503,31 +503,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	return b;
+ }
+ 
+-static void pci_release_host_bridge_dev(struct device *dev)
+-{
+-	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+-
+-	if (bridge->release_fn)
+-		bridge->release_fn(bridge);
+-
+-	pci_free_resource_list(&bridge->windows);
+-
+-	kfree(bridge);
+-}
+-
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+-{
+-	struct pci_host_bridge *bridge;
+-
+-	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+-	if (!bridge)
+-		return NULL;
+-
+-	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+-	return bridge;
+-}
+-
+ static const unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+@@ -1890,54 +1865,41 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++static struct pci_bus *__pci_create_root_bus(
++		struct pci_host_bridge *bridge, struct pci_ops *ops,
++		void *sysdata)
+ {
+ 	int error;
+-	struct pci_host_bridge *bridge;
+ 	struct pci_bus *b, *b2;
+-	struct resource_entry *window, *n;
++	struct resource_entry *window;
++	struct device *parent;
+ 	struct resource *res;
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
+-	u8	bus = PCI_BUSNUM(db);
+ 
++	parent = bridge->dev.parent;
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+-	b->number = b->busn_res.start = bus;
++	b->number = b->busn_res.start = bridge->busnum;
+ 	pci_bus_assign_domain_nr(b, parent);
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
++	b2 = pci_find_bus(pci_domain_nr(b), b->number);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+ 		goto err_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->domain = PCI_DOMAIN(db);
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	bridge->bus = b;
++	b->bridge = get_device(&bridge->dev);
+ 	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
++	if (error)
+ 		goto err_out;
+-	}
+ 
+-	error = device_register(&bridge->dev);
+-	if (error) {
+-		put_device(&bridge->dev);
+-		goto err_out;
+-	}
+-	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+@@ -1946,10 +1908,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&b->dev, "%04x:%02x", bridge->domain,
++			b->number);
+ 	error = device_register(&b->dev);
+ 	if (error)
+-		goto class_dev_reg_err;
++		goto err_out;
+ 
+ 	pcibios_add_bus(b);
+ 
+@@ -1962,12 +1925,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
+ 
+ 	/* Add initial resources to the bus */
+-	resource_list_for_each_entry_safe(window, n, resources) {
+-		list_move_tail(&window->node, &bridge->windows);
++	resource_list_for_each_entry(window, &bridge->windows) {
+ 		res = window->res;
+ 		offset = window->offset;
+ 		if (res->flags & IORESOURCE_BUS)
+-			pci_bus_insert_busn_res(b, bus, res->end);
++			pci_bus_insert_busn_res(b, b->number, res->end);
+ 		else
+ 			pci_bus_add_resource(b, res, 0);
+ 		if (offset) {
+@@ -1989,14 +1951,23 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 
+ 	return b;
+ 
+-class_dev_reg_err:
+-	put_device(&bridge->dev);
+-	device_unregister(&bridge->dev);
+ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
+ 
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, db, resources);
++	if (!host)
++		return NULL;
++
++	return __pci_create_root_bus(host, ops, sysdata);
++}
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+@@ -2060,29 +2031,32 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++static struct pci_bus *__pci_scan_root_bus(
++		struct pci_host_bridge *host, struct pci_ops *ops,
++		void *sysdata)
+ {
+ 	struct resource_entry *window;
+ 	bool found = false;
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	resource_list_for_each_entry(window, resources)
++	resource_list_for_each_entry(window, &host->windows)
+ 		if (window->res->flags & IORESOURCE_BUS) {
+ 			found = true;
+ 			break;
+ 		}
+ 
+-	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
+-	if (!b)
++	b = __pci_create_root_bus(host, ops, sysdata);
++	if (!b) {
++		pci_free_host_bridge(host);
+ 		return NULL;
++	}
+ 
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+-			PCI_BUSNUM(db));
+-		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
++			host->busnum);
++		pci_bus_insert_busn_res(b, b->number, 255);
+ 	}
+ 
+ 	max = pci_scan_child_bus(b);
+@@ -2092,6 +2066,18 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 
+ 	return b;
+ }
++
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, db, resources);
++	if (!host)
++		return NULL;
++
++	return __pci_scan_root_bus(host, ops, sysdata);
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ struct pci_bus *pci_scan_bus(u32 db, struct pci_ops *ops,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2b1b998..463eaa3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -402,6 +402,7 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 
+ struct pci_host_bridge {
+ 	u16	domain;
++	u16 busnum;
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	struct list_head windows;	/* resource_entry */
+-- 
+1.7.1
 
