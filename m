@@ -1,211 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:33204 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbbCKFAF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 01:00:05 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 11 Mar 2015 15:00:02 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 72FFD2CE8052
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 16:00:00 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2B4xqPT24313922
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 16:00:00 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2B4xQgi007256
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 15:59:26 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: cascardo@linux.vnet.ibm.com, bhelgaas@google.com,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Brian King <brking@us.ibm.com>,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>
-Subject: [PATCH v2 1/2] PCI: One more parameter to pci_set_pcie_reset_state()
-Date: Wed, 11 Mar 2015 15:59:00 +1100
-Message-Id: <1426049941-6727-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23391 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752297AbbCICnI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 12/30] PCI: Introduce pci_host_bridge_ops to support host specific operations
+Date: Mon, 9 Mar 2015 10:34:09 +0800
+Message-ID: <1425868467-9667-13-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
-which allows to check if one particular PCI device can be resetted by the
-function. The function will be reused to support PCI device specific methods
-maintained in pci_dev_reset_methods[] in subsequent patch.
+Now we have weak functions like pcibios_root_bridge_prepare()
+to setup pci host bridge, We could introduce pci_host_bridge_ops
+which contain host bridge specific ops to setup pci_host_bridge.
+Then host bridge driver could add pci_host_bridge_ops hooks
+intead of weak function to setup pci_host_bridge.
+This patch add following pci_host_bridge_ops hooks:
 
-Cc: Brian King <brking@us.ibm.com>
-Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+pci_host_bridge_ops {
+	/* set root bus speed, some platform need this like powerpc */
+	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
+	int (*prepare)(struct pci_host_bridge *host);
+	/* platform specific of scan hook to scan pci device */
+	void (*scan_bus)(struct pci_host_bridge *);
+}
+We could easily extend it to support different host bridge
+specific operations.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
- drivers/misc/genwqe/card_base.c |  9 +++++++--
- drivers/pci/pci.c               | 15 +++++++++------
- drivers/scsi/ipr.c              |  5 +++--
- include/linux/pci.h             |  5 +++--
- 5 files changed, 32 insertions(+), 16 deletions(-)
+ drivers/pci/host-bridge.c |   12 ++++++++++--
+ drivers/pci/pci.h         |    4 ++--
+ drivers/pci/probe.c       |   17 +++++++++++------
+ include/linux/pci.h       |    8 ++++++++
+ 4 files changed, 31 insertions(+), 10 deletions(-)
 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 19a897c..60a0f15ce 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -720,11 +720,14 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
-  * pcibios_set_pcie_slot_reset - Set PCI-E reset state
-  * @dev: pci device struct
-  * @state: reset state to enter
-+ * @probe: check if the device can take the reset
-  *
-  * Return value:
-  * 	0 if success
-  */
--int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
-+int pcibios_set_pcie_reset_state(struct pci_dev *dev,
-+				 enum pcie_reset_state state,
-+				 int probe)
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 3c34c49..bc1de59 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ }
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 db,
+-		struct list_head *resources, void *sysdata)
++		struct device *parent, u32 db, struct list_head *resources,
++		void *sysdata, struct pci_host_bridge_ops *ops)
  {
- 	struct eeh_dev *edev = pci_dev_to_eeh_dev(dev);
- 	struct eeh_pe *pe = eeh_dev_to_pe(edev);
-@@ -732,9 +735,12 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
- 	if (!pe) {
- 		pr_err("%s: No PE found on PCI device %s\n",
- 			__func__, pci_name(dev));
--		return -EINVAL;
-+		return -ENOTTY;
+ 	int error;
+ 	int bus = PCI_BUSNUM(db);
+@@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 		}
+ 	mutex_unlock(&phb_mutex);
+ 
++	host->ops = ops;
+ 	host->dev.parent = parent;
+ 	INIT_LIST_HEAD(&host->windows);
+ 	host->dev.release = pci_release_host_bridge_dev;
+@@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
+ 			host->busnum);
+ 
++	if (host->ops && host->ops->prepare) {
++		error = host->ops->prepare(host);
++		if (error) {
++			kfree(host);
++			return NULL;
++		}
++	}
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 79a8894..a1dc9f2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -324,8 +324,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ #endif
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, u32 dombus,
+-		struct list_head *resources, void *sysdata);
++		struct device *parent, u32 dombus, struct list_head *resources,
++		void *sysdata, struct pci_host_bridge_ops *ops);
+ 
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c8e074d..59d9be3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1889,6 +1889,8 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
++	if (bridge->ops && bridge->ops->set_root_bus_speed)
++		bridge->ops->set_root_bus_speed(bridge);
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error)
+ 		goto err_out;
+@@ -1954,7 +1956,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, db, resources, sysdata);
++	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+ 	if (!host)
+ 		return NULL;
+ 
+@@ -2051,10 +2053,13 @@ static struct pci_bus *__pci_scan_root_bus(
+ 		pci_bus_insert_busn_res(b, b->number, 255);
  	}
  
-+	if (probe)
-+		return 0;
-+
- 	switch (state) {
- 	case pcie_deassert_reset:
- 		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
-@@ -756,8 +762,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
- 		break;
- 	default:
- 		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
--		return -EINVAL;
--	};
-+		return -ENOTTY;
+-	max = pci_scan_child_bus(b);
+-
+-	if (!found)
+-		pci_bus_update_busn_res_end(b, max);
++	if (host->ops && host->ops->scan_bus) {
++		host->ops->scan_bus(host);
++	} else {
++		max = pci_scan_child_bus(b);
++		if (!found)
++			pci_bus_update_busn_res_end(b, max);
 +	}
  
- 	return 0;
+ 	return b;
  }
-diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
-index 4cf8f82..4871f69 100644
---- a/drivers/misc/genwqe/card_base.c
-+++ b/drivers/misc/genwqe/card_base.c
-@@ -782,17 +782,22 @@ static int genwqe_pci_fundamental_reset(struct pci_dev *pci_dev)
+@@ -2064,7 +2069,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
  {
- 	int rc;
+ 	struct pci_host_bridge *host;
  
-+	/* Probe if the device can take the reset */
-+	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 1);
-+	if (rc)
-+		return rc;
-+
- 	/*
- 	 * lock pci config space access from userspace,
- 	 * save state and issue PCIe fundamental reset
- 	 */
- 	pci_cfg_access_lock(pci_dev);
- 	pci_save_state(pci_dev);
--	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset);
-+	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 0);
- 	if (!rc) {
- 		/* keep PCIe reset asserted for 250ms */
- 		msleep(250);
--		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset);
-+		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset, 0);
- 		/* Wait for 2s to reload flash and train the link */
- 		msleep(2000);
- 	}
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..8581a5f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1558,28 +1558,31 @@ EXPORT_SYMBOL(pci_disable_device);
-  * pcibios_set_pcie_reset_state - set reset state for device dev
-  * @dev: the PCIe device reset
-  * @state: Reset state to enter into
-- *
-+ * @probe: Check if the device can take the reset
-  *
-  * Sets the PCIe reset state for the device. This is the default
-  * implementation. Architecture implementations can override this.
-  */
- int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
--					enum pcie_reset_state state)
-+					enum pcie_reset_state state,
-+					int probe)
- {
--	return -EINVAL;
-+	return -ENOTTY;
- }
+-	host = pci_create_host_bridge(parent, db, resources, sysdata);
++	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+ 	if (!host)
+ 		return NULL;
  
- /**
-  * pci_set_pcie_reset_state - set reset state for device dev
-  * @dev: the PCIe device reset
-  * @state: Reset state to enter into
-- *
-+ * @probe: Check if the device can take the reset
-  *
-  * Sets the PCI reset state for the device.
-  */
--int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
-+int pci_set_pcie_reset_state(struct pci_dev *dev,
-+			     enum pcie_reset_state state,
-+			     int probe)
- {
--	return pcibios_set_pcie_reset_state(dev, state);
-+	return pcibios_set_pcie_reset_state(dev, state, probe);
- }
- EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 9219953..89026f4 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -8317,7 +8317,8 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
- static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
- {
- 	ENTER;
--	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
-+	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev,
-+				 pcie_deassert_reset, 0);
- 	ipr_cmd->job_step = ipr_reset_bist_done;
- 	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
- 	LEAVE;
-@@ -8339,7 +8340,7 @@ static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
- 	struct pci_dev *pdev = ioa_cfg->pdev;
- 
- 	ENTER;
--	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
-+	pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
- 	ipr_cmd->job_step = ipr_reset_slot_reset_done;
- 	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
- 	LEAVE;
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..c15ca2f 100644
+index b621f5b..e9922b1 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -960,7 +960,8 @@ extern unsigned int pcibios_max_latency;
- void pci_set_master(struct pci_dev *dev);
- void pci_clear_master(struct pci_dev *dev);
+@@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
+ }
  
--int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
-+int pci_set_pcie_reset_state(struct pci_dev *dev,
-+			     enum pcie_reset_state state, int probe);
- int pci_set_cacheline_size(struct pci_dev *dev);
- #define HAVE_PCI_SET_MWI
- int __must_check pci_set_mwi(struct pci_dev *dev);
-@@ -1647,7 +1648,7 @@ extern unsigned long pci_hotplug_mem_size;
- void pcibios_disable_device(struct pci_dev *dev);
- void pcibios_set_master(struct pci_dev *dev);
- int pcibios_set_pcie_reset_state(struct pci_dev *dev,
--				 enum pcie_reset_state state);
-+				 enum pcie_reset_state state, int probe);
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
++struct pci_host_bridge;
++struct pci_host_bridge_ops {
++	void (*set_root_bus_speed)(struct pci_host_bridge *host);
++	int (*prepare)(struct pci_host_bridge *host);
++	void (*scan_bus)(struct pci_host_bridge *);
++};
++
+ struct pci_host_bridge {
+ 	u16	domain;
+ 	u16 busnum;
+@@ -407,6 +414,7 @@ struct pci_host_bridge {
+ 	struct pci_bus *bus;		/* root bus */
+ 	struct list_head windows;	/* resource_entry */
+ 	struct list_head list;
++	struct pci_host_bridge_ops *ops;
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
 -- 
-1.8.3.2
+1.7.1
 
