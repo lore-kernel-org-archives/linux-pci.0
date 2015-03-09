@@ -1,123 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:42541 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbbCFSQY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 13:16:24 -0500
-Received: by obcuz6 with SMTP id uz6so22251819obc.9
-        for <linux-pci@vger.kernel.org>; Fri, 06 Mar 2015 10:16:23 -0800 (PST)
-Date: Fri, 6 Mar 2015 12:16:20 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Matwey V. Kornilov" <matwey@sai.msu.ru>
-Cc: mohit.kumar@st.com, viresh.kumar@linaro.org,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	linux-kernel@vger.kernel.org, svarbanov@mm-sol.com
-Subject: Re: [PATCH v3] pci: spear: Drop __initdata from spear13xx_pcie_driver
-Message-ID: <20150306181620.GE20077@google.com>
-References: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI: PCI delay optimization from ACPI
+Date: Mon, 09 Mar 2015 15:33:30 +0100
+Message-ID: <5222588.FaRe37n2T1@vostro.rjw.lan>
+In-Reply-To: <54FD4FB9.2060802@intel.com>
+References: <54FD4FB9.2060802@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424367708-17149-1-git-send-email-matwey@sai.msu.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 19, 2015 at 08:41:48PM +0300, Matwey V. Kornilov wrote:
-> spear13xx_pcie_driver.driver is allocated in text.init section
-> and then the pointer to it is passed futher. This patch is to avoid
-> crashes like the following, when freed memory is used.
+On Monday, March 09, 2015 03:46:01 PM Aaron Lu wrote:
+> An ECN meant to specify possible delay optimizations is available on
+> the PCI website:
+> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
+> where it has defined two functions for an UUID specified _DSM:
+> Function 8: If system firmware assumes the responsibility of post
+> Conventional Reset delay (and informs the Operating System via this DSM
+> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
+> S4 or S3 states), the Operating System may assume sufficient time has
+> elapsed since the end of reset, and devices within the PCI subsystem are
+> ready for Configuration Access.
+> If the system firmware supports runtime power gating on any of the
+> device within PCI subsystem covered by this DSM function, the system
+> firmware is responsible for covering the necessary post power-on reset
+> delay.
 > 
-> Also, __init has been dropped from the probe() function referred from the struct
-> and all called functions.
+> Function 9: Specify various smaller delay values than required by the
+> SPEC for individual PCI devices like shorter delay values after
+> conventional reset, D3hot to D0 transition, functional level reset, etc.
 > 
->  #0  __device_attach (drv=0xc0ed5608 <spear13xx_pcie_driver+20>, data=0xdb622610) at ../drivers/base/dd.c:409
->  #1  0xc07a4798 in bus_for_each_drv (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a6740 <__device_attach>)
->     at ../drivers/base/bus.c:463
->  #2  0xc07a6324 in device_attach (dev=0xdb622610) at ../drivers/base/dd.c:447
->  #3  0xc07a5814 in bus_probe_device (dev=0xdb622610) at ../drivers/base/bus.c:558
->  #4  0xc07a38d8 in device_add (dev=<optimized out>) at ../drivers/base/core.c:1058
->  #5  0xc08b6a5c in of_device_add (ofdev=<optimized out>) at ../drivers/of/device.c:66
->  #6  0xc08b742c in of_platform_device_create_pdata (np=<optimized out>, bus_id=0x0 <__vectors_start>, platform_data=0x0 <__vectors_start>,
->     parent=<optimized out>) at ../drivers/of/platform.c:241
->  #7  0xc08b7568 in of_platform_bus_create (bus=0xdfa46780, matches=0x0 <__vectors_start>, lookup=0x0 <__vectors_start>, parent=0xdb183410,
->     strict=true) at ../drivers/of/platform.c:414
->  #8  0xc08b79bc in of_platform_populate (root=0xc0ed5608 <spear13xx_pcie_driver+20>, matches=0xdb622610, lookup=0xda0,
->     parent=0xc07a6740 <__device_attach>) at ../drivers/of/platform.c:501
->  #9  0xbf000030 in am335x_child_probe (pdev=0xdb183400) at ../drivers/usb/musb/musb_am335x.c:12
->  #10 0xc07a83f0 in platform_drv_probe (_dev=0xdb183410) at ../drivers/base/platform.c:512
->  #11 0xc07a64e8 in really_probe (drv=<optimized out>, dev=<optimized out>) at ../drivers/base/dd.c:302
->  #12 driver_probe_device (drv=0xbf000234, dev=0xdb183410) at ../drivers/base/dd.c:399
->  #13 0xc07a6820 in __driver_attach (dev=0xdb183410, data=0xbf000234) at ../drivers/base/dd.c:477
->  #14 0xc07a46e8 in bus_for_each_dev (bus=<optimized out>, start=<optimized out>, data=0xda0, fn=0xc07a83a4 <platform_drv_probe>)
->     at ../drivers/base/bus.c:313
->  #15 0xc07a5ebc in driver_attach (drv=<optimized out>) at ../drivers/base/dd.c:496
->  #16 0xc07a5af0 in bus_add_driver (drv=0xbf000234) at ../drivers/base/bus.c:694
->  #17 0xc07a6fec in driver_register (drv=0xbf000234) at ../drivers/base/driver.c:167
->  #18 0xc0209c34 in do_one_initcall (fn=0xbf002000) at ../init/main.c:801
->  #19 0xc02e0494 in do_init_module (mod=<optimized out>) at ../kernel/module.c:3142
->  #20 load_module (info=0xdb6b1f54, uargs=<optimized out>, flags=<optimized out>) at ../kernel/module.c:3461
->  #21 0xc02e0a44 in SYSC_finit_module (flags=<optimized out>, uargs=<optimized out>, fd=<optimized out>) at ../kernel/module.c:3537
->  #22 SyS_finit_module (fd=7, uargs=-1225602132, flags=0) at ../kernel/module.c:3518
->  #23 0xc021a680 in ?? ()
+> This patch adds support for function 8 and part of function 9. For
+> function 8, the patch will check if the required _DSM function satisfies
+> the requirement and then set the per PCI device's d3cold_delay variable
+> to zero. For function 9, the values affecting delays after conventional
+> reset and D3hot->D0 are examined and the per PCI device's d3cold_delay
+> and d3_delay are updated if the _DSM's return value is smaller than what
+> the SPEC requires.
 > 
-> Signed-off-by: Matwey V. Kornilov <matwey@sai.msu.ru>
-
-Applied with Viresh's ack to for-linus for v4.0, thanks!
-
-Mohit, chime in if you disagree.
-
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 > ---
-> Changes from v2:
->  - Drop __init from all probing functions to allow deferred probing.
-> Changes from v1:
->  - Use platform_driver_probe instead of platform_driver_register to make linker happy.
+>  drivers/pci/pci-acpi.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 61 insertions(+)
 > 
->  drivers/pci/host/pcie-designware.c | 2 +-
->  drivers/pci/host/pcie-spear13xx.c  | 6 +++---
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index df781cd..5b8a056 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -339,7 +339,7 @@ static const struct irq_domain_ops msi_domain_ops = {
->  	.map = dw_pcie_msi_map,
->  };
->  
-> -int __init dw_pcie_host_init(struct pcie_port *pp)
-> +int dw_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct device_node *np = pp->dev->of_node;
->  	struct platform_device *pdev = to_platform_device(pp->dev);
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index 866465f..020d788 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -269,7 +269,7 @@ static struct pcie_host_ops spear13xx_pcie_host_ops = {
->  	.host_init = spear13xx_pcie_host_init,
->  };
->  
-> -static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
-> +static int spear13xx_add_pcie_port(struct pcie_port *pp,
->  					 struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -299,7 +299,7 @@ static int __init spear13xx_add_pcie_port(struct pcie_port *pp,
->  	return 0;
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 489063987325..c833b054c00c 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -558,6 +558,64 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+>  				      check_children);
 >  }
 >  
-> -static int __init spear13xx_pcie_probe(struct platform_device *pdev)
-> +static int spear13xx_pcie_probe(struct platform_device *pdev)
+> +/**
+> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
+> + * @pdev: the PCI device whose delay is to be updated
+> + * @adev: the companion ACPI device of this PCI device
+> + *
+> + * Description:
+
+The word "Description" above is not necessary.
+
+> + *   This function is used to update the d3_delay and d3cold_delay of a PCI
+
+I'd simply say
+
+"Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM control
+method of either its own or its parent bridge."
+
+I'd add an empty line here and then the rest of the below starting with "The UUID ...".
+
+> + *   device from ACPI _DSM control method of either its own or its parent
+> + *   bridge device. The UUID of the _DSM control method, together with other
+> + *   information like which delay values can be optimized, etc. is defined in
+> + *   the fw_latency_optimization ECN availabe on PCIsig.com.
+
+The ECN has a number or title I suppose?
+
+> + *   Function 9 of the ACPI _DSM control method, if availabe for a specific PCI
+> + *   device, provides various possible delay values that are less than what the
+> + *   SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
+> + *   can be added later.
+> + *   Function 8 of the ACPI _DSM control method, if availabe for a specific PCI
+> + *   bridge, means all its children devices do not need the reset delay when
+> + *   leaving from D3cold state.
+> + */
+> +static void pci_acpi_delay_optimize(struct pci_dev *pdev, struct acpi_device *adev)
+> +{
+> +	const u8 uuid[] = {
+> +		0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
+> +		0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+> +	};
+> +	int revision = 3, function = 9, value;
+> +	acpi_handle handle = adev->handle;
+> +	union acpi_object *obj, *elements;
+> +
+> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
+> +	if (obj) {
+> +		if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
+> +			elements = obj->package.elements;
+> +			if (elements[3].type == ACPI_TYPE_INTEGER) {
+> +				value = (int)elements[3].integer.value / 1000;
+> +				if (value < PCI_PM_D3_WAIT)
+> +					pdev->d3_delay = value;
+> +			}
+> +			if (elements[0].type == ACPI_TYPE_INTEGER) {
+> +				value = (int)elements[0].integer.value / 1000;
+> +				if (value < PCI_PM_D3COLD_WAIT)
+> +					pdev->d3cold_delay = value;
+> +			}
+> +		}
+> +		kfree(obj);
+> +	}
+> +
+> +	function = 8;
+> +	handle = ACPI_HANDLE(pdev->bus->bridge);
+> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
+> +	if (!obj)
+> +		return;
+> +
+> +	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
+> +		pdev->d3cold_delay = 0;
+> +	kfree(obj);
+> +}
+> +
+>  static void pci_acpi_setup(struct device *dev)
 >  {
->  	struct spear13xx_pcie *spear13xx_pcie;
->  	struct pcie_port *pp;
-> @@ -370,7 +370,7 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -566,6 +624,9 @@ static void pci_acpi_setup(struct device *dev)
+>  	if (!adev)
+>  		return;
 >  
-> -static struct platform_driver spear13xx_pcie_driver __initdata = {
-> +static struct platform_driver spear13xx_pcie_driver = {
->  	.probe		= spear13xx_pcie_probe,
->  	.driver = {
->  		.name	= "spear-pcie",
-> -- 
-> 2.1.4
+> +	if (pci_dev->pm_cap)
+> +		pci_acpi_delay_optimize(pci_dev, adev);
+> +
+>  	pci_acpi_add_pm_notifier(adev, pci_dev);
+>  	if (!adev->wakeup.flags.valid)
+>  		return;
 > 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
