@@ -1,82 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:45067 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753976AbbCQOH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Mar 2015 10:07:56 -0400
-Message-ID: <1426601130.18247.238.camel@citrix.com>
-Subject: Re: [Xen-devel] [PATCH v6 07/30] PCI: Pass PCI domain number
- combined with root bus number
-From: Ian Campbell <ian.campbell@citrix.com>
-To: Manish Jaggi <mjaggi@caviumnetworks.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Paul Mackerras <paulus@samba.org>,
-	<sparclinux@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-s390@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Michael Ellerman <mpe@ellerman.id.au>, <x86@kernel.org>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<xen-devel@lists.xenproject.org>, Matt Turner <mattst88@gmail.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linux-m68k@lists.linux-m68k.org>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"Yinghai Lu" <yinghai@kernel.org>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Michal Simek <monstr@monstr.eu>,
-	Tony Luck <tony.luck@intel.com>,
-	<linux-kernel@vger.kernel.org>, Ralf Baechle <ralf@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	<linux-alpha@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Tue, 17 Mar 2015 14:05:30 +0000
-In-Reply-To: <5507B88D.1020300@caviumnetworks.com>
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+Date: Mon, 9 Mar 2015 10:34:01 +0800
+Message-ID: <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
 References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-	 <1425868467-9667-8-git-send-email-wangyijing@huawei.com>
-	 <5507B88D.1020300@caviumnetworks.com>
-Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-03-17 at 10:45 +0530, Manish Jaggi wrote:
-> On Monday 09 March 2015 08:04 AM, Yijing Wang wrote:
-> > Now we could pass PCI domain combined with bus number
-> > in u32 argu. Because in arm/arm64, PCI domain number
-> > is assigned by pci_bus_assign_domain_nr(). So we leave
-> > pci_scan_root_bus() and pci_create_root_bus() in arm/arm64
-> > unchanged. A new function pci_host_assign_domain_nr()
-> > will be introduced for arm/arm64 to assign domain number
-> > in later patch.
-> Hi,
-> I think these changes might not be required. We have made very few 
-> changes in the xen-pcifront to support PCI passthrough in arm64.
-> As per xen architecture for a domU only a single pci virtual bus is 
-> created and all passthrough devices are attached to it.
+From: Arnd Bergmann <arnd@arndb.de>
 
-I guess you are only talking about the changes to xen-pcifront.c?
-Otherwise you are ignoring the dom0 case which is exposed to the real
-set of PCI root complexes and anyway I'm not sure how "not needed for
-Xen domU" translates into not required, since it is clearly required for
-other systems.
+Use pci_scan_root_bus() instead of deprecated function
+pci_scan_bus_parented().
 
-Strictly speaking the Xen pciif protocol does support multiple buses,
-it's just that the tools, and perhaps kernels, have not yet felt any
-need to actually make use of that.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: xen-devel@lists.xenproject.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/xen-pcifront.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-There doesn't seem to be any harm in updating pcifront to follow this
-generic API change.
-
-Ian.
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index b1ffebe..9e7c28b 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -21,6 +21,7 @@
+ #include <linux/bitops.h>
+ #include <linux/time.h>
+ #include <xen/platform_pci.h>
++#include "pci.h"
+ 
+ #include <asm/xen/swiotlb-xen.h>
+ #define INVALID_GRANT_REF (0)
+@@ -446,6 +447,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 				 unsigned int domain, unsigned int bus)
+ {
+ 	struct pci_bus *b;
++	LIST_HEAD(resources);
+ 	struct pcifront_sd *sd = NULL;
+ 	struct pci_bus_entry *bus_entry = NULL;
+ 	int err = 0;
+@@ -470,17 +472,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &busn_resource);
+ 	pcifront_init_sd(sd, domain, bus, pdev);
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++				  &pcifront_bus_ops, sd, &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+ 		err = -ENOMEM;
+ 		pci_unlock_rescan_remove();
++		pci_free_resource_list(&resources);
+ 		goto err_out;
+ 	}
+ 
+@@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	list_add(&bus_entry->list, &pdev->root_buses);
+ 
+-	/* pci_scan_bus_parented skips devices which do not have a have
++	/* pci_scan_root_bus skips devices which do not have a
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+ 	err = pcifront_scan_bus(pdev, domain, bus, b);
+ 
+-- 
+1.7.1
 
