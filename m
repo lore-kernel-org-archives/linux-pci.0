@@ -1,77 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:62571 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933795AbbCPUBS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2015 16:01:18 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Received: from szxga01-in.huawei.com ([58.251.152.64]:24093 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbbCICnW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:22 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	kernel@stlinux.com, linux-pci@vger.kernel.org,
-	Lee Jones <lee.jones@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Subject: Re: [PATCH v2 4/5] PCI: designware: Add disable IO support
-Date: Mon, 16 Mar 2015 21:00:42 +0100
-Message-ID: <3714853.Vuc23EfWdL@wuerfel>
-In-Reply-To: <582D947C-1229-4DD9-BC82-812D1560C49E@codeaurora.org>
-References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org> <1426515635-9466-5-git-send-email-gabriel.fernandez@linaro.org> <582D947C-1229-4DD9-BC82-812D1560C49E@codeaurora.org>
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 06/30] PCI: Combine PCI domain and bus number in u32 arg
+Date: Mon, 9 Mar 2015 10:34:03 +0800
+Message-ID: <1425868467-9667-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 16 March 2015 13:00:51 Kumar Gala wrote:
-> On Mar 16, 2015, at 9:20 AM, Gabriel FERNANDEZ <gabriel.fernandez@st.com> wrote:
-> 
-> > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
-> > But in these SoCs PCIe IP doesn't support IO.
-> > 
-> > This patch adds the possibility to disable it through
-> > a DT property, by creating an empty IO window and by
-> > removing PCI_COMMAND_IO from the setup register.
-> > 
-> > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-> > ---
-> > .../devicetree/bindings/pci/designware-pcie.txt    |  2 ++
-> > drivers/pci/host/pcie-designware.c                 | 24 ++++++++++++++++++++--
-> > drivers/pci/host/pcie-designware.h                 |  1 +
-> > 3 files changed, 25 insertions(+), 2 deletions(-)
-> 
-> Why not just update the code such that if the ranges doesn’t have an IO
-> space rather than introducing a new DT property?
+Currently, we use int type for bus number in
+pci_create_root_bus(), pci_scan_root_bus() and
+pci_scan_bus_legacy. Because PCI bus number
+always <= 255, so we could change the bus number
+argument type to u32, and combine PCI domain and
+bus number in one. Also add a domain member in
+pci_host_bridge to save domain number. Finally,
+we could eliminate lots of the platform specific
+pci_domain_nr() in the last of the series.
 
-I suspect we can simplify this now by changing over the designware PCI
-code from pci_common_init_dev to calling pci_scan_root_bus() in the
-same way that pci-versatile.c does. This would also clean up some
-other areas of the driver and let you do proper error handling
-in the probe.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c      |   16 +++++++++-------
+ include/linux/pci.h      |    7 ++++---
+ include/uapi/linux/pci.h |    3 +++
+ 3 files changed, 16 insertions(+), 10 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 187fa54..3d6befd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1890,7 +1890,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+ 	int error;
+@@ -1901,6 +1901,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
++	u8	bus = PCI_BUSNUM(db);
+ 
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+@@ -1921,6 +1922,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (!bridge)
+ 		goto err_out;
+ 
++	bridge->domain = PCI_DOMAIN(db);
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+@@ -2058,7 +2060,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+ 	struct resource_entry *window;
+@@ -2072,15 +2074,15 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 			break;
+ 		}
+ 
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
++	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
+ 	if (!b)
+ 		return NULL;
+ 
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+-			bus);
+-		pci_bus_insert_busn_res(b, bus, 255);
++			PCI_BUSNUM(db));
++		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
+ 	}
+ 
+ 	max = pci_scan_child_bus(b);
+@@ -2092,7 +2094,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ }
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
++struct pci_bus *pci_scan_bus(u32 db, struct pci_ops *ops,
+ 					void *sysdata)
+ {
+ 	LIST_HEAD(resources);
+@@ -2101,7 +2103,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
++	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
+ 	if (b) {
+ 		pci_scan_child_bus(b);
+ 	} else {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 36effb8..8b3d245 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -401,6 +401,7 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ }
+ 
+ struct pci_host_bridge {
++	u16	domain;
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	struct list_head windows;	/* resource_entry */
+@@ -769,14 +770,14 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_bus(u32 dombus, struct pci_ops *ops, void *sysdata);
++struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+index 3c292bc..89c6f15 100644
+--- a/include/uapi/linux/pci.h
++++ b/include/uapi/linux/pci.h
+@@ -30,6 +30,9 @@
+ #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
+ #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
+ #define PCI_FUNC(devfn)		((devfn) & 0x07)
++#define PCI_DOMAIN(db)		((db) >> 16)
++#define PCI_BUSNUM(db)		((db) & 0xffff)
++#define PCI_DOMBUS(domain, bus)		(((domain) << 16) | (bus))
+ 
+ /* Ioctls for /proc/bus/pci/X/Y nodes. */
+ #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
+-- 
+1.7.1
+
