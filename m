@@ -1,130 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46041 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753074AbbC3HPf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Mar 2015 03:15:35 -0400
-Date: Mon, 30 Mar 2015 09:15:26 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
+Received: from szxga01-in.huawei.com ([58.251.152.64]:24031 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753345AbbCICnS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:18 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330085617-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-2-git-send-email-mst@redhat.com>
- <20150329204047.GA5902@kroah.com>
- <20150330083707-mutt-send-email-mst@redhat.com>
- <20150330065522.GA10105@kroah.com>
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-tegra@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+Date: Mon, 9 Mar 2015 10:34:21 +0800
+Message-ID: <1425868467-9667-25-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150330065522.GA10105@kroah.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 08:55:22AM +0200, Greg KH wrote:
-> On Mon, Mar 30, 2015 at 08:48:44AM +0200, Michael S. Tsirkin wrote:
-> > On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
-> > > On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
-> > > > The macros in pci_ids.h are pretty useful for userspace
-> > > > using the pci sysfs interface.
-> > > > At the moment userspace is forced to duplicate these macros
-> > > > (e.g. QEMU does this), it is better to expose them in
-> > > > /usr/include/linux/pci_ids.h so everyone can just include
-> > > > this header.
-> > > > 
-> > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > ---
-> > > >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
-> > > >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
-> > > 
-> > > No, please use the pci ids file from the upstream pci id database
-> > > instead.
-> > 
-> > 
-> > >  We shouldn't be putting these all in one file,
-> > 
-> > pci.txt says:
-> > 	Please add PCI_VENDOR_ID_xxx for vendors
-> > You want to change this policy, and get rid of
-> > vendor ids in pci_ids.h completely?
-> 
-> Please read the top of pci_ids.h.  It hasn't had new ids added to it in
-> a long time.
+Now pci_scan_root_bus() is almost similar to
+pci_create_root_bus() + pci_scan_child_bus().
+So we could use common pci_scan_root_bus() in
+pci_common_init_dev() to scan pci busses.
+tegra_pcie_scan_bus() is redundant, remove it.
 
-OK, looks like pci.txt should be fixed then.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: linux-tegra@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-tegra.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-> > Bjorn, what do you think of this?
-> > 
-> > >  and pulling
-> > > them out of drivers isn't ok.
-> > 
-> > This patchset is not pulling any files out of drivers fwiw.
-> 
-> It did for the USB gadget driver patch that I commented on.
-> 
-> > > Userspace shouldn't need to know any of these, use libpci.
-> > 
-> > Unless I'm mistaken, libpci does not export a header with defines. It
-> > has a text file pci.ids, but parsing that when all I want is e.g. locate
-> > all intel devices is just too much overhead. No one wants that, so
-> > people just duplicate headers.
-> 
-> Why would userspace need the pci id of anything?
-
-Look at how they are used e.g. by QEMU, seabios, gpxe.
-People want to say e.g. "find all network class devices".
-
->  Again, just use
-> libpci, isn't it fast enough?  Don't duplicate existing logic.
-
-This really depends on whether you want something else that
-libpci provides. But if I just want e.g. standard class IDs,
-I don't want to depend on libpci.
-
-
-> Or use the hw database that libudev exports, which is already on your
-> machine and exports all of the pci ids from libpci directly.
-
-Same argument really.
-
-> > Standard class IDs are even sillier to duplicate.
-> 
-> Again, why does userspace need this?
-> 
-> thanks,
-> 
-> greg k-h
-
-Mostly because it has a userspace driver, or is emulating
-a hardware device.
-
-For example, the VFIO driver uses the PCI hardware formats
-as it's userspace/kernel interface. This means I need
-a ton of PCI constants in userspace. Most of them are
-already in pci_regs.h, and so exported. No problem here.
-
-However class and prog interface IDs are not, they
-are in pci_ids.h
-
-Would you support splitting pci_ids.h to
-include/uapi/linux/pci_ids.h with standard headers
-and include/linux/pci_ids.h with device/vendor
-specific ones?
-
-
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 00e9272..10c0571 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -630,21 +630,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	return irq;
+ }
+ 
+-static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct tegra_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(pcie->dev, sys->busnr, &tegra_pcie_ops, sys,
+-				  &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+ {
+ 	const char *err_msg[] = {
+@@ -1831,7 +1816,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ 	hw.private_data = (void **)&pcie;
+ 	hw.setup = tegra_pcie_setup;
+ 	hw.map_irq = tegra_pcie_map_irq;
+-	hw.scan = tegra_pcie_scan_bus;
+ 	hw.ops = &tegra_pcie_ops;
+ 
+ 	pci_common_init_dev(pcie->dev, &hw);
 -- 
-MST
+1.7.1
+
