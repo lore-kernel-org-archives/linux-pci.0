@@ -1,362 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:52326 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752298AbbCYF5e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:57:34 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 15:57:32 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5A18F357804C
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:57:29 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5vLLq24903832
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:57:29 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5ut08030872
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:56:55 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V15 19/21] powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
-Date: Wed, 25 Mar 2015 13:44:55 +0800
-Message-Id: <1427262297-5694-20-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:34235 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbbCIReT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 13:34:19 -0400
+Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
+	(envelope-from <linux@roeck-us.net>)
+	id 1YV1ZK-0033vF-MA
+	for linux-pci@vger.kernel.org; Mon, 09 Mar 2015 17:34:18 +0000
+Message-ID: <54FDD995.1080000@roeck-us.net>
+Date: Mon, 09 Mar 2015 10:34:13 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+MIME-Version: 1.0
+To: Murali Karicheri <m-karicheri2@ti.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PCI] BUG: unable to handle kernel
+References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com> <54FDAB8B.3010404@ti.com> <CAErSpo52A+S-SSp2TG=W3oskyg_pgg9LYZzrissvfTogTSazPg@mail.gmail.com> <54FDC1FC.2030807@ti.com> <54FDC52B.1070602@roeck-us.net> <54FDD277.2060406@ti.com>
+In-Reply-To: <54FDD277.2060406@ti.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When IOV BAR is big, each is covered by 4 M64 windows.  This leads to
-several VF PE sits in one PE in terms of M64.
+On 03/09/2015 10:03 AM, Murali Karicheri wrote:
+> On 03/09/2015 12:07 PM, Guenter Roeck wrote:
+>> On 03/09/2015 08:53 AM, Murali Karicheri wrote:
+>>> On 03/09/2015 10:44 AM, Bjorn Helgaas wrote:
+>>>> On Mon, Mar 9, 2015 at 9:17 AM, Murali Karicheri<m-karicheri2@ti.com>
+>>>> wrote:
+>>>>> On 03/06/2015 12:58 PM, Murali Karicheri wrote:
+>>>>>>
+>>>>>> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
+>>>>>>>
+>>>>>>> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
+>>>>>>> [ ... ]
+>>>>>>>
+>>>>>>>>> From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17
+>>>>>>>>> 00:00:00 2001
+>>>>>>>> From: Murali Karicheri<m-karicheri2@ti.com>
+>>>>>>>> Date: Fri, 6 Mar 2015 10:23:08 -0500
+>>>>>>>> Subject: [PATCH] pci: of : fix kernel crash
+>>>>>>>>
+>>>>>>>> This is a debug patch to root cause the kernel crash
+>>>>>>>>
+>>>>>>>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
+>>>>>>>>
+>>>>>>>> PCI: Update DMA configuration from DT
+>>>>>>>>
+>>>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>>>>>>> ---
+>>>>>>>> drivers/of/of_pci.c | 8 ++++++++
+>>>>>>>> drivers/pci/host-bridge.c | 5 +++++
+>>>>>>>> 2 files changed, 13 insertions(+)
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>>>>>>> index 86d3c38..5a59fb8 100644
+>>>>>>>> --- a/drivers/of/of_pci.c
+>>>>>>>> +++ b/drivers/of/of_pci.c
+>>>>>>>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev
+>>>>>>>> *pci_dev)
+>>>>>>>> struct device *dev =&pci_dev->dev;
+>>>>>>>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>>>>>>>>
+>>>>>>>> + if (!bridge || !bridge->parent) {
+>>>>>>>> + if (!bridge)
+>>>>>>>> + pr_err("PCI bridge not found\n");
+>>>>>>>> + if (!bridge->parent)
+>>>>>>>> + pr_err("PCI bridge parent not found\n");
+>>>>>>>
+>>>>>>>
+>>>>>>> You'll see a crash here if bridge is NULL. Maybe add an else before
+>>>>>>> the second
+>>>>>>> if statement ? Also, dev_err might be a bit more useful and would be
+>>>>>>> available.
+>>>>>>>
+>>>>>> Fixed and attached.
+>>>>>>
+>>>>>> Murali
+>>>>>>>
+>>>>>>> Thanks,
+>>>>>>> Guenter
+>>>>>>>
+>>>>>>>> + return;
+>>>>>>>> + }
+>>>>>>>> +
+>>>>>>>> of_dma_configure(dev, bridge->parent->of_node);
+>>>>>>>> pci_put_host_bridge_device(bridge);
+>>>>>>>> }
+>>>>>>>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>>>>>>>> index 3e5bbf9..ef2ab51 100644
+>>>>>>>> --- a/drivers/pci/host-bridge.c
+>>>>>>>> +++ b/drivers/pci/host-bridge.c
+>>>>>>>> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct
+>>>>>>>> pci_dev *dev)
+>>>>>>>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>>>>>>>> struct device *bridge = root_bus->bridge;
+>>>>>>>>
+>>>>>>>> + if (!bridge) {
+>>>>>>>> + pr_err("PCI: bridge not found\n");
+>>>>>>>> + return NULL;
+>>>>>>>> + }
+>>>>>>>> +
+>>>>>>>> kobject_get(&bridge->kobj);
+>>>>>>>> return bridge;
+>>>>>>>> }
+>>>>>>>> --
+>>>>>>>> 1.7.9.5
+>>>>>>>>
+>>>>>>>
+>>>>>>
+>>>>> BJorn,
+>>>>>
+>>>>> Any chance of applying the attached debug patch to see if this fixes
+>>>>> and
+>>>>> provide some additional information on this BUG? Not sure who will
+>>>>> pick this
+>>>>> one and apply.
+>>>>
+>>>> The change that caused the oops (0b2af171520e ("PCI: Update DMA
+>>>> configuration from DT")) only exists on my pci/iommu branch, so I'm
+>>>> the one to apply it.
+>>>>
+>>>> It's much easier for me to deal with plain text patches (not
+>>>> attachments).
+>>>>
+>>>> I'm hesitating because I don't want to encourage use of the 0-day
+>>>> testing robot as a tool at which we can just throw debug patches. The
+>>>> robot is a service that costs somebody real money, and I want to be a
+>>>> good neighbor when using it.
+>>>
+>>> Thanks for the clarification as I don't have much information on the
+>>> testing robot. At the same time the question is how similar incidence
+>>> in the past have been handled. I am a newbie w.r.t to this. This is
+>>> first time I have introduced a patch that impacts multiple arch/machines.
+>>>
+>>>>
+>>>> Was the information in the robot's report enough to reproduce the
+>>>> oops? If not, is there additional information we could add to the
+>>>> report that would enable you to reproduce it? Even if we can't
+>>>> reproduce the oops, the report seems detailed enough that we should be
+>>>> able to deduce the problem and produce a fix in which we have high
+>>>> confidence.
+>>>
+>>> The BUG report essentially indicates the crash happened in
+>>> of_pci_dma_configure(). The machine specific log make sense to a
+>>> person familiar with this arch and I am not familiar with the same. So
+>>> anyone can help narrow down the root cause of this?
+>>>
+>>> Looking at the code, there are two ptr variables that are accessed
+>>> without checking for NULL as initial thinking was that these can never
+>>> be NULL. So the debug patch is just adding addition check before
+>>> accessing the ptr. I can send this patch without debug prints if that
+>>> make sense. I was thinking to get confirmation that this is indeed the
+>>> case before adding the check. What do you think the right approach
+>>> here? Send a patch for this to the ML for adding the check as a
+>>> potential fix? Or someone can help me investigate the crash dump and
+>>> root cause it? or if we can use test robot to confirm this, I can
+>>> re-send the patch ASIS to the list. Please clarify.
+>>>
+>> If the assumption is that the pointers can never be NULL,
+>> wouldn't it be important to see a call trace and to find out
+>> if the NULL pointers can actually be seen by design,
+>> or if there is some other bug ?
+>
+> Call trace shows
+>
+>   [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
+> [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
+>
+>
+> And BUG seems to be in of_pci_dma_configure() as shown in the BUG report.
+>
+> of_pci_dma_configure() calls newly added API call to pci_get_host_bridge_device(). Seems like this has succeeded which means bridge is non NULL IMO. However in this function it passes bridge->parent->of_node to of_dma_configure(). So I suspect bridge->parent is NULL for some reason. Is there a chance for parent being NULL in this or any other platform?
+>
 
-Group VF PEs according to the M64 allocation.
+Can bridge be the root bridge ?
 
-[bhelgaas: use dev_printk() when possible]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h     |    2 +-
- arch/powerpc/platforms/powernv/pci-ioda.c |  197 ++++++++++++++++++++++-------
- 2 files changed, 154 insertions(+), 45 deletions(-)
+Guenter
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index d6942c9..ec83b51 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -182,7 +182,7 @@ struct pci_dn {
- #define M64_PER_IOV 4
- 	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
--	int     m64_wins[PCI_SRIOV_NUM_BARS];
-+	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
- #endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 2c13a39..dc9f401 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1156,26 +1156,27 @@ static int pnv_pci_vf_release_m64(struct pci_dev *pdev)
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
- 	struct pci_dn         *pdn;
--	int                    i;
-+	int                    i, j;
- 
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
- 	phb = hose->private_data;
- 	pdn = pci_get_pdn(pdev);
- 
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		if (pdn->m64_wins[i] == IODA_INVALID_M64)
--			continue;
--		opal_pci_phb_mmio_enable(phb->opal_id,
--				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 0);
--		clear_bit(pdn->m64_wins[i], &phb->ioda.m64_bar_alloc);
--		pdn->m64_wins[i] = IODA_INVALID_M64;
--	}
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-+		for (j = 0; j < M64_PER_IOV; j++) {
-+			if (pdn->m64_wins[i][j] == IODA_INVALID_M64)
-+				continue;
-+			opal_pci_phb_mmio_enable(phb->opal_id,
-+				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 0);
-+			clear_bit(pdn->m64_wins[i][j], &phb->ioda.m64_bar_alloc);
-+			pdn->m64_wins[i][j] = IODA_INVALID_M64;
-+		}
- 
- 	return 0;
- }
- 
--static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
-+static int pnv_pci_vf_assign_m64(struct pci_dev *pdev, u16 num_vfs)
- {
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
-@@ -1183,17 +1184,33 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
- 	struct pci_dn         *pdn;
- 	unsigned int           win;
- 	struct resource       *res;
--	int                    i;
-+	int                    i, j;
- 	int64_t                rc;
-+	int                    total_vfs;
-+	resource_size_t        size, start;
-+	int                    pe_num;
-+	int                    vf_groups;
-+	int                    vf_per_group;
- 
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
- 	phb = hose->private_data;
- 	pdn = pci_get_pdn(pdev);
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
- 
- 	/* Initialize the m64_wins to IODA_INVALID_M64 */
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
--		pdn->m64_wins[i] = IODA_INVALID_M64;
-+		for (j = 0; j < M64_PER_IOV; j++)
-+			pdn->m64_wins[i][j] = IODA_INVALID_M64;
-+
-+	if (pdn->m64_per_iov == M64_PER_IOV) {
-+		vf_groups = (num_vfs <= M64_PER_IOV) ? num_vfs: M64_PER_IOV;
-+		vf_per_group = (num_vfs <= M64_PER_IOV)? 1:
-+			roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
-+	} else {
-+		vf_groups = 1;
-+		vf_per_group = 1;
-+	}
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-@@ -1203,35 +1220,61 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
- 		if (!pnv_pci_is_mem_pref_64(res->flags))
- 			continue;
- 
--		do {
--			win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
--					phb->ioda.m64_bar_idx + 1, 0);
--
--			if (win >= phb->ioda.m64_bar_idx + 1)
--				goto m64_failed;
--		} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
-+		for (j = 0; j < vf_groups; j++) {
-+			do {
-+				win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
-+						phb->ioda.m64_bar_idx + 1, 0);
-+
-+				if (win >= phb->ioda.m64_bar_idx + 1)
-+					goto m64_failed;
-+			} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
-+
-+			pdn->m64_wins[i][j] = win;
-+
-+			if (pdn->m64_per_iov == M64_PER_IOV) {
-+				size = pci_iov_resource_size(pdev,
-+							PCI_IOV_RESOURCES + i);
-+				size = size * vf_per_group;
-+				start = res->start + size * j;
-+			} else {
-+				size = resource_size(res);
-+				start = res->start;
-+			}
- 
--		pdn->m64_wins[i] = win;
-+			/* Map the M64 here */
-+			if (pdn->m64_per_iov == M64_PER_IOV) {
-+				pe_num = pdn->offset + j;
-+				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+						pe_num, OPAL_M64_WINDOW_TYPE,
-+						pdn->m64_wins[i][j], 0);
-+			}
- 
--		/* Map the M64 here */
--		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-+			rc = opal_pci_set_phb_mem_window(phb->opal_id,
- 						 OPAL_M64_WINDOW_TYPE,
--						 pdn->m64_wins[i],
--						 res->start,
-+						 pdn->m64_wins[i][j],
-+						 start,
- 						 0, /* unused */
--						 resource_size(res));
--		if (rc != OPAL_SUCCESS) {
--			dev_err(&pdev->dev, "Failed to map M64 window #%d: %lld\n",
--				win, rc);
--			goto m64_failed;
--		}
-+						 size);
- 
--		rc = opal_pci_phb_mmio_enable(phb->opal_id,
--				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 1);
--		if (rc != OPAL_SUCCESS) {
--			dev_err(&pdev->dev, "Failed to enable M64 window #%d: %llx\n",
--				win, rc);
--			goto m64_failed;
-+
-+			if (rc != OPAL_SUCCESS) {
-+				dev_err(&pdev->dev, "Failed to map M64 window #%d: %lld\n",
-+					win, rc);
-+				goto m64_failed;
-+			}
-+
-+			if (pdn->m64_per_iov == M64_PER_IOV)
-+				rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 2);
-+			else
-+				rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 1);
-+
-+			if (rc != OPAL_SUCCESS) {
-+				dev_err(&pdev->dev, "Failed to enable M64 window #%d: %llx\n",
-+					win, rc);
-+				goto m64_failed;
-+			}
- 		}
- 	}
- 	return 0;
-@@ -1273,22 +1316,53 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
- 	pe->tce32_table = NULL;
- }
- 
--static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
-+static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- {
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
- 	struct pnv_ioda_pe    *pe, *pe_n;
- 	struct pci_dn         *pdn;
-+	u16                    vf_index;
-+	int64_t                rc;
- 
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
- 	phb = hose->private_data;
-+	pdn = pci_get_pdn(pdev);
- 
- 	if (!pdev->is_physfn)
- 		return;
- 
--	pdn = pci_get_pdn(pdev);
-+	if (pdn->m64_per_iov == M64_PER_IOV && num_vfs > M64_PER_IOV) {
-+		int   vf_group;
-+		int   vf_per_group;
-+		int   vf_index1;
-+
-+		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
-+
-+		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
-+			for (vf_index = vf_group * vf_per_group;
-+				vf_index < (vf_group + 1) * vf_per_group &&
-+				vf_index < num_vfs;
-+				vf_index++)
-+				for (vf_index1 = vf_group * vf_per_group;
-+					vf_index1 < (vf_group + 1) * vf_per_group &&
-+					vf_index1 < num_vfs;
-+					vf_index1++){
-+
-+					rc = opal_pci_set_peltv(phb->opal_id,
-+						pdn->offset + vf_index,
-+						pdn->offset + vf_index1,
-+						OPAL_REMOVE_PE_FROM_DOMAIN);
-+
-+					if (rc)
-+					    dev_warn(&pdev->dev, "%s: Failed to unlink same group PE#%d(%lld)\n",
-+						__func__,
-+						pdn->offset + vf_index1, rc);
-+				}
-+	}
-+
- 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
- 		if (pe->parent_dev != pdev)
- 			continue;
-@@ -1323,10 +1397,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
- 	num_vfs = pdn->num_vfs;
- 
- 	/* Release VF PEs */
--	pnv_ioda_release_vf_PE(pdev);
-+	pnv_ioda_release_vf_PE(pdev, num_vfs);
- 
- 	if (phb->type == PNV_PHB_IODA2) {
--		pnv_pci_vf_resource_shift(pdev, -pdn->offset);
-+		if (pdn->m64_per_iov == 1)
-+			pnv_pci_vf_resource_shift(pdev, -pdn->offset);
- 
- 		/* Release M64 windows */
- 		pnv_pci_vf_release_m64(pdev);
-@@ -1348,6 +1423,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	int                    pe_num;
- 	u16                    vf_index;
- 	struct pci_dn         *pdn;
-+	int64_t                rc;
- 
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
-@@ -1396,6 +1472,37 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 
- 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
- 	}
-+
-+	if (pdn->m64_per_iov == M64_PER_IOV && num_vfs > M64_PER_IOV) {
-+		int   vf_group;
-+		int   vf_per_group;
-+		int   vf_index1;
-+
-+		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
-+
-+		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
-+			for (vf_index = vf_group * vf_per_group;
-+			     vf_index < (vf_group + 1) * vf_per_group &&
-+			     vf_index < num_vfs;
-+			     vf_index++) {
-+				for (vf_index1 = vf_group * vf_per_group;
-+				     vf_index1 < (vf_group + 1) * vf_per_group &&
-+				     vf_index1 < num_vfs;
-+				     vf_index1++) {
-+
-+					rc = opal_pci_set_peltv(phb->opal_id,
-+						pdn->offset + vf_index,
-+						pdn->offset + vf_index1,
-+						OPAL_ADD_PE_TO_DOMAIN);
-+
-+					if (rc)
-+					    dev_warn(&pdev->dev, "%s: Failed to link same group PE#%d(%lld)\n",
-+						__func__,
-+						pdn->offset + vf_index1, rc);
-+				}
-+			}
-+		}
-+	}
- }
- 
- int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-@@ -1428,7 +1535,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 		mutex_unlock(&phb->ioda.pe_alloc_mutex);
- 
- 		/* Assign M64 window accordingly */
--		ret = pnv_pci_vf_assign_m64(pdev);
-+		ret = pnv_pci_vf_assign_m64(pdev, num_vfs);
- 		if (ret) {
- 			dev_info(&pdev->dev, "Not enough M64 window resources\n");
- 			goto m64_failed;
-@@ -1439,9 +1546,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 		 * the IOV BAR according to the PE# allocated to the VFs.
- 		 * Otherwise, the PE# for the VF will conflict with others.
- 		 */
--		ret = pnv_pci_vf_resource_shift(pdev, pdn->offset);
--		if (ret)
--			goto m64_failed;
-+		if (pdn->m64_per_iov == 1) {
-+			ret = pnv_pci_vf_resource_shift(pdev, pdn->offset);
-+			if (ret)
-+				goto m64_failed;
-+		}
- 	}
- 
- 	/* Setup VF PEs */
--- 
-1.7.9.5
+>>
+>> I am a bit concerned that adding those NULL pointer checks
+>> might end up hiding some other bug, ie that they just hide
+>> the real bug without fixing it.
+>>
+>
+> I agree with you as well. That is the reason I had added the debug prints in the attached patch to check what is NULL here and that can help us dig into this more.
+>
+> If BJorn can accept this debug patch for finding this, that will help. I can re-send it to the list as a debug patch if everyone agrees. Otherwise I don't know how to proceed from here.
+>
+> Thanks and regards,
+>
+> Murali
+>> Thanks,
+>> Guenter
+>>
+>
+>
 
