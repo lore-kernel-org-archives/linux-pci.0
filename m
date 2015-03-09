@@ -1,125 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38909 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932165AbbCaOKB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Mar 2015 10:10:01 -0400
-Message-ID: <1427810993.5567.90.camel@redhat.com>
-Subject: Re: [PATCH v4 1/2] PCI: add helper function to find root port for
- device
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Tue, 31 Mar 2015 08:09:53 -0600
-In-Reply-To: <1427804588.3370.19.camel@pengutronix.de>
-References: <1427712913-13678-1-git-send-email-l.stach@pengutronix.de>
-	 <1427726038.3643.913.camel@redhat.com>
-	 <1427731601.3370.14.camel@pengutronix.de>
-	 <1427734370.3643.949.camel@redhat.com>
-	 <1427804588.3370.19.camel@pengutronix.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([58.251.152.64]:22962 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345AbbCICnC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:02 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Richard Henderson <rth@twiddle.net>,
+	"Ivan Kokshaysky" <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>, <sparclinux@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 01/30] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+Date: Mon, 9 Mar 2015 10:33:58 +0800
+Message-ID: <1425868467-9667-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-03-31 at 14:23 +0200, Lucas Stach wrote:
-> Am Montag, den 30.03.2015, 10:52 -0600 schrieb Alex Williamson:
-> > On Mon, 2015-03-30 at 18:06 +0200, Lucas Stach wrote:
-> > > Am Montag, den 30.03.2015, 08:33 -0600 schrieb Alex Williamson:
-> > > > On Mon, 2015-03-30 at 12:55 +0200, Lucas Stach wrote:
-> > > > > This adds a simple way to get the root port a given device
-> > > > > is connected to.
-> > > > > 
-> > > > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > > > > ---
-> > > > > v2: new patch in v2
-> > > > > v3: rename to pci_find_rootport to fit better with other API
-> > > > > v4: - rename to make it obvious that this function is PCIe specific
-> > > > >     - fixes wrong assumption about what is a root bus in the presence
-> > > > >       virtual buses
-> > > > > ---
-> > > > >  drivers/pci/search.c | 20 ++++++++++++++++++++
-> > > > >  include/linux/pci.h  |  1 +
-> > > > >  2 files changed, 21 insertions(+)
-> > > > > 
-> > > > > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > > > > index a20ce7d5e2a7..d7c599103ae1 100644
-> > > > > --- a/drivers/pci/search.c
-> > > > > +++ b/drivers/pci/search.c
-> > > > > @@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
-> > > > >  	return 0;
-> > > > >  }
-> > > > >  EXPORT_SYMBOL(pci_dev_present);
-> > > > > +
-> > > > > +/**
-> > > > > + * pcie_find_root_port - Returns the root port the given device is connected to.
-> > > > > + * @dev: PCI device for which the root port should be found.
-> > > > > + */
-> > > > > +struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
-> > > > > +{
-> > > > > +	struct pci_bus *bus = dev->bus;
-> > > > > +
-> > > > > +	/* if this device is located on the root bus, it is a root port */
-> > > > > +	if (pci_is_root_bus(bus))
-> > > > > +		return dev;
-> > > > 
-> > > > It could also be a root complex endpoint or a conventional PCI
-> > > > device/bridge sitting on the host bridge bus.
-> > > 
-> > > > > +
-> > > > > +	/* walk up the PCI hierarchy to the first level below the root */
-> > > > > +	while (bus->parent && bus->parent->parent)
-> > > > > +		bus = bus->parent;
-> > > > > +
-> > > > > +	return bus->self;
-> > > > > +}
-> > > > > +EXPORT_SYMBOL(pcie_find_root_port);
-> > > > 
-> > > > IMHO, this makes too many assumptions about the topology that it's
-> > > > working with for a generic interface.  Your usage may be fairly fixed,
-> > > > but there are too many cases where it could return something that's not
-> > > > a root port as a general interface.  Thanks,
-> > > > 
-> > > I'm open to suggestions on how to improve the detection. I really need
-> > > something which works reliable in the majority of cases, as the Tegra
-> > > quirk should not be executed on other platforms.
-> > > 
-> > > Do you think filtering out EP devices and conventional PCI bridges on
-> > > the root bus is enough?
-> > 
-> > I'm actually pretty confused by the implementation of the quirk as well,
-> > why do you even need this pcie_find_root_port() function?  Your fixup is
-> > called for every single PCI device in the system, so why do you need to
-> > go to the trouble of scanning the topology for the root port?  You'll be
-> > passed the root port eventually and it will match your ID table w/o any
-> > extra effort.  As coded, you're calling the set capability function
-> > multiple times per root port, once for itself and once for each device
-> > below it.
-> > 
-> > Personally, I'd probably do away with the table, declare a fixup for
-> > each entry for the specific vendor/device ID, and make a simple quirk
-> > callback that sets the capability bit.  Just my preference though.
-> > Thanks,
-> > 
-> No, you missed the point of the fixup here.
-> 
-> We need to apply this fixup on every device in the system if the root
-> port is a Tegra. So the fixup needs to get called for every device,
-> filtering on a specific vendor/device ID is not possible.
-> 
-> But on the other hand this fixup may be compiled into a multiplatform
-> kernel. If this kernel is strated on a device which isn't a Tegra (and
-> so has no Tegra root port) we don't want to apply the fixup at all.
+Pci_bus_add_devices() should not be placed in pci_scan_bus().
+Now pci device will be added to driver core once its
+creation. All things left in pci_bus_add_devices() are
+driver attachment and other trivial sysfs things.
+Pci_scan_bus() should be the function responsible for
+scanning PCI devices, not including driver attachment.
+Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
+will call pci_bus_size_bridges() and pci_bus_assign_resources()
+after pci_scan_bus().
 
-Yes, you're right, sorry for the misinterpretation.  So the quirk works
-as expected, but I think at a minimum the helper function needs to be
-renamed to something like pci_find_root_bus_dev() since there is no
-attempt made to verify whether the returned device is actually a root
-port.  If you don't support hotplug, you could also apply the quirk from
-the root port down instead of searching from every device up.  Thanks,
+E.g.
+In m68k
+mcf_pci_init()
+	pci_scan_bus()
+		...
+		pci_bus_add_devices() --- try to attach driver
+	pci_fixup_irqs()
+	pci_bus_size_bridges()
+	pci_bus_assign_resources()
 
-Alex
+Above code flow make pci scan logic obscure, resources should
+be assigned correctly before attaching driver. Because
+pci_scan_bus() mostly be called in system boot path, when
+before drivers are loaded(in module_init), so no pci scan
+issues will occur. Most pci_scan_bus() callers additionally
+call pci_bus_size_bridges() and pci_bus_assign_resources()
+after pci_scan_bus(), we could rip out pci_bus_add_devices()
+for better code readability. After applied this patch,
+pci_scan_bus() should be used like:
+
+pci_scan_bus() (mandatory)
+pci_fixup_irqs() (optional)
+pci_bus_size_bridges() (optional)
+pci_pci_bus_assign_resources() (optional)
+pci_bus_add_devices() (mandatory)
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
+CC: Richard Henderson <rth@twiddle.net>
+CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+CC: Matt Turner <mattst88@gmail.com>
+CC: linux-alpha@vger.kernel.org
+CC: linux-m68k@lists.linux-m68k.org
+CC: sparclinux@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/alpha/kernel/sys_nautilus.c  |    4 ++++
+ arch/m68k/coldfire/pci.c          |    1 +
+ arch/sparc/kernel/pcic.c          |    3 +++
+ arch/unicore32/kernel/pci.c       |   11 +++--------
+ drivers/pci/hotplug/ibmphp_core.c |    8 ++++++--
+ drivers/pci/probe.c               |    1 -
+ 6 files changed, 17 insertions(+), 11 deletions(-)
+
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 837c0fa..700686d 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -207,6 +207,9 @@ nautilus_init_pci(void)
+ 
+ 	/* Scan our single hose.  */
+ 	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
++	if (!bus)
++		return;
++
+ 	hose->bus = bus;
+ 	pcibios_claim_one_bus(bus);
+ 
+@@ -253,6 +256,7 @@ nautilus_init_pci(void)
+ 	   for the root bus, so just clear it. */
+ 	bus->self = NULL;
+ 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
++	pci_bus_add_devices(bus);
+ }
+ 
+ /*
+diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+index df96792..d45f087 100644
+--- a/arch/m68k/coldfire/pci.c
++++ b/arch/m68k/coldfire/pci.c
+@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
++	pci_bus_add_devices(rootbus);
+ 	return 0;
+ }
+ 
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index 6cc78c2..0f4dc6b 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -391,12 +391,15 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
+ 	struct linux_pbm_info *pbm = &pcic->pbm;
+ 
+ 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
++	if (!pbm->pci_bus)
++		return;
+ #if 0 /* deadwood transplanted from sparc64 */
+ 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
+ 	pci_record_assignments(pbm, pbm->pci_bus);
+ 	pci_assign_unassigned(pbm, pbm->pci_bus);
+ 	pci_fixup_irq(pbm, pbm->pci_bus);
+ #endif
++	pci_bus_add_devices(pbm->pci_bus);
+ }
+ 
+ /*
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 374a055..3d82024 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
+ 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+ 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		/*
+-		 * Size the bridge windows.
+-		 */
++		/* Size the bridge windows. */
+ 		pci_bus_size_bridges(puv3_bus);
+-
+-		/*
+-		 * Assign resources.
+-		 */
++		/* Assign resources. */
+ 		pci_bus_assign_resources(puv3_bus);
+ 	}
+-
++	pci_bus_add_devices(puv3_bus);
+ 	return 0;
+ }
+ subsys_initcall(pci_common_init);
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 96c5c72..1530247 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
+  */
+ static u8 bus_structure_fixup(u8 busno)
+ {
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *b;
+ 	struct pci_dev *dev;
+ 	u16 l;
+ 
+@@ -765,7 +765,11 @@ static u8 bus_structure_fixup(u8 busno)
+ 					(l != 0x0000) && (l != 0xffff)) {
+ 			debug("%s - Inside bus_structure_fixup()\n",
+ 							__func__);
+-			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
++			if (!b)
++				continue;
++
++			pci_bus_add_devices(b);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..88604f2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+ 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+ 	if (b) {
+ 		pci_scan_child_bus(b);
+-		pci_bus_add_devices(b);
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+-- 
+1.7.1
 
