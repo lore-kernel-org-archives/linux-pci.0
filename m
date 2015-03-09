@@ -1,112 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60608 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbbCKSEI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 14:04:08 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v6 4/4] ARM: dts: enable PCIe support for Cygnus
-Date: Wed, 11 Mar 2015 11:06:09 -0700
-Message-ID: <1426097169-20805-5-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
-References: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:31222 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbbCICst (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:48:49 -0400
+Message-ID: <54FD09CD.6010306@huawei.com>
+Date: Mon, 9 Mar 2015 10:47:41 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Rob Herring <robherring2@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-ia64@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"Tony Luck" <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-alpha@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v5 16/29] powerpc/pci: Use pci_scan_host_bridge() for
+ simplicity
+References: <1425634426-437-1-git-send-email-wangyijing@huawei.com> <1425634426-437-17-git-send-email-wangyijing@huawei.com> <CAL_JsqJqpbTThfm2yctHr-gyySyxsJT3HS8rxm6oY+ZYVT5vvQ@mail.gmail.com>
+In-Reply-To: <CAL_JsqJqpbTThfm2yctHr-gyySyxsJT3HS8rxm6oY+ZYVT5vvQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCIe device nodes in bcm-cygnus.dtsi but keep them disabled there.
-Only enable them for bcm958300k where PCIe interfaces are populated
+On 2015/3/6 22:19, Rob Herring wrote:
+> On Fri, Mar 6, 2015 at 3:33 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Now we could use pci_scan_host_bridge() to scan
+>> pci buses, provide powerpc specific pci_host_bridge_ops.
+>>
+>> Suggested-by: Arnd Bergmann <arnd@arndb.de>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> CC: linuxppc-dev@lists.ozlabs.org
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/powerpc/include/asm/machdep.h       |    2 +-
+>>  arch/powerpc/kernel/pci-common.c         |   63 ++++++++++++++++++------------
+>>  arch/powerpc/platforms/pseries/pci.c     |    8 ++--
+>>  arch/powerpc/platforms/pseries/pseries.h |    2 +-
+>>  4 files changed, 44 insertions(+), 31 deletions(-)
+>>
+>> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+>> index 8e7f2a8..b811d12 100644
+>> --- a/arch/powerpc/include/asm/machdep.h
+>> +++ b/arch/powerpc/include/asm/machdep.h
+>> @@ -129,7 +129,7 @@ struct machdep_calls {
+>>         void            (*pcibios_fixup)(void);
+>>         int             (*pci_probe_mode)(struct pci_bus *);
+>>         void            (*pci_irq_fixup)(struct pci_dev *dev);
+>> -       int             (*pcibios_set_root_bus_speed)(struct pci_host_bridge
+>> +       void            (*pcibios_set_root_bus_speed)(struct pci_host_bridge
+>>                                 *bridge);
+> 
+> Shouldn't this be part of patch 15?
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- arch/arm/boot/dts/bcm-cygnus.dtsi |   42 +++++++++++++++++++++++++++++++++++++
- arch/arm/boot/dts/bcm958300k.dts  |    8 +++++++
- 2 files changed, 50 insertions(+)
+Hi Rob, I didn't merge this to patch 15 for building happy for patch 15.
 
-diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
-index ff5fb6a..ee0c6e4 100644
---- a/arch/arm/boot/dts/bcm-cygnus.dtsi
-+++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
-@@ -90,6 +90,48 @@
- 		status = "disabled";
- 	};
- 
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <0>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
-+
-+		status = "disabled";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <1>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+
-+		status = "disabled";
-+	};
-+
- 	uart0: serial@18020000 {
- 		compatible = "snps,dw-apb-uart";
- 		reg = <0x18020000 0x100>;
-diff --git a/arch/arm/boot/dts/bcm958300k.dts b/arch/arm/boot/dts/bcm958300k.dts
-index f1bb36f..c9eb856 100644
---- a/arch/arm/boot/dts/bcm958300k.dts
-+++ b/arch/arm/boot/dts/bcm958300k.dts
-@@ -47,6 +47,14 @@
- 		bootargs = "console=ttyS0,115200";
- 	};
- 
-+	pcie0: pcie@18012000 {
-+		status = "okay";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		status = "okay";
-+	};
-+
- 	uart3: serial@18023000 {
- 		status = "okay";
- 	};
+> 
+> Rob
+> 
+> .
+> 
+
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
