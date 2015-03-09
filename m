@@ -1,115 +1,201 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 6/6] vfio-pci: Move idle devices to D3hot power state
-From: Alex Williamson <alex.williamson@redhat.com>
-To: alex.williamson@redhat.com, kvm@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, bsd@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Wed, 18 Mar 2015 14:13:42 -0600
-Message-ID: <20150318201342.24807.4286.stgit@gimli.home>
-In-Reply-To: <20150318200053.24807.74115.stgit@gimli.home>
-References: <20150318200053.24807.74115.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:49491 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751666AbbCIRFQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Mar 2015 13:05:16 -0400
+Message-ID: <54FDD277.2060406@ti.com>
+Date: Mon, 9 Mar 2015 13:03:51 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Guenter Roeck <linux@roeck-us.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PCI] BUG: unable to handle kernel
+References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com> <54FDAB8B.3010404@ti.com> <CAErSpo52A+S-SSp2TG=W3oskyg_pgg9LYZzrissvfTogTSazPg@mail.gmail.com> <54FDC1FC.2030807@ti.com> <54FDC52B.1070602@roeck-us.net>
+In-Reply-To: <54FDC52B.1070602@roeck-us.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can save some power by putting devices that are bound to vfio-pci
-but not in use by the user in the D3hot power state.  Devices get
-woken into D0 when opened by the user.  Resets return the device to
-D0, so we need to re-apply the low power state after a bus reset.
-It's tempting to try to use D3cold, but we have no reason to inhibit
-hotplug of idle devices and we might get into a loop of having the
-device disappear before we have a chance to try to use it.
+On 03/09/2015 12:07 PM, Guenter Roeck wrote:
+> On 03/09/2015 08:53 AM, Murali Karicheri wrote:
+>> On 03/09/2015 10:44 AM, Bjorn Helgaas wrote:
+>>> On Mon, Mar 9, 2015 at 9:17 AM, Murali Karicheri<m-karicheri2@ti.com>
+>>> wrote:
+>>>> On 03/06/2015 12:58 PM, Murali Karicheri wrote:
+>>>>>
+>>>>> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
+>>>>>>
+>>>>>> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
+>>>>>> [ ... ]
+>>>>>>
+>>>>>>>> From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17
+>>>>>>>> 00:00:00 2001
+>>>>>>> From: Murali Karicheri<m-karicheri2@ti.com>
+>>>>>>> Date: Fri, 6 Mar 2015 10:23:08 -0500
+>>>>>>> Subject: [PATCH] pci: of : fix kernel crash
+>>>>>>>
+>>>>>>> This is a debug patch to root cause the kernel crash
+>>>>>>>
+>>>>>>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
+>>>>>>>
+>>>>>>> PCI: Update DMA configuration from DT
+>>>>>>>
+>>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>>>>>> ---
+>>>>>>> drivers/of/of_pci.c | 8 ++++++++
+>>>>>>> drivers/pci/host-bridge.c | 5 +++++
+>>>>>>> 2 files changed, 13 insertions(+)
+>>>>>>>
+>>>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>>>>>> index 86d3c38..5a59fb8 100644
+>>>>>>> --- a/drivers/of/of_pci.c
+>>>>>>> +++ b/drivers/of/of_pci.c
+>>>>>>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev
+>>>>>>> *pci_dev)
+>>>>>>> struct device *dev =&pci_dev->dev;
+>>>>>>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>>>>>>>
+>>>>>>> + if (!bridge || !bridge->parent) {
+>>>>>>> + if (!bridge)
+>>>>>>> + pr_err("PCI bridge not found\n");
+>>>>>>> + if (!bridge->parent)
+>>>>>>> + pr_err("PCI bridge parent not found\n");
+>>>>>>
+>>>>>>
+>>>>>> You'll see a crash here if bridge is NULL. Maybe add an else before
+>>>>>> the second
+>>>>>> if statement ? Also, dev_err might be a bit more useful and would be
+>>>>>> available.
+>>>>>>
+>>>>> Fixed and attached.
+>>>>>
+>>>>> Murali
+>>>>>>
+>>>>>> Thanks,
+>>>>>> Guenter
+>>>>>>
+>>>>>>> + return;
+>>>>>>> + }
+>>>>>>> +
+>>>>>>> of_dma_configure(dev, bridge->parent->of_node);
+>>>>>>> pci_put_host_bridge_device(bridge);
+>>>>>>> }
+>>>>>>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>>>>>>> index 3e5bbf9..ef2ab51 100644
+>>>>>>> --- a/drivers/pci/host-bridge.c
+>>>>>>> +++ b/drivers/pci/host-bridge.c
+>>>>>>> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct
+>>>>>>> pci_dev *dev)
+>>>>>>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>>>>>>> struct device *bridge = root_bus->bridge;
+>>>>>>>
+>>>>>>> + if (!bridge) {
+>>>>>>> + pr_err("PCI: bridge not found\n");
+>>>>>>> + return NULL;
+>>>>>>> + }
+>>>>>>> +
+>>>>>>> kobject_get(&bridge->kobj);
+>>>>>>> return bridge;
+>>>>>>> }
+>>>>>>> --
+>>>>>>> 1.7.9.5
+>>>>>>>
+>>>>>>
+>>>>>
+>>>> BJorn,
+>>>>
+>>>> Any chance of applying the attached debug patch to see if this fixes
+>>>> and
+>>>> provide some additional information on this BUG? Not sure who will
+>>>> pick this
+>>>> one and apply.
+>>>
+>>> The change that caused the oops (0b2af171520e ("PCI: Update DMA
+>>> configuration from DT")) only exists on my pci/iommu branch, so I'm
+>>> the one to apply it.
+>>>
+>>> It's much easier for me to deal with plain text patches (not
+>>> attachments).
+>>>
+>>> I'm hesitating because I don't want to encourage use of the 0-day
+>>> testing robot as a tool at which we can just throw debug patches. The
+>>> robot is a service that costs somebody real money, and I want to be a
+>>> good neighbor when using it.
+>>
+>> Thanks for the clarification as I don't have much information on the
+>> testing robot. At the same time the question is how similar incidence
+>> in the past have been handled. I am a newbie w.r.t to this. This is
+>> first time I have introduced a patch that impacts multiple arch/machines.
+>>
+>>>
+>>> Was the information in the robot's report enough to reproduce the
+>>> oops? If not, is there additional information we could add to the
+>>> report that would enable you to reproduce it? Even if we can't
+>>> reproduce the oops, the report seems detailed enough that we should be
+>>> able to deduce the problem and produce a fix in which we have high
+>>> confidence.
+>>
+>> The BUG report essentially indicates the crash happened in
+>> of_pci_dma_configure(). The machine specific log make sense to a
+>> person familiar with this arch and I am not familiar with the same. So
+>> anyone can help narrow down the root cause of this?
+>>
+>> Looking at the code, there are two ptr variables that are accessed
+>> without checking for NULL as initial thinking was that these can never
+>> be NULL. So the debug patch is just adding addition check before
+>> accessing the ptr. I can send this patch without debug prints if that
+>> make sense. I was thinking to get confirmation that this is indeed the
+>> case before adding the check. What do you think the right approach
+>> here? Send a patch for this to the ML for adding the check as a
+>> potential fix? Or someone can help me investigate the crash dump and
+>> root cause it? or if we can use test robot to confirm this, I can
+>> re-send the patch ASIS to the list. Please clarify.
+>>
+> If the assumption is that the pointers can never be NULL,
+> wouldn't it be important to see a call trace and to find out
+> if the NULL pointers can actually be seen by design,
+> or if there is some other bug ?
 
-A new module parameter allows this feature to be disabled if there are
-devices that misbehave as a result of this change.
+Call trace shows
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/vfio/pci/vfio_pci.c |   36 +++++++++++++++++++++++++++++++++---
- 1 file changed, 33 insertions(+), 3 deletions(-)
+  [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
+[    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index d0f1e70..049b9e9 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -50,6 +50,11 @@ module_param(disable_vga, bool, S_IRUGO);
- MODULE_PARM_DESC(disable_vga, "Disable VGA resource access through vfio-pci");
- #endif
- 
-+static bool disable_idle_d3;
-+module_param(disable_idle_d3, bool, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(disable_idle_d3,
-+		 "Disable using the PCI D3 low power state for idle, unused devices");
-+
- static DEFINE_MUTEX(driver_lock);
- 
- static inline bool vfio_vga_disabled(void)
-@@ -114,6 +119,8 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 	u16 cmd;
- 	u8 msix_pos;
- 
-+	pci_set_power_state(pdev, PCI_D0);
-+
- 	/* Don't allow our initial saved state to include busmaster */
- 	pci_clear_master(pdev);
- 
-@@ -225,6 +232,9 @@ out:
- 	pci_disable_device(pdev);
- 
- 	vfio_pci_try_bus_reset(vdev);
-+
-+	if (!disable_idle_d3)
-+		pci_set_power_state(pdev, PCI_D3hot);
- }
- 
- static void vfio_pci_release(void *device_data)
-@@ -951,6 +961,20 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 					vfio_pci_set_vga_decode(vdev, false));
- 	}
- 
-+	if (!disable_idle_d3) {
-+		/*
-+		 * pci-core sets the device power state to an unknown value at
-+		 * bootup and after being removed from a driver.  The only
-+		 * transition it allows from this unknown state is to D0, which
-+		 * typically happens when a driver calls pci_enable_device().
-+		 * We're not ready to enable the device yet, but we do want to
-+		 * be able to get to D3.  Therefore first do a D0 transition
-+		 * before going to D3.
-+		 */
-+		pci_set_power_state(pdev, PCI_D0);
-+		pci_set_power_state(pdev, PCI_D3hot);
-+	}
-+
- 	return ret;
- }
- 
-@@ -971,6 +995,9 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- 				VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
- 				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
- 	}
-+
-+	if (!disable_idle_d3)
-+		pci_set_power_state(pdev, PCI_D0);
- }
- 
- static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-@@ -1089,10 +1116,13 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
--		if (!ret) {
--			tmp = vfio_device_data(devs.devices[i]);
-+		tmp = vfio_device_data(devs.devices[i]);
-+		if (!ret)
- 			tmp->needs_reset = false;
--		}
-+
-+		if (!tmp->refcnt && !disable_idle_d3)
-+			pci_set_power_state(tmp->pdev, PCI_D3hot);
-+
- 		vfio_device_put(devs.devices[i]);
- 	}
- 
 
+And BUG seems to be in of_pci_dma_configure() as shown in the BUG report.
+
+of_pci_dma_configure() calls newly added API call to 
+pci_get_host_bridge_device(). Seems like this has succeeded which means 
+bridge is non NULL IMO. However in this function it passes 
+bridge->parent->of_node to of_dma_configure(). So I suspect 
+bridge->parent is NULL for some reason. Is there a chance for parent 
+being NULL in this or any other platform?
+
+>
+> I am a bit concerned that adding those NULL pointer checks
+> might end up hiding some other bug, ie that they just hide
+> the real bug without fixing it.
+>
+
+I agree with you as well. That is the reason I had added the debug 
+prints in the attached patch to check what is NULL here and that can 
+help us dig into this more.
+
+If BJorn can accept this debug patch for finding this, that will help. I 
+can re-send it to the list as a debug patch if everyone agrees. 
+Otherwise I don't know how to proceed from here.
+
+Thanks and regards,
+
+Murali
+> Thanks,
+> Guenter
+>
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Texas Instruments
