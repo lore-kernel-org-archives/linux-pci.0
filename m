@@ -1,121 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:30053 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932566AbbCFJgb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:31 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 15/29] powerpc/pci: Rename pcibios_root_bridge_prepare()
-Date: Fri, 6 Mar 2015 17:33:32 +0800
-Message-ID: <1425634426-437-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:38096 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932631AbbCIORx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Mar 2015 10:17:53 -0400
+Message-ID: <54FDAB8B.3010404@ti.com>
+Date: Mon, 9 Mar 2015 10:17:47 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Guenter Roeck <linux@roeck-us.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PCI] BUG: unable to handle kernel
+References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com>
+In-Reply-To: <54F9EAA8.30007@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pcibios_root_bridge_prepare() in powerpc is used
-to set root bus speed. Rename it to
-pcibios_set_root_bus_speed() for better readability.
+On 03/06/2015 12:58 PM, Murali Karicheri wrote:
+> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
+>> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
+>> [ ... ]
+>>
+>>> > From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17 00:00:00 2001
+>>> From: Murali Karicheri<m-karicheri2@ti.com>
+>>> Date: Fri, 6 Mar 2015 10:23:08 -0500
+>>> Subject: [PATCH] pci: of : fix kernel crash
+>>>
+>>> This is a debug patch to root cause the kernel crash
+>>>
+>>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
+>>>
+>>> PCI: Update DMA configuration from DT
+>>>
+>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>> ---
+>>> drivers/of/of_pci.c | 8 ++++++++
+>>> drivers/pci/host-bridge.c | 5 +++++
+>>> 2 files changed, 13 insertions(+)
+>>>
+>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>> index 86d3c38..5a59fb8 100644
+>>> --- a/drivers/of/of_pci.c
+>>> +++ b/drivers/of/of_pci.c
+>>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
+>>> struct device *dev =&pci_dev->dev;
+>>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>>>
+>>> + if (!bridge || !bridge->parent) {
+>>> + if (!bridge)
+>>> + pr_err("PCI bridge not found\n");
+>>> + if (!bridge->parent)
+>>> + pr_err("PCI bridge parent not found\n");
+>>
+>> You'll see a crash here if bridge is NULL. Maybe add an else before
+>> the second
+>> if statement ? Also, dev_err might be a bit more useful and would be
+>> available.
+>>
+> Fixed and attached.
+>
+> Murali
+>> Thanks,
+>> Guenter
+>>
+>>> + return;
+>>> + }
+>>> +
+>>> of_dma_configure(dev, bridge->parent->of_node);
+>>> pci_put_host_bridge_device(bridge);
+>>> }
+>>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>>> index 3e5bbf9..ef2ab51 100644
+>>> --- a/drivers/pci/host-bridge.c
+>>> +++ b/drivers/pci/host-bridge.c
+>>> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct
+>>> pci_dev *dev)
+>>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>>> struct device *bridge = root_bus->bridge;
+>>>
+>>> + if (!bridge) {
+>>> + pr_err("PCI: bridge not found\n");
+>>> + return NULL;
+>>> + }
+>>> +
+>>> kobject_get(&bridge->kobj);
+>>> return bridge;
+>>> }
+>>> --
+>>> 1.7.9.5
+>>>
+>>
+>
+BJorn,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |    4 ++--
- arch/powerpc/platforms/pseries/pci.c     |    2 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- 5 files changed, 6 insertions(+), 6 deletions(-)
+Any chance of applying the attached debug patch to see if this fixes and 
+provide some additional information on this BUG? Not sure who will pick 
+this one and apply.
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index c8175a3..8e7f2a8 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -129,7 +129,7 @@ struct machdep_calls {
- 	void		(*pcibios_fixup)(void);
- 	int		(*pci_probe_mode)(struct pci_bus *);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
-+	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index a467aca..0d8b369 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -769,8 +769,8 @@ int pci_proc_domain(struct pci_bus *bus)
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	if (ppc_md.pcibios_root_bridge_prepare)
--		return ppc_md.pcibios_root_bridge_prepare(bridge);
-+	if (ppc_md.pcibios_set_root_bus_speed)
-+		return ppc_md.pcibios_set_root_bus_speed(bridge);
- 
- 	return 0;
- }
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index fe16a50..af685d6 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
-+int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 1796c54..5d0be3a 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
-+int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
- 
- unsigned long pseries_memory_block_size(void);
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index e445b67..b196c0d 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
- 	}
- 
--	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
-+	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
- 
- 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
- 		long rc;
 -- 
-1.7.1
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
