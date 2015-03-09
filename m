@@ -1,62 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:56896 "EHLO
-	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753966AbbCEC6e (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:0:0>);
-	Wed, 4 Mar 2015 21:58:34 -0500
-Date: Thu, 5 Mar 2015 10:58:09 +0800
-From: joeyli <jlee@suse.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@alien8.de>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23755 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753067AbbCICnO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:14 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-Message-ID: <20150305025809.GA28401@linux-rxt1.site>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
- <1425456048-16236-5-git-send-email-yinghai@kernel.org>
- <20150304101649.GA3663@pd.tnic>
- <alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
- <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 18/30] PCI: Remove weak pcibios_root_bridge_prepare()
+Date: Mon, 9 Mar 2015 10:34:15 +0800
+Message-ID: <1425868467-9667-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
+Now no one use weak pcibios_root_bridge_prepare(),
+we could remove it.
 
-On Wed, Mar 04, 2015 at 10:12:58AM -0800, Yinghai Lu wrote:
-> On Wed, Mar 4, 2015 at 7:54 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> 
-> >
-> > Also this 15-patch series needs to be separated into two patchsets. The
-> > whole series is not appropriate for -rc3, but this particular one at least
-> > is a regression fix that has to go in.
-> 
-> The first 4 should go v4.0.
-> 
-> could leave others to v4.1
-> 
-> Thanks
-> 
-> Yinghai
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   16 +---------------
+ include/linux/pci.h |    2 --
+ 2 files changed, 1 insertions(+), 17 deletions(-)
 
-After 84c91b7ae merged to v3.17 kernel, hibernate code checks the e280 regions
-should not be changed when doing hibernate resume. Without your patch 8,
-the hibernate resume checking will randomly fail on the machines that reserved
-setup_data in e820 regions.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 99f17e3..1080eff 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1845,18 +1845,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+ 
+-/**
+- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
+- * @bridge: Host bridge to set up.
+- *
+- * Default empty implementation.  Replace with an architecture-specific setup
+- * routine, if necessary.
+- */
+-int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	return 0;
+-}
+-
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1889,11 +1877,9 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
++
+ 	if (bridge->ops && bridge->ops->set_root_bus_speed)
+ 		bridge->ops->set_root_bus_speed(bridge);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error)
+-		goto err_out;
+ 
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 28eafb5..cfaf217 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -424,8 +424,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+-- 
+1.7.1
 
-Could you please consider to put "[PATCH v2 08/15] x86: Kill E820_RESERVED_KERN"
-to v4.0 kernel?
-
-
-Thanks a lot!
-Joey Lee
