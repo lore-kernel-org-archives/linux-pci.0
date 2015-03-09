@@ -1,267 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:35645 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753818AbbCDFZg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:25:36 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:25:34 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id EE7692BB0040
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:25:31 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245PNsn48103628
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:25:31 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245OwMk032761
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:24:58 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 13/21] powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
-Date: Wed,  4 Mar 2015 13:19:05 +0800
-Message-Id: <1425446353-30513-14-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23901 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbbCICnQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 17/30] powerpc/pci: Use pci_scan_host_bridge() for simplicity
+Date: Mon, 9 Mar 2015 10:34:14 +0800
+Message-ID: <1425868467-9667-18-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI config accessors previously relied on device_node.  Unfortunately,
-VFs don't have a corresponding device_node, so change the accessors to use
-pci_dn instead.
+Now we could use pci_scan_host_bridge() to scan
+pci buses, provide powerpc specific pci_host_bridge_ops.
 
-[bhelgaas: changelog]
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
- arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
- arch/powerpc/platforms/powernv/pci.h         |    4 +-
- 3 files changed, 40 insertions(+), 47 deletions(-)
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |   63 +++++++++++++++++------------
+ arch/powerpc/platforms/pseries/pci.c     |    8 ++--
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ 4 files changed, 43 insertions(+), 32 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index e261869..7a5021b 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -430,21 +430,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
- static int powernv_eeh_read_config(struct device_node *dn,
- 				   int where, int size, u32 *val)
- {
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn)) {
- 		*val = 0xFFFFFFFF;
- 		return PCIBIOS_SET_FAILED;
- 	}
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 8e7f2a8..b811d12 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
++	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
  
--	return pnv_pci_cfg_read(dn, where, size, val);
-+	return pnv_pci_cfg_read(pdn, where, size, val);
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0d8b369..74cbb5d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -767,14 +767,35 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
  }
  
- static int powernv_eeh_write_config(struct device_node *dn,
- 				    int where, int size, u32 val)
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++static void pci_host_bridge_set_root_bus_speed(
++		struct pci_host_bridge *bridge)
  {
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn))
- 		return PCIBIOS_SET_FAILED;
+ 	if (ppc_md.pcibios_set_root_bus_speed)
+-		return ppc_md.pcibios_set_root_bus_speed(bridge);
++		ppc_md.pcibios_set_root_bus_speed(bridge);
++}
  
--	return pnv_pci_cfg_write(dn, where, size, val);
-+	return pnv_pci_cfg_write(pdn, where, size, val);
+-	return 0;
++static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
++{
++	int mode = PCI_PROBE_NORMAL;
++	struct pci_bus *bus = host->bus;
++	struct pci_controller *hose = dev_get_drvdata(&host->dev);
++
++	/* Get probe mode and perform scan */
++	if (hose->dn && ppc_md.pci_probe_mode)
++		mode = ppc_md.pci_probe_mode(bus);
++
++	pr_debug("    probe mode: %d\n", mode);
++	if (mode == PCI_PROBE_DEVTREE)
++		of_scan_bus(hose->dn, bus);
++
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
++		hose->last_busno = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, hose->last_busno);
++	}
  }
  
++
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -1587,6 +1608,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ 	return of_node_get(hose->dn);
+ }
+ 
++static struct pci_host_bridge_ops phb_ops = {
++	.set_root_bus_speed = pci_host_bridge_set_root_bus_speed,
++	.scan_bus = pci_host_bridge_of_scan_bus,
++};
++
  /**
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index e69142f..6c20d6e 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
- 	spin_unlock_irqrestore(&phb->lock, flags);
- }
- 
--static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
--				     struct device_node *dn)
-+static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
+  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
+  * @hose: Pointer to the PCI host controller instance structure
+@@ -1594,9 +1620,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ void pcibios_scan_phb(struct pci_controller *hose)
  {
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 	u8	fstate;
- 	__be16	pcierr;
- 	int	pe_no;
-@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	 * setup that yet. So all ER errors should be mapped to
- 	 * reserved PE.
- 	 */
--	pe_no = PCI_DN(dn)->pe_number;
-+	pe_no = pdn->pe_number;
- 	if (pe_no == IODA_INVALID_PE) {
- 		if (phb->type == PNV_PHB_P5IOC2)
- 			pe_no = 0;
-@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	LIST_HEAD(resources);
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host;
+ 	struct device_node *node = hose->dn;
+-	int mode;
+ 
+ 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
+ 
+@@ -1612,30 +1637,16 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	pci_add_resource(&resources, &hose->busn);
+ 
+ 	/* Create an empty bus for the toplevel */
+-	bus = pci_create_root_bus(hose->parent,
++	host = pci_scan_host_bridge(hose->parent,
+ 			PCI_DOMBUS(hose->global_number, hose->first_busno),
+-			hose->ops, hose, &resources);
+-	if (bus == NULL) {
+-		pr_err("Failed to create bus for PCI domain %04x\n",
++			hose->ops, hose, &resources, &phb_ops);
++	if (host == NULL) {
++		pr_err("Failed to create host bridge for PCI domain %04x\n",
+ 			hose->global_number);
+ 		pci_free_resource_list(&resources);
+ 		return;
  	}
- 
- 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
--		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
--		pe_no, fstate);
-+		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
- 
- 	/* Clear the frozen state if applicable */
- 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
-@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- }
- 
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 	s64 rc;
-@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 
-@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
- }
- 
- #if CONFIG_EEH
--static bool pnv_pci_cfg_check(struct pci_controller *hose,
--			      struct device_node *dn)
-+static bool pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = NULL;
--	struct pnv_phb *phb = hose->private_data;
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 
- 	/* EEH not enabled ? */
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
- 		return true;
- 
- 	/* PE reset or device removed ? */
--	edev = of_node_to_eeh_dev(dn);
-+	edev = pdn->edev;
- 	if (edev) {
- 		if (edev->pe &&
- 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
-@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
- 	return true;
- }
- #else
--static inline pnv_pci_cfg_check(struct pci_controller *hose,
--				struct device_node *dn)
-+static inline pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	return true;
- }
-@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
- 			       unsigned int devfn,
- 			       int where, int size, u32 *val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
- 	*val = 0xFFFFFFFF;
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
+-	hose->bus = bus;
+-
+-	/* Get probe mode and perform scan */
+-	mode = PCI_PROBE_NORMAL;
+-	if (node && ppc_md.pci_probe_mode)
+-		mode = ppc_md.pci_probe_mode(bus);
+-	pr_debug("    probe mode: %d\n", mode);
+-	if (mode == PCI_PROBE_DEVTREE)
+-		of_scan_bus(node, bus);
+-
+-	if (mode == PCI_PROBE_NORMAL) {
+-		pci_bus_update_busn_res_end(bus, 255);
+-		hose->last_busno = pci_scan_child_bus(bus);
+-		pci_bus_update_busn_res_end(bus, hose->last_busno);
 -	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
++	hose->bus = host->bus;
  
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+@@ -1644,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 		ppc_md.pcibios_fixup_phb(hose);
  
--	ret = pnv_pci_cfg_read(dn, where, size, val);
--	if (phb->flags & PNV_PHB_FLAG_EEH) {
-+	ret = pnv_pci_cfg_read(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
-+	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
- 		if (*val == EEH_IO_ERROR_VALUE(size) &&
--		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
-+		    eeh_dev_check_failure(pdn->edev))
-                         return PCIBIOS_DEVICE_NOT_FOUND;
- 	} else {
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
+ 	/* Configure PCI Express settings */
+-	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node)
++		list_for_each_entry(child, &host->bus->children, node)
+ 			pcie_bus_configure_settings(child);
+ 	}
+ }
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index af685d6..89ff79c 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+@@ -121,7 +121,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 
+ 	dn = pcibios_get_phb_of_node(bus);
+ 	if (!dn)
+-		return 0;
++		return;
+ 
+ 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
+ 		rc = of_property_read_u32_array(pdn,
+@@ -135,7 +135,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 
+ 	if (rc) {
+ 		pr_debug("no ibm,pcie-link-speed-stats property\n");
+-		return 0;
++		return;
  	}
  
- 	return ret;
-@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
- 				unsigned int devfn,
- 				int where, int size, u32 val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
+ 	switch (pcie_link_speed_stats[0]) {
+@@ -168,5 +168,5 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 		break;
+ 	}
  
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
--	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_write(dn, where, size, val);
-+	ret = pnv_pci_cfg_write(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 
- 	return ret;
+-	return 0;
++	return;
  }
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6c02ff8..e5b75b2 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 5d0be3a..9aa9c13 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
  
- void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
- 				unsigned char *log_buff);
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val);
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val);
- extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
- 				      void *tce_mem, u64 tce_size,
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
 -- 
-1.7.9.5
+1.7.1
 
