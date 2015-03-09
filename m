@@ -1,112 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:60045 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbbCBGKS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 01:10:18 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 2 Mar 2015 16:10:16 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 46FF72CE8050
-	for <linux-pci@vger.kernel.org>; Mon,  2 Mar 2015 17:10:13 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t226A4Fj31391832
-	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 17:10:13 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2269cUO013784
-	for <linux-pci@vger.kernel.org>; Mon, 2 Mar 2015 17:09:39 +1100
-Date: Mon, 2 Mar 2015 14:09:23 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V11 07/17] powerpc/pci: Don't unset pci resources for VFs
-Message-ID: <20150302060923.GB21571@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150113180502.GC2776@google.com>
- <1421288887-7765-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1421288887-7765-8-git-send-email-weiyang@linux.vnet.ibm.com>
- <1423528584.4924.70.camel@au1.ibm.com>
- <20150210015123.GC6326@richard>
- <1423534451.4924.79.camel@au1.ibm.com>
- <20150210062544.GB31098@richard>
- <1423556085.4924.91.camel@au1.ibm.com>
- <20150220234709.GD21131@google.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:58499 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753712AbbCIUwe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Mar 2015 16:52:34 -0400
+Message-ID: <54FE080E.6040904@ti.com>
+Date: Mon, 9 Mar 2015 16:52:30 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150220234709.GD21131@google.com>
+To: Guenter Roeck <linux@roeck-us.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PCI] BUG: unable to handle kernel
+References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com> <54FDAB8B.3010404@ti.com> <CAErSpo52A+S-SSp2TG=W3oskyg_pgg9LYZzrissvfTogTSazPg@mail.gmail.com> <54FDC1FC.2030807@ti.com> <54FDC52B.1070602@roeck-us.net> <54FDD277.2060406@ti.com> <54FDD995.1080000@roeck-us.net> <54FDE1EC.9040207@ti.com> <54FDE29A.1060400@roeck-us.net>
+In-Reply-To: <54FDE29A.1060400@roeck-us.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 20, 2015 at 05:47:09PM -0600, Bjorn Helgaas wrote:
->On Tue, Feb 10, 2015 at 07:14:45PM +1100, Benjamin Herrenschmidt wrote:
->> On Tue, 2015-02-10 at 14:25 +0800, Wei Yang wrote:
->> > PF's resource will be assigned first, including normal BARs and IOV
->> > BARs.
->> > 
->> > Then PF's driver will create VFs, in virtfn_add(). In this function,
->> > VF's
->> > resources is calculated from its PF's IOV BAR.
->> > 
->> > If you reset VF's resource as PFs, no one will try to assign it again.
->> 
->> So the problem is that the flag indicating VF is lost ? IE. We should
->> still mark them unset, but preserve that flag ?
->
->I think the problem is that the normal path for PCI_REASSIGN_ALL_RSRC is
->at boot-time, where we do this:
->
->    pcibios_init
->      pcibios_scan_phb
->        pci_scan_child_bus
->          ...
->            pci_device_add
->              pci_fixup_device(pci_fixup_header)
->		pcibios_fixup_resources                       # header fixup
->		  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
->		    dev->resource[i].start = 0
->      pcibios_resource_survey
->        pcibios_allocate_resources
->
->and we assign dev->resource[] for everything in
->pcibios_allocate_resources().
->
->But VFs are enumerated later, when they are enabled by the PF driver after
->boot, so we have this path:
->
->    pci_enable_sriov
->      sriov_enable
->        virtfn_add(vf_id)
->          for (i = 0; i < 6; i++)
->            vf->resource[i].start = pf->resource[IOV + i].start + (size * vf_id)
->          pci_device_add
->            pci_fixup_device(pci_fixup_header)
->              pcibios_fixup_resources                   # header fixup
->                for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
->                  vf->resource[i].start = 0
->
->Here, we clear out vf->resource[0..5] in the header fixup, but we're not
->going to call pcibios_allocate_resources() again to reassign them.
->
->So I think the *intent* of PCI_REASSIGN_ALL_RSRC is preserved if
->pcibios_fixup_resources() leaves the VF resources alone, because the VF
->resources are completely determined by the PF resources, and the PF
->resources have already been reassigned.
->
->If my understanding is correct, I think the patch is reasonable, and I
->would try to put some of this explanation into the changelog.
+On 03/09/2015 02:12 PM, Guenter Roeck wrote:
+> On 03/09/2015 11:09 AM, Murali Karicheri wrote:
+>> On 03/09/2015 01:34 PM, Guenter Roeck wrote:
+>>> On 03/09/2015 10:03 AM, Murali Karicheri wrote:
+>>>> On 03/09/2015 12:07 PM, Guenter Roeck wrote:
+>>>>> On 03/09/2015 08:53 AM, Murali Karicheri wrote:
+>>>>>> On 03/09/2015 10:44 AM, Bjorn Helgaas wrote:
+>>>>>>> On Mon, Mar 9, 2015 at 9:17 AM, Murali
+>>>>>>> Karicheri<m-karicheri2@ti.com>
+>>>>>>> wrote:
+>>>>>>>> On 03/06/2015 12:58 PM, Murali Karicheri wrote:
+>>>>>>>>>
+>>>>>>>>> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
+>>>>>>>>>>
+>>>>>>>>>> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
+>>>>>>>>>> [ ... ]
+>>>>>>>>>>
+>>>>>>>>>>>> From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17
+>>>>>>>>>>>> 00:00:00 2001
+>>>>>>>>>>> From: Murali Karicheri<m-karicheri2@ti.com>
+>>>>>>>>>>> Date: Fri, 6 Mar 2015 10:23:08 -0500
+>>>>>>>>>>> Subject: [PATCH] pci: of : fix kernel crash
+>>>>>>>>>>>
+>>>>>>>>>>> This is a debug patch to root cause the kernel crash
+>>>>>>>>>>>
+>>>>>>>>>>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
+>>>>>>>>>>>
+>>>>>>>>>>> PCI: Update DMA configuration from DT
+>>>>>>>>>>>
+>>>>>>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>>>>>>>>>> ---
+>>>>>>>>>>> drivers/of/of_pci.c | 8 ++++++++
+>>>>>>>>>>> drivers/pci/host-bridge.c | 5 +++++
+>>>>>>>>>>> 2 files changed, 13 insertions(+)
+>>>>>>>>>>>
+>>>>>>>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>>>>>>>>>> index 86d3c38..5a59fb8 100644
+>>>>>>>>>>> --- a/drivers/of/of_pci.c
+>>>>>>>>>>> +++ b/drivers/of/of_pci.c
+>>>>>>>>>>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev
+>>>>>>>>>>> *pci_dev)
+>>>>>>>>>>> struct device *dev =&pci_dev->dev;
+>>>>>>>>>>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>>>>>>>>>>>
+>>>>>>>>>>> + if (!bridge || !bridge->parent) {
+>>>>>>>>>>> + if (!bridge)
+>>>>>>>>>>> + pr_err("PCI bridge not found\n");
+>>>>>>>>>>> + if (!bridge->parent)
+>>>>>>>>>>> + pr_err("PCI bridge parent not found\n");
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> You'll see a crash here if bridge is NULL. Maybe add an else
+>>>>>>>>>> before
+>>>>>>>>>> the second
+>>>>>>>>>> if statement ? Also, dev_err might be a bit more useful and
+>>>>>>>>>> would be
+>>>>>>>>>> available.
+>>>>>>>>>>
+>>>>>>>>> Fixed and attached.
+>>>>>>>>>
+>>>>>>>>> Murali
+>>>>>>>>>>
+>>>>>>>>>> Thanks,
+>>>>>>>>>> Guenter
+>>>>>>>>>>
+>>>>>>>>>>> + return;
+>>>>>>>>>>> + }
+>>>>>>>>>>> +
+>>>>>>>>>>> of_dma_configure(dev, bridge->parent->of_node);
+>>>>>>>>>>> pci_put_host_bridge_device(bridge);
+>>>>>>>>>>> }
+>>>>>>>>>>> diff --git a/drivers/pci/host-bridge.c
+>>>>>>>>>>> b/drivers/pci/host-bridge.c
+>>>>>>>>>>> index 3e5bbf9..ef2ab51 100644
+>>>>>>>>>>> --- a/drivers/pci/host-bridge.c
+>>>>>>>>>>> +++ b/drivers/pci/host-bridge.c
+>>>>>>>>>>> @@ -28,6 +28,11 @@ struct device
+>>>>>>>>>>> *pci_get_host_bridge_device(struct
+>>>>>>>>>>> pci_dev *dev)
+>>>>>>>>>>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>>>>>>>>>>> struct device *bridge = root_bus->bridge;
+>>>>>>>>>>>
+>>>>>>>>>>> + if (!bridge) {
+>>>>>>>>>>> + pr_err("PCI: bridge not found\n");
+>>>>>>>>>>> + return NULL;
+>>>>>>>>>>> + }
+>>>>>>>>>>> +
+>>>>>>>>>>> kobject_get(&bridge->kobj);
+>>>>>>>>>>> return bridge;
+>>>>>>>>>>> }
+>>>>>>>>>>> --
+>>>>>>>>>>> 1.7.9.5
+>>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>> BJorn,
+>>>>>>>>
+>>>>>>>> Any chance of applying the attached debug patch to see if this
+>>>>>>>> fixes
+>>>>>>>> and
+>>>>>>>> provide some additional information on this BUG? Not sure who will
+>>>>>>>> pick this
+>>>>>>>> one and apply.
+>>>>>>>
+>>>>>>> The change that caused the oops (0b2af171520e ("PCI: Update DMA
+>>>>>>> configuration from DT")) only exists on my pci/iommu branch, so I'm
+>>>>>>> the one to apply it.
+>>>>>>>
+>>>>>>> It's much easier for me to deal with plain text patches (not
+>>>>>>> attachments).
+>>>>>>>
+>>>>>>> I'm hesitating because I don't want to encourage use of the 0-day
+>>>>>>> testing robot as a tool at which we can just throw debug patches.
+>>>>>>> The
+>>>>>>> robot is a service that costs somebody real money, and I want to
+>>>>>>> be a
+>>>>>>> good neighbor when using it.
+>>>>>>
+>>>>>> Thanks for the clarification as I don't have much information on the
+>>>>>> testing robot. At the same time the question is how similar incidence
+>>>>>> in the past have been handled. I am a newbie w.r.t to this. This is
+>>>>>> first time I have introduced a patch that impacts multiple
+>>>>>> arch/machines.
+>>>>>>
+>>>>>>>
+>>>>>>> Was the information in the robot's report enough to reproduce the
+>>>>>>> oops? If not, is there additional information we could add to the
+>>>>>>> report that would enable you to reproduce it? Even if we can't
+>>>>>>> reproduce the oops, the report seems detailed enough that we
+>>>>>>> should be
+>>>>>>> able to deduce the problem and produce a fix in which we have high
+>>>>>>> confidence.
+>>>>>>
+>>>>>> The BUG report essentially indicates the crash happened in
+>>>>>> of_pci_dma_configure(). The machine specific log make sense to a
+>>>>>> person familiar with this arch and I am not familiar with the
+>>>>>> same. So
+>>>>>> anyone can help narrow down the root cause of this?
+>>>>>>
+>>>>>> Looking at the code, there are two ptr variables that are accessed
+>>>>>> without checking for NULL as initial thinking was that these can
+>>>>>> never
+>>>>>> be NULL. So the debug patch is just adding addition check before
+>>>>>> accessing the ptr. I can send this patch without debug prints if that
+>>>>>> make sense. I was thinking to get confirmation that this is indeed
+>>>>>> the
+>>>>>> case before adding the check. What do you think the right approach
+>>>>>> here? Send a patch for this to the ML for adding the check as a
+>>>>>> potential fix? Or someone can help me investigate the crash dump and
+>>>>>> root cause it? or if we can use test robot to confirm this, I can
+>>>>>> re-send the patch ASIS to the list. Please clarify.
+>>>>>>
+>>>>> If the assumption is that the pointers can never be NULL,
+>>>>> wouldn't it be important to see a call trace and to find out
+>>>>> if the NULL pointers can actually be seen by design,
+>>>>> or if there is some other bug ?
+>>>>
+>>>> Call trace shows
+>>>>
+>>>> [ 0.576666] [<7976c1ac>] pci_device_add+0xbc/0x820
+>>>> [ 0.576666] [<7976c1ac>] pci_device_add+0xbc/0x820
+>>>>
+>>>>
+>>>> And BUG seems to be in of_pci_dma_configure() as shown in the BUG
+>>>> report.
+>>>>
+>>>> of_pci_dma_configure() calls newly added API call to
+>>>> pci_get_host_bridge_device(). Seems like this has succeeded which
+>>>> means bridge is non NULL IMO. However in this function it passes
+>>>> bridge->parent->of_node to of_dma_configure(). So I suspect
+>>>> bridge->parent is NULL for some reason. Is there a chance for parent
+>>>> being NULL in this or any other platform?
+>>>>
+>>>
+>>> Can bridge be the root bridge ?
+>>
+>> Going by the code below, bridge is assigned the ptr to bridge on the
+>> root bus.
+>>
+>> +struct device *pci_get_host_bridge_device(struct pci_dev *dev)
+>> +{
+>> + struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+>> + struct device *bridge = root_bus->bridge;
+>> +
+>> + kobject_get(&bridge->kobj);
+>> + return bridge;
+>> +}
+>> +
+>>
+>> So to answer your question, yes it is the root bridge.
+>>
+> AFAIK the root bridge does not have a parent.
 
-Yep, it is correct, thanks for your explanation.
+Aha! That seems to be the problem. A grep on the tree showed up a bunch 
+of calling pci_create_root_bus() with first arg (parent) being null 
+(x86, ia64). So the code needs to check for the parent node being non 
+null and potentially causing this crash. I will send an incremental 
+patch to add this check.
 
-I did a chat on IRC with Ben, I guess he has got the idea :-)
+Murali
 
 >
->Bjorn
+> Guenter
+>
+
 
 -- 
-Richard Yang
-Help you, Help me
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
