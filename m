@@ -1,88 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:34496 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbbC0VBz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 17:01:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <551495EE.20201@oracle.com>
-References: <5514391F.2030300@oracle.com>
-	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-Date: Fri, 27 Mar 2015 14:01:54 -0700
-Message-ID: <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Ahern <david.ahern@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout3.samsung.com ([203.254.224.33]:35668 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbbCIMS3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 08:18:29 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0NKY002QR26S7P00@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 09 Mar 2015 21:18:28 +0900 (KST)
+Received: from [10.252.81.186] by mmp1.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTPA id <0NKY00A8326RS080@mmp1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 09 Mar 2015 21:18:27 +0900 (KST)
+Message-id: <54FD8F94.20305@samsung.com>
+Date: Mon, 09 Mar 2015 21:18:28 +0900
+From: Jaehoon Chung <jh80.chung@samsung.com>
+MIME-version: 1.0
+To: linux-pci@vger.kernel.org
+Subject: [RFC] Build with arm64 configuration
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 26, 2015 at 4:27 PM, David Ahern <david.ahern@oracle.com> wrote:
-> On 3/26/15 2:43 PM, Yinghai Lu wrote:
->>
->> Can you send out boot log with "debug ignore_loglevel"?
->
->
-> attached
+Hi,
 
-So the kernel config is sparc32 or sparc64 ?
+I have a question for building arm64.
+(Actually, i didn't have many knowledges for PCIe.)
+When i built with arm64 configuration, then i always found the compiler errors.
+Since some header file has dependency on structure of architecture.
+I think it's not solution that it copies from arch/arm/... to arch/arm64/...
 
-pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
-0x110204000)
+So i want to get advise at mailing. how can i solve it?
+If my understanding is right, after enabled PCIe at bootloader, then it bridges at kernel. right?
 
+I want to know exactly solution..
 
-only could happen when dma_addr_t is 32bit.
-
-in drivers/pci/probe.c::__pcie_read_base()
-                if ((sizeof(dma_addr_t) < 8) && l) {
-                        /* Above 32-bit boundary; try to reallocate */
-                        res->flags |= IORESOURCE_UNSET;
-                        res->start = 0;
-                        res->end = sz64;
-                        dev_info(&dev->dev, "reg 0x%x: can't handle
-BAR above 4GB (bus address %#010llx)\n",
-                                 pos, (unsigned long long)l64);
-                        goto out;
-                }
-
-also root bus has
-pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff]
-(bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff]
-(bus address [0x00000000-0x7effffff])
-pci_bus 0000:00: root bus resource [bus 00-77]
-
-and children device have
-pci 0000:05:00.0: can't claim BAR 0 [mem
-0x800100000000-0x800100001fff]: no compatible bridge window
-pci 0000:06:00.0: can't claim BAR 0 [mem 0x800110000000-0x8001101fffff
-pref]: no compatible bridge window
-pci 0000:06:00.0: can't claim BAR 4 [mem 0x800110200000-0x800110203fff
-pref]: no compatible bridge window
-pci 0000:06:00.1: can't claim BAR 0 [mem 0x800110600000-0x8001107fffff
-pref]: no compatible bridge window
-pci 0000:06:00.1: can't claim BAR 4 [mem 0x800110404000-0x800110407fff
-pref]: no compatible bridge window
-pci 0000:07:00.0: can't claim BAR 1 [mem
-0x800120000000-0x80012000ffff]: no compatible bridge window
-pci 0000:07:00.0: can't claim BAR 3 [mem
-0x800120040000-0x80012007ffff]: no compatible bridge window
-
-
-looks like some root bus resource get dumped because it is out of range.
-
-Also please make sure your config have
-
-CONFIG_PCI_DEBUG=y
-
-and capture serial console with "debug ignore_loglevel", so we check if
-pci 0000:00:01.0 really have resource assigned.
-
-Thanks
-
-Yinghai
+Best Regards,
+Jaehoon Chung
