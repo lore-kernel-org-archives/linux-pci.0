@@ -1,12 +1,9 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:3076 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753591AbbCLLrL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 07:47:11 -0400
-Message-ID: <55017CA5.2010502@huawei.com>
-Date: Thu, 12 Mar 2015 19:46:45 +0800
+Received: from szxga01-in.huawei.com ([58.251.152.64]:23808 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753099AbbCICnP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:15 -0400
 From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
 CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
@@ -23,77 +20,73 @@ CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
 	"Arnd Bergmann" <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com>
-In-Reply-To: <20150311223211.GB1082@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify code
+Date: Mon, 9 Mar 2015 10:34:20 +0800
+Message-ID: <1425868467-9667-24-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>  	struct pci_bus *b;
->> +	LIST_HEAD(resources);
->>  	struct pcifront_sd *sd = NULL;
->>  	struct pci_bus_entry *bus_entry = NULL;
->>  	int err = 0;
->> @@ -470,17 +472,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>  		err = -ENOMEM;
->>  		goto err_out;
->>  	}
->> +	pci_add_resource(&resources, &ioport_resource);
->> +	pci_add_resource(&resources, &iomem_resource);
->> +	pci_add_resource(&resources, &busn_resource);
-> 
-> Since I don't want to export busn_resource, you might have to allocate your
-> own struct resource for it here.  And, of course, figure out the details of
-> which PCI domain you're in and whether you need to share one struct
-> resource across several host bridges in the same domain.
+Mvebu_pcie_scan_bus() is not necessary, we could use
+pci_common_init_dev() instead of pci_common_init(),
+and pass the device pointer as the parent. Then
+pci_scan_root_bus() will be called to scan the pci busses.
 
-Allocate its own resource here is ok for me, as I mentioned in previous reply,
-so do we still need to add additional info to figure out which domain own the bus resource ?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Jason Cooper <jason@lakedaemon.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-mvebu.c |   18 +-----------------
+ 1 files changed, 1 insertions(+), 17 deletions(-)
 
-
-> 
->>  	pcifront_init_sd(sd, domain, bus, pdev);
->>  
->>  	pci_lock_rescan_remove();
->>  
->> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
->> -				  &pcifront_bus_ops, sd);
->> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
->> +				  &pcifront_bus_ops, sd, &resources);
->>  	if (!b) {
->>  		dev_err(&pdev->xdev->dev,
->>  			"Error creating PCI Frontend Bus!\n");
->>  		err = -ENOMEM;
->>  		pci_unlock_rescan_remove();
->> +		pci_free_resource_list(&resources);
->>  		goto err_out;
->>  	}
->>  
->> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>  
->>  	list_add(&bus_entry->list, &pdev->root_buses);
->>  
->> -	/* pci_scan_bus_parented skips devices which do not have a have
->> +	/* pci_scan_root_bus skips devices which do not have a
->>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
->>  	err = pcifront_scan_bus(pdev, domain, bus, b);
->>  
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 1309cfb..d5a2b70 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
+-static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
+-				  &mvebu_pcie_ops, sys, &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 						 const struct resource *res,
+ 						 resource_size_t start,
+@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.nr_controllers = 1;
+ 	hw.private_data   = (void **)&pcie;
+ 	hw.setup          = mvebu_pcie_setup;
+-	hw.scan           = mvebu_pcie_scan_bus;
+ 	hw.map_irq        = of_irq_parse_and_map_pci;
+ 	hw.ops            = &mvebu_pcie_ops;
+ 	hw.align_resource = mvebu_pcie_align_resource;
+ 
+-	pci_common_init(&hw);
++	pci_common_init_dev(&pcie->pdev->dev, &hw);
+ }
+ 
+ /*
 -- 
-Thanks!
-Yijing
+1.7.1
 
