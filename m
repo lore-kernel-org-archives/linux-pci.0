@@ -1,184 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:56162 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479AbbCDFWJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:22:09 -0500
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:22:07 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 4C76E2CE8040
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:22:04 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245LuAC33685690
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:04 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245LUlS026903
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:21:30 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 03/21] PCI: Keep individual VF BAR size in struct pci_sriov
-Date: Wed,  4 Mar 2015 13:18:55 +0800
-Message-Id: <1425446353-30513-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:41036 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478AbbCJXO4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 19:14:56 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: bhelgaas@google.com, mingo@redhat.com, tglx@linutronix.de,
+	hpa@zytor.com, pure.logic@nexus-software.ie, jgross@suse.com,
+	luto@amacapital.net, andy.shevchenko@gmail.com,
+	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [RFC v1 2/2] x86: kconfig: remove UP [IO]APIC options
+Date: Tue, 10 Mar 2015 16:14:35 -0700
+Message-Id: <1426029275-9594-3-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we don't store the individual VF BAR size.  We calculate it when
-needed by dividing the PF's IOV resource size (which contains space for
-*all* the VFs) by total_VFs or by reading the BAR in the SR-IOV capability
-again.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Keep the individual VF BAR size in struct pci_sriov.barsz[], add
-pci_iov_resource_size() to retrieve it, and use that instead of doing the
-division or reading the SR-IOV capability BAR.
+These were here mostly to help as wrappers for PCI_MSI
+under certain UP 32-bit build scenarios, now that PCI_MSI
+properly selects what it needs and when it needs it these
+Kconfig options are now only enabling users reduce the size
+of 32-bit kernels optionally. Since 32-bit kernels are not
+in a huge state of flux and since there is no penalty for
+adding APIC support other than a bit of size moving forward
+we simply expect folks to enable APIC options on 32-bit systems
+when a system needs it, as with PCI_MSI. This lets us remove
+clutter from the x86 Kconfig file.
 
-[bhelgaas: rename to "barsz[]", simplify barsz[] index computation, remove
-SR-IOV capability BAR sizing]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bryan O'Donoghue <pure.logic@nexus-software.ie>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Jan Beulich <JBeulich@suse.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: linux-pci@vger.kernel.org
+Cc: x86@kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/pci/iov.c   |   39 ++++++++++++++++++++-------------------
- drivers/pci/pci.h   |    1 +
- include/linux/pci.h |    3 +++
- 3 files changed, 24 insertions(+), 19 deletions(-)
+ arch/x86/Kconfig | 29 ++---------------------------
+ 1 file changed, 2 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 05f9d97..5bca0e1 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -57,6 +57,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
- 		pci_remove_bus(virtbus);
- }
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 0ecdeb1..bfd4d66 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -889,38 +889,13 @@ config UP_LATE_INIT
+        def_bool y
+        depends on !SMP && X86_LOCAL_APIC
  
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{
-+	if (!dev->is_physfn)
-+		return 0;
-+
-+	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
-+}
-+
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
-@@ -92,8 +100,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
- 		virtfn->resource[i].flags = res->flags;
--		size = resource_size(res);
--		do_div(size, iov->total_VFs);
-+		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
- 		virtfn->resource[i].start = res->start + size * id;
- 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
- 		rc = request_resource(res, &virtfn->resource[i]);
-@@ -311,7 +318,7 @@ static void sriov_disable(struct pci_dev *dev)
- 
- static int sriov_init(struct pci_dev *dev, int pos)
- {
--	int i;
-+	int i, bar64;
- 	int rc;
- 	int nres;
- 	u32 pgsz;
-@@ -360,29 +367,29 @@ found:
- 	pgsz &= ~(pgsz - 1);
- 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
- 
-+	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
-+	if (!iov)
-+		return -ENOMEM;
-+
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = dev->resource + PCI_IOV_RESOURCES + i;
--		i += __pci_read_base(dev, pci_bar_unknown, res,
--				     pos + PCI_SRIOV_BAR + i * 4);
-+		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
-+					pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
- 			rc = -EIO;
- 			goto failed;
- 		}
-+		iov->barsz[i] = resource_size(res);
- 		res->end = res->start + resource_size(res) * total - 1;
- 		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
- 			 i, res, i, total);
-+		i += bar64;
- 		nres++;
- 	}
- 
--	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
--	if (!iov) {
--		rc = -ENOMEM;
--		goto failed;
--	}
+-config X86_UP_APIC
+-	bool "Local APIC support on uniprocessors"
+-	depends on X86_32 && !SMP && !X86_32_NON_STANDARD
+-	---help---
+-	  A local APIC (Advanced Programmable Interrupt Controller) is an
+-	  integrated interrupt controller in the CPU. If you have a single-CPU
+-	  system which has a processor with a local APIC, you can say Y here to
+-	  enable and use it. If you say Y here even though your machine doesn't
+-	  have a local APIC, then the kernel will still run with no slowdown at
+-	  all. The local APIC supports CPU-generated self-interrupts (timer,
+-	  performance counters), and the NMI watchdog which detects hard
+-	  lockups.
 -
- 	iov->pos = pos;
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
-@@ -414,6 +421,7 @@ failed:
- 		res->flags = 0;
- 	}
- 
-+	kfree(iov);
- 	return rc;
- }
- 
-@@ -510,14 +518,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
-  */
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
--	struct resource tmp;
--	int reg = pci_iov_resource_bar(dev, resno);
+-config X86_UP_IOAPIC
+-	bool "IO-APIC support on uniprocessors"
+-	depends on X86_UP_APIC
+-	---help---
+-	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
+-	  SMP-capable replacement for PC-style interrupt controllers. Most
+-	  SMP systems and many recent uniprocessor systems have one.
 -
--	if (!reg)
--		return 0;
+-	  If you have a single-CPU system with an IO-APIC, you can say Y here
+-	  to use it. If you say Y here even though your machine doesn't have
+-	  an IO-APIC, then the kernel will still run with no slowdown at all.
 -
--	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
--	return resource_alignment(&tmp);
-+	return pci_iov_resource_size(dev, resno);
- }
+ config X86_LOCAL_APIC
+ 	def_bool y
+-	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
++	depends on X86_64 || SMP || X86_32_NON_STANDARD || PCI_MSI
+ 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
  
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4091f82..5732964 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -247,6 +247,7 @@ struct pci_sriov {
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
- 	struct mutex lock;	/* lock for VF bus */
-+	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
- };
+ config X86_IO_APIC
+-	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC || PCI_MSI
++	def_bool X86_64 || SMP || X86_32_NON_STANDARD || PCI_MSI
+ 	depends on X86_LOCAL_APIC
+ 	select IRQ_DOMAIN
  
- #ifdef CONFIG_PCI_ATS
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..1559658 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1675,6 +1675,7 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
-@@ -1686,6 +1687,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
- { return 0; }
- static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
-+static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-+{ return 0; }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
 -- 
-1.7.9.5
+2.3.2.209.gd67f9d5.dirty
 
