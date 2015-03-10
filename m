@@ -1,103 +1,323 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:19902 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119AbbCaGie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 02:38:34 -0400
-Message-ID: <551A40E8.4080708@huawei.com>
-Date: Tue, 31 Mar 2015 14:38:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	PCI <linux-pci@vger.kernel.org>,
-	"Herui (Ray)" <Ray.herui@huawei.com>
-Subject: Re: Assign mem resource fail after remove and rescan
-References: <55167C1C.6010001@huawei.com> <CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
-In-Reply-To: <CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-la0-f51.google.com ([209.85.215.51]:35792 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752467AbbCJLej (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 07:34:39 -0400
+Received: by lams18 with SMTP id s18so992727lam.2
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 04:34:38 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v3 2/9] x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround exclusively.
+Date: Tue, 10 Mar 2015 12:35:13 +0100
+Message-Id: <1425987320-15020-3-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/29 14:18, Yinghai Lu wrote:
-> On Sat, Mar 28, 2015 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> ...
->>
->> I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
->> and when system boot up, it requested only 0x4800000.
->>
->> In hotplug(remove and rescan) path, we would call calculate_mem_align() function which would align the resource at 0x2000000.
-> 
-> Looks like we align the size too early. Please check if attach patch
-> could fix the problem.
-> 
+>From now on, readb()/writeb()/etc. generic calls are used as default
+approach. Special MMIO accessors are registered for AMD Fam10h CPUs only.
 
-Hi Yinghai,
-   I tested it, remove and rescan 05:19.0 device is ok now, but
-if do the operations for the parent device of 05:19.0, the result is
-still fail.
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+---
+ arch/x86/include/asm/pci_x86.h |   8 +++
+ arch/x86/pci/mmconfig-shared.c | 114 +++++++++++++++++++++++++++++++++++++++++
+ arch/x86/pci/mmconfig_32.c     |  24 +--------
+ arch/x86/pci/mmconfig_64.c     |  24 +--------
+ arch/x86/pci/numachip.c        |  24 +--------
+ 5 files changed, 128 insertions(+), 66 deletions(-)
 
--[0000:00]-+-00.0  Intel Corporation 2nd Generation Core Processor Family DRAM Controller
-           +-01.0-[01]--
-           +-16.0  Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1
-           +-19.0  Intel Corporation 82579LM Gigabit Network Connection
-           +-1a.0  Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2
-           +-1c.0-[02-21]----00.0-[03-21]--+-01.0-[04-12]----00.0-[05-12]----19.0-[06-12]----00.0  PLX Technology, Inc. Device 1009
-           |                               +-05.0-[13]--
-
-Remove and rescan for 04:00.0
-
-...
-[  152.657657] pci_bus 0000:06: busn_res: [bus 06-12] is released
-[  152.659086] pci_bus 0000:05: busn_res: [bus 05-12] is released
-[  165.353539] pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
-[  165.353789] pci 0000:04:00.0: [10b5:9797] type 01 class 0x060400
-[  165.354149] pci 0000:04:00.0: PME# supported from D0 D3hot D3cold
-[  165.362337] pci_bus 0000:05: busn_res: can not insert [bus 05-ff] under [bus 04-12] (conflicts with (null) [bus 04-12])
-[  165.362935] pci 0000:05:19.0: [10b5:9797] type 01 class 0x060400
-[  165.363250] pci 0000:05:19.0: PME# supported from D0 D3hot D3cold
-[  165.365996] pci 0000:04:00.0: PCI bridge to [bus 05-ff]
-[  165.366026] pci 0000:04:00.0:   bridge window [mem 0xe4000000-0xe87fffff]
-[  165.368389] pci 0000:06:00.0: [10b5:1009] type 00 class 0x088000
-[  165.368458] pci 0000:06:00.0: reg 0x10: [mem 0xe8000000-0xe87fffff]
-[  165.368524] pci 0000:06:00.0: reg 0x18: [mem 0xe4000000-0xe7ffffff 64bit]
-[  165.369912] pci 0000:05:19.0: PCI bridge to [bus 06-ff]
-[  165.369939] pci 0000:05:19.0:   bridge window [mem 0xe4000000-0xe87fffff]
-[  165.369958] pci_bus 0000:06: busn_res: [bus 06-ff] end is updated to 12
-[  165.369972] pci_bus 0000:05: busn_res: [bus 05-ff] end is updated to 12
-[  165.369984] pci_bus 0000:04: busn_res: [bus 04-12] end is updated to 12
-[  165.370014] pci_bus 0000:13: busn_res: [bus 13] end is updated to 13
-[  165.370259] pci_bus 0000:16: busn_res: [bus 16] end is updated to 16
-[  165.370304] pci_bus 0000:17: busn_res: [bus 17] end is updated to 17
-[  165.370334] pci_bus 0000:18: busn_res: [bus 18-20] end is updated to 20
-[  165.370346] pci_bus 0000:15: busn_res: [bus 15-20] end is updated to 20
-[  165.370358] pci_bus 0000:14: busn_res: [bus 14-20] end is updated to 20
-[  165.370384] pci_bus 0000:21: busn_res: [bus 21] end is updated to 21
-[  165.370395] pci_bus 0000:03: busn_res: [bus 03-21] end is updated to 21
-[  165.370404] pci_bus 0000:02: busn_res: [bus 02-21] end is updated to 21
-[  165.374463] pci_bus 0000:22: busn_res: [bus 22] end is updated to 22
-[  165.374657] pci_bus 0000:24: busn_res: [bus 24] end is updated to 24
-[  165.374670] pci_bus 0000:23: busn_res: [bus 23-24] end is updated to 24
-[  165.374956] pci 0000:04:00.0: BAR 14: no space for [mem size 0x06000000]
-[  165.374960] pci 0000:04:00.0: BAR 14: failed to assign [mem size 0x06000000]
-[  165.374965] pci 0000:05:19.0: BAR 14: no space for [mem size 0x04800000]
-[  165.374968] pci 0000:05:19.0: BAR 14: failed to assign [mem size 0x04800000]
-[  165.374973] pci 0000:06:00.0: BAR 2: no space for [mem size 0x04000000 64bit]
-[  165.374977] pci 0000:06:00.0: BAR 2: failed to assign [mem size 0x04000000 64bit]
-[  165.374981] pci 0000:06:00.0: BAR 0: no space for [mem size 0x00800000]
-[  165.374984] pci 0000:06:00.0: BAR 0: failed to assign [mem size 0x00800000]
-[  165.374989] pci 0000:05:19.0: PCI bridge to [bus 06-12]
-[  165.375025] pci 0000:04:00.0: PCI bridge to [bus 05-12]
-[  165.375064] pci 0000:23:00.0: PCI bridge to [bus 24]
-
-
-
-> Thanks
-> 
-> Yinghai
-> 
-
-
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index d024f4d..c57c225 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -137,6 +137,11 @@ struct pci_mmcfg_region {
+ 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
+ };
+ 
++struct pci_mmcfg_mmio_ops {
++	u32 (*read)(int len, void __iomem *addr);
++	void (*write)(int len, void __iomem *addr, u32 value);
++};
++
+ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
+ extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
+@@ -145,6 +150,9 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern u32 pci_mmio_read(int len, void __iomem *addr);
++extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
++extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
+ 
+ extern struct list_head pci_mmcfg_list;
+ 
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index dd30b7e..8b3bc4f 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -31,6 +31,118 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
++static u32
++pci_mmconfig_generic_read(int len, void __iomem *addr)
++{
++	u32 data = 0;
++
++	switch (len) {
++	case 1:
++		data = readb(addr);
++		break;
++	case 2:
++		data = readw(addr);
++		break;
++	case 4:
++		data = readl(addr);
++		break;
++	}
++
++	return data;
++}
++
++static void
++pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
++{
++	switch (len) {
++	case 1:
++		writeb(value, addr);
++		break;
++	case 2:
++		writew(value, addr);
++		break;
++	case 4:
++		writel(value, addr);
++		break;
++	}
++}
++
++static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
++	.read = pci_mmconfig_generic_read,
++	.write = pci_mmconfig_generic_write,
++};
++
++static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
++
++static u32
++pci_mmconfig_amd_read(int len, void __iomem *addr)
++{
++	u32 data = 0;
++
++	switch (len) {
++	case 1:
++		data = mmio_config_readb(addr);
++		break;
++	case 2:
++		data = mmio_config_readw(addr);
++		break;
++	case 4:
++		data = mmio_config_readl(addr);
++		break;
++	}
++
++	return data;
++}
++
++static void
++pci_mmconfig_amd_write(int len, void __iomem *addr, u32 value)
++{
++	switch (len) {
++	case 1:
++		mmio_config_writeb(addr, value);
++		break;
++	case 2:
++		mmio_config_writew(addr, value);
++		break;
++	case 4:
++		mmio_config_writel(addr, value);
++		break;
++	}
++}
++
++static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
++	.read = pci_mmconfig_amd_read,
++	.write = pci_mmconfig_amd_write,
++};
++
++void
++pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
++{
++	pci_mmcfg_mmio = ops;
++}
++
++u32
++pci_mmio_read(int len, void __iomem *addr)
++{
++	if (!pci_mmcfg_mmio) {
++		pr_err("PCI config space has no accessors !");
++		return 0;
++	}
++
++	return pci_mmcfg_mmio->read(len, addr);
++}
++
++void
++pci_mmio_write(int len, void __iomem *addr, u32 value)
++{
++	if (!pci_mmcfg_mmio) {
++		pr_err("PCI config space has no accessors !");
++		return;
++	}
++
++	pci_mmcfg_mmio->write(len, addr, value);
++}
++
+ static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+ {
+ 	if (cfg->res.parent)
+@@ -231,6 +343,8 @@ static const char *__init pci_mmcfg_amd_fam10h(void)
+ 			return NULL;
+ 		}
+ 
++	pci_mmconfig_register_mmio(&pci_mmcfg_mmio_amd_fam10h);
++
+ 	return "AMD Family 10h NB";
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 43984bc..4b3d025 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -71,17 +71,7 @@ err:		*value = -1;
+ 
+ 	pci_exp_set_dev_base(base, bus, devfn);
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(mmcfg_virt_addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(mmcfg_virt_addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(mmcfg_virt_addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, mmcfg_virt_addr + reg);
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+ 	rcu_read_unlock();
+ 
+@@ -108,17 +98,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 
+ 	pci_exp_set_dev_base(base, bus, devfn);
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(mmcfg_virt_addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(mmcfg_virt_addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(mmcfg_virt_addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, mmcfg_virt_addr + reg, value);
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+ 	rcu_read_unlock();
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index bea5249..032593d 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -42,17 +42,7 @@ err:		*value = -1;
+ 		goto err;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, addr + reg);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+@@ -74,17 +64,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, addr + reg, value);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
+index 2e565e6..5047e9b 100644
+--- a/arch/x86/pci/numachip.c
++++ b/arch/x86/pci/numachip.c
+@@ -51,17 +51,7 @@ err:		*value = -1;
+ 		goto err;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, addr + reg);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+@@ -87,17 +77,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, addr + reg, value);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
 -- 
-Thanks!
-Yijing
+1.9.1
 
