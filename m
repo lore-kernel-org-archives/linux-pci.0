@@ -1,58 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49262 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbbCaSTN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 14:19:13 -0400
-Date: Tue, 31 Mar 2015 14:19:11 -0400 (EDT)
-Message-Id: <20150331.141911.1147249607585406404.davem@davemloft.net>
-To: yinghai@kernel.org
-Cc: david.ahern@oracle.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
-References: <CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
-	<20150331.110636.1386273674508393491.davem@davemloft.net>
-	<CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:19612 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399AbbCJVCn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 17:02:43 -0400
+Message-ID: <54FF5BED.9090302@broadcom.com>
+Date: Tue, 10 Mar 2015 14:02:37 -0700
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
+	"Paul Bolle" <pebolle@tiscali.nl>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>
+Subject: Re: [PATCH v5 1/4] PCI: Export symbols of PCI functions
+References: <1425947886-23705-1-git-send-email-rjui@broadcom.com> <1425947886-23705-2-git-send-email-rjui@broadcom.com> <20150310205651.GA32204@google.com>
+In-Reply-To: <20150310205651.GA32204@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPg0KRGF0ZTogVHVlLCAzMSBNYXIg
-MjAxNSAxMToxNjoxMSAtMDcwMA0KDQo+IE9uIFR1ZSwgTWFyIDMxLCAyMDE1IGF0IDg6MDYgQU0s
-IERhdmlkIE1pbGxlciA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldD4gd3JvdGU6DQo+PiBZb3VyIHBhdGNo
-IG9ubHkgYWxsb3dzIHRoZSBjb25kaXRpb24gYmVoaW5kIHJlc291cmNlcyB0aGF0IGhhdmUgNjQt
-Yml0cw0KPj4gb2Ygc2lnbmlmaWNhbmNlLCBidXQgdGhhdCBpcyBub3Qgd2hhdCB0aGUgZG9jdW1l
-bnQgYWJvdmUgc2F5cyBhYm91dA0KPj4gd2hlbiB0aGlzIHNpdHVhdGlvbiBpcyBhbGxvd2VkLg0K
-Pj4NCj4+IFBsZWFzZSBpbXBsZW1lbnQgdGhlIGNoZWNrIGVpdGhlciBleGFjdGx5IGFzIHN0YXRl
-ZCBpbiB0aGUgZXJyYXRhDQo+PiBkb2N1bWVudCwgb3IgbW9yZSBsb29zZWx5IGlmIHRoYXQgaXMg
-bm90IHBvc3NpYmxlLCByYXRoZXIgdGhhbiBtb3JlDQo+PiBzdHJpY3RseSB0aGFuIGFsbG93ZWQu
-DQo+Pg0KPj4gWW91ciBvdmVybHkgc3RyaWN0IGFuZCByZXN0cmljdGl2ZSBjaGVja3MgYXJlIHdo
-YXQgZ290IHVzIGludG8gdGhpcw0KPj4gcHJlZGljYW1lbnQgaW4gdGhlIGZpcnN0IHBsYWNlLiA6
-LSgNCj4gDQo+IEZyb20gdGhhdCBlcnJhdGE6DQo+IC0tLQ0KPiBIZXJlIGFyZSBjcml0ZXJpYSB0
-aGF0IGFyZSBzdWZmaWNpZW50IHRvIGd1YXJhbnRlZSBjb3JyZWN0bmVzcyBmb3IgYQ0KPiBnaXZl
-biBjYW5kaWRhdGUgQkFSOg0KPiDCiQ0KPiBUaGUgZW50aXJlIHBhdGggZnJvbSB0aGUgaG9zdCB0
-byB0aGUgYWRhcHRlciBpcyBvdmVyIFBDSSBFeHByZXNzLg0KPiDCiQ0KPiBObyBjb252ZW50aW9u
-YWwgUENJIG9yIFBDSS1YIGRldmljZXMgZG8gcGVlci10IG8tcGVlciByZWFkcyB0byB0aGUNCj4g
-cmFuZ2UgbWFwcGVkIGJ5IHRoZSBCQVIuDQo+IMKJDQo+IFRoZSBQQ0kgRXhwcmVzcyBIb3N0IEJy
-aWRnZSBkb2VzIG5vIGJ5dGUgbWVyZ2luZy4gKFRoaXMgaXMgYmVsaWV2ZWQgdG8NCj4gYmUgdHJ1
-ZSBvbiBtb3N0DQo+IHBsYXRmb3Jtcy4pDQo+IMKJDQo+IEFueSBsb2NhdGlvbnMgd2l0aCByZWFk
-IHNpZGUtZWZmZWN0cyBhcmUgbmV2ZXIgdGhlIHRhcmdldCBvZiBNZW1vcnkNCj4gUmVhZHMgd2l0
-aCB0aGUgVEggYml0IFNldC4NCj4gU2VlIFNlY3Rpb24gMi4yLjUNCj4gLS0tDQo+IA0KPiBXZSBj
-YW4gdmVyaWZ5IGZpcnN0IG9uZSB0aGF0IHdlIGhhdmUgYWxsIHBjaWUgZGV2aWNlIGFsbCB0aGUg
-d2F5IHRvDQo+IHRoZSBob3N0YnJpZGdlLg0KPiANCj4gQnV0IHdlIGNhbiBub3QgdmVyaWZ5IG9y
-IGd1YXJhbnRlZSBvdGhlciB0aHJlZS4NCg0KTGFjayBvZiBwZWVyLXRvLXBlZXIgcmVhZHMgd2Ug
-Y2FuIGFzc3VtZSwgdGhlIGJ5dGUgbWVyZ2luZyB3ZSBjYW4NCmFkZCBhcyBhIHBlci1jb250cm9s
-bGVyIGF0dHJpYnV0ZSBpbiB0aGUgZnV0dXJlIGlmIGl0IHR1cm5zIG91dCB0aGVyZQ0KYXJlIHNv
-bWUgdGhhdCBkbyBhbmQgaXQgbWF0dGVycyAoSSBkb3VidCB0aGlzIHdpbGwgZXZlciBiZSBuZWNl
-c3NhcnkpDQphbmQgdGhlIHNpZGUtZWZmZWN0IGlzc3VlIGlzIG91dHNpZGUgdGhlIHNjb3BlIG9m
-IHRoZSBQQ0kgbGF5ZXIuDQoNCj4gU3lzdGVtIHNob3VsZCBnZXQgYmV0dGVyIGFib3V0IHRoZSBj
-b25zdHJhaW50cyB3aXRoIHN5c3RlbSBkZXNpZ24uDQo+IFNvIGlmIGl0IHdvdWxkIGFzc2lnbiA2
-NGJpdCAoYW5kIGFib3ZlIDRHKSBtbWlvIHRvIHRob3NlIG5vbi1wcmVmIDY0Yml0IEJBUiwNCj4g
-dGhhdCBtZWFucyBpdCBhbHJlYWR5IG1ha2Ugc3VyZSBzeXN0ZW0gZGVzaWduIHdpbGwgZm9sbG93
-IHRob3NlIGNyaXRlcmlhLg0KPiBhbmQgdGhlbiB3ZSBjYW4gc2FmZWx5IHNldCBwcmVmIGJpdCBp
-biByZXNvdXJjZSBmbGFncy4NCg0KSSB0b3RhbGx5IGRpc2FncmVlLCBJIHRoaW5rIHlvdXIgdGVz
-dCBpcyB0b28gc3RyaW5nZW50IGFuZCBzaG91bGQgYmUNCnNpZ25pZmljYW50bHkgcmVsYXhlZCBp
-ZiBub3QgcmVtb3ZlZCBlbnRpcmVseS4NCg==
+Hi Bjorn,
+
+On 3/10/2015 1:56 PM, Bjorn Helgaas wrote:
+> On Mon, Mar 09, 2015 at 05:38:03PM -0700, Ray Jui wrote:
+>> Export symbols of the following PCI functions so they can be referenced
+>> by a PCI driver compiled as a kernel loadable module:
+>>
+>> pci_common_swizzle
+>> pci_create_root_bus
+>> pci_stop_root_bus
+>> pci_remove_root_bus
+>> pci_assign_unassigned_bus_resources
+>> pci_fixup_irqs
+> 
+> Have you tested your driver as a loadable module?
+> 
+> If it works to load/unload/reload/etc., I'm OK with exporting these
+> symbols.  I would prefer EXPORT_SYMBOL_GPL, though, because these don't
+> constitute a very coherent interface right now, and they will likely be
+> reworked.  For example, see Yijing Wang's work to sort out the
+> pci_bus_add_devices() / resource assignment mess.
+> 
+> Bjorn
+
+Yes, I tested the driver with load/unload/reload on Cygnus. Console logs
+are included in my reply to Arnd's email from another email thread.
+
+I'll wait for more feedback from you on the iProc PCIe driver itself.
+But if you have reviewed them and think they are okay then I can go
+ahead and submit v6 with changes to use EXPORT_SYMBOL_GPL.
+
+Let me know.
+
+Thanks,
+
+Ray
