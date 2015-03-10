@@ -1,122 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:33893 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbbCTDPO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:15:14 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:15:12 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 54A8E3578055
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:10 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3F22K40566804
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:10 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3EaSK012144
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:14:36 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 16/21] powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
-Date: Fri, 20 Mar 2015 11:06:32 +0800
-Message-Id: <1426820797-6267-17-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:43642 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752477AbbCJU4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 16:56:55 -0400
+Received: by oibg201 with SMTP id g201so4053343oib.10
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 13:56:55 -0700 (PDT)
+Date: Tue, 10 Mar 2015 15:56:51 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 1/4] PCI: Export symbols of PCI functions
+Message-ID: <20150310205651.GA32204@google.com>
+References: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
+ <1425947886-23705-2-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1425947886-23705-2-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement pcibios_iov_resource_alignment() on powernv platform.
+On Mon, Mar 09, 2015 at 05:38:03PM -0700, Ray Jui wrote:
+> Export symbols of the following PCI functions so they can be referenced
+> by a PCI driver compiled as a kernel loadable module:
+> 
+> pci_common_swizzle
+> pci_create_root_bus
+> pci_stop_root_bus
+> pci_remove_root_bus
+> pci_assign_unassigned_bus_resources
+> pci_fixup_irqs
 
-On PowerNV platform, there are 3 cases for the IOV BAR:
-1. initial state, the IOV BAR size is multiple times of VF BAR size
-2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
-3. sizing stage, the IOV BAR is truncated to 0
+Have you tested your driver as a loadable module?
 
-pnv_pci_iov_resource_alignment() handle these three cases respectively.
+If it works to load/unload/reload/etc., I'm OK with exporting these
+symbols.  I would prefer EXPORT_SYMBOL_GPL, though, because these don't
+constitute a very coherent interface right now, and they will likely be
+reworked.  For example, see Yijing Wang's work to sort out the
+pci_bus_add_devices() / resource assignment mess.
 
-[bhelgaas: adjust to drop "align" parameter, return pci_iov_resource_size()
-if no ppc_md machdep_call version]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/machdep.h        |    1 +
- arch/powerpc/kernel/pci-common.c          |   10 ++++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
- 3 files changed, 31 insertions(+)
+Bjorn
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 1d72fda..37e451f 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -252,6 +252,7 @@ struct machdep_calls {
- 
- #ifdef CONFIG_PCI_IOV
- 	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
-+	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
- #endif /* CONFIG_PCI_IOV */
- 
- 	/* Called to shutdown machine specific hardware not already controlled
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 375bf70..9a306ff 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -130,6 +130,16 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	pci_reset_secondary_bus(dev);
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
-+{
-+	if (ppc_md.pcibios_iov_resource_alignment)
-+		return ppc_md.pcibios_iov_resource_alignment(pdev, resno);
-+
-+	return pci_iov_resource_size(pdev, resno);
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
- {
- #ifdef CONFIG_PPC64
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index cadd3fb..93ec16c 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1965,6 +1965,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
-+						      int resno)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	resource_size_t align, iov_align;
-+
-+	iov_align = resource_size(&pdev->resource[resno]);
-+	if (iov_align)
-+		return iov_align;
-+
-+	align = pci_iov_resource_size(pdev, resno);
-+	if (pdn->vfs_expanded)
-+		return pdn->vfs_expanded * align;
-+
-+	return align;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /* Prevent enabling devices for which we couldn't properly
-  * assign a PE
-  */
-@@ -2167,6 +2186,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
- #ifdef CONFIG_PCI_IOV
- 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
-+	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
- #endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
--- 
-1.7.9.5
-
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> ---
+>  drivers/pci/pci.c       |    1 +
+>  drivers/pci/probe.c     |    1 +
+>  drivers/pci/remove.c    |    2 ++
+>  drivers/pci/setup-bus.c |    1 +
+>  drivers/pci/setup-irq.c |    1 +
+>  5 files changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 81f06e8..fb4a3da 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
+>  	*pinp = pin;
+>  	return PCI_SLOT(dev->devfn);
+>  }
+> +EXPORT_SYMBOL(pci_common_swizzle);
+>  
+>  /**
+>   *	pci_release_region - Release a PCI bar
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8d2f400..eb24ef9 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1993,6 +1993,7 @@ err_out:
+>  	kfree(b);
+>  	return NULL;
+>  }
+> +EXPORT_SYMBOL(pci_create_root_bus);
+>  
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+>  {
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 8bd76c9..c523159 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+>  	/* stop the host bridge */
+>  	device_release_driver(&host_bridge->dev);
+>  }
+> +EXPORT_SYMBOL(pci_stop_root_bus);
+>  
+>  void pci_remove_root_bus(struct pci_bus *bus)
+>  {
+> @@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>  	/* remove the host bridge */
+>  	device_unregister(&host_bridge->dev);
+>  }
+> +EXPORT_SYMBOL(pci_remove_root_bus);
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index e3e17f3..932c9e5 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+>  	__pci_bus_assign_resources(bus, &add_list, NULL);
+>  	BUG_ON(!list_empty(&add_list));
+>  }
+> +EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index 4e2d595..9d2bbb6 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>  	for_each_pci_dev(dev)
+>  		pdev_fixup_irq(dev, swizzle, map_irq);
+>  }
+> +EXPORT_SYMBOL(pci_fixup_irqs);
+> -- 
+> 1.7.9.5
+> 
