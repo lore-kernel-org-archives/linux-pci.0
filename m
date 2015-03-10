@@ -1,119 +1,124 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>
-Cc: David Ahern <david.ahern@oracle.com>, linux-pci@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
-Subject: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
-Date: Tue, 31 Mar 2015 19:57:49 -0700
-Message-Id: <1427857069-6789-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+Message-ID: <54FF1383.7030301@broadcom.com>
+Date: Tue, 10 Mar 2015 08:53:39 -0700
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 1/4] PCI: Export symbols of PCI functions
+References: <1425946878-13169-1-git-send-email-rjui@broadcom.com>	 <1425946878-13169-2-git-send-email-rjui@broadcom.com> <1425949234.25026.24.camel@redhat.com>
+In-Reply-To: <1425949234.25026.24.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+Hi Alex,
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
+On 3/9/2015 6:00 PM, Alex Williamson wrote:
+> On Mon, 2015-03-09 at 17:21 -0700, Ray Jui wrote:
+>> Export symbols of the following PCI functions so they can be referenced
+>> by a PCI driver compiled as a kernel loadable module:
+>>
+>> pci_common_swizzle
+>> pci_create_root_bus
+>> pci_stop_root_bus
+>> pci_remove_root_bus
+>> pci_assign_unassigned_bus_resources
+>> pci_fixup_irqs
+>>
+>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>> ---
+>>  drivers/pci/pci.c       |    1 +
+>>  drivers/pci/probe.c     |    1 +
+>>  drivers/pci/remove.c    |    2 ++
+>>  drivers/pci/setup-bus.c |    1 +
+>>  drivers/pci/setup-irq.c |    1 +
+>>  5 files changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 81f06e8..fb4a3da 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
+>>  	*pinp = pin;
+>>  	return PCI_SLOT(dev->devfn);
+>>  }
+>> +EXPORT_SYMBOL(pci_common_swizzle);
+>>  
+>>  /**
+>>   *	pci_release_region - Release a PCI bar
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 8d2f400..eb24ef9 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1993,6 +1993,7 @@ err_out:
+>>  	kfree(b);
+>>  	return NULL;
+>>  }
+>> +EXPORT_SYMBOL(pci_create_root_bus);
+>>  
+>>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+>>  {
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index 8bd76c9..c523159 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+>>  	/* stop the host bridge */
+>>  	device_release_driver(&host_bridge->dev);
+>>  }
+>> +EXPORT_SYMBOL(pci_stop_root_bus);
+>>  
+>>  void pci_remove_root_bus(struct pci_bus *bus)
+>>  {
+>> @@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>>  	/* remove the host bridge */
+>>  	device_unregister(&host_bridge->dev);
+>>  }
+>> +EXPORT_SYMBOL(pci_remove_root_bus);
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index e3e17f3..932c9e5 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+>>  	__pci_bus_assign_resources(bus, &add_list, NULL);
+>>  	BUG_ON(!list_empty(&add_list));
+>>  }
+>> +EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
+>> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+>> index 4e2d595..9d2bbb6 100644
+>> --- a/drivers/pci/setup-irq.c
+>> +++ b/drivers/pci/setup-irq.c
+>> @@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>>  	for_each_pci_dev(dev)
+>>  		pdev_fixup_irq(dev, swizzle, map_irq);
+>>  }
+>> +EXPORT_SYMBOL(pci_fixup_irqs);
+> 
+> 
+> Why not EXPORT_SYMBOL_GPL for all of these?  Some of these seem fairly
+> close to PCI core functionality for arbitrarily licensed modules.
+> 
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mem under pref mem.
+I have no issue with that. I know there have been a lot of debates on
+EXPORT_SYMBOL vs. EXPORT_SYMBOL_GPL use. If EXPORT_SYMBOL_GPL is
+preferred on these PCI functions here, I'll make the change.
 
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
 
-Only set pref for 64bit mmio when the entire path from the host to the adapter is
-over PCI Express.
+I'm still waiting for comments from Bjorn on the Broadcom iProc PCI
+driver itself. This change will go with other changes in the iProc PCI
+driver.
 
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: <stable@vger.kernel.org> #3.19
----
- drivers/pci/probe.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
+Thanks,
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f71cb7c..4e0cd46 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1507,6 +1507,53 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (!bus)
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's set pref bit for 64bit mmio when entire path from the host to
-+ * the adapter is over PCI Express.
-+ */
-+static void set_pcie_64bit_pref(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
-+		struct resource *res = &dev->resource[i];
-+		enum pci_bar_type type;
-+		int reg;
-+
-+		if (!(res->flags & IORESOURCE_MEM_64))
-+			continue;
-+
-+		if (res->flags & IORESOURCE_PREFETCH)
-+			continue;
-+
-+		reg = pci_resource_bar(dev, i, &type);
-+		dev_printk(KERN_DEBUG, &dev->dev, "reg 0x%x %pR + pref\n",
-+			   reg, res);
-+		res->flags |= IORESOURCE_PREFETCH;
-+	}
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1536,6 +1583,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* After pcie_cap is assigned and sriov bar is probed */
-+	set_pcie_64bit_pref(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
--- 
-1.8.4.5
-
+Ray
