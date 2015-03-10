@@ -1,191 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:50770 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbbCSFh2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:28 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v9 04/10] iommu/vt-d: functions to copy data from old mem
-Date: Thu, 19 Mar 2015 13:36:22 +0800
-Message-Id: <1426743388-26908-5-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v3 1/9] x86, pci: Clean up comment about buggy MMIO config space access for AMD Fam10h CPUs.
+Date: Tue, 10 Mar 2015 12:35:12 +0100
+Message-Id: <1425987320-15020-2-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add some functions to copy the data from old kernel.
-These functions are used to copy context tables and page tables.
+- fix typo
+- improve explanation
+- add reference to the related document
 
-To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
-use a link here, store the pointers , and then use iounmap to free them in
-another place.
-
-Li, Zhen-hua:
-    The functions and logics.
-
-Takao Indoh:
-    Check if pfn is ram:
-        if (page_is_ram(pfn))
-
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- drivers/iommu/intel-iommu.c | 102 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h |   9 ++++
- 2 files changed, 111 insertions(+)
+ arch/x86/include/asm/pci_x86.h | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f7dbe70..7f3484a 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -374,6 +374,17 @@ static struct context_entry *device_to_existing_context_entry(
- 				u8 bus, u8 devfn);
- 
- 
-+/*
-+ * A structure used to store the address allocated by ioremap();
-+ * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
-+ */
-+struct iommu_remapped_entry {
-+	struct list_head list;
-+	void __iomem *mem;
-+};
-+static LIST_HEAD(__iommu_remapped_mem);
-+static DEFINE_MUTEX(__iommu_mem_list_lock);
-+
- #endif /* CONFIG_CRASH_DUMP */
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index fa1195d..d024f4d 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -152,10 +152,13 @@ extern struct list_head pci_mmcfg_list;
  
  /*
-@@ -4822,4 +4833,95 @@ static struct context_entry *device_to_existing_context_entry(
- 	return ret;
- }
- 
-+/*
-+ * Copy memory from a physically-addressed area into a virtually-addressed area
-+ */
-+int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
-+{
-+	unsigned long pfn;		/* Page Frame Number */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of to */
-+	void __iomem *virt_mem;
-+	struct iommu_remapped_entry *mapped;
-+
-+	pfn = from >> VTD_PAGE_SHIFT;
-+	offset = from & (~VTD_PAGE_MASK);
-+
-+	if (page_is_ram(pfn)) {
-+		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
-+	} else{
-+
-+		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-+				GFP_KERNEL);
-+		if (!mapped)
-+			return -ENOMEM;
-+
-+		virt_mem = ioremap_cache((unsigned long)from, size);
-+		if (!virt_mem) {
-+			kfree(mapped);
-+			return -ENOMEM;
-+		}
-+		memcpy(to, virt_mem, size);
-+
-+		mutex_lock(&__iommu_mem_list_lock);
-+		mapped->mem = virt_mem;
-+		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-+		mutex_unlock(&__iommu_mem_list_lock);
-+	}
-+	return size;
-+}
-+
-+/*
-+ * Copy memory from a virtually-addressed area into a physically-addressed area
-+ */
-+int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
-+{
-+	unsigned long pfn;		/* Page Frame Number */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of to */
-+	void __iomem *virt_mem;
-+	struct iommu_remapped_entry *mapped;
-+
-+	pfn = to >> VTD_PAGE_SHIFT;
-+	offset = to & (~VTD_PAGE_MASK);
-+
-+	if (page_is_ram(pfn)) {
-+		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
-+	} else{
-+		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-+				GFP_KERNEL);
-+		if (!mapped)
-+			return -ENOMEM;
-+
-+		virt_mem = ioremap_cache((unsigned long)to, size);
-+		if (!virt_mem) {
-+			kfree(mapped);
-+			return -ENOMEM;
-+		}
-+		memcpy(virt_mem, from, size);
-+		mutex_lock(&__iommu_mem_list_lock);
-+		mapped->mem = virt_mem;
-+		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-+		mutex_unlock(&__iommu_mem_list_lock);
-+	}
-+	return size;
-+}
-+
-+/*
-+ * Free the mapped memory for ioremap;
-+ */
-+int __iommu_free_mapped_mem(void)
-+{
-+	struct iommu_remapped_entry *mem_entry, *tmp;
-+
-+	mutex_lock(&__iommu_mem_list_lock);
-+	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
-+		iounmap(mem_entry->mem);
-+		list_del(&mem_entry->list);
-+		kfree(mem_entry);
-+	}
-+	mutex_unlock(&__iommu_mem_list_lock);
-+	return 0;
-+}
-+
- #endif /* CONFIG_CRASH_DUMP */
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index a65208a..8ffa523 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -26,6 +26,7 @@
- #include <linux/iova.h>
- #include <linux/io.h>
- #include <linux/dma_remapping.h>
-+#include <linux/crash_dump.h>
- #include <asm/cacheflush.h>
- #include <asm/iommu.h>
- 
-@@ -368,4 +369,12 @@ extern int dmar_ir_support(void);
- 
- extern const struct attribute_group *intel_iommu_groups[];
- 
-+#ifdef CONFIG_CRASH_DUMP
-+extern int __iommu_load_from_oldmem(void *to, unsigned long from,
-+					unsigned long size);
-+extern int __iommu_save_to_oldmem(unsigned long to, void *from,
-+					unsigned long size);
-+extern int __iommu_free_mapped_mem(void);
-+#endif /* CONFIG_CRASH_DUMP */
-+
- #endif
+  * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
+- * on their northbrige except through the * %eax register. As such, you MUST
+- * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
++ * on their northbridge except through the * %eax register. As such, you MUST
++ * NOT use normal IOMEM accesses, you need to only use the magic mmio_config_*
+  * accessor functions.
+- * In fact just use pci_config_*, nothing else please.
++ *
++ * Please refer to the following doc:
++ * "BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h Processors",
++ * rev. 3.48, sec 2.11.1, "MMIO Configuration Coding Requirements".
+  */
+ static inline unsigned char mmio_config_readb(void __iomem *pos)
+ {
 -- 
-2.0.0-rc0
+1.9.1
 
