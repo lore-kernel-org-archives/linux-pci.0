@@ -1,132 +1,104 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5510B158.6060006@intel.com>
-Date: Tue, 24 Mar 2015 08:35:36 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v5 1/4] PCI: Export symbols of PCI functions
+Date: Mon, 9 Mar 2015 17:38:03 -0700
+Message-ID: <1425947886-23705-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
+References: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI: rename dsm uuid for PCI
-References: <54FD4FB9.2060802@intel.com> <20150320210354.GK26935@google.com> <550FD9DF.7050306@intel.com> <1641780.MlgGlmpUFR@vostro.rjw.lan>
-In-Reply-To: <1641780.MlgGlmpUFR@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/24/2015 08:24 AM, Rafael J. Wysocki wrote:
-> So _DSM is an ACPI-defined object and please spell its name like that.
-> Also please spell UUID in capitals if that's not a problem.
+Export symbols of the following PCI functions so they can be referenced
+by a PCI driver compiled as a kernel loadable module:
 
-Something like acpi_pci_dsm_UUID?
+pci_common_swizzle
+pci_create_root_bus
+pci_stop_root_bus
+pci_remove_root_bus
+pci_assign_unassigned_bus_resources
+pci_fixup_irqs
 
-> 
-> On Monday, March 23, 2015 05:16:15 PM Aaron Lu wrote:
->> According to the PCI firmware spec, there is only one assigned UUID used
->> for PCI system so rename the device_label_dsm_uuid to something more
->> common as: pci_acpi_dsm_uuid and put it in drivers/pci/pci-acpi.c. Make
->> that uuid array extern in the pci.h so that other code can also make use
->> of it.
->>
->> This patch shouldn't bring any functional change.
->>
->> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> ---
->>  drivers/pci/pci-acpi.c  |  5 +++++
->>  drivers/pci/pci-label.c | 11 ++---------
->>  drivers/pci/pci.h       |  6 ++++++
->>  3 files changed, 13 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index 489063987325..6ef2019073e2 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -18,6 +18,11 @@
->>  #include <linux/pm_qos.h>
->>  #include "pci.h"
->>  
-> 
-> Please add a comment referring to the document defining the UUID here.
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+---
+ drivers/pci/pci.c       |    1 +
+ drivers/pci/probe.c     |    1 +
+ drivers/pci/remove.c    |    2 ++
+ drivers/pci/setup-bus.c |    1 +
+ drivers/pci/setup-irq.c |    1 +
+ 5 files changed, 6 insertions(+)
 
-OK.
-
-> 
->> +const u8 pci_acpi_dsm_uuid[] = {
->> +	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
->> +	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
->> +};
->> +
->>  phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
->>  {
->>  	acpi_status status = AE_NOT_EXIST;
->> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
->> index 2ab1b47c7651..024b5c179348 100644
->> --- a/drivers/pci/pci-label.c
->> +++ b/drivers/pci/pci-label.c
->> @@ -31,8 +31,6 @@
->>  #include <linux/pci-acpi.h>
->>  #include "pci.h"
->>  
->> -#define	DEVICE_LABEL_DSM	0x07
->> -
->>  #ifdef CONFIG_DMI
->>  enum smbios_attr_enum {
->>  	SMBIOS_ATTR_NONE = 0,
->> @@ -148,11 +146,6 @@ static inline void pci_remove_smbiosname_file(struct pci_dev *pdev)
->>  #endif
->>  
->>  #ifdef CONFIG_ACPI
->> -static const char device_label_dsm_uuid[] = {
->> -	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
->> -	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
->> -};
->> -
->>  enum acpi_attr_enum {
->>  	ACPI_ATTR_LABEL_SHOW,
->>  	ACPI_ATTR_INDEX_SHOW,
->> @@ -179,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
->>  	if (!handle)
->>  		return -1;
->>  
->> -	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
->> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
->>  				DEVICE_LABEL_DSM, NULL);
->>  	if (!obj)
->>  		return -1;
->> @@ -219,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
->>  	if (!handle)
->>  		return false;
->>  
->> -	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
->> +	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
->>  				1 << DEVICE_LABEL_DSM);
->>  }
->>  
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index 4091f82239cd..c901ab84cf3b 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -321,4 +321,10 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->>  }
->>  #endif
->>  
->> +#ifdef CONFIG_ACPI
->> +extern const u8 pci_acpi_dsm_uuid[];
->> +
->> +#define DEVICE_LABEL_DSM	0x07
->> +#endif
-> 
-> We have pci-acpi.h.  Maybe define this stuff in there and make the user(s)
-> include that?
-
-No problem.
-
-Thanks,
-Aaron
-
-> 
->> +
->>  #endif /* DRIVERS_PCI_H */
->>
-> 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 81f06e8..fb4a3da 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
+ 	*pinp = pin;
+ 	return PCI_SLOT(dev->devfn);
+ }
++EXPORT_SYMBOL(pci_common_swizzle);
+ 
+ /**
+  *	pci_release_region - Release a PCI bar
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..eb24ef9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1993,6 +1993,7 @@ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(pci_create_root_bus);
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8bd76c9..c523159 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+ 	/* stop the host bridge */
+ 	device_release_driver(&host_bridge->dev);
+ }
++EXPORT_SYMBOL(pci_stop_root_bus);
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+ {
+@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	/* remove the host bridge */
+ 	device_unregister(&host_bridge->dev);
+ }
++EXPORT_SYMBOL(pci_remove_root_bus);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e3e17f3..932c9e5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+ }
++EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 4e2d595..9d2bbb6 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 	for_each_pci_dev(dev)
+ 		pdev_fixup_irq(dev, swizzle, map_irq);
+ }
++EXPORT_SYMBOL(pci_fixup_irqs);
+-- 
+1.7.9.5
 
