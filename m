@@ -1,105 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:28024 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735AbbCYIzf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:55:35 -0400
-Message-ID: <551277E6.1010307@huawei.com>
-Date: Wed, 25 Mar 2015 16:55:02 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v8 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
- code
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com> <1427168064-8657-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-24-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v3 0/9] PCI: MMCONFIG clean up
+Date: Tue, 10 Mar 2015 12:35:11 +0100
+Message-Id: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas and Jason,
-   Do you have any comment for this patch ? In this series, pci_bus_add_devices()
-has been ripped out from pci_scan_root_bus(), so I think the pci_scan_root_bus() is
-almost the same as pci_create_root_bus + pci_scan_child_bus(). And in this series,
-we try to unexport pci_create_root_bus(). It's even better if you could help test this changes.
+MCFG ACPI table and PCI ECAM standard have no arch dependencies so it can be
+used across all architectures. Currently MMCONFIG related code resides in
+arch/x86 directories. This patch set is going to isolate non-architecture
+specific code and make it accessible for all architectures.
 
-Thanks!
-Yijing.
+v2 -> v3 changes:
+- rebase patch set v2 to v4.0-rc1
 
-On 2015/3/24 11:34, Yijing Wang wrote:
-> Mvebu_pcie_scan_bus() is not necessary, we could use
-> pci_common_init_dev() instead of pci_common_init(),
-> and pass the device pointer as the parent. Then
-> pci_scan_root_bus() will be called to scan the pci busses.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> CC: Jason Cooper <jason@lakedaemon.net>
-> ---
->  drivers/pci/host/pci-mvebu.c |   18 +-----------------
->  1 files changed, 1 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 0cfc494..d5a2b70 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->  	return 1;
->  }
->  
-> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> -{
-> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
-> -	struct pci_bus *bus;
-> -
-> -	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
-> -				  &mvebu_pcie_ops, sys, &sys->resources);
-> -	if (!bus)
-> -		return NULL;
-> -
-> -	pci_scan_child_bus(bus);
-> -
-> -	return bus;
-> -}
-> -
->  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
->  						 const struct resource *res,
->  						 resource_size_t start,
-> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
->  	hw.nr_controllers = 1;
->  	hw.private_data   = (void **)&pcie;
->  	hw.setup          = mvebu_pcie_setup;
-> -	hw.scan           = mvebu_pcie_scan_bus;
->  	hw.map_irq        = of_irq_parse_and_map_pci;
->  	hw.ops            = &mvebu_pcie_ops;
->  	hw.align_resource = mvebu_pcie_align_resource;
->  
-> -	pci_common_init(&hw);
-> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
->  }
->  
->  /*
-> 
+v1 -> v2 changes:
+- use generic readb/readw etc. accessors instead of AMD Fam10h workaround
+- separate ACPI and ECAM code
+- improve ECAM code naming
 
+
+Tomasz Nowicki (9):
+  x86, pci: Clean up comment about buggy MMIO config space access for
+    AMD Fam10h CPUs.
+  x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
+    exclusively.
+  x86, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+    out of arch/x86/ directory
+  pci, acpi, mcfg: Provide generic implementation of MCFG code
+    initialization.
+  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+    driver.
+  pci, acpi, mcfg: Share ACPI PCI config space accessors.
+  pci, ecam: Improve naming for ecam.c content and areas where it is
+    used.
+
+ arch/x86/Kconfig               |   3 +
+ arch/x86/include/asm/pci_x86.h |  34 +---
+ arch/x86/pci/Makefile          |   5 +-
+ arch/x86/pci/acpi.c            |   3 +-
+ arch/x86/pci/mmconfig-shared.c | 340 +++++++++++----------------------------
+ arch/x86/pci/mmconfig_32.c     |  47 ++----
+ arch/x86/pci/mmconfig_64.c     | 153 ------------------
+ arch/x86/pci/numachip.c        |  27 +---
+ drivers/acpi/Makefile          |   1 +
+ drivers/acpi/mcfg.c            | 121 ++++++++++++++
+ drivers/pci/Kconfig            |   7 +
+ drivers/pci/Makefile           |   5 +
+ drivers/pci/ecam.c             | 356 +++++++++++++++++++++++++++++++++++++++++
+ drivers/xen/pci.c              |   6 +-
+ include/linux/ecam.h           |  56 +++++++
+ 15 files changed, 668 insertions(+), 496 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
+ create mode 100644 drivers/acpi/mcfg.c
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 include/linux/ecam.h
 
 -- 
-Thanks!
-Yijing
+1.9.1
 
