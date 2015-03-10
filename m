@@ -1,45 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:38477 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753015AbbCDSM7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 13:12:59 -0500
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41216 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbbCJAgK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 20:36:10 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v5 4/4] ARM: dts: enable PCIe support for Cygnus
+Date: Mon, 9 Mar 2015 17:38:06 -0700
+Message-ID: <1425947886-23705-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
+References: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
-	<20150304101649.GA3663@pd.tnic>
-	<alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
-Date: Wed, 4 Mar 2015 10:12:58 -0800
-Message-ID: <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Borislav Petkov <bp@alien8.de>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 4, 2015 at 7:54 AM, Jiri Kosina <jkosina@suse.cz> wrote:
+Add PCIe device nodes in bcm-cygnus.dtsi but keep them disabled there.
+Only enable them for bcm958300k where PCIe interfaces are populated
 
->
-> Also this 15-patch series needs to be separated into two patchsets. The
-> whole series is not appropriate for -rc3, but this particular one at least
-> is a regression fix that has to go in.
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbraden@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-cygnus.dtsi |   42 +++++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/bcm958300k.dts  |    8 +++++++
+ 2 files changed, 50 insertions(+)
 
-The first 4 should go v4.0.
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index ff5fb6a..ee0c6e4 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -90,6 +90,48 @@
+ 		status = "disabled";
+ 	};
+ 
++	pcie0: pcie@18012000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18012000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <0>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
++			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++
++		status = "disabled";
++	};
++
++	pcie1: pcie@18013000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18013000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <1>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
++			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
++
++		status = "disabled";
++	};
++
+ 	uart0: serial@18020000 {
+ 		compatible = "snps,dw-apb-uart";
+ 		reg = <0x18020000 0x100>;
+diff --git a/arch/arm/boot/dts/bcm958300k.dts b/arch/arm/boot/dts/bcm958300k.dts
+index f1bb36f..c9eb856 100644
+--- a/arch/arm/boot/dts/bcm958300k.dts
++++ b/arch/arm/boot/dts/bcm958300k.dts
+@@ -47,6 +47,14 @@
+ 		bootargs = "console=ttyS0,115200";
+ 	};
+ 
++	pcie0: pcie@18012000 {
++		status = "okay";
++	};
++
++	pcie1: pcie@18013000 {
++		status = "okay";
++	};
++
+ 	uart3: serial@18023000 {
+ 		status = "okay";
+ 	};
+-- 
+1.7.9.5
 
-could leave others to v4.1
-
-Thanks
-
-Yinghai
