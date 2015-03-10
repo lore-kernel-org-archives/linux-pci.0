@@ -1,81 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:58553 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbbCCDDL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:03:11 -0500
-Received: by mail-oi0-f46.google.com with SMTP id x69so30869276oia.5
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 19:03:11 -0800 (PST)
-Date: Mon, 2 Mar 2015 21:03:01 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v4 12/30] PCI: Introduce pci_host_bridge_ops to support
- host specific operations
-Message-ID: <20150303030301.GI11978@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
- <1424938344-4017-13-git-send-email-wangyijing@huawei.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:55262 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400AbbCJAf7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 20:35:59 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v5 2/4] pci: iProc: define iProc PCIe platform bus binding
+Date: Mon, 9 Mar 2015 17:38:04 -0700
+Message-ID: <1425947886-23705-3-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
+References: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-13-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:12:06PM +0800, Yijing Wang wrote:
-> Now we have weak functions like pcibios_root_bridge_prepare()
-> to setup pci host bridge, We could introduce pci_host_bridge_ops
-> which contain host bridge specific ops to setup pci_host_bridge.
-> Then host bridge driver could add pci_host_bridge_ops hooks
-> intead of weak function to setup pci_host_bridge.
-> This patch add following pci_host_bridge_ops hooks:
-> 
-> pci_host_bridge_ops {
-> 	/* set root bus speed, some platform need this like powerpc */
-> 	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-> 	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-> 	int (*phb_prepare)(struct pci_host_bridge *host);
-> 	/* platform specific of scan hook to scan pci device */
-> 	void (*phb_of_scan_bus)(struct pci_host_bridge *);
-> }
-> We could easily extend it to support different host bridge
-> specific operations.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ...
+Document the Broadcom iProc PCIe platform interface device tree binding
 
-> @@ -2050,10 +2052,13 @@ static struct pci_bus *__pci_scan_root_bus(
->  		pci_bus_insert_busn_res(b, b->number, 255);
->  	}
->  
-> -	max = pci_scan_child_bus(b);
-> -
-> -	if (!found)
-> -		pci_bus_update_busn_res_end(b, max);
-> +	if (host->ops && host->ops->phb_of_scan_bus) {
-> +		host->ops->phb_of_scan_bus(host);
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbraden@broadcom.com>
+---
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
 
-The important thing here is not the use of OF (Open Firmware/Device Tree),
-is it?  Why would we want "_of_" in the function name?  I assume the intent
-is that this host bridge op performs the same function as
-pci_scan_child_bus(), so I think the op should be called "scan_bus".
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+new file mode 100644
+index 0000000..f7ce50e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -0,0 +1,63 @@
++* Broadcom iProc PCIe controller with the platform bus interface
++
++Required properties:
++- compatible: Must be "brcm,iproc-pcie"
++- reg: base address and length of the PCIe controller I/O register space
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map, standard PCI properties to define the
++  mapping of the PCIe interface to interrupt numbers
++- linux,pci-domain: PCI domain ID. Should be unique for each host controller
++- bus-range: PCI bus numbers covered
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions
++
++Optional properties:
++- phys: phandle of the PCIe PHY device
++- phy-names: must be "pcie-phy"
++
++Example:
++	pcie0: pcie@18012000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18012000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <0>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
++			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++
++		phys = <&phy 0 5>;
++		phy-names = "pcie-phy";
++	};
++
++	pcie1: pcie@18013000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18013000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <1>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
++			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
++
++		phys = <&phy 1 6>;
++		phy-names = "pcie-phy";
++	};
+-- 
+1.7.9.5
 
-> +	} else {
-> +		max = pci_scan_child_bus(b);
-> +		if (!found)
-> +			pci_bus_update_busn_res_end(b, max);
-> +	}
->  
->  	return b;
->  }
