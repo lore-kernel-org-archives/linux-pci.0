@@ -1,63 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43962 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752966AbbCDWY5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Mar 2015 17:24:57 -0500
-From: Mark Salter <msalter@redhat.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Mark Salter <msalter@redhat.com>
-Subject: [PATCH] PCI: xgene: fix breakage from generic config usage
-Date: Wed,  4 Mar 2015 17:24:24 -0500
-Message-Id: <1425507864-22055-1-git-send-email-msalter@redhat.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:44920 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbbCJXOq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 19:14:46 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: bhelgaas@google.com, mingo@redhat.com, tglx@linutronix.de,
+	hpa@zytor.com, pure.logic@nexus-software.ie, jgross@suse.com,
+	luto@amacapital.net, andy.shevchenko@gmail.com,
+	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [RFC v1 0/2] x86: kconfig: simplify APIC entries
+Date: Tue, 10 Mar 2015 16:14:33 -0700
+Message-Id: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 350f8be5bb402 ("PCI: xgene: Convert to use generic config
-accessors") breaks PCI on the X-Gene platform. It creates two
-problems with the xgene_pcie_map_bus() function. First, it returns
-an int but should return a void __iomem *, but that's just a
-compile-time warning. The breakage is caused by the offset not
-being added to the base of the config map. So all config reads
-and writes operate on the first four bytes of config space. This
-patch fixes both issues.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Signed-off-by: Mark Salter <msalter@redhat.com>
----
- drivers/pci/host/pci-xgene.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+There's quite a bit of Kconfig entries related to X86_LOCAL_APIC
+and X86_IO_APIC, and all for 32-bit purposes. Since 32-bit isn't in
+a magical state of flux we now *should* know when to enable or disable
+APIC stuff for these systems. Through history we've observed for
+instance PCI_MSI requires these under specific scenarios, just enable
+it for those learned scenarios and expect future requirements to also
+be explicit about the requirements on 32-bit. This lets us remove
+clutter (3 Kconfig entries) from x86 Kconfig simply for 32-bit build
+purposes.
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 52bb25c..b87f80b 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -129,17 +129,21 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
- 	return false;
- }
- 
--static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
--			      int offset)
-+static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-+					int offset)
- {
- 	struct xgene_pcie_port *port = bus->sysdata;
-+	void __iomem *base;
- 
- 	if ((pci_is_root_bus(bus) && devfn != 0) || !port->link_up ||
- 	    xgene_pcie_hide_rc_bars(bus, offset))
- 		return NULL;
- 
- 	xgene_pcie_set_rtdid_reg(bus, devfn);
--	return xgene_pcie_get_cfg_base(bus);
-+	base = xgene_pcie_get_cfg_base(bus);
-+	if (base)
-+		base += offset;
-+	return base;
- }
- 
- static struct pci_ops xgene_pcie_ops = {
+Luis R. Rodriguez (2):
+  x86: kconfig: simplify enabling [IO]APIC for PCI_MSI
+  x86: kconfig: remove UP [IO]APIC options
+
+ Documentation/PCI/MSI-HOWTO.txt |  5 +----
+ arch/x86/Kconfig                | 33 ++-------------------------------
+ drivers/pci/Kconfig             |  2 ++
+ 3 files changed, 5 insertions(+), 35 deletions(-)
+
 -- 
-1.8.3.1
+2.3.2.209.gd67f9d5.dirty
 
