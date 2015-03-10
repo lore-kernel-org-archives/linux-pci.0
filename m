@@ -1,46 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:12708 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbbCYFNU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:13:20 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
- 64bit (built May  5 2014))
- with ESMTP id <0NLR00BVL566YD80@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 25 Mar 2015 14:13:18 +0900 (KST)
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Liviu.Dudau@arm.com,
-	cpgs@samsung.com, Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH] pci: pci-exynos: fixed the sentence error
-Date: Wed, 25 Mar 2015 14:13:12 +0900
-Message-id: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v3 8/9] pci, acpi, mcfg: Share ACPI PCI config space accessors.
+Date: Tue, 10 Mar 2015 12:35:19 +0100
+Message-Id: <1425987320-15020-9-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is the sentence error.
-Changed the semicolon instead of comma.
+MCFG can be used perfectly for all architectures which support ACPI.
+ACPI mandates MCFG to describe PCI config space ranges which means
+we should use MMCONFIG accessors by default.
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- drivers/pci/host/pci-exynos.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/acpi/mcfg.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index d202b37..c139237 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -396,7 +396,7 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 1e646fc..e285f62 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -13,6 +13,26 @@
  
- 	/* enable INTX interrupt */
- 	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
--		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
-+		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
- 	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
- }
+ #define	PREFIX	"MCFG: "
  
++/*
++ * raw_pci_read/write - ACPI PCI config space accessors.
++ *
++ * ACPI spec defines MCFG table as the way we can describe access to PCI config
++ * space, so let MCFG be default (__weak).
++ *
++ * If platform needs more fancy stuff, should provides its own implementation.
++ */
++int __weak raw_pci_read(unsigned int domain, unsigned int bus,
++			unsigned int devfn, int reg, int len, u32 *val)
++{
++	return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
++}
++
++int __weak raw_pci_write(unsigned int domain, unsigned int bus,
++			 unsigned int devfn, int reg, int len, u32 val)
++{
++	return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
++}
++
+ static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
+ {
 -- 
 1.9.1
 
