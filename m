@@ -1,60 +1,340 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:44277 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbbCHB7R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 20:59:17 -0500
-Received: by igdh15 with SMTP id h15so12952499igd.3
-        for <linux-pci@vger.kernel.org>; Sat, 07 Mar 2015 17:59:16 -0800 (PST)
-Date: Sat, 7 Mar 2015 17:59:14 -0800 (PST)
-From: David Rientjes <rientjes@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiri Kosina <jkosina@suse.cz>, Chun-Yi Lee <jlee@suse.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/8] x86: Kill E820_RESERVED_KERN
-In-Reply-To: <1425776181-10219-2-git-send-email-yinghai@kernel.org>
-Message-ID: <alpine.DEB.2.10.1503071748530.5739@chino.kir.corp.google.com>
-References: <1425776181-10219-1-git-send-email-yinghai@kernel.org> <1425776181-10219-2-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:45114 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbbCJLe6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 07:34:58 -0400
+Received: by lbiz12 with SMTP id z12so922406lbi.12
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 04:34:57 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v3 7/9] x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM driver.
+Date: Tue, 10 Mar 2015 12:35:18 +0100
+Message-Id: <1425987320-15020-8-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 7 Mar 2015, Yinghai Lu wrote:
+Architectures which want to take advantage of ECAM generic goodness
+should select CONFIG_PCI_ECAM_GENERIC. Otherwise, like x86 32bits, machines
+are obligated to provide own low-level ECAM calls.
 
-> Now we are using memblock to do early resource reserver/allocation
-> instead of using e820 map directly, and setup_data is reserved in
-> memblock early already.
-> Also kexec generate setup_data and pass pointer to second kernel,
-> so second kernel reserve setup_data by their own.
-> (Now kexec-tools create SETUP_EFI and SETUP_E820_EXT).
-> 
-> We can kill E820_RESERVED_KERN and not touch e820 map at all.
-> 
-> That will fix bug in mark_nonsave_region that can not handle that
-> case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
-> boundary is not page aligned.
-> 
-> Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+---
+ arch/x86/Kconfig           |   1 +
+ arch/x86/pci/Makefile      |   5 +-
+ arch/x86/pci/mmconfig_64.c | 127 ---------------------------------------------
+ drivers/pci/Kconfig        |   3 ++
+ drivers/pci/ecam.c         | 113 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 121 insertions(+), 128 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
 
-Is this the bug referenced in the commit message that is fixed?  If so, 
-it's only a bug for resume, correct?  I'm not sure if that's clear enough 
-just from the commit message, I was looking at this patch for an e820 
-problem I'm currently facing on 3.3.
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index dd926f4..9f30dab 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -141,6 +141,7 @@ config X86
+ 	select ACPI_LEGACY_TABLES_LOOKUP if ACPI
+ 	select X86_FEATURE_NAMES if PROC_FS
+ 	select SRCU
++	select PCI_ECAM_GENERIC if X86_64
+ 
+ config INSTRUCTION_DECODER
+ 	def_bool y
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 5c6fc35..35c765b 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -1,7 +1,10 @@
+ obj-y				:= i386.o init.o
+ 
+ obj-$(CONFIG_PCI_BIOS)		+= pcbios.o
+-obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_$(BITS).o direct.o mmconfig-shared.o
++obj-$(CONFIG_PCI_MMCONFIG)	+= direct.o mmconfig-shared.o
++ifeq ($(BITS),32)
++obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_32.o
++endif
+ obj-$(CONFIG_PCI_DIRECT)	+= direct.o
+ obj-$(CONFIG_PCI_OLPC)		+= olpc.o
+ obj-$(CONFIG_PCI_XEN)		+= xen.o
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+deleted file mode 100644
+index fd857ea..0000000
+--- a/arch/x86/pci/mmconfig_64.c
++++ /dev/null
+@@ -1,127 +0,0 @@
+-/*
+- * mmconfig.c - Low-level direct PCI config space access via MMCONFIG
+- *
+- * This is an 64bit optimized version that always keeps the full mmconfig
+- * space mapped. This allows lockless config space operation.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/init.h>
+-#include <linux/acpi.h>
+-#include <linux/bitmap.h>
+-#include <linux/rcupdate.h>
+-#include <linux/ecam.h>
+-#include <asm/e820.h>
+-#include <asm/pci_x86.h>
+-
+-#define PREFIX "PCI: "
+-
+-static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
+-{
+-	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+-
+-	if (cfg && cfg->virt)
+-		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
+-	return NULL;
+-}
+-
+-int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+-			  unsigned int devfn, int reg, int len, u32 *value)
+-{
+-	char __iomem *addr;
+-
+-	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+-	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+-err:		*value = -1;
+-		return -EINVAL;
+-	}
+-
+-	rcu_read_lock();
+-	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr) {
+-		rcu_read_unlock();
+-		goto err;
+-	}
+-
+-	*value = pci_mmio_read(len, addr + reg);
+-	rcu_read_unlock();
+-
+-	return 0;
+-}
+-
+-int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+-			   unsigned int devfn, int reg, int len, u32 value)
+-{
+-	char __iomem *addr;
+-
+-	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+-	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+-		return -EINVAL;
+-
+-	rcu_read_lock();
+-	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr) {
+-		rcu_read_unlock();
+-		return -EINVAL;
+-	}
+-
+-	pci_mmio_write(len, addr + reg, value);
+-	rcu_read_unlock();
+-
+-	return 0;
+-}
+-
+-static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+-{
+-	void __iomem *addr;
+-	u64 start, size;
+-	int num_buses;
+-
+-	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+-	num_buses = cfg->end_bus - cfg->start_bus + 1;
+-	size = PCI_MMCFG_BUS_OFFSET(num_buses);
+-	addr = ioremap_nocache(start, size);
+-	if (addr)
+-		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+-	return addr;
+-}
+-
+-int __init pci_mmcfg_arch_init(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		if (pci_mmcfg_arch_map(cfg)) {
+-			pci_mmcfg_arch_free();
+-			return 0;
+-		}
+-
+-	return 1;
+-}
+-
+-void __init pci_mmcfg_arch_free(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		pci_mmcfg_arch_unmap(cfg);
+-}
+-
+-int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
+-{
+-	cfg->virt = mcfg_ioremap(cfg);
+-	if (!cfg->virt) {
+-		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+-void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
+-{
+-	if (cfg && cfg->virt) {
+-		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
+-		cfg->virt = NULL;
+-	}
+-}
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index e2eb982..32e0a73 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -26,6 +26,9 @@ config PCI_ECAM
+ 	bool "Enhanced Configuration Access Mechanism (ECAM)"
+ 	depends on PCI
+ 
++config PCI_ECAM_GENERIC
++	bool
++
+ config PCI_DEBUG
+ 	bool "PCI Debugging"
+ 	depends on PCI && DEBUG_KERNEL
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index f540184..f886796 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -21,6 +21,119 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
++#ifdef CONFIG_PCI_ECAM_GENERIC
++static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
++				  unsigned int devfn)
++{
++	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
++
++	if (cfg && cfg->virt)
++		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
++	return NULL;
++}
++
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++			  unsigned int devfn, int reg, int len, u32 *value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
++err:		*value = -1;
++		return -EINVAL;
++	}
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		goto err;
++	}
++
++	*value = pci_mmio_read(len, addr + reg);
++	rcu_read_unlock();
++
++	return 0;
++}
++
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++			   unsigned int devfn, int reg, int len, u32 value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
++		return -EINVAL;
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		return -EINVAL;
++	}
++
++	pci_mmio_write(len, addr + reg, value);
++	rcu_read_unlock();
++
++	return 0;
++}
++
++static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
++{
++	void __iomem *addr;
++	u64 start, size;
++	int num_buses;
++
++	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
++	num_buses = cfg->end_bus - cfg->start_bus + 1;
++	size = PCI_MMCFG_BUS_OFFSET(num_buses);
++	addr = ioremap_nocache(start, size);
++	if (addr)
++		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
++	return addr;
++}
++
++int __init pci_mmcfg_arch_init(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		if (pci_mmcfg_arch_map(cfg)) {
++			pci_mmcfg_arch_free();
++			return 0;
++		}
++
++	return 1;
++}
++
++void __init pci_mmcfg_arch_free(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		pci_mmcfg_arch_unmap(cfg);
++}
++
++int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	cfg->virt = mcfg_ioremap(cfg);
++	if (!cfg->virt) {
++		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	if (cfg && cfg->virt) {
++		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
++		cfg->virt = NULL;
++	}
++}
++#endif
++
+ static u32
+ pci_mmconfig_generic_read(int len, void __iomem *addr)
+ {
+-- 
+1.9.1
 
-> Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
-> Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
-> Cc: "Lee, Chun-Yi" <jlee@suse.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: stable@vger.kernel.org
-
-Hmm, although the bug is reported for a 3.12 kernel, I assume this is for 
-stable 3.10+?  If so, it should apply fine with the exception of removing 
-e820_reserve_setup_data() from setup_arch() rather than 
-memblock_x86_reserve_range_setup_data().  Or is it for 3.2 as well and 
-needs to be completely rebased for that kernel?
