@@ -1,213 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:27586 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932564AbbCFJgM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:12 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Richard Henderson <rth@twiddle.net>,
-	"Ivan Kokshaysky" <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>, <sparclinux@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 01/29] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-Date: Fri, 6 Mar 2015 17:33:18 +0800
-Message-ID: <1425634426-437-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v3 6/9] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
+Date: Tue, 10 Mar 2015 12:35:17 +0100
+Message-Id: <1425987320-15020-7-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_bus_add_devices() should not be placed in pci_scan_bus().
-Now pci device will be added to driver core once its
-creation. All things left in pci_bus_add_devices() are
-driver attachment and other trivial sysfs things.
-Pci_scan_bus() should be the function responsible for
-scanning PCI devices, not including driver attachment.
-Other, some callers(m68k,unicore32,alpha) of pci_scan_bus()
-will call pci_bus_size_bridges() and pci_bus_assign_resources()
-after pci_scan_bus().
+mmconfig_64.c version is going to be default implementation for arch
+agnostic low-level direct PCI config space accessors for ECAM dirver.
+However, now it initialize raw_pci_ext_ops pointer which is x86 specific
+code only. Moreover, mmconfig_32.c is doing the same thing at the same time.
 
-E.g.
-In m68k
-mcf_pci_init()
-	pci_scan_bus()
-		...
-		pci_bus_add_devices() --- try to attach driver
-	pci_fixup_irqs()
-	pci_bus_size_bridges()
-	pci_bus_assign_resources()
+Move it to mmconfig_shared.c so it becomes common for both and
+mmconfig_64.c turns out to be purely arch agnostic.
 
-Above code flow make pci scan logic obscure, resources should
-be assigned correctly before attaching driver. Because
-pci_scan_bus() mostly be called in system boot path, when
-before drivers are loaded(in module_init), so no pci scan
-issues will occur. Most pci_scan_bus() callers additionally
-call pci_bus_size_bridges() and pci_bus_assign_resources()
-after pci_scan_bus(), we could rip out pci_bus_add_devices()
-for better code readability. After applied this patch,
-pci_scan_bus() should be used like:
-
-pci_scan_bus() (mandatory)
-pci_fixup_irqs() (optional)
-pci_bus_size_bridges() (optional)
-pci_pci_bus_assign_resources() (optional)
-pci_bus_add_devices() (mandatory)
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: Guan Xuetao <gxt@mprc.pku.edu.cn>
-CC: Richard Henderson <rth@twiddle.net>
-CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-CC: Matt Turner <mattst88@gmail.com>
-CC: linux-alpha@vger.kernel.org
-CC: linux-m68k@lists.linux-m68k.org
-CC: sparclinux@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- arch/alpha/kernel/sys_nautilus.c  |    4 ++++
- arch/m68k/coldfire/pci.c          |    1 +
- arch/sparc/kernel/pcic.c          |    3 +++
- arch/unicore32/kernel/pci.c       |   11 +++--------
- drivers/pci/hotplug/ibmphp_core.c |    8 ++++++--
- drivers/pci/probe.c               |    1 -
- 6 files changed, 17 insertions(+), 11 deletions(-)
+ arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
+ arch/x86/pci/mmconfig_32.c     | 10 ++--------
+ arch/x86/pci/mmconfig_64.c     | 11 ++---------
+ include/linux/ecam.h           |  5 +++++
+ 4 files changed, 17 insertions(+), 19 deletions(-)
 
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 837c0fa..700686d 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -207,6 +207,9 @@ nautilus_init_pci(void)
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 5064302..6dfe614 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -29,6 +29,11 @@
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
  
- 	/* Scan our single hose.  */
- 	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
-+	if (!bus)
-+		return;
++const struct pci_raw_ops pci_mmcfg = {
++	.read =		pci_mmcfg_read,
++	.write =	pci_mmcfg_write,
++};
 +
- 	hose->bus = bus;
- 	pcibios_claim_one_bus(bus);
- 
-@@ -253,6 +256,7 @@ nautilus_init_pci(void)
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
- 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
-+	pci_bus_add_devices(bus);
- }
- 
- /*
-diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
-index df96792..d45f087 100644
---- a/arch/m68k/coldfire/pci.c
-+++ b/arch/m68k/coldfire/pci.c
-@@ -319,6 +319,7 @@ static int __init mcf_pci_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
- 	pci_bus_size_bridges(rootbus);
- 	pci_bus_assign_resources(rootbus);
-+	pci_bus_add_devices(rootbus);
- 	return 0;
- }
- 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 6cc78c2..0f4dc6b 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -391,12 +391,15 @@ static void __init pcic_pbm_scan_bus(struct linux_pcic *pcic)
- 	struct linux_pbm_info *pbm = &pcic->pbm;
- 
- 	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
-+	if (!pbm->pci_bus)
-+		return;
- #if 0 /* deadwood transplanted from sparc64 */
- 	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
- 	pci_record_assignments(pbm, pbm->pci_bus);
- 	pci_assign_unassigned(pbm, pbm->pci_bus);
- 	pci_fixup_irq(pbm, pbm->pci_bus);
- #endif
-+	pci_bus_add_devices(pbm->pci_bus);
- }
- 
- /*
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 374a055..3d82024 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -266,17 +266,12 @@ static int __init pci_common_init(void)
- 	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
- 
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		/*
--		 * Size the bridge windows.
--		 */
-+		/* Size the bridge windows. */
- 		pci_bus_size_bridges(puv3_bus);
--
--		/*
--		 * Assign resources.
--		 */
-+		/* Assign resources. */
- 		pci_bus_assign_resources(puv3_bus);
- 	}
--
-+	pci_bus_add_devices(puv3_bus);
- 	return 0;
- }
- subsys_initcall(pci_common_init);
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 96c5c72..1530247 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
-  */
- static u8 bus_structure_fixup(u8 busno)
+ static u32
+ pci_mmconfig_amd_read(int len, void __iomem *addr)
  {
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *b;
- 	struct pci_dev *dev;
- 	u16 l;
- 
-@@ -765,7 +765,11 @@ static u8 bus_structure_fixup(u8 busno)
- 					(l != 0x0000) && (l != 0xffff)) {
- 			debug("%s - Inside bus_structure_fixup()\n",
- 							__func__);
--			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
-+			if (!b)
-+				continue;
-+
-+			pci_bus_add_devices(b);
- 			break;
+@@ -532,9 +537,10 @@ static void __init __pci_mmcfg_init(int early)
  		}
  	}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..88604f2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
- 	if (b) {
- 		pci_scan_child_bus(b);
--		pci_bus_add_devices(b);
- 	} else {
- 		pci_free_resource_list(&resources);
+ 
+-	if (pci_mmcfg_arch_init())
++	if (pci_mmcfg_arch_init()) {
++		raw_pci_ext_ops = &pci_mmcfg;
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+-	else {
++	} else {
+ 		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
  	}
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5cf6291..7a050cb 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
+ 	}
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	unsigned long flags;
+@@ -79,7 +79,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	unsigned long flags;
+@@ -106,15 +106,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ int __init pci_mmcfg_arch_init(void)
+ {
+ 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
+-	raw_pci_ext_ops = &pci_mmcfg;
+ 	return 1;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index b62ff18..fd857ea 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
+ 	return NULL;
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	char __iomem *addr;
+@@ -49,7 +49,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	char __iomem *addr;
+@@ -71,11 +71,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+@@ -101,8 +96,6 @@ int __init pci_mmcfg_arch_init(void)
+ 			return 0;
+ 		}
+ 
+-	raw_pci_ext_ops = &pci_mmcfg;
+-
+ 	return 1;
+ }
+ 
+diff --git a/include/linux/ecam.h b/include/linux/ecam.h
+index 2387df5..fba5d6b 100644
+--- a/include/linux/ecam.h
++++ b/include/linux/ecam.h
+@@ -47,5 +47,10 @@ extern struct list_head pci_mmcfg_list;
+ 
+ #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+ 
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++		   unsigned int devfn, int reg, int len, u32 *value);
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++		    unsigned int devfn, int reg, int len, u32 value);
++
+ #endif  /* __KERNEL__ */
+ #endif  /* __ECAM_H */
 -- 
-1.7.1
+1.9.1
 
