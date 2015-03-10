@@ -1,11 +1,11 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:43642 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbbCJU4z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 16:56:55 -0400
-Received: by oibg201 with SMTP id g201so4053343oib.10
-        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 13:56:55 -0700 (PDT)
-Date: Tue, 10 Mar 2015 15:56:51 -0500
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:45073 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbbCJWqt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 18:46:49 -0400
+Received: by obbnt9 with SMTP id nt9so5102262obb.12
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 15:46:49 -0700 (PDT)
+Date: Tue, 10 Mar 2015 17:46:46 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
 To: Ray Jui <rjui@broadcom.com>
 Cc: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
@@ -16,106 +16,114 @@ Cc: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
 	Scott Branden <sbranden@broadcom.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
-Subject: Re: [PATCH v5 1/4] PCI: Export symbols of PCI functions
-Message-ID: <20150310205651.GA32204@google.com>
+	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org,
+	Rob Herring <robh@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [PATCH v5 3/4] pci: iproc: Add Broadcom iProc PCIe support
+Message-ID: <20150310224646.GC32204@google.com>
 References: <1425947886-23705-1-git-send-email-rjui@broadcom.com>
- <1425947886-23705-2-git-send-email-rjui@broadcom.com>
+ <1425947886-23705-4-git-send-email-rjui@broadcom.com>
+ <20150310214010.GB32204@google.com>
+ <54FF6EAC.90603@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425947886-23705-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <54FF6EAC.90603@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 05:38:03PM -0700, Ray Jui wrote:
-> Export symbols of the following PCI functions so they can be referenced
-> by a PCI driver compiled as a kernel loadable module:
+On Tue, Mar 10, 2015 at 03:22:36PM -0700, Ray Jui wrote:
+> Hi Bjorn,
 > 
-> pci_common_swizzle
-> pci_create_root_bus
-> pci_stop_root_bus
-> pci_remove_root_bus
-> pci_assign_unassigned_bus_resources
-> pci_fixup_irqs
+> On 3/10/2015 2:40 PM, Bjorn Helgaas wrote:
+> > [+cc Rob, Yijing]
+> > 
+> > On Mon, Mar 09, 2015 at 05:38:05PM -0700, Ray Jui wrote:
+> >> This adds the support for Broadcom iProc PCIe controller
+> >>
+> >> pcie-iproc.c servers as the common core driver, and front-end bus
+> >> interface needs to be added to support different bus interfaces
+> >>
+> >> pcie-iproc-pltfm.c contains the support for the platform bus interface
+> >>
+> >> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> >> Reviewed-by: Scott Branden <sbraden@broadcom.com>
+> >> ---
+> >>  drivers/pci/host/Kconfig            |   17 ++
+> >>  drivers/pci/host/Makefile           |    2 +
+> >>  drivers/pci/host/pcie-iproc-pltfm.c |  108 +++++++++++
+> >>  drivers/pci/host/pcie-iproc.c       |  351 +++++++++++++++++++++++++++++++++++
+> >>  drivers/pci/host/pcie-iproc.h       |   42 +++++
+> >>  5 files changed, 520 insertions(+)
+> >>  create mode 100644 drivers/pci/host/pcie-iproc-pltfm.c
+> >>  create mode 100644 drivers/pci/host/pcie-iproc.c
+> >>  create mode 100644 drivers/pci/host/pcie-iproc.h
+> >>
+> >> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> >> index 7b892a9..f4d9c90 100644
+> >> --- a/drivers/pci/host/Kconfig
+> >> +++ b/drivers/pci/host/Kconfig
+> >> @@ -106,4 +106,21 @@ config PCI_VERSATILE
+> >>  	bool "ARM Versatile PB PCI controller"
+> >>  	depends on ARCH_VERSATILE
+> >>  
+> >> +config PCIE_IPROC
+> >> +	tristate "Broadcom iProc PCIe controller"
+> >> +	help
+> >> +	  This enables the iProc PCIe core controller support for Broadcom's
+> >> +	  iProc family of SoCs. An appropriate bus interface driver also needs
+> >> +	  to be enabled
+> >> +
+> >> +config PCIE_IPROC_PLTFM
+> >> +	tristate "Broadcom iProc PCIe platform bus driver"
+> >> +	depends on ARCH_BCM_IPROC || COMPILE_TEST
+> >> +	depends on OF
+> >> +	select PCIE_IPROC
+> >> +	default ARCH_BCM_IPROC
+> >> +	help
+> >> +	  Say Y here if you want to use the Broadcom iProc PCIe controller
+> >> +	  through the generic platform bus interface
+> > 
+> > Do you anticipate additional front-end bus interfaces?  If not, and maybe
+> > even if you do, you might squash everything into pcie-iproc.c.  Then you
+> > only need one file (no .h file needed) and the package is a little
+> > simpler.  I think it's pretty common to have multiple driver registration
+> > methods in the same file (OF, PCI, ACPI, etc.)  And I think it's common to
+> > have those methods guarded by the generic config symbol (CONFIG_PCI,
+> > CONFIG_OF, etc.) rather than defining new ones specific to the driver.
+> 
+> Yes I do expect Hauke (CCed) to add BCMA bus front end support later.
+> 
+> I still think having the front end bus driver separated is cleaner and
+> may be less troublesome for Hauke to add BCMA support in the future. But
+> if you strongly favor having everything stuffed in one single file, I
+> can make that change. Please let me know.
 
-Have you tested your driver as a loadable module?
+OK, just leave it as-is.
 
-If it works to load/unload/reload/etc., I'm OK with exporting these
-symbols.  I would prefer EXPORT_SYMBOL_GPL, though, because these don't
-constitute a very coherent interface right now, and they will likely be
-reworked.  For example, see Yijing Wang's work to sort out the
-pci_bus_add_devices() / resource assignment mess.
+> >> +#define INVALID_ACCESS_OFFSET 0xffffffff
+> >> +static u32 iproc_pcie_cfg_base(struct iproc_pcie *pcie, int busno,
+> >> +			       unsigned int devfn, int where)
+> >> +{
+> >> +	int slot = PCI_SLOT(devfn);
+> >> +	int fn = PCI_FUNC(devfn);
+> >> +	u32 val;
+> >> +
+> > 
+> > Would you mind adding a comment to the effect that
+> > CFG_IND_ADDR_OFFSET/CFG_IND_DATA_OFFSET and
+> > CFG_ADDR_OFFSET/CFG_DATA_OFFSET are protected by pci_lock?
+> > 
+> > They obviously need a mutex, and while I don't have any plans to
+> > change it, I'm not completely 100% sure that pci_lock is the best
+> > place for it.
+> 
+> Sorry I don't get what you want me to do here. Do you want me to add
+> some comment to explain that the struct pci_ops read/write callbacks are
+> already protected at the upper layer by the pci_lock spinlock and
+> therefore no lock is required in this driver?
+
+Nothing fancy; something like this that "git grep pci_lock" will find:
+
+  /* addr/data must used atomically and are protected by pci_lock */
 
 Bjorn
-
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> ---
->  drivers/pci/pci.c       |    1 +
->  drivers/pci/probe.c     |    1 +
->  drivers/pci/remove.c    |    2 ++
->  drivers/pci/setup-bus.c |    1 +
->  drivers/pci/setup-irq.c |    1 +
->  5 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 81f06e8..fb4a3da 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
->  	*pinp = pin;
->  	return PCI_SLOT(dev->devfn);
->  }
-> +EXPORT_SYMBOL(pci_common_swizzle);
->  
->  /**
->   *	pci_release_region - Release a PCI bar
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8d2f400..eb24ef9 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1993,6 +1993,7 @@ err_out:
->  	kfree(b);
->  	return NULL;
->  }
-> +EXPORT_SYMBOL(pci_create_root_bus);
->  
->  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
->  {
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8bd76c9..c523159 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
->  	/* stop the host bridge */
->  	device_release_driver(&host_bridge->dev);
->  }
-> +EXPORT_SYMBOL(pci_stop_root_bus);
->  
->  void pci_remove_root_bus(struct pci_bus *bus)
->  {
-> @@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	/* remove the host bridge */
->  	device_unregister(&host_bridge->dev);
->  }
-> +EXPORT_SYMBOL(pci_remove_root_bus);
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index e3e17f3..932c9e5 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  	__pci_bus_assign_resources(bus, &add_list, NULL);
->  	BUG_ON(!list_empty(&add_list));
->  }
-> +EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 4e2d595..9d2bbb6 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->  	for_each_pci_dev(dev)
->  		pdev_fixup_irq(dev, swizzle, map_irq);
->  }
-> +EXPORT_SYMBOL(pci_fixup_irqs);
-> -- 
-> 1.7.9.5
-> 
