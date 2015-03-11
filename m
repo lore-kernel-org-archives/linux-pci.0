@@ -1,64 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:36320 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752731AbbCWMoW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:22 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v7 26/31] PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-Date: Mon, 23 Mar 2015 20:40:52 +0800
-Message-ID: <1427114457-16687-27-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-la0-f41.google.com ([209.85.215.41]:38194 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbbCKOMl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:41 -0400
+Received: by labhs14 with SMTP id hs14so8564871lab.5
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:39 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v4 3/9] x86, pci: Reorder logic of pci_mmconfig_insert() function
+Date: Wed, 11 Mar 2015 15:12:43 +0100
+Message-Id: <1426083169-8698-4-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_scan_root_bus() instead of pci_create_root_bus() +
-pci_scan_child_bus() for simplicity.
+This patch is the first step for MMCONFIG refactoring process.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tanmay Inamdar <tinamdar@apm.com>
+Code that uses pci_mmcfg_lock will be moved to common file and become
+accessible for all architectures. pci_mmconfig_insert() cannot be moved
+so easily since it is mixing generic mmconfig code with x86 specific logic
+inside of mutual exclusive block guarded by pci_mmcfg_lock.
+
+To get rid of that constraint, we reorder actions as follow:
+1. mmconfig entry allocation can be done first, no need to lock
+2. insertion to iomem_resource has its own lock, no need to wrap it into mutex
+3. insertion to mmconfig list can be done as the final step in separate
+function (candidate for further refactoring)
+
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- drivers/pci/host/pci-xgene.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ arch/x86/pci/mmconfig-shared.c | 100 ++++++++++++++++++++++-------------------
+ 1 file changed, 54 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 078e853..380c259 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 8b3bc4f..685cd4c 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -834,6 +834,39 @@ static int __init pci_mmcfg_late_insert_resources(void)
+  */
+ late_initcall(pci_mmcfg_late_insert_resources);
  
--	bus = pci_create_root_bus(&pdev->dev, -1, 0,
-+	bus = pci_scan_root_bus(&pdev->dev, -1, 0,
- 					&xgene_pcie_ops, port, &res);
- 	if (!bus)
- 		return -ENOMEM;
++static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
++{
++	struct pci_mmcfg_region *cfg_conflict;
++	int err = 0;
++
++	mutex_lock(&pci_mmcfg_lock);
++	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
++	if (cfg_conflict) {
++		if (cfg_conflict->end_bus < cfg->end_bus)
++			pr_info(FW_INFO "MMCONFIG for "
++				"domain %04x [bus %02x-%02x] "
++				"only partially covers this bridge\n",
++				cfg_conflict->segment, cfg_conflict->start_bus,
++				cfg_conflict->end_bus);
++		err = -EEXIST;
++		goto out;
++	}
++
++	if (pci_mmcfg_arch_map(cfg)) {
++		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
++		err = -ENOMEM;
++		goto out;
++	} else {
++		list_add_sorted(cfg);
++		pr_info("MMCONFIG at %pR (base %#lx)\n",
++			&cfg->res, (unsigned long)cfg->address);
++
++	}
++out:
++	mutex_unlock(&pci_mmcfg_lock);
++	return err;
++}
++
+ /* Add MMCFG information for host bridges */
+ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			phys_addr_t addr)
+@@ -845,66 +878,41 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+ 		return -ENODEV;
  
--	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
- 	pci_bus_add_devices(bus);
+-	if (start > end)
++	if (start > end || !addr)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&pci_mmcfg_lock);
+-	cfg = pci_mmconfig_lookup(seg, start);
+-	if (cfg) {
+-		if (cfg->end_bus < end)
+-			dev_info(dev, FW_INFO
+-				 "MMCONFIG for "
+-				 "domain %04x [bus %02x-%02x] "
+-				 "only partially covers this bridge\n",
+-				  cfg->segment, cfg->start_bus, cfg->end_bus);
+-		mutex_unlock(&pci_mmcfg_lock);
+-		return -EEXIST;
+-	}
+-
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
+-		return -EINVAL;
+-	}
+-
+ 	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+ 	if (cfg == NULL) {
+ 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
+-		rc = -ENOMEM;
++		return -ENOMEM;
+ 	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
+ 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
+ 			 &cfg->res);
+-	} else {
+-		/* Insert resource if it's not in boot stage */
+-		if (pci_mmcfg_running_state)
+-			tmp = insert_resource_conflict(&iomem_resource,
+-						       &cfg->res);
+-
+-		if (tmp) {
+-			dev_warn(dev,
+-				 "MMCONFIG %pR conflicts with "
+-				 "%s %pR\n",
+-				 &cfg->res, tmp->name, tmp);
+-		} else if (pci_mmcfg_arch_map(cfg)) {
+-			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
+-				 &cfg->res);
+-		} else {
+-			list_add_sorted(cfg);
+-			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
+-				 &cfg->res, (unsigned long)addr);
+-			cfg = NULL;
+-			rc = 0;
+-		}
++		goto error;
+ 	}
+ 
+-	if (cfg) {
+-		if (cfg->res.parent)
+-			release_resource(&cfg->res);
+-		kfree(cfg);
++	/* Insert resource if it's not in boot stage */
++	if (pci_mmcfg_running_state)
++		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
++
++	if (tmp) {
++		dev_warn(dev,
++			 "MMCONFIG %pR conflicts with %s %pR\n",
++			 &cfg->res, tmp->name, tmp);
++		goto error;
+ 	}
+ 
+-	mutex_unlock(&pci_mmcfg_lock);
++	rc = pci_mmconfig_inject(cfg);
++	if (rc)
++		goto error;
++
++	return 0;
+ 
++error:
++	if (cfg->res.parent)
++		release_resource(&cfg->res);
++	kfree(cfg);
+ 	return rc;
+ }
  
 -- 
-1.7.1
+1.9.1
 
