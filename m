@@ -1,60 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:47322 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665AbbCQMWm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2015 08:22:42 -0400
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-To: linux@arm.linux.org.uk
-Cc: linux-kernel@codethink.co.uk,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Linux ARM Kernel list <linux-arm-kernel@lists.infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI List <linux-pci@vger.kernel.org>
-Subject: [PATCH] ARM: add PCI hotplug support
-Date: Tue, 17 Mar 2015 12:22:32 +0000
-Message-Id: <1426594952-1456-1-git-send-email-ben.dooks@codethink.co.uk>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:46123 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbbCKOMd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:33 -0400
+Received: by labgm9 with SMTP id gm9so9003745lab.13
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:32 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v4 0/9] PCI: MMCONFIG clean up
+Date: Wed, 11 Mar 2015 15:12:40 +0100
+Message-Id: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hotplug on PCIe should work with ARM, however the necessary
-PCIe hotplug is not availale as the menu items for PCI hotplug
-have not been included.
+MCFG ACPI table and PCI ECAM standard have no arch dependencies so it can be
+used across all architectures. Currently MMCONFIG related code resides in
+arch/x86 directories. This patch set is going to isolate non-architecture
+specific code and make it accessible for all architectures.
 
-Add the include of PCI hotplug support to the ARM main Kconfig
-so that it can be selected.
+v3 -> v4 changes:
+- bug fixes after kbuild test robot report
+    - add asm/io.h header for ecam.c
+    - rename mmcfg -> ecam for drivers/xen/pci.c and arch/x86/pci/numachip.c
+- rework Kconfig logic
 
-The only issue that was found during this is that the PCI code
-did not assign interrupts properly to newly probed devices. This
-will need to be fixed for any interrupt capable devices.
+v2 -> v3 changes:
+- rebase patch set v2 to v4.0-rc1
 
-This has been tested on a Marvell 88F6281 with a TI XIO3130
-PCIe bridge (with hotplug enabled) and fixes for IRQ assignment
-added.
+v1 -> v2 changes:
+- use generic readb/readw etc. accessors instead of AMD Fam10h workaround
+- separate ACPI and ECAM code
+- improve ECAM code naming
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
---
-CC: Linux ARM Kernel list <linux-arm-kernel@lists.infradead.org>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Linux PCI List <linux-pci@vger.kernel.org>
----
- arch/arm/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Tomasz Nowicki (9):
+  x86, pci: Clean up comment about buggy MMIO config space access for
+    AMD Fam10h CPUs.
+  x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
+    exclusively.
+  x86, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+    out of arch/x86/ directory
+  pci, acpi, mcfg: Provide generic implementation of MCFG code
+    initialization.
+  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+    driver.
+  pci, acpi, mcfg: Share ACPI PCI config space accessors.
+  pci, ecam: Improve naming for ecam.c content and areas where it is
+    used.
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 9f1f09a..4574ab4 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1302,6 +1302,7 @@ config PCI_HOST_ITE8152
- 	select DMABOUNCE
- 
- source "drivers/pci/Kconfig"
-+source "drivers/pci/hotplug/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pcmcia/Kconfig"
+ arch/x86/Kconfig               |   4 +
+ arch/x86/include/asm/pci_x86.h |  34 +---
+ arch/x86/pci/Makefile          |   5 +-
+ arch/x86/pci/acpi.c            |   3 +-
+ arch/x86/pci/mmconfig-shared.c | 346 +++++++++++----------------------------
+ arch/x86/pci/mmconfig_32.c     |  47 ++----
+ arch/x86/pci/mmconfig_64.c     | 153 ------------------
+ arch/x86/pci/numachip.c        |  29 +---
+ drivers/acpi/Makefile          |   1 +
+ drivers/acpi/mcfg.c            | 121 ++++++++++++++
+ drivers/pci/Kconfig            |  10 ++
+ drivers/pci/Makefile           |   5 +
+ drivers/pci/ecam.c             | 358 +++++++++++++++++++++++++++++++++++++++++
+ drivers/xen/pci.c              |   7 +-
+ include/linux/ecam.h           |  56 +++++++
+ 15 files changed, 679 insertions(+), 500 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
+ create mode 100644 drivers/acpi/mcfg.c
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 include/linux/ecam.h
+
 -- 
-2.1.4
+1.9.1
 
