@@ -1,241 +1,179 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v9 07/10] iommu/vt-d: enable kdump support in iommu module
-Date: Thu, 19 Mar 2015 13:36:25 +0800
-Message-Id: <1426743388-26908-8-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:54447 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbbCKVe5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 17:34:57 -0400
+Date: Wed, 11 Mar 2015 22:34:45 +0100
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Darren Hart <dvhart@infradead.org>
+Cc: platform-driver-x86@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Petri Hodju <petrihodju@yahoo.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb changes
+Message-ID: <20150311223445.6af76f7c@neptune.home>
+In-Reply-To: <CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
+References: <20150223215155.18444386@neptune.home>
+	<20150303172753.GF83894@vmdeb7>
+	<20150305232038.1873d380@neptune.home>
+	<20150306174254.GB19001@vmdeb7>
+	<20150307011546.0050279d@neptune.home>
+	<20150309225238.0b9ced4e@neptune.home>
+	<CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Modify the operation of the following functions when called during crash dump:
-    device_to_context_entry
-    free_context_table
-    get_domain_for_dev
-    init_dmars
-    intel_iommu_init
+As GMUX depends on IO for iGP to be enabled and active, lock the IO at
+vgaarb level. This should prevent GPU driver for dGPU to disable IO for
+iGP while it tries to own legacy VGA IO.
 
-Bill Sumner:
-    Original version.
+This fixes usage of backlight control combined with closed nvidia
+driver on some Apple dual-GPU (intel/nvidia) systems.
 
-Zhenhua:
-    The name of new calling functions.
-    Do not disable and re-enable TE in kdump kernel.
-    Use the did and gaw from old context entry;
+On those systems loading nvidia driver disables intel IO decoding,
+disabling the gmux backlight controls as a side effect.
+Prior to commits moving boot_vga from (optional) efifb to less optional
+vgaarb this mis-behavior could be avoided by using right kernel config
+(efifb enabled but vgaarb disabled).
 
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+This patch explicitly does not try to trigger vgaarb changes in order
+to avoid confusing already running graphics drivers. If IO has been
+mis-configured by vgaarb gmux will thus fail to probe.
+It is expected to load/probe gmux prior to graphics drivers.
+
+Fixes: ce027dac592c0ada241ce0f95ae65856828ac450 # nvidia interaction
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=86121
+Reported-by: Petri Hodju <petrihodju@yahoo.com>
+Tested-by: Petri Hodju <petrihodju@yahoo.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
 ---
- drivers/iommu/intel-iommu.c | 118 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 103 insertions(+), 15 deletions(-)
+Resending v2 in the hope Darren won't hit quoted-printable.
+Also adding linux-pci on CC by Bjorn's request in bugzilla.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 44f3369..312f06b 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -841,6 +841,11 @@ static struct context_entry * device_to_context_entry(struct intel_iommu *iommu,
- 		set_root_value(root, phy_addr);
- 		set_root_present(root);
- 		__iommu_flush_cache(iommu, root, sizeof(*root));
-+
-+#ifdef CONFIG_CRASH_DUMP
-+		if (is_kdump_kernel())
-+			__iommu_update_old_root_entry(iommu, bus);
-+#endif
- 	}
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 	return &context[devfn];
-@@ -892,7 +897,8 @@ static void free_context_table(struct intel_iommu *iommu)
+Changes since v2:
+- Renamed gmux_find_pdev to gmux_get_io_pdev
+- Whitespace fix
+- vga_put() on error path
+
+Changes since v1:
+- Dropped repeat of gmux in pr_info/pr_err calls
+- Mention PCI device we tried to lock IO for in case of error
+
+
+ drivers/platform/x86/apple-gmux.c | 48 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 47 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/platform/x86/apple-gmux.c b/drivers/platform/x86/apple-gmux.c
+index b9429fb..e743b03 100644
+--- a/drivers/platform/x86/apple-gmux.c
++++ b/drivers/platform/x86/apple-gmux.c
+@@ -22,6 +22,7 @@
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/vga_switcheroo.h>
++#include <linux/vgaarb.h>
+ #include <acpi/video.h>
+ #include <asm/io.h>
  
- 	spin_lock_irqsave(&iommu->lock, flags);
- 	if (!iommu->root_entry) {
--		goto out;
-+		spin_unlock_irqrestore(&iommu->lock, flags);
-+		return;
- 	}
- 	for (i = 0; i < ROOT_ENTRY_NR; i++) {
- 		root = &iommu->root_entry[i];
-@@ -900,10 +906,23 @@ static void free_context_table(struct intel_iommu *iommu)
- 		if (context)
- 			free_pgtable_page(context);
- 	}
-+
-+#ifdef CONFIG_CRASH_DUMP
-+	if (is_kdump_kernel()) {
-+		iommu->root_entry_old_phys = 0;
-+		root = iommu->root_entry_old_virt;
-+		iommu->root_entry_old_virt = NULL;
-+	}
-+#endif
- 	free_pgtable_page(iommu->root_entry);
- 	iommu->root_entry = NULL;
--out:
-+
- 	spin_unlock_irqrestore(&iommu->lock, flags);
-+
-+#ifdef CONFIG_CRASH_DUMP
-+	if (is_kdump_kernel())
-+		iounmap(root);
-+#endif
+@@ -31,6 +32,7 @@ struct apple_gmux_data {
+ 	bool indexed;
+ 	struct mutex index_lock;
+ 
++	struct pci_dev *pdev;
+ 	struct backlight_device *bdev;
+ 
+ 	/* switcheroo data */
+@@ -415,6 +417,23 @@ static int gmux_resume(struct device *dev)
+ 	return 0;
  }
  
- static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
-@@ -2322,6 +2341,9 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	unsigned long flags;
- 	u8 bus, devfn;
- 	int did = -1;   /* Default to "no domain_id supplied" */
-+#ifdef CONFIG_CRASH_DUMP
-+	struct context_entry *ce = NULL;
-+#endif /* CONFIG_CRASH_DUMP */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2355,6 +2377,22 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
++static struct pci_dev *gmux_get_io_pdev(void)
++{
++	struct pci_dev *pdev = NULL;
 +
-+#ifdef CONFIG_CRASH_DUMP
-+	if (is_kdump_kernel()) {
-+		/*
-+		 * if this device had a did in the old kernel
-+		 * use its values instead of generating new ones
-+		 */
-+		ce = device_to_existing_context_entry(iommu, bus, devfn);
++	while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, pdev))) {
++		u16 cmd;
 +
-+		if (ce) {
-+			did = context_domain_id(ce);
-+			gaw = agaw_to_width(context_address_width(ce));
-+		}
++		pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++		if (!(cmd & PCI_COMMAND_IO))
++			continue;
++
++		return pdev;
 +	}
-+#endif /* CONFIG_CRASH_DUMP */
 +
- 	domain->id = iommu_attach_domain_with_id(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
-@@ -2889,14 +2927,33 @@ static int __init init_dmars(void)
- 		if (ret)
- 			goto free_iommu;
- 
--		/*
--		 * TBD:
--		 * we could share the same root & context tables
--		 * among all IOMMU's. Need to Split it later.
--		 */
--		ret = iommu_alloc_root_entry(iommu);
--		if (ret)
--			goto free_iommu;
-+#ifdef CONFIG_CRASH_DUMP
-+		if (is_kdump_kernel()) {
-+			pr_info("IOMMU Copying translate tables from panicked kernel\n");
-+			ret = intel_iommu_load_translation_tables(drhd);
-+			if (ret) {
-+				pr_err("IOMMU: Copy translate tables failed\n");
++	return NULL;
++}
 +
-+				/* Best to stop trying */
-+				goto free_iommu;
-+			}
-+			pr_info("IOMMU: root_cache:0x%12.12llx phys:0x%12.12llx\n",
-+				(u64)iommu->root_entry,
-+				(u64)iommu->root_entry_old_phys);
-+		} else {
-+#endif /* CONFIG_CRASH_DUMP */
-+			/*
-+			 * TBD:
-+			 * we could share the same root & context tables
-+			 * among all IOMMU's. Need to Split it later.
-+			 */
-+			ret = iommu_alloc_root_entry(iommu);
-+			if (ret)
-+				goto free_iommu;
-+#ifdef CONFIG_CRASH_DUMP
-+		}
-+#endif
-+
- 		if (!ecap_pass_through(iommu->ecap))
- 			hw_pass_through = 0;
- 	}
-@@ -2913,6 +2970,16 @@ static int __init init_dmars(void)
+ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
+ {
+ 	struct apple_gmux_data *gmux_data;
+@@ -425,6 +444,7 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
+ 	int ret = -ENXIO;
+ 	acpi_status status;
+ 	unsigned long long gpe;
++	struct pci_dev *pdev = NULL;
  
- 	check_tylersburg_isoch();
+ 	if (apple_gmux_data)
+ 		return -EBUSY;
+@@ -475,7 +495,7 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
+ 			ver_minor = (version >> 16) & 0xff;
+ 			ver_release = (version >> 8) & 0xff;
+ 		} else {
+-			pr_info("gmux device not present\n");
++			pr_info("gmux device not present or IO disabled\n");
+ 			ret = -ENODEV;
+ 			goto err_release;
+ 		}
+@@ -483,6 +503,23 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
+ 	pr_info("Found gmux version %d.%d.%d [%s]\n", ver_major, ver_minor,
+ 		ver_release, (gmux_data->indexed ? "indexed" : "classic"));
  
-+#ifdef CONFIG_CRASH_DUMP
 +	/*
-+	 * In the crashdump kernel: Skip setting-up new domains for
-+	 * si, rmrr, and the isa bus on the expectation that these
-+	 * translations were copied from the old kernel.
++	 * Apple systems with gmux are EFI based and normally don't use
++	 * VGA. In addition changing IO+MEM ownership between IGP and dGPU
++	 * disables IO/MEM used for backlight control on some systems.
++	 * Lock IO+MEM to GPU with active IO to prevent switch.
 +	 */
-+	if (is_kdump_kernel())
-+		goto skip_new_domains_for_si_rmrr_isa;
-+#endif /* CONFIG_CRASH_DUMP */
++	pdev = gmux_get_io_pdev();
++	if (pdev && vga_tryget(pdev,
++			       VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM)) {
++		pr_err("IO+MEM vgaarb-locking for PCI:%s failed\n",
++			pci_name(pdev));
++		ret = -EBUSY;
++		goto err_release;
++	} else if (pdev)
++		pr_info("locked IO for PCI:%s\n", pci_name(pdev));
++	gmux_data->pdev = pdev;
 +
- 	/*
- 	 * If pass through is not set or not enabled, setup context entries for
- 	 * identity mappings for rmrr, gfx, and isa and may fall back to static
-@@ -2953,6 +3020,10 @@ static int __init init_dmars(void)
- 
- 	iommu_prepare_isa();
- 
-+#ifdef CONFIG_CRASH_DUMP
-+skip_new_domains_for_si_rmrr_isa:;
-+#endif /* CONFIG_CRASH_DUMP */
-+
- 	/*
- 	 * for each drhd
- 	 *   enable fault log
-@@ -2981,7 +3052,15 @@ static int __init init_dmars(void)
- 
- 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
- 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
--		iommu_enable_translation(iommu);
-+
-+#ifdef CONFIG_CRASH_DUMP
-+		if (is_kdump_kernel()) {
-+			if (!(iommu->gcmd & DMA_GCMD_TE))
-+				iommu_enable_translation(iommu);
-+		} else
-+#endif
-+			iommu_enable_translation(iommu);
-+
- 		iommu_disable_protect_mem_regions(iommu);
+ 	memset(&props, 0, sizeof(props));
+ 	props.type = BACKLIGHT_PLATFORM;
+ 	props.max_brightness = gmux_read32(gmux_data, GMUX_PORT_MAX_BRIGHTNESS);
+@@ -574,6 +611,10 @@ err_enable_gpe:
+ err_notify:
+ 	backlight_device_unregister(bdev);
+ err_release:
++	if (gmux_data->pdev)
++		vga_put(gmux_data->pdev,
++			VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM);
++	pci_dev_put(pdev);
+ 	release_region(gmux_data->iostart, gmux_data->iolen);
+ err_free:
+ 	kfree(gmux_data);
+@@ -593,6 +634,11 @@ static void gmux_remove(struct pnp_dev *pnp)
+ 					   &gmux_notify_handler);
  	}
  
-@@ -4266,12 +4345,21 @@ int __init intel_iommu_init(void)
- 		goto out_free_dmar;
- 	}
++	if (gmux_data->pdev) {
++		vga_put(gmux_data->pdev,
++			VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM);
++		pci_dev_put(gmux_data->pdev);
++	}
+ 	backlight_device_unregister(gmux_data->bdev);
  
-+#ifdef CONFIG_CRASH_DUMP
- 	/*
--	 * Disable translation if already enabled prior to OS handover.
-+	 * If (This is the crash kernel)
-+	 *    Skip disabling the iommu hardware translations
- 	 */
--	for_each_active_iommu(iommu, drhd)
--		if (iommu->gcmd & DMA_GCMD_TE)
--			iommu_disable_translation(iommu);
-+	if (is_kdump_kernel()) {
-+		pr_info("IOMMU Skip disabling iommu hardware translations\n");
-+	} else
-+#endif /* CONFIG_CRASH_DUMP */
-+		/*
-+		 * Disable translation if already enabled prior to OS handover.
-+		 */
-+		for_each_active_iommu(iommu, drhd)
-+			if (iommu->gcmd & DMA_GCMD_TE)
-+				iommu_disable_translation(iommu);
- 
- 	if (dmar_dev_scope_init() < 0) {
- 		if (force_on)
--- 
-2.0.0-rc0
-
+ 	release_region(gmux_data->iostart, gmux_data->iolen);
