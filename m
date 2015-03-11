@@ -1,163 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28855 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935903AbbCDIBj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:39 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 11/15] x86, boot: Add add_pci handler for SETUP_PCI
-Date: Wed,  4 Mar 2015 00:00:44 -0800
-Message-Id: <1425456048-16236-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:44947 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbbCKChC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 22:37:02 -0400
+Received: by oifu20 with SMTP id u20so5323372oif.11
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 19:37:01 -0700 (PDT)
+Date: Tue, 10 Mar 2015 21:36:58 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 10/21] PCI: Consider additional PF's IOV BAR
+ alignment in sizing and assigning
+Message-ID: <20150311023658.GA10994@google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224084152.GG6220@google.com>
+ <20150302073247.GE21571@richard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150302073247.GE21571@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let it reserve setup_data, and keep it's own list.
+On Mon, Mar 02, 2015 at 03:32:47PM +0800, Wei Yang wrote:
+> On Tue, Feb 24, 2015 at 02:41:52AM -0600, Bjorn Helgaas wrote:
+> >On Tue, Feb 24, 2015 at 02:34:06AM -0600, Bjorn Helgaas wrote:
+> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+> >> 
+> >> When sizing and assigning resources, we divide the resources into two
+> >> lists: the requested list and the additional list.  We don't consider the
+> >> alignment of additional VF(n) BAR space.
+> >> 
+> >> This is reasonable because the alignment required for the VF(n) BAR space
+> >> is the size of an individual VF BAR, not the size of the space for *all*
+> >> VFs.  But some platforms, e.g., PowerNV, require additional alignment.
+> >> 
+> >> Consider the additional IOV BAR alignment when sizing and assigning
+> >> resources.  When there is not enough system MMIO space, the PF's IOV BAR
+> >> alignment will not contribute to the bridge.  When there is enough system
+> >> MMIO space, the additional alignment will contribute to the bridge.
+> >
+> >I don't understand the ""when there is not enough system MMIO space" part.
+> >How do we tell if there's enough MMIO space?
+> >
+> 
+> In __assign_resources_sorted(), it has two resources list, one for requested
+> (head) and one for additional (realloc_head). This function will first try to
+> combine them and assign. If failed, this means we don't have enough MMIO
+> space.
 
-Also clear the hdr.setup_data, as all handler will handle or
-reserve setup_data locally already.
+How about this text:
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matt Fleming <matt.fleming@intel.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/pci.h |  2 ++
- arch/x86/kernel/setup.c    |  8 ++++++++
- arch/x86/pci/common.c      | 42 ++++++++++++++++++++++++++++--------------
- 3 files changed, 38 insertions(+), 14 deletions(-)
+  This is because the alignment required for the VF(n) BAR space is the size
+  of an individual VF BAR, not the size of the space for *all* VFs.  But we
+  want additional alignment to support partitioning on PowerNV.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5..7fbd5f3 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -87,8 +87,10 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- 	*strat = PCI_DMA_BURST_INFINITY;
- 	*strategy_parameter = ~0UL;
- }
-+void add_pci(u64 pa_data);
- #else
- static inline void early_quirks(void) { }
-+static inline void add_pci(u64 pa_data) { }
- #endif
- 
- extern void pci_iommu_alloc(void);
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index c9b3e2f..b1296d3 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -453,6 +453,8 @@ static void __init parse_setup_data(void)
- 		pa_next = data->next;
- 		early_iounmap(data, sizeof(*data));
- 
-+		printk(KERN_DEBUG "setup_data type: %d @ %#010llx\n",
-+				data_type, pa_data);
- 		switch (data_type) {
- 		case SETUP_E820_EXT:
- 			parse_e820_ext(pa_data, data_len);
-@@ -460,6 +462,9 @@ static void __init parse_setup_data(void)
- 		case SETUP_DTB:
- 			add_dtb(pa_data);
- 			break;
-+		case SETUP_PCI:
-+			add_pci(pa_data);
-+			break;
- 		case SETUP_EFI:
- 			parse_efi_setup(pa_data, data_len);
- 			break;
-@@ -467,10 +472,13 @@ static void __init parse_setup_data(void)
- 			parse_kaslr_setup(pa_data, data_len);
- 			break;
- 		default:
-+			pr_warn("Unknown setup_data type: %d @ %#010llx ignored!\n",
-+				data_type, pa_data);
- 			break;
- 		}
- 		pa_data = pa_next;
- 	}
-+	boot_params.hdr.setup_data = 0; /* all done */
- }
- 
- static void __init memblock_x86_reserve_range_setup_data(void)
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 3d2612b..4846db7 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -9,6 +9,7 @@
- #include <linux/pci-acpi.h>
- #include <linux/ioport.h>
- #include <linux/init.h>
-+#include <linux/memblock.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
- 
-@@ -667,31 +668,44 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+static u64 pci_setup_data;
-+void __init add_pci(u64 pa_data)
-+{
-+	struct setup_data *data;
-+
-+	data = early_memremap(pa_data, sizeof(*data));
-+	memblock_reserve(pa_data, sizeof(*data) + data->len);
-+	data->next = pci_setup_data;
-+	pci_setup_data = pa_data;
-+	early_memunmap(data, sizeof(*data));
-+}
-+
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	struct setup_data *data;
- 	struct pci_setup_rom *rom;
- 	u64 pa_data;
- 
--	pa_data = boot_params.hdr.setup_data;
-+	pa_data = pci_setup_data;
- 	while (pa_data) {
- 		data = ioremap(pa_data, sizeof(*rom));
- 		if (!data)
- 			return -ENOMEM;
- 
--		if (data->type == SETUP_PCI) {
--			rom = (struct pci_setup_rom *)data;
--
--			if ((pci_domain_nr(dev->bus) == rom->segment) &&
--			    (dev->bus->number == rom->bus) &&
--			    (PCI_SLOT(dev->devfn) == rom->device) &&
--			    (PCI_FUNC(dev->devfn) == rom->function) &&
--			    (dev->vendor == rom->vendor) &&
--			    (dev->device == rom->devid)) {
--				dev->rom = pa_data +
--				      offsetof(struct pci_setup_rom, romdata);
--				dev->romlen = rom->pcilen;
--			}
-+		rom = (struct pci_setup_rom *)data;
-+
-+		if ((pci_domain_nr(dev->bus) == rom->segment) &&
-+		    (dev->bus->number == rom->bus) &&
-+		    (PCI_SLOT(dev->devfn) == rom->device) &&
-+		    (PCI_FUNC(dev->devfn) == rom->function) &&
-+		    (dev->vendor == rom->vendor) &&
-+		    (dev->device == rom->devid)) {
-+			dev->rom = pa_data +
-+			      offsetof(struct pci_setup_rom, romdata);
-+			dev->romlen = rom->pcilen;
-+			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
-+				   (unsigned long)dev->rom,
-+				   (unsigned long)(dev->rom + dev->romlen - 1));
- 		}
- 		pa_data = data->next;
- 		iounmap(data);
--- 
-1.8.4.5
+  Consider the additional IOV BAR alignment when sizing and assigning
+  resources.  When there is not enough system MMIO space to accomodate both
+  the requested list and the additional list, the PF's IOV BAR alignment will
+  not contribute to the bridge.  When there is enough system MMIO space for
+  both lists, the additional alignment will contribute to the bridge.
 
+We're doing something specifically for PowerNV.  I would really like to be
+able to read this patch and say "Oh, here's the hook where we get the
+PowerNV behavior, and it's obvious that other platforms are unaffected."
+But I don't see a pcibios or similar hook, so I don't know where that
+PowerNV behavior is.
+
+Is it something to do with get_res_add_align()?  That uses min_align, but I
+don't know how that's connected ...  ah, I see, "add_align" is computed
+from pci_resource_alignment(), which has this path:
+
+  pci_resource_alignment
+    pci_sriov_resource_alignment
+      pcibios_iov_resource_alignment
+
+and powerpc has a special pcibios_iov_resource_alignment() for PowerNV.
+
+> >> Also, take advantage of pci_dev_resource::min_align to store this
+> >> additional alignment.
+> >
+> >This comment doesn't seem to make sense; this patch doesn't save anything
+> >in min_align.
+> 
+> At the end of this patch:
+> 
+>    add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
+> 
+> The add_align is stored in pci_dev_resource::min_align in add_to_list(). And
+> retrieved by get_res_add_align() in below code. This field is not used
+> previously, so I took advantage of this field to store the alignment of the
+> additional resources.
+
+Hmm.  pci_dev_resource::min_align *is* already used in
+reassign_resources_sorted().  Maybe there's no overlap; I gave up the
+analysis before I could convince myself.
+
+The changelog needs to mention the add_to_list() connection.
+
+> >> +		/*
+> >> +		 * There are two kinds of additional resources in the list:
+> >> +		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+> >> +		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+> >> +		 * Here just fix the additional alignment for bridge
+> >> +		 */
+> >> +		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+> >> +			continue;
+> >> +
+> >> +		add_align = get_res_add_align(realloc_head, dev_res->res);
+> >> +
+> >> +		/* Reorder the list by their alignment */
+> >
+> >Why do we need to reorder the list by alignment?
+> 
+> Resource list "head" is sorted by the alignment, while the alignment would be
+> changed after we considering the additional resource.
+> 
+> Take powernv platform as an example. The IOV BAR is expanded and need to be
+> aligned with its total size instead of the individual VF BAR size. If we don't
+> reorder it, the IOV BAR would be assigned after some other resources, which
+> may cause the real assignment fail even the total size is enough.
+
+This is worthy of a comment in the code.
+
+Bjorn
