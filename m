@@ -1,47 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from resqmta-po-05v.sys.comcast.net ([96.114.154.164]:34397 "EHLO
-	resqmta-po-05v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752696AbbCFBp5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 20:45:57 -0500
-Message-ID: <54F9107D.4000000@pobox.com>
-Date: Thu, 05 Mar 2015 18:27:09 -0800
-From: Robert White <rwhite@pobox.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60608 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbbCKSEC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 14:04:02 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v6 2/4] pci: iProc: define iProc PCIe platform bus binding
+Date: Wed, 11 Mar 2015 11:06:07 -0700
+Message-ID: <1426097169-20805-3-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
+References: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: NULL Pointer in 3.x during PCI bus enumeration
-References: <54EB81B2.4050904@pobox.com> <54F10D0F.9080309@pobox.com> <CAErSpo7NB25yNaHu8VOujUN1NUTyr4FM+jUA8gsbVSx0ZC1USg@mail.gmail.com>
-In-Reply-To: <CAErSpo7NB25yNaHu8VOujUN1NUTyr4FM+jUA8gsbVSx0ZC1USg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It took me a while to get back into the lab and scrape together a 
-working subsystem to collect the data you wanted.
+Document the Broadcom iProc PCIe platform interface device tree binding
 
-Link to bug...
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
 
-https://bugzilla.kernel.org/show_bug.cgi?id=94361
-
---Rob.
-
-
-On 02/28/2015 02:33 PM, Bjorn Helgaas wrote:
-> On Fri, Feb 27, 2015 at 4:34 PM, Robert White <rwhite@pobox.com> wrote:
->> Eh, wrong mailing list the first time...?
->
-> Yep, I browse linux-kernel sometimes, but not enough to catch
-> everything.  Anyway, thanks a lot for the problem report.
->
-> Would you mind opening a bug report at http://bugzilla.kernel.org,
-> drivers/pci component, and attaching
->
->    - a completely dmesg log from your most recent kernel (it probably
-> doesn't boot, which it makes it hard to get an actual dmesg log; a
-> complete console log with "ignore_loglevel" is fine, too).
->    - complete "lspci -vv" output from a working system (v2.x is fine).
->
-> Thanks,
->    Bjorn
->
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+new file mode 100644
+index 0000000..f7ce50e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -0,0 +1,63 @@
++* Broadcom iProc PCIe controller with the platform bus interface
++
++Required properties:
++- compatible: Must be "brcm,iproc-pcie"
++- reg: base address and length of the PCIe controller I/O register space
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map, standard PCI properties to define the
++  mapping of the PCIe interface to interrupt numbers
++- linux,pci-domain: PCI domain ID. Should be unique for each host controller
++- bus-range: PCI bus numbers covered
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions
++
++Optional properties:
++- phys: phandle of the PCIe PHY device
++- phy-names: must be "pcie-phy"
++
++Example:
++	pcie0: pcie@18012000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18012000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <0>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
++			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++
++		phys = <&phy 0 5>;
++		phy-names = "pcie-phy";
++	};
++
++	pcie1: pcie@18013000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18013000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <1>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
++			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
++
++		phys = <&phy 1 6>;
++		phy-names = "pcie-phy";
++	};
+-- 
+1.7.9.5
 
