@@ -1,81 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx07-00178001.pphosted.com ([62.209.51.94]:48688 "EHLO
-	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965069AbbCPOZI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2015 10:25:08 -0400
-From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org>
+References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org> <1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 11 Mar 2015 10:37:29 -0500
+Message-ID: <CAL_JsqJfvOcQ9sSuKfq3YCWubL9QctEDU0CR2mjBze2ZyB+nVg@mail.gmail.com>
+Subject: Re: [PATCH v4 7/9] x86, pci, ecam: mmconfig_64.c becomes default
+ implementation for ECAM driver.
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Subject: [PATCH v2 0/5] PCI: st: provide support for dw pcie
-Date: Mon, 16 Mar 2015 15:20:30 +0100
-Message-Id: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Al Stone <al.stone@linaro.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v2:
- - comestic corrections in device tree binding
- - add pci-st.c into MAINTAINERS
- - remove st_pcie_ops structure to avoid another level of indirection
- - remove nasty busy-loop
- - remove useless test using virt_to_phys()
- - move disable io support into dw-pcie driver
+On Wed, Mar 11, 2015 at 9:12 AM, Tomasz Nowicki
+<tomasz.nowicki@linaro.org> wrote:
+> Architectures which want to take advantage of ECAM generic goodness
 
-I don't change the st_pcie_abort_handler() function because abort handling
-is masked during boot.
+This is not necessarily an architecture decision. It is likely per host.
 
+> should select CONFIG_PCI_ECAM_GENERIC. Otherwise, like x86 32bits machines,
+> are obligated to provide own low-level ECAM calls.
+>
+> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+> ---
 
-This patch-set introduces a STMicroelectronics PCIe controller.
-It's based on designware PCIe driver.
+[...]
 
-Gabriel Fernandez (5):
-  ARM: STi: Kconfig update for PCIe support
-  PCI: st: Add Device Tree bindings for sti pcie
-  PCI: st: Provide support for the sti PCIe controller
-  PCI: designware: Add disable IO support
-  MAINTAINERS: Add pci-st.c to ARCH/STI architecture
+> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+> index c588234..796b6e7 100644
+> --- a/drivers/pci/ecam.c
+> +++ b/drivers/pci/ecam.c
+> @@ -23,6 +23,119 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+>
+>  LIST_HEAD(pci_mmcfg_list);
+>
+> +#ifdef CONFIG_GENERIC_PCI_ECAM
+> +static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
+> +                                 unsigned int devfn)
+> +{
+> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+> +
+> +       if (cfg && cfg->virt)
+> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
+> +       return NULL;
+> +}
+> +
+> +int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+> +                         unsigned int devfn, int reg, int len, u32 *value)
+> +{
+> +       char __iomem *addr;
+> +
+> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+> +err:           *value = -1;
+> +               return -EINVAL;
+> +       }
+> +
+> +       rcu_read_lock();
 
- .../devicetree/bindings/pci/designware-pcie.txt    |   2 +
- Documentation/devicetree/bindings/pci/st-pcie.txt  |  54 ++
- MAINTAINERS                                        |   1 +
- arch/arm/mach-sti/Kconfig                          |   2 +
- drivers/pci/host/Kconfig                           |   9 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-st.c                          | 617 +++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                 |  24 +-
- drivers/pci/host/pcie-designware.h                 |   1 +
- 9 files changed, 709 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
- create mode 100644 drivers/pci/host/pci-st.c
+What is the purpose of the rcu lock other than the old implementation had it?
 
--- 
-1.9.1
+> +       addr = pci_dev_base(seg, bus, devfn);
 
+The .map_bus op provides the same function if you restructure to use
+the generic accessors.
+
+> +       if (!addr) {
+> +               rcu_read_unlock();
+> +               goto err;
+> +       }
+> +
+> +       *value = pci_mmio_read(len, addr + reg);
+> +       rcu_read_unlock();
+> +
+> +       return 0;
+> +}
+> +
+> +int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+> +                          unsigned int devfn, int reg, int len, u32 value)
+> +{
+> +       char __iomem *addr;
+> +
+> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+> +               return -EINVAL;
+> +
+> +       rcu_read_lock();
+> +       addr = pci_dev_base(seg, bus, devfn);
+> +       if (!addr) {
+> +               rcu_read_unlock();
+> +               return -EINVAL;
+> +       }
+> +
+> +       pci_mmio_write(len, addr + reg, value);
+> +       rcu_read_unlock();
+> +
+> +       return 0;
+> +}
+> +
+> +static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+> +{
+> +       void __iomem *addr;
+> +       u64 start, size;
+> +       int num_buses;
+> +
+> +       start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+> +       num_buses = cfg->end_bus - cfg->start_bus + 1;
+> +       size = PCI_MMCFG_BUS_OFFSET(num_buses);
+> +       addr = ioremap_nocache(start, size);
+> +       if (addr)
+> +               addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+> +       return addr;
+> +}
+> +
+> +int __init pci_mmcfg_arch_init(void)
+
+Where would this be called for the case of the generic host and using DT?
+
+Rob
