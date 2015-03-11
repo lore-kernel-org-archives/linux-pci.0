@@ -1,51 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54F5ED32.6070200@punnoor.de>
-Date: Tue, 03 Mar 2015 18:19:46 +0100
-From: Prakash Punnoor <prakash@punnoor.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:44271 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522AbbCKA6b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 20:58:31 -0400
+Received: by igdh15 with SMTP id h15so8633516igd.3
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 17:58:30 -0700 (PDT)
+Date: Tue, 10 Mar 2015 17:58:27 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+cc: bhelgaas@google.com, mingo@redhat.com, tglx@linutronix.de,
+	hpa@zytor.com, pure.logic@nexus-software.ie, jgross@suse.com,
+	luto@amacapital.net, andy.shevchenko@gmail.com,
+	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	x86@kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [RFC v1 2/2] x86: kconfig: remove UP [IO]APIC options
+In-Reply-To: <1426029275-9594-3-git-send-email-mcgrof@do-not-panic.com>
+Message-ID: <alpine.DEB.2.10.1503101756460.26407@chino.kir.corp.google.com>
+References: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com> <1426029275-9594-3-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-To: Dave Airlie <airlied@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Voegtle <tv@lio96.de>, Hudd <hedede.l@gmail.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Lv Zheng <lv.zheng@intel.com>
-Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
-References: <1425356741-26789-1-git-send-email-jiang.liu@linux.intel.com> <CAPM=9txLQMWzEw0M6v0J8wdCtmH17NMMY_jckiBmAC+keHSTHw@mail.gmail.com>
-In-Reply-To: <CAPM=9txLQMWzEw0M6v0J8wdCtmH17NMMY_jckiBmAC+keHSTHw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03.03.2015 05:34, Dave Airlie wrote:
-> On 3 March 2015 at 14:25, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> Commit 593669c2ac0f (x86/PCI/ACPI: Use common ACPI resource interfaces
->> to simplify implementation) causes regression to several platforms,
->> which is caused by stricter checks in new ACPI resource parsing code
->> and BIOSes report incorrect ACPI resource descriptors.  So try to relax
->> the check to avoid regressions.
->>
->> Jiang Liu (2):
->>   x86/PCI/ACPI: Ignore resources consumed by host bridge itself
->>   x86/PCI/ACPI: Relax ACPI resource descriptor checks to work around
->>     BIOS bugs
+On Tue, 10 Mar 2015, Luis R. Rodriguez wrote:
+
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
 > 
-> I've booted my machine with that lost its r8169 and it appears to be
-> working now.
+> These were here mostly to help as wrappers for PCI_MSI
+> under certain UP 32-bit build scenarios, now that PCI_MSI
+> properly selects what it needs and when it needs it these
+> Kconfig options are now only enabling users reduce the size
+> of 32-bit kernels optionally. Since 32-bit kernels are not
+> in a huge state of flux and since there is no penalty for
+> adding APIC support other than a bit of size moving forward
+> we simply expect folks to enable APIC options on 32-bit systems
+> when a system needs it, as with PCI_MSI. This lets us remove
+> clutter from the x86 Kconfig file.
 > 
-> So from the regression POV:
-> Tested-by: Dave Airlie <airlied@redhat.com>
 
-Works for me, as well. Thanks!
-
-Tested-by: Prakash Punnoor <prakash@punnoor.de>
-
-
-Regards,
-
-Prakash
+Check out Linus's latest tree at 
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git and see 
+how it looks after commit 50849eefea3b ("x86/Kconfig: Simplify X86_UP_APIC 
+handling") and commit b1da1e715d4f ("x86/Kconfig: Simplify X86_IO_APIC 
+dependencies").
