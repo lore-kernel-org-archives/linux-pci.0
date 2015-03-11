@@ -1,94 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:38936 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbbCFRt0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 12:49:26 -0500
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:36045 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbbCKCrl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 22:47:41 -0400
+Received: by oiav1 with SMTP id v1so2105497oia.3
+        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 19:47:40 -0700 (PDT)
+Date: Tue, 10 Mar 2015 21:47:37 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 14/21] powerpc/powernv: Allocate struct pnv_ioda_pe
+ iommu_table dynamically
+Message-ID: <20150311024737.GB10994@google.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083435.32124.65099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224084653.GI6220@google.com>
+ <20150302075036.GH21571@richard>
 MIME-Version: 1.0
-In-Reply-To: <20150306133312.GC4259@pd.tnic>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
-	<20150304101649.GA3663@pd.tnic>
-	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
-	<20150304200000.GB6276@gmail.com>
-	<CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
-	<20150306133312.GC4259@pd.tnic>
-Date: Fri, 6 Mar 2015 09:49:25 -0800
-Message-ID: <CAE9FiQVux0j=3MOj1V-hAfVtbPGUCtAyzBpkQyjr8iUchFBmOg@mail.gmail.com>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150302075036.GH21571@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 6, 2015 at 5:33 AM, Borislav Petkov <bp@suse.de> wrote:
-> Please use checkpatch before submitting patches:
->
-> WARNING: please, no spaces at the start of a line
-> #71: FILE: arch/x86/kernel/setup.c:433:
-> +    unsigned char *data;$
->
-> WARNING: please, no spaces at the start of a line
-> #72: FILE: arch/x86/kernel/setup.c:434:
-> +    unsigned long offset = sizeof(struct setup_data);$
->
-> WARNING: please, no spaces at the start of a line
-> #74: FILE: arch/x86/kernel/setup.c:436:
-> +    data = early_memremap(pa_data, offset + 1);$
->
-> WARNING: please, no spaces at the start of a line
-> #75: FILE: arch/x86/kernel/setup.c:437:
-> +    if (!data) {$
->
-> ERROR: code indent should use tabs where possible
-> #76: FILE: arch/x86/kernel/setup.c:438:
-> +        kaslr_enabled = true;$
->
-> WARNING: please, no spaces at the start of a line
-> #76: FILE: arch/x86/kernel/setup.c:438:
-> +        kaslr_enabled = true;$
->
-> ERROR: code indent should use tabs where possible
-> #77: FILE: arch/x86/kernel/setup.c:439:
-> +        return;$
->
-> WARNING: please, no spaces at the start of a line
-> #77: FILE: arch/x86/kernel/setup.c:439:
-> +        return;$
->
-> WARNING: please, no spaces at the start of a line
-> #78: FILE: arch/x86/kernel/setup.c:440:
-> +    }$
->
-> WARNING: please, no spaces at the start of a line
-> #80: FILE: arch/x86/kernel/setup.c:442:
-> +    kaslr_enabled = *(data + offset);$
->
-> WARNING: please, no spaces at the start of a line
-> #81: FILE: arch/x86/kernel/setup.c:443:
-> +    early_memunmap(data, offset + 1);$
->
-> total: 2 errors, 9 warnings, 19 lines checked
->
-> NOTE: whitespace errors detected, you may wish to use scripts/cleanpatch or
->       scripts/cleanfile
->
-> Your patch has style problems, please review.
->
-> If any of these errors are false positives, please report
-> them to the maintainer, see CHECKPATCH in MAINTAINERS.
->
+On Mon, Mar 02, 2015 at 03:50:37PM +0800, Wei Yang wrote:
+> On Tue, Feb 24, 2015 at 02:46:53AM -0600, Bjorn Helgaas wrote:
+> >On Tue, Feb 24, 2015 at 02:34:35AM -0600, Bjorn Helgaas wrote:
+> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+> >> 
+> >> Current iommu_table of a PE is a static field.  This will have a problem
+> >> when iommu_free_table() is called.
+> >> 
+> >> Allocate iommu_table dynamically.
+> >
+> >I'd like a little more explanation about why we're calling
+> >iommu_free_table() now when we didn't call it before.  Maybe this happens
+> >when we disable SR-IOV and the VFs go away?
+> 
+> Yes, it is called in disable path.
+> 
+> pcibios_sriov_disable
+>     pnv_pci_sriov_disable
+>         pnv_ioda_release_vf_PE
+> 	    pnv_pci_ioda2_release_dma_pe
+> 	        iommu_free_table            <--- here it is invoked
+> 
+> 
+> >
+> >Is there a hotplug remove path where we should also be calling
+> >iommu_free_table()?
+> 
+> When VF is not introduced, no one calls this on powernv platform.
+> 
+> Each PCI bus is a PE and it has its own iommu table, even a device is
+> hotpluged, the iommu table will not be released.
 
-That is "copy and paste" instead of attachment for easy review.
-but gmail web client convert tab to spaces.
+None of this explanation made it into the v13 patch.  And I don't quite
+understand it anyway.
+
+Something like "Previously the iommu_table had the same lifetime as a
+struct pnv_ioda_pe and was embedded in it.  The pnv_ioda_pe was allocated
+when XXX and freed when YYY.  This no longer works: we can't allocate the
+iommu_table at the same time as the pnv_ioda_pe because XXX, so we allocate
+it when XXX and free it when YYY."
+
+Bjorn
