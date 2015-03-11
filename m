@@ -1,48 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:62688 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278AbbCYGjx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 02:39:53 -0400
-From: Ray Jui <rjui@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49436 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750775AbbCKUOf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Mar 2015 16:14:35 -0400
+Message-ID: <1426104871.3643.17.camel@redhat.com>
+Subject: Re: [PATCH 1/5] vfio-pci: Allow PCI IDs to be specified as module
+ options
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH 1/2] pci: iproc: fix PCIE_IPROC in Kconfig
-Date: Tue, 24 Mar 2015 23:42:23 -0700
-Message-ID: <1427265744-27590-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1427265744-27590-1-git-send-email-rjui@broadcom.com>
-References: <1427265744-27590-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 11 Mar 2015 14:14:31 -0600
+In-Reply-To: <20150306221121.GA14814@google.com>
+References: <20150304194711.26766.75450.stgit@gimli.home>
+	 <20150304200243.26766.556.stgit@gimli.home>
+	 <20150306221121.GA14814@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make PCIE_IPROC depending on both OF and ARM and default to be disabled,
-so it cannot be accidentally enabled by other platforms
+On Fri, 2015-03-06 at 16:11 -0600, Bjorn Helgaas wrote:
+> On Wed, Mar 04, 2015 at 01:02:43PM -0700, Alex Williamson wrote:
+> > This copies the same support from pci-stub for exactly the same
+> > purpose, enabling a set of PCI IDs to be automatically added to the
+> > driver's dynamic ID table at module load time.  The code here is
+> > pretty simple and both vfio-pci and pci-stub are fairly unique in
+> > being meta drivers, capable of attaching to any device, so there's no
+> > attempt made to generalize the code into pci-core.
+> > 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >  drivers/vfio/pci/vfio_pci.c |   46 +++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 46 insertions(+)
+> > 
+> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> > index f8a1863..b3bae4c 100644
+> > --- a/drivers/vfio/pci/vfio_pci.c
+> > +++ b/drivers/vfio/pci/vfio_pci.c
+> > @@ -32,6 +32,10 @@
+> >  #define DRIVER_AUTHOR   "Alex Williamson <alex.williamson@redhat.com>"
+> >  #define DRIVER_DESC     "VFIO PCI - User Level meta-driver"
+> >  
+> > +static char ids[1024] __initdata;
+> > +module_param_string(ids, ids, sizeof(ids), 0);
+> > +MODULE_PARM_DESC(ids, "Initial PCI IDs to add to the vfio driver, format is \"vendor:device[:subvendor[:subdevice[:class[:class_mask]]]]\" and multiple comma separated entries can be specified");
+> > +
+> >  static bool nointxmask;
+> >  module_param_named(nointxmask, nointxmask, bool, S_IRUGO | S_IWUSR);
+> >  MODULE_PARM_DESC(nointxmask,
+> > @@ -1034,6 +1038,46 @@ static void __exit vfio_pci_cleanup(void)
+> >  	vfio_pci_uninit_perm_bits();
+> >  }
+> >  
+> > +static void __init vfio_pci_fill_ids(void)
+> > +{
+> > +	char *p, *id;
+> > +	int rc;
+> > +
+> > +	/* no ids passed actually */
+> > +	if (ids[0] == '\0')
+> > +		return;
+> > +
+> > +	/* add ids specified in the module parameter */
+> > +	p = ids;
+> > +	while ((id = strsep(&p, ","))) {
+> > +		unsigned int vendor, device, subvendor = PCI_ANY_ID,
+> > +			subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+> > +		int fields;
+> > +
+> > +		if (!strlen(id))
+> > +			continue;
+> > +
+> > +		fields = sscanf(id, "%x:%x:%x:%x:%x:%x",
+> > +				&vendor, &device, &subvendor, &subdevice,
+> > +				&class, &class_mask);
+> > +
+> > +		if (fields < 2) {
+> > +			pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
+> > +			continue;
+> > +		}
+> > +
+> > +		pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
+> 
+> pci_setup_device() uses "[%04x:%04x] ... class %#08x".  Maybe they should
+> be the same, at least as far as using upper/lower case, spelling out
+> "class", and "0x" prefix.  Maybe there's other precedent that you're
+> following and pci_setup_device() is not?
 
-PCIE_IPROC is meant to be enabled by a front-end bus driver. Curenntly
-it's enabled by PCIE_IPROC_PLTFM driver
+Sorry for not responding to this right away.  The precedent I was
+following is pci_stub_init(), but I don't know that it's any sort of
+canonical reference.  PCI output in dmesg seems pretty consistent in
+using lower case hex, so I agree we should make that change.  I also
+note that the default value for sub IDs is PCI_ANY_ID, which ends up
+getting printed as 8 characters since we don't specify the length.  I'm
+also not a fan of the lack of consistency in printing the ID vs the sub
+ID nor how the line wraps in dmesg w/ timestamps enabled.  What do you
+think about this:
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
----
- drivers/pci/host/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+[%04hx:%04hx[%04hx:%04hx]] class %#08x/%08x
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index feccd0d..963b507 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -108,6 +108,8 @@ config PCI_VERSATILE
- 
- config PCIE_IPROC
- 	tristate "Broadcom iProc PCIe controller"
-+	depends on OF && ARM
-+	default n
- 	help
- 	  This enables the iProc PCIe core controller support for Broadcom's
- 	  iProc family of SoCs. An appropriate bus interface driver also needs
--- 
-1.7.9.5
+Which gives us this and doesn't wrap:
+
+[   92.731809] vfio_pci: add [10de:11fa[ffff:ffff]] class 0x000000/00000000
+[   92.738530] vfio_pci: add [10de:0e0b[ffff:ffff]] class 0x000000/00000000
+
+I'm open to adding 0x on the class mask as well if anyone wants it.
+Thanks,
+Alex
+
+> > +			vendor, device, subvendor, subdevice,
+> > +			class, class_mask);
+> > +
+> > +		rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
+> > +				   subvendor, subdevice, class, class_mask, 0);
+> > +		if (rc)
+> > +			pr_warn("vfio-pci: failed to add dynamic id (%d)\n",
+> > +				rc);
+> > +	}
+> > +}
+> > +
+> >  static int __init vfio_pci_init(void)
+> >  {
+> >  	int ret;
+> > @@ -1053,6 +1097,8 @@ static int __init vfio_pci_init(void)
+> >  	if (ret)
+> >  		goto out_driver;
+> >  
+> > +	vfio_pci_fill_ids();
+> > +
+> >  	return 0;
+> >  
+> >  out_driver:
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+
+
 
