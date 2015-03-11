@@ -1,121 +1,323 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:37843 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbbCKXOs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 19:14:48 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rientjes@google.com, bhelgaas@google.com, mingo@redhat.com,
-	tglx@linutronix.de, hpa@zytor.com, pure.logic@nexus-software.ie,
-	jgross@suse.com, luto@amacapital.net, andy.shevchenko@gmail.com,
-	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH v1 1/2] x86: kconfig: remove X86_UP_IOAPIC
-Date: Wed, 11 Mar 2015 16:10:21 -0700
-Message-Id: <1426115422-1823-2-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mail-la0-f41.google.com ([209.85.215.41]:33798 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbbCKOMi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:38 -0400
+Received: by labgq15 with SMTP id gq15so9080177lab.1
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:37 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v4 2/9] x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround exclusively.
+Date: Wed, 11 Mar 2015 15:12:42 +0100
+Message-Id: <1426083169-8698-3-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+>From now on, readb()/writeb()/etc. generic calls are used as default
+approach. Special MMIO accessors are registered for AMD Fam10h CPUs only.
 
-X86_UP_IOAPIC is a way so that 32-bit UP systems can enable
-X86_IOAPIC. X86_UP_IOAPIC is only as a visible user option if
-you are on a 32-bit system but have X86_UP_APIC enabled. X86_UP_APIC
-will be enabled by force if you have PCI_MSI on 32-bit systems
-now, X86_UP_APIC will now only be user selectable if you didn't
-have PCI_MSI enabled and are also not on a X86_32_NON_STANDARD
-system. Bryan's original patch (refactored commit log in commit
-38a1dfda) [0] describes that Intel CE, Intel MID and Intel Quark
-are all 32-bit uniprocessor systems with IO-APICs, the code change
-however only *re-enabled* UP_IOAPIC as an *option* when PCI_MSI
-was enabled, but given that:
-
-1) enabling X86_IOAPIC is the real end goal here
-2) enabling X86_IOAPIC only increases the kernel only by 12064 bytes (~12 KiB)
-3) enabling X86_IOAPIC will in no way slow down your kernel
-
-Let's make a compromise for 32-bit systems and always enable X86_IOAPIC
-when X86_UP_IOAPIC is enabled as 32-bit systems are not in a state
-of flux and the price for the size is small with no performance impact.
-
-Using:
-
-export ARCH=i386
-make allnoconfig
---> Enabling PCI_MSI
-make localyesconfig
-
-With X86_IO_APIC:
-mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
-734608  arch/x86/boot/bzImage
-
-Without X86_IO_APIC:
-mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
-722544  arch/x86/boot/bzImage
-
-[0] https://lkml.org/lkml/2015/1/22/718
-
-Cc: David Rientjes <rientjes@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bryan O'Donoghue <pure.logic@nexus-software.ie>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Jan Beulich <JBeulich@suse.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: linux-pci@vger.kernel.org
-Cc: x86@kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- arch/x86/Kconfig | 15 ++-------------
- 1 file changed, 2 insertions(+), 13 deletions(-)
+ arch/x86/include/asm/pci_x86.h |   8 +++
+ arch/x86/pci/mmconfig-shared.c | 114 +++++++++++++++++++++++++++++++++++++++++
+ arch/x86/pci/mmconfig_32.c     |  24 +--------
+ arch/x86/pci/mmconfig_64.c     |  24 +--------
+ arch/x86/pci/numachip.c        |  24 +--------
+ 5 files changed, 128 insertions(+), 66 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 110f6ae..b17a8ea 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -899,6 +899,7 @@ config X86_UP_APIC
- 	bool "Local APIC support on uniprocessors" if !PCI_MSI
- 	default PCI_MSI
- 	depends on X86_32 && !SMP && !X86_32_NON_STANDARD
-+	select X86_IO_APIC
- 	---help---
- 	  A local APIC (Advanced Programmable Interrupt Controller) is an
- 	  integrated interrupt controller in the CPU. If you have a single-CPU
-@@ -909,18 +910,6 @@ config X86_UP_APIC
- 	  performance counters), and the NMI watchdog which detects hard
- 	  lockups.
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index d024f4d..c57c225 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -137,6 +137,11 @@ struct pci_mmcfg_region {
+ 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
+ };
  
--config X86_UP_IOAPIC
--	bool "IO-APIC support on uniprocessors"
--	depends on X86_UP_APIC
--	---help---
--	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
--	  SMP-capable replacement for PC-style interrupt controllers. Most
--	  SMP systems and many recent uniprocessor systems have one.
--
--	  If you have a single-CPU system with an IO-APIC, you can say Y here
--	  to use it. If you say Y here even though your machine doesn't have
--	  an IO-APIC, then the kernel will still run with no slowdown at all.
--
- config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
-@@ -928,7 +917,7 @@ config X86_LOCAL_APIC
++struct pci_mmcfg_mmio_ops {
++	u32 (*read)(int len, void __iomem *addr);
++	void (*write)(int len, void __iomem *addr, u32 value);
++};
++
+ extern int __init pci_mmcfg_arch_init(void);
+ extern void __init pci_mmcfg_arch_free(void);
+ extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
+@@ -145,6 +150,9 @@ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			       phys_addr_t addr);
+ extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
++extern u32 pci_mmio_read(int len, void __iomem *addr);
++extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
++extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
  
- config X86_IO_APIC
- 	def_bool y
--	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
-+	depends on X86_LOCAL_APIC
- 	select IRQ_DOMAIN
+ extern struct list_head pci_mmcfg_list;
  
- config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index dd30b7e..8b3bc4f 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -31,6 +31,118 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
++static u32
++pci_mmconfig_generic_read(int len, void __iomem *addr)
++{
++	u32 data = 0;
++
++	switch (len) {
++	case 1:
++		data = readb(addr);
++		break;
++	case 2:
++		data = readw(addr);
++		break;
++	case 4:
++		data = readl(addr);
++		break;
++	}
++
++	return data;
++}
++
++static void
++pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
++{
++	switch (len) {
++	case 1:
++		writeb(value, addr);
++		break;
++	case 2:
++		writew(value, addr);
++		break;
++	case 4:
++		writel(value, addr);
++		break;
++	}
++}
++
++static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
++	.read = pci_mmconfig_generic_read,
++	.write = pci_mmconfig_generic_write,
++};
++
++static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
++
++static u32
++pci_mmconfig_amd_read(int len, void __iomem *addr)
++{
++	u32 data = 0;
++
++	switch (len) {
++	case 1:
++		data = mmio_config_readb(addr);
++		break;
++	case 2:
++		data = mmio_config_readw(addr);
++		break;
++	case 4:
++		data = mmio_config_readl(addr);
++		break;
++	}
++
++	return data;
++}
++
++static void
++pci_mmconfig_amd_write(int len, void __iomem *addr, u32 value)
++{
++	switch (len) {
++	case 1:
++		mmio_config_writeb(addr, value);
++		break;
++	case 2:
++		mmio_config_writew(addr, value);
++		break;
++	case 4:
++		mmio_config_writel(addr, value);
++		break;
++	}
++}
++
++static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
++	.read = pci_mmconfig_amd_read,
++	.write = pci_mmconfig_amd_write,
++};
++
++void
++pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
++{
++	pci_mmcfg_mmio = ops;
++}
++
++u32
++pci_mmio_read(int len, void __iomem *addr)
++{
++	if (!pci_mmcfg_mmio) {
++		pr_err("PCI config space has no accessors !");
++		return 0;
++	}
++
++	return pci_mmcfg_mmio->read(len, addr);
++}
++
++void
++pci_mmio_write(int len, void __iomem *addr, u32 value)
++{
++	if (!pci_mmcfg_mmio) {
++		pr_err("PCI config space has no accessors !");
++		return;
++	}
++
++	pci_mmcfg_mmio->write(len, addr, value);
++}
++
+ static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+ {
+ 	if (cfg->res.parent)
+@@ -231,6 +343,8 @@ static const char *__init pci_mmcfg_amd_fam10h(void)
+ 			return NULL;
+ 		}
+ 
++	pci_mmconfig_register_mmio(&pci_mmcfg_mmio_amd_fam10h);
++
+ 	return "AMD Family 10h NB";
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 43984bc..4b3d025 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -71,17 +71,7 @@ err:		*value = -1;
+ 
+ 	pci_exp_set_dev_base(base, bus, devfn);
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(mmcfg_virt_addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(mmcfg_virt_addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(mmcfg_virt_addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, mmcfg_virt_addr + reg);
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+ 	rcu_read_unlock();
+ 
+@@ -108,17 +98,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 
+ 	pci_exp_set_dev_base(base, bus, devfn);
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(mmcfg_virt_addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(mmcfg_virt_addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(mmcfg_virt_addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, mmcfg_virt_addr + reg, value);
+ 	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+ 	rcu_read_unlock();
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index bea5249..032593d 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -42,17 +42,7 @@ err:		*value = -1;
+ 		goto err;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, addr + reg);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+@@ -74,17 +64,7 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, addr + reg, value);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
+index 2e565e6..5047e9b 100644
+--- a/arch/x86/pci/numachip.c
++++ b/arch/x86/pci/numachip.c
+@@ -51,17 +51,7 @@ err:		*value = -1;
+ 		goto err;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		*value = mmio_config_readb(addr + reg);
+-		break;
+-	case 2:
+-		*value = mmio_config_readw(addr + reg);
+-		break;
+-	case 4:
+-		*value = mmio_config_readl(addr + reg);
+-		break;
+-	}
++	*value = pci_mmio_read(len, addr + reg);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
+@@ -87,17 +77,7 @@ static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch (len) {
+-	case 1:
+-		mmio_config_writeb(addr + reg, value);
+-		break;
+-	case 2:
+-		mmio_config_writew(addr + reg, value);
+-		break;
+-	case 4:
+-		mmio_config_writel(addr + reg, value);
+-		break;
+-	}
++	pci_mmio_write(len, addr + reg, value);
+ 	rcu_read_unlock();
+ 
+ 	return 0;
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.9.1
 
