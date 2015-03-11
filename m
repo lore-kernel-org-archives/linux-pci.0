@@ -1,49 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:59118 "EHLO mx02.posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbbC2JBa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Mar 2015 05:01:30 -0400
-Received: from dovecot03.posteo.de (unknown [185.67.36.28])
-	by mx02.posteo.de (Postfix) with ESMTPS id 4317925A2135
-	for <linux-pci@vger.kernel.org>; Sun, 29 Mar 2015 11:01:28 +0200 (CEST)
-Received: from mail.posteo.de (localhost [127.0.0.1])
-	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3lF9rl6jk4z5vMr
-	for <linux-pci@vger.kernel.org>; Sun, 29 Mar 2015 11:01:27 +0200 (CEST)
-Date: Sun, 29 Mar 2015 09:59:32 +0100
-From: Felix Janda <felix.janda@posteo.de>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH pciutils] pread.h: Remove support for libc5
-Message-ID: <20150329085931.GA8259@euler>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:49848 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbbCKFDx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 01:03:53 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 11 Mar 2015 15:03:51 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 93DC42CE8052
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 16:03:48 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2B53euQ33554526
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 16:03:48 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2B53EfG015783
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 16:03:15 +1100
+Date: Wed, 11 Mar 2015 16:02:50 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, cascardo@linux.vnet.ibm.com,
+	bhelgaas@google.com, Brian King <brking@us.ibm.com>,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 1/2] PCI: One more parameter to
+ pci_set_pcie_reset_state()
+Message-ID: <20150311050250.GA6906@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1426049941-6727-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426049941-6727-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The support code for libc5 breaks building on linux i386 with
-other libcs that don't define __GLIBC__.
----
- lib/pread.h | 9 ---------
- 1 file changed, 9 deletions(-)
+On Wed, Mar 11, 2015 at 03:59:00PM +1100, Gavin Shan wrote:
+>The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
+>which allows to check if one particular PCI device can be resetted by the
+>function. The function will be reused to support PCI device specific methods
+>maintained in pci_dev_reset_methods[] in subsequent patch.
+>
+>Cc: Brian King <brking@us.ibm.com>
+>Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>---
 
-diff --git a/lib/pread.h b/lib/pread.h
-index 0e64326..3db90e3 100644
---- a/lib/pread.h
-+++ b/lib/pread.h
-@@ -30,15 +30,6 @@ static int pread(unsigned int fd, void *buf, size_t size, loff_t where)
- static int pwrite(unsigned int fd, void *buf, size_t size, loff_t where)
- { return syscall(SYS_pwrite, fd, buf, size, where); }
- 
--#elif defined(i386)
--/* old libc on i386 -> call syscalls directly the old way */
--#include <asm/unistd.h>
--static _syscall5(int, pread, unsigned int, fd, void *, buf, size_t, size, u32, where_lo, u32, where_hi);
--static _syscall5(int, pwrite, unsigned int, fd, void *, buf, size_t, size, u32, where_lo, u32, where_hi);
--static int do_read(struct pci_dev *d UNUSED, int fd, void *buf, size_t size, int where) { return pread(fd, buf, size, where, 0); }
--static int do_write(struct pci_dev *d UNUSED, int fd, void *buf, size_t size, int where) { return pwrite(fd, buf, size, where, 0); }
--#define PCI_HAVE_DO_READ
--
- #else
- /* In all other cases we use lseek/read/write instead to be safe */
- #define make_rw_glue(op) \
--- 
-2.0.5
+The patch depdends on: https://patchwork.ozlabs.org/patch/438598/ which
+should be applied prior this one.
+
+Thanks,
+Gavin
+
+> arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
+> drivers/misc/genwqe/card_base.c |  9 +++++++--
+> drivers/pci/pci.c               | 15 +++++++++------
+> drivers/scsi/ipr.c              |  5 +++--
+> include/linux/pci.h             |  5 +++--
+> 5 files changed, 32 insertions(+), 16 deletions(-)
+>
+>diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+>index 19a897c..60a0f15ce 100644
+>--- a/arch/powerpc/kernel/eeh.c
+>+++ b/arch/powerpc/kernel/eeh.c
+>@@ -720,11 +720,14 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
+>  * pcibios_set_pcie_slot_reset - Set PCI-E reset state
+>  * @dev: pci device struct
+>  * @state: reset state to enter
+>+ * @probe: check if the device can take the reset
+>  *
+>  * Return value:
+>  * 	0 if success
+>  */
+>-int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+>+int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>+				 enum pcie_reset_state state,
+>+				 int probe)
+> {
+> 	struct eeh_dev *edev = pci_dev_to_eeh_dev(dev);
+> 	struct eeh_pe *pe = eeh_dev_to_pe(edev);
+>@@ -732,9 +735,12 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+> 	if (!pe) {
+> 		pr_err("%s: No PE found on PCI device %s\n",
+> 			__func__, pci_name(dev));
+>-		return -EINVAL;
+>+		return -ENOTTY;
+> 	}
+>
+>+	if (probe)
+>+		return 0;
+>+
+> 	switch (state) {
+> 	case pcie_deassert_reset:
+> 		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
+>@@ -756,8 +762,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+> 		break;
+> 	default:
+> 		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
+>-		return -EINVAL;
+>-	};
+>+		return -ENOTTY;
+>+	}
+>
+> 	return 0;
+> }
+>diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
+>index 4cf8f82..4871f69 100644
+>--- a/drivers/misc/genwqe/card_base.c
+>+++ b/drivers/misc/genwqe/card_base.c
+>@@ -782,17 +782,22 @@ static int genwqe_pci_fundamental_reset(struct pci_dev *pci_dev)
+> {
+> 	int rc;
+>
+>+	/* Probe if the device can take the reset */
+>+	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 1);
+>+	if (rc)
+>+		return rc;
+>+
+> 	/*
+> 	 * lock pci config space access from userspace,
+> 	 * save state and issue PCIe fundamental reset
+> 	 */
+> 	pci_cfg_access_lock(pci_dev);
+> 	pci_save_state(pci_dev);
+>-	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset);
+>+	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 0);
+> 	if (!rc) {
+> 		/* keep PCIe reset asserted for 250ms */
+> 		msleep(250);
+>-		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset);
+>+		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset, 0);
+> 		/* Wait for 2s to reload flash and train the link */
+> 		msleep(2000);
+> 	}
+>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>index 81f06e8..8581a5f 100644
+>--- a/drivers/pci/pci.c
+>+++ b/drivers/pci/pci.c
+>@@ -1558,28 +1558,31 @@ EXPORT_SYMBOL(pci_disable_device);
+>  * pcibios_set_pcie_reset_state - set reset state for device dev
+>  * @dev: the PCIe device reset
+>  * @state: Reset state to enter into
+>- *
+>+ * @probe: Check if the device can take the reset
+>  *
+>  * Sets the PCIe reset state for the device. This is the default
+>  * implementation. Architecture implementations can override this.
+>  */
+> int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>-					enum pcie_reset_state state)
+>+					enum pcie_reset_state state,
+>+					int probe)
+> {
+>-	return -EINVAL;
+>+	return -ENOTTY;
+> }
+>
+> /**
+>  * pci_set_pcie_reset_state - set reset state for device dev
+>  * @dev: the PCIe device reset
+>  * @state: Reset state to enter into
+>- *
+>+ * @probe: Check if the device can take the reset
+>  *
+>  * Sets the PCI reset state for the device.
+>  */
+>-int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+>+int pci_set_pcie_reset_state(struct pci_dev *dev,
+>+			     enum pcie_reset_state state,
+>+			     int probe)
+> {
+>-	return pcibios_set_pcie_reset_state(dev, state);
+>+	return pcibios_set_pcie_reset_state(dev, state, probe);
+> }
+> EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+>
+>diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+>index 9219953..89026f4 100644
+>--- a/drivers/scsi/ipr.c
+>+++ b/drivers/scsi/ipr.c
+>@@ -8317,7 +8317,8 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
+> static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
+> {
+> 	ENTER;
+>-	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
+>+	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev,
+>+				 pcie_deassert_reset, 0);
+> 	ipr_cmd->job_step = ipr_reset_bist_done;
+> 	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
+> 	LEAVE;
+>@@ -8339,7 +8340,7 @@ static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
+> 	struct pci_dev *pdev = ioa_cfg->pdev;
+>
+> 	ENTER;
+>-	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
+>+	pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
+> 	ipr_cmd->job_step = ipr_reset_slot_reset_done;
+> 	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
+> 	LEAVE;
+>diff --git a/include/linux/pci.h b/include/linux/pci.h
+>index 211e9da..c15ca2f 100644
+>--- a/include/linux/pci.h
+>+++ b/include/linux/pci.h
+>@@ -960,7 +960,8 @@ extern unsigned int pcibios_max_latency;
+> void pci_set_master(struct pci_dev *dev);
+> void pci_clear_master(struct pci_dev *dev);
+>
+>-int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+>+int pci_set_pcie_reset_state(struct pci_dev *dev,
+>+			     enum pcie_reset_state state, int probe);
+> int pci_set_cacheline_size(struct pci_dev *dev);
+> #define HAVE_PCI_SET_MWI
+> int __must_check pci_set_mwi(struct pci_dev *dev);
+>@@ -1647,7 +1648,7 @@ extern unsigned long pci_hotplug_mem_size;
+> void pcibios_disable_device(struct pci_dev *dev);
+> void pcibios_set_master(struct pci_dev *dev);
+> int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>-				 enum pcie_reset_state state);
+>+				 enum pcie_reset_state state, int probe);
+> int pcibios_add_device(struct pci_dev *dev);
+> void pcibios_release_device(struct pci_dev *dev);
+> void pcibios_penalize_isa_irq(int irq, int active);
+>-- 
+>1.8.3.2
+>
+
