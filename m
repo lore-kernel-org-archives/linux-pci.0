@@ -1,68 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:32784 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795AbbCMB61 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 21:58:27 -0400
-Message-ID: <55024405.8040504@huawei.com>
-Date: Fri, 13 Mar 2015 09:57:25 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from cantor2.suse.de ([195.135.220.15]:48556 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750770AbbCKSfQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Mar 2015 14:35:16 -0400
+Date: Wed, 11 Mar 2015 19:35:12 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: David Rientjes <rientjes@google.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bhelgaas@google.com,
+	mingo@redhat.com, tglx@linutronix.de, hpa@zytor.com,
+	pure.logic@nexus-software.ie, jgross@suse.com, luto@amacapital.net,
+	andy.shevchenko@gmail.com, thomas.petazzoni@free-electrons.com,
+	JBeulich@suse.com, bp@suse.de, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [RFC v1 2/2] x86: kconfig: remove UP [IO]APIC options
+Message-ID: <20150311183512.GI25035@wotan.suse.de>
+References: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com>
+ <1426029275-9594-3-git-send-email-mcgrof@do-not-panic.com>
+ <alpine.DEB.2.10.1503101756460.26407@chino.kir.corp.google.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 03/30] PCI: Export busn_resource to drivers/pci
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-4-git-send-email-wangyijing@huawei.com> <20150311222835.GA1082@google.com> <55017BA1.7020700@huawei.com> <20150312193219.GA7346@google.com>
-In-Reply-To: <20150312193219.GA7346@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.10.1503101756460.26407@chino.kir.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> Hi Bjorn, busn_resource may would not be shared by multi domains,
->>
->> We insert bus number resource like:
->>
->> pci_add_resource(&resources, &busn_resource);	
->> 	pci_bus_insert_busn_res(root_bus, start, bus_max);	//start is the root bus number provided by arch pci host driver, bus max here == 255
->> 		get_pci_domain_busn_res(domain)	//for root bus	//try to get a domain specific pci_domain_busn_res, if not exist, create it.
->> 			request_resource_conflict(domain_specific_busn_res, res)   //request busn res(start, bus_max) from the pci_domain_busn_res.
->>
->> So every domain has its own pci_domain_busn_res , different domain would not share the same bus number resource.
+On Tue, Mar 10, 2015 at 05:58:27PM -0700, David Rientjes wrote:
+> On Tue, 10 Mar 2015, Luis R. Rodriguez wrote:
 > 
-> The intent of pci_add_resource() and passing the resulting resource list
-> into pci_scan_root_bus(), etc., is that the host bridge may consume any
-> resources described by the list.  If we pass the same resource to multiple
-> calls, that means the resource must be shared between the multiple host
-> bridges involved.  For bus numbers, that makes some sense if the platform
-> considers the bridges to be in the same domain, but not if they are in
-> different domains.
+> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > 
+> > These were here mostly to help as wrappers for PCI_MSI
+> > under certain UP 32-bit build scenarios, now that PCI_MSI
+> > properly selects what it needs and when it needs it these
+> > Kconfig options are now only enabling users reduce the size
+> > of 32-bit kernels optionally. Since 32-bit kernels are not
+> > in a huge state of flux and since there is no penalty for
+> > adding APIC support other than a bit of size moving forward
+> > we simply expect folks to enable APIC options on 32-bit systems
+> > when a system needs it, as with PCI_MSI. This lets us remove
+> > clutter from the x86 Kconfig file.
+> > 
 > 
-> If we export busn_resource, we have no control over what domains it becomes
-> associated with because the domain is passed into pci_scan_root_bus() by
-> the caller.
+> Check out Linus's latest tree at 
+> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git and see 
+> how it looks after commit 50849eefea3b ("x86/Kconfig: Simplify X86_UP_APIC 
+> handling") and commit b1da1e715d4f ("x86/Kconfig: Simplify X86_IO_APIC 
+> dependencies").
 
-Agree, I will drop this patch, thanks!
+OK thanks yeah I see that now, yeah this can be simplified further, will
+send a follow up based on top of these two.
 
-> 
-> Bjorn
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+ Luis
