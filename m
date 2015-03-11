@@ -1,57 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:40292 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753363AbbCGVLF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Mar 2015 16:11:05 -0500
+Received: from szxga03-in.huawei.com ([119.145.14.66]:48574 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976AbbCKBMC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 21:12:02 -0400
+Message-ID: <54FF9655.7080604@huawei.com>
+Date: Wed, 11 Mar 2015 09:11:49 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150307210514.GC3380@pd.tnic>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
-	<20150304101649.GA3663@pd.tnic>
-	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
-	<20150304200000.GB6276@gmail.com>
-	<CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
-	<20150306133312.GC4259@pd.tnic>
-	<CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
-	<CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
-	<20150307210514.GC3380@pd.tnic>
-Date: Sat, 7 Mar 2015 13:11:04 -0800
-Message-ID: <CAE9FiQWVdzX=eDGEz3u906TYTagps0VZsSWKHRqJro8wfgGjeg@mail.gmail.com>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
+	"Paul Bolle" <pebolle@tiscali.nl>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	"Dmitry Torokhov" <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Rob Herring" <robh@kernel.org>
+Subject: Re: [PATCH v5 3/4] pci: iproc: Add Broadcom iProc PCIe support
+References: <1425947886-23705-1-git-send-email-rjui@broadcom.com> <1425947886-23705-4-git-send-email-rjui@broadcom.com> <20150310214010.GB32204@google.com>
+In-Reply-To: <20150310214010.GB32204@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 7, 2015 at 1:05 PM, Borislav Petkov <bp@suse.de> wrote:
-> On Fri, Mar 06, 2015 at 11:53:22AM -0800, Yinghai Lu wrote:
-> ---
-> Commit
->
->   f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
->
-> started passing KASLR status to kernel proper, but it uses a physical
-> address as the vaule, leading to parsing bogus KASLR status in kernel
-> proper.
->
-> The setup_data linked list and thus the element which contains
-> kaslr_enabled is chained together using physical addresses. At the time
-> when we access it in the kernel proper, we're already running with
-> paging enabled and therefore must access it through its virtual address.
->
-> This patch changes the code to use early_memmap() and access the value.
-> ---
+...
+>> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+>> +				  &pcie->sysdata, pcie->resources);
+>> +	if (!bus) {
+>> +		dev_err(pcie->dev, "unable to create PCI root bus\n");
+>> +		ret = -ENOMEM;
+>> +		goto err_power_off_phy;
+>> +	}
+>> +	pcie->root_bus = bus;
+>> +
+>> +	ret = iproc_pcie_check_link(pcie, bus);
+>> +	if (ret) {
+>> +		dev_err(pcie->dev, "no PCIe EP device detected\n");
+>> +		goto err_rm_root_bus;
+>> +	}
+>> +
+>> +	iproc_pcie_enable(pcie);
+>> +
+>> +	pci_scan_child_bus(bus);
+>> +	pci_assign_unassigned_bus_resources(bus);
+>> +	pci_bus_add_devices(bus);
+>> +
+>> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> 
+> I think the IRQ fixup should be before pci_bus_add_devices().  CC'd Yijing,
+> who's been fixing similar issues.
+> 
+> pci_bus_add_devices() is the point where drivers can claim these devices,
+> and we don't want to change things after a driver claims the device.
 
-Good to me.
+Yes, we should call pci_bus_add_devices() at last, after all resources(mem/io/irq) are
+configured properly. Otherwise, this code could not be run normally in non system boot up path.
+
+Thanks!
+Yijing.
+
+
+> 
+>> +
+>> +	return 0;
+>> +
+>> +err_rm_root_bus:
+>> +	pci_stop_root_bus(bus);
+>> +	pci_remove_root_bus(bus);
+>> +
+>> +err_power_off_phy:
+>> +	if (pcie->phy)
+>> +		phy_power_off(pcie->phy);
+>> +err_exit_phy:
+>> +	if (pcie->phy)
+>> +		phy_exit(pcie->phy);
+>> +
+>> +	return ret;
+>> +}
+>> +EXPORT_SYMBOL(iproc_pcie_setup);
+>> +
+>> +int iproc_pcie_remove(struct iproc_pcie *pcie)
+>> +{
+>> +	pci_stop_root_bus(pcie->root_bus);
+>> +	pci_remove_root_bus(pcie->root_bus);
+>> +
+>> +	if (pcie->phy) {
+>> +		phy_power_off(pcie->phy);
+>> +		phy_exit(pcie->phy);
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL(iproc_pcie_remove);
+> 
+> These exports wouldn't be needed if this were all squashed into one file.
+> 
+>> +
+>> +MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
+>> +MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
+>> +MODULE_LICENSE("GPL v2");
+>> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+>> new file mode 100644
+>> index 0000000..569bc04
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-iproc.h
+>> @@ -0,0 +1,42 @@
+>> +/*
+>> + * Copyright (C) 2014-2015 Broadcom Corporation
+>> + *
+>> + * This program is free software; you can redistribute it and/or
+>> + * modify it under the terms of the GNU General Public License as
+>> + * published by the Free Software Foundation version 2.
+>> + *
+>> + * This program is distributed "as is" WITHOUT ANY WARRANTY of any
+>> + * kind, whether express or implied; without even the implied warranty
+>> + * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
+>> + */
+>> +
+>> +#ifndef _PCIE_IPROC_H
+>> +#define _PCIE_IPROC_H
+>> +
+>> +#define IPROC_PCIE_MAX_NUM_IRQS 6
+>> +
+>> +/**
+>> + * iProc PCIe device
+>> + * @dev: pointer to device data structure
+>> + * @base: PCIe host controller I/O register base
+>> + * @resources: linked list of all PCI resources
+>> + * @sysdata: Per PCI controller data
+>> + * @root_bus: pointer to root bus
+>> + * @phy: optional PHY device that controls the Serdes
+>> + * @irqs: interrupt IDs
+>> + */
+>> +struct iproc_pcie {
+>> +	struct device *dev;
+>> +	void __iomem *base;
+>> +	struct list_head *resources;
+>> +	struct pci_sys_data sysdata;
+>> +	struct pci_bus *root_bus;
+>> +	struct phy *phy;
+>> +	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+>> +};
+>> +
+>> +extern int iproc_pcie_setup(struct iproc_pcie *pcie);
+>> +extern int iproc_pcie_remove(struct iproc_pcie *pcie);
+> 
+> Hopefully you can squash this all into one file, but if you can't, my
+> preference is to omit "extern" on function declarations.
+> 
+>> +
+>> +#endif /* _PCIE_IPROC_H */
+>> -- 
+>> 1.7.9.5
+>>
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
