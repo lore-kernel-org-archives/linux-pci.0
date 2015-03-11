@@ -1,230 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28913 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935885AbbCDIBo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:44 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 15/15] x86, pci: export SETUP_PCI data via sysfs
-Date: Wed,  4 Mar 2015 00:00:48 -0800
-Message-Id: <1425456048-16236-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:51397 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753037AbbCKP0R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Mar 2015 11:26:17 -0400
+Message-ID: <55005E82.4050607@ti.com>
+Date: Wed, 11 Mar 2015 11:25:54 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Rob Herring <robherring2@gmail.com>
+CC: Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH] pci: of : fix BUG: unable to handle kernel
+References: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com> <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com>
+In-Reply-To: <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could let kexec-tools to rebuild SETUP_PCI and pass it to
-second kernel.
+On 03/11/2015 08:35 AM, Rob Herring wrote:
+> On Tue, Mar 10, 2015 at 10:25 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+>> On some platforms such as that based on x86, ia64 etc, root bus is
+>> created with parent node passed in as NULL to pci_create_root_bus().
+>> On these platforms, the patch series "PCI: get DMA configuration from
+>> parent device" when applied causes kernel crash. So add a check for this
+>> in of_pci_dma_configure()
+>
+> Wouldn't these arches have OF disabled and call an empty function?
+The current patch series does have a empty function if OF is disabled.
+> Regardless, we still need this.
+These archs have OF enabled, but they call  pci_create_root_bus() with 
+NULL parent node passed in. That is why the crash happens.
 
-Now kexec-tools already build SETUP_EFI and SETUP_E820EXT.
+Murali
+>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>
+> I'm assuming Bjorn will apply this.
+>
+> Acked-by: Rob Herring<robh@kernel.org>
+>
+>> ---
+>>   drivers/of/of_pci.c |    4 ++++
+>>   1 file changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>> index 86d3c38..a8e485c 100644
+>> --- a/drivers/of/of_pci.c
+>> +++ b/drivers/of/of_pci.c
+>> @@ -129,6 +129,10 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
+>>          struct device *dev =&pci_dev->dev;
+>>          struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>>
+>> +       /* Some platforms can have bridge->parent set to NULL */
+>> +       if (!bridge->parent)
+>> +               return;
+>> +
+>>          of_dma_configure(dev, bridge->parent->of_node);
+>>          pci_put_host_bridge_device(bridge);
+>>   }
+>> --
+>> 1.7.9.5
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/common.c | 175 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 175 insertions(+)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index a5de331..fb4765b 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -682,6 +682,8 @@ void __init add_pci(u64 pa_data)
- 
- struct firmware_setup_pci_entry {
- 	struct list_head list;
-+	struct kobject kobj;
-+	struct bin_attribute *rom_attr;
- 	uint16_t vendor;
- 	uint16_t devid;
- 	uint64_t pcilen;
-@@ -803,6 +805,179 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_SYSFS
-+static inline struct firmware_setup_pci_entry *
-+to_setup_pci_entry(struct kobject *kobj)
-+{
-+	return container_of(kobj, struct firmware_setup_pci_entry, kobj);
-+}
-+
-+static ssize_t vendor_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->vendor);
-+}
-+
-+static ssize_t devid_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->devid);
-+}
-+
-+static ssize_t pcilen_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
-+			(unsigned long long)entry->pcilen);
-+}
-+
-+static ssize_t segment_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->segment);
-+}
-+
-+static ssize_t bus_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
-+			(unsigned long long)entry->bus);
-+}
-+
-+static ssize_t device_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
-+			(unsigned long long)entry->device);
-+}
-+
-+static ssize_t function_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%1llx\n",
-+			(unsigned long long)entry->function);
-+}
-+
-+struct setup_pci_attribute {
-+	struct attribute attr;
-+	ssize_t (*show)(struct firmware_setup_pci_entry *entry, char *buf);
-+};
-+
-+static inline struct setup_pci_attribute *to_setup_pci_attr(
-+							struct attribute *attr)
-+{
-+	return container_of(attr, struct setup_pci_attribute, attr);
-+}
-+
-+static ssize_t setup_pci_attr_show(struct kobject *kobj,
-+				   struct attribute *attr, char *buf)
-+{
-+	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
-+	struct setup_pci_attribute *setup_pci_attr = to_setup_pci_attr(attr);
-+
-+	return setup_pci_attr->show(entry, buf);
-+}
-+
-+static struct setup_pci_attribute setup_pci_vendor_attr = __ATTR_RO(vendor);
-+static struct setup_pci_attribute setup_pci_devid_attr = __ATTR_RO(devid);
-+static struct setup_pci_attribute setup_pci_pcilen_attr = __ATTR_RO(pcilen);
-+static struct setup_pci_attribute setup_pci_segment_attr = __ATTR_RO(segment);
-+static struct setup_pci_attribute setup_pci_bus_attr = __ATTR_RO(bus);
-+static struct setup_pci_attribute setup_pci_device_attr = __ATTR_RO(device);
-+static struct setup_pci_attribute setup_pci_function_attr = __ATTR_RO(function);
-+
-+/*
-+ * These are default attributes that are added for every memmap entry.
-+ */
-+static struct attribute *def_attrs[] = {
-+	&setup_pci_vendor_attr.attr,
-+	&setup_pci_devid_attr.attr,
-+	&setup_pci_pcilen_attr.attr,
-+	&setup_pci_segment_attr.attr,
-+	&setup_pci_bus_attr.attr,
-+	&setup_pci_device_attr.attr,
-+	&setup_pci_function_attr.attr,
-+	NULL
-+};
-+
-+static const struct sysfs_ops setup_pci_attr_ops = {
-+	.show = setup_pci_attr_show,
-+};
-+
-+static struct kobj_type __refdata setup_pci_ktype = {
-+	.sysfs_ops      = &setup_pci_attr_ops,
-+	.default_attrs  = def_attrs,
-+};
-+
-+static ssize_t setup_pci_rom_read(struct file *filp, struct kobject *kobj,
-+				  struct bin_attribute *bin_attr, char *buf,
-+				  loff_t off, size_t count)
-+{
-+	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
-+
-+	if (off >= entry->pcilen)
-+		count = 0;
-+	else {
-+		unsigned char *rom = phys_to_virt(entry->romdata);
-+
-+		if (off + count > entry->pcilen)
-+			count = entry->pcilen - off;
-+
-+		memcpy(buf, rom + off, count);
-+	}
-+
-+	return count;
-+}
-+
-+static int __init add_sysfs_fw_setup_pci_entry(
-+					struct firmware_setup_pci_entry *entry)
-+{
-+	int retval = 0;
-+	static int setup_pci_entries_nr;
-+	static struct kset *setup_pci_kset;
-+	struct bin_attribute *attr;
-+
-+	kobject_init(&entry->kobj, &setup_pci_ktype);
-+
-+	if (!setup_pci_kset) {
-+		setup_pci_kset = kset_create_and_add("setup_pci", NULL,
-+						     firmware_kobj);
-+		if (!setup_pci_kset)
-+			return -ENOMEM;
-+	}
-+
-+	entry->kobj.kset = setup_pci_kset;
-+	retval = kobject_add(&entry->kobj, NULL, "%d", setup_pci_entries_nr++);
-+	if (retval) {
-+		kobject_put(&entry->kobj);
-+		return retval;
-+	}
-+
-+	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
-+	if (!attr)
-+		return -ENOMEM;
-+
-+	sysfs_bin_attr_init(attr);
-+	attr->size = entry->pcilen;
-+	attr->attr.name = "rom";
-+	attr->attr.mode = S_IRUSR;
-+	attr->read = setup_pci_rom_read;
-+	retval = sysfs_create_bin_file(&entry->kobj, attr);
-+	if (retval)
-+		kfree(attr);
-+	entry->rom_attr = attr;
-+
-+	return retval;
-+}
-+
-+static int __init firmware_setup_pci_init(void)
-+{
-+	struct firmware_setup_pci_entry *entry;
-+
-+	list_for_each_entry(entry, &setup_pci_entries, list)
-+		add_sysfs_fw_setup_pci_entry(entry);
-+
-+	return 0;
-+}
-+late_initcall(firmware_setup_pci_init);
-+#endif
-+
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
- 	int err;
 -- 
-1.8.4.5
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
