@@ -1,224 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28822 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbbCYU1w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 16:27:52 -0400
-Date: Wed, 25 Mar 2015 16:27:00 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:59990 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbbCKGXV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 02:23:21 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 11 Mar 2015 16:23:19 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id BB0012CE8055
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:23:15 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2B6N7lm44236930
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:23:15 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2B6MfZh006454
+	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:22:42 +1100
+Date: Wed, 11 Mar 2015 14:22:25 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michael D Labriola <mlabriol@gdeb.com>,
-	xen-devel@lists.xenproject.org, Stuart Wehrly <swehrly@gdeb.com>,
-	michael.d.labriola@gmail.com, Jayson A Dyke <jdyke@gdeb.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Xen-devel] 3.18 xen-pcifront regression?
-Message-ID: <20150325202700.GS25884@l.oracle.com>
-References: <OF77E25ED8.9CA80CE3-ON85257E12.004F7B31-85257E12.0053B9A0@gdeb.com>
- <20150324152806.GD14418@l.oracle.com>
- <20150324172702.GC2495@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v12 15/21] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+Message-ID: <20150311062225.GC5826@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224083442.32124.96716.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150224085234.GJ6220@google.com>
+ <20150302074132.GG21571@richard>
+ <20150311025125.GC10994@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150324172702.GC2495@google.com>
+In-Reply-To: <20150311025125.GC10994@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 24, 2015 at 12:27:02PM -0500, Bjorn Helgaas wrote:
-> [+cc Rafael, linux-pci, linux-acpi]
-> 
-> On Tue, Mar 24, 2015 at 11:28:06AM -0400, Konrad Rzeszutek Wilk wrote:
-> > On Tue, Mar 24, 2015 at 11:14:29AM -0400, Michael D Labriola wrote:
-> > > I'm having problems booting a 3.18 or newer domU w/ PCI devices passed 
-> > > through.  It only seems to be the domU kernel that's upset (i.e., Behavior 
-> > > is identical whether I'm running 3.19 or 3.13 dom0).  I'm running a 32bit 
-> > > dom0 (3.13.11) w/ 64bit 4.4.0 hypervisor and 32bit domU.  I get the 
-> > > following Oops when trying to boot my domU with a couple PCI cards passed 
-> > > through:
-> > > 
-> > > BUG: unable to handle kernel paging request at 0030303e
-> > > IP: [<c06ed0e6>] acpi_ns_validate_handle+0x12/0x1a
-> > > *pdpt = 00000000019f1027 *pde = 0000000000000000 
-> > > Oops: 0000 [#1] PREEMPT SMP 
-> > > Modules linked in: xen_pcifront(+) pcspkr xen_blkfront loop
-> > > CPU: 0 PID: 18 Comm: xenwatch Not tainted 3.17.0-test+ #6
-> > > task: cb869950 ti: cb8ae000 task.ti: cb8ae000
-> > > EIP: 0061:[<c06ed0e6>] EFLAGS: 00010246 CPU: 0
-> > > EIP is at acpi_ns_validate_handle+0x12/0x1a
-> > > EAX: 00000000 EBX: cb895dc0 ECX: 00000000 EDX: 0030303a
-> > > ESI: c0a6bccd EDI: 00000000 EBP: 00000004 ESP: cb8afd00
-> > >  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0069
-> > > CR0: 8005003b CR2: 0030303e CR3: 0a68e000 CR4: 00040660
-> > > Stack:
-> > >  c06eda4d 00000000 c096a21d 00000000 00000000 00006462 00000000 c0c102c0
-> > >  0030303a 00040004 0030303a cb8afd94 cb8afdec cb8afd60 c06b78e1 cb8afd60
-> > >  00000061 00000246 c0407bc7 c0c102c0 00000000 cb8afda0 cb8afda8 cb8afdb0
-> > > Call Trace:
-> > >  [<c06eda4d>] ? acpi_evaluate_object+0x31/0x1fc
-> > 
-> > We should not be calling in any acpi code in PV domU guests.
-> > 
-> > WE actually disable it (acpi=0) to make sure we don't call it - as
-> > there is no ACPI AML data at all in the guest.
-> > 
-> > CC-ing Bjorn.
-> > >  [<c096a21d>] ? resume_kernel+0x5/0x7
-> > >  [<c06b78e1>] ? pci_get_hp_params+0x111/0x4e0
-> > >  [<c0407bc7>] ? xen_force_evtchn_callback+0x17/0x30
-> > >  [<c04085fb>] ? xen_restore_fl_direct_reloc+0x4/0x4
-> > >  [<c0699d34>] ? pci_device_add+0x24/0x450
-> > >  [<c06975ce>] ? pci_bus_read_config_word+0x6e/0x80
-> > >  [<c069a66d>] ? pci_scan_single_device+0x8d/0xb0
-> > >  [<c069a6cc>] ? pci_scan_slot+0x3c/0xf0
-> > >  [<c069b1bc>] ? pci_scan_child_bus+0x1c/0x90
-> > >  [<c069b71a>] ? pci_scan_bus_parented+0x6a/0x90
-> > >  [<d088d241>] ? pcifront_scan_root+0x91/0x130 [xen_pcifront]
-> > >  [<d088e69f>] ? pcifront_backend_changed+0x4af/0x654 [xen_pcifront]
-> > >  [<c070dd0f>] ? xenbus_gather+0x5f/0x90
-> > >  [<c070dd0f>] ? xenbus_gather+0x5f/0x90
-> > >  [<c070c393>] ? xenbus_read_driver_state+0x33/0x50
-> > >  [<c070f375>] ? xenbus_otherend_changed+0x95/0xa0
-> > >  [<c0710a5f>] ? backend_changed+0xf/0x20
-> > >  [<c070d712>] ? xenwatch_thread+0x72/0x110
-> > >  [<c0486140>] ? bit_waitqueue+0x50/0x50
-> > >  [<c070d6a0>] ? join+0x70/0x70
-> > >  [<c046e59b>] ? kthread+0xab/0xd0
-> > >  [<c096a1c1>] ? ret_from_kernel_thread+0x21/0x30
-> > >  [<c046e4f0>] ? flush_kthread_worker+0xa0/0xa0
-> > > Code: 03 10 00 00 eb 0e 46 83 c2 04 4b 85 db 75 b9 c6 02 00 31 c0 5b 5e 5f 
-> > > 5d c3 89 c2 8d 40 ff 83 f8 fd 76 06 a1 2c 32 c1 c0 c3 31 c0 <80> 7a 04 0f 
-> > > 0f 44 c2 c3 83 ec 10 83 f8 1d 76 24 89 44 24 0c c7
-> > > EIP: [<c06ed0e6>] acpi_ns_validate_handle+0x12/0x1a SS:ESP 0069:cb8afd00
-> > > CR2: 000000000030303e
-> > > ---[ end trace d4ddeb038cbcbdf7 ]---
-> > > 
-> > > 
-> > > I've bisected down to the following commit in 3.18, which breaks my 
-> > > system.
-> > > 
-> > > 6cd33649fa83d97ba7b66f1d871a360e867c5220 is the first bad commit
-> > > commit 6cd33649fa83d97ba7b66f1d871a360e867c5220
-> > > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > > Date:   Wed Aug 27 14:29:47 2014 -0600
-> > > 
-> > >     PCI: Add pci_configure_device() during enumeration
-> > >  
-> > >     Some platforms can tell the OS how to configure PCI devices, e.g., how 
-> > > to
-> > >     set cache line size, error reporting enables, etc.  ACPI defines _HPP 
-> > > and
-> > >     _HPX methods for this purpose.
-> > >  
-> > >     This configuration was previously done by some of the hotplug drivers 
-> > > using
-> > >     pci_configure_slot().  But not all hotplug drivers did this, and per 
-> > > the
-> > >     spec (ACPI rev 5.0, sec 6.2.7), we can also do it for "devices not
-> > >     configured by the BIOS at system boot."
-> > >  
-> > >     Move this configuration into the PCI core by adding 
-> > > pci_configure_device()
-> > >     and calling it from pci_device_add(), so we do this for all devices as 
-> > > we
-> > >     enumerate them.
-> > >  
-> > >     This is based on pci_configure_slot(), which is used by hotplug 
-> > > drivers.
-> > >     I omitted:
-> > >  
-> > >       - pcie_bus_configure_settings() because it configures MPS and MRRS, 
-> > > which
-> > >         requires global knowledge of the fabric and must be done later, 
-> > > and
-> > >  
-> > >       - configuration of subordinate devices; that will happen when we 
-> > > call
-> > >         pci_device_add() for those devices.
-> > >  
-> > >     Because pci_configure_slot() was only done by hotplug drivers, this 
-> > > initial
-> > >     version of pci_configure_device() only configures hot-added devices,
-> > >     ignoring anything added during boot.
-> > >  
-> > >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >     Acked-by: Yinghai Lu <yinghai@kernel.org>
-> > > 
-> > > :040000 040000 4fadbe1e5f8f18daa6be7bdb7c9c1d6def0a2615 
-> > > 9aef037aa35ca156ac46553f7fc4c5b1b3980c19 M      drivers
-> > > 
-> > > 
-> > > I've reverted that commit on top of 3.19, which feels incredibly wrong, 
-> > > but does fix the problem on my system.  This is a little over my head, 
-> > > though...  ;-)
-> > > 
-> > > Thoughts?
-> 
-> Thanks for the report, Michael, and sorry for the inconvenience.  I think
-> the patch below will fix it, but I don't think it's the right fix either
-> because it seems a little ad hoc to sprinkle "acpi_pci_disabled" tests
-> around like fairy dust.  I wonder if we can set things up so ACPI methods
-> would fail gracefully like they do when ACPI is disabled at compile-time.
-> 
-> I can boot with "acpi=off" on qemu just fine, and when we look up the ACPI
-> device handles, we just get NULL pointers, so everything works out even
-> without a fix like the one below.
+On Tue, Mar 10, 2015 at 09:51:25PM -0500, Bjorn Helgaas wrote:
+>On Mon, Mar 02, 2015 at 03:41:32PM +0800, Wei Yang wrote:
+>> On Tue, Feb 24, 2015 at 02:52:34AM -0600, Bjorn Helgaas wrote:
+>> >On Tue, Feb 24, 2015 at 02:34:42AM -0600, Bjorn Helgaas wrote:
+>> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> >> 
+>> >> On PHB3, PF IOV BAR will be covered by M64 window to have better PE
+>> >> isolation.  The total_pe number is usually different from total_VFs, which
+>> >> can lead to a conflict between MMIO space and the PE number.
+>> >> 
+>> >> For example, if total_VFs is 128 and total_pe is 256, the second half of
+>> >> M64 window will be part of other PCI device, which may already belong
+>> >> to other PEs.
+>> >
+>> >I'm still trying to wrap my mind around the explanation here.
+>> >
+>> >I *think* what's going on is that the M64 window must be a power-of-two
+>> >size.  If the VF(n) BAR space doesn't completely fill it, we might allocate
+>> >the leftover space to another device.  Then the M64 window for *this*
+>> >device may cause the other device to be associated with a PE it didn't
+>> >expect.
+>> 
+>> Yes, this is the exact reason.
+>
+>Can you include some of this text in your changelog, then?  I can wordsmith
+>it and try to make it fit together better.
+>
 
-<nods>
-> 
-> There must be something different about the way things get set up in that
-> domU kernel.  I'll try to look into that some more, but I'm going on
-> vacation for the next week, so if you learn anything before then, let me
-> know.
+Sure, I will do this.
 
-And I don't see where 'resume_kernel' gets called.
+>> >> +#ifdef CONFIG_PCI_IOV
+>> >> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>> >> +{
+>> >> +	struct pci_controller *hose;
+>> >> +	struct pnv_phb *phb;
+>> >> +	struct resource *res;
+>> >> +	int i;
+>> >> +	resource_size_t size;
+>> >> +	struct pci_dn *pdn;
+>> >> +
+>> >> +	if (!pdev->is_physfn || pdev->is_added)
+>> >> +		return;
+>> >> +
+>> >> +	hose = pci_bus_to_host(pdev->bus);
+>> >> +	phb = hose->private_data;
+>> >> +
+>> >> +	pdn = pci_get_pdn(pdev);
+>> >> +	pdn->max_vfs = 0;
+>> >> +
+>> >> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> >> +		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+>> >> +		if (!res->flags || res->parent)
+>> >> +			continue;
+>> >> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+>> >> +			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
+>> >> +				 i, res);
+>> >> +			continue;
+>> >> +		}
+>> >> +
+>> >> +		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+>> >> +		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+>> >> +		res->end = res->start + size * phb->ioda.total_pe - 1;
+>> >> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
+>> >> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+>> >> +				i, res, phb->ioda.total_pe);
+>> >> +	}
+>> >> +	pdn->max_vfs = phb->ioda.total_pe;
+>> >> +}
+>> >> +
+>> >> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+>> >> +{
+>> >> +	struct pci_dev *pdev;
+>> >> +	struct pci_bus *b;
+>> >> +
+>> >> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
+>> >> +		b = pdev->subordinate;
+>> >> +
+>> >> +		if (b)
+>> >> +			pnv_pci_ioda_fixup_sriov(b);
+>> >> +
+>> >> +		pnv_pci_ioda_fixup_iov_resources(pdev);
+>> >
+>> >I'm not sure this happens at the right time.  We have this call chain:
+>> >
+>> >  pcibios_scan_phb
+>> >    pci_create_root_bus
+>> >    pci_scan_child_bus
+>> >    pnv_pci_ioda_fixup_sriov
+>> >      pnv_pci_ioda_fixup_iov_resources
+>> >	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
+>> >	  increase res->size to accomodate 256 PEs (or roundup(totalVFs)
+>> >
+>> >so we only do the fixup_iov_resources() when we scan the PHB, and we
+>> >wouldn't do it at all for hot-added devices.
+>> 
+>> Yep, you are right :-)
+>> 
+>> I had a separate patch to do this in pcibios_add_pci_devices(). Looks we could
+>> merge them.
+>
+>Did you fix this in v13?  I don't see the change if you did.
+>
 
+I add this in [PATCH V13 15/21].
 
-And under my PV guest I see:
-# lspci
-00:00.0 USB Controller: NEC Corporation Device 0194 (rev 04)
-00:01.0 USB Controller: NEC Corporation Device 0194 (rev 03)
+In the file arch/powerpc/kernel/pci-hotplug.c, when hotplug a device, the
+fixup will be called on that bus too.
 
-when the guest boots up. Hm, what kind of cards are these?
-Could you also provide the config file and the guest config please?
+>> >> +	}
+>> >> +}
+>> >> +#endif /* CONFIG_PCI_IOV */
+>> >> +
+>> >>  /*
+>> >>   * This function is supposed to be called on basis of PE from top
+>> >>   * to bottom style. So the the I/O or MMIO segment assigned to
+>> >> @@ -2125,6 +2180,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>> >>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+>> >>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+>> >>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+>> >> +#ifdef CONFIG_PCI_IOV
+>> >> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
+>> >> +#endif /* CONFIG_PCI_IOV */
+>> >>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>> >>  
+>> >>  	/* Reset IODA tables to a clean state */
+>> >> 
+>> 
+>> -- 
+>> Richard Yang
+>> Help you, Help me
+>> 
 
-Thank you!
+-- 
+Richard Yang
+Help you, Help me
 
-> 
-> Bjorn
-> 
-> 
-> commit 6678b0fb6504c890481863b4916089b41e6042bf
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Mar 24 11:12:45 2015 -0500
-> 
->     PCI: Don't look for ACPI hotplug parameters if ACPI is disabled
->     
->     In a kernel with CONFIG_ACPI=y, pci_get_hp_params() evaluates ACPI methods
->     (_HPX, _HPP, etc.) to learn how to configure devices.  If ACPI has been
->     disabled at runtime, e.g., with "acpi=off", this causes an oops because
->     there's no AML at all.
->     
->     Before 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration"),
->     we only used pci_get_hp_params() for hot-added devices, but after it, we
->     use it for all devices, so we're much more likely to see the oops.
->     
->     Don't bother looking for ACPI configuration information if ACPI has been
->     disabled.
->     
->     Fixes: 6cd33649fa83 ("PCI: Add pci_configure_device() during enumeration")
->     Reported-by: Michael D Labriola <mlabriol@gdeb.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: stable@vger.kernel.org	# v3.18+
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 489063987325..c93fbe76d281 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -248,6 +248,9 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
->  	acpi_handle handle, phandle;
->  	struct pci_bus *pbus;
->  
-> +	if (acpi_pci_disabled)
-> +		return -ENODEV;
-> +
->  	handle = NULL;
->  	for (pbus = dev->bus; pbus; pbus = pbus->parent) {
->  		handle = acpi_pci_get_bridge_handle(pbus);
