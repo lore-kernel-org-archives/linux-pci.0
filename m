@@ -1,43 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 29 Mar 2015 15:38:32 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35733 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbbCKWjl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 18:39:41 -0400
+Received: by ieclw3 with SMTP id lw3so3508769iec.2
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 15:39:40 -0700 (PDT)
+Date: Wed, 11 Mar 2015 17:32:11 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 12/86] x86/pci/sta2x11: use uapi/linux/pci_ids.h directly
-Message-ID: <1427635734-24786-13-git-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function
+ pci_scan_bus_parented()
+Message-ID: <20150311223211.GB1082@google.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
-use the new header directly so we can drop
-the wrapper in include/linux/pci_ids.h.
+On Mon, Mar 09, 2015 at 10:34:01AM +0800, Yijing Wang wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Use pci_scan_root_bus() instead of deprecated function
+> pci_scan_bus_parented().
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: xen-devel@lists.xenproject.org
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/xen-pcifront.c |   12 +++++++++---
+>  1 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index b1ffebe..9e7c28b 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/bitops.h>
+>  #include <linux/time.h>
+>  #include <xen/platform_pci.h>
+> +#include "pci.h"
+>  
+>  #include <asm/xen/swiotlb-xen.h>
+>  #define INVALID_GRANT_REF (0)
+> @@ -446,6 +447,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  				 unsigned int domain, unsigned int bus)
+>  {
+>  	struct pci_bus *b;
+> +	LIST_HEAD(resources);
+>  	struct pcifront_sd *sd = NULL;
+>  	struct pci_bus_entry *bus_entry = NULL;
+>  	int err = 0;
+> @@ -470,17 +472,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  		err = -ENOMEM;
+>  		goto err_out;
+>  	}
+> +	pci_add_resource(&resources, &ioport_resource);
+> +	pci_add_resource(&resources, &iomem_resource);
+> +	pci_add_resource(&resources, &busn_resource);
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- arch/x86/pci/sta2x11-fixup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Since I don't want to export busn_resource, you might have to allocate your
+own struct resource for it here.  And, of course, figure out the details of
+which PCI domain you're in and whether you need to share one struct
+resource across several host bridges in the same domain.
 
-diff --git a/arch/x86/pci/sta2x11-fixup.c b/arch/x86/pci/sta2x11-fixup.c
-index 5ceda85..96e5e10 100644
---- a/arch/x86/pci/sta2x11-fixup.c
-+++ b/arch/x86/pci/sta2x11-fixup.c
-@@ -23,7 +23,7 @@
-  */
- 
- #include <linux/pci.h>
--#include <linux/pci_ids.h>
-+#include <uapi/linux/pci_ids.h>
- #include <linux/export.h>
- #include <linux/list.h>
- 
--- 
-MST
-
+>  	pcifront_init_sd(sd, domain, bus, pdev);
+>  
+>  	pci_lock_rescan_remove();
+>  
+> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> -				  &pcifront_bus_ops, sd);
+> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+> +				  &pcifront_bus_ops, sd, &resources);
+>  	if (!b) {
+>  		dev_err(&pdev->xdev->dev,
+>  			"Error creating PCI Frontend Bus!\n");
+>  		err = -ENOMEM;
+>  		pci_unlock_rescan_remove();
+> +		pci_free_resource_list(&resources);
+>  		goto err_out;
+>  	}
+>  
+> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  
+>  	list_add(&bus_entry->list, &pdev->root_buses);
+>  
+> -	/* pci_scan_bus_parented skips devices which do not have a have
+> +	/* pci_scan_root_bus skips devices which do not have a
+>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+>  	err = pcifront_scan_bus(pdev, domain, bus, b);
+>  
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
