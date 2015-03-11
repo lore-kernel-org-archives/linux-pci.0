@@ -1,142 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:39591 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbbCLBsc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 21:48:32 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, x86@kernel.org,
+	mingo@redhat.com, bp@alien8.de, lv.zheng@intel.com, hpa@zytor.com,
+	tglx@linutronix.de, yinghai@kernel.org, lenb@kernel.org,
+	linux-pci@vger.kernel.org, tony.luck@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: Fully disable devices before releasing IRQ resource
+Date: Wed, 11 Mar 2015 23:04:19 +0100
+Message-ID: <2139068.CEUJTvBkYG@vostro.rjw.lan>
+In-Reply-To: <1426092450.3643.7.camel@redhat.com>
+References: <20150305210529.6393.29546.stgit@gimli.home> <1425613912.5200.344.camel@redhat.com> <1426092450.3643.7.camel@redhat.com>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-Date: Wed, 11 Mar 2015 18:48:32 -0700
-Message-ID: <CAA93t1qpPqbih+UB0McA_d_+2rVaNkXsinAUxYzK9+JXSS+L-g@mail.gmail.com>
-Subject: Hit a deadlock: between AER and pcieport/pciehp
-From: Rajat Jain <rajatxjain@gmail.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wednesday, March 11, 2015 10:47:30 AM Alex Williamson wrote:
+> On Thu, 2015-03-05 at 20:51 -0700, Alex Williamson wrote:
+> > On Fri, 2015-03-06 at 09:49 +0800, Jiang Liu wrote:
+> > > On 2015/3/6 5:06, Alex Williamson wrote:
+> > > > The IRQ resource for a device is established when pci_enabled_device()
+> > > > is called on a fully disabled device (ie. enable_cnt == 0).  With
+> > > > commit b4b55cda5874 ("x86/PCI: Refine the way to release PCI IRQ
+> > > > resources") this same IRQ resource is released when the driver is
+> > > > unbound from the device, regardless of the enable_cnt.  This presents
+> > > > the situation that an ill-behaved driver can now make a device
+> > > > unusable to subsequent drivers by an imbalance in their use of
+> > > > pci_enable/disable_device().  It's one thing to break your own device
+> > > > if you're one of these ill-behaved drivers, but it's a serious
+> > > > regression for secondary drivers like vfio-pci, which are innocent
+> > > > of the transgressions of the previous driver.
+> > > > 
+> > > > Resolve by pushing the device to a fully disabled state before
+> > > > releasing the IRQ resource.
+> > > > 
+> > > > Fixes: b4b55cda5874 ("x86/PCI: Refine the way to release PCI IRQ resources")
+> > > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > > Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> > > > ---
+> > > >  arch/x86/pci/common.c |   13 ++++++++++++-
+> > > >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> > > > index 3d2612b..4810194 100644
+> > > > --- a/arch/x86/pci/common.c
+> > > > +++ b/arch/x86/pci/common.c
+> > > > @@ -527,8 +527,19 @@ static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
+> > > >  	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
+> > > >  		return NOTIFY_DONE;
+> > > >  
+> > > > -	if (pcibios_disable_irq)
+> > > > +	if (pcibios_disable_irq) {
+> > > > +		/*
+> > > > +		 * Broken drivers may allow a device to be .remove()'d while
+> > > > +		 * still enabled.  pci_enable_device() will only re-establish
+> > > > +		 * dev->irq if the devices is fully disabled.  So if we want
+> > > > +		 * to release the IRQ, we need to make sure the next driver
+> > > > +		 * can re-establish it using pci_enable_device().
+> > > > +		 */
+> > > > +		while (pci_is_enabled(dev))
+> > > > +			pci_disable_device(dev);
+> > > > +
+> > > >  		pcibios_disable_irq(dev);
+> > > > +	}
+> > > Hi Alex,
+> > > 	Thanks for debugging and fixing it.
+> > > 	Will it be feasible to give a debug message to remind those
+> > > driver authors to correctly disable PCI when unbinding?
+> > 
+> > I can certainly add a warning to the loop, it loses a bit of its teeth
+> > here though since we can't specify which driver to blame at this point.
+> > Maybe that warning and perhaps this enabling roll-back should happen in
+> > drivers/pci/pci-driver.c:pci_device_remove().  Bjorn, would you prefer
+> > it be done generically there?  Thanks,
+> 
+> Unfortunately there's a long standing comment in pci_device_remove():
+> 
+>         /*
+>          * We would love to complain here if pci_dev->is_enabled is set, that
+>          * the driver should have called pci_disable_device(), but the
+>          * unfortunate fact is there are too many odd BIOS and bridge setups
+>          * that don't like drivers doing that all of the time.
+>          * Oh well, we can dream of sane hardware when we sleep, no matter how
+>          * horrible the crap we have to deal with is when we are awake...
+>          */
+> 
+> So, unless we can somehow ignore that comment, I suspect forcing the
+> device to be disabled on driver remove, whether done from pci-core or
+> from x86/pci, is going to cause all sorts of breakage.  Are the
+> expectations set by b4b55cda5874 really valid?  It seems like something
+> needs to be done to allow the IRQ to be automatically re-established on
+> x86 regardless of the driver doing the right thing when releasing the
+> device.  We're still looking at a regression for v4.0 as a result of
+> b4b55cda5874.
+
+In which case we probably should revert commit b4b55cda5874 for the time being.
+
+At least I'd be very nervous about any ad-hoc fixes at this stage of the cycle.
+
+Gerry?
 
 
-I have hit a kernel deadlock situation on my system that has
-hierarchical hot plug situations (i.e. we can hot-plug a card, that
-itself may have a hot-plug slot for another level of hot-pluggable
-add-on cards). In summary, I see 2 threads that are both waiting on
-mutexes that is acquired by the other one. The mutexes are the
-(global) "pci_bus_sem" and "device->mutex" respectively.
-
-
-Thread1
- =======
- This is the pciehp worker thread, that scans a new card, and on
-finding that there is a hotplug slot downstream, tries to
-pci_create_slot().
- pciehp_power_thread()
-   -> pciehp_enable_slot()
-     -> pciehp_configure_device()
-       -> pci_bus_add_devices() discovers all devices including a new
-hotplug slot.
-         -> ....(etc)...
-         -> device_attach(dev) (for the newly discovered HP slot /
-downstream port)
-           -> device_lock(dev) SUCCESSFULLY ACQUIRES dev->mutex for
-the new slot.
-         -> ....(etc)...
-         -> ... (goes on)
-         -> pciehp_probe(dev)
-             -> __pci_hp_register()
-                -> pci_create_slot()
-                     -> down_write(pci_bus_sem); /* Deadlocked */
-
- This how the stack looks like:
-  [<ffffffff814e9923>] call_rwsem_down_write_failed+0x13/0x20
- [<ffffffff81522d4f>] pci_create_slot+0x3f/0x280
- [<ffffffff8152c030>] __pci_hp_register+0x70/0x400
- [<ffffffff8152cf49>] pciehp_probe+0x1a9/0x450
- [<ffffffff8152865d>] pcie_port_probe_service+0x3d/0x90
- [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
- [<ffffffff815c490b>] __device_attach+0x4b/0x60
- [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
- [<ffffffff815c4468>] device_attach+0xa8/0xc0
- [<ffffffff815c38d0>] bus_probe_device+0xb0/0xe0
- [<ffffffff815c16ce>] device_add+0x3de/0x560
- [<ffffffff815c1a2e>] device_register+0x1e/0x30
- [<ffffffff81528aef>] pcie_port_device_register+0x32f/0x510
- [<ffffffff81528eb8>] pcie_portdrv_probe+0x48/0x80
- [<ffffffff8151b17c>] pci_device_probe+0x9c/0xf0
- [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
- [<ffffffff815c490b>] __device_attach+0x4b/0x60
- [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
- [<ffffffff815c4468>] device_attach+0xa8/0xc0
- [<ffffffff815116c1>] pci_bus_add_device+0x41/0x70
- [<ffffffff81511a41>] pci_bus_add_devices+0x41/0x90
- [<ffffffff81511a6f>] pci_bus_add_devices+0x6f/0x90
- [<ffffffff8152e7e2>] pciehp_configure_device+0xa2/0x140
- [<ffffffff8152df08>] pciehp_enable_slot+0x188/0x2d0
- [<ffffffff8152e3d1>] pciehp_power_thread+0x2b1/0x3c0
- [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
- [<ffffffff810d9cc1>] worker_thread+0x121/0x440
- [<ffffffff810df0bf>] kthread+0xef/0x110
- [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
- [<ffffffffffffffff>] 0xffffffffffffffff
-
-
- Thread2
- =======
- While the above thread is doing its work, the root port gets a
-completion timeout. And thus the AER Error recovery worker thread
-kicks in to handle that error. And as part of that error recovery -
-since the completion timeout was detected at root port, attempts to
-see for ALL the devices downstream if they have an error handler that
-need to be called. Here is what happens:
-
-
-aer_isr()
-   -> aer_isr_one_error()
-     -> aer_process_err_device()
-        -> ... (etc)...
-          -> do_recovery()
-            -> broadcast_error_message()
-              -> pci_walk_bus( ..., report_error_detected,...) /*
-effectively for all buses below root port */
-                    -> down_read(&pci_bus_sem);  /* SUCCESSFULLY
-ACQUIRES the semaophore */
-                    -> report_error_detected(dev) /* for the newly
-detected slot */
-                         -> device_lock(dev) /* Deadlocked */
-
- This is how the stack looks like:
- [<ffffffff81529e7e>] report_error_detected+0x4e/0x170 <--- Waiting on
-device_lock()
- [<ffffffff8151162e>] pci_walk_bus+0x4e/0xa0
- [<ffffffff81529b84>] broadcast_error_message+0xc4/0xf0
- [<ffffffff81529bed>] do_recovery+0x3d/0x280
- [<ffffffff8152a5d0>] aer_isr+0x300/0x3e0
- [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
- [<ffffffff810d9cc1>] worker_thread+0x121/0x440
- [<ffffffff810df0bf>] kthread+0xef/0x110
- [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
- [<ffffffffffffffff>] 0xffffffffffffffff
-
-
-As a temporary work around to let me proceed, I was thinking may be I
-could change in report_error_detected() such that completion timeouts
-errors may not be broadcast (do we really have any drivers that have
-aer handlers that handle such an error? What would the handler do
-anyway to fix such an error?)
-
-
-But not sure what the right solution might look like. I thought about
-whether these locks should have been taken in a particular order in
-order to avoid this problem, but looking at the stack there seems to
-be no other way. What do you think is the best way to fix this
-deadlock?
-
-Any help or suggestions in this regard are greatly appreciated.
-
- Thanks,
-
-Rajat
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
