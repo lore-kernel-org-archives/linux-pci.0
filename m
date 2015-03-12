@@ -1,190 +1,236 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44142 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751241AbbCZDBC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Mar 2015 23:01:02 -0400
-Date: Thu, 26 Mar 2015 04:00:55 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arndatarndb.de@suse.de>,
-	Linus Walleij <linus.walleijatlinaro.org@suse.de>,
-	Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Peter Senna Tschudin <peter.senna@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Ingo Molnar <mingo@redhat.com>,
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:46874 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262AbbCLDXr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:23:47 -0400
+Received: by obcva2 with SMTP id va2so12970596obc.13
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:23:46 -0700 (PDT)
+Date: Wed, 11 Mar 2015 22:23:41 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, jgross@suse.com,
-	Jan Beulich <JBeulich@suse.com>, Borislav Petkov <bp@suse.de>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	venkatesh.pallipadi@intel.com, Dave Airlie <airlied@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-fbdev@vger.kernel.org, "x86@kernel.org" <x86@kernel.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	Benjamin Poirier <bpoirier@suse.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1 05/47] pci: add pci_iomap_wc() variants
-Message-ID: <20150326030054.GA5622@wotan.suse.de>
-References: <1426893517-2511-1-git-send-email-mcgrof@do-not-panic.com>
- <1426893517-2511-6-git-send-email-mcgrof@do-not-panic.com>
- <CAErSpo5LfgTM879jmt58yLrXD6e7spsaX1wNDcc2ppU9JrMXOg@mail.gmail.com>
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 12/30] PCI: Introduce pci_host_bridge_ops to support
+ host specific operations
+Message-ID: <20150312032341.GE10949@google.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-13-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5LfgTM879jmt58yLrXD6e7spsaX1wNDcc2ppU9JrMXOg@mail.gmail.com>
+In-Reply-To: <1425868467-9667-13-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 23, 2015 at 12:20:47PM -0500, Bjorn Helgaas wrote:
-> Hi Luis,
+On Mon, Mar 09, 2015 at 10:34:09AM +0800, Yijing Wang wrote:
+> Now we have weak functions like pcibios_root_bridge_prepare()
+> to setup pci host bridge, We could introduce pci_host_bridge_ops
+> which contain host bridge specific ops to setup pci_host_bridge.
+> Then host bridge driver could add pci_host_bridge_ops hooks
+> intead of weak function to setup pci_host_bridge.
+> This patch add following pci_host_bridge_ops hooks:
 > 
-> This seems OK to me, 
-
-Great.
-
-> but I'm curious about a few things.
+> pci_host_bridge_ops {
+> 	/* set root bus speed, some platform need this like powerpc */
+> 	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+> 	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
+> 	int (*prepare)(struct pci_host_bridge *host);
+> 	/* platform specific of scan hook to scan pci device */
+> 	void (*scan_bus)(struct pci_host_bridge *);
+> }
+> We could easily extend it to support different host bridge
+> specific operations.
 > 
-> On Fri, Mar 20, 2015 at 6:17 PM, Luis R. Rodriguez
-> <mcgrof@do-not-panic.com> wrote:
-> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> >
-> > This allows drivers to take advantage of write-combining
-> > when possible. Ideally we'd have pci_read_bases() just
-> > peg an IORESOURCE_WC flag for us
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host-bridge.c |   12 ++++++++++--
+>  drivers/pci/pci.h         |    4 ++--
+>  drivers/pci/probe.c       |   17 +++++++++++------
+>  include/linux/pci.h       |    8 ++++++++
+>  4 files changed, 31 insertions(+), 10 deletions(-)
 > 
-> We do set IORESOURCE_PREFETCH.  Do you mean something different?
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 3c34c49..bc1de59 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>  }
+>  
+>  struct pci_host_bridge *pci_create_host_bridge(
+> -		struct device *parent, u32 db,
+> -		struct list_head *resources, void *sysdata)
+> +		struct device *parent, u32 db, struct list_head *resources,
+> +		void *sysdata, struct pci_host_bridge_ops *ops)
+>  {
+>  	int error;
+>  	int bus = PCI_BUSNUM(db);
+> @@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+>  		}
+>  	mutex_unlock(&phb_mutex);
+>  
+> +	host->ops = ops;
+>  	host->dev.parent = parent;
+>  	INIT_LIST_HEAD(&host->windows);
+>  	host->dev.release = pci_release_host_bridge_dev;
+> @@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
+>  	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
+>  			host->busnum);
+>  
+> +	if (host->ops && host->ops->prepare) {
+> +		error = host->ops->prepare(host);
+> +		if (error) {
+> +			kfree(host);
+> +			return NULL;
+> +		}
+> +	}
+>  	error = device_register(&host->dev);
+>  	if (error) {
+>  		put_device(&host->dev);
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 79a8894..a1dc9f2 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -324,8 +324,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  #endif
+>  
+>  struct pci_host_bridge *pci_create_host_bridge(
+> -		struct device *parent, u32 dombus,
+> -		struct list_head *resources, void *sysdata);
+> +		struct device *parent, u32 dombus, struct list_head *resources,
+> +		void *sysdata, struct pci_host_bridge_ops *ops);
+>  
+>  void pci_free_host_bridge(struct pci_host_bridge *host);
+>  #endif /* DRIVERS_PCI_H */
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index c8e074d..59d9be3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1889,6 +1889,8 @@ static struct pci_bus *__pci_create_root_bus(
+>  
+>  	bridge->bus = b;
+>  	b->bridge = get_device(&bridge->dev);
+> +	if (bridge->ops && bridge->ops->set_root_bus_speed)
+> +		bridge->ops->set_root_bus_speed(bridge);
 
-I did not think we had a WC IORESOURCE flag. Are you saying that we can use
-IORESOURCE_PREFETCH for that purpose? If so then great.  As I read a PCI BAR
-can have PCI_BASE_ADDRESS_MEM_PREFETCH and when that's the case we peg
-IORESOURCE_PREFETCH. That seems to be what I want indeed. Questions below.
+Before this patch, can you do this:
 
-> >  but where exactly
-> > video devices memory lie varies *largely* and at times things
-> > are mixed with MMIO registers, sometimes we can address
-> > the changes in drivers, other times the change requires
-> > intrusive changes.
+  - Rename the powerpc pcibios_root_bridge_prepare() to
+    pcibios_set_root_bus_speed() and add a call to it here
+
+  - Move the pcibios_root_bridge_prepare() call to pci_create_host_bridge()
+
+Then this patch will make a lot more sense because it will look like this,
+with the host bridge ops call right next to the matching pcibios call:
+
+  +	if (host->ops && host->ops->prepare) {
+  +		error = host->ops->prepare(host);
+  +		...
+  +	}
+	pcibios_root_bridge_prepare(...);
+
+  +	if (bridge->ops && bridge->ops->set_root_bus_speed)
+  +		bridge->ops->set_root_bus_speed(bridge);
+	pcibios_set_root_bus_speed(...);
+
+>  	error = pcibios_root_bridge_prepare(bridge);
+>  	if (error)
+>  		goto err_out;
+> @@ -1954,7 +1956,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+>  {
+>  	struct pci_host_bridge *host;
+>  
+> -	host = pci_create_host_bridge(parent, db, resources, sysdata);
+> +	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+>  	if (!host)
+>  		return NULL;
+>  
+> @@ -2051,10 +2053,13 @@ static struct pci_bus *__pci_scan_root_bus(
+>  		pci_bus_insert_busn_res(b, b->number, 255);
+>  	}
+>  
+> -	max = pci_scan_child_bus(b);
+> -
+> -	if (!found)
+> -		pci_bus_update_busn_res_end(b, max);
+> +	if (host->ops && host->ops->scan_bus) {
+> +		host->ops->scan_bus(host);
+> +	} else {
+> +		max = pci_scan_child_bus(b);
+> +		if (!found)
+> +			pci_bus_update_busn_res_end(b, max);
+> +	}
+
+I think host->ops->scan_bus() should have the same prototype as
+pci_scan_child_bus(), and it should return max, and you should do the same
+busn update as when you call pci_scan_child_bus().  So the code would look
+like this:
+
+    if (host->ops && host->ops->scan_bus)
+	max = host->ops->scan_bus(b);
+    else
+	max = pci_scan_child_bus(b);
+
+    if (!found)
+	pci_bus_update_busn_res_end(b, max);
+
+>  
+>  	return b;
+>  }
+> @@ -2064,7 +2069,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+>  {
+>  	struct pci_host_bridge *host;
+>  
+> -	host = pci_create_host_bridge(parent, db, resources, sysdata);
+> +	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+>  	if (!host)
+>  		return NULL;
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index b621f5b..e9922b1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+>  	return (pdev->error_state != pci_channel_io_normal);
+>  }
+>  
+> +struct pci_host_bridge;
+> +struct pci_host_bridge_ops {
+> +	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+> +	int (*prepare)(struct pci_host_bridge *host);
+> +	void (*scan_bus)(struct pci_host_bridge *);
+
+Needs an argument name to match the style of the other ops.
+
+> +};
+> +
+>  struct pci_host_bridge {
+>  	u16	domain;
+>  	u16 busnum;
+> @@ -407,6 +414,7 @@ struct pci_host_bridge {
+>  	struct pci_bus *bus;		/* root bus */
+>  	struct list_head windows;	/* resource_entry */
+>  	struct list_head list;
+> +	struct pci_host_bridge_ops *ops;
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+>  };
+> -- 
+> 1.7.1
 > 
-> What does a video device address have to do with this?  I do see that
-> if a BAR maps only a frame buffer, the device might be able to mark it
-> prefetchable, while if the BAR mapped both a frame buffer and some
-> registers, it might not be able to make it prefetchable.  But that
-> doesn't seem like it depends on the *address*.
-
-I meant the offsets for each of those, either registers or framebuffer,
-and that typically they are mixed (primarily on older devices), so indeed your
-summary of the problem is what I meant. Let's remember that we are trying to
-take advantage of PAT here when available and avoid MTRR in that case, do we
-know that the same PCI BARs that have always historically used MTRRs had
-IORESOURCE_PREFETCH set, is that a fair assumption ? I realize they are
-different things -- but its precisely why I ask.
-
-> pci_iomap_range() already makes a cacheable mapping if
-> IORESOURCE_CACHEABLE; I'm guessing that you would like it to
-> automatically use WC if the BAR if IORESOURCE_PREFETCH, e.g.,
-> 
->   if (flags & IORESOURCE_CACHEABLE)
->     return ioremap(start, len);
->   if (flags & IORESOURCE_PREFETCH)
->     return ioremap_wc(start, len);
->   return ioremap_nocache(start, len);
-
-Indeed, that's exactly what I think we should strive towards.
-
-> Is there a reason not to do that?
-
-This depends on the exact defintion of IORESOURCE_PREFETCH and
-PCI_BASE_ADDRESS_MEM_PREFETCH and how they are used all over and
-accross *all devices*. This didn't look promising for starters:
-
-include/uapi/linux/pci_regs.h:#define  PCI_BASE_ADDRESS_MEM_PREFETCH    0x08    /* prefetchable? */
-
-PCI_BASE_ADDRESS_MEM_PREFETCH seems to be BAR specific, so a few questions:
-
-1) Can we rest assured for instance that if we check for
-PCI_BASE_ADDRESS_MEM_PREFETCH and if set that it will *only* be set on a full
-PCI BAR if the full PCI BAR does want WC? If not this can regress
-functionality. That seems risky. It however would not be risky if we used
-another API that did look for IORESOURCE_PREFETCH and if so use ioremap_wc() --
-that way only drivers we know that do use the full PCI bar would use this API.
-There's a bit of a problem with this though:
-
-2) Do we know that if a *full PCI BAR* is used for WC that
-PCI_BASE_ADDRESS_MEM_PREFETCH *was* definitely set for the PCI BAR? If so then
-the API usage would be restricted only to devices that we know *do* adhere to
-this. That reduces the possible uses for older drivers and can create
-regressions if used loosely without verification... but..
-
-3) If from now on we get folks to commit to uset PCI_BASE_ADDRESS_MEM_PREFETCH
-for full PCI BARs that do want WC perhaps newer devices / drivers will use
-this very consistently ? Can we bank on that and is it worth it ?
-
-4) If a PCI BAR *does not* have PCI_BASE_ADDRESS_MEM_PREFETCH do we know it
-must not never want WC ?
-
-If we don't have certainty on any of the above I'm afraid we can't do much
-right now but perhaps we can push towards better use of PCI_BASE_ADDRESS_MEM_PREFETCH
-and hope folks will only use this for the full PCI BAR only if WC is desired.
-
-Thoughts?
-
-> > Although there is also arch_phys_wc_add() that makes use of
-> > architecture specific write-combinging alternatives (MTRR on
-> > x86 when a system does not have PAT) we void polluting
-> > pci_iomap() space with it and force drivers and subsystems
-> > that want to use it to be explicit.
-> >
-> > There are a few motivations for this:
-> >
-> > a) Take advantage of PAT when available
-> >
-> > b) Help bury MTRR code away, MTRR is architecture specific and on
-> >    x86 its replaced by PAT
-> >
-> > c) Help with the goal of eventually using _PAGE_CACHE_UC over
-> >    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (de33c442e)
-> > ...
-> 
-> > +void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-> > +                                int bar,
-> > +                                unsigned long offset,
-> > +                                unsigned long maxlen)
-> > +{
-> > +       resource_size_t start = pci_resource_start(dev, bar);
-> > +       resource_size_t len = pci_resource_len(dev, bar);
-> > +       unsigned long flags = pci_resource_flags(dev, bar);
-> > +
-> > +       if (len <= offset || !start)
-> > +               return NULL;
-> > +       len -= offset;
-> > +       start += offset;
-> > +       if (maxlen && len > maxlen)
-> > +               len = maxlen;
-> > +       if (flags & IORESOURCE_IO)
-> > +               return __pci_ioport_map(dev, start, len);
-> > +       if (flags & IORESOURCE_MEM)
-> 
-> Should we log a note in dmesg if the BAR is *not* IORESOURCE_PREFETCH?
->  I know the driver might know it's safe even if the device didn't mark
-> the BAR as prefetchable, but it does seem like an easy way for a
-> driver to shoot itself in the foot.
-
-You tell me. I would fear this may not be consistent and we'd end up
-having bug reports open for something that has historically been a
-non-issue. The above questions can help us gauge the risk of this.
-
-  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
