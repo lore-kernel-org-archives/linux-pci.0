@@ -1,157 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:41239 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117AbbCBLEb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 06:04:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150302085654.GA17532@pd.tnic>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
-	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
-	<20150301094557.GA7748@pd.tnic>
-	<20150301152351.GA17391@gmail.com>
-	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
-	<20150301194904.GC7748@pd.tnic>
-	<CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
-	<20150301202938.GD7748@pd.tnic>
-	<CAE9FiQWqfpCg5reKP5TOv=8qJCLxqBDHCKAexH94avZ4b3=irQ@mail.gmail.com>
-	<20150302085654.GA17532@pd.tnic>
-Date: Mon, 2 Mar 2015 03:04:30 -0800
-Message-ID: <CAE9FiQVS0ai2k-WNfsbwvOkj8YUxzaZJN5XDTMu1Ukhot7zOTw@mail.gmail.com>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Luck, Tony" <tony.luck@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e01634f58b4cd6205104c2e10
-Sender: linux-pci-owner@vger.kernel.org
+	"x86@kernel.org" <x86@kernel.org>,
+	"mingo@redhat.com" <mingo@redhat.com>,
+	"bp@alien8.de" <bp@alien8.de>, "Zheng, Lv" <lv.zheng@intel.com>,
+	"hpa@zytor.com" <hpa@zytor.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"lenb@kernel.org" <lenb@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] x86/PCI: Fully disable devices before releasing IRQ resource
+Date: Thu, 12 Mar 2015 17:08:08 +0100
+Message-ID: <20677458.zLzU1h62B0@vostro.rjw.lan>
+In-Reply-To: <5500EEC1.9000902@linux.intel.com>
+References: <20150305210529.6393.29546.stgit@gimli.home> <6862626.yP8c2o2fAj@vostro.rjw.lan> <5500EEC1.9000902@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e01634f58b4cd6205104c2e10
-Content-Type: text/plain; charset=UTF-8
+On Thursday, March 12, 2015 09:41:21 AM Jiang Liu wrote:
+> On 2015/3/12 9:17, Rafael J. Wysocki wrote:
+> > On Wednesday, March 11, 2015 10:04:42 PM Luck, Tony wrote:
+> >>>> Unfortunately there's a long standing comment in pci_device_remove():
+> >>>>
+> >>>>         /*
+> >>>>          * We would love to complain here if pci_dev->is_enabled is set, that
+> >>>>          * the driver should have called pci_disable_device(), but the
+> >>>>          * unfortunate fact is there are too many odd BIOS and bridge setups
+> >>>>          * that don't like drivers doing that all of the time.
+> >>>>          * Oh well, we can dream of sane hardware when we sleep, no matter how
+> >>>>          * horrible the crap we have to deal with is when we are awake...
+> >>>>          */
+> >>>>
+> >>>> So, unless we can somehow ignore that comment, I suspect forcing the
+> >>>> device to be disabled on driver remove, whether done from pci-core or
+> >>>> from x86/pci, is going to cause all sorts of breakage.  Are the
+> >>>> expectations set by b4b55cda5874 really valid?  It seems like something
+> >>>> needs to be done to allow the IRQ to be automatically re-established on
+> >>>> x86 regardless of the driver doing the right thing when releasing the
+> >>>> device.  We're still looking at a regression for v4.0 as a result of
+> >>>> b4b55cda5874.
+> >>>
+> >>> In which case we probably should revert commit b4b55cda5874 for the time being.
+> >>>
+> >>> At least I'd be very nervous about any ad-hoc fixes at this stage of the cycle.
+> >>
+> >> The comment goes back to the dawn of "git" time ... not sure how much further
+> >> back.
+> >>
+> >> Is this actually still an issue on modern systems?  Maybe we need a black list
+> >> or white list to separate the good from bad systems?
+> > 
+> > The answer to that is "We don't know" and in my not so humble opinion it is too
+> > risky to try to find out at the end of the cycle.
+> Hi Rafael and Alex,
+> How about a patch which:
+> 1) gives a warning if PCI device is still enabled when unloading driver
 
-On Mon, Mar 2, 2015 at 12:56 AM, Borislav Petkov <bp@suse.de> wrote:
-> On Sun, Mar 01, 2015 at 12:41:10PM -0800, Yinghai Lu wrote:
->> Does not look safe yet...
->
-> Why?
+That may become sort of noisy.  I really would prefer to introduce things like
+that by the beginning of the cycle, not by the end of it.
 
-We can not assume that range is safe to use.
+> 2) release PCI interrupt only if PCI device is disabled.
+> By this way, we could support IOAPIC hot-removal on latest platforms and
+> avoid regressions on old platforms.
 
-Please check attach one that should fix the problem really.
+Well, please submit a patch for discussion.
 
-Thanks
+I would like to know Bjorn's opinion about that too at least.
 
-Yinghai
+Rafael
 
---089e01634f58b4cd6205104c2e10
-Content-Type: text/x-patch; charset=US-ASCII; name="fix_decompress_offset.patch"
-Content-Disposition: attachment; filename="fix_decompress_offset.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i6rrdrur0
-
-U3ViamVjdDogW1BBVENIXSB4ODYsIGJvb3Q6IGtlZXAgZGF0YSBmcm9tIGJvb3Qgc3RhZ2UgdG8g
-a2VybmVsIHN0YWdlLgoKTmVlZCB0bwoxLiBtb3ZlIGNvbXByZXNzZWQga2VybmVsIGNsb3NlIHRo
-ZSBlbmQgb2YgYnVmZmVyIGluc3RlYWQgb2YgbWlkZGxlIG9mIGl0LgoyLiB1c2UgQlJLIHRvIGV4
-dGVuZCBpbml0X3NpemUgc28gbm8gb25lIGZyb20ga2VybmVsIGJzcyBhbmQgYnJrIHdpbGwKICAg
-dG91Y2ggdGhlIGRhdGEgcmVnaW9uIGZyb20gYm9vdC9jb21wcmVzc2VkL21pc2MuYwoKU2lnbmVk
-LW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBhcmNoL3g4Ni9i
-b290L2NvbXByZXNzZWQvaGVhZF8zMi5TIHwgICAxMyArKysrKysrKysrKy0tCiBhcmNoL3g4Ni9i
-b290L2NvbXByZXNzZWQvaGVhZF82NC5TIHwgICAxMCArKysrKysrKy0tCiBhcmNoL3g4Ni9ib290
-L2NvbXByZXNzZWQvbWlzYy5jICAgIHwgICAgNCArKysrCiBhcmNoL3g4Ni9ib290L2NvbXByZXNz
-ZWQvbWtwaWdneS5jIHwgICAgMyAtLS0KIGFyY2gveDg2L2luY2x1ZGUvYXNtL2Jvb3QuaCAgICAg
-ICAgfCAgICAyICsrCiBhcmNoL3g4Ni9rZXJuZWwvYXNtLW9mZnNldHMuYyAgICAgIHwgICAgMSAr
-CiBhcmNoL3g4Ni9rZXJuZWwvc2V0dXAuYyAgICAgICAgICAgIHwgICAgMyArKysKIDcgZmlsZXMg
-Y2hhbmdlZCwgMjkgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0y
-LjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL2hlYWRfNjQuUwo9PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
-eC0yLjYub3JpZy9hcmNoL3g4Ni9ib290L2NvbXByZXNzZWQvaGVhZF82NC5TCisrKyBsaW51eC0y
-LjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL2hlYWRfNjQuUwpAQCAtMTAyLDcgKzEwMiwxMCBA
-QCBFTlRSWShzdGFydHVwXzMyKQogMToKIAogCS8qIFRhcmdldCBhZGRyZXNzIHRvIHJlbG9jYXRl
-IHRvIGZvciBkZWNvbXByZXNzaW9uICovCi0JYWRkbAkkel9leHRyYWN0X29mZnNldCwgJWVieAor
-CW1vdmwJQlBfaW5pdF9zaXplKCVlc2kpLCAlZWF4CisJc3VibAkkX2VuZCwgJWVheAorCWFuZGwJ
-JCh+KDQwOTYtMSkpLCAlZWF4CisJYWRkbAklZWF4LCAlZWJ4CiAKIC8qCiAgKiBQcmVwYXJlIGZv
-ciBlbnRlcmluZyA2NCBiaXQgbW9kZQpAQCAtMzMwLDcgKzMzMywxMCBAQCBwcmVmZXJyZWRfYWRk
-cjoKIDE6CiAKIAkvKiBUYXJnZXQgYWRkcmVzcyB0byByZWxvY2F0ZSB0byBmb3IgZGVjb21wcmVz
-c2lvbiAqLwotCWxlYXEJel9leHRyYWN0X29mZnNldCglcmJwKSwgJXJieAorCW1vdmwJQlBfaW5p
-dF9zaXplKCVyc2kpLCAlZWJ4CisJc3VibAkkX2VuZCwgJWVieAorCWFuZGwJJCh+KDQwOTYtMSkp
-LCAlZWJ4CisJYWRkcQklcmJwLCAlcmJ4CiAKIAkvKiBTZXQgdXAgdGhlIHN0YWNrICovCiAJbGVh
-cQlib290X3N0YWNrX2VuZCglcmJ4KSwgJXJzcApJbmRleDogbGludXgtMi42L2FyY2gveDg2L2tl
-cm5lbC9hc20tb2Zmc2V0cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2
-L2tlcm5lbC9hc20tb2Zmc2V0cy5jCisrKyBsaW51eC0yLjYvYXJjaC94ODYva2VybmVsL2FzbS1v
-ZmZzZXRzLmMKQEAgLTY2LDYgKzY2LDcgQEAgdm9pZCBjb21tb24odm9pZCkgewogCU9GRlNFVChC
-UF9oYXJkd2FyZV9zdWJhcmNoLCBib290X3BhcmFtcywgaGRyLmhhcmR3YXJlX3N1YmFyY2gpOwog
-CU9GRlNFVChCUF92ZXJzaW9uLCBib290X3BhcmFtcywgaGRyLnZlcnNpb24pOwogCU9GRlNFVChC
-UF9rZXJuZWxfYWxpZ25tZW50LCBib290X3BhcmFtcywgaGRyLmtlcm5lbF9hbGlnbm1lbnQpOwor
-CU9GRlNFVChCUF9pbml0X3NpemUsIGJvb3RfcGFyYW1zLCBoZHIuaW5pdF9zaXplKTsKIAlPRkZT
-RVQoQlBfcHJlZl9hZGRyZXNzLCBib290X3BhcmFtcywgaGRyLnByZWZfYWRkcmVzcyk7CiAJT0ZG
-U0VUKEJQX2NvZGUzMl9zdGFydCwgYm9vdF9wYXJhbXMsIGhkci5jb2RlMzJfc3RhcnQpOwogCklu
-ZGV4OiBsaW51eC0yLjYvYXJjaC94ODYva2VybmVsL3NldHVwLmMKPT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGlu
-dXgtMi42Lm9yaWcvYXJjaC94ODYva2VybmVsL3NldHVwLmMKKysrIGxpbnV4LTIuNi9hcmNoL3g4
-Ni9rZXJuZWwvc2V0dXAuYwpAQCAtMTExLDYgKzExMSw3IEBACiAjaW5jbHVkZSA8YXNtL21jZS5o
-PgogI2luY2x1ZGUgPGFzbS9hbHRlcm5hdGl2ZS5oPgogI2luY2x1ZGUgPGFzbS9wcm9tLmg+Cisj
-aW5jbHVkZSA8YXNtL2Jvb3QuaD4KIAogLyoKICAqIG1heF9sb3dfcGZuX21hcHBlZDogaGlnaGVz
-dCBkaXJlY3QgbWFwcGVkIHBmbiB1bmRlciA0R0IKQEAgLTE0NCw2ICsxNDUsOCBAQCBpbnQgZGVm
-YXVsdF9jaGVja19waHlzX2FwaWNpZF9wcmVzZW50KGluCiB9CiAjZW5kaWYKIAorUkVTRVJWRV9C
-UksoYWRkb25fem8sIEJPT1RfQURET05fWk9fU0laRSk7CisKIHN0cnVjdCBib290X3BhcmFtcyBi
-b290X3BhcmFtczsKIAogLyoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXByZXNz
-ZWQvaGVhZF8zMi5TCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L2Jvb3Qv
-Y29tcHJlc3NlZC9oZWFkXzMyLlMKKysrIGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXByZXNz
-ZWQvaGVhZF8zMi5TCkBAIC0xNDgsNyArMTQ4LDEwIEBAIHByZWZlcnJlZF9hZGRyOgogMToKIAog
-CS8qIFRhcmdldCBhZGRyZXNzIHRvIHJlbG9jYXRlIHRvIGZvciBkZWNvbXByZXNzaW9uICovCi0J
-YWRkbAkkel9leHRyYWN0X29mZnNldCwgJWVieAorCW1vdmwgICAgQlBfaW5pdF9zaXplKCVlc2kp
-LCAlZWF4CisJc3VibCAgICAkX2VuZCwgJWVheAorCWFuZGwgICAgJCh+KDQwOTYtMSkpLCAlZWF4
-CisJYWRkbCAgICAlZWF4LCAlZWJ4CiAKIAkvKiBTZXQgdXAgdGhlIHN0YWNrICovCiAJbGVhbAli
-b290X3N0YWNrX2VuZCglZWJ4KSwgJWVzcApAQCAtMjEwLDggKzIxMywxNCBAQCByZWxvY2F0ZWQ6
-CiAJCQkJLyogcHVzaCBhcmd1bWVudHMgZm9yIGRlY29tcHJlc3Nfa2VybmVsOiAqLwogCXB1c2hs
-CSR6X3J1bl9zaXplCS8qIHNpemUgb2Yga2VybmVsIHdpdGggLmJzcyBhbmQgLmJyayAqLwogCXB1
-c2hsCSR6X291dHB1dF9sZW4JLyogZGVjb21wcmVzc2VkIGxlbmd0aCwgZW5kIG9mIHJlbG9jcyAq
-LwotCWxlYWwJel9leHRyYWN0X29mZnNldF9uZWdhdGl2ZSglZWJ4KSwgJWVicAorCisJbW92bCAg
-ICBCUF9pbml0X3NpemUoJWVzaSksICVlYXgKKwlzdWJsICAgICRfZW5kLCAlZWF4CisJYW5kbCAg
-ICAkKH4oNDA5Ni0xKSksICVlYXgKKwltb3ZsCSVlYngsICVlYnAKKwlzdWJsCSVlYXgsICVlYnAK
-IAlwdXNobAklZWJwCQkvKiBvdXRwdXQgYWRkcmVzcyAqLworCiAJcHVzaGwJJHpfaW5wdXRfbGVu
-CS8qIGlucHV0X2xlbiAqLwogCWxlYWwJaW5wdXRfZGF0YSglZWJ4KSwgJWVheAogCXB1c2hsCSVl
-YXgJCS8qIGlucHV0X2RhdGEgKi8KSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXBy
-ZXNzZWQvbWtwaWdneS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L2Jv
-b3QvY29tcHJlc3NlZC9ta3BpZ2d5LmMKKysrIGxpbnV4LTIuNi9hcmNoL3g4Ni9ib290L2NvbXBy
-ZXNzZWQvbWtwaWdneS5jCkBAIC04NSw5ICs4NSw2IEBAIGludCBtYWluKGludCBhcmdjLCBjaGFy
-ICphcmd2W10pCiAJcHJpbnRmKCJ6X291dHB1dF9sZW4gPSAlbHVcbiIsICh1bnNpZ25lZCBsb25n
-KW9sZW4pOwogCXByaW50ZigiLmdsb2JsIHpfZXh0cmFjdF9vZmZzZXRcbiIpOwogCXByaW50Zigi
-el9leHRyYWN0X29mZnNldCA9IDB4JWx4XG4iLCBvZmZzKTsKLQkvKiB6X2V4dHJhY3Rfb2Zmc2V0
-X25lZ2F0aXZlIGFsbG93cyBzaW1wbGlmaWNhdGlvbiBvZiBoZWFkXzMyLlMgKi8KLQlwcmludGYo
-Ii5nbG9ibCB6X2V4dHJhY3Rfb2Zmc2V0X25lZ2F0aXZlXG4iKTsKLQlwcmludGYoInpfZXh0cmFj
-dF9vZmZzZXRfbmVnYXRpdmUgPSAtMHglbHhcbiIsIG9mZnMpOwogCXByaW50ZigiLmdsb2JsIHpf
-cnVuX3NpemVcbiIpOwogCXByaW50Zigiel9ydW5fc2l6ZSA9ICVsdVxuIiwgcnVuX3NpemUpOwog
-CkluZGV4OiBsaW51eC0yLjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL21pc2MuYwo9PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3g4Ni9ib290L2NvbXByZXNzZWQvbWlzYy5jCisr
-KyBsaW51eC0yLjYvYXJjaC94ODYvYm9vdC9jb21wcmVzc2VkL21pc2MuYwpAQCAtMzY2LDYgKzM2
-Niw4IEBAIHN0YXRpYyB2b2lkIHBhcnNlX2VsZih2b2lkICpvdXRwdXQpCiAJZnJlZShwaGRycyk7
-CiB9CiAKK2V4dGVybiBjaGFyIF9yb2RhdGFbXSwgX2VuZFtdOworCiBhc21saW5rYWdlIF9fdmlz
-aWJsZSB2b2lkICpkZWNvbXByZXNzX2tlcm5lbCh2b2lkICpybW9kZSwgbWVtcHRyIGhlYXAsCiAJ
-CQkJICB1bnNpZ25lZCBjaGFyICppbnB1dF9kYXRhLAogCQkJCSAgdW5zaWduZWQgbG9uZyBpbnB1
-dF9sZW4sCkBAIC0zOTIsNiArMzk0LDggQEAgYXNtbGlua2FnZSBfX3Zpc2libGUgdm9pZCAqZGVj
-b21wcmVzc19rZQogCiAJY29uc29sZV9pbml0KCk7CiAJZGVidWdfcHV0c3RyKCJlYXJseSBjb25z
-b2xlIGluIGRlY29tcHJlc3Nfa2VybmVsXG4iKTsKKwlpZiAoX2VuZCAtIF9yb2RhdGEgPiBCT09U
-X0FERE9OX1pPX1NJWkUpCisJCWRlYnVnX3B1dHN0cigiQk9PVF9BRERPTl9aT19TSVpFIHRvbyBz
-bWFsbFxuIik7CiAKIAlmcmVlX21lbV9wdHIgICAgID0gaGVhcDsJLyogSGVhcCAqLwogCWZyZWVf
-bWVtX2VuZF9wdHIgPSBoZWFwICsgQk9PVF9IRUFQX1NJWkU7CkluZGV4OiBsaW51eC0yLjYvYXJj
-aC94ODYvaW5jbHVkZS9hc20vYm9vdC5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2Fy
-Y2gveDg2L2luY2x1ZGUvYXNtL2Jvb3QuaAorKysgbGludXgtMi42L2FyY2gveDg2L2luY2x1ZGUv
-YXNtL2Jvb3QuaApAQCAtMzcsNCArMzcsNiBAQAogI2RlZmluZSBCT09UX1NUQUNLX1NJWkUJMHgx
-MDAwCiAjZW5kaWYKIAorI2RlZmluZSBCT09UX0FERE9OX1pPX1NJWkUgMHg0MDAwMAorCiAjZW5k
-aWYgLyogX0FTTV9YODZfQk9PVF9IICovCg==
---089e01634f58b4cd6205104c2e10--
