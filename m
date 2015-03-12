@@ -1,155 +1,226 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15095 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753153AbbCXDhS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:18 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:49161 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbbCLBQM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 21:16:12 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 12 Mar 2015 11:16:10 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 82F342CE804E
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 12:16:07 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2C1FxqO39583814
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 12:16:07 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2C1FXtv019820
+	for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 12:15:34 +1100
+Date: Thu, 12 Mar 2015 09:15:17 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 07/30] PCI: Add default bus resource in pci_host_bridge
-Date: Tue, 24 Mar 2015 11:34:01 +0800
-Message-ID: <1427168064-8657-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V13 15/21] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+Message-ID: <20150312011517.GA5833@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1425446353-30513-16-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150311135507.GA16664@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150311135507.GA16664@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If there is no busn resource provided for pci_scan_root_bus(),
-we would insert a default bus resource (root_bus_number, 255)
-in root bus, and update the max bus number we found after
-pci_scan_child_bus(). We also need to hold the default bus
-resource in pci_host_bridge, then we could identify whether
-the new pci host bridge conflict with existing one.
+On Wed, Mar 11, 2015 at 08:55:07AM -0500, Bjorn Helgaas wrote:
+>On Wed, Mar 04, 2015 at 01:19:07PM +0800, Wei Yang wrote:
+>> On PHB3, PF IOV BAR will be covered by M64 window to have better PE
+>> isolation.  The total_pe number is usually different from total_VFs, which
+>> can lead to a conflict between MMIO space and the PE number.
+>> 
+>> For example, if total_VFs is 128 and total_pe is 256, the second half of
+>> M64 window will be part of other PCI device, which may already belong
+>> to other PEs.
+>> 
+>> Prevent the conflict by reserving additional space for the PF IOV BAR,
+>> which is total_pe number of VF's BAR size.
+>> 
+>> [bhelgaas: make dev_printk() output more consistent, index resource[]
+>> conventionally]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/include/asm/machdep.h        |    4 ++
+>>  arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+>>  arch/powerpc/kernel/pci-common.c          |    5 +++
+>>  arch/powerpc/kernel/pci-hotplug.c         |    4 ++
+>>  arch/powerpc/platforms/powernv/pci-ioda.c |   61 +++++++++++++++++++++++++++++
+>>  5 files changed, 77 insertions(+)
+>> 
+>> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+>> index c8175a3..965547c 100644
+>> --- a/arch/powerpc/include/asm/machdep.h
+>> +++ b/arch/powerpc/include/asm/machdep.h
+>> @@ -250,6 +250,10 @@ struct machdep_calls {
+>>  	/* Reset the secondary bus of bridge */
+>>  	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  	/* Called to shutdown machine specific hardware not already controlled
+>>  	 * by other drivers.
+>>  	 */
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index 513f8f2..de11de7 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -175,6 +175,9 @@ struct pci_dn {
+>>  #define IODA_INVALID_PE		(-1)
+>>  #ifdef CONFIG_PPC_POWERNV
+>>  	int	pe_number;
+>> +#ifdef CONFIG_PCI_IOV
+>> +	u16     max_vfs;		/* number of VFs IOV BAR expended */
+>> +#endif /* CONFIG_PCI_IOV */
+>>  #endif
+>>  	struct list_head child_list;
+>>  	struct list_head list;
+>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>> index 8203101..022e9fe 100644
+>> --- a/arch/powerpc/kernel/pci-common.c
+>> +++ b/arch/powerpc/kernel/pci-common.c
+>> @@ -1646,6 +1646,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+>>  	if (ppc_md.pcibios_fixup_phb)
+>>  		ppc_md.pcibios_fixup_phb(hose);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	if (ppc_md.pcibios_fixup_sriov)
+>> +		ppc_md.pcibios_fixup_sriov(bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>
+>Here, and ...
+>
+>> +
+>>  	/* Configure PCI Express settings */
+>>  	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>  		struct pci_bus *child;
+>> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+>> index 5b78917..7d238ae 100644
+>> --- a/arch/powerpc/kernel/pci-hotplug.c
+>> +++ b/arch/powerpc/kernel/pci-hotplug.c
+>> @@ -94,6 +94,10 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
+>>  		 */
+>>  		slotno = PCI_SLOT(PCI_DN(dn->child)->devfn);
+>>  		pci_scan_slot(bus, PCI_DEVFN(slotno, 0));
+>> +#ifdef CONFIG_PCI_IOV
+>> +		if (ppc_md.pcibios_fixup_sriov)
+>> +			ppc_md.pcibios_fixup_sriov(bus);
+>> +#endif /* CONFIG_PCI_IOV */
+>
+>here, you have the same code.  It's good that we now do it for hot-added
+>devices as well as those present at boot.  But it's bad that it happens in
+>two different paths.
+>
+>Isn't there some way we can unify this so the same path is used for the
+>initial pcibios_scan_phb() and also the hot-add case?  Maybe call
+>pcibios_fixup_sriov() from pcibios_add_device()?
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   20 ++++++++++++++++++++
- drivers/pci/probe.c       |   26 ++++++++++----------------
- include/linux/pci.h       |    2 ++
- 3 files changed, 32 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 7d52a0a..ecc1a7c 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -19,6 +19,25 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
-+static void pci_host_update_busn_res(
-+		struct pci_host_bridge *host, int bus,
-+		struct list_head *resources)
-+{
-+	struct resource_entry *window;
-+
-+	resource_list_for_each_entry(window, resources)
-+		if (window->res->flags & IORESOURCE_BUS)
-+			return;
-+
-+	pr_info(
-+	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
-+		host->domain, bus, bus);
-+	host->busn_res.flags = IORESOURCE_BUS;
-+	host->busn_res.start = bus;
-+	host->busn_res.end = 255;
-+	pci_add_resource(resources, &host->busn_res);
-+}
-+
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
- 		struct list_head *resources)
-@@ -33,6 +52,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
-+	pci_host_update_busn_res(host, bus, resources);
- 	resource_list_for_each_entry_safe(window, n, resources)
- 		list_move_tail(&window->node, &host->windows);
- 	/*
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9bc4784..d5a12d9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2022,6 +2022,12 @@ int pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
- 	return ret;
- }
- 
-+static void pci_host_update_busn_res_end(
-+		struct pci_host_bridge *host, int max)
-+{
-+	host->busn_res.end = max;
-+}
-+
- void pci_bus_release_busn_res(struct pci_bus *b)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2040,32 +2046,20 @@ static struct pci_bus *__pci_scan_root_bus(int bus,
- 		struct pci_host_bridge *host, struct pci_ops *ops,
- 		void *sysdata)
- {
--	struct resource_entry *window;
--	bool found = false;
- 	struct pci_bus *b;
- 	int max;
- 
--	resource_list_for_each_entry(window, &host->windows)
--		if (window->res->flags & IORESOURCE_BUS) {
--			found = true;
--			break;
--		}
--
- 	b = __pci_create_root_bus(bus, host, ops, sysdata);
- 	if (!b)
- 		return NULL;
- 
--	if (!found) {
--		dev_info(&b->dev,
--		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
--			bus);
--		pci_bus_insert_busn_res(b, bus, 255);
--	}
--
- 	max = pci_scan_child_bus(b);
- 
--	if (!found)
-+	/* If default busn resource used, update the max bus number */
-+	if (host->busn_res.flags & IORESOURCE_BUS) {
-+		pci_host_update_busn_res_end(host, max);
- 		pci_bus_update_busn_res_end(b, max);
-+	}
- 
- 	return b;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1542df8..f189dfb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -404,6 +404,8 @@ struct pci_host_bridge {
- 	int domain;
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
-+	/* we use default bus resource if no bus resource provided */
-+	struct resource busn_res;
- 	struct list_head windows;	/* resource_entry */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
+This is a very good suggestion. I have changed this and works fine.
+
+Thanks :-)
+
+>>  		pcibios_setup_bus_devices(bus);
+>>  		max = bus->busn_res.start;
+>>  		for (pass = 0; pass < 2; pass++) {
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index 1b37066..958c7a3 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -1749,6 +1749,64 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+>>  static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+>>  #endif /* CONFIG_PCI_MSI */
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>> +{
+>> +	struct pci_controller *hose;
+>> +	struct pnv_phb *phb;
+>> +	struct resource *res;
+>> +	int i;
+>> +	resource_size_t size;
+>> +	struct pci_dn *pdn;
+>> +
+>> +	if (!pdev->is_physfn || pdev->is_added)
+>> +		return;
+>> +
+>> +	hose = pci_bus_to_host(pdev->bus);
+>> +	phb = hose->private_data;
+>> +
+>> +	pdn = pci_get_pdn(pdev);
+>> +	pdn->max_vfs = 0;
+>> +
+>> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>> +		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+>> +		if (!res->flags || res->parent)
+>> +			continue;
+>> +		if (!pnv_pci_is_mem_pref_64(res->flags)) {
+>> +			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
+>> +				 i, res);
+>> +			continue;
+>> +		}
+>> +
+>> +		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+>> +		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+>> +		res->end = res->start + size * phb->ioda.total_pe - 1;
+>> +		dev_dbg(&pdev->dev, "                       %pR\n", res);
+>> +		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+>> +				i, res, phb->ioda.total_pe);
+>> +	}
+>> +	pdn->max_vfs = phb->ioda.total_pe;
+>> +}
+>> +
+>> +static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
+>> +{
+>> +	struct pci_dev *pdev;
+>> +	struct pci_bus *b;
+>> +
+>> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
+>> +		b = pdev->subordinate;
+>> +
+>> +		if (b)
+>> +			pnv_pci_ioda_fixup_sriov(b);
+>> +
+>> +		if (pdev->is_added)
+>> +			continue;
+>> +
+>> +		pnv_pci_ioda_fixup_iov_resources(pdev);
+>> +	}
+>> +}
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  /*
+>>   * This function is supposed to be called on basis of PE from top
+>>   * to bottom style. So the the I/O or MMIO segment assigned to
+>> @@ -2125,6 +2183,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+>>  	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+>>  	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+>> +#ifdef CONFIG_PCI_IOV
+>> +	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_sriov;
+>> +#endif /* CONFIG_PCI_IOV */
+>>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+>>  
+>>  	/* Reset IODA tables to a clean state */
+>> -- 
+>> 1.7.9.5
+>> 
+
 -- 
-1.7.1
+Richard Yang
+Help you, Help me
 
