@@ -1,177 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:38194 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbbCKOMl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:41 -0400
-Received: by labhs14 with SMTP id hs14so8564871lab.5
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:39 -0700 (PDT)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v4 3/9] x86, pci: Reorder logic of pci_mmconfig_insert() function
-Date: Wed, 11 Mar 2015 15:12:43 +0100
-Message-Id: <1426083169-8698-4-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:29455 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932136AbbCLNRT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:17:19 -0400
+Message-ID: <550191D0.3050707@huawei.com>
+Date: Thu, 12 Mar 2015 21:17:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<sparclinux@vger.kernel.org>
+Subject: Re: [PATCH v6 20/30] sparc/PCI: Use pci_scan_host_bridge() for simplicity
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-21-git-send-email-wangyijing@huawei.com> <20150312033050.GG10949@google.com>
+In-Reply-To: <20150312033050.GG10949@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is the first step for MMCONFIG refactoring process.
+>> @@ -667,22 +680,21 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+>>  	pbm->busn.end	= pbm->pci_last_busno;
+>>  	pbm->busn.flags	= IORESOURCE_BUS;
+>>  	pci_add_resource(&resources, &pbm->busn);
+>> -	bus = pci_create_root_bus(parent,
+>> +	host = pci_scan_host_bridge(parent,
+>>  			PCI_DOMBUS(pbm->index, pbm->pci_first_busno),
+>> -			pbm->pci_ops, pbm, &resources);
+>> -	if (!bus) {
+>> -		printk(KERN_ERR "Failed to create bus for %s\n",
+>> +			pbm->pci_ops, pbm, &resources, &phb_ops);
+>> +	if (!host) {
+>> +		printk(KERN_ERR "Failed to create host bridge for %s\n",
+>>  		       node->full_name);
+>>  		pci_free_resource_list(&resources);
+>>  		return NULL;
+>>  	}
+>>  
+> 
+> I would keep "bus" and set it here:
+> 
+> 	bus = host->bus;
+> 
+> That would remove some lines from your patch that really didn't change,
+> which makes it easier to see what actually *is* changing, namely, you're
+> removing the pci_of_scan_bus() call because it is now done inside
+> pci_scan_host_bridge().
+> 
 
-Code that uses pci_mmcfg_lock will be moved to common file and become
-accessible for all architectures. pci_mmconfig_insert() cannot be moved
-so easily since it is mixing generic mmconfig code with x86 specific logic
-inside of mutual exclusive block guarded by pci_mmcfg_lock.
+Yes, keep it will make the code more clean, thanks!
 
-To get rid of that constraint, we reorder actions as follow:
-1. mmconfig entry allocation can be done first, no need to lock
-2. insertion to iomem_resource has its own lock, no need to wrap it into mutex
-3. insertion to mmconfig list can be done as the final step in separate
-function (candidate for further refactoring)
+>> -	pci_of_scan_bus(pbm, node, bus);
+>> -	pci_bus_register_of_sysfs(bus);
+>> +	pci_bus_register_of_sysfs(host->bus);
+>>  
+>> -	pci_claim_bus_resources(bus);
+>> -	pci_bus_add_devices(bus);
+>> -	return bus;
+>> +	pci_claim_bus_resources(host->bus);
+>> +	pci_bus_add_devices(host->bus);
+>> +	return host->bus;
+>>  }
+>>  
+>>  void pcibios_fixup_bus(struct pci_bus *pbus)
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
----
- arch/x86/pci/mmconfig-shared.c | 100 ++++++++++++++++++++++-------------------
- 1 file changed, 54 insertions(+), 46 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 8b3bc4f..685cd4c 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -834,6 +834,39 @@ static int __init pci_mmcfg_late_insert_resources(void)
-  */
- late_initcall(pci_mmcfg_late_insert_resources);
- 
-+static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-+{
-+	struct pci_mmcfg_region *cfg_conflict;
-+	int err = 0;
-+
-+	mutex_lock(&pci_mmcfg_lock);
-+	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-+	if (cfg_conflict) {
-+		if (cfg_conflict->end_bus < cfg->end_bus)
-+			pr_info(FW_INFO "MMCONFIG for "
-+				"domain %04x [bus %02x-%02x] "
-+				"only partially covers this bridge\n",
-+				cfg_conflict->segment, cfg_conflict->start_bus,
-+				cfg_conflict->end_bus);
-+		err = -EEXIST;
-+		goto out;
-+	}
-+
-+	if (pci_mmcfg_arch_map(cfg)) {
-+		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-+		err = -ENOMEM;
-+		goto out;
-+	} else {
-+		list_add_sorted(cfg);
-+		pr_info("MMCONFIG at %pR (base %#lx)\n",
-+			&cfg->res, (unsigned long)cfg->address);
-+
-+	}
-+out:
-+	mutex_unlock(&pci_mmcfg_lock);
-+	return err;
-+}
-+
- /* Add MMCFG information for host bridges */
- int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			phys_addr_t addr)
-@@ -845,66 +878,41 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
- 		return -ENODEV;
- 
--	if (start > end)
-+	if (start > end || !addr)
- 		return -EINVAL;
- 
--	mutex_lock(&pci_mmcfg_lock);
--	cfg = pci_mmconfig_lookup(seg, start);
--	if (cfg) {
--		if (cfg->end_bus < end)
--			dev_info(dev, FW_INFO
--				 "MMCONFIG for "
--				 "domain %04x [bus %02x-%02x] "
--				 "only partially covers this bridge\n",
--				  cfg->segment, cfg->start_bus, cfg->end_bus);
--		mutex_unlock(&pci_mmcfg_lock);
--		return -EEXIST;
--	}
--
--	if (!addr) {
--		mutex_unlock(&pci_mmcfg_lock);
--		return -EINVAL;
--	}
--
- 	rc = -EBUSY;
- 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
- 	if (cfg == NULL) {
- 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
--		rc = -ENOMEM;
-+		return -ENOMEM;
- 	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
- 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
- 			 &cfg->res);
--	} else {
--		/* Insert resource if it's not in boot stage */
--		if (pci_mmcfg_running_state)
--			tmp = insert_resource_conflict(&iomem_resource,
--						       &cfg->res);
--
--		if (tmp) {
--			dev_warn(dev,
--				 "MMCONFIG %pR conflicts with "
--				 "%s %pR\n",
--				 &cfg->res, tmp->name, tmp);
--		} else if (pci_mmcfg_arch_map(cfg)) {
--			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
--				 &cfg->res);
--		} else {
--			list_add_sorted(cfg);
--			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
--				 &cfg->res, (unsigned long)addr);
--			cfg = NULL;
--			rc = 0;
--		}
-+		goto error;
- 	}
- 
--	if (cfg) {
--		if (cfg->res.parent)
--			release_resource(&cfg->res);
--		kfree(cfg);
-+	/* Insert resource if it's not in boot stage */
-+	if (pci_mmcfg_running_state)
-+		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
-+
-+	if (tmp) {
-+		dev_warn(dev,
-+			 "MMCONFIG %pR conflicts with %s %pR\n",
-+			 &cfg->res, tmp->name, tmp);
-+		goto error;
- 	}
- 
--	mutex_unlock(&pci_mmcfg_lock);
-+	rc = pci_mmconfig_inject(cfg);
-+	if (rc)
-+		goto error;
-+
-+	return 0;
- 
-+error:
-+	if (cfg->res.parent)
-+		release_resource(&cfg->res);
-+	kfree(cfg);
- 	return rc;
- }
- 
 -- 
-1.9.1
+Thanks!
+Yijing
 
