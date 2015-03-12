@@ -1,47 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:44271 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbbCKA6b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 20:58:31 -0400
-Received: by igdh15 with SMTP id h15so8633516igd.3
-        for <linux-pci@vger.kernel.org>; Tue, 10 Mar 2015 17:58:30 -0700 (PDT)
-Date: Tue, 10 Mar 2015 17:58:27 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-cc: bhelgaas@google.com, mingo@redhat.com, tglx@linutronix.de,
-	hpa@zytor.com, pure.logic@nexus-software.ie, jgross@suse.com,
-	luto@amacapital.net, andy.shevchenko@gmail.com,
-	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [RFC v1 2/2] x86: kconfig: remove UP [IO]APIC options
-In-Reply-To: <1426029275-9594-3-git-send-email-mcgrof@do-not-panic.com>
-Message-ID: <alpine.DEB.2.10.1503101756460.26407@chino.kir.corp.google.com>
-References: <1426029275-9594-1-git-send-email-mcgrof@do-not-panic.com> <1426029275-9594-3-git-send-email-mcgrof@do-not-panic.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:1383 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754172AbbCLNPK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:15:10 -0400
+Message-ID: <55019145.2060504@huawei.com>
+Date: Thu, 12 Mar 2015 21:14:45 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 12/30] PCI: Introduce pci_host_bridge_ops to support
+ host specific operations
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-13-git-send-email-wangyijing@huawei.com> <20150312032341.GE10949@google.com>
+In-Reply-To: <20150312032341.GE10949@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 10 Mar 2015, Luis R. Rodriguez wrote:
-
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+>>  void pci_free_host_bridge(struct pci_host_bridge *host);
+>>  #endif /* DRIVERS_PCI_H */
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index c8e074d..59d9be3 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1889,6 +1889,8 @@ static struct pci_bus *__pci_create_root_bus(
+>>  
+>>  	bridge->bus = b;
+>>  	b->bridge = get_device(&bridge->dev);
+>> +	if (bridge->ops && bridge->ops->set_root_bus_speed)
+>> +		bridge->ops->set_root_bus_speed(bridge);
 > 
-> These were here mostly to help as wrappers for PCI_MSI
-> under certain UP 32-bit build scenarios, now that PCI_MSI
-> properly selects what it needs and when it needs it these
-> Kconfig options are now only enabling users reduce the size
-> of 32-bit kernels optionally. Since 32-bit kernels are not
-> in a huge state of flux and since there is no penalty for
-> adding APIC support other than a bit of size moving forward
-> we simply expect folks to enable APIC options on 32-bit systems
-> when a system needs it, as with PCI_MSI. This lets us remove
-> clutter from the x86 Kconfig file.
+> Before this patch, can you do this:
+> 
+>   - Rename the powerpc pcibios_root_bridge_prepare() to
+>     pcibios_set_root_bus_speed() and add a call to it here
+> 
+>   - Move the pcibios_root_bridge_prepare() call to pci_create_host_bridge()
+> 
+> Then this patch will make a lot more sense because it will look like this,
+> with the host bridge ops call right next to the matching pcibios call:
+> 
+>   +	if (host->ops && host->ops->prepare) {
+>   +		error = host->ops->prepare(host);
+>   +		...
+>   +	}
+> 	pcibios_root_bridge_prepare(...);
+> 
+>   +	if (bridge->ops && bridge->ops->set_root_bus_speed)
+>   +		bridge->ops->set_root_bus_speed(bridge);
+> 	pcibios_set_root_bus_speed(...);
+
+OK, will update.
+
+> 
+>>  	error = pcibios_root_bridge_prepare(bridge);
+>>  	if (error)
+>>  		goto err_out;
+>> @@ -1954,7 +1956,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
+>>  {
+>>  	struct pci_host_bridge *host;
+>>  
+>> -	host = pci_create_host_bridge(parent, db, resources, sysdata);
+>> +	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+>>  	if (!host)
+>>  		return NULL;
+>>  
+>> @@ -2051,10 +2053,13 @@ static struct pci_bus *__pci_scan_root_bus(
+>>  		pci_bus_insert_busn_res(b, b->number, 255);
+>>  	}
+>>  
+>> -	max = pci_scan_child_bus(b);
+>> -
+>> -	if (!found)
+>> -		pci_bus_update_busn_res_end(b, max);
+>> +	if (host->ops && host->ops->scan_bus) {
+>> +		host->ops->scan_bus(host);
+>> +	} else {
+>> +		max = pci_scan_child_bus(b);
+>> +		if (!found)
+>> +			pci_bus_update_busn_res_end(b, max);
+>> +	}
+> 
+> I think host->ops->scan_bus() should have the same prototype as
+> pci_scan_child_bus(), and it should return max, and you should do the same
+> busn update as when you call pci_scan_child_bus().  So the code would look
+> like this:
+> 
+>     if (host->ops && host->ops->scan_bus)
+> 	max = host->ops->scan_bus(b);
+>     else
+> 	max = pci_scan_child_bus(b);
+> 
+>     if (!found)
+> 	pci_bus_update_busn_res_end(b, max);
 > 
 
-Check out Linus's latest tree at 
-git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git and see 
-how it looks after commit 50849eefea3b ("x86/Kconfig: Simplify X86_UP_APIC 
-handling") and commit b1da1e715d4f ("x86/Kconfig: Simplify X86_IO_APIC 
-dependencies").
+OK, I will try to change the of scan_bus(), and make it return the max bus number like pci_scan_child_bus().
+
+>>  
+>>  	return b;
+>>  }
+>> @@ -2064,7 +2069,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+>>  {
+>>  	struct pci_host_bridge *host;
+>>  
+>> -	host = pci_create_host_bridge(parent, db, resources, sysdata);
+>> +	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
+>>  	if (!host)
+>>  		return NULL;
+>>  
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index b621f5b..e9922b1 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+>>  	return (pdev->error_state != pci_channel_io_normal);
+>>  }
+>>  
+>> +struct pci_host_bridge;
+>> +struct pci_host_bridge_ops {
+>> +	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+>> +	int (*prepare)(struct pci_host_bridge *host);
+>> +	void (*scan_bus)(struct pci_host_bridge *);
+> 
+> Needs an argument name to match the style of the other ops.
+
+Sorry, I missed it, will add it, thanks.
+
+
+> 
+>> +};
+>> +
+>>  struct pci_host_bridge {
+>>  	u16	domain;
+>>  	u16 busnum;
+>> @@ -407,6 +414,7 @@ struct pci_host_bridge {
+>>  	struct pci_bus *bus;		/* root bus */
+>>  	struct list_head windows;	/* resource_entry */
+>>  	struct list_head list;
+>> +	struct pci_host_bridge_ops *ops;
+>>  	void (*release_fn)(struct pci_host_bridge *);
+>>  	void *release_data;
+>>  };
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
