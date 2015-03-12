@@ -1,157 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:34837 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574AbbCQTLg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2015 15:11:36 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55018330.5050002@huawei.com>
+Date: Thu, 12 Mar 2015 20:14:40 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <CAA93t1qpPqbih+UB0McA_d_+2rVaNkXsinAUxYzK9+JXSS+L-g@mail.gmail.com>
-References: <CAA93t1qpPqbih+UB0McA_d_+2rVaNkXsinAUxYzK9+JXSS+L-g@mail.gmail.com>
-Date: Tue, 17 Mar 2015 12:11:35 -0700
-Message-ID: <CAA93t1ohiz+21DsKpjYueiUDsrO_yeKccwhYF9HO7BxNuXrQ6w@mail.gmail.com>
-Subject: Re: Hit a deadlock: between AER and pcieport/pciehp
-From: Rajat Jain <rajatxjain@gmail.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>, rthirumal@juniper.net,
-	sanjayj@juniper.net
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 06/30] PCI: Combine PCI domain and bus number in u32
+ arg
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-7-git-send-email-wangyijing@huawei.com> <20150312012946.GA10949@google.com>
+In-Reply-To: <20150312012946.GA10949@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On 2015/3/12 9:29, Bjorn Helgaas wrote:
+> On Mon, Mar 09, 2015 at 10:34:03AM +0800, Yijing Wang wrote:
+>> Currently, we use int type for bus number in
+>> pci_create_root_bus(), pci_scan_root_bus() and
+>> pci_scan_bus_legacy. Because PCI bus number
+>> always <= 255, so we could change the bus number
+>> argument type to u32, and combine PCI domain and
+>> bus number in one. 
+> 
+> This makes no sense.  Or rather, it only states the obvious: an 8-bit value
+> and a 16-bit value will both fit in a 32-bit value.  But it doesn't say
+> *why* you think it's a good idea to pass a single value that contains both
+> domain and bus numbers.  The obvious thing is to pass two separate values,
+> and you don't say why passing a single combined value is better.
 
-I was wondering if any one has a any suggestions to make here. I
-believe this is a pretty serious deadlock - and I'm looking for ideas
-on what should be the right way to fix this.
+Sorry for my poor description for this patch, I combined the domain and bus, because
+I think now we have too many args at pci_scan_root_bus() or other scan functions,
 
-Thanks,
+struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
 
-Rajat
+Now we have five args yet, plus the new introduced domain and pci_host_bridge_ops,
+it will become 7.
+
+I thought introduced a new structure which contain the necessary info to scan root bus/ host bridge,
+
+E.g
+
+struct pci_scan_info {
+	int bus;
+	struct device *parent;
+	struct pci_ops *ops;
+	void *sysdata;
+	struct list_head *resource;
+	int domain;
+	struct pci_host_bridge_ops;
+}
+
+Do you like this one or keep it like now ?
+
+pci_scan_root_bus(struct device *parent, int domain, int bus,
+		struct pci_ops *ops, void *sysdata, struct list_head *resources, struct pci_host_bridge_ops *ops)
 
 
-On Wed, Mar 11, 2015 at 6:48 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Hello,
->
->
-> I have hit a kernel deadlock situation on my system that has
-> hierarchical hot plug situations (i.e. we can hot-plug a card, that
-> itself may have a hot-plug slot for another level of hot-pluggable
-> add-on cards). In summary, I see 2 threads that are both waiting on
-> mutexes that is acquired by the other one. The mutexes are the
-> (global) "pci_bus_sem" and "device->mutex" respectively.
->
->
-> Thread1
->  =======
->  This is the pciehp worker thread, that scans a new card, and on
-> finding that there is a hotplug slot downstream, tries to
-> pci_create_slot().
->  pciehp_power_thread()
->    -> pciehp_enable_slot()
->      -> pciehp_configure_device()
->        -> pci_bus_add_devices() discovers all devices including a new
-> hotplug slot.
->          -> ....(etc)...
->          -> device_attach(dev) (for the newly discovered HP slot /
-> downstream port)
->            -> device_lock(dev) SUCCESSFULLY ACQUIRES dev->mutex for
-> the new slot.
->          -> ....(etc)...
->          -> ... (goes on)
->          -> pciehp_probe(dev)
->              -> __pci_hp_register()
->                 -> pci_create_slot()
->                      -> down_write(pci_bus_sem); /* Deadlocked */
->
->  This how the stack looks like:
->   [<ffffffff814e9923>] call_rwsem_down_write_failed+0x13/0x20
->  [<ffffffff81522d4f>] pci_create_slot+0x3f/0x280
->  [<ffffffff8152c030>] __pci_hp_register+0x70/0x400
->  [<ffffffff8152cf49>] pciehp_probe+0x1a9/0x450
->  [<ffffffff8152865d>] pcie_port_probe_service+0x3d/0x90
->  [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
->  [<ffffffff815c490b>] __device_attach+0x4b/0x60
->  [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
->  [<ffffffff815c4468>] device_attach+0xa8/0xc0
->  [<ffffffff815c38d0>] bus_probe_device+0xb0/0xe0
->  [<ffffffff815c16ce>] device_add+0x3de/0x560
->  [<ffffffff815c1a2e>] device_register+0x1e/0x30
->  [<ffffffff81528aef>] pcie_port_device_register+0x32f/0x510
->  [<ffffffff81528eb8>] pcie_portdrv_probe+0x48/0x80
->  [<ffffffff8151b17c>] pci_device_probe+0x9c/0xf0
->  [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
->  [<ffffffff815c490b>] __device_attach+0x4b/0x60
->  [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
->  [<ffffffff815c4468>] device_attach+0xa8/0xc0
->  [<ffffffff815116c1>] pci_bus_add_device+0x41/0x70
->  [<ffffffff81511a41>] pci_bus_add_devices+0x41/0x90
->  [<ffffffff81511a6f>] pci_bus_add_devices+0x6f/0x90
->  [<ffffffff8152e7e2>] pciehp_configure_device+0xa2/0x140
->  [<ffffffff8152df08>] pciehp_enable_slot+0x188/0x2d0
->  [<ffffffff8152e3d1>] pciehp_power_thread+0x2b1/0x3c0
->  [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
->  [<ffffffff810d9cc1>] worker_thread+0x121/0x440
->  [<ffffffff810df0bf>] kthread+0xef/0x110
->  [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
->  [<ffffffffffffffff>] 0xffffffffffffffff
->
->
->  Thread2
->  =======
->  While the above thread is doing its work, the root port gets a
-> completion timeout. And thus the AER Error recovery worker thread
-> kicks in to handle that error. And as part of that error recovery -
-> since the completion timeout was detected at root port, attempts to
-> see for ALL the devices downstream if they have an error handler that
-> need to be called. Here is what happens:
->
->
-> aer_isr()
->    -> aer_isr_one_error()
->      -> aer_process_err_device()
->         -> ... (etc)...
->           -> do_recovery()
->             -> broadcast_error_message()
->               -> pci_walk_bus( ..., report_error_detected,...) /*
-> effectively for all buses below root port */
->                     -> down_read(&pci_bus_sem);  /* SUCCESSFULLY
-> ACQUIRES the semaophore */
->                     -> report_error_detected(dev) /* for the newly
-> detected slot */
->                          -> device_lock(dev) /* Deadlocked */
->
->  This is how the stack looks like:
->  [<ffffffff81529e7e>] report_error_detected+0x4e/0x170 <--- Waiting on
-> device_lock()
->  [<ffffffff8151162e>] pci_walk_bus+0x4e/0xa0
->  [<ffffffff81529b84>] broadcast_error_message+0xc4/0xf0
->  [<ffffffff81529bed>] do_recovery+0x3d/0x280
->  [<ffffffff8152a5d0>] aer_isr+0x300/0x3e0
->  [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
->  [<ffffffff810d9cc1>] worker_thread+0x121/0x440
->  [<ffffffff810df0bf>] kthread+0xef/0x110
->  [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
->  [<ffffffffffffffff>] 0xffffffffffffffff
->
->
-> As a temporary work around to let me proceed, I was thinking may be I
-> could change in report_error_detected() such that completion timeouts
-> errors may not be broadcast (do we really have any drivers that have
-> aer handlers that handle such an error? What would the handler do
-> anyway to fix such an error?)
->
->
-> But not sure what the right solution might look like. I thought about
-> whether these locks should have been taken in a particular order in
-> order to avoid this problem, but looking at the stack there seems to
-> be no other way. What do you think is the best way to fix this
-> deadlock?
->
-> Any help or suggestions in this regard are greatly appreciated.
->
->  Thanks,
->
-> Rajat
+> 
+> Also see whitespace mistakes below.  I get a little testy when people don't
+> follow the whitespace convention of neighboring lines because if people are
+> sloppy about whitespace I assume they're sloppy about the code.
+> 
+
+Sorry, I would be more careful.
+
+
+>>  	int error;
+>> @@ -1901,6 +1901,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>  	resource_size_t offset;
+>>  	char bus_addr[64];
+>>  	char *fmt;
+>> +	u8	bus = PCI_BUSNUM(db);
+> 
+> Whitespace botch.
+> 
+>>  
+>>  	b = pci_alloc_bus(NULL);
+>>  	if (!b)
+>> @@ -1921,6 +1922,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>  	if (!bridge)
+>>  		goto err_out;
+>>  
+>> +	bridge->domain = PCI_DOMAIN(db);
+>>  	bridge->dev.parent = parent;
+>>  	bridge->dev.release = pci_release_host_bridge_dev;
+>>  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>> @@ -2058,7 +2060,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+>>  			res, ret ? "can not be" : "is");
+>>  }
+>>  
+>> -struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>> +struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+>>  		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>>  {
+>>  	struct resource_entry *window;
+>> @@ -2072,15 +2074,15 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>>  			break;
+>>  		}
+>>  
+>> -	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
+>> +	b = pci_create_root_bus(parent, db, ops, sysdata, resources);
+>>  	if (!b)
+>>  		return NULL;
+>>  
+>>  	if (!found) {
+>>  		dev_info(&b->dev,
+>>  		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+>> -			bus);
+>> -		pci_bus_insert_busn_res(b, bus, 255);
+>> +			PCI_BUSNUM(db));
+>> +		pci_bus_insert_busn_res(b, PCI_BUSNUM(db), 255);
+>>  	}
+>>  
+>>  	max = pci_scan_child_bus(b);
+>> @@ -2092,7 +2094,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>>  }
+>>  EXPORT_SYMBOL(pci_scan_root_bus);
+>>  
+>> -struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+>> +struct pci_bus *pci_scan_bus(u32 db, struct pci_ops *ops,
+>>  					void *sysdata)
+>>  {
+>>  	LIST_HEAD(resources);
+>> @@ -2101,7 +2103,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+>>  	pci_add_resource(&resources, &ioport_resource);
+>>  	pci_add_resource(&resources, &iomem_resource);
+>>  	pci_add_resource(&resources, &busn_resource);
+>> -	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
+>> +	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
+>>  	if (b) {
+>>  		pci_scan_child_bus(b);
+>>  	} else {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 36effb8..8b3d245 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -401,6 +401,7 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+>>  }
+>>  
+>>  struct pci_host_bridge {
+>> +	u16	domain;
+> 
+> Please follow the existing whitespace convention, i.e., use a space, not a
+> tab, between "u16 domain".
+> 
+>>  	struct device dev;
+>>  	struct pci_bus *bus;		/* root bus */
+>>  	struct list_head windows;	/* resource_entry */
+>> @@ -769,14 +770,14 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>>  void pcibios_scan_specific_bus(int busn);
+>>  struct pci_bus *pci_find_bus(int domain, int busnr);
+>>  void pci_bus_add_devices(const struct pci_bus *bus);
+>> -struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>> +struct pci_bus *pci_scan_bus(u32 dombus, struct pci_ops *ops, void *sysdata);
+>> +struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
+>>  				    struct pci_ops *ops, void *sysdata,
+>>  				    struct list_head *resources);
+>>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+>>  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+>>  void pci_bus_release_busn_res(struct pci_bus *b);
+>> -struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>> +struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
+>>  					     struct pci_ops *ops, void *sysdata,
+>>  					     struct list_head *resources);
+>>  struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+>> diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+>> index 3c292bc..89c6f15 100644
+>> --- a/include/uapi/linux/pci.h
+>> +++ b/include/uapi/linux/pci.h
+>> @@ -30,6 +30,9 @@
+>>  #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
+>>  #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
+>>  #define PCI_FUNC(devfn)		((devfn) & 0x07)
+>> +#define PCI_DOMAIN(db)		((db) >> 16)
+>> +#define PCI_BUSNUM(db)		((db) & 0xffff)
+>> +#define PCI_DOMBUS(domain, bus)		(((domain) << 16) | (bus))
+>>  
+>>  /* Ioctls for /proc/bus/pci/X/Y nodes. */
+>>  #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
