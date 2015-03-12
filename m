@@ -1,84 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52051 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933075AbbCPRUl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Mar 2015 13:20:41 -0400
-Date: Mon, 16 Mar 2015 18:20:37 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: [PATCH RFC 3/4] pci: make msi/msix shutdown functions static
-Message-ID: <1426526415-13299-4-git-send-email-mst@redhat.com>
-References: <1426526415-13299-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426526415-13299-1-git-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <55015F690200007800068D86@mail.emea.novell.com>
+Date: Thu, 12 Mar 2015 08:42:01 +0000
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: <luto@amacapital.net>, <thomas.petazzoni@free-electrons.com>,
+	<andy.shevchenko@gmail.com>, <bhelgaas@google.com>,
+	<rientjes@google.com>, "Ingo Molnar" <mingo@kernel.org>,
+	<x86@kernel.org>, <tglx@linutronix.de>,
+	<pure.logic@nexus-software.ie>, <mingo@redhat.com>,
+	"Juergen Gross" <JGross@suse.com>,
+	"Luis Rodriguez" <Mcgrof@Suse.com>, <bp@suse.de>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<hpa@zytor.com>
+Subject: Re: [PATCH v1 2/2] x86: kconfig: remove X86_UP_APIC
+References: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com>
+ <1426115422-1823-3-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1426115422-1823-3-git-send-email-mcgrof@do-not-panic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_msi_shutdown and pci_msix_shutdown are now internal to msi.c, drop
-them from header and make them static.
+>>> On 12.03.15 at 00:10, <mcgrof@do-not-panic.com> wrote:
+>  config X86_LOCAL_APIC
+>  	def_bool y
+> -	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+> +	depends on X86_64 || SMP || X86_32_NON_STANDARD || PCI_MSI
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- include/linux/pci.h | 4 ----
- drivers/pci/msi.c   | 4 ++--
- 2 files changed, 2 insertions(+), 6 deletions(-)
+I.e. building a 32-bit kernel with APIC support but with !SMP, !PCI_MSI,
+and !X86_32_NON_STANDARD will now be impossible. Surely not
+what the patch description says.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..a34df45 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1209,11 +1209,9 @@ struct msix_entry {
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
--void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_vec_count(struct pci_dev *dev);
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
--void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
-@@ -1237,13 +1235,11 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
- }
- #else
- static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
--static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
- static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
- static inline int pci_enable_msix(struct pci_dev *dev,
- 				  struct msix_entry *entries, int nvec)
- { return -ENOSYS; }
--static inline void pci_msix_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msix(struct pci_dev *dev) { }
- static inline void pci_restore_msi_state(struct pci_dev *dev) { }
- static inline int pci_msi_enabled(void) { return 0; }
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfc..0e037af 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -908,7 +908,7 @@ int pci_msi_vec_count(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_msi_vec_count);
- 
--void pci_msi_shutdown(struct pci_dev *dev)
-+static void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
- 	u32 mask;
-@@ -1014,7 +1014,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msix);
- 
--void pci_msix_shutdown(struct pci_dev *dev)
-+static void pci_msix_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
- 
--- 
-MST
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -5,6 +5,8 @@ config PCI_MSI
+>  	bool "Message Signaled Interrupts (MSI and MSI-X)"
+>  	depends on PCI
+>  	select GENERIC_MSI_IRQ
+> +	select X86_LOCAL_APIC
+> +	select X86_IO_APIC
+
+I don't see the need for the latter - MSI specifically works without
+any IO-APIC interaction. And for the former you should decide
+which way you want it - PCI_MSI select X86_LOCAL_APIC
+(probably the right thing in x86, but surely wrong everwhere
+else, i.e. this at least needs a condition tagged onto it) or
+X86_LOCAL_APIC depend on PCI_MSI; in no case should this
+be a forward _and_ reverse dependency.
+
+Jan
 
