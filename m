@@ -1,77 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51696 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030AbbCLMX4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 08:23:56 -0400
-Message-ID: <5501853E.7050009@huawei.com>
-Date: Thu, 12 Mar 2015 20:23:26 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:39624 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751169AbbCLVJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 17:09:00 -0400
+Received: by oifz81 with SMTP id z81so1389024oif.6
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 14:08:59 -0700 (PDT)
+Date: Thu, 12 Mar 2015 16:08:56 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
+Subject: Re: [PATCH v6 3/4] pci: iproc: Add Broadcom iProc PCIe support
+Message-ID: <20150312210856.GF7346@google.com>
+References: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
+ <1426097169-20805-4-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 08/30] PCI: Introduce pci_host_assign_domain_nr() to
- assign domain
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-9-git-send-email-wangyijing@huawei.com> <20150312013918.GC10949@google.com>
-In-Reply-To: <20150312013918.GC10949@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426097169-20805-4-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 8b3d245..2b1b998 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1327,11 +1327,15 @@ static inline int pci_domain_nr(struct pci_bus *bus)
->>  	return bus->domain_nr;
->>  }
->>  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
->> +void pci_host_assign_domain_nr(struct pci_host_bridge *host);
+On Wed, Mar 11, 2015 at 11:06:08AM -0700, Ray Jui wrote:
+> This adds the support for Broadcom iProc PCIe controller
 > 
-> I do not think this needs to be in include/linux/pci.h.  It's called only
-> from drivers/pci/host-bridge.c, so at most, it needs to be in
-> drivers/pci/pci.h.
+> pcie-iproc.c servers as the common core driver, and front-end bus
+> interface needs to be added to support different bus interfaces
 > 
-> Better still would be if the definition could be moved from
-> drivers/pci/pci.c to drivers/pci/host-bridge.c so we wouldn't need anything
-> in a header file at all.
-
-This is a good idea, thanks.
-
+> pcie-iproc-pltfm.c contains the support for the platform bus interface
 > 
->>  #else
->>  static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
->>  					struct device *parent)
->>  {
->>  }
->> +static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
->> +{
->> +}
->>  #endif
->>  
->>  /* some architectures require additional setup to direct VGA traffic */
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ...
 
+> +static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+> +{
+> +	u8 hdr_type;
+> +	u32 link_ctrl;
+> +	u16 pos, link_status;
+> +	int link_is_active = 0;
+> +
+> +	/* make sure we are not in EP mode */
+> +	pci_bus_read_config_byte(bus, 0, PCI_HEADER_TYPE, &hdr_type);
+> +	if ((hdr_type & 0x7f) != PCI_HEADER_TYPE_BRIDGE) {
+> +		dev_err(pcie->dev, "in EP mode, hdr=0x08%x\n", hdr_type);
 
--- 
-Thanks!
-Yijing
-
+"0x08%x" doesn't look right.  I changed it to "%#02x"; is that what you
+intended?
