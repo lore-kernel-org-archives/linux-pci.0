@@ -1,112 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51467 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbbCJBBP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Mar 2015 21:01:15 -0400
-Message-ID: <1425949234.25026.24.camel@redhat.com>
-Subject: Re: [PATCH v4 1/4] PCI: Export symbols of PCI functions
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
-Date: Mon, 09 Mar 2015 19:00:34 -0600
-In-Reply-To: <1425946878-13169-2-git-send-email-rjui@broadcom.com>
-References: <1425946878-13169-1-git-send-email-rjui@broadcom.com>
-	 <1425946878-13169-2-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([58.251.152.64]:29096 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754170AbbCLNPj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:15:39 -0400
+Message-ID: <5501915F.80404@huawei.com>
+Date: Thu, 12 Mar 2015 21:15:11 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 13/30] PCI: Introduce new scan function pci_scan_host_bridge()
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-14-git-send-email-wangyijing@huawei.com> <20150312032515.GF10949@google.com>
+In-Reply-To: <20150312032515.GF10949@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-03-09 at 17:21 -0700, Ray Jui wrote:
-> Export symbols of the following PCI functions so they can be referenced
-> by a PCI driver compiled as a kernel loadable module:
+>> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
+>> +		u32 db, struct pci_ops *ops, void *sysdata,
+>> +		struct list_head *resources,
+>> +		struct pci_host_bridge_ops *phb_ops)
 > 
-> pci_common_swizzle
-> pci_create_root_bus
-> pci_stop_root_bus
-> pci_remove_root_bus
-> pci_assign_unassigned_bus_resources
-> pci_fixup_irqs
+> Drop the "phb_" prefix.
+
+OK.
+
 > 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> ---
->  drivers/pci/pci.c       |    1 +
->  drivers/pci/probe.c     |    1 +
->  drivers/pci/remove.c    |    2 ++
->  drivers/pci/setup-bus.c |    1 +
->  drivers/pci/setup-irq.c |    1 +
->  5 files changed, 6 insertions(+)
+>> +{
+>> +	struct pci_host_bridge *host;
+>> +	struct pci_bus *bus;
+>> +
+>> +	host = pci_create_host_bridge(parent, db, resources,
+>> +			sysdata, phb_ops);
+>> +	if (!host)
+>> +		return NULL;
+>> +
+>> +	bus = __pci_scan_root_bus(host, ops);
+>> +	if (!bus)
+>> +		pci_free_host_bridge(host);
+>> +
+>> +	return host;
+>> +}
+>> +EXPORT_SYMBOL(pci_scan_host_bridge);
+>> +
+>> +
+>>  struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
+>>  		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+>>  {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index e9922b1..28eafb5 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -790,6 +790,10 @@ void pci_bus_release_busn_res(struct pci_bus *b);
+>>  struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
+>>  					     struct pci_ops *ops, void *sysdata,
+>>  					     struct list_head *resources);
+>> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
+>> +		u32 dombus, struct pci_ops *ops, void *sysdata,
+>> +		struct list_head *resources,
+>> +		struct pci_host_bridge_ops *phb_ops);
+>>  struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+>>  				int busnr);
+>>  void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 81f06e8..fb4a3da 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
->  	*pinp = pin;
->  	return PCI_SLOT(dev->devfn);
->  }
-> +EXPORT_SYMBOL(pci_common_swizzle);
->  
->  /**
->   *	pci_release_region - Release a PCI bar
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8d2f400..eb24ef9 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1993,6 +1993,7 @@ err_out:
->  	kfree(b);
->  	return NULL;
->  }
-> +EXPORT_SYMBOL(pci_create_root_bus);
->  
->  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
->  {
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8bd76c9..c523159 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
->  	/* stop the host bridge */
->  	device_release_driver(&host_bridge->dev);
->  }
-> +EXPORT_SYMBOL(pci_stop_root_bus);
->  
->  void pci_remove_root_bus(struct pci_bus *bus)
->  {
-> @@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	/* remove the host bridge */
->  	device_unregister(&host_bridge->dev);
->  }
-> +EXPORT_SYMBOL(pci_remove_root_bus);
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index e3e17f3..932c9e5 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  	__pci_bus_assign_resources(bus, &add_list, NULL);
->  	BUG_ON(!list_empty(&add_list));
->  }
-> +EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 4e2d595..9d2bbb6 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->  	for_each_pci_dev(dev)
->  		pdev_fixup_irq(dev, swizzle, map_irq);
->  }
-> +EXPORT_SYMBOL(pci_fixup_irqs);
+> .
+> 
 
 
-Why not EXPORT_SYMBOL_GPL for all of these?  Some of these seem fairly
-close to PCI core functionality for arbitrarily licensed modules.
+-- 
+Thanks!
+Yijing
 
