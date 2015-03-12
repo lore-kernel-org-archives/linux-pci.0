@@ -1,99 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:54045 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbbCWMoQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:39064 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbbCLDsL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:48:11 -0400
+Received: by oigi138 with SMTP id i138so11394281oig.6
+        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:48:11 -0700 (PDT)
+Date: Wed, 11 Mar 2015 22:48:07 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v7 13/31] PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
-Date: Mon, 23 Mar 2015 20:40:39 +0800
-Message-ID: <1427114457-16687-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 30/30] PCI: Remove pci_bus_assign_domain_nr()
+Message-ID: <20150312034807.GK10949@google.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-31-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1425868467-9667-31-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move pcibios_root_bridge_prepare() to pci_create_host_bridge().
+On Mon, Mar 09, 2015 at 10:34:27AM +0800, Yijing Wang wrote:
+> Now we save the domain number in pci_host_bridge,
+> we could remove pci_bus_assign_domain_nr() and
+> clean the domain member in pci_bus.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci.c   |    5 -----
+>  drivers/pci/probe.c |   12 ++++--------
+>  include/linux/pci.h |    3 ---
+>  3 files changed, 4 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2cf942b..4d8dfe4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4581,11 +4581,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+>  {
+>  	host->domain = pci_assign_domain_nr(host->dev.parent);
+>  }
+> -
+> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> -{
+> -	bus->domain_nr = pci_assign_domain_nr(parent);
+> -}
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   16 +++++++++++++---
- drivers/pci/probe.c       |    3 ---
- 2 files changed, 13 insertions(+), 6 deletions(-)
+I think you forgot to remove the empty pci_bus_assign_domain_nr()
+definition from include/linux/pci.h.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index b0ed8da..87c4fc5 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -92,9 +92,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 			pr_warn("pci host bridge pci%04x:%02x exist\n",
- 					host->domain, bus);
- 			mutex_unlock(&pci_host_mutex);
--			pci_free_resource_list(&host->windows);
--			kfree(host);
--			return NULL;
-+			goto free_res;
- 		}
- 	}
- 	list_add_tail(&host->list, &pci_host_bridge_list);
-@@ -105,6 +103,10 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
- 
-+	error = pcibios_root_bridge_prepare(host);
-+	if (error)
-+		goto list_del;
-+
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-@@ -112,6 +114,14 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	}
- 
- 	return host;
-+list_del:
-+	mutex_lock(&pci_host_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&pci_host_mutex);
-+free_res:
-+	pci_free_resource_list(&host->windows);
-+	kfree(host);
-+	return NULL;
- }
- 
- void pci_free_host_bridge(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 418a426..ee17d9a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1893,9 +1893,6 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto put_dev;
- 
- 	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
--- 
-1.7.1
+I'm not sure how much value is left in CONFIG_PCI_DOMAINS_GENERIC.  You're
+removed *almost* everything that uses it.  I wonder how hard it would be to
+get rid of that last little bit.
 
+>  #endif
+>  #endif
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 196f08a..9cd3ca2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -481,7 +481,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+>  	}
+>  }
+>  
+> -static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+> +static struct pci_bus *pci_alloc_bus(void)
+>  {
+>  	struct pci_bus *b;
+>  
+> @@ -496,10 +496,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+>  	INIT_LIST_HEAD(&b->resources);
+>  	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+>  	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -	if (parent)
+> -		b->domain_nr = parent->domain_nr;
+> -#endif
+> +
+>  	return b;
+>  }
+>  
+> @@ -646,7 +643,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	/*
+>  	 * Allocate a new bus, and inherit stuff from the parent..
+>  	 */
+> -	child = pci_alloc_bus(parent);
+> +	child = pci_alloc_bus();
+>  	if (!child)
+>  		return NULL;
+>  
+> @@ -1866,14 +1863,13 @@ static struct pci_bus *pci_create_root_bus(
+>  	char *fmt;
+>  
+>  	parent = bridge->dev.parent;
+> -	b = pci_alloc_bus(NULL);
+> +	b = pci_alloc_bus();
+>  	if (!b)
+>  		return NULL;
+>  
+>  	b->sysdata = dev_get_drvdata(&bridge->dev);
+>  	b->ops = ops;
+>  	b->number = b->busn_res.start = bridge->busnum;
+> -	pci_bus_assign_domain_nr(b, parent);
+>  
+>  	bridge->bus = b;
+>  	b->bridge = get_device(&bridge->dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index dc1c710..ebc70bb 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -467,9 +467,6 @@ struct pci_bus {
+>  	unsigned char	primary;	/* number of primary bridge */
+>  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -	int		domain_nr;
+> -#endif
+>  
+>  	char		name[48];
+>  
+> -- 
+> 1.7.1
+> 
