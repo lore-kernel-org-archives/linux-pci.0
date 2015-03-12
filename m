@@ -1,98 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48983 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284AbbCDWcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Mar 2015 17:32:13 -0500
-From: Bandan Das <bsd@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] vfio-pci: Allow PCI IDs to be specified as module options
-References: <20150304194711.26766.75450.stgit@gimli.home>
-	<20150304200243.26766.556.stgit@gimli.home>
-	<jpgy4ncv681.fsf@redhat.com> <1425507522.5200.311.camel@redhat.com>
-Date: Wed, 04 Mar 2015 17:32:11 -0500
-In-Reply-To: <1425507522.5200.311.camel@redhat.com> (Alex Williamson's message
-	of "Wed, 04 Mar 2015 15:18:42 -0700")
-Message-ID: <jpg8ufc75sk.fsf@redhat.com>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:40966 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755194AbbCLUAu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 16:00:50 -0400
+Received: by oiga141 with SMTP id a141so16698593oig.8
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 13:00:50 -0700 (PDT)
+Date: Thu, 12 Mar 2015 15:00:46 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [PATCH v6 21/30] PCI: Introduce pci_bus_child_max_busnr()
+Message-ID: <20150312200046.GE7346@google.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-22-git-send-email-wangyijing@huawei.com>
+ <20150312033643.GI10949@google.com>
+ <5501947E.4070801@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5501947E.4070801@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson <alex.williamson@redhat.com> writes:
+On Thu, Mar 12, 2015 at 09:28:30PM +0800, Yijing Wang wrote:
+> On 2015/3/12 11:36, Bjorn Helgaas wrote:
+> > On Mon, Mar 09, 2015 at 10:34:18AM +0800, Yijing Wang wrote:
+> >> Sometimes, we need to know the highest reserved
+> >> busnr for children bus. Because parent's
+> >> bus->busn_res could have padding in it.
+> >> This function return the max child busnr as
+> >> pci_scan_child_bus().
+> >>
+> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+> > 
+> > I must have screwed this up.  I don't know where the Signed-off-by from
+> > Fengguang came from, but it shouldn't be there.  And I also screwed up by
+> > adding my own Signed-off-by to the branch while we're still iterating on
+> > this series.  The patches you post should not have my Signed-off-by in
+> > them; I should add that.  But that's my fault because put them in the
+> > branch, and I asked you to pull that branch and modify and repost it.
+> > 
+> 
+> -.-! I added the Fengguang Signed-off-by, because his kbuild test robot sent a patch to me to fix a building error.
 
-> On Wed, 2015-03-04 at 15:49 -0500, Bandan Das wrote:
->> Hi Alex,
->> 
->> Alex Williamson <alex.williamson@redhat.com> writes:
->> ...
->> > +		if (fields < 2) {
->> > +			pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
->> > +			continue;
->> > +		}
->> > +
->> > +		pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
->> > +			vendor, device, subvendor, subdevice,
->> > +			class, class_mask);
->> > +
->> > +		rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
->> > +				   subvendor, subdevice, class, class_mask, 0);
->> > +		if (rc)
->> > +			pr_warn("vfio-pci: failed to add dynamic id (%d)\n",
->> > +				rc);
->> Just a minor observation - maybe we should print out the
->> vendor/device/subvendor/subdevice as part of the failure message too. The info
->> message could potentially get lost in a system with high syslog traffic.
->
-> Thanks for the comment.  I don't think we want to duplicate the pr_info
-> above it, so are you thinking something like this?
->
->                 if (fields < 2) {
->                         pr_warn("vfio-pci: invalid id string \"%s\"\n", id);
->                         continue;
->                 }
->
->                 rc = pci_add_dynid(&vfio_pci_driver, vendor, device,
->                                    subvendor, subdevice, class, class_mask, 0);
->                 if (rc)
->                         pr_warn("vfio-pci: failed to add dynamic id: %04X:%04X sub=%04X:%04X cls=%08X/%08X (%d)\n",
->                                 vendor, device, subvendor, subdevice,
->                                 class, class_mask, rc);
->                 else
->                         pr_info("vfio-pci: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
->                                 vendor, device, subvendor, subdevice,
->                                 class, class_mask);
->         }
-
-Yep, this is good. (BTW, we can define pr_fmt at the top of the file and avoid
-the "vfio-pci" prefix)
-
->
->> > +	}
->> > +}
->> > +
->> >  static int __init vfio_pci_init(void)
->> >  {
->> >  	int ret;
->> > @@ -1053,6 +1097,8 @@ static int __init vfio_pci_init(void)
->> >  	if (ret)
->> >  		goto out_driver;
->> >  
->> > +	vfio_pci_fill_ids();
->> > +
->> >  	return 0;
->> >  
->> >  out_driver:
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe kvm" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oh, OK.  I forgot about that.  I think it's OK to include Fengguang's
+Signed-off-by for that, but it should come before yours.  Since you're the
+one sending the patch, your Signed-off-by should be last in the list.
