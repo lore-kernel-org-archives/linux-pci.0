@@ -1,84 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:33098 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165AbbCXMbp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Mar 2015 08:31:45 -0400
-Date: Tue, 24 Mar 2015 13:31:40 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v8 24/30] PCI/tegra: Remove redundant
- tegra_pcie_scan_bus()
-Message-ID: <20150324123139.GA11625@ulmo.nvidia.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
- <1427168064-8657-25-git-send-email-wangyijing@huawei.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:39591 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710AbbCLBsc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 21:48:32 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="bp/iNruPH9dso1Pn"
-In-Reply-To: <1427168064-8657-25-git-send-email-wangyijing@huawei.com>
+Reply-To: rajatxjain@gmail.com
+Date: Wed, 11 Mar 2015 18:48:32 -0700
+Message-ID: <CAA93t1qpPqbih+UB0McA_d_+2rVaNkXsinAUxYzK9+JXSS+L-g@mail.gmail.com>
+Subject: Hit a deadlock: between AER and pcieport/pciehp
+From: Rajat Jain <rajatxjain@gmail.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello,
 
---bp/iNruPH9dso1Pn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Mar 24, 2015 at 11:34:18AM +0800, Yijing Wang wrote:
-> Now pci_scan_root_bus() is almost similar to
-> pci_create_root_bus() + pci_scan_child_bus().
-> So we could use common pci_scan_root_bus() in
-> pci_common_init_dev() to scan pci busses.
-> tegra_pcie_scan_bus() is redundant, remove it.
->=20
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Thierry Reding <thierry.reding@gmail.com>
-> CC: linux-tegra@vger.kernel.org
-> ---
->  drivers/pci/host/pci-tegra.c |   16 ----------------
->  1 files changed, 0 insertions(+), 16 deletions(-)
+I have hit a kernel deadlock situation on my system that has
+hierarchical hot plug situations (i.e. we can hot-plug a card, that
+itself may have a hot-plug slot for another level of hot-pluggable
+add-on cards). In summary, I see 2 threads that are both waiting on
+mutexes that is acquired by the other one. The mutexes are the
+(global) "pci_bus_sem" and "device->mutex" respectively.
 
-Jetson TK1 still boots over NFS root via the onboard PCIe network card
-with this series applied, so:
 
-Tested-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
+Thread1
+ =======
+ This is the pciehp worker thread, that scans a new card, and on
+finding that there is a hotplug slot downstream, tries to
+pci_create_slot().
+ pciehp_power_thread()
+   -> pciehp_enable_slot()
+     -> pciehp_configure_device()
+       -> pci_bus_add_devices() discovers all devices including a new
+hotplug slot.
+         -> ....(etc)...
+         -> device_attach(dev) (for the newly discovered HP slot /
+downstream port)
+           -> device_lock(dev) SUCCESSFULLY ACQUIRES dev->mutex for
+the new slot.
+         -> ....(etc)...
+         -> ... (goes on)
+         -> pciehp_probe(dev)
+             -> __pci_hp_register()
+                -> pci_create_slot()
+                     -> down_write(pci_bus_sem); /* Deadlocked */
 
---bp/iNruPH9dso1Pn
-Content-Type: application/pgp-signature
+ This how the stack looks like:
+  [<ffffffff814e9923>] call_rwsem_down_write_failed+0x13/0x20
+ [<ffffffff81522d4f>] pci_create_slot+0x3f/0x280
+ [<ffffffff8152c030>] __pci_hp_register+0x70/0x400
+ [<ffffffff8152cf49>] pciehp_probe+0x1a9/0x450
+ [<ffffffff8152865d>] pcie_port_probe_service+0x3d/0x90
+ [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
+ [<ffffffff815c490b>] __device_attach+0x4b/0x60
+ [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
+ [<ffffffff815c4468>] device_attach+0xa8/0xc0
+ [<ffffffff815c38d0>] bus_probe_device+0xb0/0xe0
+ [<ffffffff815c16ce>] device_add+0x3de/0x560
+ [<ffffffff815c1a2e>] device_register+0x1e/0x30
+ [<ffffffff81528aef>] pcie_port_device_register+0x32f/0x510
+ [<ffffffff81528eb8>] pcie_portdrv_probe+0x48/0x80
+ [<ffffffff8151b17c>] pci_device_probe+0x9c/0xf0
+ [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
+ [<ffffffff815c490b>] __device_attach+0x4b/0x60
+ [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
+ [<ffffffff815c4468>] device_attach+0xa8/0xc0
+ [<ffffffff815116c1>] pci_bus_add_device+0x41/0x70
+ [<ffffffff81511a41>] pci_bus_add_devices+0x41/0x90
+ [<ffffffff81511a6f>] pci_bus_add_devices+0x6f/0x90
+ [<ffffffff8152e7e2>] pciehp_configure_device+0xa2/0x140
+ [<ffffffff8152df08>] pciehp_enable_slot+0x188/0x2d0
+ [<ffffffff8152e3d1>] pciehp_power_thread+0x2b1/0x3c0
+ [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
+ [<ffffffff810d9cc1>] worker_thread+0x121/0x440
+ [<ffffffff810df0bf>] kthread+0xef/0x110
+ [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
+ [<ffffffffffffffff>] 0xffffffffffffffff
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
 
-iQIcBAABCAAGBQJVEVknAAoJEN0jrNd/PrOhgSAQAKCC9PfTMZLcgurKsdBmqctU
-7WkCuoKLDv1sbEfF1mzfk8VI/9kROf6bIyKKgvXV2V50p8OHBbJBJmjR5U48/37v
-iDGVlSrSII4+G3Mv/HWx/Dvh1whXYp/TH+SNUPNY1BdSIRmvjmLQ3QYBuC6P3N6W
-kjd5NW5KkgZ0NPORWfXzEabkXIGEjIk8fsB6ILXxBVJMdUxiLA4LyOQAmmuzoviW
-TAsboT7liAJPbiM2mjnYqo6ZdDR7Y8hotXBf8KtIxlzns12VQZl40GdtvZ7zWi4R
-tH3zyYqJuhyg6VjvDMZzKZsmU4hctOQ2sgeYOFn52t8nPIZqJMoLT3nAabgUw+7x
-NNI+oZGD8Wo4XGDXQyiY1ihjObLCD2uDfpKfdwmCRlYFef66rEWW0gImACCCprEc
-9jqQgqZAN9AXX+1OkNyX+Ioiy2v7yicVi/JMHawdEEdszSuG3RuZIQQWku+T2UDy
-WmpI2MdZRUEAJiW1V5rOBibae2uvGEHedkZmOqkjG2NLFqt633FlUg416ucPD+eJ
-VKWNXwsJyqBtGpifsUaFZfSNFsvSZ4gceI+/KD0ZpmhhAXkh+AVoNTa1iZLjq3X9
-q8J1YflS6mHPbE+D37LRDLg47XoHRIf0Ly/9GukoXbowfnP3/Fy1532Zy+1eXyBb
-Lk3IVyxC8BFsZ0j1FZKG
-=0jIA
------END PGP SIGNATURE-----
+ Thread2
+ =======
+ While the above thread is doing its work, the root port gets a
+completion timeout. And thus the AER Error recovery worker thread
+kicks in to handle that error. And as part of that error recovery -
+since the completion timeout was detected at root port, attempts to
+see for ALL the devices downstream if they have an error handler that
+need to be called. Here is what happens:
 
---bp/iNruPH9dso1Pn--
+
+aer_isr()
+   -> aer_isr_one_error()
+     -> aer_process_err_device()
+        -> ... (etc)...
+          -> do_recovery()
+            -> broadcast_error_message()
+              -> pci_walk_bus( ..., report_error_detected,...) /*
+effectively for all buses below root port */
+                    -> down_read(&pci_bus_sem);  /* SUCCESSFULLY
+ACQUIRES the semaophore */
+                    -> report_error_detected(dev) /* for the newly
+detected slot */
+                         -> device_lock(dev) /* Deadlocked */
+
+ This is how the stack looks like:
+ [<ffffffff81529e7e>] report_error_detected+0x4e/0x170 <--- Waiting on
+device_lock()
+ [<ffffffff8151162e>] pci_walk_bus+0x4e/0xa0
+ [<ffffffff81529b84>] broadcast_error_message+0xc4/0xf0
+ [<ffffffff81529bed>] do_recovery+0x3d/0x280
+ [<ffffffff8152a5d0>] aer_isr+0x300/0x3e0
+ [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
+ [<ffffffff810d9cc1>] worker_thread+0x121/0x440
+ [<ffffffff810df0bf>] kthread+0xef/0x110
+ [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
+ [<ffffffffffffffff>] 0xffffffffffffffff
+
+
+As a temporary work around to let me proceed, I was thinking may be I
+could change in report_error_detected() such that completion timeouts
+errors may not be broadcast (do we really have any drivers that have
+aer handlers that handle such an error? What would the handler do
+anyway to fix such an error?)
+
+
+But not sure what the right solution might look like. I thought about
+whether these locks should have been taken in a particular order in
+order to avoid this problem, but looking at the stack there seems to
+be no other way. What do you think is the best way to fix this
+deadlock?
+
+Any help or suggestions in this regard are greatly appreciated.
+
+ Thanks,
+
+Rajat
