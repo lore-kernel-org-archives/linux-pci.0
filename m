@@ -1,35 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:37919 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752415AbbCaSZ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 14:25:58 -0400
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:33049 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753303AbbCLT4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 15:56:55 -0400
+Received: by obcvb8 with SMTP id vb8so16427380obc.0
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 12:56:55 -0700 (PDT)
+Date: Thu, 12 Mar 2015 14:56:51 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 10/30] PCI: Introduce pci_host_bridge_list to manage
+ host bridges
+Message-ID: <20150312195651.GD7346@google.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-11-git-send-email-wangyijing@huawei.com>
+ <20150312025537.GD10949@google.com>
+ <55018E90.9030301@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150331.141911.1147249607585406404.davem@davemloft.net>
-References: <CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
-	<20150331.110636.1386273674508393491.davem@davemloft.net>
-	<CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
-	<20150331.141911.1147249607585406404.davem@davemloft.net>
-Date: Tue, 31 Mar 2015 11:25:57 -0700
-Message-ID: <CAE9FiQXgR+k5zv9W4EbO7of=Rxzt3p=NFop+UzAUT6s9c9EBmw@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Miller <davem@davemloft.net>
-Cc: David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55018E90.9030301@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 31, 2015 at 11:19 AM, David Miller <davem@davemloft.net> wrote:
+On Thu, Mar 12, 2015 at 09:03:12PM +0800, Yijing Wang wrote:
+> On 2015/3/12 10:55, Bjorn Helgaas wrote:
+> > On Mon, Mar 09, 2015 at 10:34:07AM +0800, Yijing Wang wrote:
+> >> Introduce pci_host_bridge_list to manage pci host
+> >> bridges in system, so we could detect whether
+> >> the host in domain:bus is alreay registered.
+> >> Then we could remove bus alreay exist test in
+> >> __pci_create_root_bus().
+> > 
+> > It's a nice idea to move this test into the core.  While you're at it, why
+> > don't you check for any overlap with the bus ranges of existing host
+> > bridges?  For example, if we're trying to create a new host bridge to
+> > [bus 40-7f], it should conflict with existing bridges to [bus 00-7f]
+> > as well as to [bus 40-ff].  I think your current patch will detect the
+> > latter conflict but not the former.
+> 
+> Now pci host bridge may only know its start bus number, like acpi _BBN provided,
+> but does not limit the end bus number, Eg. two pci roots report _BBN 0x0 and 0x80,
+> so we have two bus number resource (0, 0xff) and (0x80, 0xff), if we check it strictly,
+> some pci scan would fail which currently scan success.
 
-> I totally disagree, I think your test is too stringent and should be
-> significantly relaxed if not removed entirely.
+_BBN is not the correct source for the bridge's bus number range.  There's
+a comment in acpi_pci_root_add() that explains why:
 
-ok, will produce one version that only verify first criteria.
+  * We need both the start and end of the downstream bus range
+  * to interpret _CBA (MMCONFIG base address), so it really is
+  * supposed to be in _CRS.  If we don't find it there, all we
+  * can do is assume [_BBN-0xFF] or [0-0xFF].
 
-Thanks
-
-Yinghai
+A platform SHOULD know the start and and end bus number.  If it doesn't I
+think it's the platform's responsibility to carve up the bus number range.
+Maybe this can be done by trimming the range of the [bus 00-ff] bridge when
+we discover another bridge that leads to bus 80.
