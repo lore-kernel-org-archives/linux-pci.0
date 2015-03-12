@@ -1,200 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"Lee, Chun-Yi" <jlee@suse.com>, stable@vger.kernel.org
-Subject: [PATCH v2 08/15] x86: Kill E820_RESERVED_KERN
-Date: Wed,  4 Mar 2015 00:00:41 -0800
-Message-Id: <1425456048-16236-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34475 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105AbbCLRf3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 13:35:29 -0400
+Received: by oiba3 with SMTP id a3so6203716oib.1
+        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 10:35:28 -0700 (PDT)
+Subject: [PATCH v1 1/4] PNP: Don't check for overlaps with unassigned PCI
+ BARs
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org
+Date: Thu, 12 Mar 2015 12:35:26 -0500
+Message-ID: <20150312173526.1052.59512.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150312173201.1052.28341.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150312173201.1052.28341.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we are using memblock to do early resource reserver/allocation
-instead of using e820 map directly, and setup_data is reserved in
-memblock early already.
-Also kexec will generate setup_data and pass pointer to second kernel,
-so second kernel will reserve setup_data by their own.
+After 0509ad5e1a7d ("PNP: disable PNP motherboard resources that overlap
+PCI BARs"), we disable and warn about PNP resources that overlap PCI BARs.
+But we assume that all PCI BARs are valid, which is incorrect, because a
+BAR may not have any space assigned to it.  In that case, we will not
+enable the BAR, so no other resource can conflict with it.
 
-We can kill E820_RESERVED_KERN and not touch e820 map at all.
+Ignore PCI BARs that are unassigned, as indicated by IORESOURCE_UNSET.
 
-That will fix bug in mark_nonsave_region that can not handle that
-case: E820_RAM and E820_RESERVED_KERN ranges are continuous and
-boundary is not page aligned.
+Firmware often leaves PCI BARs unassigned, containing zero.  Zero is a
+valid BAR value, so we can't just check for that, but the PCI core can set
+IORESOURCE_UNSET when it detects an unassigned BAR by other means.  This
+should get rid of many of the annoying messages like this:
 
-Bugzilla: https://bugzilla.opensuse.org/show_bug.cgi?id=913885
-Reported-by: "Lee, Chun-Yi" <jlee@suse.com>
-Tested-by: "Lee, Chun-Yi" <jlee@suse.com>
-Cc: "Lee, Chun-Yi" <jlee@suse.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
+  pnp 00:00: disabling [io  0x0061] because it overlaps 0001:05:00.0 BAR 0 [io  0x0000-0x00ff]
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/include/uapi/asm/e820.h |  9 ---------
- arch/x86/kernel/e820.c           |  6 ++----
- arch/x86/kernel/setup.c          | 26 --------------------------
- arch/x86/kernel/tboot.c          |  3 +--
- arch/x86/mm/init_64.c            | 11 ++++-------
- 5 files changed, 7 insertions(+), 48 deletions(-)
+ drivers/pnp/quirks.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/include/uapi/asm/e820.h b/arch/x86/include/uapi/asm/e820.h
-index d993e33..edc8a71 100644
---- a/arch/x86/include/uapi/asm/e820.h
-+++ b/arch/x86/include/uapi/asm/e820.h
-@@ -33,15 +33,6 @@
- #define E820_NVS	4
- #define E820_UNUSABLE	5
+diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+index ebf0d6710b5a..943c1cb9566c 100644
+--- a/drivers/pnp/quirks.c
++++ b/drivers/pnp/quirks.c
+@@ -246,13 +246,16 @@ static void quirk_system_pci_resources(struct pnp_dev *dev)
+ 	 */
+ 	for_each_pci_dev(pdev) {
+ 		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+-			unsigned long type;
++			unsigned long flags, type;
  
--
--/*
-- * reserved RAM used by kernel itself
-- * if CONFIG_INTEL_TXT is enabled, memory of this type will be
-- * included in the S3 integrity calculation and so should not include
-- * any memory that BIOS might alter over the S3 transition
-- */
--#define E820_RESERVED_KERN        128
--
- #ifndef __ASSEMBLY__
- #include <linux/types.h>
- struct e820entry {
-diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
-index 46201de..2a6bed9 100644
---- a/arch/x86/kernel/e820.c
-+++ b/arch/x86/kernel/e820.c
-@@ -134,7 +134,6 @@ static void __init e820_print_type(u32 type)
- {
- 	switch (type) {
- 	case E820_RAM:
--	case E820_RESERVED_KERN:
- 		printk(KERN_CONT "usable");
- 		break;
- 	case E820_RESERVED:
-@@ -688,7 +687,7 @@ void __init e820_mark_nosave_regions(unsigned long limit_pfn)
- 			register_nosave_region(pfn, PFN_UP(ei->addr));
+-			type = pci_resource_flags(pdev, i) &
+-					(IORESOURCE_IO | IORESOURCE_MEM);
++			flags = pci_resource_flags(pdev, i);
++			type = flags & (IORESOURCE_IO | IORESOURCE_MEM);
+ 			if (!type || pci_resource_len(pdev, i) == 0)
+ 				continue;
  
- 		pfn = PFN_DOWN(ei->addr + ei->size);
--		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
-+		if (ei->type != E820_RAM)
- 			register_nosave_region(PFN_UP(ei->addr), pfn);
- 
- 		if (pfn >= limit_pfn)
-@@ -902,7 +901,6 @@ void __init finish_e820_parsing(void)
- static inline const char *e820_type_to_string(int e820_type)
- {
- 	switch (e820_type) {
--	case E820_RESERVED_KERN:
- 	case E820_RAM:	return "System RAM";
- 	case E820_ACPI:	return "ACPI Tables";
- 	case E820_NVS:	return "ACPI Non-volatile Storage";
-@@ -1077,7 +1075,7 @@ void __init memblock_x86_fill(void)
- 		if (end != (resource_size_t)end)
- 			continue;
- 
--		if (ei->type != E820_RAM && ei->type != E820_RESERVED_KERN)
-+		if (ei->type != E820_RAM)
- 			continue;
- 
- 		memblock_add(ei->addr, ei->size);
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 05d444f..c9b3e2f 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -473,30 +473,6 @@ static void __init parse_setup_data(void)
- 	}
- }
- 
--static void __init e820_reserve_setup_data(void)
--{
--	struct setup_data *data;
--	u64 pa_data;
--	int found = 0;
--
--	pa_data = boot_params.hdr.setup_data;
--	while (pa_data) {
--		data = early_memremap(pa_data, sizeof(*data));
--		e820_update_range(pa_data, sizeof(*data)+data->len,
--			 E820_RAM, E820_RESERVED_KERN);
--		found = 1;
--		pa_data = data->next;
--		early_iounmap(data, sizeof(*data));
--	}
--	if (!found)
--		return;
--
--	sanitize_e820_map(e820.map, ARRAY_SIZE(e820.map), &e820.nr_map);
--	memcpy(&e820_saved, &e820, sizeof(struct e820map));
--	printk(KERN_INFO "extended physical RAM map:\n");
--	e820_print_map("reserve setup_data");
--}
--
- static void __init memblock_x86_reserve_range_setup_data(void)
- {
- 	struct setup_data *data;
-@@ -1032,8 +1008,6 @@ void __init setup_arch(char **cmdline_p)
- 		early_dump_pci_devices();
- #endif
- 
--	/* update the e820_saved too */
--	e820_reserve_setup_data();
- 	finish_e820_parsing();
- 
- 	if (efi_enabled(EFI_BOOT))
-diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
-index 91a4496..3c2752a 100644
---- a/arch/x86/kernel/tboot.c
-+++ b/arch/x86/kernel/tboot.c
-@@ -195,8 +195,7 @@ static int tboot_setup_sleep(void)
- 	tboot->num_mac_regions = 0;
- 
- 	for (i = 0; i < e820.nr_map; i++) {
--		if ((e820.map[i].type != E820_RAM)
--		 && (e820.map[i].type != E820_RESERVED_KERN))
-+		if (e820.map[i].type != E820_RAM)
- 			continue;
- 
- 		add_mac_region(e820.map[i].addr, e820.map[i].size);
-diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
-index c30efb6..63520ec 100644
---- a/arch/x86/mm/init_64.c
-+++ b/arch/x86/mm/init_64.c
-@@ -354,8 +354,7 @@ phys_pte_init(pte_t *pte_page, unsigned long addr, unsigned long end,
- 		next = (addr & PAGE_MASK) + PAGE_SIZE;
- 		if (addr >= end) {
- 			if (!after_bootmem &&
--			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM) &&
--			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RESERVED_KERN))
-+			    !e820_any_mapped(addr & PAGE_MASK, next, E820_RAM))
- 				set_pte(pte, __pte(0));
- 			continue;
- 		}
-@@ -401,9 +400,8 @@ phys_pmd_init(pmd_t *pmd_page, unsigned long address, unsigned long end,
- 
- 		next = (address & PMD_MASK) + PMD_SIZE;
- 		if (address >= end) {
--			if (!after_bootmem &&
--			    !e820_any_mapped(address & PMD_MASK, next, E820_RAM) &&
--			    !e820_any_mapped(address & PMD_MASK, next, E820_RESERVED_KERN))
-+			if (!after_bootmem && !e820_any_mapped(
-+					address & PMD_MASK, next, E820_RAM))
- 				set_pmd(pmd, __pmd(0));
- 			continue;
- 		}
-@@ -476,8 +474,7 @@ phys_pud_init(pud_t *pud_page, unsigned long addr, unsigned long end,
- 		next = (addr & PUD_MASK) + PUD_SIZE;
- 		if (addr >= end) {
- 			if (!after_bootmem &&
--			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM) &&
--			    !e820_any_mapped(addr & PUD_MASK, next, E820_RESERVED_KERN))
-+			    !e820_any_mapped(addr & PUD_MASK, next, E820_RAM))
- 				set_pud(pud, __pud(0));
- 			continue;
- 		}
--- 
-1.8.4.5
++			if (flags & IORESOURCE_UNSET)
++				continue;
++
+ 			pci_start = pci_resource_start(pdev, i);
+ 			pci_end = pci_resource_end(pdev, i);
+ 			for (j = 0;
 
