@@ -1,62 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:30268 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754268AbbCFJgh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:37 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v5 18/29] sparc/PCI: Claim bus resources before pci_bus_add_devices()
-Date: Fri, 6 Mar 2015 17:33:35 +0800
-Message-ID: <1425634426-437-19-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:40875 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932322AbbCLQVR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 12:21:17 -0400
+Message-ID: <5501BCF7.9080004@redhat.com>
+Date: Thu, 12 Mar 2015 17:21:11 +0100
+From: Paolo Bonzini <pbonzini@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux Virtualization <virtualization@lists.linux-foundation.org>
+Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
+References: <1426137682-12287-1-git-send-email-famz@redhat.com>
+In-Reply-To: <1426137682-12287-1-git-send-email-famz@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_claim_bus_resources() should be called before
-pci_bus_add_devices(), or driver may failed to
-load, because the resources had not claimed.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/sparc/kernel/pci.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 838fe1e..21f804a 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -678,11 +678,10 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	}
- 
- 	pci_of_scan_bus(pbm, node, bus);
--	pci_bus_add_devices(bus);
- 	pci_bus_register_of_sysfs(bus);
- 
- 	pci_claim_bus_resources(bus);
--
-+	pci_bus_add_devices(bus);
- 	return bus;
- }
- 
--- 
-1.7.1
+On 12/03/2015 06:21, Fam Zheng wrote:
+> If the device doesn't support shutdown, disabling interrupts may cause
+> trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
+> after we disable MSI-X, futher notifications from device will be
+> delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
+> may prevent us from making progress, by keep triggering interrupts.
+> 
+> Signed-off-by: Fam Zheng <famz@redhat.com>
+> ---
+>  drivers/pci/pci-driver.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3cb2210..fb29c96 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
+>  
+>  	pm_runtime_resume(dev);
+>  
+> -	if (drv && drv->shutdown)
+> +	if (drv && drv->shutdown) {
+>  		drv->shutdown(pci_dev);
+> -	pci_msi_shutdown(pci_dev);
+> -	pci_msix_shutdown(pci_dev);
+> +		pci_msi_shutdown(pci_dev);
+> +		pci_msix_shutdown(pci_dev);
+> +	}
+>  
+>  #ifdef CONFIG_KEXEC
+>  	/*
+> 
 
+The patch may be okay, but I think the bug here is also that virtio-pci
+is not defining a .shutdown callback.  It should define one and call
+free_irq (for INTX) and pci_disable_msix.
+
+How is this related to the virtio-scsi patch that you posted?  Do you
+need both to fix the problem you reported?
+
+Paolo
