@@ -1,154 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15834 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbbCXDhf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:35 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for simplicity
-Date: Tue, 24 Mar 2015 11:34:13 +0800
-Message-ID: <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:32832 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136AbbCLFVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Mar 2015 01:21:31 -0400
+From: Fam Zheng <famz@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	famz@redhat.com
+Subject: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
+Date: Thu, 12 Mar 2015 13:21:22 +0800
+Message-Id: <1426137682-12287-1-git-send-email-famz@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_host_bridge() to scan
-pci buses, provide powerpc specific pci_host_bridge_ops.
+If the device doesn't support shutdown, disabling interrupts may cause
+trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
+after we disable MSI-X, futher notifications from device will be
+delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
+may prevent us from making progress, by keep triggering interrupts.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Fam Zheng <famz@redhat.com>
 ---
- arch/powerpc/kernel/pci-common.c |   60 +++++++++++++++++++++++--------------
- 1 files changed, 37 insertions(+), 23 deletions(-)
+ drivers/pci/pci-driver.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 2c58200..e2b50a2 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -773,6 +773,29 @@ void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
- 		return ppc_md.pcibios_set_root_bus_speed(bridge);
- }
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..fb29c96 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
  
-+static int pci_host_scan_bus(struct pci_host_bridge *host)
-+{
-+	int mode = PCI_PROBE_NORMAL;
-+	struct pci_bus *bus = host->bus;
-+	struct pci_controller *hose = dev_get_drvdata(&host->dev);
-+
-+	/* Get probe mode and perform scan */
-+	if (hose->dn && ppc_md.pci_probe_mode)
-+		mode = ppc_md.pci_probe_mode(bus);
-+
-+	pr_debug("    probe mode: %d\n", mode);
-+	if (mode == PCI_PROBE_DEVTREE)
-+		of_scan_bus(hose->dn, bus);
-+
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
-+		hose->last_busno = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, hose->last_busno);
+ 	pm_runtime_resume(dev);
+ 
+-	if (drv && drv->shutdown)
++	if (drv && drv->shutdown) {
+ 		drv->shutdown(pci_dev);
+-	pci_msi_shutdown(pci_dev);
+-	pci_msix_shutdown(pci_dev);
++		pci_msi_shutdown(pci_dev);
++		pci_msix_shutdown(pci_dev);
 +	}
-+
-+	return pci_bus_child_max_busnr(bus);
-+}
-+
- /* This header fixup will do the resource fixup for all devices as they are
-  * probed, but not for bridge ranges
-  */
-@@ -1585,6 +1608,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- 	return of_node_get(hose->dn);
- }
  
-+static struct pci_host_bridge_ops pci_host_ops = {
-+	.set_root_bus_speed = pcibios_set_root_bus_speed,
-+	.scan_bus = pci_host_scan_bus,
-+};
-+
- /**
-  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-  * @hose: Pointer to the PCI host controller instance structure
-@@ -1592,9 +1620,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- void pcibios_scan_phb(struct pci_controller *hose)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host;
- 	struct device_node *node = hose->dn;
--	int mode;
- 
- 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
- 
-@@ -1609,31 +1636,18 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	hose->busn.flags = IORESOURCE_BUS;
- 	pci_add_resource(&resources, &hose->busn);
- 
-+	pci_host_ops.pci_ops = hose->ops;
- 	/* Create an empty bus for the toplevel */
--	bus = pci_create_root_bus(hose->parent, hose->global_number,
--			hose->first_busno, hose->ops, hose, &resources);
--	if (bus == NULL) {
--		pr_err("Failed to create bus for PCI domain %04x\n",
--			hose->global_number);
-+	host = pci_scan_host_bridge(hose->parent, hose->global_number,
-+			hose->first_busno, hose, &resources, &pci_host_ops);
-+	if (host == NULL) {
-+		pr_err("Failed to create host bridge for pci%04x:%02x\n",
-+			hose->global_number, hose->first_busno);
- 		pci_free_resource_list(&resources);
- 		return;
- 	}
- 	hose->bus = bus;
- 
--	/* Get probe mode and perform scan */
--	mode = PCI_PROBE_NORMAL;
--	if (node && ppc_md.pci_probe_mode)
--		mode = ppc_md.pci_probe_mode(bus);
--	pr_debug("    probe mode: %d\n", mode);
--	if (mode == PCI_PROBE_DEVTREE)
--		of_scan_bus(node, bus);
--
--	if (mode == PCI_PROBE_NORMAL) {
--		pci_bus_update_busn_res_end(bus, 255);
--		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
--	}
--
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
- 	 */
-@@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
- 	/* Configure PCI Express settings */
--	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node)
-+		list_for_each_entry(child, &host->bus->children, node)
- 			pcie_bus_configure_settings(child);
- 	}
- }
+ #ifdef CONFIG_KEXEC
+ 	/*
 -- 
-1.7.1
+1.9.3
 
