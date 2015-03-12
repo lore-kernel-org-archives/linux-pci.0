@@ -1,124 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54FF1383.7030301@broadcom.com>
-Date: Tue, 10 Mar 2015 08:53:39 -0700
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:46639 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077AbbCLP0J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Mar 2015 11:26:09 -0400
+Date: Thu, 12 Mar 2015 16:26:07 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: David Rientjes <rientjes@google.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bhelgaas@google.com,
+	mingo@redhat.com, tglx@linutronix.de, hpa@zytor.com,
+	pure.logic@nexus-software.ie, jgross@suse.com, luto@amacapital.net,
+	andy.shevchenko@gmail.com, thomas.petazzoni@free-electrons.com,
+	JBeulich@suse.com, bp@suse.de, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH v1 1/2] x86: kconfig: remove X86_UP_IOAPIC
+Message-ID: <20150312152607.GM25035@wotan.suse.de>
+References: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com>
+ <1426115422-1823-2-git-send-email-mcgrof@do-not-panic.com>
+ <alpine.DEB.2.10.1503112232230.8492@chino.kir.corp.google.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 1/4] PCI: Export symbols of PCI functions
-References: <1425946878-13169-1-git-send-email-rjui@broadcom.com>	 <1425946878-13169-2-git-send-email-rjui@broadcom.com> <1425949234.25026.24.camel@redhat.com>
-In-Reply-To: <1425949234.25026.24.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.10.1503112232230.8492@chino.kir.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-
-On 3/9/2015 6:00 PM, Alex Williamson wrote:
-> On Mon, 2015-03-09 at 17:21 -0700, Ray Jui wrote:
->> Export symbols of the following PCI functions so they can be referenced
->> by a PCI driver compiled as a kernel loadable module:
->>
->> pci_common_swizzle
->> pci_create_root_bus
->> pci_stop_root_bus
->> pci_remove_root_bus
->> pci_assign_unassigned_bus_resources
->> pci_fixup_irqs
->>
->> Signed-off-by: Ray Jui <rjui@broadcom.com>
->> ---
->>  drivers/pci/pci.c       |    1 +
->>  drivers/pci/probe.c     |    1 +
->>  drivers/pci/remove.c    |    2 ++
->>  drivers/pci/setup-bus.c |    1 +
->>  drivers/pci/setup-irq.c |    1 +
->>  5 files changed, 6 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 81f06e8..fb4a3da 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
->>  	*pinp = pin;
->>  	return PCI_SLOT(dev->devfn);
->>  }
->> +EXPORT_SYMBOL(pci_common_swizzle);
->>  
->>  /**
->>   *	pci_release_region - Release a PCI bar
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 8d2f400..eb24ef9 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1993,6 +1993,7 @@ err_out:
->>  	kfree(b);
->>  	return NULL;
->>  }
->> +EXPORT_SYMBOL(pci_create_root_bus);
->>  
->>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
->>  {
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index 8bd76c9..c523159 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
->>  	/* stop the host bridge */
->>  	device_release_driver(&host_bridge->dev);
->>  }
->> +EXPORT_SYMBOL(pci_stop_root_bus);
->>  
->>  void pci_remove_root_bus(struct pci_bus *bus)
->>  {
->> @@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
->>  	/* remove the host bridge */
->>  	device_unregister(&host_bridge->dev);
->>  }
->> +EXPORT_SYMBOL(pci_remove_root_bus);
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index e3e17f3..932c9e5 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->>  	__pci_bus_assign_resources(bus, &add_list, NULL);
->>  	BUG_ON(!list_empty(&add_list));
->>  }
->> +EXPORT_SYMBOL(pci_assign_unassigned_bus_resources);
->> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
->> index 4e2d595..9d2bbb6 100644
->> --- a/drivers/pci/setup-irq.c
->> +++ b/drivers/pci/setup-irq.c
->> @@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->>  	for_each_pci_dev(dev)
->>  		pdev_fixup_irq(dev, swizzle, map_irq);
->>  }
->> +EXPORT_SYMBOL(pci_fixup_irqs);
+On Wed, Mar 11, 2015 at 10:36:41PM -0700, David Rientjes wrote:
+> On Wed, 11 Mar 2015, Luis R. Rodriguez wrote:
 > 
+> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > 
+> > X86_UP_IOAPIC is a way so that 32-bit UP systems can enable
+> > X86_IOAPIC. X86_UP_IOAPIC is only as a visible user option if
+> > you are on a 32-bit system but have X86_UP_APIC enabled. X86_UP_APIC
+> > will be enabled by force if you have PCI_MSI on 32-bit systems
+> > now, X86_UP_APIC will now only be user selectable if you didn't
+> > have PCI_MSI enabled and are also not on a X86_32_NON_STANDARD
+> > system. Bryan's original patch (refactored commit log in commit
+> > 38a1dfda) [0] describes that Intel CE, Intel MID and Intel Quark
+> > are all 32-bit uniprocessor systems with IO-APICs, the code change
+> > however only *re-enabled* UP_IOAPIC as an *option* when PCI_MSI
+> > was enabled, but given that:
+> > 
+> > 1) enabling X86_IOAPIC is the real end goal here
+> > 2) enabling X86_IOAPIC only increases the kernel only by 12064 bytes (~12 KiB)
+> > 3) enabling X86_IOAPIC will in no way slow down your kernel
+> > 
+> > Let's make a compromise for 32-bit systems and always enable X86_IOAPIC
+> > when X86_UP_IOAPIC is enabled as 32-bit systems are not in a state
+> > of flux and the price for the size is small with no performance impact.
+> > 
+> > Using:
+> > 
+> > export ARCH=i386
+> > make allnoconfig
+> > --> Enabling PCI_MSI
+> > make localyesconfig
+> > 
+> > With X86_IO_APIC:
+> > mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
+> > 734608  arch/x86/boot/bzImage
+> > 
+> > Without X86_IO_APIC:
+> > mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
+> > 722544  arch/x86/boot/bzImage
+> > 
 > 
-> Why not EXPORT_SYMBOL_GPL for all of these?  Some of these seem fairly
-> close to PCI core functionality for arbitrarily licensed modules.
+> 1.6% increase.
+
+Indeed, but we are talking about x86-32 bit and the question these
+two patches bring up is -- is the gains of the cleanup from the
+removal of these two worth the compromise? I think it is, but
+if there is active interest in keeping 32-bit x86 builds tiny
+I understand if this is not desirable.
+
+> > [0] https://lkml.org/lkml/2015/1/22/718
+> > 
+> > Cc: David Rientjes <rientjes@google.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Bryan O'Donoghue <pure.logic@nexus-software.ie>
+> > Cc: Thomas Gleixner <tglx@linutronix.de>
+> > Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
+> > Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > Cc: Ingo Molnar <mingo@kernel.org>
+> > Cc: Borislav Petkov <bp@suse.de>
+> > Cc: H. Peter Anvin <hpa@zytor.com>
+> > Cc: Jan Beulich <JBeulich@suse.com>
+> > Cc: Juergen Gross <jgross@suse.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: x86@kernel.org
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+> > ---
+> >  arch/x86/Kconfig | 15 ++-------------
+> >  1 file changed, 2 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+> > index 110f6ae..b17a8ea 100644
+> > --- a/arch/x86/Kconfig
+> > +++ b/arch/x86/Kconfig
+> > @@ -899,6 +899,7 @@ config X86_UP_APIC
+> >  	bool "Local APIC support on uniprocessors" if !PCI_MSI
+> >  	default PCI_MSI
+> >  	depends on X86_32 && !SMP && !X86_32_NON_STANDARD
+> > +	select X86_IO_APIC
+> >  	---help---
+> >  	  A local APIC (Advanced Programmable Interrupt Controller) is an
+> >  	  integrated interrupt controller in the CPU. If you have a single-CPU
+> > @@ -909,18 +910,6 @@ config X86_UP_APIC
+> >  	  performance counters), and the NMI watchdog which detects hard
+> >  	  lockups.
+> >  
+> > -config X86_UP_IOAPIC
+> > -	bool "IO-APIC support on uniprocessors"
+> > -	depends on X86_UP_APIC
+> > -	---help---
+> > -	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
+> > -	  SMP-capable replacement for PC-style interrupt controllers. Most
+> > -	  SMP systems and many recent uniprocessor systems have one.
+> > -
+> > -	  If you have a single-CPU system with an IO-APIC, you can say Y here
+> > -	  to use it. If you say Y here even though your machine doesn't have
+> > -	  an IO-APIC, then the kernel will still run with no slowdown at all.
+> > -
+> >  config X86_LOCAL_APIC
+> >  	def_bool y
+> >  	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+> > @@ -928,7 +917,7 @@ config X86_LOCAL_APIC
+> >  
+> >  config X86_IO_APIC
+> >  	def_bool y
+> > -	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
+> > +	depends on X86_LOCAL_APIC
+> >  	select IRQ_DOMAIN
+> >  
+> >  config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
 > 
+> I think it would be best to remove the "select" so the "depends" for both 
+> config options won't diverge in the future.  This should be equivalent, 
+> right?
 
-I have no issue with that. I know there have been a lot of debates on
-EXPORT_SYMBOL vs. EXPORT_SYMBOL_GPL use. If EXPORT_SYMBOL_GPL is
-preferred on these PCI functions here, I'll make the change.
+Do you mean remove the "select IRQ_DOMAIN" ? If so the "select" does not imply
+"depends" though, it simply will peg it on if its own dependencies are met.
 
+> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+> --- a/arch/x86/Kconfig
+> +++ b/arch/x86/Kconfig
+> @@ -909,18 +909,6 @@ config X86_UP_APIC
+>  	  performance counters), and the NMI watchdog which detects hard
+>  	  lockups.
+>  
+> -config X86_UP_IOAPIC
+> -	bool "IO-APIC support on uniprocessors"
+> -	depends on X86_UP_APIC
+> -	---help---
+> -	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
+> -	  SMP-capable replacement for PC-style interrupt controllers. Most
+> -	  SMP systems and many recent uniprocessor systems have one.
+> -
+> -	  If you have a single-CPU system with an IO-APIC, you can say Y here
+> -	  to use it. If you say Y here even though your machine doesn't have
+> -	  an IO-APIC, then the kernel will still run with no slowdown at all.
+> -
+>  config X86_LOCAL_APIC
+>  	def_bool y
+>  	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+> @@ -928,7 +916,7 @@ config X86_LOCAL_APIC
+>  
+>  config X86_IO_APIC
+>  	def_bool y
+> -	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
+> +	depends on X86_LOCAL_APIC || X86_UP_APIC
+>  	select IRQ_DOMAIN
+>  
+>  config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+> 
+> And then the second patch adds a 3.8% increase on top of this (and the two 
+> "select" statements in that patch shouldn't be necessary, both 
+> X86_LOCAL_APIC and X86_IO_APIC are def_bool y for PCI_MSI configs).
 
-I'm still waiting for comments from Bjorn on the Broadcom iProc PCI
-driver itself. This change will go with other changes in the iProc PCI
-driver.
+This is one way to express that and the trick is the depends are carried over
+this way.
 
-Thanks,
+>  If these are just cleanup patches, I'm not sure I understand why a
+>  considerable kernel text size increase is worth it.
 
-Ray
+The patches pose the question if the cleanup of the removal of both
+is worth the compromise to always enable thes two for PCI_MSI and remove
+the option to enable/disable it on platform where the depends match out.
+The later would also imply that platforms that need it will need to
+ensure its components select them, but historically it seems we can
+only deduce these both are required for PCI_MSI 32-bit platforms.
+
+  Luis
