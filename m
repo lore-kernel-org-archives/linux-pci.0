@@ -1,162 +1,176 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v3 6/9] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
-Date: Tue, 10 Mar 2015 12:35:17 +0100
-Message-Id: <1425987320-15020-7-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:3780 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753604AbbCLNZN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:25:13 -0400
+Message-ID: <550193A3.1020102@huawei.com>
+Date: Thu, 12 Mar 2015 21:24:51 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [PATCH v6 21/30] PCI: Introduce pci_bus_child_max_busnr()
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-22-git-send-email-wangyijing@huawei.com> <20150312033305.GH10949@google.com>
+In-Reply-To: <20150312033305.GH10949@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmconfig_64.c version is going to be default implementation for arch
-agnostic low-level direct PCI config space accessors for ECAM dirver.
-However, now it initialize raw_pci_ext_ops pointer which is x86 specific
-code only. Moreover, mmconfig_32.c is doing the same thing at the same time.
+On 2015/3/12 11:33, Bjorn Helgaas wrote:
+> On Mon, Mar 09, 2015 at 10:34:18AM +0800, Yijing Wang wrote:
+>> Sometimes, we need to know the highest reserved
+>> busnr for children bus. Because parent's
+>> bus->busn_res could have padding in it.
+>> This function return the max child busnr as
+>> pci_scan_child_bus().
+> 
+> I'm not convinced about this one.  The fact that it's only used by parisc
+> lba_pci.c and acpiphp makes me suspicious that either they're doing
+> something funny, or other drivers *should* be using it, too.
 
-Move it to mmconfig_shared.c so it becomes common for both and
-mmconfig_64.c turns out to be purely arch agnostic.
+Yes, what lba_pci.c do looks some strange, I did this patch just try to
+keep the original logic, but it seems to make code more complex, I would
+consider this again and try to find a better solution, thanks.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
----
- arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
- arch/x86/pci/mmconfig_32.c     | 10 ++--------
- arch/x86/pci/mmconfig_64.c     | 11 ++---------
- include/linux/ecam.h           |  5 +++++
- 4 files changed, 17 insertions(+), 19 deletions(-)
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+>> ---
+>>  drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
+>>  drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
+>>  include/linux/pci.h                |    2 +-
+>>  3 files changed, 27 insertions(+), 31 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> index bcb90e4..84f2584 100644
+>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+>>  	acpi_unlock_hp_context();
+>>  }
+>>  
+>> -/**
+>> - * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
+>> - * @bus: bus to start search with
+>> - */
+>> -static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
+>> -{
+>> -	struct pci_bus *tmp;
+>> -	unsigned char max, n;
+>> -
+>> -	/*
+>> -	 * pci_bus_max_busnr will return the highest
+>> -	 * reserved busnr for all these children.
+>> -	 * that is equivalent to the bus->subordinate
+>> -	 * value.  We don't want to use the parent's
+>> -	 * bus->subordinate value because it could have
+>> -	 * padding in it.
+>> -	 */
+>> -	max = bus->busn_res.start;
+>> -
+>> -	list_for_each_entry(tmp, &bus->children, node) {
+>> -		n = pci_bus_max_busnr(tmp);
+>> -		if (n > max)
+>> -			max = n;
+>> -	}
+>> -	return max;
+>> -}
+>> -
+>>  static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+>>  {
+>>  	struct acpiphp_func *func;
+>> @@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+>>  	LIST_HEAD(add_list);
+>>  
+>>  	acpiphp_rescan_slot(slot);
+>> -	max = acpiphp_max_busnr(bus);
+>> +	max = pci_bus_child_max_busnr(bus);
+>>  	for (pass = 0; pass < 2; pass++) {
+>>  		list_for_each_entry(dev, &bus->devices, bus_list) {
+>>  			if (PCI_SLOT(dev->devfn) != slot->device)
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index c49eec1..0001896 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
+>>   * Given a PCI bus, returns the highest PCI bus number present in the set
+>>   * including the given PCI bus and its list of child PCI buses.
+>>   */
+>> -unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+>> +static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+>>  {
+>>  	struct pci_bus *tmp;
+>>  	unsigned char max, n;
+>> @@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
+>>  	}
+>>  	return max;
+>>  }
+>> -EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
+>> +
+>> +unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
+>> +{
+>> +	struct pci_bus *tmp;
+>> +	unsigned char max, n;
+>> +
+>> +	/*
+>> +	 * pci_bus_max_busnr will return the highest
+>> +	 * reserved busnr for all these children.
+>> +	 * that is equivalent to the bus->subordinate
+>> +	 * value.  We don't want to use the parent's
+>> +	 * bus->subordinate value because it could have
+>> +	 * padding in it.
+>> +	 */
+>> +	max = bus->busn_res.start;
+>> +
+>> +	list_for_each_entry(tmp, &bus->children, node) {
+>> +		n = pci_bus_max_busnr(tmp);
+>> +		if (n > max)
+>> +			max = n;
+>> +	}
+>> +	return max;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
+>>  
+>>  #ifdef CONFIG_HAS_IOMEM
+>>  void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index cfaf217..261b8de 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1181,7 +1181,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>>  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>>  		  void *userdata);
+>>  int pci_cfg_space_size(struct pci_dev *dev);
+>> -unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>> +unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
+>>  void pci_setup_bridge(struct pci_bus *bus);
+>>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+>>  					 unsigned long type);
+>> -- 
+>> 1.7.1
+>>
+> 
+> .
+> 
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 5064302..6dfe614 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -29,6 +29,11 @@
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- 
-+const struct pci_raw_ops pci_mmcfg = {
-+	.read =		pci_mmcfg_read,
-+	.write =	pci_mmcfg_write,
-+};
-+
- static u32
- pci_mmconfig_amd_read(int len, void __iomem *addr)
- {
-@@ -532,9 +537,10 @@ static void __init __pci_mmcfg_init(int early)
- 		}
- 	}
- 
--	if (pci_mmcfg_arch_init())
-+	if (pci_mmcfg_arch_init()) {
-+		raw_pci_ext_ops = &pci_mmcfg;
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
--	else {
-+	} else {
- 		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5cf6291..7a050cb 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
- 	}
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	unsigned long flags;
-@@ -79,7 +79,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	unsigned long flags;
-@@ -106,15 +106,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- int __init pci_mmcfg_arch_init(void)
- {
- 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
--	raw_pci_ext_ops = &pci_mmcfg;
- 	return 1;
- }
- 
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index b62ff18..fd857ea 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
- 	return NULL;
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	char __iomem *addr;
-@@ -49,7 +49,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	char __iomem *addr;
-@@ -71,11 +71,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
- {
- 	void __iomem *addr;
-@@ -101,8 +96,6 @@ int __init pci_mmcfg_arch_init(void)
- 			return 0;
- 		}
- 
--	raw_pci_ext_ops = &pci_mmcfg;
--
- 	return 1;
- }
- 
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index 2387df5..fba5d6b 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -47,5 +47,10 @@ extern struct list_head pci_mmcfg_list;
- 
- #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
- 
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+		   unsigned int devfn, int reg, int len, u32 *value);
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+		    unsigned int devfn, int reg, int len, u32 value);
-+
- #endif  /* __KERNEL__ */
- #endif  /* __ECAM_H */
+
 -- 
-1.9.1
+Thanks!
+Yijing
 
