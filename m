@@ -1,92 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:42826 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbbCEQip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Mar 2015 11:38:45 -0500
-Received: by oiav1 with SMTP id v1so12655583oia.9
-        for <linux-pci@vger.kernel.org>; Thu, 05 Mar 2015 08:38:44 -0800 (PST)
-Date: Thu, 5 Mar 2015 10:38:22 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Feng Kan <fkan@apm.com>
-Cc: patches@apm.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, robh@kernel.org,
-	linux-arm-kernel@lists.infradead.org, tinamdar@apm.com,
-	Mark Salter <msalter@redhat.com>
-Subject: Re: [PATCH] pci: host: xgene: fix incorrectly returned address by
- map_bus
-Message-ID: <20150305163822.GA3048@google.com>
-References: <1424214840-26498-1-git-send-email-fkan@apm.com>
- <20150227002151.GG25765@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <550197B1.8000405@linaro.org>
+Date: Thu, 12 Mar 2015 14:42:09 +0100
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150227002151.GG25765@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Rob Herring <robherring2@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Al Stone <al.stone@linaro.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 7/9] x86, pci, ecam: mmconfig_64.c becomes default
+ implementation for ECAM driver.
+References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org> <1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org> <CAL_JsqJfvOcQ9sSuKfq3YCWubL9QctEDU0CR2mjBze2ZyB+nVg@mail.gmail.com>
+In-Reply-To: <CAL_JsqJfvOcQ9sSuKfq3YCWubL9QctEDU0CR2mjBze2ZyB+nVg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mark]
+On 11.03.2015 16:37, Rob Herring wrote:
+> On Wed, Mar 11, 2015 at 9:12 AM, Tomasz Nowicki
+> <tomasz.nowicki@linaro.org> wrote:
+>> Architectures which want to take advantage of ECAM generic goodness
+>
+> This is not necessarily an architecture decision. It is likely per host.
+Right, good point.
 
-On Thu, Feb 26, 2015 at 06:21:51PM -0600, Bjorn Helgaas wrote:
-> On Tue, Feb 17, 2015 at 03:14:00PM -0800, Feng Kan wrote:
-> > The generic accessor functions for pci-xgene uses map_bus
-> > call that returns the base address but did not add the additional
-> > offset.
-> > 
-> > Signed-off-by: Feng Kan <fkan@apm.com>
-> > ---
-> >  drivers/pci/host/pci-xgene.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> > index aab5547..ee082c0 100644
-> > --- a/drivers/pci/host/pci-xgene.c
-> > +++ b/drivers/pci/host/pci-xgene.c
-> > @@ -127,7 +127,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
-> >  	return false;
-> >  }
-> >  
-> > -static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> > +static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> >  			      int offset)
-> >  {
-> >  	struct xgene_pcie_port *port = bus->sysdata;
-> > @@ -137,7 +137,7 @@ static int xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> >  		return NULL;
-> >  
-> >  	xgene_pcie_set_rtdid_reg(bus, devfn);
-> > -	return xgene_pcie_get_cfg_base(bus);
-> > +	return xgene_pcie_get_cfg_base(bus) + offset;
-> 
-> Where's the locking here?  ECAM doesn't need locking because the
-> bus/dev/fn/offset is all encoded in the MMIO address.  But it looks
-> like X-Gene doesn't work that way and bus/dev/fn is in the RTDID register.
-> 
-> So it seems like X-Gene needs locking that not everybody needs.  Are you
-> relying on higher-level locking somewhere?
+>
+>> should select CONFIG_PCI_ECAM_GENERIC. Otherwise, like x86 32bits machines,
+>> are obligated to provide own low-level ECAM calls.
+>>
+>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+>> ---
+>
+> [...]
+>
+>> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+>> index c588234..796b6e7 100644
+>> --- a/drivers/pci/ecam.c
+>> +++ b/drivers/pci/ecam.c
+>> @@ -23,6 +23,119 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+>>
+>>   LIST_HEAD(pci_mmcfg_list);
+>>
+>> +#ifdef CONFIG_GENERIC_PCI_ECAM
+>> +static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
+>> +                                 unsigned int devfn)
+>> +{
+>> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+>> +
+>> +       if (cfg && cfg->virt)
+>> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
+>> +       return NULL;
+>> +}
+>> +
+>> +int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+>> +                         unsigned int devfn, int reg, int len, u32 *value)
+>> +{
+>> +       char __iomem *addr;
+>> +
+>> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+>> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+>> +err:           *value = -1;
+>> +               return -EINVAL;
+>> +       }
+>> +
+>> +       rcu_read_lock();
+>
+> What is the purpose of the rcu lock other than the old implementation had it?
 
-Ping, what's going on here?  I've gotten at least three patches for this
-offset issue, so we need to get it resolved.
+Read/write calls consist on lookup RCU list (with MMCONFIG regions) and 
+then corresponding operation. It is possible to hotplug another pci root 
+bridge which leads to RCU list modification.
 
-If there's no locking problem, I can just apply this and we'll be finished.
-Actually, I think Mark's patch is better, because it correctly returns NULL
-(failure) if xgene_pcie_get_cfg_base() fails.  So please review and ack
-that one or explain why this one is better.
+>
+>> +       addr = pci_dev_base(seg, bus, devfn);
+>
+> The .map_bus op provides the same function if you restructure to use
+> the generic accessors.
 
-But if there *is* a locking problem, we should fix that, too.  That should
-be a separate patch, so I guess I can apply the one to fix the offset
-problem first, and we'll at least be no worse off with respect to locking
-than we are today.
+As you noticed, pci_mmcfg_{read,write} and 
+pci_generic_config_{read,write} prototypes are different.
 
-Please help me out.
+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+                    unsigned int devfn, int reg, int len, u32 *value);
+vs
+int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
+                             int where, int size, u32 *val);
 
-Bjorn
+This is because pci_mmcfg_{read,write} can be used before pci root 
+bridge initialization (while we have no struct pci_bus *bus) inside of 
+ACPICA code (osl.c --> acpi_os_read_pci_configuration())
 
-> >  }
-> >  
-> >  static struct pci_ops xgene_pcie_ops = {
-> > -- 
-> > 1.9.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+For that reason, I decide to create ECAM related new accessors which do 
+not depend on host bridge presence. In other words, 
+pci_generic_config_{read,write} can be built on pci_mmcfg_{read,write} 
+but not the other way around.
+
+In the light of above, I could not used .map_bus. I might not see a 
+nicer way to solve that so any opinion/suggestion very appreciated :)
+
+>
+>> +       if (!addr) {
+>> +               rcu_read_unlock();
+>> +               goto err;
+>> +       }
+>> +
+>> +       *value = pci_mmio_read(len, addr + reg);
+>> +       rcu_read_unlock();
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+>> +                          unsigned int devfn, int reg, int len, u32 value)
+>> +{
+>> +       char __iomem *addr;
+>> +
+>> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+>> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+>> +               return -EINVAL;
+>> +
+>> +       rcu_read_lock();
+>> +       addr = pci_dev_base(seg, bus, devfn);
+>> +       if (!addr) {
+>> +               rcu_read_unlock();
+>> +               return -EINVAL;
+>> +       }
+>> +
+>> +       pci_mmio_write(len, addr + reg, value);
+>> +       rcu_read_unlock();
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+>> +{
+>> +       void __iomem *addr;
+>> +       u64 start, size;
+>> +       int num_buses;
+>> +
+>> +       start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+>> +       num_buses = cfg->end_bus - cfg->start_bus + 1;
+>> +       size = PCI_MMCFG_BUS_OFFSET(num_buses);
+>> +       addr = ioremap_nocache(start, size);
+>> +       if (addr)
+>> +               addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+>> +       return addr;
+>> +}
+>> +
+>> +int __init pci_mmcfg_arch_init(void)
+>
+> Where would this be called for the case of the generic host and using DT?
+>
+I focused on sharing the code in ACPI context and did not consider DT. I 
+think we can improve that code as next steps.
+
+Tomasz
