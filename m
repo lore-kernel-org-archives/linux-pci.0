@@ -1,160 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:35959 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637AbbCWMoM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:12 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:33286 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707AbbCMOdu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Mar 2015 10:33:50 -0400
+Received: by qgef51 with SMTP id f51so26306894qge.0
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2015 07:33:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <55025955.3020000@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-11-git-send-email-wangyijing@huawei.com> <20150312025537.GD10949@google.com>
+ <55018E90.9030301@huawei.com> <20150312195651.GD7346@google.com> <55025955.3020000@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Mar 2015 09:33:29 -0500
+Message-ID: <CAErSpo5RgADWDPDvA-sg+MhmayPgTCfQqN1j0hYorAzZ=8_-qg@mail.gmail.com>
+Subject: Re: [PATCH v6 10/30] PCI: Introduce pci_host_bridge_list to manage
+ host bridges
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH v7 16/31] PCI: Introduce pci_bus_child_max_busnr()
-Date: Mon, 23 Mar 2015 20:40:42 +0800
-Message-ID: <1427114457-16687-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes, we want to know the highest reserved
-busnr for children bus. Because parent's bus->busn_res
-may have padding in it. For example, some host drivers
-don't know the bus end, so they supply the bus
-resource (root_bus, 255), they want to update the
-max bus number after pci scan complete. But pci scan
-functions won't return the actual max bus number.
-So we could use pci_bus_child_max_busnr() to find
-that.
+On Thu, Mar 12, 2015 at 10:28 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>> It's a nice idea to move this test into the core.  While you're at it, why
+>>>> don't you check for any overlap with the bus ranges of existing host
+>>>> bridges?  For example, if we're trying to create a new host bridge to
+>>>> [bus 40-7f], it should conflict with existing bridges to [bus 00-7f]
+>>>> as well as to [bus 40-ff].  I think your current patch will detect the
+>>>> latter conflict but not the former.
+>>>
+>>> Now pci host bridge may only know its start bus number, like acpi _BBN provided,
+>>> but does not limit the end bus number, Eg. two pci roots report _BBN 0x0 and 0x80,
+>>> so we have two bus number resource (0, 0xff) and (0x80, 0xff), if we check it strictly,
+>>> some pci scan would fail which currently scan success.
+>>
+>> _BBN is not the correct source for the bridge's bus number range.  There's
+>> a comment in acpi_pci_root_add() that explains why:
+>>
+>>   * We need both the start and end of the downstream bus range
+>>   * to interpret _CBA (MMCONFIG base address), so it really is
+>>   * supposed to be in _CRS.  If we don't find it there, all we
+>>   * can do is assume [_BBN-0xFF] or [0-0xFF].
+>>
+>> A platform SHOULD know the start and and end bus number.  If it doesn't I
+>> think it's the platform's responsibility to carve up the bus number range.
+>> Maybe this can be done by trimming the range of the [bus 00-ff] bridge when
+>> we discover another bridge that leads to bus 80.
+>
+> Currently, if platform does not know the end bus number (not provide the bus resource),
+> we will update the max bus number returned by pci_scan_child_bus() to the bus resource end,
+> and I think this is reasonable. I consider to introduce a flag to identify the bus resource
+> which end bus number is undefined, then we could force all pci_scan_root_bus()  etc. callers
+> to provide the bus resource, and we could process the bus resource end according the bus resource flag.
+> Also then we could reduce the bus argument which is the same as busn_res->start.
+> I would try to provide draft patch, then we could discuss it more clearly.
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
- drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
- include/linux/pci.h                |    2 +-
- 3 files changed, 27 insertions(+), 31 deletions(-)
+Without having seen a patch, my inclination is to avoid a flag because
+flags change the behavior of the code you call, which makes that code
+harder to follow.  Maybe we could require these platforms to
+explicitly update the ending bus number after scanning the bus.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index bcb90e4..84f2584 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 	acpi_unlock_hp_context();
- }
- 
--/**
-- * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
-- * @bus: bus to start search with
-- */
--static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
--{
--	struct pci_bus *tmp;
--	unsigned char max, n;
--
--	/*
--	 * pci_bus_max_busnr will return the highest
--	 * reserved busnr for all these children.
--	 * that is equivalent to the bus->subordinate
--	 * value.  We don't want to use the parent's
--	 * bus->subordinate value because it could have
--	 * padding in it.
--	 */
--	max = bus->busn_res.start;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		n = pci_bus_max_busnr(tmp);
--		if (n > max)
--			max = n;
--	}
--	return max;
--}
--
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
-@@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	LIST_HEAD(add_list);
- 
- 	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
-+	max = pci_bus_child_max_busnr(bus);
- 	for (pass = 0; pass < 2; pass++) {
- 		list_for_each_entry(dev, &bus->devices, bus_list) {
- 			if (PCI_SLOT(dev->devfn) != slot->device)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6677fac..8a2f12c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
-  * Given a PCI bus, returns the highest PCI bus number present in the set
-  * including the given PCI bus and its list of child PCI buses.
-  */
--unsigned char pci_bus_max_busnr(struct pci_bus *bus)
-+static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- {
- 	struct pci_bus *tmp;
- 	unsigned char max, n;
-@@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- 	}
- 	return max;
- }
--EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
-+
-+unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
-+{
-+	struct pci_bus *tmp;
-+	unsigned char max, n;
-+
-+	/*
-+	 * pci_bus_max_busnr will return the highest
-+	 * reserved busnr for all these children.
-+	 * that is equivalent to the bus->subordinate
-+	 * value.  We don't want to use the parent's
-+	 * bus->subordinate value because it could have
-+	 * padding in it.
-+	 */
-+	max = bus->busn_res.start;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		n = pci_bus_max_busnr(tmp);
-+		if (n > max)
-+			max = n;
-+	}
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
- 
- #ifdef CONFIG_HAS_IOMEM
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7f4f182..0b921d6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1185,7 +1185,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
- int pci_cfg_space_size(struct pci_dev *dev);
--unsigned char pci_bus_max_busnr(struct pci_bus *bus);
-+unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
--- 
-1.7.1
-
+Bjorn
