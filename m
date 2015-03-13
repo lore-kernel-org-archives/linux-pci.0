@@ -1,55 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42889 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752739AbbC3K7p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Mar 2015 06:59:45 -0400
-Date: Mon, 30 Mar 2015 12:59:35 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH v2 4/6] brcm80211: drop pci dependency
-Message-ID: <1427712964-16155-5-git-send-email-mst@redhat.com>
-References: <1427712964-16155-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	"yinghai @ kernel . org" <yinghai@kernel.org>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is disabled when unbinding
+Date: Fri, 13 Mar 2015 22:45:18 +0100
+Message-ID: <1959219.oI9I2JEVpa@vostro.rjw.lan>
+In-Reply-To: <1426212403-16234-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1426092450.3643.7.camel@redhat.com> <1426212403-16234-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427712964-16155-1-git-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This file does not use any pci APIs, drop
-pci header includes.
+On Friday, March 13, 2015 10:06:43 AM Jiang Liu wrote:
+> To support IOAPIC hot-removal, we need to release PCI interrupt resource
+> when unbinding PCI device driver. But due to historical reason,
+> /*
+>  * We would love to complain here if pci_dev->is_enabled is set, that
+>  * the driver should have called pci_disable_device(), but the
+>  * unfortunate fact is there are too many odd BIOS and bridge setups
+>  * that don't like drivers doing that all of the time.
+>  * Oh well, we can dream of sane hardware when we sleep, no matter how
+>  * horrible the crap we have to deal with is when we are awake...
+>  */
+> some drivers don't call pci_disable_device() when unloading, which
+> prevents us from reallocating PCI interrupt resource on reloading
+> PCI driver and causes regressions.
+> 
+> So release PCI interrupt resource only if PCI device is disabled when
+> unbinding. By this way, we could support IOAPIC hot-removal on latest
+> platforms and avoid regressions on old platforms.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 --
- 1 file changed, 2 deletions(-)
+OK, I can agree with that.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 7944224..9331486 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -17,8 +17,6 @@
- 
- #include <linux/types.h>
- #include <linux/netdevice.h>
--#include <linux/pci.h>
--#include <linux/pci_ids.h>
- #include <linux/sched.h>
- #include <linux/completion.h>
- #include <linux/scatterlist.h>
+Bjorn, what do you think?
+
+> ---
+>  arch/x86/pci/common.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 3d2612b68694..8d792142cb2a 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -527,7 +527,7 @@ static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
+>  	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
+>  		return NOTIFY_DONE;
+>  
+> -	if (pcibios_disable_irq)
+> +	if (!pci_is_enabled(dev) && pcibios_disable_irq)
+>  		pcibios_disable_irq(dev);
+>  
+>  	return NOTIFY_OK;
+> 
+
 -- 
-MST
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
