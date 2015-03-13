@@ -1,105 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Mar 2015 16:42:25 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: [PATCH v3 00/10] pci: fix unhandled interrupt on shutdown
-Message-ID: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57855 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751795AbbCMCJZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Mar 2015 22:09:25 -0400
+Date: Fri, 13 Mar 2015 10:09:19 +0800
+From: Fam Zheng <famz@redhat.com>
+To: Bandan Das <bsd@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
+Message-ID: <20150313020919.GD32054@ad.nay.redhat.com>
+References: <1426137682-12287-1-git-send-email-famz@redhat.com>
+ <jpgk2ylzs62.fsf@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <jpgk2ylzs62.fsf@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fam Zheng noticed that pci shutdown disables msi and msix of a device while
-device is still active. This was intended to fix kexec with fusion devices but
-had the unintended effect of breaking even regular shutdown when using virtio.
+On Thu, 03/12 19:56, Bandan Das wrote:
+> Hi Fam,
+> 
+> Fam Zheng <famz@redhat.com> writes:
+> 
+> > If the device doesn't support shutdown, disabling interrupts may cause
+> > trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
+> > after we disable MSI-X, futher notifications from device will be
+> > delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
+> > may prevent us from making progress, by keep triggering interrupts.
+> >
+> > Signed-off-by: Fam Zheng <famz@redhat.com>
+> > ---
+> >  drivers/pci/pci-driver.c | 7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index 3cb2210..fb29c96 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
+> >  
+> >  	pm_runtime_resume(dev);
+> >  
+> > -	if (drv && drv->shutdown)
+> > +	if (drv && drv->shutdown) {
+> >  		drv->shutdown(pci_dev);
+> > -	pci_msi_shutdown(pci_dev);
+> > -	pci_msix_shutdown(pci_dev);
+> > +		pci_msi_shutdown(pci_dev);
+> > +		pci_msix_shutdown(pci_dev);
+> > +	}
+> 
+> If the driver doesn't provide a shutdown method and doesn't itself
+> disable MSI/MSI-X, then pci_msi(x)_shutdown won't be called anymore,
+> no ?
 
-As a result, people reported VMs being hung on shutdown,
-with traces that look like this:
+Right.
 
-...
+> 
+> This is probably ok (but unclean) for a system shutdown, but could
+> cause problems for something like kexec ?
 
-  [<ffffffff815f367b>] ? _raw_spin_unlock_irqrestore+0x1b/0x40
-  [<ffffffff812e068f>] pci_bus_read_config_word+0x9f/0xb0
-  [<ffffffff812e205c>] pci_read_config_word+0x1c/0x20
-  [<ffffffff812e5ea3>] pci_intx+0x33/0xb0
-  [<ffffffff81304ddd>] pci_msix_shutdown+0x8d/0x90
-  [<ffffffff812ead26>] pci_device_shutdown+0x46/0x60
-  [<ffffffff813b4258>] device_shutdown+0xc8/0x180
-  [<ffffffff810761c5>] kernel_power_off+0x35/0x80
-  [<ffffffff81077ceb>] SYSC_reboot+0x18b/0x260
-  [<ffffffff811c5bb5>] ? d_free+0x55/0x60
-  [<ffffffff811cf414>] ? mntput+0x24/0x40
-  [<ffffffff811b1613>] ? __fput+0x183/0x270
-  [<ffffffff81077dee>] SyS_reboot+0xe/0x10
-  [<ffffffff815fc819>] system_call_fastpath+0x16/0x1b
+Doesn't the reset in kexec clean this up during initialization?
 
-...
+Without shutdown, anything in the driver is unclean anyway, for example
+free_irq is not called.
 
-as well as the messages that look like this:
-BUG: soft lockup - CPU#2 stuck for 22s!  [poweroff:1964]
-
-The same problem would affect any driver which doesn't register
-a level interrupt handler when using msix.
-
-I think the fix is to avoid touching device on shutdown:
-we clear bus master anyway, so we won't get any more
-msi interrupts, and bus reset will clear the msi/msix
-state eventually.
-
-The patch that added the code in question is from
-	d52877c7b1afb8c37ebe17e2005040b79cb618b0:
-        "pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
-from 2008, but it turns out that in 2011 the following commit
-    commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
-        "PCI: msi: Disable msi interrupts when we initialize a pci device"
-fixed the issue in a more robust way.  The only thing left to do is to
-fix configurations with CONFIG_PCI_MSI disabled, and then
-d52877c7b1afb8c37ebe17e2005040b79cb618b0 can be reverted.
-
-Status:
-
-Patches 1-6 work well for me.
-Given they affect all pci devices, and the bug has been there since 2.6 times,
-I think there's no rush: we can merge them for 4.1.
-
-At the same time, once merged, patches 1-4 will likely make a good stable
-candidate.
-
-Patches 7-10 compiled only, will need maintainer ack.
-
-Please review, and consider at least 1-6 for 4.1.
-
-Changes from v3:
-	move code from probe to device enumeration
-	add patches to unexport pci_msi_off
-
-Michael S. Tsirkin (10):
-  pci: export functions for msi/msix ctrl
-  pci: move pci_msi_init_pci_dev to pci.c
-  pci: drop some duplicate code
-  pci: don't disable msi/msix at shutdown
-  pci: make msi/msix shutdown functions static
-  virtio_pci: drop msi_off on probe
-  ntb: drop pci_msi_off call on probe
-  mic: drop pci_msi_off call on probe
-  pci: drop pci_msi_off calls from quirks
-  pci: unexport pci_msi_off
-
- drivers/pci/pci.h                  | 25 +++++++++++++--
- include/linux/pci.h                |  5 ---
- drivers/misc/mic/host/mic_intr.c   |  2 --
- drivers/ntb/ntb_hw.c               |  2 --
- drivers/pci/msi.c                  | 62 ++++++++------------------------------
- drivers/pci/pci-driver.c           |  2 --
- drivers/pci/pci.c                  | 26 ++++------------
- drivers/pci/probe.c                | 16 ++++++++++
- drivers/pci/quirks.c               |  2 --
- drivers/virtio/virtio_pci_common.c |  3 --
- 10 files changed, 57 insertions(+), 88 deletions(-)
-
--- 
-MST
-
+Fam
