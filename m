@@ -1,73 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35044 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754848AbbCRSwF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Mar 2015 14:52:05 -0400
-Message-ID: <5509C951.30402@arm.com>
-Date: Wed, 18 Mar 2015 18:52:01 +0000
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:37929 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754018AbbCMNZT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Mar 2015 09:25:19 -0400
+Received: by qgdz60 with SMTP id z60so25700923qgd.5
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2015 06:25:18 -0700 (PDT)
 MIME-Version: 1.0
-To: Duc Dang <dhdang@apm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, Feng Kan <fkan@apm.com>,
+In-Reply-To: <55024D35.6050509@huawei.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com>
+ <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com> <55024D35.6050509@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Mar 2015 08:24:58 -0500
+Message-ID: <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com>
+Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
- termination driver
-References: <cover.1425497218.git.dhdang@apm.com> <ca98e05f8a8dabdc6cc5b6e8c3ce50cf4e900fac.1425497218.git.dhdang@apm.com> <5509BE7C.1000901@arm.com> <CADaLNDn0V8F27Yu1-j8H0Dw2t-Ac04TZcbtsg++ALdB4orXrUQ@mail.gmail.com>
-In-Reply-To: <CADaLNDn0V8F27Yu1-j8H0Dw2t-Ac04TZcbtsg++ALdB4orXrUQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18/03/15 18:29, Duc Dang wrote:
-> On Wed, Mar 18, 2015 at 11:05 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> On 04/03/15 19:39, Duc Dang wrote:
->>> X-Gene v1 SOC supports total 2688 MSI/MSIX vectors coalesced into
->>> 16 HW IRQ lines.
+On Thu, Mar 12, 2015 at 9:36 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>>> +  pci_add_resource(&resources, &ioport_resource);
+>>>>> +  pci_add_resource(&resources, &iomem_resource);
+>>>>> +  pci_add_resource(&resources, &busn_resource);
+>>>>
+>>>> Since I don't want to export busn_resource, you might have to allocate your
+>>>> own struct resource for it here.  And, of course, figure out the details of
+>>>> which PCI domain you're in and whether you need to share one struct
+>>>> resource across several host bridges in the same domain.
 >>>
->>> Signed-off-by: Duc Dang <dhdang@apm.com>
->>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>>> Allocate its own resource here is ok for me, as I mentioned in previous reply,
+>>> so do we still need to add additional info to figure out which domain own the bus resource ?
 >>
->> I just had a quick look at this, and this seems to be going in the exact
->> opposite direction compared to what we now have on arm64, where we move
->> away from using struct msi_controller for most thing, and implement PCI
->> MSI/MSIX in a generic way, using MSI domains.
+>> That's up to the caller.  Only the platform knows which bridges it wants to
+>> have in the same domain.  In principle, every host bridge could be in its
+>> own domain, since each bridge is the root of a unique PCI hierarchy.  But
+>> some platforms have firmware that assumes otherwise.  I have no idea what
+>> xen assumes.
+>
+> I'm not xen guy, so I don't know much about it, but because it call pci_scan_bus_parented()
+> before, and in which busn_resource is always shared for different host bridges(same domain or not),
+> I think add a static bus resource(0,255) should be safe, at least, it would not introduce new risk.
+>
+> Something like:
+>
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index b1ffebe..a69e529 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>                                  unsigned int domain, unsigned int bus)
+>  {
+>         struct pci_bus *b;
+> +       LIST_HEAD(resources);
+>         struct pcifront_sd *sd = NULL;
+>         struct pci_bus_entry *bus_entry = NULL;
+>         int err = 0;
+> +       static struct resource busn_res = {
+> +               .start = 0,
+> +               .end = 255,
+> +               .flags = IORESOURCE_BUS,
+> +       };
+>
+>  #ifndef CONFIG_PCI_DOMAINS
+>         if (domain != 0) {
+> @@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>                 err = -ENOMEM;
+>                 goto err_out;
+>         }
+> +       pci_add_resource(&resources, &ioport_resource);
+> +       pci_add_resource(&resources, &iomem_resource);
+> +       pci_add_resource(&resources, &busn_res);
+>         pcifront_init_sd(sd, domain, bus, pdev);
+>
+>         pci_lock_rescan_remove();
+>
+> -       b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> -                                 &pcifront_bus_ops, sd);
+> +       b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+> +                                 &pcifront_bus_ops, sd, &resources);
+>         if (!b) {
+>
+> Bjorn, what do you think about ?
+
+That seems OK to me.  Probably still wrong, but no worse than it was before.
+
+>>>>>    pcifront_init_sd(sd, domain, bus, pdev);
+>>>>>
+>>>>>    pci_lock_rescan_remove();
+>>>>>
+>>>>> -  b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+>>>>> -                            &pcifront_bus_ops, sd);
+>>>>> +  b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+>>>>> +                            &pcifront_bus_ops, sd, &resources);
+>>>>>    if (!b) {
+>>>>>            dev_err(&pdev->xdev->dev,
+>>>>>                    "Error creating PCI Frontend Bus!\n");
+>>>>>            err = -ENOMEM;
+>>>>>            pci_unlock_rescan_remove();
+>>>>> +          pci_free_resource_list(&resources);
+>>>>>            goto err_out;
+>>>>>    }
+>>>>>
+>>>>> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>>>>>
+>>>>>    list_add(&bus_entry->list, &pdev->root_buses);
+>>>>>
+>>>>> -  /* pci_scan_bus_parented skips devices which do not have a have
+>>>>> +  /* pci_scan_root_bus skips devices which do not have a
+>>>>>    * devfn==0. The pcifront_scan_bus enumerates all devfn. */
+>>>>>    err = pcifront_scan_bus(pdev, domain, bus, b);
+>>>>>
+>>>>> --
+>>>>> 1.7.1
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>> --
+>>> Thanks!
+>>> Yijing
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>
->> I suggest you have a look at how GICv2m and GICv3 ITS implement the MSI
->> support. You can also have a look at what I did for the Tegra MSI
->> controller in this patch:
+>> .
 >>
->> https://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/kill-msi-controller&id=83b3602fcee7972b9d549ed729b56ec28de16081
->>
->> Eventually, the plan is to kill msi_controller entirely, so introducing
->> new drivers that rely on it is not something I'm eager to see.
-> 
-> Thanks, Marc.
-> 
->  X-Gene 1 MSI is handled by separate MSI controller block, so its
-> driver implementation is different from GICv2m and GICv3. I will refer
-
-It will certainly be different in the sense that you won't use a stacked
-domain on top of the GIC. But what I want to see is the use of a generic
-pci_msi_domain on top of an irq_domain, just like we have on v2m and v3.
-Thomas has also been vocal enough about that in the past, and x86 is
-going down that road as well.
-
-> to what you did for Tegra MSI, but I don't see your latest changes in
-> 4.0-rc4. Is the change you made for Tegra MSI going to mainline soon?
-
-Not yet. As you can see in this branch, this relies on some other
-cleanups. But you can already convert most of your driver and put it in
-the shape that matches what we have for v2m and v3. Once the required
-cleanups are in, I'll remove the last traces of msi_controller myself if
-necessary.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+>
+>
+> --
+> Thanks!
+> Yijing
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
