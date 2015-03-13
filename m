@@ -1,105 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:11617 "EHLO
+Received: from szxga03-in.huawei.com ([119.145.14.66]:60731 "EHLO
 	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231AbbC1KCS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 06:02:18 -0400
-Message-ID: <55167C1C.6010001@huawei.com>
-Date: Sat, 28 Mar 2015 18:02:04 +0800
+	with ESMTP id S1752632AbbCMChH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 22:37:07 -0400
+Message-ID: <55024D35.6050509@huawei.com>
+Date: Fri, 13 Mar 2015 10:36:37 +0800
 From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: PCI <linux-pci@vger.kernel.org>,
-	"Herui (Ray)" <Ray.herui@huawei.com>
-Subject: Assign mem resource fail after remove and rescan
-Content-Type: text/plain; charset="UTF-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com> <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com>
+In-Reply-To: <20150312193505.GB7346@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai, Bjorn
-   I found a memory resource assignment fail after I did remove and rescan a bridge device,
-I don't know whether this is a kernel bug, I hope could get some advice from you, thanks!
+>>>> +	pci_add_resource(&resources, &ioport_resource);
+>>>> +	pci_add_resource(&resources, &iomem_resource);
+>>>> +	pci_add_resource(&resources, &busn_resource);
+>>>
+>>> Since I don't want to export busn_resource, you might have to allocate your
+>>> own struct resource for it here.  And, of course, figure out the details of
+>>> which PCI domain you're in and whether you need to share one struct
+>>> resource across several host bridges in the same domain.
+>>
+>> Allocate its own resource here is ok for me, as I mentioned in previous reply,
+>> so do we still need to add additional info to figure out which domain own the bus resource ?
+> 
+> That's up to the caller.  Only the platform knows which bridges it wants to
+> have in the same domain.  In principle, every host bridge could be in its
+> own domain, since each bridge is the root of a unique PCI hierarchy.  But
+> some platforms have firmware that assumes otherwise.  I have no idea what
+> xen assumes.
 
-My pci tree:
--[0000:00]-+-00.0  Intel Corporation 2nd Generation Core Processor Family DRAM Controller
-...
-           +-1c.0-[02-21]----00.0-[03-21]--+-01.0-[04-12]----00.0-[05-12]----19.0-[06-12]----00.0  PLX Technology, Inc. Device 1009
-           |                               +-05.0-[13]--
-           |                               +-07.0-[14-20]----00.0-[15-20]--+-08.0-[16]--+-00.0  NVIDIA Corporation GT218 [GeForce 210]
-           |                               |                               |            \-00.1  NVIDIA Corporation High Definition Audio Controller
-           |                               |                               +-14.0-[17]----00.0  Intel Corporation Device 0953
-           |                               |                               \-19.0-[18-20]----00.0  PLX Technology, Inc. Device 1009
-           |                               \-09.0-[21]--
+I'm not xen guy, so I don't know much about it, but because it call pci_scan_bus_parented()
+before, and in which busn_resource is always shared for different host bridges(same domain or not),
+I think add a static bus resource(0,255) should be safe, at least, it would not introduce new risk.
 
+Something like:
 
-Reproduce action:
-1. echo 1 > /sys/bus/pci/devices/0000:05:19.0/remove
-2. echo 1 > /sys/bus/pci/rescan
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index b1ffebe..a69e529 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+                                 unsigned int domain, unsigned int bus)
+ {
+        struct pci_bus *b;
++       LIST_HEAD(resources);
+        struct pcifront_sd *sd = NULL;
+        struct pci_bus_entry *bus_entry = NULL;
+        int err = 0;
++       static struct resource busn_res = {
++               .start = 0,
++               .end = 255,
++               .flags = IORESOURCE_BUS,
++       };
 
-After above operations, I found the memory resource assigned fail.
+ #ifndef CONFIG_PCI_DOMAINS
+        if (domain != 0) {
+@@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+                err = -ENOMEM;
+                goto err_out;
+        }
++       pci_add_resource(&resources, &ioport_resource);
++       pci_add_resource(&resources, &iomem_resource);
++       pci_add_resource(&resources, &busn_res);
+        pcifront_init_sd(sd, domain, bus, pdev);
 
-Fail log:
-[  105.905480] pci_bus 0000:06: busn_res: [bus 06-12] is released
-[  125.771655] pci_bus 0000:01: busn_res: [bus 01] end is updated to 01
-[  125.772519] pci 0000:05:19.0: [10b5:9797] type 01 class 0x060400
-[  125.772846] pci 0000:05:19.0: PME# supported from D0 D3hot D3cold
-[  125.778576] pci_bus 0000:06: busn_res: can not insert [bus 06-ff] under [bus 05-12] (conflicts with (null) [bus 05-12])
-[  125.778638] pci 0000:06:00.0: [10b5:1009] type 00 class 0x088000
-[  125.778693] pci 0000:06:00.0: reg 0x10: [mem 0xe8000000-0xe87fffff]
-[  125.778761] pci 0000:06:00.0: reg 0x18: [mem 0xe4000000-0xe7ffffff 64bit]
-[  125.782315] pci 0000:05:19.0: PCI bridge to [bus 06-ff]
-[  125.782345] pci 0000:05:19.0:   bridge window [mem 0xe4000000-0xe87fffff]
-[  125.782366] pci_bus 0000:06: busn_res: [bus 06-ff] end is updated to 12
-[  125.782380] pci_bus 0000:05: busn_res: [bus 05-12] end is updated to 12
-[  125.782393] pci_bus 0000:04: busn_res: [bus 04-12] end is updated to 12
-[  125.782422] pci_bus 0000:13: busn_res: [bus 13] end is updated to 13
-[  125.782674] pci_bus 0000:16: busn_res: [bus 16] end is updated to 16
-[  125.782721] pci_bus 0000:17: busn_res: [bus 17] end is updated to 17
-[  125.782751] pci_bus 0000:18: busn_res: [bus 18-20] end is updated to 20
-[  125.782763] pci_bus 0000:15: busn_res: [bus 15-20] end is updated to 20
-[  125.782775] pci_bus 0000:14: busn_res: [bus 14-20] end is updated to 20
-[  125.782802] pci_bus 0000:21: busn_res: [bus 21] end is updated to 21
-[  125.782812] pci_bus 0000:03: busn_res: [bus 03-21] end is updated to 21
-[  125.782822] pci_bus 0000:02: busn_res: [bus 02-21] end is updated to 21
-[  125.782845] pci_bus 0000:22: busn_res: [bus 22] end is updated to 22
-[  125.786433] pci_bus 0000:24: busn_res: [bus 24] end is updated to 24
-[  125.786450] pci_bus 0000:23: busn_res: [bus 23-24] end is updated to 24
-[  125.786749] pci 0000:05:19.0: BAR 14: no space for [mem size 0x06000000]
-[  125.786754] pci 0000:05:19.0: BAR 14: failed to assign [mem size 0x06000000]
-[  125.786760] pci 0000:06:00.0: BAR 2: no space for [mem size 0x04000000 64bit]
-[  125.786764] pci 0000:06:00.0: BAR 2: failed to assign [mem size 0x04000000 64bit]
-[  125.786769] pci 0000:06:00.0: BAR 0: no space for [mem size 0x00800000]
-[  125.786773] pci 0000:06:00.0: BAR 0: failed to assign [mem size 0x00800000]
-[  125.786777] pci 0000:05:19.0: PCI bridge to [bus 06-12]
-[  125.786819] pci 0000:23:00.0: PCI bridge to [bus 24]
+        pci_lock_rescan_remove();
 
-System boot log:
+-       b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-                                 &pcifront_bus_ops, sd);
++       b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++                                 &pcifront_bus_ops, sd, &resources);
+        if (!b) {
 
-...
-[    0.122097] pci 0000:05:19.0: [10b5:9797] type 01 class 0x060400
-[    0.122373] pci 0000:05:19.0: PME# supported from D0 D3hot D3cold
-[    0.122481] pci 0000:04:00.0: PCI bridge to [bus 05-ff]
-[    0.122501] pci 0000:04:00.0:   bridge window [mem 0xe4000000-0xe87fffff]
-[    0.122708] pci 0000:06:00.0: [10b5:1009] type 00 class 0x088000
-[    0.122749] pci 0000:06:00.0: reg 0x10: [mem 0xe8000000-0xe87fffff]
-[    0.122816] pci 0000:06:00.0: reg 0x18: [mem 0xe4000000-0xe7ffffff 64bit]
-[    0.123323] pci 0000:05:19.0: PCI bridge to [bus 06-ff]
-[    0.123346] pci 0000:05:19.0:   bridge window [mem 0xe4000000-0xe87fffff]
-...
-
-I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
-and when system boot up, it requested only 0x4800000.
-
-In hotplug(remove and rescan) path, we would call calculate_mem_align() function which would align the resource at 0x2000000.
-
-I wonder is this a resource assignment bug ?
-
+Bjorn, what do you think about ?
 
 Thanks!
 Yijing.
 
 
-
+> 
+>>>>  	pcifront_init_sd(sd, domain, bus, pdev);
+>>>>  
+>>>>  	pci_lock_rescan_remove();
+>>>>  
+>>>> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+>>>> -				  &pcifront_bus_ops, sd);
+>>>> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+>>>> +				  &pcifront_bus_ops, sd, &resources);
+>>>>  	if (!b) {
+>>>>  		dev_err(&pdev->xdev->dev,
+>>>>  			"Error creating PCI Frontend Bus!\n");
+>>>>  		err = -ENOMEM;
+>>>>  		pci_unlock_rescan_remove();
+>>>> +		pci_free_resource_list(&resources);
+>>>>  		goto err_out;
+>>>>  	}
+>>>>  
+>>>> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>>>>  
+>>>>  	list_add(&bus_entry->list, &pdev->root_buses);
+>>>>  
+>>>> -	/* pci_scan_bus_parented skips devices which do not have a have
+>>>> +	/* pci_scan_root_bus skips devices which do not have a
+>>>>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+>>>>  	err = pcifront_scan_bus(pdev, domain, bus, b);
+>>>>  
+>>>> -- 
+>>>> 1.7.1
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>> .
+>>>
+>>
+>>
+>> -- 
+>> Thanks!
+>> Yijing
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
 
 -- 
