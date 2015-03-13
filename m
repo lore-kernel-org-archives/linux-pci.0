@@ -1,95 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:36317 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbbCWMoW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:22 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+Received: from mail-qg0-f46.google.com ([209.85.192.46]:40956 "EHLO
+	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754169AbbCMOsq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Mar 2015 10:48:46 -0400
+Received: by qgdq107 with SMTP id q107so26348845qgd.7
+        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2015 07:48:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150313113156.GA4739@bart.dudau.co.uk>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <20150312212306.GH7346@google.com> <20150313113156.GA4739@bart.dudau.co.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Mar 2015 09:48:25 -0500
+Message-ID: <CAErSpo7KuchFy0U=80buz4oRKwn-tcwz1Ej9-hBZHg+a-eYCbw@mail.gmail.com>
+Subject: Re: [PATCH v6 00/30] Refine PCI scan interfaces and make generic pci
+ host bridge
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>, <sparclinux@vger.kernel.org>
-Subject: [PATCH v7 21/31] sparc/PCI: Use pci_scan_host_bridge() for simplicity
-Date: Mon, 23 Mar 2015 20:40:47 +0800
-Message-ID: <1427114457-16687-22-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_host_bridge() to scan
-pci buses, provide sparc specific pci_host_bridge_ops.
+On Fri, Mar 13, 2015 at 6:31 AM, Liviu Dudau <liviu@dudau.co.uk> wrote:
+> On Thu, Mar 12, 2015 at 04:23:06PM -0500, Bjorn Helgaas wrote:
+>> On Mon, Mar 09, 2015 at 10:33:57AM +0800, Yijing Wang wrote:
+>> > ...
+>> > Yijing Wang (29):
+>> >   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+>> >   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+>> >   sparc/PCI: Claim bus resources before pci_bus_add_devices()
+>>
+>> I put the above patches plus a cleanup patch on my pci/enumeration branch.
+>> Please rebase your next revision to that.  If there's anything else
+>> non-controversial that we can pull in to chip away at this, let me know.
+>
+> Hi Bjorn and Yijing,
+>
+> Sorry for not providing feedback earlier on this series (or any previous ones),
+> I'm just crawling out from under a rock of doing graphics drivers :)
+>
+> The patch ripping out pci_bus_add_devices() from pci_scan_root_bus() misses out
+> the users of that function from drivers/pci/host. If Yijing is going to refresh
+> the series it is probably worth starting with adding back the call into pcie-xilinx.c
+> and pci-versatile.c.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/pci.c |   27 +++++++++++++++++++++------
- 1 files changed, 21 insertions(+), 6 deletions(-)
+Huh, sure enough, I missed those, too.  Yijing, when you add those,
+can you pull my branch, update the patch, and repost it?  That way
+you'll keep my changelog and cleanup updates.
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index e40e456..2a0f5ec 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -650,6 +650,20 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
- 		pci_claim_bus_resources(child_bus);
- }
- 
-+static int pci_host_bridge_of_scan_bus(
-+		struct pci_host_bridge_ *host)
-+{
-+	struct pci_pbm_info *pbm = dev_get_drvdata(&host->dev);
-+	struct device_node *node = pbm->op->dev.of_node;
-+
-+	pci_of_scan_bus(pbm, node, host->bus);
-+	return pci_bus_child_max_busnr(host->bus);
-+}
-+
-+static struct pci_host_bridge_ops pci_host_ops = {
-+	.scan_bus = pci_host_of_scan_bus,
-+};
-+
- struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 				 struct device *parent)
- {
-@@ -667,16 +681,17 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
- 	pci_add_resource(&resources, &pbm->busn);
--	bus = pci_create_root_bus(parent, pbm->index, pbm->pci_first_busno,
--			pbm->pci_ops, pbm, &resources);
--	if (!bus) {
--		printk(KERN_ERR "Failed to create bus for %s\n",
--		       node->full_name);
-+	pci_host_ops.pci_ops = pbm->pci_ops;
-+	bus = pci_scan_host_bridge(parent, pbm->index, pbm->pci_first_busno,
-+			pbm, &resources, &pci_host_ops);
-+	if (!host) {
-+		pr_err("Failed to create host bridge pci%04x:%02x for %s\n",
-+		       pbm->index, pbm->pci_first_busno, node->full_name);
- 		pci_free_resource_list(&resources);
- 		return NULL;
- 	}
- 
--	pci_of_scan_bus(pbm, node, bus);
-+	bus = host->bus;
- 	pci_bus_register_of_sysfs(bus);
- 
- 	pci_claim_bus_resources(bus);
--- 
-1.7.1
-
+Bjorn
