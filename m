@@ -1,90 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:27609 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932567AbbCFJgM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:12 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 04/29] PCI: Remove deprecated pci_scan_bus_parented()
-Date: Fri, 6 Mar 2015 17:33:21 +0800
-Message-ID: <1425634426-437-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15473 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbbCMARj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:17:39 -0400
+Message-ID: <55022CA0.6080806@broadcom.com>
+Date: Thu, 12 Mar 2015 17:17:36 -0700
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
+	"Paul Bolle" <pebolle@tiscali.nl>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>
+Subject: Re: [PATCH v6 3/4] pci: iproc: Add Broadcom iProc PCIe support
+References: <1426097169-20805-1-git-send-email-rjui@broadcom.com> <1426097169-20805-4-git-send-email-rjui@broadcom.com> <20150312210856.GF7346@google.com>
+In-Reply-To: <20150312210856.GF7346@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No one uses pci_scan_bus_parented() any more,
-remove it.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   19 -------------------
- include/linux/pci.h |    2 --
- 2 files changed, 0 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8ef0375..699a238 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2091,25 +2091,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 					void *sysdata)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..36effb8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -769,8 +769,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--- 
-1.7.1
+On 3/12/2015 2:08 PM, Bjorn Helgaas wrote:
+> On Wed, Mar 11, 2015 at 11:06:08AM -0700, Ray Jui wrote:
+>> This adds the support for Broadcom iProc PCIe controller
+>>
+>> pcie-iproc.c servers as the common core driver, and front-end bus
+>> interface needs to be added to support different bus interfaces
+>>
+>> pcie-iproc-pltfm.c contains the support for the platform bus interface
+>>
+>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>> ...
+> 
+>> +static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+>> +{
+>> +	u8 hdr_type;
+>> +	u32 link_ctrl;
+>> +	u16 pos, link_status;
+>> +	int link_is_active = 0;
+>> +
+>> +	/* make sure we are not in EP mode */
+>> +	pci_bus_read_config_byte(bus, 0, PCI_HEADER_TYPE, &hdr_type);
+>> +	if ((hdr_type & 0x7f) != PCI_HEADER_TYPE_BRIDGE) {
+>> +		dev_err(pcie->dev, "in EP mode, hdr=0x08%x\n", hdr_type);
+> 
+> "0x08%x" doesn't look right.  I changed it to "%#02x"; is that what you
+> intended?
+> 
+You are right. Will fix it along with the Kconfig fix (so it won't get
+compiled for non-ARM platforms). I'll submit v7?
 
+Thanks,
+
+Ray
