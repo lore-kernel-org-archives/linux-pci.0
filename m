@@ -1,197 +1,99 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 28 Mar 2015 02:05:32 +0100
-From: Sam Ravnborg <sam@ravnborg.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-Message-ID: <20150328010532.GA15897@ravnborg.org>
-References: <5514391F.2030300@oracle.com>
- <CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
- <551495EE.20201@oracle.com>
- <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
- <CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+Date: Fri, 13 Mar 2015 11:31:56 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 00/30] Refine PCI scan interfaces and make generic pci
+ host bridge
+Message-ID: <20150313113156.GA4739@bart.dudau.co.uk>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <20150312212306.GH7346@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150312212306.GH7346@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Mar 12, 2015 at 04:23:06PM -0500, Bjorn Helgaas wrote:
+> On Mon, Mar 09, 2015 at 10:33:57AM +0800, Yijing Wang wrote:
+> > ...
+> > Yijing Wang (29):
+> >   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+> >   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+> >   sparc/PCI: Claim bus resources before pci_bus_add_devices()
 > 
-> Index: linux-2.6/arch/alpha/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/alpha/Kconfig
-> +++ linux-2.6/arch/alpha/Kconfig
-> @@ -66,6 +66,9 @@ config ZONE_DMA
->  config ARCH_DMA_ADDR_T_64BIT
->  	def_bool y
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool y
-> +
-For alpha you define a new symbol with a default value.
+> I put the above patches plus a cleanup patch on my pci/enumeration branch.
+> Please rebase your next revision to that.  If there's anything else
+> non-controversial that we can pull in to chip away at this, let me know.
 
->  config NEED_DMA_MAP_STATE
->         def_bool y
->  
-> Index: linux-2.6/arch/arm/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/arm/Kconfig
-> +++ linux-2.6/arch/arm/Kconfig
-> @@ -1779,6 +1779,7 @@ config XEN
->  	depends on !GENERIC_ATOMIC64
->  	depends on MMU
->  	select ARCH_DMA_ADDR_T_64BIT
-> +	select ARCH_PCI_BUS_ADDR_T_64BIT
->  	select ARM_PSCI
->  	select SWIOTLB_XEN
->  	help
-For arm you use select ...
+Hi Bjorn and Yijing,
 
-As the actual definition of the Kconfig symbol is already
-present in mm/Kconfig please use select in all cases.
+Sorry for not providing feedback earlier on this series (or any previous ones),
+I'm just crawling out from under a rock of doing graphics drivers :)
 
-> Index: linux-2.6/arch/arm/mm/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/arm/mm/Kconfig
-> +++ linux-2.6/arch/arm/mm/Kconfig
-> @@ -630,6 +630,9 @@ config ARCH_PHYS_ADDR_T_64BIT
->  config ARCH_DMA_ADDR_T_64BIT
->  	bool
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	bool
-> +
-Here it would have been nice with a comment that explains the use of ths symbol.
+The patch ripping out pci_bus_add_devices() from pci_scan_root_bus() misses out
+the users of that function from drivers/pci/host. If Yijing is going to refresh
+the series it is probably worth starting with adding back the call into pcie-xilinx.c
+and pci-versatile.c.
 
->  config ARM_THUMB
->  	bool "Support Thumb user binaries" if !CPU_THUMBONLY
->  	depends on CPU_ARM720T || CPU_ARM740T || CPU_ARM920T || CPU_ARM922T || \
-> Index: linux-2.6/arch/arm64/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/arm64/Kconfig
-> +++ linux-2.6/arch/arm64/Kconfig
-> @@ -125,6 +125,9 @@ config HAVE_GENERIC_RCU_GUP
->  config ARCH_DMA_ADDR_T_64BIT
->  	def_bool y
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool y
-> +
-Use select
+Will try to review (and test) the rest of the series soon.
 
->  config NEED_DMA_MAP_STATE
->  	def_bool y
->  
-> Index: linux-2.6/arch/ia64/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/ia64/Kconfig
-> +++ linux-2.6/arch/ia64/Kconfig
-> @@ -74,6 +74,9 @@ config MMU
->  config ARCH_DMA_ADDR_T_64BIT
->  	def_bool y
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool y
-> +
-Use select
+Best regards,
+Liviu
 
->  config NEED_DMA_MAP_STATE
->  	def_bool y
->  
-> Index: linux-2.6/arch/mips/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/mips/Kconfig
-> +++ linux-2.6/arch/mips/Kconfig
-> @@ -984,6 +984,9 @@ config FW_CFE
->  config ARCH_DMA_ADDR_T_64BIT
->  	def_bool (HIGHMEM && ARCH_PHYS_ADDR_T_64BIT) || 64BIT
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool (HIGHMEM && ARCH_PHYS_ADDR_T_64BIT) || 64BIT
+> 
+> >   PCI: Export busn_resource to drivers/pci
+> >   PCI: Remove deprecated pci_scan_bus_parented()
+> >   PCI: Combine PCI domain and bus number in u32 arg
+> >   PCI: Pass PCI domain number combined with root bus number
+> >   PCI: Introduce pci_host_assign_domain_nr() to assign domain
+> >   PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+> >   PCI: Introduce pci_host_bridge_list to manage host bridges
+> >   PCI: Save sysdata in pci_host_bridge drvdata
+> >   PCI: Introduce pci_host_bridge_ops to support host specific
+> >     operations
+> >   PCI: Introduce new scan function pci_scan_host_bridge()
+> >   x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+> >   ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+> >   powerpc/pci: Rename pcibios_root_bridge_prepare()
+> >   powerpc/pci: Use pci_scan_host_bridge() for simplicity
+> >   PCI: Remove weak pcibios_root_bridge_prepare()
+> >   sparc/PCI: Use pci_scan_host_bridge() for simplicity
+> >   PCI: Introduce pci_bus_child_max_busnr()
+> >   parisc/PCI: Use pci_scan_root_bus() for simplicity
+> >   PCI/mvebu: Use pci_common_init_dev() to simplify code
+> >   PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+> >   PCI/designware: Use pci_scan_root_bus() for simplicity
+> >   PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+> >   PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+> >   PCI: Export find_pci_host_bridge() and rename to
+> >     pci_find_host_bridge()
+> >   PCI: Remove platform specific pci_domain_nr()
+> >   PCI: Remove pci_bus_assign_domain_nr()
+> 
 
-Use select ... if
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
 
-> ===================================================================
-> --- linux-2.6.orig/arch/powerpc/Kconfig
-> +++ linux-2.6/arch/powerpc/Kconfig
-> @@ -23,6 +23,9 @@ config ARCH_PHYS_ADDR_T_64BIT
->  config ARCH_DMA_ADDR_T_64BIT
->  	def_bool ARCH_PHYS_ADDR_T_64BIT
->  
-> +config ARCH_PCI_ADDR_T_64BIT
-> +	def_bool ARCH_PHYS_ADDR_T_64BIT
-> +
-Use select
+ One small step
+   for me ...
 
-> Index: linux-2.6/arch/sparc/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/sparc/Kconfig
-> +++ linux-2.6/arch/sparc/Kconfig
-> @@ -143,6 +143,9 @@ config GENERIC_ISA_DMA
->  	bool
->  	default y if SPARC32
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool y if SPARC64
-> +
-Use select ...
-
->  config ARCH_SUPPORTS_DEBUG_PAGEALLOC
->  	def_bool y if SPARC64
->  
-> Index: linux-2.6/arch/tile/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/tile/Kconfig
-> +++ linux-2.6/arch/tile/Kconfig
-> @@ -86,6 +86,9 @@ config ARCH_PHYS_ADDR_T_64BIT
->  config ARCH_DMA_ADDR_T_64BIT
->  	def_bool y
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool y
-> +
-Use select ...
-
-> Index: linux-2.6/arch/x86/Kconfig
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/Kconfig
-> +++ linux-2.6/arch/x86/Kconfig
-> @@ -1295,6 +1295,10 @@ config ARCH_DMA_ADDR_T_64BIT
->  	def_bool y
->  	depends on X86_64 || HIGHMEM64G
->  
-> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> +	def_bool y
-> +	depends on X86_64 || HIGHMEM64G
-Use select ...
-
-> +
->  config X86_DIRECT_GBPAGES
->  	def_bool y
->  	depends on X86_64 && !DEBUG_PAGEALLOC && !KMEMCHECK
-
-> Index: linux-2.6/include/linux/types.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/types.h
-> +++ linux-2.6/include/linux/types.h
-> @@ -146,6 +146,13 @@ typedef u64 dma_addr_t;
->  typedef u32 dma_addr_t;
->  #endif /* dma_addr_t */
->  
-> +/* A pci_bus_addr_t can hold pci bus address for the platform */
-> +#ifdef CONFIG_ARCH_PCI_BUS_ADDR_T_64BIT
-> +typedef u64 pci_bus_addr_t;
-> +#else
-> +typedef u32 pci_bus_addr_t;
-> +#endif /* pci_bus_addr_t */
-> +
-Looking att all the Kconfig logic I get the impression that
-the type of pci_bus_addr_t equals unsigned long.
-If this is correct then you can skip that and things
-gets much simpler.
-
-	Sam
