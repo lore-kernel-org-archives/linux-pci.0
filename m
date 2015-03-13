@@ -1,62 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59341 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755424AbbCDUCi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Mar 2015 15:02:38 -0500
-Subject: [PATCH 0/5] vfio-pci: Misc enhancements
-From: Alex Williamson <alex.williamson@redhat.com>
-To: alex.williamson@redhat.com, kvm@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 04 Mar 2015 13:02:37 -0700
-Message-ID: <20150304194711.26766.75450.stgit@gimli.home>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12243 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755647AbbCMAql (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:46:41 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rob Herring" <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v7 1/4] PCI: Export symbols of PCI functions
+Date: Thu, 12 Mar 2015 17:48:49 -0700
+Message-ID: <1426207732-31625-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
+References: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each of these patches stands on it's own, but they all touch the
-same file and therefore build on each other to some extent.  The first
-patch allows vfio-pci to accept a list of IDs as a module parameter,
-exactly like pci-stub.  This is really useful to get vfio-pci bound to
-devices that are intended to be used exclusively by userspace without
-more complex scripts (particuarly with modprobe.d softdep, pre
-loading).
+Export symbols of the following PCI functions so they can be referenced
+by a PCI driver compiled as a kernel loadable module:
 
-The 2nd patch allows a module option to disable VGA access if vfio-pci
-is configured with VGA support.  By itself this doesn't do much, but
-with patch 5, we add a VGA arbiter client that will opt-out devices
-from arbitration if the user cannot access VGA regions of the device.
-If you have extra GPUs in your system exclusively for use via vfio-pci
-and don't depend on VGA resource access, this opt-out can allow host
-graphics to enable DRI2 support as if the additional GPUs weren't
-there.  This depends on https://lkml.org/lkml/2015/2/24/430 or else
-vga arbiter support gets ugly (still looking for an Ack there).
+pci_common_swizzle
+pci_create_root_bus
+pci_stop_root_bus
+pci_remove_root_bus
+pci_assign_unassigned_bus_resources
+pci_fixup_irqs
 
-The other interesting feature here is idle power management.  It's
-possible that there are extra devices in a host that are used
-exclusively via vfio-pci and that those devices are not used 100% of
-the time.  To be power conscious we can put devices into a low power
-state when they're not actively being used.  This doesn't always save
-much, or necessarily any power, but we can at least try.
-
-I'll also note that the last patch makes use of pci_bus_max_busnr()
-which seems to be in flux with some current upstream patches.  I don't
-really care if we use pci_bus_max_busnr() or some replacement for it,
-so long as pci-core allows a way to determine the bus number range
-below a bridge so I can determine if there's more than one VGA device
-below it.  Comments welcome.  Thanks,
-
-Alex
-
+Signed-off-by: Ray Jui <rjui@broadcom.com>
 ---
+ drivers/pci/pci.c       |    1 +
+ drivers/pci/probe.c     |    1 +
+ drivers/pci/remove.c    |    2 ++
+ drivers/pci/setup-bus.c |    1 +
+ drivers/pci/setup-irq.c |    1 +
+ 5 files changed, 6 insertions(+)
 
-Alex Williamson (5):
-      vfio-pci: Allow PCI IDs to be specified as module options
-      vfio-pci: Add module option to disable VGA region access
-      vfio-pci: Remove warning if try-reset fails
-      vfio-pci: Move idle devices to D3hot power state
-      vfio-pci: Add VGA arbiter client
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 81f06e8..14e7f3c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
+ 	*pinp = pin;
+ 	return PCI_SLOT(dev->devfn);
+ }
++EXPORT_SYMBOL_GPL(pci_common_swizzle);
+ 
+ /**
+  *	pci_release_region - Release a PCI bar
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..f13a78a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1993,6 +1993,7 @@ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(pci_create_root_bus);
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8bd76c9..8a280e9 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+ 	/* stop the host bridge */
+ 	device_release_driver(&host_bridge->dev);
+ }
++EXPORT_SYMBOL_GPL(pci_stop_root_bus);
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+ {
+@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	/* remove the host bridge */
+ 	device_unregister(&host_bridge->dev);
+ }
++EXPORT_SYMBOL_GPL(pci_remove_root_bus);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e3e17f3..8169597 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+ }
++EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 4e2d595..95c225b 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 	for_each_pci_dev(dev)
+ 		pdev_fixup_irq(dev, swizzle, map_irq);
+ }
++EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+-- 
+1.7.9.5
 
-
- drivers/vfio/pci/vfio_pci.c |  174 +++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 157 insertions(+), 17 deletions(-)
