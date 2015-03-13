@@ -1,86 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:32880 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbbCTNLr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 09:11:47 -0400
-Received: by qgfa8 with SMTP id a8so91966611qgf.0
-        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 06:11:47 -0700 (PDT)
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:38298 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755854AbbCMAqq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:46:46 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rob Herring" <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>
+CC: Florian Fainelli <f.fainelli@gmail.com>,
+	Dmitry Torokhov <dtor@google.com>,
+	Anatol Pomazau <anatol@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
+Subject: [PATCH v7 4/4] ARM: dts: enable PCIe support for Cygnus
+Date: Thu, 12 Mar 2015 17:48:52 -0700
+Message-ID: <1426207732-31625-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
+References: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <550B8F50.3070402@linux.intel.com>
-References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com>
- <20150318221152.GA2495@google.com> <550A7F8D.90404@linux.intel.com>
- <2835680.pSPaYk3eSL@vostro.rjw.lan> <CAErSpo4r+Brx0fgpwQ=Wr_1wxBNvuAy0cJxYBSR6hBLt=d=e8Q@mail.gmail.com>
- <550B8F50.3070402@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 20 Mar 2015 08:11:26 -0500
-Message-ID: <CAErSpo7a9Pnxq77DSL3insZ_k1-Re5FixZ16sqbwd+mNbDxXig@mail.gmail.com>
-Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is
- disabled when unbinding
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	"yinghai @ kernel . org" <yinghai@kernel.org>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 19, 2015 at 10:09 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> On 2015/3/19 22:08, Bjorn Helgaas wrote:
+Add PCIe device nodes in bcm-cygnus.dtsi but keep them disabled there.
+Only enable them for bcm958300k where PCIe interfaces are populated
 
->> There are two other possibilities I can see:
->>
->> 1) Decide that a driver that captures the IRQ and then calls
->> pci_enable_device() is just broken, and fix those drivers to
->> re-capture the IRQ every time they call pci_enable_device().  I assume
->> you've looked at this already and concluded it's not practical?
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-cygnus.dtsi |   42 +++++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/bcm958300k.dts  |    8 +++++++
+ 2 files changed, 50 insertions(+)
 
-Did you look at this or not?  I don't have any idea of the scope of the problem.
+diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi b/arch/arm/boot/dts/bcm-cygnus.dtsi
+index ff5fb6a..ee0c6e4 100644
+--- a/arch/arm/boot/dts/bcm-cygnus.dtsi
++++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+@@ -90,6 +90,48 @@
+ 		status = "disabled";
+ 	};
+ 
++	pcie0: pcie@18012000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18012000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <0>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
++			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++
++		status = "disabled";
++	};
++
++	pcie1: pcie@18013000 {
++		compatible = "brcm,iproc-pcie";
++		reg = <0x18013000 0x1000>;
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
++
++		linux,pci-domain = <1>;
++
++		bus-range = <0x00 0xff>;
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
++			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
++
++		status = "disabled";
++	};
++
+ 	uart0: serial@18020000 {
+ 		compatible = "snps,dw-apb-uart";
+ 		reg = <0x18020000 0x100>;
+diff --git a/arch/arm/boot/dts/bcm958300k.dts b/arch/arm/boot/dts/bcm958300k.dts
+index f1bb36f..c9eb856 100644
+--- a/arch/arm/boot/dts/bcm958300k.dts
++++ b/arch/arm/boot/dts/bcm958300k.dts
+@@ -47,6 +47,14 @@
+ 		bootargs = "console=ttyS0,115200";
+ 	};
+ 
++	pcie0: pcie@18012000 {
++		status = "okay";
++	};
++
++	pcie1: pcie@18013000 {
++		status = "okay";
++	};
++
+ 	uart3: serial@18023000 {
+ 		status = "okay";
+ 	};
+-- 
+1.7.9.5
 
-I think in general we want drivers to start from scratch whenever they
-call pci_enable_device().  They should not assume that BARs are the
-same, IRQs are the same, etc.  If we ever want to dynamically reassign
-resources, e.g., move BARs around to accommodate new hotplugged
-devices, a path involving pci_enable_device() seems a likely route of
-having the drivers learn about resource changes.
-
->> 2) Configure the IRQ in pci_device_probe().  Then it would be
->> configured before the driver sees the device, and you could dispose of
->> it in pci_device_remove() when the driver is unbound.
-> Actually I prefer solution 2 above. The key idea is to decouple
-> IRQ resource allocation from pci_enabe/disable_device(), so irq
-> resource will be allocated just before driver binding and will
-> be released after driver unbinding.
-
-Solution 2 does have the advantage of making it simpler for driver writers.
-
-One disadvantage is that it *forces* us to do IRQ allocation, even
-though it may not be required.  There are drivers that don't need IRQs
-because they use MSI or don't need interrupts at all.  If we do IRQ
-allocation before binding the driver, and the allocation fails, these
-driver will no longer work even though they don't need the IRQs.
-
-> One issue left is the way to hook driver binding/unbinding events.
-> Currently pcibios_enable/disable_irq() are x86 specific, so I use
-> PCI notification to hook driver binding/unbinding evetns.
-> If you are OK with introducing two new weak functions
-> pcibios_enable/disable_irq() into PCI core, that's obviously
-> a clear solution, easier to maintain and may benefit other platforms
-> too in future.
->
-> So should I introduce pcibios_enable/disable_irq() into PCI core?
-
-I think it would be better to add new weak interfaces than to use
-bus_register_notifier().  New interfaces are much more explicit when
-reading the code, and their ordering is very clearly defined.
-
-Bjorn
