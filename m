@@ -1,52 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:34187 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbbCSXtj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 19:49:39 -0400
-Received: by oier21 with SMTP id r21so78750042oie.1
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 16:49:38 -0700 (PDT)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27256 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbbCMD2g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 23:28:36 -0400
+Message-ID: <55025955.3020000@huawei.com>
+Date: Fri, 13 Mar 2015 11:28:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6+d4W5wXEP8qoPN3S3tEYpFoOvg==ES922J_miisshXw@mail.gmail.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	<1425446353-30513-16-git-send-email-weiyang@linux.vnet.ibm.com>
-	<20150311135507.GA16664@google.com>
-	<20150312011517.GA5833@richard>
-	<20150319150824.GE26935@google.com>
-	<CADLM8XOFfQmfEXeqObNatGmvonFRF29RVyhhOaKaxzdYxpHoEw@mail.gmail.com>
-	<CAErSpo6+d4W5wXEP8qoPN3S3tEYpFoOvg==ES922J_miisshXw@mail.gmail.com>
-Date: Fri, 20 Mar 2015 07:49:38 +0800
-Message-ID: <CADLM8XNxRgpKFa9JE8vCge2vT9xK_4aorcku9RbCs5eP8o2kaQ@mail.gmail.com>
-Subject: Re: [PATCH V13 15/21] powerpc/powernv: Reserve additional space for
- IOV BAR according to the number of total_pe
-From: Wei Yang <weiyang.kernel@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 10/30] PCI: Introduce pci_host_bridge_list to manage
+ host bridges
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-11-git-send-email-wangyijing@huawei.com> <20150312025537.GD10949@google.com> <55018E90.9030301@huawei.com> <20150312195651.GD7346@google.com>
+In-Reply-To: <20150312195651.GD7346@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2015-03-20 1:54 GMT+08:00 Bjorn Helgaas <bhelgaas@google.com>:
-> On Thu, Mar 19, 2015 at 11:18 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
->> Oh, I thought you are not comfortable with the "Patch v12 10/21 PCI:
->> Consider additional PF's IOV BAR alignment ..."
+>>> It's a nice idea to move this test into the core.  While you're at it, why
+>>> don't you check for any overlap with the bus ranges of existing host
+>>> bridges?  For example, if we're trying to create a new host bridge to
+>>> [bus 40-7f], it should conflict with existing bridges to [bus 00-7f]
+>>> as well as to [bus 40-ff].  I think your current patch will detect the
+>>> latter conflict but not the former.
 >>
->> V14 is ready to send which is based on v4.0-rc1.
->
-> Unless I missed something, the last email in that thread [1] is from
-> you, so I think we're ready for the next iteration.
->
-> [1] http://lkml.kernel.org/r/20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com
+>> Now pci host bridge may only know its start bus number, like acpi _BBN provided,
+>> but does not limit the end bus number, Eg. two pci roots report _BBN 0x0 and 0x80,
+>> so we have two bus number resource (0, 0xff) and (0x80, 0xff), if we check it strictly,
+>> some pci scan would fail which currently scan success.
+> 
+> _BBN is not the correct source for the bridge's bus number range.  There's
+> a comment in acpi_pci_root_add() that explains why:
+> 
+>   * We need both the start and end of the downstream bus range
+>   * to interpret _CBA (MMCONFIG base address), so it really is
+>   * supposed to be in _CRS.  If we don't find it there, all we
+>   * can do is assume [_BBN-0xFF] or [0-0xFF].
+> 
+> A platform SHOULD know the start and and end bus number.  If it doesn't I
+> think it's the platform's responsibility to carve up the bus number range.
+> Maybe this can be done by trimming the range of the [bus 00-ff] bridge when
+> we discover another bridge that leads to bus 80.
 
+Currently, if platform does not know the end bus number (not provide the bus resource),
+we will update the max bus number returned by pci_scan_child_bus() to the bus resource end,
+and I think this is reasonable. I consider to introduce a flag to identify the bus resource
+which end bus number is undefined, then we could force all pci_scan_root_bus()  etc. callers
+to provide the bus resource, and we could process the bus resource end according the bus resource flag.
+Also then we could reduce the bus argument which is the same as busn_res->start.
+I would try to provide draft patch, then we could discuss it more clearly.
 
-Great~~~ I thought you didn't get a chance to read it.
+Thanks!
+Yijing.
 
-Will send out a v14 ASAP.
+> 
+> .
+> 
 
 
 -- 
-Richard Yang
-Help You, Help Me
+Thanks!
+Yijing
+
