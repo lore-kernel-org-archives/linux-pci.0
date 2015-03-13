@@ -1,79 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from asavdk4.altibox.net ([109.247.116.15]:57326 "EHLO
-	asavdk4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbbC1ITJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 04:19:09 -0400
-Date: Sat, 28 Mar 2015 09:18:43 +0100
-From: Sam Ravnborg <sam@ravnborg.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-Message-ID: <20150328081843.GA27114@ravnborg.org>
-References: <5514391F.2030300@oracle.com>
- <CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
- <551495EE.20201@oracle.com>
- <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
- <CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
- <20150328010532.GA15897@ravnborg.org>
- <CAE9FiQVHwR7ge-hFXq=xqOTZEzHdm5AqiwFC3HEcrTKxeDcePg@mail.gmail.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:18623 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbbCMDTn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 23:19:43 -0400
+Message-ID: <55025730.40504@huawei.com>
+Date: Fri, 13 Mar 2015 11:19:12 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVHwR7ge-hFXq=xqOTZEzHdm5AqiwFC3HEcrTKxeDcePg@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 06/30] PCI: Combine PCI domain and bus number in u32
+ arg
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-7-git-send-email-wangyijing@huawei.com> <20150312012946.GA10949@google.com> <55018330.5050002@huawei.com> <20150312194927.GC7346@google.com>
+In-Reply-To: <20150312194927.GC7346@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >>  config ARM_THUMB
-> >>       bool "Support Thumb user binaries" if !CPU_THUMBONLY
-> >>       depends on CPU_ARM720T || CPU_ARM740T || CPU_ARM920T || CPU_ARM922T || \
-> >> Index: linux-2.6/arch/arm64/Kconfig
-> >> ===================================================================
-> >> --- linux-2.6.orig/arch/arm64/Kconfig
-> >> +++ linux-2.6/arch/arm64/Kconfig
-> >> @@ -125,6 +125,9 @@ config HAVE_GENERIC_RCU_GUP
-> >>  config ARCH_DMA_ADDR_T_64BIT
-> >>       def_bool y
-> >>
-> >> +config ARCH_PCI_BUS_ADDR_T_64BIT
-> >> +     def_bool y
-> >> +
-> > Use select
-> ...
+>> struct pci_scan_info {
+>> 	int bus;
+>> 	struct device *parent;
+>> 	struct pci_ops *ops;
+>> 	void *sysdata;
+>> 	struct list_head *resource;
+>> 	int domain;
+>> 	struct pci_host_bridge_ops;
+>> }
+>>
+>> Do you like this one or keep it like now ?
+>>
+>> pci_scan_root_bus(struct device *parent, int domain, int bus,
+>> 		struct pci_ops *ops, void *sysdata, struct list_head *resources, struct pci_host_bridge_ops *ops)
 > 
-> I was trying to keep the style to be consistent with old one in each Kconfig.
+> I don't think reducing the number of arguments is a good argument for
+> squashing some of them together.
 > 
-> So do we just need to make sure new added lines to use new style?
-
-Use new style select everywhere.
-That could maybe in the future trigger someone to update the different arch
-configs to use select for the remaining bits.
-
-> >> Index: linux-2.6/include/linux/types.h
-> >> ===================================================================
-> >> --- linux-2.6.orig/include/linux/types.h
-> >> +++ linux-2.6/include/linux/types.h
-> >> @@ -146,6 +146,13 @@ typedef u64 dma_addr_t;
-> >>  typedef u32 dma_addr_t;
-> >>  #endif /* dma_addr_t */
-> >>
-> >> +/* A pci_bus_addr_t can hold pci bus address for the platform */
-> >> +#ifdef CONFIG_ARCH_PCI_BUS_ADDR_T_64BIT
-> >> +typedef u64 pci_bus_addr_t;
-> >> +#else
-> >> +typedef u32 pci_bus_addr_t;
-> >> +#endif /* pci_bus_addr_t */
-> >> +
-> > Looking att all the Kconfig logic I get the impression that
-> > the type of pci_bus_addr_t equals unsigned long.
-> > If this is correct then you can skip that and things
-> > gets much simpler.
+> I don't really want to add a structure like that because it adds management
+> complexity for all the callers because it contains per-bridge things (bus,
+> parent, domain, resource, sysdata).  Things like struct pci_ops and struct
+> pci_host_bridge_ops are much simpler because drivers can statically
+> allocate a single copy and use it for multiple devices.
 > 
-> For x86 32bit with PAE support, we could use 64bit for bus address.
-> but unsigned long is 32bit.
+> I think it might make sense to put the struct pci_ops pointer inside struct
+> pci_host_bridge_ops.  That would get rid of one of the arguments.
+> 
+> You might also be able to get rid of the "bus" argument, since the caller
+> should be passing an IORESOURCE_BUS resource in the resource list, and
+> "bus" should be the same as res->start.
 
-Missed that part - OK.
+I think this make sense, I will try to find a better solution.
 
-	Sam
+Thanks!
+Yijing.
+
+> 
+> Bjorn
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
