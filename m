@@ -1,139 +1,248 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39810 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066AbbC3Hxi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 03:53:38 -0400
-Date: Mon, 30 Mar 2015 09:53:31 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330075331.GA17823@kroah.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-2-git-send-email-mst@redhat.com>
- <20150329204047.GA5902@kroah.com>
- <20150330083707-mutt-send-email-mst@redhat.com>
- <20150330065522.GA10105@kroah.com>
- <20150330085617-mutt-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150330085617-mutt-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Fabian Frederick <fabf@skynet.be>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Fabian Frederick <fabf@skynet.be>,
+	Dan Williams <dan.j.williams@intel.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Hartmut Knaack <knaack.h@gmx.de>,
+	Lars-Peter Clausen <lars@metafoo.de>,
+	Peter Meerwald <pmeerw@pmeerw.net>, linux-ide@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-crypto@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pm@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-tegra@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-edac@vger.kernel.org, linux-gpio@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, lm-sensors@lm-sensors.org,
+	linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-media@vger.kernel.org, kernel@stlinux.com,
+	linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-rpi-kernel@lists.infradead.org, linux-spi@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-serial@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-pwm@vger.kernel.org,
+	virtualization@lists.linux-foundation.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH 00/35 linux-next] constify of_device_id array
+Date: Mon, 16 Mar 2015 20:17:06 +0100
+Message-Id: <1426533469-25458-1-git-send-email-fabf@skynet.be>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 09:15:26AM +0200, Michael S. Tsirkin wrote:
-> On Mon, Mar 30, 2015 at 08:55:22AM +0200, Greg KH wrote:
-> > On Mon, Mar 30, 2015 at 08:48:44AM +0200, Michael S. Tsirkin wrote:
-> > > On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
-> > > > On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
-> > > > > The macros in pci_ids.h are pretty useful for userspace
-> > > > > using the pci sysfs interface.
-> > > > > At the moment userspace is forced to duplicate these macros
-> > > > > (e.g. QEMU does this), it is better to expose them in
-> > > > > /usr/include/linux/pci_ids.h so everyone can just include
-> > > > > this header.
-> > > > > 
-> > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > > ---
-> > > > >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
-> > > > >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
-> > > > 
-> > > > No, please use the pci ids file from the upstream pci id database
-> > > > instead.
-> > > 
-> > > 
-> > > >  We shouldn't be putting these all in one file,
-> > > 
-> > > pci.txt says:
-> > > 	Please add PCI_VENDOR_ID_xxx for vendors
-> > > You want to change this policy, and get rid of
-> > > vendor ids in pci_ids.h completely?
-> > 
-> > Please read the top of pci_ids.h.  It hasn't had new ids added to it in
-> > a long time.
-> 
-> OK, looks like pci.txt should be fixed then.
+This small patchset adds const to of_device_id arrays in
+drivers branch.
 
-Please send a patch.  As the original PCI kernel maintainer, I don't
-think I ever noticed pci.txt.  It was last "updated" in 2006...
+Fabian Frederick (35):
+  ata: constify of_device_id array
+  regulator: constify of_device_id array
+  thermal: constify of_device_id array
+  tty/hvc_opal: constify of_device_id array
+  tty: constify of_device_id array
+  power: constify of_device_id array
+  char: constify of_device_id array
+  dma: constify of_device_id array
+  iio: constify of_device_id array
+  misc: constify of_device_id array
+  usb: gadget: constify of_device_id array
+  mtd: constify of_device_id array
+  w1: constify of_device_id array
+  ide: pmac: constify of_device_id array
+  spi: constify of_device_id array
+  video: constify of_device_id array
+  coresight-replicator: constify of_device_id array
+  macintosh: constify of_device_id array
+  virtio_mmio: constify of_device_id array
+  swim3: constify of_device_id array
+  mfd: constify of_device_id array
+  soc: ti: constify of_device_id array
+  [media]: constify of_device_id array
+  Input: constify of_device_id array
+  PCI: constify of_device_id array
+  hwmon: constify of_device_id array
+  reset: sti: constify of_device_id array
+  uio: constify of_device_id array
+  gpu: constify of_device_id array
+  devfreq: constify of_device_id array
+  EDAC: constify of_device_id array
+  clk: constify of_device_id array
+  mmc: constify of_device_id array
+  Staging: octeon: constify of_device_id array
+  pinctrl: constify of_device_id array
 
-> > Why would userspace need the pci id of anything?
-> 
-> Look at how they are used e.g. by QEMU, seabios, gpxe.
-> People want to say e.g. "find all network class devices".
+ drivers/ata/pata_macio.c                     | 2 +-
+ drivers/ata/pata_mpc52xx.c                   | 2 +-
+ drivers/ata/pata_octeon_cf.c                 | 2 +-
+ drivers/ata/pata_of_platform.c               | 2 +-
+ drivers/ata/sata_fsl.c                       | 2 +-
+ drivers/ata/sata_mv.c                        | 2 +-
+ drivers/ata/sata_rcar.c                      | 2 +-
+ drivers/block/swim3.c                        | 2 +-
+ drivers/char/hw_random/pasemi-rng.c          | 2 +-
+ drivers/char/hw_random/powernv-rng.c         | 2 +-
+ drivers/char/hw_random/ppc4xx-rng.c          | 2 +-
+ drivers/char/ipmi/ipmi_si_intf.c             | 4 ++--
+ drivers/char/xillybus/xillybus_of.c          | 2 +-
+ drivers/clk/clk-palmas.c                     | 2 +-
+ drivers/clk/st/clkgen-fsyn.c                 | 2 +-
+ drivers/clk/st/clkgen-mux.c                  | 8 ++++----
+ drivers/clk/st/clkgen-pll.c                  | 4 ++--
+ drivers/clk/ti/clk-dra7-atl.c                | 2 +-
+ drivers/clk/ti/clockdomain.c                 | 2 +-
+ drivers/clk/versatile/clk-vexpress-osc.c     | 2 +-
+ drivers/coresight/coresight-replicator.c     | 2 +-
+ drivers/devfreq/event/exynos-ppmu.c          | 2 +-
+ drivers/devfreq/tegra-devfreq.c              | 2 +-
+ drivers/dma/bestcomm/bestcomm.c              | 4 ++--
+ drivers/dma/k3dma.c                          | 2 +-
+ drivers/dma/mmp_pdma.c                       | 2 +-
+ drivers/dma/mmp_tdma.c                       | 2 +-
+ drivers/dma/mpc512x_dma.c                    | 2 +-
+ drivers/dma/mv_xor.c                         | 2 +-
+ drivers/dma/sirf-dma.c                       | 2 +-
+ drivers/dma/sun6i-dma.c                      | 2 +-
+ drivers/edac/highbank_mc_edac.c              | 2 +-
+ drivers/edac/mpc85xx_edac.c                  | 4 ++--
+ drivers/edac/ppc4xx_edac.c                   | 2 +-
+ drivers/edac/synopsys_edac.c                 | 2 +-
+ drivers/gpio/gpio-mpc8xxx.c                  | 2 +-
+ drivers/gpio/gpio-octeon.c                   | 2 +-
+ drivers/gpio/gpio-tz1090-pdc.c               | 2 +-
+ drivers/gpio/gpio-tz1090.c                   | 2 +-
+ drivers/gpio/gpio-zynq.c                     | 2 +-
+ drivers/gpu/drm/armada/armada_crtc.c         | 2 +-
+ drivers/gpu/drm/exynos/exynos_drm_dsi.c      | 2 +-
+ drivers/gpu/drm/exynos/exynos_hdmi.c         | 2 +-
+ drivers/gpu/drm/exynos/exynos_mixer.c        | 2 +-
+ drivers/gpu/drm/panel/panel-ld9040.c         | 2 +-
+ drivers/gpu/drm/panel/panel-s6e8aa0.c        | 2 +-
+ drivers/gpu/drm/sti/sti_dvo.c                | 2 +-
+ drivers/gpu/drm/sti/sti_hqvdp.c              | 2 +-
+ drivers/gpu/drm/tilcdc/tilcdc_drv.c          | 4 ++--
+ drivers/gpu/drm/tilcdc/tilcdc_panel.c        | 2 +-
+ drivers/gpu/drm/tilcdc/tilcdc_slave.c        | 4 ++--
+ drivers/gpu/drm/tilcdc/tilcdc_tfp410.c       | 4 ++--
+ drivers/gpu/host1x/dev.c                     | 2 +-
+ drivers/gpu/host1x/mipi.c                    | 2 +-
+ drivers/hwmon/pwm-fan.c                      | 2 +-
+ drivers/hwmon/vexpress.c                     | 2 +-
+ drivers/ide/pmac.c                           | 2 +-
+ drivers/iio/common/ssp_sensors/ssp_dev.c     | 2 +-
+ drivers/input/misc/palmas-pwrbutton.c        | 2 +-
+ drivers/input/misc/regulator-haptic.c        | 2 +-
+ drivers/input/misc/tps65218-pwrbutton.c      | 2 +-
+ drivers/input/touchscreen/ar1021_i2c.c       | 2 +-
+ drivers/macintosh/mediabay.c                 | 2 +-
+ drivers/macintosh/rack-meter.c               | 2 +-
+ drivers/media/i2c/adv7604.c                  | 2 +-
+ drivers/media/platform/fsl-viu.c             | 2 +-
+ drivers/media/platform/soc_camera/rcar_vin.c | 2 +-
+ drivers/media/rc/gpio-ir-recv.c              | 2 +-
+ drivers/media/rc/ir-hix5hd2.c                | 2 +-
+ drivers/media/rc/st_rc.c                     | 2 +-
+ drivers/mfd/hi6421-pmic-core.c               | 2 +-
+ drivers/mfd/rk808.c                          | 2 +-
+ drivers/mfd/twl4030-power.c                  | 2 +-
+ drivers/misc/carma/carma-fpga-program.c      | 2 +-
+ drivers/misc/carma/carma-fpga.c              | 2 +-
+ drivers/misc/lis3lv02d/lis3lv02d_i2c.c       | 2 +-
+ drivers/misc/lis3lv02d/lis3lv02d_spi.c       | 2 +-
+ drivers/misc/sram.c                          | 2 +-
+ drivers/mmc/host/mmc_spi.c                   | 2 +-
+ drivers/mmc/host/wmt-sdmmc.c                 | 2 +-
+ drivers/mtd/devices/docg3.c                  | 2 +-
+ drivers/mtd/maps/physmap_of.c                | 4 ++--
+ drivers/mtd/nand/mpc5121_nfc.c               | 2 +-
+ drivers/mtd/spi-nor/fsl-quadspi.c            | 2 +-
+ drivers/pci/host/pci-rcar-gen2.c             | 2 +-
+ drivers/pci/host/pcie-xilinx.c               | 2 +-
+ drivers/pinctrl/bcm/pinctrl-bcm2835.c        | 2 +-
+ drivers/pinctrl/mediatek/pinctrl-mt8135.c    | 2 +-
+ drivers/pinctrl/mediatek/pinctrl-mt8173.c    | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-armada-370.c   | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-armada-375.c   | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-armada-38x.c   | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-armada-39x.c   | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-armada-xp.c    | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-kirkwood.c     | 2 +-
+ drivers/pinctrl/mvebu/pinctrl-orion.c        | 2 +-
+ drivers/pinctrl/pinctrl-as3722.c             | 2 +-
+ drivers/pinctrl/pinctrl-at91.c               | 4 ++--
+ drivers/pinctrl/pinctrl-palmas.c             | 2 +-
+ drivers/pinctrl/pinctrl-single.c             | 4 ++--
+ drivers/pinctrl/pinctrl-st.c                 | 2 +-
+ drivers/pinctrl/pinctrl-tz1090-pdc.c         | 2 +-
+ drivers/pinctrl/pinctrl-tz1090.c             | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun4i-a10.c    | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun5i-a10s.c   | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun5i-a13.c    | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun6i-a31-r.c  | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun6i-a31.c    | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun6i-a31s.c   | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun7i-a20.c    | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun8i-a23-r.c  | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun8i-a23.c    | 2 +-
+ drivers/pinctrl/sunxi/pinctrl-sun9i-a80.c    | 2 +-
+ drivers/pinctrl/vt8500/pinctrl-vt8500.c      | 2 +-
+ drivers/pinctrl/vt8500/pinctrl-wm8505.c      | 2 +-
+ drivers/pinctrl/vt8500/pinctrl-wm8650.c      | 2 +-
+ drivers/pinctrl/vt8500/pinctrl-wm8750.c      | 2 +-
+ drivers/pinctrl/vt8500/pinctrl-wm8850.c      | 2 +-
+ drivers/power/charger-manager.c              | 2 +-
+ drivers/power/reset/at91-poweroff.c          | 2 +-
+ drivers/power/reset/at91-reset.c             | 4 ++--
+ drivers/power/reset/hisi-reboot.c            | 2 +-
+ drivers/power/reset/keystone-reset.c         | 2 +-
+ drivers/power/reset/st-poweroff.c            | 2 +-
+ drivers/power/reset/syscon-reboot.c          | 2 +-
+ drivers/power/reset/vexpress-poweroff.c      | 2 +-
+ drivers/power/reset/xgene-reboot.c           | 2 +-
+ drivers/power/tps65090-charger.c             | 2 +-
+ drivers/regulator/palmas-regulator.c         | 2 +-
+ drivers/reset/sti/reset-stih407.c            | 2 +-
+ drivers/reset/sti/reset-stih415.c            | 2 +-
+ drivers/reset/sti/reset-stih416.c            | 2 +-
+ drivers/soc/ti/knav_dma.c                    | 2 +-
+ drivers/soc/ti/knav_qmss_queue.c             | 2 +-
+ drivers/spi/spi-mpc512x-psc.c                | 2 +-
+ drivers/spi/spi-octeon.c                     | 2 +-
+ drivers/spi/spi-st-ssc4.c                    | 2 +-
+ drivers/staging/octeon-usb/octeon-hcd.c      | 2 +-
+ drivers/staging/octeon/ethernet.c            | 2 +-
+ drivers/thermal/st/st_thermal_memmap.c       | 2 +-
+ drivers/thermal/st/st_thermal_syscfg.c       | 2 +-
+ drivers/tty/hvc/hvc_opal.c                   | 2 +-
+ drivers/tty/serial/apbuart.c                 | 2 +-
+ drivers/tty/serial/cpm_uart/cpm_uart_core.c  | 2 +-
+ drivers/tty/serial/fsl_lpuart.c              | 2 +-
+ drivers/tty/serial/mpc52xx_uart.c            | 2 +-
+ drivers/tty/serial/mxs-auart.c               | 2 +-
+ drivers/tty/serial/of_serial.c               | 4 ++--
+ drivers/tty/serial/pmac_zilog.c              | 2 +-
+ drivers/tty/serial/pxa.c                     | 2 +-
+ drivers/tty/serial/serial-tegra.c            | 2 +-
+ drivers/tty/serial/sirfsoc_uart.c            | 2 +-
+ drivers/tty/serial/st-asc.c                  | 2 +-
+ drivers/tty/serial/uartlite.c                | 2 +-
+ drivers/tty/serial/ucc_uart.c                | 2 +-
+ drivers/tty/serial/xilinx_uartps.c           | 2 +-
+ drivers/uio/uio_pdrv_genirq.c                | 2 +-
+ drivers/usb/gadget/udc/pxa27x_udc.c          | 2 +-
+ drivers/video/backlight/gpio_backlight.c     | 2 +-
+ drivers/video/backlight/pwm_bl.c             | 2 +-
+ drivers/video/fbdev/fsl-diu-fb.c             | 2 +-
+ drivers/video/fbdev/grvga.c                  | 2 +-
+ drivers/video/fbdev/mb862xx/mb862xxfbdrv.c   | 2 +-
+ drivers/video/fbdev/ocfb.c                   | 2 +-
+ drivers/video/fbdev/platinumfb.c             | 2 +-
+ drivers/video/fbdev/xilinxfb.c               | 2 +-
+ drivers/virtio/virtio_mmio.c                 | 2 +-
+ drivers/w1/masters/mxc_w1.c                  | 2 +-
+ drivers/w1/masters/omap_hdq.c                | 2 +-
+ drivers/w1/masters/w1-gpio.c                 | 2 +-
+ 170 files changed, 185 insertions(+), 185 deletions(-)
 
-Then use libpci.
+-- 
+2.1.0
 
-> >  Again, just use
-> > libpci, isn't it fast enough?  Don't duplicate existing logic.
-> 
-> This really depends on whether you want something else that
-> libpci provides. But if I just want e.g. standard class IDs,
-> I don't want to depend on libpci.
-
-Why not?  Don't duplicate things that already are there just for this
-very use.
-
-Don't make us do kernel changes just because you don't want to depend on
-either of the two different userspace packages that provide this
-information in a standard way for userspace.  Your system will have one
-of those two packages in it, depending on it isn't a "burden" at all.
-
-> > Or use the hw database that libudev exports, which is already on your
-> > machine and exports all of the pci ids from libpci directly.
-> 
-> Same argument really.
-
-Because you don't want to depend on existing packages, doesn't mean we
-have to accept kernel changes and maintain them for forever, as you are
-now creating a new api that we will have to keep up to date and correct
-for all time.
-
-Again, depend on the packages that are already doing this work please.
-
-> > > Standard class IDs are even sillier to duplicate.
-> > 
-> > Again, why does userspace need this?
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> 
-> Mostly because it has a userspace driver, or is emulating
-> a hardware device.
-> 
-> For example, the VFIO driver uses the PCI hardware formats
-> as it's userspace/kernel interface. This means I need
-> a ton of PCI constants in userspace. Most of them are
-> already in pci_regs.h, and so exported. No problem here.
-> 
-> However class and prog interface IDs are not, they
-> are in pci_ids.h
-> 
-> Would you support splitting pci_ids.h to
-> include/uapi/linux/pci_ids.h with standard headers
-> and include/linux/pci_ids.h with device/vendor
-> specific ones?
-
-No, again, please use the "standard" Linux apis for these, don't
-duplicate work and make people do more work over the long-term than is
-needed.
-
-thanks,
-
-greg k-h
