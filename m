@@ -1,163 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:34046 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668AbbCLDdJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:33:09 -0400
-Received: by iecsl2 with SMTP id sl2so12809671iec.1
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:33:08 -0700 (PDT)
-Date: Wed, 11 Mar 2015 22:33:05 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+Received: from mout.kundenserver.de ([212.227.126.130]:62571 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933795AbbCPUBS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2015 16:01:18 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH v6 21/30] PCI: Introduce pci_bus_child_max_busnr()
-Message-ID: <20150312033305.GH10949@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-22-git-send-email-wangyijing@huawei.com>
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	kernel@stlinux.com, linux-pci@vger.kernel.org,
+	Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: Re: [PATCH v2 4/5] PCI: designware: Add disable IO support
+Date: Mon, 16 Mar 2015 21:00:42 +0100
+Message-ID: <3714853.Vuc23EfWdL@wuerfel>
+In-Reply-To: <582D947C-1229-4DD9-BC82-812D1560C49E@codeaurora.org>
+References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org> <1426515635-9466-5-git-send-email-gabriel.fernandez@linaro.org> <582D947C-1229-4DD9-BC82-812D1560C49E@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-22-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:18AM +0800, Yijing Wang wrote:
-> Sometimes, we need to know the highest reserved
-> busnr for children bus. Because parent's
-> bus->busn_res could have padding in it.
-> This function return the max child busnr as
-> pci_scan_child_bus().
-
-I'm not convinced about this one.  The fact that it's only used by parisc
-lba_pci.c and acpiphp makes me suspicious that either they're doing
-something funny, or other drivers *should* be using it, too.
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
->  drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
->  include/linux/pci.h                |    2 +-
->  3 files changed, 27 insertions(+), 31 deletions(-)
+On Monday 16 March 2015 13:00:51 Kumar Gala wrote:
+> On Mar 16, 2015, at 9:20 AM, Gabriel FERNANDEZ <gabriel.fernandez@st.com> wrote:
 > 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index bcb90e4..84f2584 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->  	acpi_unlock_hp_context();
->  }
->  
-> -/**
-> - * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
-> - * @bus: bus to start search with
-> - */
-> -static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
-> -{
-> -	struct pci_bus *tmp;
-> -	unsigned char max, n;
-> -
-> -	/*
-> -	 * pci_bus_max_busnr will return the highest
-> -	 * reserved busnr for all these children.
-> -	 * that is equivalent to the bus->subordinate
-> -	 * value.  We don't want to use the parent's
-> -	 * bus->subordinate value because it could have
-> -	 * padding in it.
-> -	 */
-> -	max = bus->busn_res.start;
-> -
-> -	list_for_each_entry(tmp, &bus->children, node) {
-> -		n = pci_bus_max_busnr(tmp);
-> -		if (n > max)
-> -			max = n;
-> -	}
-> -	return max;
-> -}
-> -
->  static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
->  {
->  	struct acpiphp_func *func;
-> @@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
->  	LIST_HEAD(add_list);
->  
->  	acpiphp_rescan_slot(slot);
-> -	max = acpiphp_max_busnr(bus);
-> +	max = pci_bus_child_max_busnr(bus);
->  	for (pass = 0; pass < 2; pass++) {
->  		list_for_each_entry(dev, &bus->devices, bus_list) {
->  			if (PCI_SLOT(dev->devfn) != slot->device)
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index c49eec1..0001896 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
->   * Given a PCI bus, returns the highest PCI bus number present in the set
->   * including the given PCI bus and its list of child PCI buses.
->   */
-> -unsigned char pci_bus_max_busnr(struct pci_bus *bus)
-> +static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
->  {
->  	struct pci_bus *tmp;
->  	unsigned char max, n;
-> @@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
->  	}
->  	return max;
->  }
-> -EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
-> +
-> +unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
-> +{
-> +	struct pci_bus *tmp;
-> +	unsigned char max, n;
-> +
-> +	/*
-> +	 * pci_bus_max_busnr will return the highest
-> +	 * reserved busnr for all these children.
-> +	 * that is equivalent to the bus->subordinate
-> +	 * value.  We don't want to use the parent's
-> +	 * bus->subordinate value because it could have
-> +	 * padding in it.
-> +	 */
-> +	max = bus->busn_res.start;
-> +
-> +	list_for_each_entry(tmp, &bus->children, node) {
-> +		n = pci_bus_max_busnr(tmp);
-> +		if (n > max)
-> +			max = n;
-> +	}
-> +	return max;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
->  
->  #ifdef CONFIG_HAS_IOMEM
->  void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index cfaf217..261b8de 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1181,7 +1181,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->  		  void *userdata);
->  int pci_cfg_space_size(struct pci_dev *dev);
-> -unsigned char pci_bus_max_busnr(struct pci_bus *bus);
-> +unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
->  void pci_setup_bridge(struct pci_bus *bus);
->  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
->  					 unsigned long type);
-> -- 
-> 1.7.1
+> > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
+> > But in these SoCs PCIe IP doesn't support IO.
+> > 
+> > This patch adds the possibility to disable it through
+> > a DT property, by creating an empty IO window and by
+> > removing PCI_COMMAND_IO from the setup register.
+> > 
+> > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+> > ---
+> > .../devicetree/bindings/pci/designware-pcie.txt    |  2 ++
+> > drivers/pci/host/pcie-designware.c                 | 24 ++++++++++++++++++++--
+> > drivers/pci/host/pcie-designware.h                 |  1 +
+> > 3 files changed, 25 insertions(+), 2 deletions(-)
 > 
+> Why not just update the code such that if the ranges doesn’t have an IO
+> space rather than introducing a new DT property?
+
+I suspect we can simplify this now by changing over the designware PCI
+code from pci_common_init_dev to calling pci_scan_root_bus() in the
+same way that pci-versatile.c does. This would also clean up some
+other areas of the driver and let you do proper error handling
+in the probe.
+
+	Arnd
