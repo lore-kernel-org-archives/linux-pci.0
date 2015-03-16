@@ -1,72 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:13387 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238AbbCZBT1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 21:19:27 -0400
-Message-ID: <55135E83.3040804@huawei.com>
-Date: Thu, 26 Mar 2015 09:18:59 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52203 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752080AbbCPMOM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Mar 2015 08:14:12 -0400
+Date: Mon, 16 Mar 2015 13:14:06 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Fam Zheng <famz@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, yhlu.kernel.send@gmail.com
+Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
+Message-ID: <20150316062407-mutt-send-email-mst@redhat.com>
+References: <1426137682-12287-1-git-send-email-famz@redhat.com>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@vger.kernel.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com> <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com> <55024D35.6050509@huawei.com> <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com> <20150313140132.GH5378@l.oracle.com> <CAErSpo69ytCxBK5AD79Nz05wy=GwzcOGV7WkiKFxpLDH4wtJXw@mail.gmail.com> <20150325192331.GG25884@l.oracle.com>
-In-Reply-To: <20150325192331.GG25884@l.oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426137682-12287-1-git-send-email-famz@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>>> That seems OK to me.  Probably still wrong, but no worse than it was before.
->>>
->>> Interesting. The mechanism for PCI passthrough can either synthesize
->>> and PCI bus number starting at zero (so first device is always 0:0:0.0)
->>> or it can replicate the backend PCI topology. That means you
->>> could have segment values passed in, so: ab:ff:00.1). I've to admin
->>> I hadn't tried the 'physical' replication on an machine with
->>> domains (err, segments).
->>>
->>> Is there an git tree with this so I can just try it out?
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
->> pci/enumeration-yw6 has similar code (it exports the single
+On Thu, Mar 12, 2015 at 01:21:22PM +0800, Fam Zheng wrote:
+> If the device doesn't support shutdown, disabling interrupts may cause
+> trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
+> after we disable MSI-X, futher notifications from device will be
+> delivered to IRQ, which is unexpected.
+
+
+> This IRQ will not be cleared, and
+> may prevent us from making progress, by keep triggering interrupts.
+
+I would say:
+	Since there's no handler, the interrupt line will never be cleared,
+	causing a deadlock.
+
 > 
-> I presume now it is bjorn/pci/enumeration-yw8 ? Going to test this out
-> this week.
+> Signed-off-by: Fam Zheng <famz@redhat.com>
 
-Yes, it's the latest version. thanks!
+However, see below:
 
->> busn_resource and makes xen use it).  That should be functionally
->> identical to what v4.0-rc1 does.
->>
->> Yijing hasn't posted the static busn_res proposal above yet, so I
->> don't have a branch with that in it.
->>
->> Bjorn
+> ---
+>  drivers/pci/pci-driver.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> .
-> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3cb2210..fb29c96 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
+>  
+>  	pm_runtime_resume(dev);
+>  
+> -	if (drv && drv->shutdown)
+> +	if (drv && drv->shutdown) {
+>  		drv->shutdown(pci_dev);
+> -	pci_msi_shutdown(pci_dev);
+> -	pci_msix_shutdown(pci_dev);
+> +		pci_msi_shutdown(pci_dev);
+> +		pci_msix_shutdown(pci_dev);
+> +	}
+>  
+
+So the following bus reset will disable msi anyway,
+IMHO there's no need to do it in software.
+kexec is more interesting. This is an attempt to leave
+device in a consistent state:
+
+	commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+	Author: Yinghai Lu <yhlu.kernel.send@gmail.com>
+	Date:   Wed Apr 23 14:58:09 2008 -0700
+	    pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
+
+but arguably, it's better to disable msi/msix when kexec
+starts - for example, kexec might run after a crash (kdump)
+and shutdown callbacks are not invoked in that case.
 
 
--- 
-Thanks!
-Yijing
+The reason this does not trigger for MPT is because
+it has an intx handler so that gets invoked.
+
+So here's my proposal:
+- for 4.0, let's just do a virtio specific work-around,
+  this seems safer.
+- for 4.1, let's disable msi/msix first thing on
+  kexec startup, before driver probe.
+
+I'll post both patches shortly.
+
+>  #ifdef CONFIG_KEXEC
+>  	/*
+> -- 
+> 1.9.3
+
+
+
 
