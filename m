@@ -1,38 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:34402 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756110AbbCSRyy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 13:54:54 -0400
-Received: by qcaz10 with SMTP id z10so73287200qca.1
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 10:54:53 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([58.251.152.64]:4343 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651AbbCPBse (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Mar 2015 21:48:34 -0400
+Message-ID: <5506365E.6020704@huawei.com>
+Date: Mon, 16 Mar 2015 09:48:14 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CADLM8XOFfQmfEXeqObNatGmvonFRF29RVyhhOaKaxzdYxpHoEw@mail.gmail.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1425446353-30513-16-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150311135507.GA16664@google.com> <20150312011517.GA5833@richard>
- <20150319150824.GE26935@google.com> <CADLM8XOFfQmfEXeqObNatGmvonFRF29RVyhhOaKaxzdYxpHoEw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 19 Mar 2015 12:54:33 -0500
-Message-ID: <CAErSpo6+d4W5wXEP8qoPN3S3tEYpFoOvg==ES922J_miisshXw@mail.gmail.com>
-Subject: Re: [PATCH V13 15/21] powerpc/powernv: Reserve additional space for
- IOV BAR according to the number of total_pe
-To: Wei Yang <weiyang.kernel@gmail.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Liviu Dudau <liviu@dudau.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Arnd Bergmann <arnd@arndb.de>,
+	"Geert Uytterhoeven" <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 00/30] Refine PCI scan interfaces and make generic
+ pci host bridge
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <20150312212306.GH7346@google.com> <20150313113156.GA4739@bart.dudau.co.uk>
+In-Reply-To: <20150313113156.GA4739@bart.dudau.co.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 19, 2015 at 11:18 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
-> Oh, I thought you are not comfortable with the "Patch v12 10/21 PCI:
-> Consider additional PF's IOV BAR alignment ..."
->
-> V14 is ready to send which is based on v4.0-rc1.
+On 2015/3/13 19:31, Liviu Dudau wrote:
+> On Thu, Mar 12, 2015 at 04:23:06PM -0500, Bjorn Helgaas wrote:
+>> On Mon, Mar 09, 2015 at 10:33:57AM +0800, Yijing Wang wrote:
+>>> ...
+>>> Yijing Wang (29):
+>>>   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+>>>   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+>>>   sparc/PCI: Claim bus resources before pci_bus_add_devices()
+>>
+>> I put the above patches plus a cleanup patch on my pci/enumeration branch.
+>> Please rebase your next revision to that.  If there's anything else
+>> non-controversial that we can pull in to chip away at this, let me know.
+> 
+> Hi Bjorn and Yijing,
+> 
+> Sorry for not providing feedback earlier on this series (or any previous ones),
+> I'm just crawling out from under a rock of doing graphics drivers :)
+> 
+> The patch ripping out pci_bus_add_devices() from pci_scan_root_bus() misses out
+> the users of that function from drivers/pci/host. If Yijing is going to refresh
+> the series it is probably worth starting with adding back the call into pcie-xilinx.c
+> and pci-versatile.c.
 
-Unless I missed something, the last email in that thread [1] is from
-you, so I think we're ready for the next iteration.
+Hi Liviu, thanks for your comment. I would add pci_bus_add_devices() for pci-versatile.c,
+But for pcie-xilinx.c and other host drivers used for arm32, we do not need to add
+pci_bus_add_devices() for them, because in arm32 pci enumeration, another pci_bus_add_devices()
+would be called in pci_common_init_dev();
 
-[1] http://lkml.kernel.org/r/20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com
+for arm32 pci enumeration:
+pci_common_init_dev()
+   pcibios_init_hw()
+       hw->scan/pci_scan_root_bus()
+   pci_bus_size_bridges()
+   pci_bus_assign_resources()
+   pci_bus_add_devices()
+
+Is there something I have missed ?
+
+Thanks!
+Yijing.
+
+> 
+> Will try to review (and test) the rest of the series soon.
+> 
+> Best regards,
+> Liviu
+> 
+>>
+>>>   PCI: Export busn_resource to drivers/pci
+>>>   PCI: Remove deprecated pci_scan_bus_parented()
+>>>   PCI: Combine PCI domain and bus number in u32 arg
+>>>   PCI: Pass PCI domain number combined with root bus number
+>>>   PCI: Introduce pci_host_assign_domain_nr() to assign domain
+>>>   PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+>>>   PCI: Introduce pci_host_bridge_list to manage host bridges
+>>>   PCI: Save sysdata in pci_host_bridge drvdata
+>>>   PCI: Introduce pci_host_bridge_ops to support host specific
+>>>     operations
+>>>   PCI: Introduce new scan function pci_scan_host_bridge()
+>>>   x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+>>>   ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+>>>   powerpc/pci: Rename pcibios_root_bridge_prepare()
+>>>   powerpc/pci: Use pci_scan_host_bridge() for simplicity
+>>>   PCI: Remove weak pcibios_root_bridge_prepare()
+>>>   sparc/PCI: Use pci_scan_host_bridge() for simplicity
+>>>   PCI: Introduce pci_bus_child_max_busnr()
+>>>   parisc/PCI: Use pci_scan_root_bus() for simplicity
+>>>   PCI/mvebu: Use pci_common_init_dev() to simplify code
+>>>   PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+>>>   PCI/designware: Use pci_scan_root_bus() for simplicity
+>>>   PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+>>>   PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+>>>   PCI: Export find_pci_host_bridge() and rename to
+>>>     pci_find_host_bridge()
+>>>   PCI: Remove platform specific pci_domain_nr()
+>>>   PCI: Remove pci_bus_assign_domain_nr()
+>>
+> 
+
+
+-- 
+Thanks!
+Yijing
+
