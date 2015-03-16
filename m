@@ -1,74 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54F90790.7060204@linux.intel.com>
-Date: Fri, 06 Mar 2015 09:49:04 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>, x86@kernel.org,
-	rjw@rjwysocki.net, mingo@redhat.com, bp@alien8.de,
-	lv.zheng@intel.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, yinghai@kernel.org, lenb@kernel.org
-CC: linux-pci@vger.kernel.org, tony.luck@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: Fully disable devices before releasing IRQ resource
-References: <20150305210529.6393.29546.stgit@gimli.home>
-In-Reply-To: <20150305210529.6393.29546.stgit@gimli.home>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:48737 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933439AbbCPOZa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Mar 2015 10:25:30 -0400
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: [PATCH v2 1/5] ARM: STi: Kconfig update for PCIe support
+Date: Mon, 16 Mar 2015 15:20:31 +0100
+Message-Id: <1426515635-9466-2-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/6 5:06, Alex Williamson wrote:
-> The IRQ resource for a device is established when pci_enabled_device()
-> is called on a fully disabled device (ie. enable_cnt == 0).  With
-> commit b4b55cda5874 ("x86/PCI: Refine the way to release PCI IRQ
-> resources") this same IRQ resource is released when the driver is
-> unbound from the device, regardless of the enable_cnt.  This presents
-> the situation that an ill-behaved driver can now make a device
-> unusable to subsequent drivers by an imbalance in their use of
-> pci_enable/disable_device().  It's one thing to break your own device
-> if you're one of these ill-behaved drivers, but it's a serious
-> regression for secondary drivers like vfio-pci, which are innocent
-> of the transgressions of the previous driver.
-> 
-> Resolve by pushing the device to a fully disabled state before
-> releasing the IRQ resource.
-> 
-> Fixes: b4b55cda5874 ("x86/PCI: Refine the way to release PCI IRQ resources")
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/pci/common.c |   13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 3d2612b..4810194 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -527,8 +527,19 @@ static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
->  	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
->  		return NOTIFY_DONE;
->  
-> -	if (pcibios_disable_irq)
-> +	if (pcibios_disable_irq) {
-> +		/*
-> +		 * Broken drivers may allow a device to be .remove()'d while
-> +		 * still enabled.  pci_enable_device() will only re-establish
-> +		 * dev->irq if the devices is fully disabled.  So if we want
-> +		 * to release the IRQ, we need to make sure the next driver
-> +		 * can re-establish it using pci_enable_device().
-> +		 */
-> +		while (pci_is_enabled(dev))
-> +			pci_disable_device(dev);
-> +
->  		pcibios_disable_irq(dev);
-> +	}
-Hi Alex,
-	Thanks for debugging and fixing it.
-	Will it be feasible to give a debug message to remind those
-driver authors to correctly disable PCI when unbinding?
-Regards!
-Gerry
+Update Kconfig:
+- MIGHT_HAVE_PCI
+- PCI_DOMAINS
 
->  
->  	return NOTIFY_OK;
->  }
-> 
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+---
+ arch/arm/mach-sti/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/mach-sti/Kconfig b/arch/arm/mach-sti/Kconfig
+index 3b1ac46..7f9b432 100644
+--- a/arch/arm/mach-sti/Kconfig
++++ b/arch/arm/mach-sti/Kconfig
+@@ -8,6 +8,8 @@ menuconfig ARCH_STI
+ 	select ARCH_HAS_RESET_CONTROLLER
+ 	select HAVE_ARM_SCU if SMP
+ 	select ARCH_REQUIRE_GPIOLIB
++	select PCI_DOMAINS if PCI
++	select MIGHT_HAVE_PCI
+ 	select ARM_ERRATA_754322
+ 	select ARM_ERRATA_764369 if SMP
+ 	select ARM_ERRATA_775420
+-- 
+1.9.1
+
