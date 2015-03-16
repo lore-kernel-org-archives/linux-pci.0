@@ -1,122 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 18 Mar 2015 17:11:52 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	"yinghai @ kernel . org" <yinghai@kernel.org>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is
- disabled when unbinding
-Message-ID: <20150318221152.GA2495@google.com>
-References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38342 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932223AbbCPR7J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Mar 2015 13:59:09 -0400
+Date: Mon, 16 Mar 2015 18:59:00 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH RFC 1/4] pci: disable msi/msix at probe time
+Message-ID: <20150316185535-mutt-send-email-mst@redhat.com>
+References: <1426526415-13299-1-git-send-email-mst@redhat.com>
+ <1426526415-13299-2-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1426526415-13299-2-git-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 17, 2015 at 03:37:12PM +0800, Jiang Liu wrote:
-> To support IOAPIC hot-removal, we need to release PCI interrupt resource
-> when unbinding PCI device driver. But due to historical reason,
-> /*
->  * We would love to complain here if pci_dev->is_enabled is set, that
->  * the driver should have called pci_disable_device(), but the
->  * unfortunate fact is there are too many odd BIOS and bridge setups
->  * that don't like drivers doing that all of the time.
->  * Oh well, we can dream of sane hardware when we sleep, no matter how
->  * horrible the crap we have to deal with is when we are awake...
->  */
-
-Quoting the comment here (especially the last two lines) is overkill and
-obscures the real point.  The important thing is that some drivers have
-legitimate reasons for not calling pci_disable_device().
-
-> some drivers don't call pci_disable_device() when unloading, which
-> prevents us from reallocating PCI interrupt resource on reloading
-> PCI driver and causes regressions.
-
-This isn't very clear.  I can believe that "drivers not calling
-pci_disable_device()" means we don't release IRQ resources, which might
-prevent you from hot-removing an IOAPIC.
-
-But "drivers not calling pci_disable_device()" doesn't cause regressions.
-
-> So release PCI interrupt resource only if PCI device is disabled when
-> unbinding. By this way, we could support IOAPIC hot-removal on latest
-> platforms and avoid regressions on old platforms.
-
-Does this mean you can only hot-remove IOAPICs if all drivers for devices
-using the IOAPIC call pci_disable_device()?  If so, it seems sort of
-dubious that we have to rely on drivers for that.
-
-What happens if we try to hot-remove an IOAPIC where we haven't released
-all the IRQ resources?  Is there a nice error message that will help us
-debug problem reports?
-
-This has nothing to do with "latest platforms" and "old platforms."  That
-text pretends to convey information, but it doesn't.  To be useful, it
-would have to say something specific about how "latest" and "old" platforms
-are different.
-
-I haven't even figured out what causes the regressions yet.  I guess maybe
-it's the fact that after b4b55cda5874, we always call pcibios_disable_irq(),
-while before we only called it if the driver used pci_disable_device()?
-The changelog should be clear about this.
-
-> Please aslo refer to:
-
-"also"
-
-> https://bugzilla.kernel.org/show_bug.cgi?id=94721
+On Mon, Mar 16, 2015 at 06:20:27PM +0100, Michael S. Tsirkin wrote:
+> commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+>     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
 > 
-
-This apparently fixes something and needs a Fixes: tag to help people who
-might backport the broken commit.
-
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Reported-by: Alex Williamson <alex.williamson@redhat.com>
-> Reported-by: Thomas Hellstrom <thellstrom@vmware.com>
-> Reviewed-by: Rafael J. Wysocki <rjw@rjwysocki.net>
-> ---
-> Hi Rafael,
-> 	I have assumed an Reviewed-by from you, is that OK?
-> Thanks!
-> Gerry
-> ---
->  arch/x86/pci/common.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> attempted to address the problem of kexec getting
+> started after linux enabled msi/msix for a device,
+> and drivers being confused by msi being enabled,
+> by disabling msi at shutdown.
 > 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 3d2612b68694..8d792142cb2a 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -527,7 +527,7 @@ static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
+> But arguably, it's better to disable msi/msix when kexec
+> starts - for example, kexec might run after a crash (kdump)
+> and shutdown callbacks are not always invoked in that case.
+> 
+> Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> Cc: Ulrich Obergfell <uobergfe@redhat.com>
+> Cc: Fam Zheng <famz@redhat.com>
+> Cc: Rusty Russell <rusty@rustcorp.com.au>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  drivers/pci/pci-driver.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3cb2210..dac6d47 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
+>  	 */
+>  	pm_runtime_get_sync(dev);
+>  	pci_dev->driver = pci_drv;
+> +	/*
+> +	 * When using kexec, msi might be left enabled by the previous kernel,
+> +	 * this breaks things as some drivers assume msi/msi-x is off at boot.
+> +	 * Fix this by forcing msi off at startup.
+> +	 */
+> +	pci_msi_off(dev);
 
-I know the notifier was added by b4b55cda5874, not this patch, but I don't
-think it's the best mechanism.  I would rather do something like calling
-pcibios_disable_irq() directly from pci_device_remove().  That way the call
-is more explicit, it's in arch-independent code, and it's more parallel
-with how we call pcibios_enable_irq() in the pci_enable_device() path.
+should be
+	pci_msi_off(pci_dev);
 
-This code is all x86-specific.  But other arches use IOAPIC, and there's
-nothing obviously x86-specific here.  Won't they still have issues here?
+obviously.
 
->  	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
->  		return NOTIFY_DONE;
->  
-> -	if (pcibios_disable_irq)
-> +	if (!pci_is_enabled(dev) && pcibios_disable_irq)
->  		pcibios_disable_irq(dev);
->  
->  	return NOTIFY_OK;
+Which likely means I pushed a wrong tree
+to the test machine again, so this wasn't
+tested as I thought it is :(
+
+I'll re-test and repost day after tomorrow,
+Fam, can you tweak this manually when you are testing?
+I don't want to spam the list.
+
+>  	rc = pci_drv->probe(pci_dev, ddi->id);
+>  	if (!rc)
+>  		return rc;
 > -- 
-> 1.7.10.4
+> MST
 > 
