@@ -1,93 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	<linux-parisc@vger.kernel.org>
-Subject: [PATCH v8 22/30] parisc/PCI: Use pci_scan_root_bus() for simplicity
-Date: Tue, 24 Mar 2015 11:34:16 +0800
-Message-ID: <1427168064-8657-23-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	"yinghai @ kernel . org" <yinghai@kernel.org>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is disabled when unbinding
+Date: Tue, 17 Mar 2015 15:37:12 +0800
+Message-Id: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+To support IOAPIC hot-removal, we need to release PCI interrupt resource
+when unbinding PCI device driver. But due to historical reason,
+/*
+ * We would love to complain here if pci_dev->is_enabled is set, that
+ * the driver should have called pci_disable_device(), but the
+ * unfortunate fact is there are too many odd BIOS and bridge setups
+ * that don't like drivers doing that all of the time.
+ * Oh well, we can dream of sane hardware when we sleep, no matter how
+ * horrible the crap we have to deal with is when we are awake...
+ */
+some drivers don't call pci_disable_device() when unloading, which
+prevents us from reallocating PCI interrupt resource on reloading
+PCI driver and causes regressions.
 
-Now pci_bus_add_devices() has been ripped out
-from pci_scan_root_bus(), we could use pci_scan_root_bus()
-instead of pci_create_root_bus() + pci_scan_child_bus()
-for simplicity.
+So release PCI interrupt resource only if PCI device is disabled when
+unbinding. By this way, we could support IOAPIC hot-removal on latest
+platforms and avoid regressions on old platforms.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
-CC: linux-parisc@vger.kernel.org
+Please aslo refer to:
+https://bugzilla.kernel.org/show_bug.cgi?id=94721
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reported-by: Alex Williamson <alex.williamson@redhat.com>
+Reported-by: Thomas Hellstrom <thellstrom@vmware.com>
+Reviewed-by: Rafael J. Wysocki <rjw@rjwysocki.net>
 ---
- drivers/parisc/dino.c    |    4 ++--
- drivers/parisc/lba_pci.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Hi Rafael,
+	I have assumed an Reviewed-by from you, is that OK?
+Thanks!
+Gerry
+---
+ arch/x86/pci/common.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index f375252..146c3ff 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -985,7 +985,7 @@ static int __init dino_probe(struct parisc_device *dev)
- 	** It's not used to avoid chicken/egg problems
- 	** with configuration accessor functions.
- 	*/
--	dino_dev->hba.hba_bus = bus = pci_create_root_bus(&dev->dev,
-+	dino_dev->hba.hba_bus = bus = pci_scan_root_bus(&dev->dev,
- 			 0, dino_current_bus, &dino_cfg_ops, NULL, &resources);
- 	if (!bus) {
- 		printk(KERN_ERR "ERROR: failed to scan PCI bus on %s (duplicate bus number %d?)\n",
-@@ -996,7 +996,7 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 3d2612b68694..8d792142cb2a 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -527,7 +527,7 @@ static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
+ 	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
+ 		return NOTIFY_DONE;
  
--	max = pci_scan_child_bus(bus);
-+	max = pci_bus_child_max_busnr(bus);
- 	pci_bus_update_busn_res_end(bus, max);
+-	if (pcibios_disable_irq)
++	if (!pci_is_enabled(dev) && pcibios_disable_irq)
+ 		pcibios_disable_irq(dev);
  
- 	/* This code *depends* on scanning being single threaded
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index 2949030..b630364 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1563,14 +1563,14 @@ lba_driver_probe(struct parisc_device *dev)
- 
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
--		pci_create_root_bus(&dev->dev, 0, lba_dev->hba.bus_num.start,
-+		pci_scan_root_bus(&dev->dev, 0, lba_dev->hba.bus_num.start,
- 				    cfg_ops, NULL, &resources);
- 	if (!lba_bus) {
- 		pci_free_resource_list(&resources);
- 		return 0;
- 	}
- 
--	max = pci_scan_child_bus(lba_bus);
-+	max = pci_bus_child_max_busnr(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
- 	if (is_pdc_pat()) {
+ 	return NOTIFY_OK;
 -- 
-1.7.1
+1.7.10.4
 
