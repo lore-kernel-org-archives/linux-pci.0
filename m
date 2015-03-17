@@ -1,41 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61927 "EHLO mga01.intel.com"
+Received: from dliviu.plus.com ([80.229.23.120]:44265 "EHLO smtp.dudau.co.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752294AbbCXPih (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Mar 2015 11:38:37 -0400
-Message-ID: <5511849F.3050903@intel.com>
-Date: Tue, 24 Mar 2015 23:37:03 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+	id S933188AbbCQKzK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Mar 2015 06:55:10 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 1CE8E10037F
+	for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2015 10:55:09 +0000 (GMT)
+Date: Tue, 17 Mar 2015 10:55:00 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v6 00/30] Refine PCI scan interfaces and make generic pci
+ host bridge
+Message-ID: <20150317105459.GH4739@bart.dudau.co.uk>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <20150312212306.GH7346@google.com>
+ <20150313113156.GA4739@bart.dudau.co.uk>
+ <5506365E.6020704@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
-References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com> <20150320210354.GK26935@google.com> <550FDA38.2090505@intel.com> <20150323150955.GR26935@google.com> <551128BA.7070508@intel.com> <20150324140812.GB2495@google.com>
-In-Reply-To: <20150324140812.GB2495@google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5506365E.6020704@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/24/2015 10:08 PM, Bjorn Helgaas wrote:
-> On Tue, Mar 24, 2015 at 05:04:58PM +0800, Aaron Lu wrote:
->> @@ -575,6 +637,9 @@ static void pci_acpi_setup(struct device *dev)
->>  	if (!adev)
->>  		return;
->>  
->> +	if (pci_dev->pm_cap)
->> +		pci_acpi_delay_optimize(pci_dev, adev->handle);
+On Mon, Mar 16, 2015 at 09:48:14AM +0800, Yijing Wang wrote:
+> On 2015/3/13 19:31, Liviu Dudau wrote:
+> > On Thu, Mar 12, 2015 at 04:23:06PM -0500, Bjorn Helgaas wrote:
+> >> On Mon, Mar 09, 2015 at 10:33:57AM +0800, Yijing Wang wrote:
+> >>> ...
+> >>> Yijing Wang (29):
+> >>>   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
+> >>>   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
+> >>>   sparc/PCI: Claim bus resources before pci_bus_add_devices()
+> >>
+> >> I put the above patches plus a cleanup patch on my pci/enumeration branch.
+> >> Please rebase your next revision to that.  If there's anything else
+> >> non-controversial that we can pull in to chip away at this, let me know.
+> > 
+> > Hi Bjorn and Yijing,
+> > 
+> > Sorry for not providing feedback earlier on this series (or any previous ones),
+> > I'm just crawling out from under a rock of doing graphics drivers :)
+> > 
+> > The patch ripping out pci_bus_add_devices() from pci_scan_root_bus() misses out
+> > the users of that function from drivers/pci/host. If Yijing is going to refresh
+> > the series it is probably worth starting with adding back the call into pcie-xilinx.c
+> > and pci-versatile.c.
 > 
-> Is the "pm_cap" test really necessary?  If we do it this way, we then have
-> to convince ourselves that pdev->d3cold_delay and pdev->d3_delay are only
-> needed when pdev has a pm_cap.
+> Hi Liviu, thanks for your comment. I would add pci_bus_add_devices() for pci-versatile.c,
+> But for pcie-xilinx.c and other host drivers used for arm32, we do not need to add
+> pci_bus_add_devices() for them, because in arm32 pci enumeration, another pci_bus_add_devices()
+> would be called in pci_common_init_dev();
 > 
-> If we *always* fill in the delay values, it's possible they won't be used,
-> but we don't have to prove any connection between them and a pm_cap, so
-> the code is easier to analyze.
+> for arm32 pci enumeration:
+> pci_common_init_dev()
+>    pcibios_init_hw()
+>        hw->scan/pci_scan_root_bus()
+>    pci_bus_size_bridges()
+>    pci_bus_assign_resources()
+>    pci_bus_add_devices()
+> 
+> Is there something I have missed ?
 
-I remembered why I did the pm_cap test: the d3cold_delay and d3_delay is
-only filled when pm_cap is set in pci_pm_init - if the device doesn't
-have PCI_CAP_ID_PM set, its pm_cap will be 0 and d3cold_delay, d3_delay
-will not be assigned.
+No, you were right. I was under impression that pcie-xilinx.c has broken away from arch/arm dependencies.
+
+Best regards,
+Liviu
+
+> 
+> Thanks!
+> Yijing.
+> 
+> > 
+> > Will try to review (and test) the rest of the series soon.
+> > 
+> > Best regards,
+> > Liviu
+> > 
+> >>
+> >>>   PCI: Export busn_resource to drivers/pci
+> >>>   PCI: Remove deprecated pci_scan_bus_parented()
+> >>>   PCI: Combine PCI domain and bus number in u32 arg
+> >>>   PCI: Pass PCI domain number combined with root bus number
+> >>>   PCI: Introduce pci_host_assign_domain_nr() to assign domain
+> >>>   PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
+> >>>   PCI: Introduce pci_host_bridge_list to manage host bridges
+> >>>   PCI: Save sysdata in pci_host_bridge drvdata
+> >>>   PCI: Introduce pci_host_bridge_ops to support host specific
+> >>>     operations
+> >>>   PCI: Introduce new scan function pci_scan_host_bridge()
+> >>>   x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+> >>>   ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+> >>>   powerpc/pci: Rename pcibios_root_bridge_prepare()
+> >>>   powerpc/pci: Use pci_scan_host_bridge() for simplicity
+> >>>   PCI: Remove weak pcibios_root_bridge_prepare()
+> >>>   sparc/PCI: Use pci_scan_host_bridge() for simplicity
+> >>>   PCI: Introduce pci_bus_child_max_busnr()
+> >>>   parisc/PCI: Use pci_scan_root_bus() for simplicity
+> >>>   PCI/mvebu: Use pci_common_init_dev() to simplify code
+> >>>   PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+> >>>   PCI/designware: Use pci_scan_root_bus() for simplicity
+> >>>   PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+> >>>   PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+> >>>   PCI: Export find_pci_host_bridge() and rename to
+> >>>     pci_find_host_bridge()
+> >>>   PCI: Remove platform specific pci_domain_nr()
+> >>>   PCI: Remove pci_bus_assign_domain_nr()
+> >>
+> > 
+> 
+> 
+> -- 
+> Thanks!
+> Yijing
+> 
+> 
+
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
+
