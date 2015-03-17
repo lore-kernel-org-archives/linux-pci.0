@@ -1,62 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:40875 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932322AbbCLQVR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 12:21:17 -0400
-Message-ID: <5501BCF7.9080004@redhat.com>
-Date: Thu, 12 Mar 2015 17:21:11 +0100
-From: Paolo Bonzini <pbonzini@redhat.com>
+Received: from smtp.citrix.com ([66.165.176.89]:45067 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753976AbbCQOH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Mar 2015 10:07:56 -0400
+Message-ID: <1426601130.18247.238.camel@citrix.com>
+Subject: Re: [Xen-devel] [PATCH v6 07/30] PCI: Pass PCI domain number
+ combined with root bus number
+From: Ian Campbell <ian.campbell@citrix.com>
+To: Manish Jaggi <mjaggi@caviumnetworks.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-mips@linux-mips.org>, <linux-ia64@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Paul Mackerras <paulus@samba.org>,
+	<sparclinux@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-s390@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Michael Ellerman <mpe@ellerman.id.au>, <x86@kernel.org>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<xen-devel@lists.xenproject.org>, Matt Turner <mattst88@gmail.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Yinghai Lu" <yinghai@kernel.org>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Michal Simek <monstr@monstr.eu>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>, Ralf Baechle <ralf@linux-mips.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-alpha@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Tue, 17 Mar 2015 14:05:30 +0000
+In-Reply-To: <5507B88D.1020300@caviumnetworks.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+	 <1425868467-9667-8-git-send-email-wangyijing@huawei.com>
+	 <5507B88D.1020300@caviumnetworks.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Virtualization <virtualization@lists.linux-foundation.org>
-Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
-References: <1426137682-12287-1-git-send-email-famz@redhat.com>
-In-Reply-To: <1426137682-12287-1-git-send-email-famz@redhat.com>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, 2015-03-17 at 10:45 +0530, Manish Jaggi wrote:
+> On Monday 09 March 2015 08:04 AM, Yijing Wang wrote:
+> > Now we could pass PCI domain combined with bus number
+> > in u32 argu. Because in arm/arm64, PCI domain number
+> > is assigned by pci_bus_assign_domain_nr(). So we leave
+> > pci_scan_root_bus() and pci_create_root_bus() in arm/arm64
+> > unchanged. A new function pci_host_assign_domain_nr()
+> > will be introduced for arm/arm64 to assign domain number
+> > in later patch.
+> Hi,
+> I think these changes might not be required. We have made very few 
+> changes in the xen-pcifront to support PCI passthrough in arm64.
+> As per xen architecture for a domU only a single pci virtual bus is 
+> created and all passthrough devices are attached to it.
 
+I guess you are only talking about the changes to xen-pcifront.c?
+Otherwise you are ignoring the dom0 case which is exposed to the real
+set of PCI root complexes and anyway I'm not sure how "not needed for
+Xen domU" translates into not required, since it is clearly required for
+other systems.
 
-On 12/03/2015 06:21, Fam Zheng wrote:
-> If the device doesn't support shutdown, disabling interrupts may cause
-> trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
-> after we disable MSI-X, futher notifications from device will be
-> delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
-> may prevent us from making progress, by keep triggering interrupts.
-> 
-> Signed-off-by: Fam Zheng <famz@redhat.com>
-> ---
->  drivers/pci/pci-driver.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3cb2210..fb29c96 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
->  
->  	pm_runtime_resume(dev);
->  
-> -	if (drv && drv->shutdown)
-> +	if (drv && drv->shutdown) {
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
-> +		pci_msi_shutdown(pci_dev);
-> +		pci_msix_shutdown(pci_dev);
-> +	}
->  
->  #ifdef CONFIG_KEXEC
->  	/*
-> 
+Strictly speaking the Xen pciif protocol does support multiple buses,
+it's just that the tools, and perhaps kernels, have not yet felt any
+need to actually make use of that.
 
-The patch may be okay, but I think the bug here is also that virtio-pci
-is not defining a .shutdown callback.  It should define one and call
-free_irq (for INTX) and pci_disable_msix.
+There doesn't seem to be any harm in updating pcifront to follow this
+generic API change.
 
-How is this related to the virtio-scsi patch that you posted?  Do you
-need both to fix the problem you reported?
+Ian.
 
-Paolo
