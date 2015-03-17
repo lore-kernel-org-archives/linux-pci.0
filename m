@@ -1,74 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:42621 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbbCAT1t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 14:27:49 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20150301152351.GA17391@gmail.com>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
-	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
-	<20150301094557.GA7748@pd.tnic>
-	<20150301152351.GA17391@gmail.com>
-Date: Sun, 1 Mar 2015 11:27:48 -0800
-Message-ID: <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Borislav Petkov <bp@suse.de>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+In-Reply-To: <1426518695.26437.55.camel@x220>
+References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1426515635-9466-4-git-send-email-gabriel.fernandez@linaro.org>
+	<1426518695.26437.55.camel@x220>
+Date: Tue, 17 Mar 2015 08:53:04 +0100
+Message-ID: <CAG374jATQ-kMQ==eOW33LsFR8H2YAMBz6vB621UOJgT5f40r5w@mail.gmail.com>
+Subject: Re: [PATCH v2 3/5] PCI: st: Provide support for the sti PCIe controller
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 1, 2015 at 7:23 AM, Ingo Molnar <mingo@kernel.org> wrote:
+Thanks Paul for reviewing.
+
+I'll check to be modular.
+
+BR
+
+Gabriel
+
+On 16 March 2015 at 16:11, Paul Bolle <pebolle@tiscali.nl> wrote:
+> On Mon, 2015-03-16 at 15:20 +0100, Gabriel FERNANDEZ wrote:
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
 >
-> I think that's a different bug.
+>> +config PCI_ST
+>> +     bool "ST PCIe controller"
 >
-> parse_kaslr_setup() is simply bogus, it does:
+> You add a bool Kconfig symbol. A week or two ago I saw some patches fly
+> by that - I think - allowed PCIe controllers to be built modular.
 >
->         kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
+>> +     depends on ARCH_STI || (ARM && COMPILE_TEST)
+>> +     select PCIE_DW
+>> +     help
+>> +       Enable PCIe controller support on ST Socs. This controller is based
+>> +       on Designware hardware and therefore the driver re-uses the
+>> +       Designware core functions to implement the driver.
 >
-> which makes no sense whatsoever: it randomly enables (or disables,
-> depending on the physical address of the setup page) KASLR when it
-> meets a SETUP_KASLR record.
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
 >
-
-Yes, you are right.
-
-there are 8 patches in this series.
-  x86, kaslr: get kaslr_enabled back correctly
-  x86: Kill E820_RESERVED_KERN
-  x86, efi: copy SETUP_EFI data and access directly
-  x86, of: let add_dtb reserve by itself
-  x86, boot: Add add_pci handler for SETUP_PCI
-  x86: kill not used setup_data handling code
-  x86, pci: convert SETUP_PCI data to list
-  x86, pci: export SETUP_PCI data via sysfs
-
-other 7 should also address the problem in
-   http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
-
-the root cause is E820_RESERVED_KERN and setup_data handling
-will make E820 are not page aligned anymore.
-
-We should change setup_data handling.
-
-Please check updated version at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-x86-4.0
-
-(with a fix for config without CONFIG_PCI).
-
-Thanks
-
-Yinghai
+>> +obj-$(CONFIG_PCI_ST) += pci-st.o
+>
+> If you keep that symbol bool this objectfile will never be part of a
+> module.
+>
+>> diff --git a/drivers/pci/host/pci-st.c b/drivers/pci/host/pci-st.c
+>> new file mode 100644
+>> index 0000000..470000d
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pci-st.c
+>
+>> +#include <linux/module.h>
+>
+> For built-in code this include is, probably, not needed.
+>
+>> +MODULE_DEVICE_TABLE(of, st_pcie_of_match);
+>
+> For built-in code that macro will always be preprocessed away.
+>
+>> +/* ST PCIe driver does not allow module unload */
+>> +static int __init pcie_init(void)
+>> +{
+>> +     return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
+>> +}
+>> +device_initcall(pcie_init);
+>
+> I think the module unload comment is a bit odd for built-in only code.
+>
+>> +MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
+>> +MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
+>> +MODULE_LICENSE("GPL v2");
+>
+> These three macros will be, basically, always preprocessed away as long
+> as this code can't be built to be modular.
+>
+>
+> Paul Bolle
+>
