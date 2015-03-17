@@ -1,148 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:7204 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753786AbbCCBMu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 20:12:50 -0500
-Message-ID: <54F50A77.7040703@huawei.com>
-Date: Tue, 3 Mar 2015 09:12:23 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:36530 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003AbbCQHlE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2015 03:41:04 -0400
+Received: by igbue6 with SMTP id ue6so63882912igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2015 00:41:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+In-Reply-To: <3714853.Vuc23EfWdL@wuerfel>
+References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1426515635-9466-5-git-send-email-gabriel.fernandez@linaro.org>
+	<582D947C-1229-4DD9-BC82-812D1560C49E@codeaurora.org>
+	<3714853.Vuc23EfWdL@wuerfel>
+Date: Tue, 17 Mar 2015 08:41:03 +0100
+Message-ID: <CAG374jBqtw8sW-ZpMJFQUR0skdh+oX_F120hc90ssAYHzrF15g@mail.gmail.com>
+Subject: Re: [PATCH v2 4/5] PCI: designware: Add disable IO support
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Richard Henderson" <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	"Matt Turner" <mattst88@gmail.com>, <sparclinux@vger.kernel.org>
-Subject: Re: [PATCH v4 01/30] PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-2-git-send-email-wangyijing@huawei.com> <20150302234147.GA11978@google.com>
-In-Reply-To: <20150302234147.GA11978@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>  	pbm->pci_bus = pci_scan_bus(pbm->pci_first_busno, &pcic_ops, pbm);
->> +	if (pbm->pci_bus)
->> +		pci_bus_add_devices(pbm->pci_bus);
->>  #if 0 /* deadwood transplanted from sparc64 */
->>  	pci_fill_in_pbm_cookies(pbm->pci_bus, pbm, pbm->prom_node);
->>  	pci_record_assignments(pbm, pbm->pci_bus);
-> 
-> This is correct, but it should look like this instead:
-> 
->     if (!pbm->pci_bus)
->       return;
->   #if 0 /* deadwood ... */
->   ...
->   #endif
->     pci_bus_add_devices(pbm->pci_bus);
->   }
-> 
-> That way the mainline code is the normal path, and pci_bus_add_devices() is
-> in the correct place even if the "deadwood" code is resurrected.
-> 
+Hi Arnd,
 
-Yes, you are right, thanks!
+Ok i will try the same way that pci-versatile.c
 
-> 
->> diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
->> index 374a055..3d82024 100644
->> --- a/arch/unicore32/kernel/pci.c
->> +++ b/arch/unicore32/kernel/pci.c
->> @@ -266,17 +266,12 @@ static int __init pci_common_init(void)
->>  	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
->>  
->>  	if (!pci_has_flag(PCI_PROBE_ONLY)) {
->> -		/*
->> -		 * Size the bridge windows.
->> -		 */
->> +		/* Size the bridge windows. */
->>  		pci_bus_size_bridges(puv3_bus);
->> -
->> -		/*
->> -		 * Assign resources.
->> -		 */
->> +		/* Assign resources. */
->>  		pci_bus_assign_resources(puv3_bus);
->>  	}
->> -
->> +	pci_bus_add_devices(puv3_bus);
->>  	return 0;
->>  }
->>  subsys_initcall(pci_common_init);
->> diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
->> index 96c5c72..86e3bfd 100644
->> --- a/drivers/pci/hotplug/ibmphp_core.c
->> +++ b/drivers/pci/hotplug/ibmphp_core.c
->> @@ -738,7 +738,7 @@ static void ibm_unconfigure_device(struct pci_func *func)
->>   */
->>  static u8 bus_structure_fixup(u8 busno)
->>  {
->> -	struct pci_bus *bus;
->> +	struct pci_bus *bus, *b;
->>  	struct pci_dev *dev;
->>  	u16 l;
->>  
->> @@ -765,7 +765,9 @@ static u8 bus_structure_fixup(u8 busno)
->>  					(l != 0x0000) && (l != 0xffff)) {
->>  			debug("%s - Inside bus_structure_fixup()\n",
->>  							__func__);
->> -			pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
->> +			b = pci_scan_bus(busno, ibmphp_pci_bus->ops, NULL);
->> +			if (b)
->> +				pci_bus_add_devices(b);
-> 
-> Use this:
-> 
->     if (!b)
->       continue;
->     pci_bus_add_devices(b);
-> 
-> for the same reason as above.
+Thanks.
 
+Gabriel
 
-Will update, thanks!
-
-Thanks!
-Yijing.
-
-> 
->>  			break;
->>  		}
->>  	}
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 8d2f400..88604f2 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -2123,7 +2123,6 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
->>  	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
->>  	if (b) {
->>  		pci_scan_child_bus(b);
->> -		pci_bus_add_devices(b);
->>  	} else {
->>  		pci_free_resource_list(&resources);
->>  	}
->> -- 
->> 1.7.1
+On 16 March 2015 at 21:00, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 16 March 2015 13:00:51 Kumar Gala wrote:
+>> On Mar 16, 2015, at 9:20 AM, Gabriel FERNANDEZ <gabriel.fernandez@st.com> wrote:
 >>
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+>> > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
+>> > But in these SoCs PCIe IP doesn't support IO.
+>> >
+>> > This patch adds the possibility to disable it through
+>> > a DT property, by creating an empty IO window and by
+>> > removing PCI_COMMAND_IO from the setup register.
+>> >
+>> > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>> > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+>> > ---
+>> > .../devicetree/bindings/pci/designware-pcie.txt    |  2 ++
+>> > drivers/pci/host/pcie-designware.c                 | 24 ++++++++++++++++++++--
+>> > drivers/pci/host/pcie-designware.h                 |  1 +
+>> > 3 files changed, 25 insertions(+), 2 deletions(-)
+>>
+>> Why not just update the code such that if the ranges doesn’t have an IO
+>> space rather than introducing a new DT property?
+>
+> I suspect we can simplify this now by changing over the designware PCI
+> code from pci_common_init_dev to calling pci_scan_root_bus() in the
+> same way that pci-versatile.c does. This would also clean up some
+> other areas of the driver and let you do proper error handling
+> in the probe.
+>
+>         Arnd
