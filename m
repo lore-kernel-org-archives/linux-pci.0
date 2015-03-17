@@ -1,49 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49154 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324AbbCJP0I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:26:08 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <grant.likely@linaro.org>, <robh+dt@kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-	<arnd@arndb.de>, <Suravee.Suthikulpanit@amd.com>,
-	<will.deacon@arm.com>, <joro@8bytes.org>, <linux@arm.linux.org.uk>
-CC: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH] pci: of : fix BUG: unable to handle kernel
-Date: Tue, 10 Mar 2015 11:25:39 -0400
-Message-ID: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:47322 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753665AbbCQMWm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2015 08:22:42 -0400
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+To: linux@arm.linux.org.uk
+Cc: linux-kernel@codethink.co.uk,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Linux ARM Kernel list <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI List <linux-pci@vger.kernel.org>
+Subject: [PATCH] ARM: add PCI hotplug support
+Date: Tue, 17 Mar 2015 12:22:32 +0000
+Message-Id: <1426594952-1456-1-git-send-email-ben.dooks@codethink.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms such as that based on x86, ia64 etc, root bus is
-created with parent node passed in as NULL to pci_create_root_bus().
-On these platforms, the patch series "PCI: get DMA configuration from
-parent device" when applied causes kernel crash. So add a check for this
-in of_pci_dma_configure()
+Hotplug on PCIe should work with ARM, however the necessary
+PCIe hotplug is not availale as the menu items for PCI hotplug
+have not been included.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Add the include of PCI hotplug support to the ARM main Kconfig
+so that it can be selected.
+
+The only issue that was found during this is that the PCI code
+did not assign interrupts properly to newly probed devices. This
+will need to be fixed for any interrupt capable devices.
+
+This has been tested on a Marvell 88F6281 with a TI XIO3130
+PCIe bridge (with hotplug enabled) and fixes for IRQ assignment
+added.
+
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+--
+CC: Linux ARM Kernel list <linux-arm-kernel@lists.infradead.org>
+CC: Russell King <linux@arm.linux.org.uk>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Linux PCI List <linux-pci@vger.kernel.org>
 ---
- drivers/of/of_pci.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ arch/arm/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 86d3c38..a8e485c 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -129,6 +129,10 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
- 	struct device *dev = &pci_dev->dev;
- 	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 9f1f09a..4574ab4 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1302,6 +1302,7 @@ config PCI_HOST_ITE8152
+ 	select DMABOUNCE
  
-+	/* Some platforms can have bridge->parent set to NULL */
-+	if (!bridge->parent)
-+		return;
-+
- 	of_dma_configure(dev, bridge->parent->of_node);
- 	pci_put_host_bridge_device(bridge);
- }
+ source "drivers/pci/Kconfig"
++source "drivers/pci/hotplug/Kconfig"
+ source "drivers/pci/pcie/Kconfig"
+ 
+ source "drivers/pcmcia/Kconfig"
 -- 
-1.7.9.5
+2.1.4
 
