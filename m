@@ -1,267 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:32939 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbbCTDJH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:09:07 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:09:05 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A72BB2CE8040
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:02 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K38s2s29491344
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:02 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K38STq002554
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:29 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 02/21] powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
-Date: Fri, 20 Mar 2015 11:06:18 +0800
-Message-Id: <1426820797-6267-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-bl2on0111.outbound.protection.outlook.com ([65.55.169.111]:40091
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755433AbbCRKSq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Mar 2015 06:18:46 -0400
+Date: Wed, 18 Mar 2015 03:04:07 -0700
+From: Guenter Roeck <groeck@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatxjain@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>, <rthirumal@juniper.net>,
+	<sanjayj@juniper.net>, Rafael Wysocki <rjw@rjwysocki.net>
+Subject: Re: Hit a deadlock: between AER and pcieport/pciehp
+Message-ID: <20150318100406.GA27083@svl-evodev-groeck.juniper.net>
+References: <CAA93t1qpPqbih+UB0McA_d_+2rVaNkXsinAUxYzK9+JXSS+L-g@mail.gmail.com>
+ <CAA93t1ohiz+21DsKpjYueiUDsrO_yeKccwhYF9HO7BxNuXrQ6w@mail.gmail.com>
+ <CAErSpo6SLNrA64iJAr3RuYJX+pzqZU6+QaZXw7KqmnvhNbeqKA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo6SLNrA64iJAr3RuYJX+pzqZU6+QaZXw7KqmnvhNbeqKA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI config accessors previously relied on device_node.  Unfortunately,
-VFs don't have a corresponding device_node, so change the accessors to use
-pci_dn instead.
+On Tue, Mar 17, 2015 at 09:28:24PM -0500, Bjorn Helgaas wrote:
+> [+cc Rafael]
+> 
+> Hi Rajat,
+> 
+> On Tue, Mar 17, 2015 at 2:11 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> > Hello,
+> >
+> > I was wondering if any one has a any suggestions to make here. I
+> > believe this is a pretty serious deadlock - and I'm looking for ideas
+> > on what should be the right way to fix this.
+> 
+> I agree, this definitely sounds like a real problem.  I'm not ignoring
+> it; I just haven't had time to look into it :)
+> 
+> After ten seconds of thought, my suggestion is to try to make this
+> work in a way that doesn't require taking the mutexes in two different
+> orders.  It might be *possible* to write code that is smart enough to
+> take them in different orders, but I'm pretty sure our automated lock
+> checking tools wouldn't be that smart.
+> 
 
-[bhelgaas: changelog]
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
- arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
- arch/powerpc/platforms/powernv/pci.h         |    4 +-
- 3 files changed, 40 insertions(+), 47 deletions(-)
+Assuming that pci_walk_bus needs to hold pci_bus_sem, and pci_create_slot
+needs to hold it as well, that may be tricky. More likely one just must
+not call device_lock() from any function called through pci_walk_bus.
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index e261869..7a5021b 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -430,21 +430,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
- static int powernv_eeh_read_config(struct device_node *dn,
- 				   int where, int size, u32 *val)
- {
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn)) {
- 		*val = 0xFFFFFFFF;
- 		return PCIBIOS_SET_FAILED;
- 	}
- 
--	return pnv_pci_cfg_read(dn, where, size, val);
-+	return pnv_pci_cfg_read(pdn, where, size, val);
- }
- 
- static int powernv_eeh_write_config(struct device_node *dn,
- 				    int where, int size, u32 val)
- {
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
- 	if (powernv_eeh_cfg_blocked(dn))
- 		return PCIBIOS_SET_FAILED;
- 
--	return pnv_pci_cfg_write(dn, where, size, val);
-+	return pnv_pci_cfg_write(pdn, where, size, val);
- }
- 
- /**
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index e69142f..6c20d6e 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
- 	spin_unlock_irqrestore(&phb->lock, flags);
- }
- 
--static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
--				     struct device_node *dn)
-+static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
- {
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 	u8	fstate;
- 	__be16	pcierr;
- 	int	pe_no;
-@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	 * setup that yet. So all ER errors should be mapped to
- 	 * reserved PE.
- 	 */
--	pe_no = PCI_DN(dn)->pe_number;
-+	pe_no = pdn->pe_number;
- 	if (pe_no == IODA_INVALID_PE) {
- 		if (phb->type == PNV_PHB_P5IOC2)
- 			pe_no = 0;
-@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- 
- 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
--		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
--		pe_no, fstate);
-+		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
- 
- 	/* Clear the frozen state if applicable */
- 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
-@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
- 	}
- }
- 
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 	s64 rc;
-@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val)
- {
--	struct pci_dn *pdn = PCI_DN(dn);
- 	struct pnv_phb *phb = pdn->phb->private_data;
- 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
- 
-@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
- }
- 
- #if CONFIG_EEH
--static bool pnv_pci_cfg_check(struct pci_controller *hose,
--			      struct device_node *dn)
-+static bool pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = NULL;
--	struct pnv_phb *phb = hose->private_data;
-+	struct pnv_phb *phb = pdn->phb->private_data;
- 
- 	/* EEH not enabled ? */
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
- 		return true;
- 
- 	/* PE reset or device removed ? */
--	edev = of_node_to_eeh_dev(dn);
-+	edev = pdn->edev;
- 	if (edev) {
- 		if (edev->pe &&
- 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
-@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
- 	return true;
- }
- #else
--static inline pnv_pci_cfg_check(struct pci_controller *hose,
--				struct device_node *dn)
-+static inline pnv_pci_cfg_check(struct pci_dn *pdn)
- {
- 	return true;
- }
-@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
- 			       unsigned int devfn,
- 			       int where, int size, u32 *val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
- 	*val = 0xFFFFFFFF;
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
--	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_read(dn, where, size, val);
--	if (phb->flags & PNV_PHB_FLAG_EEH) {
-+	ret = pnv_pci_cfg_read(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
-+	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
- 		if (*val == EEH_IO_ERROR_VALUE(size) &&
--		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
-+		    eeh_dev_check_failure(pdn->edev))
-                         return PCIBIOS_DEVICE_NOT_FOUND;
- 	} else {
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 	}
- 
- 	return ret;
-@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
- 				unsigned int devfn,
- 				int where, int size, u32 val)
- {
--	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
- 	struct pci_dn *pdn;
- 	struct pnv_phb *phb;
--	bool found = false;
- 	int ret;
- 
--	for (dn = busdn->child; dn; dn = dn->sibling) {
--		pdn = PCI_DN(dn);
--		if (pdn && pdn->devfn == devfn) {
--			phb = pdn->phb->private_data;
--			found = true;
--			break;
--		}
--	}
-+	pdn = pci_get_pdn_by_devfn(bus, devfn);
-+	if (!pdn)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
-+	if (!pnv_pci_cfg_check(pdn))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	ret = pnv_pci_cfg_write(dn, where, size, val);
-+	ret = pnv_pci_cfg_write(pdn, where, size, val);
-+	phb = pdn->phb->private_data;
- 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
--		pnv_pci_config_check_eeh(phb, dn);
-+		pnv_pci_config_check_eeh(pdn);
- 
- 	return ret;
- }
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6c02ff8..e5b75b2 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
- 
- void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
- 				unsigned char *log_buff);
--int pnv_pci_cfg_read(struct device_node *dn,
-+int pnv_pci_cfg_read(struct pci_dn *pdn,
- 		     int where, int size, u32 *val);
--int pnv_pci_cfg_write(struct device_node *dn,
-+int pnv_pci_cfg_write(struct pci_dn *pdn,
- 		      int where, int size, u32 val);
- extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
- 				      void *tce_mem, u64 tce_size,
--- 
-1.7.9.5
+Does report_error_detected() really need to call device_lock(),
+or would get_device() be sufficient ? Or even nothing ?
 
+Guenter
+
+> I added Rafael because he recently did some work on PCI bus locking
+> and might have better ideas than I do.
+> 
+> > On Wed, Mar 11, 2015 at 6:48 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> >> Hello,
+> >>
+> >>
+> >> I have hit a kernel deadlock situation on my system that has
+> >> hierarchical hot plug situations (i.e. we can hot-plug a card, that
+> >> itself may have a hot-plug slot for another level of hot-pluggable
+> >> add-on cards). In summary, I see 2 threads that are both waiting on
+> >> mutexes that is acquired by the other one. The mutexes are the
+> >> (global) "pci_bus_sem" and "device->mutex" respectively.
+> >>
+> >>
+> >> Thread1
+> >>  =======
+> >>  This is the pciehp worker thread, that scans a new card, and on
+> >> finding that there is a hotplug slot downstream, tries to
+> >> pci_create_slot().
+> >>  pciehp_power_thread()
+> >>    -> pciehp_enable_slot()
+> >>      -> pciehp_configure_device()
+> >>        -> pci_bus_add_devices() discovers all devices including a new
+> >> hotplug slot.
+> >>          -> ....(etc)...
+> >>          -> device_attach(dev) (for the newly discovered HP slot /
+> >> downstream port)
+> >>            -> device_lock(dev) SUCCESSFULLY ACQUIRES dev->mutex for
+> >> the new slot.
+> >>          -> ....(etc)...
+> >>          -> ... (goes on)
+> >>          -> pciehp_probe(dev)
+> >>              -> __pci_hp_register()
+> >>                 -> pci_create_slot()
+> >>                      -> down_write(pci_bus_sem); /* Deadlocked */
+> >>
+> >>  This how the stack looks like:
+> >>   [<ffffffff814e9923>] call_rwsem_down_write_failed+0x13/0x20
+> >>  [<ffffffff81522d4f>] pci_create_slot+0x3f/0x280
+> >>  [<ffffffff8152c030>] __pci_hp_register+0x70/0x400
+> >>  [<ffffffff8152cf49>] pciehp_probe+0x1a9/0x450
+> >>  [<ffffffff8152865d>] pcie_port_probe_service+0x3d/0x90
+> >>  [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
+> >>  [<ffffffff815c490b>] __device_attach+0x4b/0x60
+> >>  [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
+> >>  [<ffffffff815c4468>] device_attach+0xa8/0xc0
+> >>  [<ffffffff815c38d0>] bus_probe_device+0xb0/0xe0
+> >>  [<ffffffff815c16ce>] device_add+0x3de/0x560
+> >>  [<ffffffff815c1a2e>] device_register+0x1e/0x30
+> >>  [<ffffffff81528aef>] pcie_port_device_register+0x32f/0x510
+> >>  [<ffffffff81528eb8>] pcie_portdrv_probe+0x48/0x80
+> >>  [<ffffffff8151b17c>] pci_device_probe+0x9c/0xf0
+> >>  [<ffffffff815c45b9>] driver_probe_device+0xf9/0x350
+> >>  [<ffffffff815c490b>] __device_attach+0x4b/0x60
+> >>  [<ffffffff815c25a6>] bus_for_each_drv+0x56/0xa0
+> >>  [<ffffffff815c4468>] device_attach+0xa8/0xc0
+> >>  [<ffffffff815116c1>] pci_bus_add_device+0x41/0x70
+> >>  [<ffffffff81511a41>] pci_bus_add_devices+0x41/0x90
+> >>  [<ffffffff81511a6f>] pci_bus_add_devices+0x6f/0x90
+> >>  [<ffffffff8152e7e2>] pciehp_configure_device+0xa2/0x140
+> >>  [<ffffffff8152df08>] pciehp_enable_slot+0x188/0x2d0
+> >>  [<ffffffff8152e3d1>] pciehp_power_thread+0x2b1/0x3c0
+> >>  [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
+> >>  [<ffffffff810d9cc1>] worker_thread+0x121/0x440
+> >>  [<ffffffff810df0bf>] kthread+0xef/0x110
+> >>  [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
+> >>  [<ffffffffffffffff>] 0xffffffffffffffff
+> >>
+> >>
+> >>  Thread2
+> >>  =======
+> >>  While the above thread is doing its work, the root port gets a
+> >> completion timeout. And thus the AER Error recovery worker thread
+> >> kicks in to handle that error. And as part of that error recovery -
+> >> since the completion timeout was detected at root port, attempts to
+> >> see for ALL the devices downstream if they have an error handler that
+> >> need to be called. Here is what happens:
+> >>
+> >>
+> >> aer_isr()
+> >>    -> aer_isr_one_error()
+> >>      -> aer_process_err_device()
+> >>         -> ... (etc)...
+> >>           -> do_recovery()
+> >>             -> broadcast_error_message()
+> >>               -> pci_walk_bus( ..., report_error_detected,...) /*
+> >> effectively for all buses below root port */
+> >>                     -> down_read(&pci_bus_sem);  /* SUCCESSFULLY
+> >> ACQUIRES the semaophore */
+> >>                     -> report_error_detected(dev) /* for the newly
+> >> detected slot */
+> >>                          -> device_lock(dev) /* Deadlocked */
+> >>
+> >>  This is how the stack looks like:
+> >>  [<ffffffff81529e7e>] report_error_detected+0x4e/0x170 <--- Waiting on
+> >> device_lock()
+> >>  [<ffffffff8151162e>] pci_walk_bus+0x4e/0xa0
+> >>  [<ffffffff81529b84>] broadcast_error_message+0xc4/0xf0
+> >>  [<ffffffff81529bed>] do_recovery+0x3d/0x280
+> >>  [<ffffffff8152a5d0>] aer_isr+0x300/0x3e0
+> >>  [<ffffffff810d92a0>] process_one_work+0x1d0/0x510
+> >>  [<ffffffff810d9cc1>] worker_thread+0x121/0x440
+> >>  [<ffffffff810df0bf>] kthread+0xef/0x110
+> >>  [<ffffffff81a4d8ac>] ret_from_fork+0x7c/0xb0
+> >>  [<ffffffffffffffff>] 0xffffffffffffffff
+> >>
+> >>
+> >> As a temporary work around to let me proceed, I was thinking may be I
+> >> could change in report_error_detected() such that completion timeouts
+> >> errors may not be broadcast (do we really have any drivers that have
+> >> aer handlers that handle such an error? What would the handler do
+> >> anyway to fix such an error?)
+> >>
+> >>
+> >> But not sure what the right solution might look like. I thought about
+> >> whether these locks should have been taken in a particular order in
+> >> order to avoid this problem, but looking at the stack there seems to
+> >> be no other way. What do you think is the best way to fix this
+> >> deadlock?
+> >>
+> >> Any help or suggestions in this regard are greatly appreciated.
+> >>
+> >>  Thanks,
+> >>
+> >> Rajat
