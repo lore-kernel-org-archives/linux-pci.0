@@ -1,51 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46445 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56356 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753260AbbCXPm5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 Mar 2015 11:42:57 -0400
-Date: Tue, 24 Mar 2015 16:42:53 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ashutosh Dixit <ashutosh.dixit@intel.com>,
-	Nikhil Rao <nikhil.rao@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sudeep Dutt <sudeep.dutt@intel.com>,
-	Siva Yerramreddy <yshivakrishna@gmail.com>
-Subject: [PATCH v3 08/10] mic: drop pci_msi_off call on probe
-Message-ID: <1427211032-2270-9-git-send-email-mst@redhat.com>
-References: <1427211032-2270-1-git-send-email-mst@redhat.com>
+	id S1754099AbbCRUN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Mar 2015 16:13:26 -0400
+Subject: [PATCH v2 3/6] vfio-pci: Add VGA arbiter client
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, bsd@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Wed, 18 Mar 2015 14:13:24 -0600
+Message-ID: <20150318201324.24807.75913.stgit@gimli.home>
+In-Reply-To: <20150318200053.24807.74115.stgit@gimli.home>
+References: <20150318200053.24807.74115.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci core now disables msi on probe automatically,
-drop this from device-specific code.
+If VFIO VGA access is disabled for the user, either by CONFIG option
+or module parameter, we can often opt-out of VGA arbitration.  We can
+do this when PCI bridge control of VGA routing is possible.  This
+means that we must have a parent bridge and there must only be a
+single VGA device below that bridge.  Fortunately this is the typical
+case for discrete GPUs.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Doing this allows us to minimize the impact of additional GPUs, in
+terms of VGA arbitration, when they are only used via vfio-pci for
+non-VGA applications.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/misc/mic/host/mic_intr.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/vfio/pci/vfio_pci.c |   67 ++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 63 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/misc/mic/host/mic_intr.c b/drivers/misc/mic/host/mic_intr.c
-index d686f28..b4ca6c8 100644
---- a/drivers/misc/mic/host/mic_intr.c
-+++ b/drivers/misc/mic/host/mic_intr.c
-@@ -363,8 +363,6 @@ static int mic_setup_intx(struct mic_device *mdev, struct pci_dev *pdev)
- {
- 	int rc;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 7053110..25aef05 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/types.h>
+ #include <linux/uaccess.h>
+ #include <linux/vfio.h>
++#include <linux/vgaarb.h>
  
--	pci_msi_off(pdev);
--
- 	/* Enable intx */
- 	pci_intx(pdev, 1);
- 	rc = mic_setup_callbacks(mdev);
--- 
-MST
+ #include "vfio_pci_private.h"
+ 
+@@ -54,6 +55,50 @@ static inline bool vfio_vga_disabled(void)
+ #endif
+ }
+ 
++/*
++ * Our VGA arbiter participation is limited since we don't know anything
++ * about the device itself.  However, if the device is the only VGA device
++ * downstream of a bridge and VFIO VGA support is disabled, then we can
++ * safely return legacy VGA IO and memory as not decoded since the user
++ * has no way to get to it and routing can be disabled externally at the
++ * bridge.
++ */
++static unsigned int vfio_pci_set_vga_decode(void *opaque, bool single_vga)
++{
++	struct vfio_pci_device *vdev = opaque;
++	struct pci_dev *tmp = NULL, *pdev = vdev->pdev;
++	unsigned char max_busnr;
++	unsigned int decodes;
++
++	if (single_vga || !vfio_vga_disabled() || pci_is_root_bus(pdev->bus))
++		return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
++		       VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
++
++	max_busnr = pci_bus_max_busnr(pdev->bus);
++	decodes = VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
++
++	while ((tmp = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, tmp)) != NULL) {
++		if (tmp == pdev ||
++		    pci_domain_nr(tmp->bus) != pci_domain_nr(pdev->bus) ||
++		    pci_is_root_bus(tmp->bus))
++			continue;
++
++		if (tmp->bus->number >= pdev->bus->number &&
++		    tmp->bus->number <= max_busnr) {
++			pci_dev_put(tmp);
++			decodes |= VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
++			break;
++		}
++	}
++
++	return decodes;
++}
++
++static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
++{
++	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
++}
++
+ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
+ 
+ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+@@ -108,7 +153,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 	} else
+ 		vdev->msix_bar = 0xFF;
+ 
+-	if (!vfio_vga_disabled() && (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
++	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
+ 		vdev->has_vga = true;
+ 
+ 	return 0;
+@@ -900,6 +945,12 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		kfree(vdev);
+ 	}
+ 
++	if (vfio_pci_is_vga(pdev)) {
++		vga_client_register(pdev, vdev, NULL, vfio_pci_set_vga_decode);
++		vga_set_legacy_decoding(pdev,
++					vfio_pci_set_vga_decode(vdev, false));
++	}
++
+ 	return ret;
+ }
+ 
+@@ -908,9 +959,17 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	struct vfio_pci_device *vdev;
+ 
+ 	vdev = vfio_del_group_dev(&pdev->dev);
+-	if (vdev) {
+-		iommu_group_put(pdev->dev.iommu_group);
+-		kfree(vdev);
++	if (!vdev)
++		return;
++
++	iommu_group_put(pdev->dev.iommu_group);
++	kfree(vdev);
++
++	if (vfio_pci_is_vga(pdev)) {
++		vga_client_register(pdev, NULL, NULL, NULL);
++		vga_set_legacy_decoding(pdev,
++				VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
++				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
+ 	}
+ }
+ 
 
