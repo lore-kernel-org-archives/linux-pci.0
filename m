@@ -1,166 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:37956 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbbCYIaN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:30:13 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:30:11 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id F3FE92BB004D
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:09 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8U1wV22806656
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:09 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8Ta4c026357
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:36 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 14/20] powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
-Date: Wed, 25 Mar 2015 16:23:55 +0800
-Message-Id: <1427271841-28749-15-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57705 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754099AbbCRUNI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Mar 2015 16:13:08 -0400
+Subject: [PATCH v2 0/6] vfio-pci: Misc enhancements
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, bsd@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Wed, 18 Mar 2015 14:13:07 -0600
+Message-ID: <20150318200053.24807.74115.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
-M64 BAR is a type of hardware resource in PHB3, which could map a range of
-MMIO to PE numbers on powernv platform. And this range is divided equally
-by the number of total_pe with each divided range mapping to a PE number.
-Also, the M64 BAR must map a MMIO range with power-of-two size.
+v2:
+ - Incorporate comments from Bandan and Bjorn for vfio-pci.ids option
+ - Include necessary vgaarb change, already Ack'd by Dave
+ - Rebase on top of my current next branch
+ - Rename D3 disable parameter
 
-The total_pe number is usually different from total_VFs, which can lead to
-a conflict between MMIO space and the PE number.
+There are really 3 separate features added in this series, the first
+is to opt-out VGA devices from VGA arbitration if a) vfio VGA support
+is disable, either via config or module optioni (new), and b) bridge
+control of VGA resource routing is possible.  This means that if
+multiple VGA devices are installed with the intention of using them
+for device assignment without VGA, we can eliminate the effect they
+have on host graphics.
 
-For example, if total_VFs is 128 and total_pe is 256, the second half of
-M64 BAR will be part of other PCI device, which may already belong to other
-PEs.
+The second feature is the addition of the "ids" module option, which
+acts just like the option of the same name on pci-stub.  This makes it
+easier to configure vfio-pci to statically claim certain devices.  By
+either building vfio support into the kernel or using softdeps to
+load vfio-pci before native drivers, this can make it much easier to
+bind to devices which are only intended to be used through vfio, such
+as those additional graphics cards.
 
-This patch prevents the conflict by reserving additional space for the PF
-IOV BAR, which is total_pe number of VF's BAR size.
+Finally, when devices are bound to vfio-pci and unused, we can try to
+put them into a low-power state.  This again feeds into that idea that
+devices may be installed on the system only for use through vfio, and
+that use may not be continuous.  This saves a few watts for some GPUs.
+Thanks,
 
-[bhelgaas: make dev_printk() output more consistent, index resource[]
-conventionally]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Alex
+
 ---
- arch/powerpc/include/asm/machdep.h        |    4 +++
- arch/powerpc/include/asm/pci-bridge.h     |    3 ++
- arch/powerpc/kernel/pci-common.c          |    6 ++++
- arch/powerpc/platforms/powernv/pci-ioda.c |   43 +++++++++++++++++++++++++++++
- 4 files changed, 56 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 098d51e..b303833 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -250,6 +250,10 @@ struct machdep_calls {
- 	/* Reset the secondary bus of bridge */
- 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
- 
-+#ifdef CONFIG_PCI_IOV
-+	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
- 	 */
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index ece30f5..7b8ebc5 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -178,6 +178,9 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+#ifdef CONFIG_PCI_IOV
-+	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
-+#endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
- 	struct list_head list;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 8203101..375bf70 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -990,6 +990,12 @@ int pcibios_add_device(struct pci_dev *dev)
- 	 */
- 	if (dev->bus->is_added)
- 		pcibios_setup_device(dev);
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (ppc_md.pcibios_fixup_sriov)
-+		ppc_md.pcibios_fixup_sriov(dev);
-+#endif /* CONFIG_PCI_IOV */
-+
- 	return 0;
- }
- 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 9447ee9..1da45aa 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1749,6 +1749,46 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
- static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
- #endif /* CONFIG_PCI_MSI */
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct resource *res;
-+	int i;
-+	resource_size_t size;
-+	struct pci_dn *pdn;
-+
-+	if (!pdev->is_physfn || pdev->is_added)
-+		return;
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	phb = hose->private_data;
-+
-+	pdn = pci_get_pdn(pdev);
-+	pdn->vfs_expanded = 0;
-+
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
-+				 i, res);
-+			continue;
-+		}
-+
-+		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
-+		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
-+		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		dev_dbg(&pdev->dev, "                       %pR\n", res);
-+		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
-+				i, res, phb->ioda.total_pe);
-+	}
-+	pdn->vfs_expanded = phb->ioda.total_pe;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- /*
-  * This function is supposed to be called on basis of PE from top
-  * to bottom style. So the the I/O or MMIO segment assigned to
-@@ -2122,6 +2162,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
- 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
- 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
-+#endif /* CONFIG_PCI_IOV */
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
- 
- 	/* Reset IODA tables to a clean state */
--- 
-1.7.9.5
+Alex Williamson (6):
+      vgaarb: Stub vga_set_legacy_decoding()
+      vfio-pci: Add module option to disable VGA region access
+      vfio-pci: Add VGA arbiter client
+      vfio-pci: Allow PCI IDs to be specified as module options
+      vfio-pci: Remove warning if try-reset fails
+      vfio-pci: Move idle devices to D3hot power state
 
+
+ drivers/vfio/pci/vfio_pci.c |  179 +++++++++++++++++++++++++++++++++++++++----
+ include/linux/vgaarb.h      |    5 +
+ 2 files changed, 167 insertions(+), 17 deletions(-)
