@@ -1,110 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:60033 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757846AbbCCRxD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Mar 2015 12:53:03 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:61229 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754074AbbCRKfd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2015 06:35:33 -0400
+Message-ID: <1426674930.2649.50.camel@tiscali.nl>
+Subject: Re: [PATCH v2 3/5] PCI: st: Provide support for the sti PCIe
+ controller
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Fabrice Gasnier <fabrice.gasnier@st.com>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
 	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
 	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH v8 0/7] PCI: get DMA configuration from parent device
-Date: Tue, 3 Mar 2015 12:52:07 -0500
-Message-ID: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	kernel@stlinux.com, linux-pci@vger.kernel.org,
+	Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Wed, 18 Mar 2015 11:35:30 +0100
+In-Reply-To: <55093C12.7070004@st.com>
+References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
+		 <1426515635-9466-4-git-send-email-gabriel.fernandez@linaro.org>
+	 <1426518695.26437.55.camel@x220> <55093C12.7070004@st.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is already applied on arm-pci iommu branch for next, but
-kbuild test robot reported build errors on x86_64 and sparc. So I am
-sending v8 to help apply on arm-pci iommu branch.
- 
-Here is the original cover letter of the series.
+Hi Fabrice,
 
-This patch add an important capability to PCI driver on Keystone. I hope to
-have this merged to the upstream branch so that it is available for v3.20.
-Also would like thank everyone for the contribution.
+Fabrice Gasnier schreef op wo 18-03-2015 om 09:49 [+0100]:
+> On 03/16/2015 04:11 PM, Paul Bolle wrote:
+> >> +config PCI_ST
+> >> +	bool "ST PCIe controller"
+> > You add a bool Kconfig symbol. A week or two ago I saw some patches fly
+> > by that - I think - allowed PCIe controllers to be built modular.
+> 
+> Thanks for your review.
+> 
+> Are you talking about "PCI: Export symbols of PCI functions" patch, that 
+> is part of a series
+> named "pci: iproc: Add Broadcom iProc PCIe support" ?
 
-PCI devices on Keystone doesn't have correct dma_pfn_offset set. This patch
-add capability to set the dma configuration such as dma-mask, dma_pfn_offset,
-and dma ops etc using the information from DT. The prior RFCs and discussions
-are available at [1] and [2] below.
+Yes, that is the series I was thinking about. (I made you search lkml,
+and that was a bit rude. But you found the patch anyhow.)
 
-[2] : https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg790244.html
-[1] : http://www.gossamer-threads.com/lists/linux/kernel/2024591
+> This controller doesn't look like to be based on pcie-designware core 
+> driver.
+> Other vendors that are using "pcie-designware" core driver are also make 
+> it bool.
+> The current core driver doesn't support module loading/unloading as I 
+> see it.
+> If this is required, I also think this should be part of another patchset.
+> 
+> What do you think ?
 
-Change history:
-	v8 - On request from Bjorn, I am resending the whole series with also
-	     ack from Rob Herring against 2/7
-	v7 - Used for re-spinning 2/7 and 6/7. Fixed build issues on x86_64 and
-	     sparc reported by kbuild test robot
-	v6 - Rebased to v3.19-v7
-	   - Addressed some minor comments about node name and DT size validation.
-	   - Pulled out 8/8 of v5 and plan to send a patch for enhancing
-	     of_dma_configure() to use size to calculate dma mask.
-	   - Added Acks from reviewers.
-	v5 - moved the dma_mask update in device from ARM specific API to
-	     of_dma_configure to allow this across other architecture as well
-	   - improved sanity check for DT dma-range size in of_dma_configure()
-	   - moved API to get parent bridge device to PCI (host-bridge.c)
-	v4 - moved size adjustments in of_iommu_configure() to a separate patch
-	   - consistent node name comment from Rob
-	   - patch 6 added for dma_mask adjustment and iommu mapping size
-	     limiting.
-	v3 - addressed comments to re-use of_dma_configure() for PCI
-	   - To help re-use, change of_iommu_configure() function argument
-		- Move of_dma_configure to of/device.c
-		- Limit the of_iommu_configure to non pci devices
-	v2 - update size to coherent_dma_mask + 1 if dma-range info is missing
-	   - also check the np for null.
-	v1 - updates based on the comments against initial RFC.
-	   - Added a helper function to get the OF node of the parent
-	   - Added an API in of_pci.c to update DMA configuration of the pci
-	     device.
+I wouldn't know whether your driver might work as a loadable module, but
+other people reading this surely will. But if it can't work as a module
+you should drop all the module related macros etc. I spotted. Because
+then they serve no purpose.
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-
-Murali Karicheri (7):
-  of: iommu: Add ptr to OF node arg to of_iommu_configure()
-  of: Move of_dma_configure() to device.c to help re-use
-  of: Fix size when dma-range is not used
-  PCI: Add helper functions pci_get[put]_host_bridge_device()
-  of/pci: Add of_pci_dma_configure() to update DMA configuration
-  PCI: Update DMA configuration from DT
-  arm: dma-mapping: limit IOMMU mapping size
-
- arch/arm/mm/dma-mapping.c |    7 +++++
- drivers/iommu/of_iommu.c  |   10 ++++--
- drivers/of/device.c       |   74 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/of_pci.c       |   18 +++++++++++
- drivers/of/platform.c     |   58 ++---------------------------------
- drivers/pci/host-bridge.c |   14 +++++++++
- drivers/pci/probe.c       |    2 ++
- include/linux/of_device.h |    3 ++
- include/linux/of_iommu.h  |    6 ++--
- include/linux/of_pci.h    |    3 ++
- include/linux/pci.h       |    3 ++
- 11 files changed, 138 insertions(+), 60 deletions(-)
-
--- 
-1.7.9.5
+Paul Bolle
 
