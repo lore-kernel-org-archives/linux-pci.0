@@ -1,52 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:43916 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbbCAUYK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Mar 2015 15:24:10 -0500
+Received: from exprod5og104.obsmtp.com ([64.18.0.178]:51729 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755559AbbCRRnl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2015 13:43:41 -0400
+Received: by obcjt1 with SMTP id jt1so17448891obc.2
+        for <linux-pci@vger.kernel.org>; Wed, 18 Mar 2015 10:43:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150301194904.GC7748@pd.tnic>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
-	<1425176259-30087-2-git-send-email-yinghai@kernel.org>
-	<CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
-	<20150301094557.GA7748@pd.tnic>
-	<20150301152351.GA17391@gmail.com>
-	<CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
-	<20150301194904.GC7748@pd.tnic>
-Date: Sun, 1 Mar 2015 12:24:08 -0800
-Message-ID: <CAE9FiQVpWQ1NU5Euy2G4btS=94qKCZZ7T0YFsCR1x6iv4C1hjA@mail.gmail.com>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
+References: <1678162.2PJ2o1jRen@wuerfel> <cover.1425497218.git.dhdang@apm.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Wed, 18 Mar 2015 10:43:10 -0700
+Message-ID: <CADaLND=+Aq-zgMWE6vnn1kt1g2iz1k-AxMj4--kejF-q=f=bfg@mail.gmail.com>
+Subject: Re: [PATCH v2 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX
+ termination driver
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 1, 2015 at 11:49 AM, Borislav Petkov <bp@suse.de> wrote:
-> On Sun, Mar 01, 2015 at 11:27:48AM -0800, Yinghai Lu wrote:
->> other 7 should also address the problem in
->>    http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
+On Wed, Mar 4, 2015 at 11:39 AM, Duc Dang <dhdang@apm.com> wrote:
+> This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+> APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+> to GIC V2M specification for MSI Termination.
 >
-> No, they don't:
+> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
+> block supports 2688 MSI termination ports coalesced into 16 physical HW IRQ lines
+> and shared across all 5 PCIe ports.
 >
-> [    0.000000] parse_setup_data: data: 0x2206e50 (va: ffffffffff200e50) { next: 0x0, type: 0x0, len: 16, data[0]: 0x0 }
-> [    0.000000] Unknown setup_data type: 0 ignored!
+> v2 changes:
+>         1. Use msi_controller structure
+>         2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
+>
+>  .../devicetree/bindings/pci/xgene-pci-msi.txt      |  61 ++++
+>  MAINTAINERS                                        |   8 +
+>  arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 ++
+>  drivers/pci/host/Kconfig                           |   4 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-xgene-msi.c                   | 393 +++++++++++++++++++++
+>  drivers/pci/host/pci-xgene.c                       |  25 ++
+>  7 files changed, 519 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+>  create mode 100644 drivers/pci/host/pci-xgene-msi.c
 >
 > --
+> 1.9.1
+>
+Hi Bjorn, Arnd, and All,
 
-ok, i get your point.
+Did you have a chance to take a look at this v2 patch set for X-Gene 1
+MSI support?
 
-static allocation in misc.c can not be used to kernel/head_64.S stage safely.
-
-Thanks
-
-Yinghai
+Thanks,
+Duc Dang.
