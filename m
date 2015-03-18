@@ -1,35 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:34836 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbbC1UT3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 16:19:29 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 5/6] vfio-pci: Remove warning if try-reset fails
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, bsd@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Wed, 18 Mar 2015 14:13:36 -0600
+Message-ID: <20150318201336.24807.33423.stgit@gimli.home>
+In-Reply-To: <20150318200053.24807.74115.stgit@gimli.home>
+References: <20150318200053.24807.74115.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <20150328.111621.1041514784349808716.davem@davemloft.net>
-References: <551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
-	<20150328.111621.1041514784349808716.davem@davemloft.net>
-Date: Sat, 28 Mar 2015 13:19:28 -0700
-Message-ID: <CAE9FiQVoDVZOsjZ827NDnTeQ6WiAWDvPays7RqYB4Q2Jy1nmMw@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Miller <davem@davemloft.net>
-Cc: David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 28, 2015 at 11:16 AM, David Miller <davem@davemloft.net> wrote:
-> PCI addresses being 64-bit or not is an attribute of the PCI
-> controller and the geography of the bridges behind it, not the
-> cpu architecture.
+As indicated in the comment, this is not entirely uncommon and
+causes user concern for no reason.
 
-Good point. We should add one choice in pci subsystem Kconfig.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/vfio/pci/vfio_pci.c |   10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-Thanks
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 43517ce..d0f1e70 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -217,14 +217,8 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	 * Try to reset the device.  The success of this is dependent on
+ 	 * being able to lock the device, which is not always possible.
+ 	 */
+-	if (vdev->reset_works) {
+-		int ret = pci_try_reset_function(pdev);
+-		if (ret)
+-			pr_warn("%s: Failed to reset device %s (%d)\n",
+-				__func__, dev_name(&pdev->dev), ret);
+-		else
+-			vdev->needs_reset = false;
+-	}
++	if (vdev->reset_works && !pci_try_reset_function(pdev))
++		vdev->needs_reset = false;
+ 
+ 	pci_restore_state(pdev);
+ out:
 
-Yinghai
