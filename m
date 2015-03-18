@@ -1,181 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19862 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754326AbbCMODG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Mar 2015 10:03:06 -0400
-Date: Fri, 13 Mar 2015 10:01:32 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+Received: from service87.mimecast.com ([91.220.42.44]:38315 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896AbbCRPQv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2015 11:16:51 -0400
+Date: Wed, 18 Mar 2015 15:16:45 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@vger.kernel.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function
- pci_scan_bus_parented()
-Message-ID: <20150313140132.GH5378@l.oracle.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
- <20150311223211.GB1082@google.com>
- <55017CA5.2010502@huawei.com>
- <20150312193505.GB7346@google.com>
- <55024D35.6050509@huawei.com>
- <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com>
+	cpGS <cpgs@samsung.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [RFC] Build with arm64 configuration
+Message-ID: <20150318151645.GA16158@e106497-lin.cambridge.arm.com>
+References: <54FD8F94.20305@samsung.com>
+ <CAErSpo6jOJUcvStVk=9=xUBb7E2E-MCRcFqBmV1o0X2pULAW6Q@mail.gmail.com>
+ <54FE4A9D.5010001@samsung.com>
+ <CAErSpo4Fx6BGEtBwJB4c=q_QMm+x0Xd3k=Gs9mJV9JnQE6YiuA@mail.gmail.com>
+ <54FFF60B.4090300@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com>
+In-Reply-To: <54FFF60B.4090300@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 13, 2015 at 08:24:58AM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 12, 2015 at 9:36 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> >>>>> +  pci_add_resource(&resources, &ioport_resource);
-> >>>>> +  pci_add_resource(&resources, &iomem_resource);
-> >>>>> +  pci_add_resource(&resources, &busn_resource);
-> >>>>
-> >>>> Since I don't want to export busn_resource, you might have to allocate your
-> >>>> own struct resource for it here.  And, of course, figure out the details of
-> >>>> which PCI domain you're in and whether you need to share one struct
-> >>>> resource across several host bridges in the same domain.
-> >>>
-> >>> Allocate its own resource here is ok for me, as I mentioned in previous reply,
-> >>> so do we still need to add additional info to figure out which domain own the bus resource ?
-> >>
-> >> That's up to the caller.  Only the platform knows which bridges it wants to
-> >> have in the same domain.  In principle, every host bridge could be in its
-> >> own domain, since each bridge is the root of a unique PCI hierarchy.  But
-> >> some platforms have firmware that assumes otherwise.  I have no idea what
-> >> xen assumes.
-> >
-> > I'm not xen guy, so I don't know much about it, but because it call pci_scan_bus_parented()
-> > before, and in which busn_resource is always shared for different host bridges(same domain or not),
-> > I think add a static bus resource(0,255) should be safe, at least, it would not introduce new risk.
-> >
-> > Something like:
-> >
-> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> > index b1ffebe..a69e529 100644
-> > --- a/drivers/pci/xen-pcifront.c
-> > +++ b/drivers/pci/xen-pcifront.c
-> > @@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
-> >                                  unsigned int domain, unsigned int bus)
-> >  {
-> >         struct pci_bus *b;
-> > +       LIST_HEAD(resources);
-> >         struct pcifront_sd *sd = NULL;
-> >         struct pci_bus_entry *bus_entry = NULL;
-> >         int err = 0;
-> > +       static struct resource busn_res = {
-> > +               .start = 0,
-> > +               .end = 255,
-> > +               .flags = IORESOURCE_BUS,
-> > +       };
-> >
-> >  #ifndef CONFIG_PCI_DOMAINS
-> >         if (domain != 0) {
-> > @@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
-> >                 err = -ENOMEM;
-> >                 goto err_out;
-> >         }
-> > +       pci_add_resource(&resources, &ioport_resource);
-> > +       pci_add_resource(&resources, &iomem_resource);
-> > +       pci_add_resource(&resources, &busn_res);
-> >         pcifront_init_sd(sd, domain, bus, pdev);
-> >
-> >         pci_lock_rescan_remove();
-> >
-> > -       b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
-> > -                                 &pcifront_bus_ops, sd);
-> > +       b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-> > +                                 &pcifront_bus_ops, sd, &resources);
-> >         if (!b) {
-> >
-> > Bjorn, what do you think about ?
+On Wed, Mar 11, 2015 at 08:00:11AM +0000, Jaehoon Chung wrote:
+> Dear, Bjorn.
 > 
-> That seems OK to me.  Probably still wrong, but no worse than it was before.
+> On 03/10/2015 11:17 AM, Bjorn Helgaas wrote:
+> > [+cc Jingoo, Mohit]
+> > 
+> > On Mon, Mar 9, 2015 at 8:36 PM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+> >> Dear, Bjorn.
+> >>
+> >> Thanks for reply.
+> >>
+> >> On 03/10/2015 08:35 AM, Bjorn Helgaas wrote:
+> >>> On Mon, Mar 9, 2015 at 7:18 AM, Jaehoon Chung <jh80.chung@samsung.com> wrote:
+> >>>> Hi,
+> >>>>
+> >>>> I have a question for building arm64.
+> >>>> (Actually, i didn't have many knowledges for PCIe.)
+> >>>> When i built with arm64 configuration, then i always found the compiler errors.
+> >>>
+> >>> The kernel does build for arm64, so you'll have to be more specific
+> >>> about the problem you're seeing.
+> >>
+> >> I built the pcie-designware.c and pci-exynos.c.
+> >>
+> >> When pcie-designware.c is built, i found the below error message.
+> >> drivers/pci/host/pcie-designware.c:74:52: warning: Ëstruct pci_sys_dataâ¢ declared inside parameter list
+> >>  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> >>                                                     ^
+> >> drivers/pci/host/pcie-designware.c:74:52: warning: its scope is only this definition or declaration, which is probably not what you want
+> >> In file included from include/uapi/linux/stddef.h:1:0,
+> >>                  from include/linux/stddef.h:4,
+> >>                  from ./include/uapi/linux/posix_types.h:4,
+> >>                  from include/uapi/linux/types.h:13,
+> >>                  from include/linux/types.h:5,
+> >>                  from include/linux/smp.h:10,
+> >>                  from include/linux/irq.h:12,
+> >>                  from drivers/pci/host/pcie-designware.c:14:
+> >> drivers/pci/host/pcie-designware.c: In function Ësys_to_pcie":
+> >> drivers/pci/host/pcie-designware.c:76:13: error: dereferencing pointer to incomplete type
+> >>   BUG_ON(!sys->private_data);
+> >>
+> >> I found it's located at arch/arm/include/asm/mach/pci.h.
+> >> It can't refer when do build for arm64.
+> >> So I think that i missed something..I have also searched the patches relevant to this at patchwork.
+> >> Some patch have copied header files relevant to "pci" to "arch/arm64/include/".
+> >> (This is not solution.)
+> >>
+> >> And i don't want to add #ifdef CONFIG_ARM64 into pcie-designware.c
+> >> I think mailing should know the graceful solution.
+> >>
+> >> If i can solve this problem, i will contribute for pci-exynos.c.
+> > 
+> > Oh, I think pcie-designware.c and pci-exynos.c currently only work on
+> > arm, not on arm64.  I don't know enough about them to know whether
+> > they could be made to work on arm64.  But Jingoo and Mohit probably
+> > do.
 
-Interesting. The mechanism for PCI passthrough can either synthesize
-and PCI bus number starting at zero (so first device is always 0:0:0.0)
-or it can replicate the backend PCI topology. That means you
-could have segment values passed in, so: ab:ff:00.1). I've to admin
-I hadn't tried the 'physical' replication on an machine with
-domains (err, segments).
+Jaehoon,
 
-Is there an git tree with this so I can just try it out?
+pci-exynos and pcie-designware need to be converted to the generic PCIe framework and then
+they will work on both arm and arm64. For an example of a driver that successfully works
+in both worlds look at pci-versatile.c.
 
-Thanks.
+Currently, PCI host bridges that work on arch/arm depend on pci_sys_data, like you have
+discovered. There is no reason to do that nowadays, and Lorenzo Pieralisi, Yijing Wang
+and others are trying to get rid of that structure from arch/arm.
+
+Best regards,
+Liviu
+
 > 
-> >>>>>    pcifront_init_sd(sd, domain, bus, pdev);
-> >>>>>
-> >>>>>    pci_lock_rescan_remove();
-> >>>>>
-> >>>>> -  b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
-> >>>>> -                            &pcifront_bus_ops, sd);
-> >>>>> +  b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-> >>>>> +                            &pcifront_bus_ops, sd, &resources);
-> >>>>>    if (!b) {
-> >>>>>            dev_err(&pdev->xdev->dev,
-> >>>>>                    "Error creating PCI Frontend Bus!\n");
-> >>>>>            err = -ENOMEM;
-> >>>>>            pci_unlock_rescan_remove();
-> >>>>> +          pci_free_resource_list(&resources);
-> >>>>>            goto err_out;
-> >>>>>    }
-> >>>>>
-> >>>>> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
-> >>>>>
-> >>>>>    list_add(&bus_entry->list, &pdev->root_buses);
-> >>>>>
-> >>>>> -  /* pci_scan_bus_parented skips devices which do not have a have
-> >>>>> +  /* pci_scan_root_bus skips devices which do not have a
-> >>>>>    * devfn==0. The pcifront_scan_bus enumerates all devfn. */
-> >>>>>    err = pcifront_scan_bus(pdev, domain, bus, b);
-> >>>>>
-> >>>>> --
-> >>>>> 1.7.1
-> >>>>>
-> >>>>> --
-> >>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>>>> the body of a message to majordomo@vger.kernel.org
-> >>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>
-> >>>> .
-> >>>>
-> >>>
-> >>>
-> >>> --
-> >>> Thanks!
-> >>> Yijing
-> >>>
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >> .
-> >>
-> >
-> >
-> > --
-> > Thanks!
-> > Yijing
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'm checking the code..
+> If my understanding is right, pci_sys_data is just used to take data relevant to pice_port.
+> So I think it can get from device-tree or other.
+> I don't exactly know why needs "pci_sys_data".
+> 
+> It seems to discuss about pcie (struct pci_sys_data and hw_pci) on arm64 at mailing..right?
+> ([RFC 2/4] PCI: generic: Add support for ARM64 and MSI(x))
+> 
+> If need to work, i have interesting for contributing pcie on arm64.(pcie-designware.c and pci-exynos.c)
+> But i need to gain the knowledge of pcie..
+> 
+> Best Regards,
+> Jaehoon Chung
+> 
+> > 
+> > Bjorn
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
