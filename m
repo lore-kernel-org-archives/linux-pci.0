@@ -1,97 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:42684 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbbCWDDx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Mar 2015 23:03:53 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 23 Mar 2015 13:03:51 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id F37F4357805B
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:03:49 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2N33fum36044928
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:03:49 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2N33Gjp016027
-	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:03:16 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@ozlabs.org
-Cc: linux-pci@vger.kernel.org, cascardo@linux.vnet.ibm.com,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 2/2] PCI: Apply warm reset to specific devices
-Date: Mon, 23 Mar 2015 14:02:51 +1100
-Message-Id: <1427079771-18472-2-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 6/6] vfio-pci: Move idle devices to D3hot power state
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com, kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, bsd@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Wed, 18 Mar 2015 14:13:42 -0600
+Message-ID: <20150318201342.24807.4286.stgit@gimli.home>
+In-Reply-To: <20150318200053.24807.74115.stgit@gimli.home>
+References: <20150318200053.24807.74115.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, VFIO infrastructure depends on pci_reset_function()
-to ensure the PCI device in clean state when passing to guest,
-or being returned back to host. However, the function doesn't
-work (or well) on some PCI devices on PowerPC platforms, which
-potentially brings pending traffic over the boundary between
-host/guest and usually causes memory corruption.
+We can save some power by putting devices that are bound to vfio-pci
+but not in use by the user in the D3hot power state.  Devices get
+woken into D0 when opened by the user.  Resets return the device to
+D0, so we need to re-apply the low power state after a bus reset.
+It's tempting to try to use D3cold, but we have no reason to inhibit
+hotplug of idle devices and we might get into a loop of having the
+device disappear before we have a chance to try to use it.
 
-The patch applies warm reset to those PCI devices, which is
-implemented based on pci_set_pcie_reset_state() to get clean
-state when passing device from host to guest, or returning it
-back to host. The reset request is routed to platform specific
-pcibios_set_pcie_reset_state() and processed there.
+A new module parameter allows this feature to be disabled if there are
+devices that misbehave as a result of this change.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/quirks.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/vfio/pci/vfio_pci.c |   36 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 33 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85f247e..9846d5e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3504,6 +3504,22 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
- 	return 0;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index d0f1e70..049b9e9 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -50,6 +50,11 @@ module_param(disable_vga, bool, S_IRUGO);
+ MODULE_PARM_DESC(disable_vga, "Disable VGA resource access through vfio-pci");
+ #endif
+ 
++static bool disable_idle_d3;
++module_param(disable_idle_d3, bool, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(disable_idle_d3,
++		 "Disable using the PCI D3 low power state for idle, unused devices");
++
+ static DEFINE_MUTEX(driver_lock);
+ 
+ static inline bool vfio_vga_disabled(void)
+@@ -114,6 +119,8 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 	u16 cmd;
+ 	u8 msix_pos;
+ 
++	pci_set_power_state(pdev, PCI_D0);
++
+ 	/* Don't allow our initial saved state to include busmaster */
+ 	pci_clear_master(pdev);
+ 
+@@ -225,6 +232,9 @@ out:
+ 	pci_disable_device(pdev);
+ 
+ 	vfio_pci_try_bus_reset(vdev);
++
++	if (!disable_idle_d3)
++		pci_set_power_state(pdev, PCI_D3hot);
  }
  
-+static int pci_dev_warm_reset(struct pci_dev *pdev, int probe)
-+{
-+	int ret;
-+
-+	/* Check the device can take the reset or not */
-+	if (probe)
-+		return pci_set_pcie_reset_state(pdev, pcie_warm_reset, probe);
-+
-+	/* Issue warm reset */
-+	ret = pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
-+	if (!ret)
-+		ret = pci_set_pcie_reset_state(pdev, pcie_deassert_reset, 0);
-+
-+	return ret;
-+}
-+
- #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
- #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
- #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-@@ -3519,6 +3535,18 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_intel_generic_dev },
- 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
- 		reset_chelsio_generic_dev },
-+	{ PCI_VENDOR_ID_IBM, PCI_ANY_ID,
-+		pci_dev_warm_reset },
-+	{ PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_NX2_57800,
-+		pci_dev_warm_reset },
-+	{ PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_NX2_57840,
-+		pci_dev_warm_reset },
-+	{ PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_NX2_57810,
-+		pci_dev_warm_reset },
-+	{ PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-+		pci_dev_warm_reset },
-+	{ PCI_VENDOR_ID_TI, PCI_ANY_ID,
-+		pci_dev_warm_reset },
- 	{ 0 }
- };
+ static void vfio_pci_release(void *device_data)
+@@ -951,6 +961,20 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 					vfio_pci_set_vga_decode(vdev, false));
+ 	}
  
--- 
-1.8.3.2
++	if (!disable_idle_d3) {
++		/*
++		 * pci-core sets the device power state to an unknown value at
++		 * bootup and after being removed from a driver.  The only
++		 * transition it allows from this unknown state is to D0, which
++		 * typically happens when a driver calls pci_enable_device().
++		 * We're not ready to enable the device yet, but we do want to
++		 * be able to get to D3.  Therefore first do a D0 transition
++		 * before going to D3.
++		 */
++		pci_set_power_state(pdev, PCI_D0);
++		pci_set_power_state(pdev, PCI_D3hot);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -971,6 +995,9 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 				VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
+ 				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
+ 	}
++
++	if (!disable_idle_d3)
++		pci_set_power_state(pdev, PCI_D0);
+ }
+ 
+ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+@@ -1089,10 +1116,13 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
+ 
+ put_devs:
+ 	for (i = 0; i < devs.cur_index; i++) {
+-		if (!ret) {
+-			tmp = vfio_device_data(devs.devices[i]);
++		tmp = vfio_device_data(devs.devices[i]);
++		if (!ret)
+ 			tmp->needs_reset = false;
+-		}
++
++		if (!tmp->refcnt && !disable_idle_d3)
++			pci_set_power_state(tmp->pdev, PCI_D3hot);
++
+ 		vfio_device_put(devs.devices[i]);
+ 	}
+ 
 
