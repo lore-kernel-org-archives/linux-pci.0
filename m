@@ -1,55 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:32928 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752340AbbCaWi7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 18:38:59 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55093C12.7070004@st.com>
+Date: Wed, 18 Mar 2015 09:49:22 +0100
+From: Fabrice Gasnier <fabrice.gasnier@st.com>
 MIME-Version: 1.0
-In-Reply-To: <551B1FB2.3020203@oracle.com>
-References: <5514391F.2030300@oracle.com>
-	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
-	<5515F6B8.8020606@oracle.com>
-	<5515F782.7060301@oracle.com>
-	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
-	<551623C1.2040300@oracle.com>
-	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>
-	<5516BF4B.9030901@oracle.com>
-	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>
-	<55181065.8090807@oracle.com>
-	<CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
-	<5519D40D.20903@oracle.com>
-	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
-	<551A1E32.1010309@oracle.com>
-	<CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>
-	<551AD384.50000@oracle.com>
-	<CAE9FiQU=9_NBiPNgaEBa3nOPBnCwGyj0ppOyVnf7RduKRe8K=A@mail.gmail.com>
-	<551B1FB2.3020203@oracle.com>
-Date: Tue, 31 Mar 2015 15:38:58 -0700
-Message-ID: <CAE9FiQVTBWQnH_UcVtg3Z38=+qwJXvx8aLoTFF_2JaTY3zi8pw@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Ahern <david.ahern@oracle.com>
-Cc: David Miller <davem@davemloft.net>,
+To: Paul Bolle <pebolle@tiscali.nl>,
+	Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <kernel@stlinux.com>,
+	<linux-pci@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: Re: [PATCH v2 3/5] PCI: st: Provide support for the sti PCIe controller
+References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>	 <1426515635-9466-4-git-send-email-gabriel.fernandez@linaro.org> <1426518695.26437.55.camel@x220>
+In-Reply-To: <1426518695.26437.55.camel@x220>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 31, 2015 at 3:29 PM, David Ahern <david.ahern@oracle.com> wrote:
->>
->> Please check attached three patches on top of current linus tree.
->>
+Hi Paul,
+
+On 03/16/2015 04:11 PM, Paul Bolle wrote:
+>> +config PCI_ST
+>> +	bool "ST PCIe controller"
+> You add a bool Kconfig symbol. A week or two ago I saw some patches fly
+> by that - I think - allowed PCIe controllers to be built modular.
+
+Thanks for your review.
+
+Are you talking about "PCI: Export symbols of PCI functions" patch, that 
+is part of a series
+named "pci: iproc: Add Broadcom iProc PCIe support" ?
+
+This controller doesn't look like to be based on pcie-designware core 
+driver.
+Other vendors that are using "pcie-designware" core driver are also make 
+it bool.
+The current core driver doesn't support module loading/unloading as I 
+see it.
+If this is required, I also think this should be part of another patchset.
+
+What do you think ?
+
+Please advise,
+BR,
+Fabrice
 >
-> new log. Same as before -- PCI_DEBUG, ignore_loglevel ofpci_debug=1
+>> +	depends on ARCH_STI || (ARM && COMPILE_TEST)
+>> +	select PCIE_DW
+>> +	help
+>> +	  Enable PCIe controller support on ST Socs. This controller is based
+>> +	  on Designware hardware and therefore the driver re-uses the
+>> +	  Designware core functions to implement the driver.
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
+>> +obj-$(CONFIG_PCI_ST) += pci-st.o
+> If you keep that symbol bool this objectfile will never be part of a
+> module.
+>
+>> diff --git a/drivers/pci/host/pci-st.c b/drivers/pci/host/pci-st.c
+>> new file mode 100644
+>> index 0000000..470000d
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pci-st.c
+>> +#include <linux/module.h>
+> For built-in code this include is, probably, not needed.
+>
+>> +MODULE_DEVICE_TABLE(of, st_pcie_of_match);
+> For built-in code that macro will always be preprocessed away.
+>
+>> +/* ST PCIe driver does not allow module unload */
+>> +static int __init pcie_init(void)
+>> +{
+>> +	return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
+>> +}
+>> +device_initcall(pcie_init);
+> I think the module unload comment is a bit odd for built-in only code.
+>
+>> +MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
+>> +MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
+>> +MODULE_LICENSE("GPL v2");
+> These three macros will be, basically, always preprocessed away as long
+> as this code can't be built to be modular.
+>
+>
+> Paul Bolle
 >
 
-Good, it is clean now.
-
-Thanks
-
-Yinghai
