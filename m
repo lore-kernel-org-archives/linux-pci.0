@@ -1,90 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41041 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:53763 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752058AbbCMDSB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:18:01 -0400
-Date: Fri, 13 Mar 2015 11:17:57 +0800
-From: Fam Zheng <famz@redhat.com>
-To: Bandan Das <bsd@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
-Message-ID: <20150313031757.GA26947@ad.nay.redhat.com>
-References: <1426137682-12287-1-git-send-email-famz@redhat.com>
- <jpgk2ylzs62.fsf@redhat.com>
- <20150313020919.GD32054@ad.nay.redhat.com>
- <jpg8uf1twxs.fsf@redhat.com>
+	id S1750853AbbCSS5x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Mar 2015 14:57:53 -0400
+Date: Thu, 19 Mar 2015 19:57:38 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v2 0/4] pci: fix unhandled interrupt on shutdown
+Message-ID: <1426786724-22241-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <jpg8uf1twxs.fsf@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 03/12 23:09, Bandan Das wrote:
-> Ccing Alex, he can probably confirm if my understanding is indeed correct.
-> 
-> Fam Zheng <famz@redhat.com> writes:
-> 
-> > On Thu, 03/12 19:56, Bandan Das wrote:
-> >> Hi Fam,
-> >> 
-> >> Fam Zheng <famz@redhat.com> writes:
-> >> 
-> >> > If the device doesn't support shutdown, disabling interrupts may cause
-> >> > trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
-> >> > after we disable MSI-X, futher notifications from device will be
-> >> > delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
-> >> > may prevent us from making progress, by keep triggering interrupts.
-> >> >
-> >> > Signed-off-by: Fam Zheng <famz@redhat.com>
-> >> > ---
-> >> >  drivers/pci/pci-driver.c | 7 ++++---
-> >> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> > index 3cb2210..fb29c96 100644
-> >> > --- a/drivers/pci/pci-driver.c
-> >> > +++ b/drivers/pci/pci-driver.c
-> >> > @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
-> >> >  
-> >> >  	pm_runtime_resume(dev);
-> >> >  
-> >> > -	if (drv && drv->shutdown)
-> >> > +	if (drv && drv->shutdown) {
-> >> >  		drv->shutdown(pci_dev);
-> >> > -	pci_msi_shutdown(pci_dev);
-> >> > -	pci_msix_shutdown(pci_dev);
-> >> > +		pci_msi_shutdown(pci_dev);
-> >> > +		pci_msix_shutdown(pci_dev);
-> >> > +	}
-> >> 
-> >> If the driver doesn't provide a shutdown method and doesn't itself
-> >> disable MSI/MSI-X, then pci_msi(x)_shutdown won't be called anymore,
-> >> no ?
-> >
-> > Right.
-> >
-> >> 
-> >> This is probably ok (but unclean) for a system shutdown, but could
-> >> cause problems for something like kexec ?
-> >
-> > Doesn't the reset in kexec clean this up during initialization?
-> 
-> I guess it would take the same path as a reboot.
+Fam Zheng noticed that pci shutdown disables msi and msix of a device while
+device is still active. This was intended to fix kexec with fusion devices but
+had the unintended effect of breaking even regular shutdown when using virtio.
 
-I don't understand, do you mean that no reset will be done before more
-operations on the device?
+The same problem would affect any driver which doesn't register
+a level interrupt handler when using msix.
 
-> 
-> > Without shutdown, anything in the driver is unclean anyway, for example
-> > free_irq is not called.
-> 
-> True, And that is why the MSI/-X shutdown functions are called here
-> because pci can't always rely on the individual device drivers to do
-> the right thing, but atleast can make a best effort at cleaning up.
+I think the fix is to avoid touching device on shutdown:
+we clear bus master anyway, so we won't get any more
+msi interrupts, and bus reset will clear the msi/msix
+state eventually anyway.
 
-This virtio-scsi case shows us that intermediate state is bad, so I still think
-we should call pci_msix_shutdown conditionally.
+The patches seems to all work well for me.  Given they affect all pci devices,
+and the bug has been there since 2.6 times, I think there's no rush: we can
+merge them for 4.1.
 
-Fam
+At the same time, once merged, they will likely make a good
+stable candidate.
+
+Michael S. Tsirkin (4):
+  pci: disable msi/msix at probe time
+  pci: don't disable msi/msix at shutdown
+  pci: make msi/msix shutdown functions static
+  virtio_pci: drop msi_off on probe
+
+ include/linux/pci.h                | 4 ----
+ drivers/pci/msi.c                  | 4 ++--
+ drivers/pci/pci-driver.c           | 8 ++++++--
+ drivers/virtio/virtio_pci_common.c | 3 ---
+ 4 files changed, 8 insertions(+), 11 deletions(-)
+
+-- 
+MST
+
