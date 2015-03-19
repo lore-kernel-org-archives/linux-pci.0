@@ -1,300 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:17052 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884AbbCXDig (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:38:36 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 29/30] PCI: Remove pci_bus_assign_domain_nr()
-Date: Tue, 24 Mar 2015 11:34:23 +0800
-Message-ID: <1427168064-8657-30-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from g4t3427.houston.hp.com ([15.201.208.55]:50752 "EHLO
+	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbbCSFhV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:21 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v9 03/10] iommu/vt-d: Function to get old context entry
+Date: Thu, 19 Mar 2015 13:36:21 +0800
+Message-Id: <1426743388-26908-4-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus. Also move
-pci_host_assign_domain_nr() to drivers/pci/host-bridge.c
-for simplicity.
+Interface for when a new domain in the crashdump kernel needs some
+values from the panicked kernel's context entries.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 ---
- drivers/pci/host-bridge.c |   63 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c         |   67 ---------------------------------------------
- drivers/pci/pci.h         |   13 ---------
- drivers/pci/probe.c       |   11 ++-----
- include/linux/pci.h       |    3 --
- 5 files changed, 66 insertions(+), 91 deletions(-)
+ drivers/iommu/intel-iommu.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index e68b6c8..c78f4d0 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -11,6 +11,8 @@
- static LIST_HEAD(pci_host_bridge_list);
- static DEFINE_MUTEX(pci_host_mutex);
- 
-+static void pci_host_assign_domain_nr(struct pci_host_bridge *host);
-+
- static void pci_release_host_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-@@ -159,8 +161,69 @@ int pci_domain_nr(struct pci_bus *bus)
- 	return host->domain;
- }
- EXPORT_SYMBOL(pci_domain_nr);
-+
-+static atomic_t __domain_nr = ATOMIC_INIT(-1);
-+
-+int pci_get_new_domain_nr(void)
-+{
-+	return atomic_inc_return(&__domain_nr);
-+}
-+
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+static int pci_assign_domain_nr(struct device *dev)
-+{
-+	static int use_dt_domains = -1;
-+	int domain = of_get_pci_domain_nr(dev->of_node);
-+
-+	/*
-+	 * Check DT domain and use_dt_domains values.
-+	 *
-+	 * If DT domain property is valid (domain >= 0) and
-+	 * use_dt_domains != 0, the DT assignment is valid since this means
-+	 * we have not previously allocated a domain number by using
-+	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-+	 * 1, to indicate that we have just assigned a domain number from
-+	 * DT.
-+	 *
-+	 * If DT domain property value is not valid (ie domain < 0), and we
-+	 * have not previously assigned a domain number from DT
-+	 * (use_dt_domains != 1) we should assign a domain number by
-+	 * using the:
-+	 *
-+	 * pci_get_new_domain_nr()
-+	 *
-+	 * API and update the use_dt_domains value to keep track of method we
-+	 * are using to assign domain numbers (use_dt_domains = 0).
-+	 *
-+	 * All other combinations imply we have a platform that is trying
-+	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-+	 * which is a recipe for domain mishandling and it is prevented by
-+	 * invalidating the domain value (domain = -1) and printing a
-+	 * corresponding error.
-+	 */
-+	if (domain >= 0 && use_dt_domains) {
-+		use_dt_domains = 1;
-+	} else if (domain < 0 && use_dt_domains != 1) {
-+		use_dt_domains = 0;
-+		domain = pci_get_new_domain_nr();
-+	} else {
-+		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-+			dev->of_node->full_name);
-+		domain = -1;
-+	}
-+
-+	return domain;
-+}
-+#endif
- #endif
- 
-+void pci_host_assign_domain_nr(struct pci_host_bridge *host)
-+{
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	host->domain = pci_assign_domain_nr(host->dev.parent);
-+#endif
-+}
-+
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 				 void (*release_fn)(struct pci_host_bridge *),
- 				 void *release_data)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8a2f12c..044801c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4515,73 +4515,6 @@ static void pci_no_domains(void)
- #endif
- }
- 
--#ifdef CONFIG_PCI_DOMAINS
--static atomic_t __domain_nr = ATOMIC_INIT(-1);
--
--int pci_get_new_domain_nr(void)
--{
--	return atomic_inc_return(&__domain_nr);
--}
--
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--static int pci_assign_domain_nr(struct device *dev)
--{
--	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(dev->of_node);
--
--	/*
--	 * Check DT domain and use_dt_domains values.
--	 *
--	 * If DT domain property is valid (domain >= 0) and
--	 * use_dt_domains != 0, the DT assignment is valid since this means
--	 * we have not previously allocated a domain number by using
--	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
--	 * 1, to indicate that we have just assigned a domain number from
--	 * DT.
--	 *
--	 * If DT domain property value is not valid (ie domain < 0), and we
--	 * have not previously assigned a domain number from DT
--	 * (use_dt_domains != 1) we should assign a domain number by
--	 * using the:
--	 *
--	 * pci_get_new_domain_nr()
--	 *
--	 * API and update the use_dt_domains value to keep track of method we
--	 * are using to assign domain numbers (use_dt_domains = 0).
--	 *
--	 * All other combinations imply we have a platform that is trying
--	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
--	 * which is a recipe for domain mishandling and it is prevented by
--	 * invalidating the domain value (domain = -1) and printing a
--	 * corresponding error.
--	 */
--	if (domain >= 0 && use_dt_domains) {
--		use_dt_domains = 1;
--	} else if (domain < 0 && use_dt_domains != 1) {
--		use_dt_domains = 0;
--		domain = pci_get_new_domain_nr();
--	} else {
--		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
--			dev->of_node->full_name);
--		domain = -1;
--	}
--
--	return domain;
--}
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
--
--void pci_host_assign_domain_nr(struct pci_host_bridge *host)
--{
--	host->domain = pci_assign_domain_nr(host->dev.parent);
--}
--
--#endif
--#endif
--
- /**
-  * pci_ext_cfg_avail - can we access extended PCI config space?
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 577d5de..f7dbe70 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -369,6 +369,10 @@ static inline int first_pte_in_page(struct dma_pte *pte)
   *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ef10cc1..a6e4d8f 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -321,19 +321,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+  */
+ 
++static struct context_entry *device_to_existing_context_entry(
++				struct intel_iommu *iommu,
++				u8 bus, u8 devfn);
++
+ 
+ #endif /* CONFIG_CRASH_DUMP */
+ 
+@@ -4796,3 +4800,26 @@ static void __init check_tylersburg_isoch(void)
+ 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
+ 	       vtisochctrl);
  }
- #endif
- 
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
--void pci_host_assign_domain_nr(struct pci_host_bridge *host);
--#else
--static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
--{
--}
--static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
--{
--}
--#endif
--
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus, void *sysdata,
- 		struct list_head *resources, struct pci_host_bridge_ops *ops);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cb0237f..53e4887 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -495,10 +495,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
- 	return b;
- }
- 
-@@ -645,7 +641,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1865,7 +1861,7 @@ static struct pci_bus *pci_create_root_bus(
- 	char *fmt;
- 
- 	parent = bridge->dev.parent;
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
-@@ -1873,7 +1869,6 @@ static struct pci_bus *pci_create_root_bus(
- 	b->ops = ops;
- 	b->number = b->busn_res.start =
- 		pci_host_first_busnr(bridge);
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c2c6675..7ef205c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -469,9 +469,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
++
++#ifdef CONFIG_CRASH_DUMP
++
++static struct context_entry *device_to_existing_context_entry(
++				struct intel_iommu *iommu,
++				u8 bus, u8 devfn)
++{
++	struct root_entry *root;
++	struct context_entry *context;
++	struct context_entry *ret;
++	unsigned long flags;
++
++	ret = NULL;
++	spin_lock_irqsave(&iommu->lock, flags);
++	root = &iommu->root_entry[bus];
++	context = get_context_addr_from_root(root);
++	if (context && context_present(context+devfn))
++		ret = &context[devfn];
++	spin_unlock_irqrestore(&iommu->lock, flags);
++	return ret;
++}
++
++#endif /* CONFIG_CRASH_DUMP */
 -- 
-1.7.1
+2.0.0-rc0
 
