@@ -1,52 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:36857 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757870AbbCDTlj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:41:39 -0500
-Date: Wed, 4 Mar 2015 20:41:33 +0100
-From: Ingo Molnar <mingo@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiri Kosina <jkosina@suse.cz>, Borislav Petkov <bp@alien8.de>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@suse.de>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-Message-ID: <20150304194133.GA6276@gmail.com>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
- <1425456048-16236-5-git-send-email-yinghai@kernel.org>
- <20150304101649.GA3663@pd.tnic>
- <alpine.LNX.2.00.1503041652550.26925@pobox.suse.cz>
- <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
+Received: from mail-bn1on0135.outbound.protection.outlook.com ([157.56.110.135]:40864
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750854AbbCSTV5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Mar 2015 15:21:57 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"olaf@aepfle.de" <olaf@aepfle.de>
+CC: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>
+Subject: RE: [PATCH 1/3] drivers:pnp Add support for descendants claiming
+ memory address space
+Date: Thu, 19 Mar 2015 19:21:53 +0000
+Message-ID: <BN3PR0301MB121958CF49F85A624B3AD2F6AB010@BN3PR0301MB1219.namprd03.prod.outlook.com>
+References: <1424202111-14461-1-git-send-email-jakeo@microsoft.com>
+ <54F8E0C3.6080103@intel.com>
+ <DM2PR0301MB12329507E2600FD4AEF9A7E7AB180@DM2PR0301MB1232.namprd03.prod.outlook.com>
+ <1785536.Y0PP4kToXf@vostro.rjw.lan>
+In-Reply-To: <1785536.Y0PP4kToXf@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU=wCmGEKoq06EV=oi=xxYwh7FGMEt7XiiPwrOLVo1OrA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-* Yinghai Lu <yinghai@kernel.org> wrote:
-
-> On Wed, Mar 4, 2015 at 7:54 AM, Jiri Kosina <jkosina@suse.cz> wrote:
-> 
-> >
-> > Also this 15-patch series needs to be separated into two patchsets. The
-> > whole series is not appropriate for -rc3, but this particular one at least
-> > is a regression fix that has to go in.
-> 
-> The first 4 should go v4.0.
-> 
-> could leave others to v4.1
-
-Then please submit the first 4 only for the time being, and submit the 
-rest once Boris has accepted and applied the fixes.
-
-Thanks,
-
-	Ingo
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBSYWZhZWwgSi4gV3lzb2NraSBb
+bWFpbHRvOnJqd0Byand5c29ja2kubmV0XQ0KPiBTZW50OiBUdWVzZGF5LCBNYXJjaCAxMCwgMjAx
+NSA1OjM0IFBNDQo+IFRvOiBKYWtlIE9zaGluczsgb2xhZkBhZXBmbGUuZGUNCj4gQ2M6IFJhZmFl
+bCBKLiBXeXNvY2tpOyBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZzsgS1kgU3Jpbml2YXNhbjsg
+bGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGFwd0BjYW5vbmljYWwuY29tOyB2a3V6
+bmV0c0ByZWRoYXQuY29tOyBMaW51eA0KPiBBQ1BJOyBMaW51eCBQQ0k7IEJqb3JuIEhlbGdhYXMN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzNdIGRyaXZlcnM6cG5wIEFkZCBzdXBwb3J0IGZvciBk
+ZXNjZW5kYW50cyBjbGFpbWluZw0KPiBtZW1vcnkgYWRkcmVzcyBzcGFjZQ0KPiANCg0KPHNuaXA+
+DQoNCj4gSXQgc2VlbXMgdG8gbWUgdGhlbiB0aGF0IHdoYXQgeW91IHJlYWxseSB3YW50IGlzIGEg
+bnVsbCBwcm90b2NvbCBmb3IgUE5QDQo+IHdoaWNoIHNpbXBseSBkb2Vzbid0IGRvIGFueXRoaW5n
+LiAgSSBkb24ndCBzZWUgYW55IGp1c3RpZmljYXRpb24gZm9yIHRoZQ0KPiAiZGVzY2VuZGFudF9w
+cm90b2NvbCIgbmFtZS4gIEl0J3MganVzdCBhIG51bGwgb25lLg0KPiANCj4gSW4gdGhhdCBjYXNl
+IHlvdSBzaG91bGQgc2xpZ2h0bHkgbW9kaWZ5IHRoZSBQTlAgYnVzIHR5cGUgdG8gYmUgYWJsZSB0
+bw0KPiB1c2UgYSBudWxsIHByb3RvY29sIHdpdGhvdXQgZGVmaW5pbmcgdGhlIHN0dWIgLT5nZXQs
+IC0+cHV0IGFuZCAtPmRpc2FibGUNCj4gbWV0aG9kcyB0aGF0IGp1c3QgZG8gbm90aGluZyBhbmQg
+cmV0dXJuIDAuDQo+IA0KPiBUaGVuLCB5b3UgY2FuIGRlZmluZSB0aGUgbnVsbCBwcm90b2NvbCB3
+aXRob3V0IGFueSBtZXRob2RzIGluDQo+IGRyaXZlcnMvcG5wL2NvcmUuYyBhbmQgdXNlIGl0IGlu
+IHlvdXIgY29kZSB3aXRob3V0IGFkZGluZyB0aGUgImRlc2NlbmRhbnQiDQo+IGNvbmNlcHQuDQo+
+IA0KPiBPZiBjb3Vyc2UsIHRoYXQgY29tZXMgd2l0aCBhIHByaWNlIHdoaWNoIGlzIHRoYXQgZXZl
+cnkgZGV2aWNlIHVzaW5nIHRoZQ0KPiBudWxsIHByb3RvY29sIHdpbGwgaGF2ZSB0aGF0IHByb3Rv
+Y29sJ3MgYWJzdHJhY3QgZGV2aWNlIGFzIGl0cyBwYXJlbnQuDQo+IEkgc3VwcG9zZSB0aGF0IHRo
+aXMgaXMgbm90IGEgcHJvYmxlbT8NCj4gDQoNCjxzbmlwPg0KDQo+IA0KPiA+IFRoZSBwcm9ibGVt
+IGNvbWVzIGluIGlmIHRoZXJlIGFyZSBQQ0kgZGV2aWNlcyBpbiB0aGUgc2FtZSByZWdpb24uICBU
+aGVyZSdzDQo+IG5vDQo+ID4gZWFzeSB3YXkgdG8gZmlndXJlIG91dCB3aGV0aGVyIHRoZSBjbGFp
+bSBjb25mbGljdHMgd2l0aCB0aGUgUENJIGRldmljZXMsDQo+IHNpbmNlDQo+ID4gdGhlIFBDSSBk
+ZXZpY2UncyBjbGFpbXMgYXJlIG1hZGUgdGhyb3VnaCB0aGUgcG5wIGxheWVyLg0KPiANCj4gV2Vs
+bCwgcGxlYXNlIGxvb2sgYXQgX19wY2lfcmVxdWVzdF9yZWdpb24oKSB0aGVuIGFuZCB0ZWxsIG1l
+IHdoZXJlIGl0IHVzZXMNCj4gdGhlDQo+IFBOUCBsYXllci4NCj4gDQoNCkkndmUgYmVlbiB0aGlu
+a2luZyBhIGxvdCAoYW5kIHBva2luZyBhcm91bmQgaW4gdGhlIGNvZGUsIHRyeWluZyB0aGluZ3Mp
+IGluIHJlc3BvbnNlIHRvIHdoYXQgeW91IHdyb3RlLCBhbmQgaW4gcGFydGljdWxhciBpbiByZXNw
+b25zZSB0byB0aGUgdHdvIHBhcnRzIHF1b3RlZCBhYm92ZS4gIEhhdmluZyBhIG51bGwgcHJvdG9j
+b2wgd2hlcmUgZWFjaCBvZiB0aGUgZGV2aWNlcyBoYXMgdGhlIHNhbWUgYWJzdHJhY3QgcGFyZW50
+IGRvZXNuJ3Qgc2VydmUgbXkgbmVlZHMsIGJlY2F1c2UgaXQgd29uJ3QgZ3VhcmFudGVlIHRoYXQg
+dGhlIHJhbmdlcyBjbGFpbWVkIGZhbGwgd2l0aGluIHRoZSBfQ1JTIG9mIHRoZSBncmFuZHBhcmVu
+dCBvciBncmVhdC1ncmFuZHBhcmVudCBub2RlLiAgQW5kLCBpbiBmYWN0LCBJIGRvbid0IHRoaW5r
+IHRoYXQgbXkgcHJvcG9zZWQgcGF0Y2ggaXMgYWN0dWFsbHkgYWNjb21wbGlzaGluZyB0aGF0IGRl
+dGVybWluaXN0aWNhbGx5IGVpdGhlciwgYXQgdGhlIG1vbWVudC4NCg0KWW91ciByZXNwb25zZSwg
+YXQgbGVuZ3RoLCBjb252aW5jZWQgbWUgdG8gbG9vayBhdCB0aGluZ3MgZGlmZmVyZW50bHkgYW5k
+IEkgcmVhbGl6ZWQgdGhhdCBJIHdhc24ndCBnZXR0aW5nIGFzIG11Y2ggZnJvbSB0aGlzIGFwcHJv
+YWNoIGFzIEkgdGhvdWdodCBJIHdhcy4gIEknZCBsaWtlIHRvIHdpdGhkcmF3IHRoaXMgcGF0Y2gg
+c2VyaWVzLiAgSSBjYW4gY29tZSB1cCB3aXRoIGFuIGFsdGVybmF0aXZlIHNvbHV0aW9uIHRoYXQg
+ZXhpc3RzIG9ubHkgd2l0aGluIHRoZSBIeXBlci1WLXJlbGF0ZWQgZHJpdmVycy4NCg0KVGhhbmtz
+IGFnYWluIGZvciB5b3VyIHRpbWUgYW5kIHBhdGllbmNlLA0KSmFrZSBPc2hpbnMNCg0KDQo=
