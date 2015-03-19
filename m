@@ -1,103 +1,134 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v3 1/3] pci: iProc: define iProc PCIe platform bus binding
-Date: Thu, 5 Mar 2015 17:01:36 -0800
-Message-ID: <1425603699-13416-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1425603699-13416-1-git-send-email-rjui@broadcom.com>
-References: <1425603699-13416-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:60815 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbbCSFh4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:56 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v9 09/10] iommu/vt-d: Copy functions for irte
+Date: Thu, 19 Mar 2015 13:36:27 +0800
+Message-Id: <1426743388-26908-10-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document the Broadcom iProc PCIe platform interface device tree binding
+Functions to copy the irte data from the old kernel into the kdump kernel.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbraden@broadcom.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 ---
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+ drivers/iommu/intel_irq_remapping.c | 62 +++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h         |  4 +++
+ 2 files changed, 66 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-new file mode 100644
-index 0000000..f7ce50e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -0,0 +1,63 @@
-+* Broadcom iProc PCIe controller with the platform bus interface
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 14de1ab..20c060b 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -8,6 +8,7 @@
+ #include <linux/irq.h>
+ #include <linux/intel-iommu.h>
+ #include <linux/acpi.h>
++#include <linux/crash_dump.h>
+ #include <asm/io_apic.h>
+ #include <asm/smp.h>
+ #include <asm/cpu.h>
+@@ -17,6 +18,11 @@
+ 
+ #include "irq_remapping.h"
+ 
++#ifdef CONFIG_CRASH_DUMP
++static int __iommu_load_old_irte(struct intel_iommu *iommu);
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
++#endif /* CONFIG_CRASH_DUMP */
 +
-+Required properties:
-+- compatible: Must be "brcm,iproc-pcie"
-+- reg: base address and length of the PCIe controller I/O register space
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+  mapping of the PCIe interface to interrupt numbers
-+- linux,pci-domain: PCI domain ID. Should be unique for each host controller
-+- bus-range: PCI bus numbers covered
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
+ struct ioapic_scope {
+ 	struct intel_iommu *iommu;
+ 	unsigned int id;
+@@ -1302,3 +1308,59 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ 
+ 	return ret;
+ }
 +
-+Optional properties:
-+- phys: phandle of the PCIe PHY device
-+- phy-names: must be "pcie-phy"
++#ifdef CONFIG_CRASH_DUMP
 +
-+Example:
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>;
++static int __iommu_load_old_irte(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
 +
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
++	memcpy(iommu->ir_table->base,
++		iommu->ir_table->base_old_virt,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
 +
-+		linux,pci-domain = <0>;
++	__iommu_flush_cache(iommu, iommu->ir_table->base,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
 +
-+		bus-range = <0x00 0xff>;
++	return 0;
++}
 +
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
++{
++	int start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
 +
-+		phys = <&phy 0 5>;
-+		phy-names = "pcie-phy";
-+	};
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
 +
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>;
++	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
++		return -1;
 +
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
++	if (index == -1) {
++		start = 0;
++		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
++	} else {
++		start = index * sizeof(struct irte);
++		size = sizeof(struct irte);
++	}
 +
-+		linux,pci-domain = <1>;
++	to = iommu->ir_table->base_old_virt;
++	from = iommu->ir_table->base;
++	memcpy(to + start, from + start, size);
 +
-+		bus-range = <0x00 0xff>;
++	__iommu_flush_cache(iommu, to + start, size);
 +
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+
-+		phys = <&phy 1 6>;
-+		phy-names = "pcie-phy";
-+	};
++	return 0;
++}
++#endif /* CONFIG_CRASH_DUMP */
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 8e29b97..76c6ea5 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -290,6 +290,10 @@ struct q_inval {
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
++#ifdef CONFIG_CRASH_DUMP
++	void __iomem *base_old_virt;
++	unsigned long base_old_phys;
++#endif
+ };
+ #endif
+ 
 -- 
-1.7.9.5
+2.0.0-rc0
 
