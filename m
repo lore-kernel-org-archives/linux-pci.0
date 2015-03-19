@@ -1,106 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 20/30] PCI: Remove pcibios_root_bridge_prepare() and pcibos_set_root_bus_speed()
-Date: Tue, 24 Mar 2015 11:34:14 +0800
-Message-ID: <1427168064-8657-21-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:57338 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750778AbbCSIYu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 04:24:50 -0400
+Date: Thu, 19 Mar 2015 09:24:46 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: [PATCH] PCI: mvebu: add suspend/resume support
+Message-ID: <20150319092446.468ab397@free-electrons.com>
+In-Reply-To: <20150317151501.GC3368@io.lakedaemon.net>
+References: <1426604145-12335-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20150317151501.GC3368@io.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use weak pcibios_root_bridge_prepare() and
-pcibios_set_root_bus_speed, we could clean up them.
+Dear Jason Cooper,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    4 ----
- drivers/pci/probe.c       |   18 +-----------------
- include/linux/pci.h       |    2 --
- 3 files changed, 1 insertions(+), 23 deletions(-)
+On Tue, 17 Mar 2015 15:15:01 +0000, Jason Cooper wrote:
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index b439264..919ba4d 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -110,10 +110,6 @@ struct pci_host_bridge *pci_create_host_bridge(
- 			goto list_del;
- 	}
- 
--	error = pcibios_root_bridge_prepare(host);
--	if (error)
--		goto list_del;
--
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b3d9b1b..7796bf8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1844,22 +1844,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL_GPL(pci_scan_child_bus);
- 
--/**
-- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
-- * @bridge: Host bridge to set up.
-- *
-- * Default empty implementation.  Replace with an architecture-specific setup
-- * routine, if necessary.
-- */
--int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	return 0;
--}
--
--void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
--{
--}
--
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
- }
-@@ -1896,7 +1880,7 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	if (bridge->ops && bridge->ops->set_root_bus_speed)
- 		bridge->ops->set_root_bus_speed(bridge);
--	pcibios_set_root_bus_speed(bridge);
-+
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0b921d6..61e0853 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -426,8 +426,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 		     void (*release_fn)(struct pci_host_bridge *),
- 		     void *release_data);
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
--
- /*
-  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> > index 1309cfb..1ab8635 100644
+> > --- a/drivers/pci/host/pci-mvebu.c
+> > +++ b/drivers/pci/host/pci-mvebu.c
+> > @@ -129,6 +129,7 @@ struct mvebu_pcie_port {
+> >  	size_t memwin_size;
+> >  	phys_addr_t iowin_base;
+> >  	size_t iowin_size;
+> > +	u32 saved_pcie_stat;
+> 
+> nit:  It's already in the pcie port struct, why not just call it saved_state?
+
+Well the "stat" does not mean "state", but refers to the register being
+saved in this field. The register is called: PCIE_STAT_OFF. Hence the
+name saved_pcie_stat. But I'm fine with changing this to some other
+name, I really don't care :)
+
+> Either way,
+> 
+> Acked-by: Jason Cooper <jason@lakedaemon.net>
+
+Thanks!
+
+Thomas
 -- 
-1.7.1
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
