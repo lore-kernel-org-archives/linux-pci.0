@@ -1,84 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53891 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751606AbbCSS6Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Mar 2015 14:58:24 -0400
-Date: Thu, 19 Mar 2015 19:58:12 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: [PATCH v2 3/4] pci: make msi/msix shutdown functions static
-Message-ID: <1426786724-22241-4-git-send-email-mst@redhat.com>
-References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:34187 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbbCSXtj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 19:49:39 -0400
+Received: by oier21 with SMTP id r21so78750042oie.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 16:49:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426786724-22241-1-git-send-email-mst@redhat.com>
+In-Reply-To: <CAErSpo6+d4W5wXEP8qoPN3S3tEYpFoOvg==ES922J_miisshXw@mail.gmail.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	<1425446353-30513-16-git-send-email-weiyang@linux.vnet.ibm.com>
+	<20150311135507.GA16664@google.com>
+	<20150312011517.GA5833@richard>
+	<20150319150824.GE26935@google.com>
+	<CADLM8XOFfQmfEXeqObNatGmvonFRF29RVyhhOaKaxzdYxpHoEw@mail.gmail.com>
+	<CAErSpo6+d4W5wXEP8qoPN3S3tEYpFoOvg==ES922J_miisshXw@mail.gmail.com>
+Date: Fri, 20 Mar 2015 07:49:38 +0800
+Message-ID: <CADLM8XNxRgpKFa9JE8vCge2vT9xK_4aorcku9RbCs5eP8o2kaQ@mail.gmail.com>
+Subject: Re: [PATCH V13 15/21] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+From: Wei Yang <weiyang.kernel@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_msi_shutdown and pci_msix_shutdown are now internal to msi.c, drop
-them from header and make them static.
+2015-03-20 1:54 GMT+08:00 Bjorn Helgaas <bhelgaas@google.com>:
+> On Thu, Mar 19, 2015 at 11:18 AM, Wei Yang <weiyang.kernel@gmail.com> wrote:
+>> Oh, I thought you are not comfortable with the "Patch v12 10/21 PCI:
+>> Consider additional PF's IOV BAR alignment ..."
+>>
+>> V14 is ready to send which is based on v4.0-rc1.
+>
+> Unless I missed something, the last email in that thread [1] is from
+> you, so I think we're ready for the next iteration.
+>
+> [1] http://lkml.kernel.org/r/20150224083406.32124.65957.stgit@bhelgaas-glaptop2.roam.corp.google.com
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- include/linux/pci.h | 4 ----
- drivers/pci/msi.c   | 4 ++--
- 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..a34df45 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1209,11 +1209,9 @@ struct msix_entry {
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
--void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_vec_count(struct pci_dev *dev);
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
--void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
-@@ -1237,13 +1235,11 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
- }
- #else
- static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
--static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
- static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
- static inline int pci_enable_msix(struct pci_dev *dev,
- 				  struct msix_entry *entries, int nvec)
- { return -ENOSYS; }
--static inline void pci_msix_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msix(struct pci_dev *dev) { }
- static inline void pci_restore_msi_state(struct pci_dev *dev) { }
- static inline int pci_msi_enabled(void) { return 0; }
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfc..0e037af 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -908,7 +908,7 @@ int pci_msi_vec_count(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_msi_vec_count);
- 
--void pci_msi_shutdown(struct pci_dev *dev)
-+static void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
- 	u32 mask;
-@@ -1014,7 +1014,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msix);
- 
--void pci_msix_shutdown(struct pci_dev *dev)
-+static void pci_msix_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
- 
+Great~~~ I thought you didn't get a chance to read it.
+
+Will send out a v14 ASAP.
+
+
 -- 
-MST
-
+Richard Yang
+Help You, Help Me
