@@ -1,256 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33590 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbbCTDOA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:14:00 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:13:58 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id F057D2CE8054
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:56 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3DmJp40894492
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:56 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3DMku010594
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:23 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 12/21] PCI: Consider additional PF's IOV BAR alignment in sizing and assigning
-Date: Fri, 20 Mar 2015 11:06:28 +0800
-Message-Id: <1426820797-6267-13-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:36365 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756285AbbCSPC2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 11:02:28 -0400
+Received: by oigv203 with SMTP id v203so67013898oig.3
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 08:02:28 -0700 (PDT)
+Date: Thu, 19 Mar 2015 10:02:24 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH - v7] of: Move of_dma_configure() to device.c to help
+ re-use
+Message-ID: <20150319150224.GB26935@google.com>
+References: <1425333548-8802-1-git-send-email-m-karicheri2@ti.com>
+ <CAErSpo7MsxgVZyhpijRzVN7mVNcbN7M4A4W-UKaNs4AnmGrB6g@mail.gmail.com>
+ <54F5F59C.5000603@ti.com>
+ <CAErSpo5gPVqRrzZ3LbWvLRchr6SjxN0eve62dTJamfz+=O882Q@mail.gmail.com>
+ <54F63BA1.8030708@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54F63BA1.8030708@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When sizing and assigning resources, we divide the resources into two
-lists: the requested list and the additional list.  We don't consider the
-alignment of additional VF(n) BAR space.
+On Tue, Mar 03, 2015 at 05:54:25PM -0500, Murali Karicheri wrote:
+> On 03/03/2015 03:53 PM, Bjorn Helgaas wrote:
+> >[+cc linux-pci]
+> >
+> >On Tue, Mar 3, 2015 at 11:55 AM, Murali Karicheri<m-karicheri2@ti.com>  wrote:
+> >>On 03/02/2015 10:43 PM, Bjorn Helgaas wrote:
+> >>>
+> >>>On Mon, Mar 2, 2015 at 3:59 PM, Murali Karicheri<m-karicheri2@ti.com>
+> >>>wrote:
+> >>>>
+> >>>>Move of_dma_configure() to device.c so it can be re-used for PCI devices
+> >>>>to
+> >>>>obtain DMA configuration from DT.  Also add a second argument so that for
+> >>>>PCI, the DT node of root bus host bridge can be used to obtain the DMA
+> >>>>configuration for the slave PCI device.
+> >>>>
+> >>>>Tested-by: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>   (AMD
+> >>>>Seattle)
+> >>>>Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+> >>>>Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
+> >>>>Reviewed-by: Catalin Marinas<catalin.marinas@arm.com>
+> >>>>Acked-by: Will Deacon<will.deacon@arm.com>
+> >>>>CC: Joerg Roedel<joro@8bytes.org>
+> >>>>CC: Grant Likely<grant.likely@linaro.org>
+> >>>>CC: Rob Herring<robh+dt@kernel.org>
+> >>>>CC: Russell King<linux@arm.linux.org.uk>
+> >>>>CC: Arnd Bergmann<arnd@arndb.de>
+> >>>>---
+> >>>>   - Based on the existing patch applied to arm-pci/pci/iommu for pci next
+> >>>>(Bjorn)
+> >>>>   - Fixed the build issue reported on ARCH=x86_64
+> >>>
+> >>>
+> >>>Hi Murali,
+> >>>
+> >>>Can you please repost the entire series with fixed patches?  It's
+> >>>easier for me to reapply the whole thing at once than it is to keep
+> >>>track of and fiddle with individual patches.
+> >>>
+> >>>Bjorn
+> >>
+> >>Bjorn,
+> >>
+> >>Ok. I have just posted v8 of the series including all patches.
+> >
+> >Thanks, I put them on a pci/murali-v8 branch for now.  I'm assuming
+> >you want them to go through my tree.  In the cover letter, you
+> >mentioned the "arm-pci iommu branch", so if that means you want them
+> >via an ARM tree instead of mine, just let me know.  I assume the build
+> >will be clean and I'll rename it back to pci/iommu.
+> 
+> My bad. It should have beem pci/iommu. My remote was named arm-pci
+> and hence the confusion. Please apply it to the pci/iommu branch.
 
-This is because the alignment required for the VF(n) BAR space is the size
-of an individual VF BAR, not the size of the space for *all* VFs.  But we
-want additional alignment to support partitioning on PowerNV.
+Applied to pci/iommu for v4.1, thanks!
 
-Consider the additional IOV BAR alignment when sizing and assigning
-resources.  When there is not enough system MMIO space to accomodate both
-the requested list and the additional list, the PF's IOV BAR alignment will
-not contribute to the bridge. When there is enough system MMIO space for
-both lists, the additional alignment will contribute to the bridge.
-
-The additional alignment is stored in the min_align of pci_dev_resource,
-which is stored in the additional list by add_to_list() at the end of
-pbus_size_mem(). The additional alignment is calculated in
-pci_resource_alignment().  For an IOV BAR, we have arch dependent function
-to get the alignment for different arch.
-
-[bhelgaas: changelog, printk cast]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |   95 +++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 79 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e3e17f3..6603d40 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
- 	}
- }
- 
--static resource_size_t get_res_add_size(struct list_head *head,
--					struct resource *res)
-+static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
-+					       struct resource *res)
- {
- 	struct pci_dev_resource *dev_res;
- 
-@@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 			int idx = res - &dev_res->dev->resource[0];
- 
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--				 "res[%d]=%pR get_res_add_size add_size %llx\n",
-+				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
- 				 idx, dev_res->res,
--				 (unsigned long long)dev_res->add_size);
-+				 (unsigned long long)dev_res->add_size,
-+				 (unsigned long long)dev_res->min_align);
- 
--			return dev_res->add_size;
-+			return dev_res;
- 		}
- 	}
- 
--	return 0;
-+	return NULL;
- }
- 
-+static resource_size_t get_res_add_size(struct list_head *head,
-+					struct resource *res)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	dev_res = res_to_dev_res(head, res);
-+	return dev_res ? dev_res->add_size : 0;
-+}
-+
-+static resource_size_t get_res_add_align(struct list_head *head,
-+					 struct resource *res)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	dev_res = res_to_dev_res(head, res);
-+	return dev_res ? dev_res->min_align : 0;
-+}
-+
-+
- /* Sort resources by alignment */
- static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- {
-@@ -215,7 +235,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 	struct resource *res;
- 	struct pci_dev_resource *add_res, *tmp;
- 	struct pci_dev_resource *dev_res;
--	resource_size_t add_size;
-+	resource_size_t add_size, align;
- 	int idx;
- 
- 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
-@@ -238,13 +258,13 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 
- 		idx = res - &add_res->dev->resource[0];
- 		add_size = add_res->add_size;
-+		align = add_res->min_align;
- 		if (!resource_size(res)) {
--			res->start = add_res->start;
-+			res->start = align;
- 			res->end = res->start + add_size - 1;
- 			if (pci_assign_resource(add_res->dev, idx))
- 				reset_resource(res);
- 		} else {
--			resource_size_t align = add_res->min_align;
- 			res->flags |= add_res->flags &
- 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
- 			if (pci_reassign_resource(add_res->dev, idx,
-@@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res;
-+	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
- 	unsigned long fail_type;
-+	resource_size_t add_align, align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -384,10 +405,44 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry(dev_res, head, list)
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
-+		/*
-+		 * There are two kinds of additional resources in the list:
-+		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
-+		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
-+		 * Here just fix the additional alignment for bridge
-+		 */
-+		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+			continue;
-+
-+		add_align = get_res_add_align(realloc_head, dev_res->res);
-+
-+		/*
-+		 * The "head" list is sorted by the alignment to make sure
-+		 * resources with bigger alignment will be assigned first.
-+		 * After we change the alignment of a dev_res in "head" list,
-+		 * we need to reorder the list by alignment to make it
-+		 * consistent.
-+		 */
-+		if (add_align > dev_res->res->start) {
-+			dev_res->res->start = add_align;
-+			dev_res->res->end = add_align +
-+				            resource_size(dev_res->res);
-+
-+			list_for_each_entry(dev_res2, head, list) {
-+				align = pci_resource_alignment(dev_res2->dev,
-+							       dev_res2->res);
-+				if (add_align > align)
-+					list_move_tail(&dev_res->list,
-+						       &dev_res2->list);
-+			}
-+               }
-+
-+	}
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -962,6 +1017,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
- 	resource_size_t children_add_size = 0;
-+	resource_size_t children_add_align = 0;
-+	resource_size_t add_align = 0;
- 
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -986,6 +1043,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			/* put SRIOV requested res to the optional list */
- 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
- 					i <= PCI_IOV_RESOURCE_END) {
-+				add_align = max(pci_resource_alignment(dev, r), add_align);
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
- 				children_add_size += r_size;
-@@ -1016,19 +1074,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (order > max_order)
- 				max_order = order;
- 
--			if (realloc_head)
-+			if (realloc_head) {
- 				children_add_size += get_res_add_size(realloc_head, r);
-+				children_add_align = get_res_add_align(realloc_head, r);
-+				add_align = max(add_align, children_add_align);
-+			}
- 		}
- 	}
- 
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
- 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-+	add_align = max(min_align, add_align);
- 	if (children_add_size > add_size)
- 		add_size = children_add_size;
- 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
- 		calculate_memsize(size, min_size, add_size,
--				resource_size(b_res), min_align);
-+				resource_size(b_res), add_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-@@ -1040,10 +1102,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
--		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
-+		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
-+		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
--			   (unsigned long long)size1-size0);
-+			   (unsigned long long) (size1 - size0),
-+			   (unsigned long long) add_align);
- 	}
- 	return 0;
- }
--- 
-1.7.9.5
-
+Bjorn
