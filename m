@@ -1,78 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Luck, Tony" <tony.luck@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"mingo@redhat.com" <mingo@redhat.com>,
-	"bp@alien8.de" <bp@alien8.de>, "Zheng, Lv" <lv.zheng@intel.com>,
-	"hpa@zytor.com" <hpa@zytor.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"lenb@kernel.org" <lenb@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] x86/PCI: Fully disable devices before releasing IRQ resource
-Date: Thu, 12 Mar 2015 17:08:08 +0100
-Message-ID: <20677458.zLzU1h62B0@vostro.rjw.lan>
-In-Reply-To: <5500EEC1.9000902@linux.intel.com>
-References: <20150305210529.6393.29546.stgit@gimli.home> <6862626.yP8c2o2fAj@vostro.rjw.lan> <5500EEC1.9000902@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v9 05/10] iommu/vt-d: Add functions to load and save old re
+Date: Thu, 19 Mar 2015 13:36:23 +0800
+Message-Id: <1426743388-26908-6-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, March 12, 2015 09:41:21 AM Jiang Liu wrote:
-> On 2015/3/12 9:17, Rafael J. Wysocki wrote:
-> > On Wednesday, March 11, 2015 10:04:42 PM Luck, Tony wrote:
-> >>>> Unfortunately there's a long standing comment in pci_device_remove():
-> >>>>
-> >>>>         /*
-> >>>>          * We would love to complain here if pci_dev->is_enabled is set, that
-> >>>>          * the driver should have called pci_disable_device(), but the
-> >>>>          * unfortunate fact is there are too many odd BIOS and bridge setups
-> >>>>          * that don't like drivers doing that all of the time.
-> >>>>          * Oh well, we can dream of sane hardware when we sleep, no matter how
-> >>>>          * horrible the crap we have to deal with is when we are awake...
-> >>>>          */
-> >>>>
-> >>>> So, unless we can somehow ignore that comment, I suspect forcing the
-> >>>> device to be disabled on driver remove, whether done from pci-core or
-> >>>> from x86/pci, is going to cause all sorts of breakage.  Are the
-> >>>> expectations set by b4b55cda5874 really valid?  It seems like something
-> >>>> needs to be done to allow the IRQ to be automatically re-established on
-> >>>> x86 regardless of the driver doing the right thing when releasing the
-> >>>> device.  We're still looking at a regression for v4.0 as a result of
-> >>>> b4b55cda5874.
-> >>>
-> >>> In which case we probably should revert commit b4b55cda5874 for the time being.
-> >>>
-> >>> At least I'd be very nervous about any ad-hoc fixes at this stage of the cycle.
-> >>
-> >> The comment goes back to the dawn of "git" time ... not sure how much further
-> >> back.
-> >>
-> >> Is this actually still an issue on modern systems?  Maybe we need a black list
-> >> or white list to separate the good from bad systems?
-> > 
-> > The answer to that is "We don't know" and in my not so humble opinion it is too
-> > risky to try to find out at the end of the cycle.
-> Hi Rafael and Alex,
-> How about a patch which:
-> 1) gives a warning if PCI device is still enabled when unloading driver
+Add functions to load root entry table from old kernel, and to save updated
+root entry table.
+Add two member in struct intel_iommu, to store the RTA in old kernel, and
+the mapped virt address of it.
 
-That may become sort of noisy.  I really would prefer to introduce things like
-that by the beginning of the cycle, not by the end of it.
+We use the old RTA in dump kernel, and when the iommu->root_entry is used as
+a cache in kdump kernel, its phys address will not be save to RTA register,
+but when its data is changed, we will save the new data to old root entry table.
 
-> 2) release PCI interrupt only if PCI device is disabled.
-> By this way, we could support IOAPIC hot-removal on latest platforms and
-> avoid regressions on old platforms.
+Li, Zhen-hua:
+    The functions and logics.
 
-Well, please submit a patch for discussion.
+Takao Indoh:
+    Add __iommu_flush_cache.
 
-I would like to know Bjorn's opinion about that too at least.
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ drivers/iommu/intel-iommu.c | 52 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |  5 +++++
+ 2 files changed, 57 insertions(+)
 
-Rafael
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 7f3484a..1cb9780 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -373,6 +373,9 @@ static struct context_entry *device_to_existing_context_entry(
+ 				struct intel_iommu *iommu,
+ 				u8 bus, u8 devfn);
+ 
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
++
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
+ 
+ /*
+  * A structure used to store the address allocated by ioremap();
+@@ -4924,4 +4927,53 @@ int __iommu_free_mapped_mem(void)
+ 	return 0;
+ }
+ 
++/*
++ * Load the old root entry table to new root entry table.
++ */
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
++
++	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
++}
++
++/*
++ * When the data in new root entry table is changed, this function
++ * must be called to save the updated data to old root entry table.
++ */
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
++{
++	u8 start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++
++	if (index < -1 || index >= ROOT_ENTRY_NR)
++		return;
++
++	if (index == -1) {
++		start = 0;
++		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
++	} else {
++		start = index * sizeof(struct root_entry);
++		size = sizeof(struct root_entry);
++	}
++	to = iommu->root_entry_old_virt;
++	from = iommu->root_entry;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++}
++
+ #endif /* CONFIG_CRASH_DUMP */
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 8ffa523..8e29b97 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -329,6 +329,11 @@ struct intel_iommu {
+ 	spinlock_t	lock; /* protect context, domain ids */
+ 	struct root_entry *root_entry; /* virtual address */
+ 
++#ifdef CONFIG_CRASH_DUMP
++	void __iomem *root_entry_old_virt; /* mapped from old root entry */
++	unsigned long root_entry_old_phys; /* root entry in old kernel */
++#endif
++
+ 	struct iommu_flush flush;
+ #endif
+ 	struct q_inval  *qi;            /* Queued invalidation info */
+-- 
+2.0.0-rc0
 
