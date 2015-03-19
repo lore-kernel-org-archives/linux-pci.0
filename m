@@ -1,270 +1,196 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <54F9C407.5020602@ti.com>
-Date: Fri, 6 Mar 2015 10:13:11 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Fengguang Wu <fengguang.wu@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, LKP <lkp@01.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PCI] BUG: unable to handle kernel
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com>
-In-Reply-To: <20150306060631.GD28187@wfg-t540p.sh.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:34715 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782AbbCSFhG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:06 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Date: Thu, 19 Mar 2015 13:36:18 +0800
+Message-Id: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/06/2015 01:06 AM, Fengguang Wu wrote:
-> Greetings,
->
-> 0day kernel testing robot got the below dmesg and the first bad commit is
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
->
-> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
-> Author:     Murali Karicheri<m-karicheri2@ti.com>
-> AuthorDate: Tue Mar 3 12:52:13 2015 -0500
-> Commit:     Bjorn Helgaas<bhelgaas@google.com>
-> CommitDate: Tue Mar 3 14:42:58 2015 -0600
->
->      PCI: Update DMA configuration from DT
->
->      If there is a DT node available for the root bridge's parent device, use
->      the DMA configuration from that device node.  For example, Keystone PCI
->      devices would require dma_pfn_offset to be set correctly in the device
->      structure of the PCI device in order to have the correct DMA mask.  The DT
->      node will have dma-ranges defined for this.  Also support using the DT
->      property dma-coherent to allow coherent DMA operation by the PCI device.
->
->      Use the new helper function of_pci_dma_configure() to update the device DMA
->      configuration.  This fixes DMA on systems where DMA addresses are a
->      constant offset from CPU physical addresses.
->
->      Tested-by: Suravee Suthikulpanit<Suravee.Suthikulpanit@amd.com>  (AMD Seattle)
->      Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->      Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
->      Reviewed-by: Catalin Marinas<catalin.marinas@arm.com>
->      Acked-by: Will Deacon<will.deacon@arm.com>
->      CC: Joerg Roedel<joro@8bytes.org>
->      CC: Grant Likely<grant.likely@linaro.org>
->      CC: Rob Herring<robh+dt@kernel.org>
->      CC: Russell King<linux@arm.linux.org.uk>
->      CC: Arnd Bergmann<arnd@arndb.de>
->
-> +------------------------------------------+------------+------------+-----------------+
-> |                                          | bdc567f9c1 | 0b2af17152 | v4.0-rc2_030422 |
-> +------------------------------------------+------------+------------+-----------------+
-> | boot_successes                           | 47         | 0          | 0               |
-> | boot_failures                            | 33         | 20         | 12              |
-> | page_allocation_failure:order:#,mode     | 33         |            |                 |
-> | backtrace:btrfs_test_extent_io           | 33         |            |                 |
-> | backtrace:init_btrfs_fs                  | 33         |            |                 |
-> | backtrace:kernel_init_freeable           | 33         | 20         | 12              |
-> | BUG:unable_to_handle_kernel              | 0          | 20         | 12              |
-> | Oops                                     | 0          | 20         | 12              |
-> | EIP_is_at_of_pci_dma_configure           | 0          | 20         | 12              |
-> | Kernel_panic-not_syncing:Fatal_exception | 0          | 20         | 12              |
-> | backtrace:acpi_bus_scan                  | 0          | 20         | 12              |
-> | backtrace:acpi_scan_init                 | 0          | 20         | 12              |
-> | backtrace:acpi_init                      | 0          | 20         | 12              |
-> +------------------------------------------+------------+------------+-----------------+
->
-> [    0.573023] pci_bus 0000:00: root bus resource [mem 0x14000000-0xfebfffff window]
-> [    0.573381] pci 0000:00:00.0: [8086:1237] type 00 class 0x060000
-> [    0.573381] pci 0000:00:00.0: [8086:1237] type 00 class 0x060000
-> [    0.574397] BUG: unable to handle kernel
-> [    0.574397] BUG: unable to handle kernel NULL pointer dereferenceNULL pointer dereference at 000001c4
->   at 000001c4
-> [    0.575439] IP:
-> [    0.575439] IP: [<79a20c33>] of_pci_dma_configure+0x33/0x70
->   [<79a20c33>] of_pci_dma_configure+0x33/0x70
-> [    0.576231] *pde = 00000000
-> [    0.576231] *pde = 00000000
->
-> [    0.576666] Oops: 0000 [#1]
-> [    0.576666] Oops: 0000 [#1] SMP SMP
->
-> [    0.576666] Modules linked in:
-> [    0.576666] Modules linked in:
->
-> [    0.576666] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.0.0-rc1-00006-g0b2af17 #6
-> [    0.576666] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.0.0-rc1-00006-g0b2af17 #6
-> [    0.576666] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140531_083030-gandalf 04/01/2014
-> [    0.576666] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140531_083030-gandalf 04/01/2014
-> [    0.576666] task: 78060000 ti: 78068000 task.ti: 78068000
-> [    0.576666] task: 78060000 ti: 78068000 task.ti: 78068000
-> [    0.576666] EIP: 0060:[<79a20c33>] EFLAGS: 00010246 CPU: 0
-> [    0.576666] EIP: 0060:[<79a20c33>] EFLAGS: 00010246 CPU: 0
-> [    0.576666] EIP is at of_pci_dma_configure+0x33/0x70
-> [    0.576666] EIP is at of_pci_dma_configure+0x33/0x70
-> [    0.576666] EAX: 00000000 EBX: 78011800 ECX: 00000000 EDX: 00000005
-> [    0.576666] EAX: 00000000 EBX: 78011800 ECX: 00000000 EDX: 00000005
-> [    0.576666] ESI: 781d8400 EDI: 781d8000 EBP: 78069cd0 ESP: 78069cc8
-> [    0.576666] ESI: 781d8400 EDI: 781d8000 EBP: 78069cd0 ESP: 78069cc8
-> [    0.576666]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> [    0.576666]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> [    0.576666] CR0: 8005003b CR2: 000001c4 CR3: 0229f000 CR4: 000006d0
-> [    0.576666] CR0: 8005003b CR2: 000001c4 CR3: 0229f000 CR4: 000006d0
-> [    0.576666] Stack:
-> [    0.576666] Stack:
-> [    0.576666]  78011800
-> [    0.576666]  78011800 78011860 78011860 78069d5c 78069d5c 7976c1ac 7976c1ac 00000002 00000002 78069ce8 78069ce8 0000002e 0000002e 00000000 00000000
->
-> [    0.576666]  00001100
-> [    0.576666]  00001100 78011800 78011800 78011860 78011860 781d8000 781d8000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
->
-> [    0.576666]  00000000
-> [    0.576666]  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
->
-> [    0.576666] Call Trace:
-> [    0.576666] Call Trace:
-> [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
-> [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
-> [    0.576666]  [<7976ca54>] pci_scan_single_device+0x144/0x1c0
-> [    0.576666]  [<7976ca54>] pci_scan_single_device+0x144/0x1c0
-> [    0.576666]  [<7976cb70>] pci_scan_slot+0xa0/0x230
-> [    0.576666]  [<7976cb70>] pci_scan_slot+0xa0/0x230
-> [    0.576666]  [<7976ea6a>] pci_scan_child_bus+0x5a/0x230
-> [    0.576666]  [<7976ea6a>] pci_scan_child_bus+0x5a/0x230
-> [    0.576666]  [<79894626>] ? dev_warn+0x36/0x50
-> [    0.576666]  [<79894626>] ? dev_warn+0x36/0x50
-> [    0.576666]  [<79a48cf5>] pci_acpi_scan_root+0x4c5/0x990
-> [    0.576666]  [<79a48cf5>] pci_acpi_scan_root+0x4c5/0x990
-> [    0.576666]  [<797c9be8>] acpi_pci_root_add+0x4fb/0x64d
-> [    0.576666]  [<797c9be8>] acpi_pci_root_add+0x4fb/0x64d
-> [    0.576666]  [<797be464>] ? acpi_scan_match_handler+0x9d/0x10e
-> [    0.576666]  [<797be464>] ? acpi_scan_match_handler+0x9d/0x10e
-> [    0.576666]  [<797c2a3d>] acpi_bus_attach+0x149/0x381
-> [    0.576666]  [<797c2a3d>] acpi_bus_attach+0x149/0x381
-> [    0.576666]  [<79bd0946>] ? mutex_unlock+0x16/0x30
-> [    0.576666]  [<79bd0946>] ? mutex_unlock+0x16/0x30
-> [    0.576666]  [<7989c2a0>] ? __driver_attach+0x140/0x140
-> [    0.576666]  [<7989c2a0>] ? __driver_attach+0x140/0x140
-> [    0.576666]  [<797c2be5>] acpi_bus_attach+0x2f1/0x381
-> [    0.576666]  [<797c2be5>] acpi_bus_attach+0x2f1/0x381
-> [    0.576666]  [<7989b94d>] ? device_attach+0x6d/0x120
-> [    0.576666]  [<7989b94d>] ? device_attach+0x6d/0x120
-> [    0.576666]  [<7989c2a0>] ? __driver_attach+0x140/0x140
-> [    0.576666]  [<7989c2a0>] ? __driver_attach+0x140/0x140
-> [    0.576666]  [<797c2be5>] acpi_bus_attach+0x2f1/0x381
-> [    0.576666]  [<797c2be5>] acpi_bus_attach+0x2f1/0x381
-> [    0.576666]  [<797c2d06>] acpi_bus_scan+0x91/0xa8
-> [    0.576666]  [<797c2d06>] acpi_bus_scan+0x91/0xa8
-> [    0.576666]  [<7a217b07>] acpi_scan_init+0x137/0x39d
-> [    0.576666]  [<7a217b07>] acpi_scan_init+0x137/0x39d
-> [    0.576666]  [<7a217695>] acpi_init+0x496/0x534
-> [    0.576666]  [<7a217695>] acpi_init+0x496/0x534
-> [    0.576666]  [<7a2171ff>] ? acpi_sleep_proc_init+0x5b/0x5b
-> [    0.576666]  [<7a2171ff>] ? acpi_sleep_proc_init+0x5b/0x5b
-> [    0.576666]  [<790005ae>] do_one_initcall+0x16e/0x3c0
-> [    0.576666]  [<790005ae>] do_one_initcall+0x16e/0x3c0
-> [    0.576666]  [<7a2171ff>] ? acpi_sleep_proc_init+0x5b/0x5b
-> [    0.576666]  [<7a2171ff>] ? acpi_sleep_proc_init+0x5b/0x5b
-> [    0.576666]  [<7a1b8afe>] kernel_init_freeable+0x263/0x3e4
-> [    0.576666]  [<7a1b8afe>] kernel_init_freeable+0x263/0x3e4
-> [    0.576666]  [<79bb7c49>] kernel_init+0x19/0x200
-> [    0.576666]  [<79bb7c49>] kernel_init+0x19/0x200
-> [    0.576666]  [<79bd5d01>] ret_from_kernel_thread+0x21/0x30
-> [    0.576666]  [<79bd5d01>] ret_from_kernel_thread+0x21/0x30
-> [    0.576666]  [<79bb7c30>] ? rest_init+0x180/0x180
-> [    0.576666]  [<79bb7c30>] ? rest_init+0x180/0x180
-> [    0.576666] Code:
-> [    0.576666] Code: 80 80 5c 5c c1 c1 7a 7a 01 01 89 89 5d 5d f8 f8 89 89 c3 c3 89 89 75 75 fc fc 83 83 15 15 84 84 5c 5c c1 c1 7a 7a 00 00 e8 e8 df df ec ec d4 d4 ff ff 83 83 05 05 88 88 5c 5c c1 c1 7a 7a 01 01 83 83 15 15 8c 8c 5c 5c c1 c1 7a 7a 00 00 89 89 c6 c6 8b 8b 00 00<8b>  <8b>  90 90 c4 c4 01 01 00 00 00 00 8d 8d 43 43 60 60 e8 e8 1f 1f 94 94 ff ff ff ff 89 89 f0 f0 83 83 05 05 90 90 5c 5c c1 c1
->
-> [    0.576666] EIP: [<79a20c33>]
-> [    0.576666] EIP: [<79a20c33>] of_pci_dma_configure+0x33/0x70of_pci_dma_configure+0x33/0x70 SS:ESP 0068:78069cc8
->   SS:ESP 0068:78069cc8
-> [    0.576666] CR2: 00000000000001c4
-> [    0.576666] CR2: 00000000000001c4
-> [    0.576666] ---[ end trace af448c13c817976d ]---
-> [    0.576666] ---[ end trace af448c13c817976d ]---
->
-> git bisect start f20f4567bfc741f16e0895f4c4e845e7c51e6818 13a7a6ac0a11197edcd0f756a035f472b42cdf8b --
-> git bisect good 6a85284cccce49f687a505a7952fa3889b82628d  # 16:02     20+     19  Merge 'kees/yama/tip' into devel-hourly-2015030422
-> git bisect  bad e85ea728632a20c9830cbc5c67d64f8a302b452e  # 16:05      0-     20  Merge 'tip/x86/asm' into devel-hourly-2015030422
-> git bisect  bad 0516a34d518ed4a1ae4261736d6678094fd46142  # 16:11      0-     20  Merge 'spi/for-next' into devel-hourly-2015030422
-> git bisect  bad d8ee2cead70b0d04c58d1a57299fe307f5616b7e  # 16:49      0-     20  Merge 'sound/topic/hda-unbind' into devel-hourly-2015030422
-> git bisect  bad ccbd4806f70ac1599934b7c17582f44af02edca8  # 17:09      0-     20  Merge 'perf/tmp.perf/trace_ordered_events' into devel-hourly-2015030422
-> git bisect good a8c718ae516eeb6366d899bae02ebb409ced5453  # 17:12     20+      0  Merge 'mripard/sunxi/dt-for-4.1' into devel-hourly-2015030422
-> git bisect  bad 941b9d9416bbace6161718d173a526f9dfd10762  # 17:14      0-     20  Merge 'pci/pci/murali-v8' into devel-hourly-2015030422
-> git bisect good 6675a601d72be408025e675599702e30a99188aa  # 17:19     20+     16  PCI: Add helper functions pci_get[put]_host_bridge_device()
-> git bisect  bad 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6  # 17:21      0-     20  PCI: Update DMA configuration from DT
-> git bisect good bdc567f9c1cb6a61100471afc95ee6200f0ba043  # 17:24     20+      7  of/pci: Add of_pci_dma_configure() to update DMA configuration
-> # first bad commit: [0b2af171520e5d5e7d5b5f479b90a6a5014d9df6] PCI: Update DMA configuration from DT
-> git bisect good bdc567f9c1cb6a61100471afc95ee6200f0ba043  # 17:27     60+     33  of/pci: Add of_pci_dma_configure() to update DMA configuration
-> # extra tests with DEBUG_INFO
-> git bisect  bad 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6  # 17:40      0-     60  PCI: Update DMA configuration from DT
-> # extra tests on HEAD of linux-devel/devel-hourly-2015030422
-> git bisect  bad f20f4567bfc741f16e0895f4c4e845e7c51e6818  # 17:41      0-     12  0day head guard for 'devel-hourly-2015030422'
-> # extra tests on tree/branch pci/pci/murali-v8
-> git bisect  bad da5cc6061aae665cc15835519838861437b9fdc7  # 17:56      0-     60  of: Calculate device DMA masks based on DT dma-range size
-> # extra tests with first bad commit reverted
-> # extra tests on tree/branch linus/master
-> git bisect good 6587457b4b3d663b237a0f95ddf6e67d1828c8ea  # 18:08     60+     60  Merge tag 'dma-buf-for-4.0-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/sumits/dma-buf
-> # extra tests on tree/branch next/master
->
->
-> This script may reproduce the error.
->
-> ----------------------------------------------------------------------------
-> #!/bin/bash
->
-> kernel=$1
->
-> kvm=(
-> 	qemu-system-x86_64
-> 	-cpu kvm64
-> 	-enable-kvm
-> 	-kernel $kernel
-> 	-m 320
-> 	-smp 2
-> 	-net nic,vlan=1,model=e1000
-> 	-net user,vlan=1
-> 	-boot order=nc
-> 	-no-reboot
-> 	-watchdog i6300esb
-> 	-rtc base=localtime
-> 	-serial stdio
-> 	-display none
-> 	-monitor null
-> )
->
-> append=(
-> 	hung_task_panic=1
-> 	earlyprintk=ttyS0,115200
-> 	rd.udev.log-priority=err
-> 	systemd.log_target=journal
-> 	systemd.log_level=warning
-> 	debug
-> 	apic=debug
-> 	sysrq_always_enabled
-> 	rcupdate.rcu_cpu_stall_timeout=100
-> 	panic=-1
-> 	softlockup_panic=1
-> 	nmi_watchdog=panic
-> 	oops=panic
-> 	load_ramdisk=2
-> 	prompt_ramdisk=0
-> 	console=ttyS0,115200
-> 	console=tty0
-> 	vga=normal
-> 	root=/dev/ram0
-> 	rw
-> 	drbd.minor_count=8
-> )
->
-> "${kvm[@]}" --append "${append[*]}"
-> ----------------------------------------------------------------------------
->
-> Thanks,
-> Fengguang
-Fengguang,
+This patchset is an update of Bill Sumner's patchset, implements a fix for:
+If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
+when a panic happens, the kdump kernel will boot with these faults:
 
-Could you or someone point me to the DT file for this platform? I looked 
-at the config file and it has CONFIG_OF enabled. Wondering if it has 
-dma-ranges defined? This series was tested on ARM platforms that uses 
-dma-ranges. If someone can point me to the DT file, this will give me a 
-clue on what is going on here.
+    dmar: DRHD: handling fault status reg 102
+    dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
+    DMAR:[fault reason 01] Present bit in root entry is clear
+
+    dmar: DRHD: handling fault status reg 2
+    dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
+    INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+
+On some system, the interrupt remapping fault will also happen even if the 
+intel_iommu is not set to on, because the interrupt remapping will be enabled 
+when x2apic is needed by the system.
+
+The cause of the DMA fault is described in Bill's original version, and the 
+INTR-Remap fault is caused by a similar reason. In short, the initialization 
+of vt-d drivers causes the in-flight DMA and interrupt requests get wrong 
+response.
+
+To fix this problem, we modifies the behaviors of the intel vt-d in the 
+crashdump kernel:
+
+For DMA Remapping:
+1. To accept the vt-d hardware in an active state,
+2. Do not disable and re-enable the translation, keep it enabled.
+3. Use the old root entry table, do not rewrite the RTA register.
+4. Malloc and use new context entry table, copy data from the old ones that
+   used by the old kernel.
+5. Keep using the old page tables before driver is loaded.
+6. After device driver is loaded, when it issues the first dma_map command, 
+   free the dmar_domain structure for this device, and generate a new one, so 
+   that the device can be assigned a new and empty page table. 
+7. When a new context entry table is generated, we also save its address to 
+   the old root entry table.
+
+For Interrupt Remapping:
+1. To accept the vt-d hardware in an active state,
+2. Do not disable and re-enable the interrupt remapping, keep it enabled.
+3. Use the old interrupt remapping table, do not rewrite the IRTA register.
+4. When ioapic entry is setup, the interrupt remapping table is changed, and 
+   the updated data will be stored to the old interrupt remapping table.
+
+Advantages of this approach:
+1. All manipulation of the IO-device is done by the Linux device-driver
+   for that device.
+2. This approach behaves in a manner very similar to operation without an
+   active iommu.
+3. Any activity between the IO-device and its RMRR areas is handled by the
+   device-driver in the same manner as during a non-kdump boot.
+4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+   This supports the practice of creating a special kdump kernel without
+   drivers for any devices that are not required for taking a crashdump. 
+5. Minimal code-changes among the existing mainline intel vt-d code.
+
+Summary of changes in this patch set:
+1. Added some useful function for root entry table in code intel-iommu.c
+2. Added new members to struct root_entry and struct irte;
+3. Functions to load old root entry table to iommu->root_entry from the memory 
+   of old kernel.
+4. Functions to malloc new context entry table and copy the data from the old
+   ones to the malloced new ones.
+5. Functions to enable support for DMA remapping in kdump kernel.
+6. Functions to load old irte data from the old kernel to the kdump kernel.
+7. Some code changes that support other behaviours that have been listed.
+8. In the new functions, use physical address as "unsigned long" type, not 
+   pointers.
+
+Original version by Bill Sumner:
+    https://lkml.org/lkml/2014/1/10/518
+    https://lkml.org/lkml/2014/4/15/716
+    https://lkml.org/lkml/2014/4/24/836
+
+Zhenhua's updates:
+    https://lkml.org/lkml/2014/10/21/134
+    https://lkml.org/lkml/2014/12/15/121
+    https://lkml.org/lkml/2014/12/22/53
+    https://lkml.org/lkml/2015/1/6/1166
+    https://lkml.org/lkml/2015/1/12/35
+
+Changelog[v9]:
+    1. Add new function iommu_attach_domain_with_id.
+    2. Do not copy old page tables, keep using the old ones.
+    3. Remove functions:
+           intel_iommu_did_to_domain_values_entry
+           intel_iommu_get_dids_from_old_kernel
+           device_to_domain_id
+           copy_page_addr
+           copy_page_table
+           copy_context_entry
+           copy_context_entry_table
+    4. Add new function device_to_existing_context_entry.
+
+Changelog[v8]:
+    1. Add a missing __iommu_flush_cache in function copy_page_table.
+
+Changelog[v7]:
+    1. Use __iommu_flush_cache to flush the data to hardware.
+
+Changelog[v6]:
+    1. Use "unsigned long" as type of physical address.
+    2. Use new function unmap_device_dma to unmap the old dma.
+    3. Some small incorrect bits order for aw shift.
+
+Changelog[v5]:
+    1. Do not disable and re-enable traslation and interrupt remapping. 
+    2. Use old root entry table.
+    3. Use old interrupt remapping table.
+    4. New functions to copy data from old kernel, and save to old kernel mem.
+    5. New functions to save updated root entry table and irte table.
+    6. Use intel_unmap to unmap the old dma;
+    7. Allocate new pages while driver is being loaded.
+
+Changelog[v4]:
+    1. Cut off the patches that move some defines and functions to new files.
+    2. Reduce the numbers of patches to five, make it more easier to read.
+    3. Changed the name of functions, make them consistent with current context
+       get/set functions.
+    4. Add change to function __iommu_attach_domain.
+
+Changelog[v3]:
+    1. Commented-out "#define DEBUG 1" to eliminate debug messages.
+    2. Updated the comments about changes in each version.
+    3. Fixed: one-line added to Copy-Translations patch to initialize the iovad
+          struct as recommended by Baoquan He [bhe@redhat.com]
+          init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
+
+Changelog[v2]:
+    The following series implements a fix for:
+    A kdump problem about DMA that has been discussed for a long time. That is,
+    when a kernel panics and boots into the kdump kernel, DMA started by the
+    panicked kernel is not stopped before the kdump kernel is booted and the
+    kdump kernel disables the IOMMU while this DMA continues.  This causes the
+    IOMMU to stop translating the DMA addresses as IOVAs and begin to treat
+    them as physical memory addresses -- which causes the DMA to either:
+        (1) generate DMAR errors or 
+        (2) generate PCI SERR errors or 
+        (3) transfer data to or from incorrect areas of memory. Often this 
+            causes the dump to fail.
+
+Changelog[v1]:
+    The original version.
+
+Changed in this version:
+1. Do not disable and re-enable traslation and interrupt remapping. 
+2. Use old root entry table.
+3. Use old interrupt remapping table.
+4. Use "unsigned long" as physical address.
+5. Use intel_unmap to unmap the old dma;
+
+Baoquan He <bhe@redhat.com> helps testing this patchset.
+Takao Indoh <indou.takao@jp.fujitsu.com> gives valuable suggestions.
+
+Li, Zhen-Hua (10):
+  iommu/vt-d: New function to attach domain with id
+  iommu/vt-d: Items required for kdump
+  iommu/vt-d: Function to get old context entry
+  iommu/vt-d: functions to copy data from old mem
+  iommu/vt-d: Add functions to load and save old re
+  iommu/vt-d: datatypes and functions used for kdump
+  iommu/vt-d: enable kdump support in iommu module
+  iommu/vt-d: assign new page table for dma_map
+  iommu/vt-d: Copy functions for irte
+  iommu/vt-d: Use old irte in kdump kernel
+
+ drivers/iommu/intel-iommu.c         | 535 ++++++++++++++++++++++++++++++++++--
+ drivers/iommu/intel_irq_remapping.c | 105 ++++++-
+ include/linux/intel-iommu.h         |  18 ++
+ 3 files changed, 628 insertions(+), 30 deletions(-)
 
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+2.0.0-rc0
+
