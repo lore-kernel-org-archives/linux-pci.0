@@ -1,107 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:38584 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754364AbbCCCuZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 21:50:25 -0500
-Received: by mail-ob0-f169.google.com with SMTP id wp4so35769655obc.0
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 18:50:25 -0800 (PST)
-Date: Mon, 2 Mar 2015 20:50:20 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v4 12/30] PCI: Introduce pci_host_bridge_ops to support
- host specific operations
-Message-ID: <20150303025020.GF11978@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
- <1424938344-4017-13-git-send-email-wangyijing@huawei.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:54169 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685AbbCSDqX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2015 23:46:23 -0400
+Date: Wed, 18 Mar 2015 20:46:18 -0700
+From: Darren Hart <dvhart@infradead.org>
+To: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	platform-driver-x86@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Petri Hodju <petrihodju@yahoo.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb changes
+Message-ID: <20150319034618.GB22993@fury.dvhart.com>
+References: <20150223215155.18444386@neptune.home>
+ <20150303172753.GF83894@vmdeb7>
+ <20150305232038.1873d380@neptune.home>
+ <20150306174254.GB19001@vmdeb7>
+ <20150307011546.0050279d@neptune.home>
+ <20150309225238.0b9ced4e@neptune.home>
+ <CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
+ <20150311223445.6af76f7c@neptune.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-13-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20150311223445.6af76f7c@neptune.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:12:06PM +0800, Yijing Wang wrote:
-> Now we have weak functions like pcibios_root_bridge_prepare()
-> to setup pci host bridge, We could introduce pci_host_bridge_ops
-> which contain host bridge specific ops to setup pci_host_bridge.
-> Then host bridge driver could add pci_host_bridge_ops hooks
-> intead of weak function to setup pci_host_bridge.
-> This patch add following pci_host_bridge_ops hooks:
+On Wed, Mar 11, 2015 at 10:34:45PM +0100, Bruno Prémont wrote:
+> As GMUX depends on IO for iGP to be enabled and active, lock the IO at
+> vgaarb level. This should prevent GPU driver for dGPU to disable IO for
+> iGP while it tries to own legacy VGA IO.
 > 
-> pci_host_bridge_ops {
-> 	/* set root bus speed, some platform need this like powerpc */
-> 	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-> 	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-> 	int (*phb_prepare)(struct pci_host_bridge *host);
-> 	/* platform specific of scan hook to scan pci device */
-> 	void (*phb_of_scan_bus)(struct pci_host_bridge *);
-> }
-> We could easily extend it to support different host bridge
-> specific operations.
+> This fixes usage of backlight control combined with closed nvidia
+> driver on some Apple dual-GPU (intel/nvidia) systems.
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> On those systems loading nvidia driver disables intel IO decoding,
+> disabling the gmux backlight controls as a side effect.
+> Prior to commits moving boot_vga from (optional) efifb to less optional
+> vgaarb this mis-behavior could be avoided by using right kernel config
+> (efifb enabled but vgaarb disabled).
+> 
+> This patch explicitly does not try to trigger vgaarb changes in order
+> to avoid confusing already running graphics drivers. If IO has been
+> mis-configured by vgaarb gmux will thus fail to probe.
+> It is expected to load/probe gmux prior to graphics drivers.
+> 
+> Fixes: ce027dac592c0ada241ce0f95ae65856828ac450 # nvidia interaction
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=86121
+> Reported-by: Petri Hodju <petrihodju@yahoo.com>
+> Tested-by: Petri Hodju <petrihodju@yahoo.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Matthew Garrett <matthew.garrett@nebula.com>
+> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
 > ---
->  drivers/pci/host-bridge.c |   12 ++++++++++--
->  drivers/pci/probe.c       |   17 +++++++++++------
->  include/linux/pci.h       |   12 ++++++++++--
->  3 files changed, 31 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index b42a4bb..4a2baa2 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
->  }
->  
->  struct pci_host_bridge *pci_create_host_bridge(
-> -		struct device *parent, u32 db, 
-> -		struct list_head *resources, void *sysdata)
-> +		struct device *parent, u32 db, struct list_head *resources, 
-> +		void *sysdata, struct pci_host_bridge_ops *ops)
->  {
->  	int error;
->  	int bus = PCI_BUSNUM(db);
-> @@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
->  		}
->  	mutex_unlock(&phb_mutex);
->  
-> +	host->ops = ops;
->  	host->dev.parent = parent;
->  	INIT_LIST_HEAD(&host->windows);
->  	host->dev.release = pci_release_host_bridge_dev;
-> @@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
->  	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
->  			host->busnum);
->  
-> +	if (host->ops && host->ops->phb_prepare) {
-> +		error = host->ops->phb_prepare(host);
-> +		if(error) {
+> Resending v2 in the hope Darren won't hit quoted-printable.
+> Also adding linux-pci on CC by Bjorn's request in bugzilla.
 
-Whitespace error.
+Much better, thanks. Queued.
 
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
->  	return (pdev->error_state != pci_channel_io_normal);
->  }
->  
-> +struct pci_host_bridge;
-> +struct pci_host_bridge_ops {
-> +	void (*phb_set_root_bus_speed)(struct pci_host_bridge *host);
-> +	int (*phb_prepare)(struct pci_host_bridge *host);
-> +	void (*phb_of_scan_bus)(struct pci_host_bridge *);
-
-These function pointers don't need a "phb_" prefix.
+-- 
+Darren Hart
+Intel Open Source Technology Center
