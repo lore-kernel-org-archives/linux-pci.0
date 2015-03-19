@@ -1,91 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:39990 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152AbbCYI22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:28:28 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:28:26 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5BC542BB004D
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:28:23 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8SFJA37421178
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:28:23 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8RncV024517
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:49 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 09/20] PCI: Add pcibios_iov_resource_alignment() interface
-Date: Wed, 25 Mar 2015 16:23:50 +0800
-Message-Id: <1427271841-28749-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:53818 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750932AbbCSS6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Mar 2015 14:58:07 -0400
+Date: Thu, 19 Mar 2015 19:57:52 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH v2 1/4] pci: disable msi/msix at probe time
+Message-ID: <1426786724-22241-2-git-send-email-mst@redhat.com>
+References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426786724-22241-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per the SR-IOV spec r1.1, sec 3.3.14, the required alignment of a PF's IOV
-BAR is the size of an individual VF BAR, and the size consumed is the
-individual VF BAR size times NumVFs.
+commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+    pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
 
-The PowerNV platform has additional alignment requirements to help support
-its Partitionable Endpoint device isolation feature (see
-Documentation/powerpc/pci_iov_resource_on_powernv.txt).
+attempted to address the problem of kexec getting
+started after linux enabled msi/msix for a device,
+and drivers being confused by msi being enabled,
+by disabling msi at shutdown.
 
-Add a pcibios_iov_resource_alignment() interface to allow platforms to
-request additional alignment.
+But arguably, it's better to disable msi/msix when kexec
+starts - for example, kexec might run after a crash (kdump)
+and shutdown callbacks are not always invoked in that case.
 
-[bhelgaas: changelog, adapt to reworked pci_sriov_resource_alignment(),
-drop "align" parameter]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+Cc: Ulrich Obergfell <uobergfe@redhat.com>
+Cc: Fam Zheng <famz@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/pci/iov.c   |    8 +++++++-
- include/linux/pci.h |    1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/pci-driver.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 64c4692..ee0ebff 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -569,6 +569,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
- 
-+resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
-+						      int resno)
-+{
-+	return pci_iov_resource_size(dev, resno);
-+}
-+
- /**
-  * pci_sriov_resource_alignment - get resource alignment for VF BAR
-  * @dev: the PCI device
-@@ -581,7 +587,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
-  */
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
--	return pci_iov_resource_size(dev, resno);
-+	return pcibios_iov_resource_alignment(dev, resno);
- }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 99ea948..4e1f17d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1174,6 +1174,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
- 
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..2ebd2a8 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
+ 	 */
+ 	pm_runtime_get_sync(dev);
+ 	pci_dev->driver = pci_drv;
++	/*
++	 * When using kexec, msi might be left enabled by the previous kernel,
++	 * this breaks things as some drivers assume msi/msi-x is off at boot.
++	 * Fix this by forcing msi off at startup.
++	 */
++	pci_msi_off(pci_dev);
+ 	rc = pci_drv->probe(pci_dev, ddi->id);
+ 	if (!rc)
+ 		return rc;
 -- 
-1.7.9.5
+MST
 
