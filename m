@@ -1,166 +1,192 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f45.google.com ([209.85.192.45]:37929 "EHLO
-	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754018AbbCMNZT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Mar 2015 09:25:19 -0400
-Received: by qgdz60 with SMTP id z60so25700923qgd.5
-        for <linux-pci@vger.kernel.org>; Fri, 13 Mar 2015 06:25:18 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <550A7F8D.90404@linux.intel.com>
+Date: Thu, 19 Mar 2015 15:49:33 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <55024D35.6050509@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com>
- <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com> <55024D35.6050509@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Mar 2015 08:24:58 -0500
-Message-ID: <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com>
-Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	"yinghai @ kernel . org" <yinghai@kernel.org>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device
+ is disabled when unbinding
+References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com> <20150318221152.GA2495@google.com>
+In-Reply-To: <20150318221152.GA2495@google.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 9:36 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>>> +  pci_add_resource(&resources, &ioport_resource);
->>>>> +  pci_add_resource(&resources, &iomem_resource);
->>>>> +  pci_add_resource(&resources, &busn_resource);
->>>>
->>>> Since I don't want to export busn_resource, you might have to allocate your
->>>> own struct resource for it here.  And, of course, figure out the details of
->>>> which PCI domain you're in and whether you need to share one struct
->>>> resource across several host bridges in the same domain.
->>>
->>> Allocate its own resource here is ok for me, as I mentioned in previous reply,
->>> so do we still need to add additional info to figure out which domain own the bus resource ?
->>
->> That's up to the caller.  Only the platform knows which bridges it wants to
->> have in the same domain.  In principle, every host bridge could be in its
->> own domain, since each bridge is the root of a unique PCI hierarchy.  But
->> some platforms have firmware that assumes otherwise.  I have no idea what
->> xen assumes.
->
-> I'm not xen guy, so I don't know much about it, but because it call pci_scan_bus_parented()
-> before, and in which busn_resource is always shared for different host bridges(same domain or not),
-> I think add a static bus resource(0,255) should be safe, at least, it would not introduce new risk.
->
-> Something like:
->
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index b1ffebe..a69e529 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->                                  unsigned int domain, unsigned int bus)
->  {
->         struct pci_bus *b;
-> +       LIST_HEAD(resources);
->         struct pcifront_sd *sd = NULL;
->         struct pci_bus_entry *bus_entry = NULL;
->         int err = 0;
-> +       static struct resource busn_res = {
-> +               .start = 0,
-> +               .end = 255,
-> +               .flags = IORESOURCE_BUS,
-> +       };
->
->  #ifndef CONFIG_PCI_DOMAINS
->         if (domain != 0) {
-> @@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->                 err = -ENOMEM;
->                 goto err_out;
->         }
-> +       pci_add_resource(&resources, &ioport_resource);
-> +       pci_add_resource(&resources, &iomem_resource);
-> +       pci_add_resource(&resources, &busn_res);
->         pcifront_init_sd(sd, domain, bus, pdev);
->
->         pci_lock_rescan_remove();
->
-> -       b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
-> -                                 &pcifront_bus_ops, sd);
-> +       b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-> +                                 &pcifront_bus_ops, sd, &resources);
->         if (!b) {
->
-> Bjorn, what do you think about ?
+On 2015/3/19 6:11, Bjorn Helgaas wrote:
+> On Tue, Mar 17, 2015 at 03:37:12PM +0800, Jiang Liu wrote:
+>> To support IOAPIC hot-removal, we need to release PCI interrupt resource
+>> when unbinding PCI device driver. But due to historical reason,
+>> /*
+>>  * We would love to complain here if pci_dev->is_enabled is set, that
+>>  * the driver should have called pci_disable_device(), but the
+>>  * unfortunate fact is there are too many odd BIOS and bridge setups
+>>  * that don't like drivers doing that all of the time.
+>>  * Oh well, we can dream of sane hardware when we sleep, no matter how
+>>  * horrible the crap we have to deal with is when we are awake...
+>>  */
+> 
+> Quoting the comment here (especially the last two lines) is overkill and
+> obscures the real point.  The important thing is that some drivers have
+> legitimate reasons for not calling pci_disable_device().
+Hi Bjorn,
+	Thanks for review. I will rewrite the commit message.
+>> some drivers don't call pci_disable_device() when unloading, which
+>> prevents us from reallocating PCI interrupt resource on reloading
+>> PCI driver and causes regressions.
+> 
+> This isn't very clear.  I can believe that "drivers not calling
+> pci_disable_device()" means we don't release IRQ resources, which might
+> prevent you from hot-removing an IOAPIC.
+> 
+> But "drivers not calling pci_disable_device()" doesn't cause regressions.
+> 
+>> So release PCI interrupt resource only if PCI device is disabled when
+>> unbinding. By this way, we could support IOAPIC hot-removal on latest
+>> platforms and avoid regressions on old platforms.
+> 
+> Does this mean you can only hot-remove IOAPICs if all drivers for devices
+> using the IOAPIC call pci_disable_device()?  If so, it seems sort of
+> dubious that we have to rely on drivers for that.
+This is a quickfix for v4.0 merging window. We will try to solve this
+issue for next merging window.
 
-That seems OK to me.  Probably still wrong, but no worse than it was before.
+> 
+> What happens if we try to hot-remove an IOAPIC where we haven't released
+> all the IRQ resources?  Is there a nice error message that will help us
+> debug problem reports?
+> 
+> This has nothing to do with "latest platforms" and "old platforms."  That
+> text pretends to convey information, but it doesn't.  To be useful, it
+> would have to say something specific about how "latest" and "old" platforms
+> are different.
+> 
+> I haven't even figured out what causes the regressions yet.  I guess maybe
+> it's the fact that after b4b55cda5874, we always call pcibios_disable_irq(),
+> while before we only called it if the driver used pci_disable_device()?
+> The changelog should be clear about this.
+> 
+>> Please aslo refer to:
+> 
+> "also"
+> 
+>> https://bugzilla.kernel.org/show_bug.cgi?id=94721
+>>
+> 
+> This apparently fixes something and needs a Fixes: tag to help people who
+> might backport the broken commit.
+> 
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> Reported-by: Alex Williamson <alex.williamson@redhat.com>
+>> Reported-by: Thomas Hellstrom <thellstrom@vmware.com>
+>> Reviewed-by: Rafael J. Wysocki <rjw@rjwysocki.net>
+>> ---
+>> Hi Rafael,
+>> 	I have assumed an Reviewed-by from you, is that OK?
+>> Thanks!
+>> Gerry
+>> ---
+>>  arch/x86/pci/common.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index 3d2612b68694..8d792142cb2a 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -527,7 +527,7 @@ static int pci_irq_notifier(struct notifier_block *nb, unsigned long action,
+> 
+> I know the notifier was added by b4b55cda5874, not this patch, but I don't
+> think it's the best mechanism.  I would rather do something like calling
+> pcibios_disable_irq() directly from pci_device_remove().  That way the call
+> is more explicit, it's in arch-independent code, and it's more parallel
+> with how we call pcibios_enable_irq() in the pci_enable_device() path.
+> 
+> This code is all x86-specific.  But other arches use IOAPIC, and there's
+> nothing obviously x86-specific here.  Won't they still have issues here?
+pcibios_enable_irq() and pcibios_disable_irq() currently are x86
+specific, so I tried to keep it x86 specific.
+On the other hand, we want to release IOAPIC pin when a PCI device gets
+unused instead of getting removed, so just assign IRQ number for PCI
+devices in use.
 
->>>>>    pcifront_init_sd(sd, domain, bus, pdev);
->>>>>
->>>>>    pci_lock_rescan_remove();
->>>>>
->>>>> -  b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
->>>>> -                            &pcifront_bus_ops, sd);
->>>>> +  b = pci_scan_root_bus(&pdev->xdev->dev, bus,
->>>>> +                            &pcifront_bus_ops, sd, &resources);
->>>>>    if (!b) {
->>>>>            dev_err(&pdev->xdev->dev,
->>>>>                    "Error creating PCI Frontend Bus!\n");
->>>>>            err = -ENOMEM;
->>>>>            pci_unlock_rescan_remove();
->>>>> +          pci_free_resource_list(&resources);
->>>>>            goto err_out;
->>>>>    }
->>>>>
->>>>> @@ -488,7 +494,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>>>>
->>>>>    list_add(&bus_entry->list, &pdev->root_buses);
->>>>>
->>>>> -  /* pci_scan_bus_parented skips devices which do not have a have
->>>>> +  /* pci_scan_root_bus skips devices which do not have a
->>>>>    * devfn==0. The pcifront_scan_bus enumerates all devfn. */
->>>>>    err = pcifront_scan_bus(pdev, domain, bus, b);
->>>>>
->>>>> --
->>>>> 1.7.1
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>> .
->>>>
->>>
->>>
->>> --
->>> Thanks!
->>> Yijing
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+How about this commit message?
+------------------------------------------------------------------
+x86/PCI: Release PCI IRQ resource only if PCI device is disabled when
+unbinding
+
+To support IOAPIC hot-removal, we need to track IOAPIC pin usage, which
+is to allocate pin on demand and release pin when unused. According to
+the original design should allocate and release IOAPIC pin as below:
+pci_enable_device()
+    -> pcibios_enable_device() when pci_dev->enable_cnt changing from 0 to 1
+        ->pcibios_enable_irq()
+            ->allocate IOAPIC pin
+pci_disable_device()
+    -> pcibios_disable_device() when pci_dev->enable_cnt changing from 1
+to 0
+        ->pcibios_disable_irq()
+            ->release IOAPIC pin
+
+But above design conclicts with PCI PM design. When suspending, PCI
+device driver may call pci_disable_device() and eventually release
+IOAPIC pin. When resuming, PCI device driver call pci_enable_device()
+and reallocating IOAPIC pin. Since v3.19, IOAPIC driver dynamically
+allocates IRQ number for IOAPIC pin. So when resuming, a different
+IRQ number may assigned, which breaks some PCI drivers' suspend/resume
+implementation.
+
+So commit ("x86/PCI: Refine the way to release PCI IRQ resources")
+tries to fix PM regressions by releasing IOAPIC pin when unbinding
+PCI driver unconditionally, which causes new regressions one some
+old platforms because:
+1) some PCI device drivers skip calling pci_disable_device() when
+   unbinding due to BIOS flaws, which causing non-zero
+   pci_dev->enable_cnt after driver unbinding.
+2) pci_enable_device() doesn't call pcibios_enable_irq() because
+   pci_dev->enable_cnt is not zero when rebinding device driver,
+   thus no IOAPIC pin(IRQ number) assigned to PCI device after rebinding.
+
+This patch implements a quick workaround which releases IOAPIC iff
+pci_dev->enable_cnt is zero after driver unbinding. A better solution
+should be to make IOAPIC allocation/releasing symmetric,
+1) calling pcibios_enable_irq() on BUS_NOTIFY_BIND_DRIVER notification
+2) calling pcibios_disable_irq() on BUS_NOTIFY_UNBOUND_DRIVER notification
+So we could make IOAPIC pin allocation/releasing independent of
+pci_dev->enable_cnt. We will try the symmetric solution for next merge
+window.
+
+Please also refer to:
+https://bugzilla.kernel.org/show_bug.cgi?id=94721
+
+Fixes: b4b55cda5874("x86/PCI: Refine the way to release PCI IRQ resources")
+------------------------------------------------------------------
+Thanks!
+Gerry
+> 
+>>  	if (action != BUS_NOTIFY_UNBOUND_DRIVER)
+>>  		return NOTIFY_DONE;
+>>  
+>> -	if (pcibios_disable_irq)
+>> +	if (!pci_is_enabled(dev) && pcibios_disable_irq)
+>>  		pcibios_disable_irq(dev);
+>>  
+>>  	return NOTIFY_OK;
+>> -- 
+>> 1.7.10.4
 >>
->> .
->>
->
->
 > --
-> Thanks!
-> Yijing
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
