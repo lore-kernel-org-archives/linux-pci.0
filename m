@@ -1,60 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tkt-001-i374.relay.mailchannels.net ([174.136.5.177]:43781 "EHLO
-	relay.mailchannels.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757122AbbCRVk3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Mar 2015 17:40:29 -0400
-Date: Tue, 17 Mar 2015 15:15:01 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: [PATCH] PCI: mvebu: add suspend/resume support
-Message-ID: <20150317151501.GC3368@io.lakedaemon.net>
-References: <1426604145-12335-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from smtp-o-3.desy.de ([131.169.56.156]:34899 "EHLO smtp-o-3.desy.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753199AbbCSM01 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Mar 2015 08:26:27 -0400
+Received: from smtp-map-3.desy.de (smtp-map-3.desy.de [131.169.56.68])
+	by smtp-o-3.desy.de (DESY-O-3) with ESMTP id 15A602802AB
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 13:19:43 +0100 (CET)
+Received: from ZITSWEEP1.win.desy.de (zitsweep1.win.desy.de [131.169.97.95])
+	by smtp-map-3.desy.de (DESY_MAP_3) with ESMTP id E44121318
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 13:19:42 +0100 (MET)
+Received: from smtp-intra-3.desy.de (lb-40-26.desy.de) by ZITSWEEP1.win.desy.de
+ (Clearswift SMTPRS 5.5.0) with ESMTP id <Tb93e9948b783a9615f1310@ZITSWEEP1.win.desy.de> for <linux-pci@vger.kernel.org>;
+ Thu, 19 Mar 2015 13:19:42 +0100
+Received: from [131.169.146.36] (mcspetros.desy.de [131.169.146.36])
+	by smtp-intra-3.desy.de (DESY-INTRA-3) with ESMTP id 46BE813D1
+	for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 13:19:42 +0100 (MET)
+Message-ID: <550ABEDE.6030907@desy.de>
+Date: Thu, 19 Mar 2015 13:19:42 +0100
+From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426604145-12335-1-git-send-email-thomas.petazzoni@free-electrons.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: ACPI PCIe Hot Plug or pciehp
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Thomas,
+Hi
 
-On Tue, Mar 17, 2015 at 03:55:45PM +0100, Thomas Petazzoni wrote:
-> This commit implements suspend/resume support for the mvebu PCIe host
-> driver. Without this commit, the system will panic at resume time when
-> PCIe devices are connected.
-> 
-> Note that we have to use the ->suspend_noirq() and ->resume_noirq()
-> hooks, because at resume time, the PCI fixups are done at
-> ->resume_noirq() time, so the PCIe controller has to be ready at this
-> point.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 38 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 1309cfb..1ab8635 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -129,6 +129,7 @@ struct mvebu_pcie_port {
->  	size_t memwin_size;
->  	phys_addr_t iowin_base;
->  	size_t iowin_size;
-> +	u32 saved_pcie_stat;
+we are using PCIe hotplug for a few years in MTCA crates. We are using
+pciehp driver to handle hotplug events
+and it is fine. To force load the pciehp we used to use boot parameters
+pciehp.pciehp_force=1 and pci-ports=native.
+But today's more people talking about using ACPI hotplug instead of pciehp.
+I have tried to get some information, but could not find good description.
+Could some one help me to understand which is "better" and which one has
+to be used, ACPI hotplug or pciehp
 
-nit:  It's already in the pcie port struct, why not just call it saved_state?
+Thanks for help
 
-Either way,
+with best regards
 
-Acked-by: Jason Cooper <jason@lakedaemon.net>
+Ludwig
 
-thx,
-
-Jason.
