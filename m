@@ -1,127 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:32941 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbbCYI1R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:27:17 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:27:16 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 4D25B2BB0040
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:13 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8R4M236897008
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:12 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8QclU023081
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:39 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 06/20] PCI: Calculate maximum number of buses required for VFs
-Date: Wed, 25 Mar 2015 16:23:47 +0800
-Message-Id: <1427271841-28749-7-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36274 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755158AbbCSPBh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 11:01:37 -0400
+Received: by oigv203 with SMTP id v203so66987305oig.3
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 08:01:37 -0700 (PDT)
+Date: Thu, 19 Mar 2015 10:01:34 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: grant.likely@linaro.org, robh+dt@kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, arnd@arndb.de,
+	Suravee.Suthikulpanit@amd.com, will.deacon@arm.com,
+	joro@8bytes.org, linux@arm.linux.org.uk
+Subject: Re: [PATCH v1] of/pci : fix of_pci_dma_configure parent ptr NULL
+Message-ID: <20150319150134.GA26935@google.com>
+References: <1426092003-16925-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426092003-16925-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An SR-IOV device can change its First VF Offset and VF Stride based on the
-values of ARI Capable Hierarchy and NumVFs.  The number of buses required
-for all VFs is determined by NumVFs, First VF Offset, and VF Stride (see
-SR-IOV spec r1.1, sec 2.1.2).
+On Wed, Mar 11, 2015 at 12:40:03PM -0400, Murali Karicheri wrote:
+> On some platforms such as that based on x86, ia64 etc, root bus is
+> created with parent node passed in as NULL to pci_create_root_bus().
+> On these platforms, the patch series "PCI: get DMA configuration from
+> parent device" when applied causes kernel crash. So add a check for this
+> in of_pci_dma_configure()
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Acked-by: Rob Herring<robh@kernel.org>
 
-Previously pci_iov_bus_range() computed how many buses would be required by
-TotalVFs, but this was based on a single NumVFs value and may not have been
-the maximum for all NumVFs configurations.
+Since I hadn't merged the original patch yet, I just folded this fix into
+it.  The series is on pci/iommu, and I merged it for "next".  Thanks for
+your patience. 
 
-Iterate over all valid NumVFs and calculate the maximum number of bus
-numbers that could ever be required for VFs of this device.
+Bjorn
 
-[bhelgaas: changelog, compute busnr of NumVFs, not TotalVFs, remove
-kerenl-doc comment marker]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |   31 +++++++++++++++++++++++++++----
- drivers/pci/pci.h |    1 +
- 2 files changed, 28 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index a8752c2..2ae921f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -46,6 +46,30 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
- }
- 
-+/*
-+ * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
-+ * determine how many additional bus numbers will be consumed by VFs.
-+ *
-+ * Iterate over all valid NumVFs and calculate the maximum number of bus
-+ * numbers that could ever be required.
-+ */
-+static inline u8 virtfn_max_buses(struct pci_dev *dev)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+	int nr_virtfn;
-+	u8 max = 0;
-+	u8 busnr;
-+
-+	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
-+		pci_iov_set_numvfs(dev, nr_virtfn);
-+		busnr = virtfn_bus(dev, nr_virtfn - 1);
-+		if (busnr > max)
-+			max = busnr;
-+	}
-+
-+	return max;
-+}
-+
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -427,6 +451,7 @@ found:
- 
- 	dev->sriov = iov;
- 	dev->is_physfn = 1;
-+	iov->max_VF_buses = virtfn_max_buses(dev);
- 
- 	return 0;
- 
-@@ -556,15 +581,13 @@ void pci_restore_iov_state(struct pci_dev *dev)
- int pci_iov_bus_range(struct pci_bus *bus)
- {
- 	int max = 0;
--	u8 busnr;
- 	struct pci_dev *dev;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (!dev->is_physfn)
- 			continue;
--		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
--		if (busnr > max)
--			max = busnr;
-+		if (dev->sriov->max_VF_buses > max)
-+			max = dev->sriov->max_VF_buses;
- 	}
- 
- 	return max ? max - bus->number : 0;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5732964..bae593c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -243,6 +243,7 @@ struct pci_sriov {
- 	u16 stride;		/* following VF stride */
- 	u32 pgsz;		/* page size for BAR alignment */
- 	u8 link;		/* Function Dependency Link */
-+	u8 max_VF_buses;	/* max buses consumed by VFs */
- 	u16 driver_max_VFs;	/* max num VFs driver supports */
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
--- 
-1.7.9.5
-
+> ---
+>  drivers/of/of_pci.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 86d3c38..a8e485c 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -129,6 +129,10 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
+>  	struct device *dev = &pci_dev->dev;
+>  	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>  
+> +	/* Some platforms can have bridge->parent set to NULL */
+> +	if (!bridge->parent)
+> +		return;
+> +
+>  	of_dma_configure(dev, bridge->parent->of_node);
+>  	pci_put_host_bridge_device(bridge);
+>  }
+> -- 
+> 1.7.9.5
+> 
