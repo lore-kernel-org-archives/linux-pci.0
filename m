@@ -1,103 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og120.obsmtp.com ([64.18.0.137]:49449 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758748AbbCDTsV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 14:48:21 -0500
-Received: by pdbfp1 with SMTP id fp1so8912027pdb.2
-        for <linux-pci@vger.kernel.org>; Wed, 04 Mar 2015 11:48:20 -0800 (PST)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Duc Dang <dhdang@apm.com>
-Subject: [PATCH v2 3/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node.
-Date: Wed,  4 Mar 2015 11:39:59 -0800
-Message-Id: <d44b9e71443b7b151de385f05211afd75f426035.1425497218.git.dhdang@apm.com>
-In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
-References: <cover.1425497218.git.dhdang@apm.com>
-In-Reply-To: <cover.1425497218.git.dhdang@apm.com>
-References: <1678162.2PJ2o1jRen@wuerfel> <cover.1425497218.git.dhdang@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	"yinghai @ kernel . org" <yinghai@kernel.org>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is disabled when unbinding
+Date: Thu, 19 Mar 2015 12:29:06 +0100
+Message-ID: <2835680.pSPaYk3eSL@vostro.rjw.lan>
+In-Reply-To: <550A7F8D.90404@linux.intel.com>
+References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com> <20150318221152.GA2495@google.com> <550A7F8D.90404@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+On Thursday, March 19, 2015 03:49:33 PM Jiang Liu wrote:
+> On 2015/3/19 6:11, Bjorn Helgaas wrote:
+> > On Tue, Mar 17, 2015 at 03:37:12PM +0800, Jiang Liu wrote:
+> >> To support IOAPIC hot-removal, we need to release PCI interrupt resource
+> >> when unbinding PCI device driver. But due to historical reason,
+> >> /*
+> >>  * We would love to complain here if pci_dev->is_enabled is set, that
+> >>  * the driver should have called pci_disable_device(), but the
+> >>  * unfortunate fact is there are too many odd BIOS and bridge setups
+> >>  * that don't like drivers doing that all of the time.
+> >>  * Oh well, we can dream of sane hardware when we sleep, no matter how
+> >>  * horrible the crap we have to deal with is when we are awake...
+> >>  */
+> > 
+> > Quoting the comment here (especially the last two lines) is overkill and
+> > obscures the real point.  The important thing is that some drivers have
+> > legitimate reasons for not calling pci_disable_device().
+> Hi Bjorn,
+> 	Thanks for review. I will rewrite the commit message.
+> >> some drivers don't call pci_disable_device() when unloading, which
+> >> prevents us from reallocating PCI interrupt resource on reloading
+> >> PCI driver and causes regressions.
+> > 
+> > This isn't very clear.  I can believe that "drivers not calling
+> > pci_disable_device()" means we don't release IRQ resources, which might
+> > prevent you from hot-removing an IOAPIC.
+> > 
+> > But "drivers not calling pci_disable_device()" doesn't cause regressions.
+> > 
+> >> So release PCI interrupt resource only if PCI device is disabled when
+> >> unbinding. By this way, we could support IOAPIC hot-removal on latest
+> >> platforms and avoid regressions on old platforms.
+> > 
+> > Does this mean you can only hot-remove IOAPICs if all drivers for devices
+> > using the IOAPIC call pci_disable_device()?  If so, it seems sort of
+> > dubious that we have to rely on drivers for that.
+> This is a quickfix for v4.0 merging window. We will try to solve this
+> issue for next merging window.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pci-msi.txt      | 61 ++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+If that is the plan, then I'd rather revert the offending commit and try
+again in the next cycle.
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-new file mode 100644
-index 0000000..fdd55d6
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-@@ -0,0 +1,61 @@
-+* AppliedMicro X-Gene PCIe MSI interface
-+
-+Required properties:
-+
-+- compatible: should contain "apm,xgene1-msi" to identify the core.
-+- msi-controller: indicates that this is X-Gene1 PCIe MSI controller node
-+- reg: A list of physical base address and length for each set of controller
-+       registers.
-+- interrupts: A list of interrupt outputs of the controller.
-+
-+Each PCIe node needs to have property msi-parent that points to msi controller node
-+
-+Examples:
-+
-+SoC DTSI:
-+
-+	msi@79000000 {
-+		compatible = "apm,xgene1-msi";
-+		msi-controller;
-+		reg = <0x00 0x79000000 0x0 0x900000>;
-+		interrupts = <  0x0 0x10 0x4
-+				0x0 0x11 0x4
-+				0x0 0x12 0x4
-+				0x0 0x13 0x4
-+				0x0 0x14 0x4
-+				0x0 0x15 0x4
-+				0x0 0x16 0x4
-+				0x0 0x17 0x4
-+				0x0 0x18 0x4
-+				0x0 0x19 0x4
-+				0x0 0x1a 0x4
-+				0x0 0x1b 0x4
-+				0x0 0x1c 0x4
-+				0x0 0x1d 0x4
-+				0x0 0x1e 0x4
-+				0x0 0x1f 0x4>;
-+	};
-+
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		dma-coherent;
-+		clocks = <&pcie0clk 0>;
-+		msi-parent= <&msi>;
-+	};
+Bjorn, what do you think?
+
+
 -- 
-1.9.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
