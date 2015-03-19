@@ -1,81 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:36052 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbbCSVJD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 17:09:03 -0400
-Received: by oigv203 with SMTP id v203so75894564oig.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 14:09:03 -0700 (PDT)
-Date: Thu, 19 Mar 2015 16:08:59 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>, Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX
- termination driver
-Message-ID: <20150319210859.GJ26935@google.com>
-References: <1678162.2PJ2o1jRen@wuerfel>
- <cover.1425497218.git.dhdang@apm.com>
- <CADaLND=+Aq-zgMWE6vnn1kt1g2iz1k-AxMj4--kejF-q=f=bfg@mail.gmail.com>
- <20150319204929.GH26935@google.com>
- <CADaLND=PPuYWM_j7+GeDx+wtpN1cPsNk8UoZx0k7F9eEXPuAjg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADaLND=PPuYWM_j7+GeDx+wtpN1cPsNk8UoZx0k7F9eEXPuAjg@mail.gmail.com>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:34718 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187AbbCSFhv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:51 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v9 08/10] iommu/vt-d: assign new page table for dma_map
+Date: Thu, 19 Mar 2015 13:36:26 +0800
+Message-Id: <1426743388-26908-9-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 19, 2015 at 01:59:35PM -0700, Duc Dang wrote:
-> On Thu, Mar 19, 2015 at 1:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > [+cc Marc]
-> >
-> > On Wed, Mar 18, 2015 at 10:43:10AM -0700, Duc Dang wrote:
-> >> On Wed, Mar 4, 2015 at 11:39 AM, Duc Dang <dhdang@apm.com> wrote:
-> >> > This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
-> >> > APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
-> >> > to GIC V2M specification for MSI Termination.
-> >> >
-> >> > There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
-> >> > block supports 2688 MSI termination ports coalesced into 16 physical HW IRQ lines
-> >> > and shared across all 5 PCIe ports.
-> >> >
-> >> > v2 changes:
-> >> >         1. Use msi_controller structure
-> >> >         2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
-> >> >
-> >> >  .../devicetree/bindings/pci/xgene-pci-msi.txt      |  61 ++++
-> >> >  MAINTAINERS                                        |   8 +
-> >> >  arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 ++
-> >> >  drivers/pci/host/Kconfig                           |   4 +
-> >> >  drivers/pci/host/Makefile                          |   1 +
-> >> >  drivers/pci/host/pci-xgene-msi.c                   | 393 +++++++++++++++++++++
-> >> >  drivers/pci/host/pci-xgene.c                       |  25 ++
-> >> >  7 files changed, 519 insertions(+)
-> >> >  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-> >> >  create mode 100644 drivers/pci/host/pci-xgene-msi.c
-> >> >
-> >> > --
-> >> > 1.9.1
-> >> >
-> >> Hi Bjorn, Arnd, and All,
-> >>
-> >> Did you have a chance to take a look at this v2 patch set for X-Gene 1
-> >> MSI support?
-> >
-> > Marc had some comments, and as far as I can tell, you haven't addressed
-> > them yet.  Am I mistaken?
-> >
-> Hi Bjorn,
-> 
-> You are correct. I am making the changes as Marc pointed out. Will
-> update a new version soon.
+When a device driver issues the first dma_map command for a device, we
+assign a new and empty page-table, thus removing all mappings from the
+old kernel for the device.
 
-OK, thanks.  If other people provide feedback, I usually wait until that's
-addressed before I spend much time looking at it, because I don't want to
-spend time rediscovering things people have already commented on, and I
-can't keep up with the list as it is :)
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 54 ++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 46 insertions(+), 8 deletions(-)
 
-Bjorn
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 312f06b..6b691d4 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -44,6 +44,7 @@
+ #include <asm/irq_remapping.h>
+ #include <asm/cacheflush.h>
+ #include <asm/iommu.h>
++#include <linux/dma-mapping.h>
+ 
+ #include "irq_remapping.h"
+ 
+@@ -3121,14 +3122,30 @@ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+ 		return NULL;
+ 	}
+ 
+-	/* make sure context mapping is ok */
+-	if (unlikely(!domain_context_mapped(dev))) {
+-		ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
+-		if (ret) {
+-			printk(KERN_ERR "Domain context map for %s failed",
+-			       dev_name(dev));
+-			return NULL;
+-		}
++	/* if in kdump kernel, we need to unmap the mapped dma pages,
++	 * detach this device first.
++	 */
++	if (likely(domain_context_mapped(dev))) {
++#ifdef CONFIG_CRASH_DUMP
++		if (is_kdump_kernel()) {
++			unmap_device_dma(domain, dev);
++			domain = get_domain_for_dev(dev,
++				DEFAULT_DOMAIN_ADDRESS_WIDTH);
++			if (!domain) {
++				pr_err("Allocating domain for %s failed",
++				       dev_name(dev));
++				return NULL;
++			}
++		} else
++#endif
++			return domain;
++	}
++
++	ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
++	if (ret) {
++		pr_err("Domain context map for %s failed",
++		       dev_name(dev));
++		return NULL;
+ 	}
+ 
+ 	return domain;
+@@ -5177,4 +5194,25 @@ static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd)
+ 	return ret;
+ }
+ 
++static void unmap_device_dma(struct dmar_domain *domain, struct device *dev)
++{
++	struct intel_iommu *iommu;
++	struct context_entry *ce;
++	struct iova *iova;
++	u8 bus, devfn;
++	phys_addr_t phys_addr;
++	dma_addr_t dev_addr;
++
++	iommu = device_to_iommu(dev, &bus, &devfn);
++	ce = device_to_context_entry(iommu, bus, devfn);
++	phys_addr = context_address_root(ce) << VTD_PAGE_SHIFT;
++	dev_addr = phys_to_dma(dev, phys_addr);
++
++	iova = find_iova(&domain->iovad, IOVA_PFN(dev_addr));
++	if (iova)
++		intel_unmap(dev, dev_addr);
++
++	domain_remove_one_dev_info(domain, dev);
++}
++
+ #endif /* CONFIG_CRASH_DUMP */
+-- 
+2.0.0-rc0
+
