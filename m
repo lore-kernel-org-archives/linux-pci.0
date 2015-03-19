@@ -1,199 +1,125 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54F6B044.7000609@numascale.com>
-Date: Wed, 04 Mar 2015 15:12:04 +0800
-From: Daniel J Blueman <daniel@numascale.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:35710 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755333AbbCSPI1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 11:08:27 -0400
+Received: by oiag65 with SMTP id g65so67211811oia.2
+        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 08:08:27 -0700 (PDT)
+Date: Thu, 19 Mar 2015 10:08:24 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V13 15/21] powerpc/powernv: Reserve additional space for
+ IOV BAR according to the number of total_pe
+Message-ID: <20150319150824.GE26935@google.com>
+References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1425446353-30513-16-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150311135507.GA16664@google.com>
+ <20150312011517.GA5833@richard>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ingo Molnar <mingo@redhat.com>, H Peter Anvin <hpa@zytor.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>,
-	"x86@kernel.org" <x86@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: PCIe 32-bit MMIO exhaustion
-References: <54C8A10B.3070207@numascale.com> <CAErSpo4t94BXYhhE+bh5-3_PsdKTSa113beqqz14W+_emdCGMQ@mail.gmail.com> <54EC0013.7000100@numascale.com> <20150303223816.GB22299@google.com>
-In-Reply-To: <20150303223816.GB22299@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150312011517.GA5833@richard>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/03/2015 06:38, Bjorn Helgaas wrote:
-> [+cc linux-pci, linux-acpi]
->
-> On Tue, Feb 24, 2015 at 12:37:39PM +0800, Daniel J Blueman wrote:
->> Hi Bjorn, Jiang,
->>
->> On 29/01/2015 23:23, Bjorn Helgaas wrote:
->>> Hi Daniel,
->>>
->>> On Wed, Jan 28, 2015 at 2:42 AM, Daniel J Blueman <daniel@numascale.com> wrote:
->>>> With systems with a large number of PCI devices, we're seeing lack of 32-bit
->>>> MMIO space, eg one quad-port NetXtreme-2 adapter takes 128MB of space [1].
->>>>
->>>> An errata to the PCIe 2.1 spec provides guidance on limitations with 64-bit
->>>> non-prefetchable BARs (since bridges have only 32-bit non-prefetchable
->>>> ranges) stating that vendors can enable the prefetchable bit in BARs under
->>>> certain circumstances to allow 64-bit allocation [2].
->>>>
->>>> The problem with that, is that vendors can't know apriori what hosts their
->>>> products will be in, so can't just advertise prefetchable 64-bit BARs. What
->>>> can be done, is system firmware can use the 64-bit prefetchable BAR in
->>>> bridges, and assign a 64-bit non-prefetchable device BAR into that area,
->>>> where it is safe to do so (following the guidance).
->>>>
->>>> At present, linux denies such allocations [3] and disables the BARs. It
->>>> seems a practical solution to allow them if the firmware believes it is
->>>> safe.
->>>
->>> This particular message ([3]):
->>>
->>>> pci 0002:01:00.0: BAR 0: [mem size 0x00002000 64bit] conflicts with PCI Bus
->>>> 0002:00 [mem 0x10020000000-0x10027ffffff pref]
->>>
->>> is misleading at best and likely a symptom of a bug.  We printed the
->>> *size* of BAR 0, not an address, which means we haven't assigned space
->>> for the BAR.  That means it should not conflict with anything.
->>>
->>> We already do revert to firmware assignments in some situations when
->>> Linux can't figure out how to assign things itself.  But apparently
->>> not in *this* situation.
->>>
->>> Without seeing the whole picture, it's hard for me to figure out
->>> what's going on here.  Could you open a bug report at
->>> http://bugzilla.kernel.org (category drivers/PCI) and attach a
->>> complete dmesg and "lspci -vv" output?  Then we can look at what
->>> firmware did and what Linux thought was wrong with it.
->>
->> Done a while back:
->> https://bugzilla.kernel.org/show_bug.cgi?id=92671
->>
->> An interesting question popped up: I find the kernel doesn't accept
->> IO BARs and bridge windows after address 0xffff, though the PCI spec
->> and modern hardware allows 32-bit decode.
->>
->> Thus for practical reasons, our NumaConnect firmware doesn't setup
->> IO BARs/windows beyond the first PCI domain (which is the only one
->> with legacy support, and no drivers seem to require IO their BARs
->> anyway), ...
->
-> If we don't handle IO ports above 0xffff, I think that's broken.  I'm
-> pretty sure we do handle that on ia64 (it's done by assigning 64K of IO
-> space to each host bridge, and I think it's typically translated by the
-> bridge so each root bus sees a 0-64K space on PCI).  We should be able to
-> do something similar on x86, but it may not be implemented there yet.
->
->> and we get conflicts and warnings [1]:
->>
->> pnp 00:00: disabling [io  0x0061] because it overlaps 0001:05:00.0
->> BAR 0 [io  0x0000-0x00ff]
->> pci 0001:03:00.0: BAR 13: no space for [io  size 0x1000]
->> pci 0001:03:00.0: BAR 13: failed to assign [io  size 0x1000]
->>
->> Is there a cleaner way of dealing with this, in our firmware and/or
->> the kernel? Eg, I guess if IO BARs aren't assigned (value 0) on PCI
->> domains without IO bridge windows in the ACPI AML, no need to
->> conflict/attempt assignment?
->
-> Yes, we should be able to deal with this better.
->
-> The complaint about disabling the pnp 00:00 resource is bogus because the
-> PCI 0001:05:00.0 BAR is not assigned and should never be enabled, so this
-> is not a real conflict.  My intent is that the PCI resource corresponding
-> to this BAR should have the IORESOURCE_UNSET bit set.  That will prevent
-> pci_enable_resources() from setting the PCI_COMMAND_IO bit, which is what
-> would enable the BAR.
->
-> Can you try the patch below?  I don't think it will work right off the bat
-> because I think the fact that we print "[io  0x0000-0x00ff]" instead of
-> "[io  size 0x0100]" means we don't have IORESOURCE_UNSET set in the PCI
-> resource.  But maybe you can figure out where it *should* be getting
-> set?
->
-> Bjorn
->
->
-> commit fd4888cf942a2ae9cdefc46d1fba86b2c7ec2dbf
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Mar 3 16:13:56 2015 -0600
->
->      PNP: Don't check for overlaps with unassigned PCI BARs
->
->      After 0509ad5e1a7d ("PNP: disable PNP motherboard resources that overlap
->      PCI BARs"), we disable and warn about PNP resources that overlap PCI BARs.
->      But we assume that all PCI BARs are valid, which is incorrect, because a
->      BAR may not have any space assigned to it.  In that case, we will not
->      enable the BAR, so no other resource can conflict with it.
->
->      Ignore PCI BARs that are unassigned, as indicated by IORESOURCE_UNSET.
->
->      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
-> index ebf0d6710b5a..943c1cb9566c 100644
-> --- a/drivers/pnp/quirks.c
-> +++ b/drivers/pnp/quirks.c
-> @@ -246,13 +246,16 @@ static void quirk_system_pci_resources(struct pnp_dev *dev)
->   	 */
->   	for_each_pci_dev(pdev) {
->   		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> -			unsigned long type;
-> +			unsigned long flags, type;
->
-> -			type = pci_resource_flags(pdev, i) &
-> -					(IORESOURCE_IO | IORESOURCE_MEM);
-> +			flags = pci_resource_flags(pdev, i);
-> +			type = flags & (IORESOURCE_IO | IORESOURCE_MEM);
->   			if (!type || pci_resource_len(pdev, i) == 0)
->   				continue;
->
-> +			if (flags & IORESOURCE_UNSET)
-> +				continue;
-> +
->   			pci_start = pci_resource_start(pdev, i);
->   			pci_end = pci_resource_end(pdev, i);
->   			for (j = 0;
->
+On Thu, Mar 12, 2015 at 09:15:17AM +0800, Wei Yang wrote:
+> On Wed, Mar 11, 2015 at 08:55:07AM -0500, Bjorn Helgaas wrote:
+> >On Wed, Mar 04, 2015 at 01:19:07PM +0800, Wei Yang wrote:
+> >> On PHB3, PF IOV BAR will be covered by M64 window to have better PE
+> >> isolation.  The total_pe number is usually different from total_VFs, which
+> >> can lead to a conflict between MMIO space and the PE number.
+> >> 
+> >> For example, if total_VFs is 128 and total_pe is 256, the second half of
+> >> M64 window will be part of other PCI device, which may already belong
+> >> to other PEs.
+> >> 
+> >> Prevent the conflict by reserving additional space for the PF IOV BAR,
+> >> which is total_pe number of VF's BAR size.
+> >> 
+> >> [bhelgaas: make dev_printk() output more consistent, index resource[]
+> >> conventionally]
+> >> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> >> ---
+> >>  arch/powerpc/include/asm/machdep.h        |    4 ++
+> >>  arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+> >>  arch/powerpc/kernel/pci-common.c          |    5 +++
+> >>  arch/powerpc/kernel/pci-hotplug.c         |    4 ++
+> >>  arch/powerpc/platforms/powernv/pci-ioda.c |   61 +++++++++++++++++++++++++++++
+> >>  5 files changed, 77 insertions(+)
+> >> 
+> >> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+> >> index c8175a3..965547c 100644
+> >> --- a/arch/powerpc/include/asm/machdep.h
+> >> +++ b/arch/powerpc/include/asm/machdep.h
+> >> @@ -250,6 +250,10 @@ struct machdep_calls {
+> >>  	/* Reset the secondary bus of bridge */
+> >>  	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+> >>  
+> >> +#ifdef CONFIG_PCI_IOV
+> >> +	void (*pcibios_fixup_sriov)(struct pci_bus *bus);
+> >> +#endif /* CONFIG_PCI_IOV */
+> >> +
+> >>  	/* Called to shutdown machine specific hardware not already controlled
+> >>  	 * by other drivers.
+> >>  	 */
+> >> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> >> index 513f8f2..de11de7 100644
+> >> --- a/arch/powerpc/include/asm/pci-bridge.h
+> >> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> >> @@ -175,6 +175,9 @@ struct pci_dn {
+> >>  #define IODA_INVALID_PE		(-1)
+> >>  #ifdef CONFIG_PPC_POWERNV
+> >>  	int	pe_number;
+> >> +#ifdef CONFIG_PCI_IOV
+> >> +	u16     max_vfs;		/* number of VFs IOV BAR expended */
+> >> +#endif /* CONFIG_PCI_IOV */
+> >>  #endif
+> >>  	struct list_head child_list;
+> >>  	struct list_head list;
+> >> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> >> index 8203101..022e9fe 100644
+> >> --- a/arch/powerpc/kernel/pci-common.c
+> >> +++ b/arch/powerpc/kernel/pci-common.c
+> >> @@ -1646,6 +1646,11 @@ void pcibios_scan_phb(struct pci_controller *hose)
+> >>  	if (ppc_md.pcibios_fixup_phb)
+> >>  		ppc_md.pcibios_fixup_phb(hose);
+> >>  
+> >> +#ifdef CONFIG_PCI_IOV
+> >> +	if (ppc_md.pcibios_fixup_sriov)
+> >> +		ppc_md.pcibios_fixup_sriov(bus);
+> >> +#endif /* CONFIG_PCI_IOV */
+> >
+> >Here, and ...
+> >
+> >> +
+> >>  	/* Configure PCI Express settings */
+> >>  	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> >>  		struct pci_bus *child;
+> >> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+> >> index 5b78917..7d238ae 100644
+> >> --- a/arch/powerpc/kernel/pci-hotplug.c
+> >> +++ b/arch/powerpc/kernel/pci-hotplug.c
+> >> @@ -94,6 +94,10 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
+> >>  		 */
+> >>  		slotno = PCI_SLOT(PCI_DN(dn->child)->devfn);
+> >>  		pci_scan_slot(bus, PCI_DEVFN(slotno, 0));
+> >> +#ifdef CONFIG_PCI_IOV
+> >> +		if (ppc_md.pcibios_fixup_sriov)
+> >> +			ppc_md.pcibios_fixup_sriov(bus);
+> >> +#endif /* CONFIG_PCI_IOV */
+> >
+> >here, you have the same code.  It's good that we now do it for hot-added
+> >devices as well as those present at boot.  But it's bad that it happens in
+> >two different paths.
+> >
+> >Isn't there some way we can unify this so the same path is used for the
+> >initial pcibios_scan_phb() and also the hot-add case?  Maybe call
+> >pcibios_fixup_sriov() from pcibios_add_device()?
+> >
+> 
+> 
+> This is a very good suggestion. I have changed this and works fine.
 
-Your patch solves the conflicts nicely [1] with:
-
- From f835b16b0758a1dde6042a0e4c8aa5a2e8be5f21 Mon Sep 17 00:00:00 2001
-From: Daniel J Blueman <daniel@numascale.com>
-Date: Wed, 4 Mar 2015 14:53:00 +0800
-Subject: [PATCH] Mark PCI BARs with address 0 as unset
-
-Allow the kernel to activate the unset flag for PCI BAR resources if
-the firmware assigns address 0 (invalid as legacy IO is in this range).
-
-This allows preventing conflicts with legacy IO/ACPI PNP resources in
-this range.
-
-Signed-off-by: Daniel J Blueman <daniel@numascale.com>
----
-  drivers/pci/probe.c | 7 +++++++
-  1 file changed, 7 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..ef43652 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -281,6 +281,13 @@ int __pci_read_base(struct pci_dev *dev, enum 
-pci_bar_type type,
-  	pcibios_resource_to_bus(dev->bus, &inverted_region, res);
-
-  	/*
-+	 * If firmware doesn't assign a valid PCI address (as legacy IO is below
-+	 * PCI IO), mark resource unset to prevent later resource conflicts
-+	 */
-+	if (region.start == 0)
-+		res->flags |= IORESOURCE_UNSET;
-+
-+	/*
-  	 * If "A" is a BAR value (a bus address), "bus_to_resource(A)" is
-  	 * the corresponding resource address (the physical address used by
-  	 * the CPU.  Converting that resource address back to a bus address
-
-[1] https://resource.numascale.com/dmesg-4.0.0-rc2.txt
--- 
-Daniel J Blueman
-Principal Software Engineer, Numascale
+I was expecting a v14 series with this change.  Is it coming, or are you
+waiting for something else from me?
