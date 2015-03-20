@@ -1,179 +1,256 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 00/30] Refine PCI scan interfaces and make generic pci host bridge
-Date: Tue, 24 Mar 2015 11:33:54 +0800
-Message-ID: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33590 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbbCTDOA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:14:00 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:13:58 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id F057D2CE8054
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:56 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3DmJp40894492
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:56 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3DMku010594
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:23 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 12/21] PCI: Consider additional PF's IOV BAR alignment in sizing and assigning
+Date: Fri, 20 Mar 2015 11:06:28 +0800
+Message-Id: <1426820797-6267-13-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v7->v8:
-	Fix some cross building errors found by kbuild test.
-	Drop the rename patch for find_pci_host_bridge().
-v6->v7:
-	Drop previous patch which combined the domain and bus in one argument.
-	Make the pci_host_bridge hold the default busn resource, so we could
-	check whether new host busn resource is conflict with existing ones.
-	Move pci_host_assign_domain_nr() to drivers/pci/host-bridge.c
-	Other changes suggested by Bjorn and Suravee.
-v5->v6:
-	Fix cross building errors found by kbuild test.
-	Export busn_resource to Xen pcifront driver.
-v4->v5:
-	Fix some code style issues and rename some functions suggested by Bjorn.
-	Fix some code flaw(Eg. call pci_bus_add_devices() before resources claim
-	or lack the return checking).
-v3->v4:
-	Fix the rebase issue.
-v2->v3:
-	Rebase this series on v4.0-rc1.
-v1->v2:
-	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
-	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
-	Arnd. Refresh some patch description log, and add a new patch to fix
-	build warning in ia64.
+When sizing and assigning resources, we divide the resources into two
+lists: the requested list and the additional list.  We don't consider the
+alignment of additional VF(n) BAR space.
 
-This series is based on Bjorn's pci/enumeration branch.
+This is because the alignment required for the VF(n) BAR space is the size
+of an individual VF BAR, not the size of the space for *all* VFs.  But we
+want additional alignment to support partitioning on PowerNV.
 
-Now in kernel, we scan pci bus use the following ways:
-1. pci_scan_bus. 
-	parent = NULL, default io/mem/bus resources
-	call pci_bus_add_devices()
+Consider the additional IOV BAR alignment when sizing and assigning
+resources.  When there is not enough system MMIO space to accomodate both
+the requested list and the additional list, the PF's IOV BAR alignment will
+not contribute to the bridge. When there is enough system MMIO space for
+both lists, the additional alignment will contribute to the bridge.
 
-2. pci_scan_bus_parented() + pci_bus_add_devices()
-	default io/mem/bus resources, only used by xen
+The additional alignment is stored in the min_align of pci_dev_resource,
+which is stored in the additional list by add_to_list() at the end of
+pbus_size_mem(). The additional alignment is calculated in
+pci_resource_alignment().  For an IOV BAR, we have arch dependent function
+to get the alignment for different arch.
 
-3. pci_scan_root_bus() + pci_bus_add_devices()
+[bhelgaas: changelog, printk cast]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |   95 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 79 insertions(+), 16 deletions(-)
 
-4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
-
-5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
-
-And we have a lot of arch specific pci_domain_nr() and other platform
-specific weak function like pcibios_root_bridge_prepare().
-
-After applied this series, we have following scan interfaces:
-
-1. pci_scan_bus() 
-	parent = NULL, default io/mem/bus resources.
-	for legacy pci scan
-
-2. pci_scan_root_bus()
-	for callers provide its own parent and io/mem/bus resources
-	but no platform specific pci_host_bridge operations
-
-3. pci_scan_host_bridge()
-	for callers provide its own parent and io/mem/bus resources
-
-Arnd Bergmann (1):
-  xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-
-Yijing Wang (29):
-  PCI: Remove deprecated pci_scan_bus_parented()
-  PCI: Save domain in pci_host_bridge
-  PCI: Move pci_bus_assign_domain_nr() declaration into
-    drivers/pci/pci.h
-  PCI: Introduce pci_host_assign_domain_nr() to assign domain
-  PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-  PCI: Add default bus resource in pci_host_bridge
-  PCI: Update pci_host_bridge bus resource
-  PCI: Introduce pci_host_first_busnr() function
-  PCI: Introduce pci_host_bridge_list to manage host bridges
-  PCI: Save sysdata in pci_host_bridge drvdata
-  powerpc/PCI: Rename pcibios_root_bridge_prepare() to
-    pcibios_set_root_bus_speed()
-  PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
-  PCI: Introduce pci_host_bridge_ops to support host specific
-    operations
-  PCI: Introduce new scan function pci_scan_host_bridge()
-  PCI: Introduce pci_bus_child_max_busnr()
-  x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-  ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-  powerpc/pci: Use pci_scan_host_bridge() for simplicity
-  PCI: Remove pcibios_root_bridge_prepare() and
-    pcibos_set_root_bus_speed()
-  sparc/PCI: Use pci_scan_host_bridge() for simplicity
-  parisc/PCI: Use pci_scan_root_bus() for simplicity
-  PCI/mvebu: Use pci_common_init_dev() to simplify code
-  PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-  PCI/designware: Use pci_scan_root_bus() for simplicity
-  PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-  PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-  PCI: Remove platform specific pci_domain_nr()
-  PCI: Remove pci_bus_assign_domain_nr()
-  PCI: Clean up CONFIG_PCI_DOMAINS_GENERIC
-
- arch/alpha/include/asm/pci.h             |    2 -
- arch/alpha/kernel/pci.c                  |    4 +-
- arch/alpha/kernel/sys_nautilus.c         |    2 +-
- arch/arm/Kconfig                         |    3 -
- arch/arm/kernel/bios32.c                 |    2 +-
- arch/arm/mach-dove/pcie.c                |    2 +-
- arch/arm/mach-iop13xx/pci.c              |    4 +-
- arch/arm/mach-mv78xx0/pcie.c             |    2 +-
- arch/arm/mach-orion5x/pci.c              |    4 +-
- arch/arm64/Kconfig                       |    3 -
- arch/frv/mb93090-mb00/pci-vdk.c          |    3 +-
- arch/ia64/include/asm/pci.h              |    1 -
- arch/ia64/pci/pci.c                      |   34 +++--
- arch/ia64/sn/kernel/io_init.c            |    4 +-
- arch/m68k/coldfire/pci.c                 |    2 +-
- arch/microblaze/pci/pci-common.c         |   15 +--
- arch/mips/include/asm/pci.h              |    2 -
- arch/mips/pci/pci.c                      |    4 +-
- arch/mn10300/unit-asb2305/pci.c          |    3 +-
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |   77 ++++++------
- arch/powerpc/platforms/pseries/pci.c     |    8 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- arch/s390/pci/pci.c                      |   10 +-
- arch/sh/drivers/pci/pci.c                |    4 +-
- arch/sh/include/asm/pci.h                |    2 -
- arch/sparc/kernel/leon_pci.c             |    2 +-
- arch/sparc/kernel/pci.c                  |   45 +++----
- arch/sparc/kernel/pcic.c                 |    2 +-
- arch/tile/include/asm/pci.h              |    2 -
- arch/tile/kernel/pci.c                   |    4 +-
- arch/tile/kernel/pci_gx.c                |    4 +-
- arch/unicore32/kernel/pci.c              |    2 +-
- arch/x86/include/asm/pci.h               |    6 -
- arch/x86/pci/acpi.c                      |   37 +++---
- arch/x86/pci/common.c                    |    2 +-
- arch/xtensa/kernel/pci.c                 |    2 +-
- drivers/parisc/dino.c                    |    6 +-
- drivers/parisc/lba_pci.c                 |    4 +-
- drivers/pci/host-bridge.c                |  202 ++++++++++++++++++++++++++++
- drivers/pci/host/pci-mvebu.c             |   18 +---
- drivers/pci/host/pci-tegra.c             |   16 ---
- drivers/pci/host/pci-versatile.c         |    3 +-
- drivers/pci/host/pci-xgene.c             |    3 +-
- drivers/pci/host/pcie-designware.c       |    4 +-
- drivers/pci/host/pcie-xilinx.c           |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c       |   29 +----
- drivers/pci/hotplug/ibmphp_core.c        |    2 +-
- drivers/pci/pci.c                        |   85 ++++---------
- drivers/pci/pci.h                        |   15 ++
- drivers/pci/probe.c                      |  212 ++++++++++++------------------
- drivers/pci/xen-pcifront.c               |   16 ++-
- include/linux/pci.h                      |   46 +++----
- 54 files changed, 516 insertions(+), 458 deletions(-)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e3e17f3..6603d40 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
+ 	}
+ }
+ 
+-static resource_size_t get_res_add_size(struct list_head *head,
+-					struct resource *res)
++static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
++					       struct resource *res)
+ {
+ 	struct pci_dev_resource *dev_res;
+ 
+@@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 			int idx = res - &dev_res->dev->resource[0];
+ 
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-				 "res[%d]=%pR get_res_add_size add_size %llx\n",
++				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+ 				 idx, dev_res->res,
+-				 (unsigned long long)dev_res->add_size);
++				 (unsigned long long)dev_res->add_size,
++				 (unsigned long long)dev_res->min_align);
+ 
+-			return dev_res->add_size;
++			return dev_res;
+ 		}
+ 	}
+ 
+-	return 0;
++	return NULL;
+ }
+ 
++static resource_size_t get_res_add_size(struct list_head *head,
++					struct resource *res)
++{
++	struct pci_dev_resource *dev_res;
++
++	dev_res = res_to_dev_res(head, res);
++	return dev_res ? dev_res->add_size : 0;
++}
++
++static resource_size_t get_res_add_align(struct list_head *head,
++					 struct resource *res)
++{
++	struct pci_dev_resource *dev_res;
++
++	dev_res = res_to_dev_res(head, res);
++	return dev_res ? dev_res->min_align : 0;
++}
++
++
+ /* Sort resources by alignment */
+ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ {
+@@ -215,7 +235,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 	struct resource *res;
+ 	struct pci_dev_resource *add_res, *tmp;
+ 	struct pci_dev_resource *dev_res;
+-	resource_size_t add_size;
++	resource_size_t add_size, align;
+ 	int idx;
+ 
+ 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
+@@ -238,13 +258,13 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 
+ 		idx = res - &add_res->dev->resource[0];
+ 		add_size = add_res->add_size;
++		align = add_res->min_align;
+ 		if (!resource_size(res)) {
+-			res->start = add_res->start;
++			res->start = align;
+ 			res->end = res->start + add_size - 1;
+ 			if (pci_assign_resource(add_res->dev, idx))
+ 				reset_resource(res);
+ 		} else {
+-			resource_size_t align = add_res->min_align;
+ 			res->flags |= add_res->flags &
+ 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
+ 			if (pci_reassign_resource(add_res->dev, idx,
+@@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res;
++	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+ 	unsigned long fail_type;
++	resource_size_t add_align, align;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -384,10 +405,44 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry(dev_res, head, list)
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
++		/*
++		 * There are two kinds of additional resources in the list:
++		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
++		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
++		 * Here just fix the additional alignment for bridge
++		 */
++		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++			continue;
++
++		add_align = get_res_add_align(realloc_head, dev_res->res);
++
++		/*
++		 * The "head" list is sorted by the alignment to make sure
++		 * resources with bigger alignment will be assigned first.
++		 * After we change the alignment of a dev_res in "head" list,
++		 * we need to reorder the list by alignment to make it
++		 * consistent.
++		 */
++		if (add_align > dev_res->res->start) {
++			dev_res->res->start = add_align;
++			dev_res->res->end = add_align +
++				            resource_size(dev_res->res);
++
++			list_for_each_entry(dev_res2, head, list) {
++				align = pci_resource_alignment(dev_res2->dev,
++							       dev_res2->res);
++				if (add_align > align)
++					list_move_tail(&dev_res->list,
++						       &dev_res2->list);
++			}
++               }
++
++	}
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -962,6 +1017,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	resource_size_t children_add_size = 0;
++	resource_size_t children_add_align = 0;
++	resource_size_t add_align = 0;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -986,6 +1043,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
++				add_align = max(pci_resource_alignment(dev, r), add_align);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+ 				children_add_size += r_size;
+@@ -1016,19 +1074,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (order > max_order)
+ 				max_order = order;
+ 
+-			if (realloc_head)
++			if (realloc_head) {
+ 				children_add_size += get_res_add_size(realloc_head, r);
++				children_add_align = get_res_add_align(realloc_head, r);
++				add_align = max(add_align, children_add_align);
++			}
+ 		}
+ 	}
+ 
+ 	min_align = calculate_mem_align(aligns, max_order);
+ 	min_align = max(min_align, window_alignment(bus, b_res->flags));
+ 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
++	add_align = max(min_align, add_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), min_align);
++				resource_size(b_res), add_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1040,10 +1102,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+-		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
++		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+-			   (unsigned long long)size1-size0);
++			   (unsigned long long) (size1 - size0),
++			   (unsigned long long) add_align);
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.9.5
 
