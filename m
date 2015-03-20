@@ -1,329 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:42646 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830AbbCWWzc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 18:55:32 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 24 Mar 2015 08:55:30 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B026B2BB0047
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2015 09:55:28 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2NMtKeY47841326
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2015 09:55:28 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2NMssst029575
-	for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2015 09:54:55 +1100
-Date: Tue, 24 Mar 2015 09:54:29 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org,
-	linux-pci@vger.kernel.org, cascardo@linux.vnet.ibm.com,
-	bhelgaas@google.com, Brian King <brking@us.ibm.com>,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Ian Munsie <imunsie@au1.ibm.com>
-Subject: Re: [PATCH v3 1/2] PCI: One more parameter to
- pci_set_pcie_reset_state()
-Message-ID: <20150323225429.GA5646@shangw>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1427081673.3643.547.camel@redhat.com>
- <20150323035656.GA27802@shangw>
- <1427083561.3643.551.camel@redhat.com>
- <20150323044033.GA1874@shangw>
- <1427114434.3643.554.camel@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <550BBACE.4050503@intel.com>
+Date: Fri, 20 Mar 2015 14:14:38 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427114434.3643.554.camel@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH update] PCI / ACPI: PCI delay optimization from ACPI
+References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com>
+In-Reply-To: <54FE93A4.9040908@intel.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 23, 2015 at 06:40:34AM -0600, Alex Williamson wrote:
->On Mon, 2015-03-23 at 15:40 +1100, Gavin Shan wrote:
->> On Sun, Mar 22, 2015 at 10:06:01PM -0600, Alex Williamson wrote:
->> >On Mon, 2015-03-23 at 14:56 +1100, Gavin Shan wrote:
->> >> On Sun, Mar 22, 2015 at 09:34:33PM -0600, Alex Williamson wrote:
->> >> >On Mon, 2015-03-23 at 14:02 +1100, Gavin Shan wrote:
->> >> >> The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
->> >> >> which allows to check if one particular PCI device can be resetted by the
->> >> >> function. The function will be reused to support PCI device specific methods
->> >> >> maintained in pci_dev_reset_methods[] in subsequent patch.
->> >> >> 
->> >> >> Cc: Brian King <brking@us.ibm.com>
->> >> >> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
->> >> >> Cc: Ian Munsie <imunsie@au1.ibm.com>
->> >> >> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> >> >> ---
->> >> >> v3: Fix arguments of pci_set_pcie_reset_state() in cxl driver
->> >> >> v2: Reimplemented based on pci_set_pcie_reset_state()
->> >> >> ---
->> >> >>  arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
->> >> >>  drivers/misc/cxl/pci.c          |  2 +-
->> >> >>  drivers/misc/genwqe/card_base.c |  9 +++++++--
->> >> >>  drivers/pci/pci.c               | 15 +++++++++------
->> >> >>  drivers/scsi/ipr.c              |  5 +++--
->> >> >>  include/linux/pci.h             |  5 +++--
->> >> >>  6 files changed, 33 insertions(+), 17 deletions(-)
->> >> >
->> >> >
->> >> >Argh, you're trying to make pci_set_pcie_reset_state() compatible with
->> >> >pci_dev_specific_reset(), so it can be called via pci_reset_function(),
->> >> >but the whole point of the pci_reset_function() interface is to reset a
->> >> >*single* function without disturbing anything else.  These patches make
->> >> >no effort at all to limit the set of affected devices to a single
->> >> >function and take great liberties using PCI_ANY_ID for vendors.  My take
->> >> >on the powerpc version of pcibios_set_pcie_reset_state() is that it's
->> >> >effectively a slot reset, so why not hook into the
->> >> >pci_reset_hotplug_slot() via the hotplug slot ops?  Please also use
->> >> >cover letters.  Thanks,
->> >> >
->> >> 
->> >> Yep, that's the point and intention of the patches. pcibios_set_pcie_reset_state()
->> >> isn't equal to pci_reset_hotplug_slot(). The later one depends on PCI slot, which
->> >> wasn't populated on PowerNV platform yet, but pcibios_set_pcie_reseet_state() doesn't.
->> >> 
->> >> The patchset depends on improved pcibios_set_pcie_reset_state(), which can be seen
->> >> from following linked. With it, we don't affect any PCI devices as the config space
->> >> is saved/restored accordingly before/after reset:
->> >> 
->> >> https://patchwork.ozlabs.org/patch/438598/
->> >
->> >Sorry, that's wrong.  pci_reset_function() can be called while other
->> >devices in the same multifunction package are actively in use.  It
->> >doesn't matter that you're saving and restoring the external state of
->> >the device, the internal state is lost and operation of the device is
->> >interrupted.  That is not how pci_reset_function() is supposed to work.
->> >Thanks,
->> >
->> 
->> pcibios_set_pcie_reset_state() applies hot reset on PCI bus, or PCI
->> slot fundamental reset essentially. It's potentially affecting multiple
->> PCI devices (not functions).
->> 
->> Yes. It's not safe to call pcibios_set_pcie_reset_state() if some of
->> the target functions are actively and in use. I also suspect if it
->> works to reset function#0 via pci_reset_function() while function#1
->> is actively in use? I guess the caller of pci_reset_function() perhaps
->> has to ensure there are no active functions/devices.
->> 
->> One of the issues the patches try to fix: some of broadcom adapters have
->> multile functions, which can't support FLR, AF FLR, PM reset. Also, reset
->> on parent PCI bus and the corresponding reset can't be applied because of
->> they're multi-function package. In summary, pci_reset_function() doesn't
->> work on the adapters. That won't give clean state when passing device from
->> host to guest, or return it back to host. Sometimes, the host memory gets
->> corrupted when destorying the guest. Occasionally, the patches with improved
->> pcibios_set_pcie_reset_state() avoided the issue.
->> 
->> Some adapters might require fundamental reset on the PCI slot, or hot reset
->> on parent bus explicitly, in order to successfully reload its firmware after
->> reset.
->
->This is exactly why we have pci_reset_slot() and pci_reset_bus(), so
->that the caller can manage the scope of the reset.  You cannot change
->the semantics of pci_reset_function() simply because it's convenient for
->your implementation.  This series is wrong and should not be applied.
->Thanks,
->
-
-Alex, thanks for your review. I agree that the patches changed the semantics
-of pci_reset_function() and it's wrong direction to take. Actually, the PEs
-are segmented based on PCI buses (except SRIOV VFs), which means all PCI devices
-attached to one PCI bus forms one PE, which is the minimal unit for passing
-through. So the case that 0000:00:00.0 is passed to guest#0, while 0000:00:00.1
-is assigned to guest#1, can't happen.
+I wonder if there is any more comments about this patch?
 
 Thanks,
-Gavin
- 
->Alex
->
->> >> >> diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
->> >> >> index daa68a1..cd85c18 100644
->> >> >> --- a/arch/powerpc/kernel/eeh.c
->> >> >> +++ b/arch/powerpc/kernel/eeh.c
->> >> >> @@ -726,11 +726,14 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
->> >> >>   * pcibios_set_pcie_slot_reset - Set PCI-E reset state
->> >> >>   * @dev: pci device struct
->> >> >>   * @state: reset state to enter
->> >> >> + * @probe: check if the device can take the reset
->> >> >>   *
->> >> >>   * Return value:
->> >> >>   * 	0 if success
->> >> >>   */
->> >> >> -int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
->> >> >> +int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->> >> >> +				 enum pcie_reset_state state,
->> >> >> +				 int probe)
->> >> >>  {
->> >> >>  	struct eeh_dev *edev = pci_dev_to_eeh_dev(dev);
->> >> >>  	struct eeh_pe *pe = eeh_dev_to_pe(edev);
->> >> >> @@ -738,9 +741,12 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
->> >> >>  	if (!pe) {
->> >> >>  		pr_err("%s: No PE found on PCI device %s\n",
->> >> >>  			__func__, pci_name(dev));
->> >> >> -		return -EINVAL;
->> >> >> +		return -ENOTTY;
->> >> >>  	}
->> >> >>  
->> >> >> +	if (probe)
->> >> >> +		return 0;
->> >> >> +
->> >> >>  	switch (state) {
->> >> >>  	case pcie_deassert_reset:
->> >> >>  		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
->> >> >> @@ -762,8 +768,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
->> >> >>  		break;
->> >> >>  	default:
->> >> >>  		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
->> >> >> -		return -EINVAL;
->> >> >> -	};
->> >> >> +		return -ENOTTY;
->> >> >> +	}
->> >> >>  
->> >> >>  	return 0;
->> >> >>  }
->> >> >> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
->> >> >> index 1ef0164..3a87bfc 100644
->> >> >> --- a/drivers/misc/cxl/pci.c
->> >> >> +++ b/drivers/misc/cxl/pci.c
->> >> >> @@ -789,7 +789,7 @@ int cxl_reset(struct cxl *adapter)
->> >> >>  	/* pcie_warm_reset requests a fundamental pci reset which includes a
->> >> >>  	 * PERST assert/deassert.  PERST triggers a loading of the image
->> >> >>  	 * if "user" or "factory" is selected in sysfs */
->> >> >> -	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset))) {
->> >> >> +	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset, 0))) {
->> >> >>  		dev_err(&dev->dev, "cxl: pcie_warm_reset failed\n");
->> >> >>  		return rc;
->> >> >>  	}
->> >> >> diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
->> >> >> index 4cf8f82..4871f69 100644
->> >> >> --- a/drivers/misc/genwqe/card_base.c
->> >> >> +++ b/drivers/misc/genwqe/card_base.c
->> >> >> @@ -782,17 +782,22 @@ static int genwqe_pci_fundamental_reset(struct pci_dev *pci_dev)
->> >> >>  {
->> >> >>  	int rc;
->> >> >>  
->> >> >> +	/* Probe if the device can take the reset */
->> >> >> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 1);
->> >> >> +	if (rc)
->> >> >> +		return rc;
->> >> >> +
->> >> >>  	/*
->> >> >>  	 * lock pci config space access from userspace,
->> >> >>  	 * save state and issue PCIe fundamental reset
->> >> >>  	 */
->> >> >>  	pci_cfg_access_lock(pci_dev);
->> >> >>  	pci_save_state(pci_dev);
->> >> >> -	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset);
->> >> >> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 0);
->> >> >>  	if (!rc) {
->> >> >>  		/* keep PCIe reset asserted for 250ms */
->> >> >>  		msleep(250);
->> >> >> -		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset);
->> >> >> +		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset, 0);
->> >> >>  		/* Wait for 2s to reload flash and train the link */
->> >> >>  		msleep(2000);
->> >> >>  	}
->> >> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> >> >> index 81f06e8..8581a5f 100644
->> >> >> --- a/drivers/pci/pci.c
->> >> >> +++ b/drivers/pci/pci.c
->> >> >> @@ -1558,28 +1558,31 @@ EXPORT_SYMBOL(pci_disable_device);
->> >> >>   * pcibios_set_pcie_reset_state - set reset state for device dev
->> >> >>   * @dev: the PCIe device reset
->> >> >>   * @state: Reset state to enter into
->> >> >> - *
->> >> >> + * @probe: Check if the device can take the reset
->> >> >>   *
->> >> >>   * Sets the PCIe reset state for the device. This is the default
->> >> >>   * implementation. Architecture implementations can override this.
->> >> >>   */
->> >> >>  int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
->> >> >> -					enum pcie_reset_state state)
->> >> >> +					enum pcie_reset_state state,
->> >> >> +					int probe)
->> >> >>  {
->> >> >> -	return -EINVAL;
->> >> >> +	return -ENOTTY;
->> >> >>  }
->> >> >>  
->> >> >>  /**
->> >> >>   * pci_set_pcie_reset_state - set reset state for device dev
->> >> >>   * @dev: the PCIe device reset
->> >> >>   * @state: Reset state to enter into
->> >> >> - *
->> >> >> + * @probe: Check if the device can take the reset
->> >> >>   *
->> >> >>   * Sets the PCI reset state for the device.
->> >> >>   */
->> >> >> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
->> >> >> +int pci_set_pcie_reset_state(struct pci_dev *dev,
->> >> >> +			     enum pcie_reset_state state,
->> >> >> +			     int probe)
->> >> >>  {
->> >> >> -	return pcibios_set_pcie_reset_state(dev, state);
->> >> >> +	return pcibios_set_pcie_reset_state(dev, state, probe);
->> >> >>  }
->> >> >>  EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
->> >> >>  
->> >> >> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
->> >> >> index 9219953..89026f4 100644
->> >> >> --- a/drivers/scsi/ipr.c
->> >> >> +++ b/drivers/scsi/ipr.c
->> >> >> @@ -8317,7 +8317,8 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
->> >> >>  static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
->> >> >>  {
->> >> >>  	ENTER;
->> >> >> -	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
->> >> >> +	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev,
->> >> >> +				 pcie_deassert_reset, 0);
->> >> >>  	ipr_cmd->job_step = ipr_reset_bist_done;
->> >> >>  	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
->> >> >>  	LEAVE;
->> >> >> @@ -8339,7 +8340,7 @@ static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
->> >> >>  	struct pci_dev *pdev = ioa_cfg->pdev;
->> >> >>  
->> >> >>  	ENTER;
->> >> >> -	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
->> >> >> +	pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
->> >> >>  	ipr_cmd->job_step = ipr_reset_slot_reset_done;
->> >> >>  	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
->> >> >>  	LEAVE;
->> >> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> >> >> index 4e1f17d..052ac63 100644
->> >> >> --- a/include/linux/pci.h
->> >> >> +++ b/include/linux/pci.h
->> >> >> @@ -960,7 +960,8 @@ extern unsigned int pcibios_max_latency;
->> >> >>  void pci_set_master(struct pci_dev *dev);
->> >> >>  void pci_clear_master(struct pci_dev *dev);
->> >> >>  
->> >> >> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
->> >> >> +int pci_set_pcie_reset_state(struct pci_dev *dev,
->> >> >> +			     enum pcie_reset_state state, int probe);
->> >> >>  int pci_set_cacheline_size(struct pci_dev *dev);
->> >> >>  #define HAVE_PCI_SET_MWI
->> >> >>  int __must_check pci_set_mwi(struct pci_dev *dev);
->> >> >> @@ -1648,7 +1649,7 @@ extern unsigned long pci_hotplug_mem_size;
->> >> >>  void pcibios_disable_device(struct pci_dev *dev);
->> >> >>  void pcibios_set_master(struct pci_dev *dev);
->> >> >>  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->> >> >> -				 enum pcie_reset_state state);
->> >> >> +				 enum pcie_reset_state state, int probe);
->> >> >>  int pcibios_add_device(struct pci_dev *dev);
->> >> >>  void pcibios_release_device(struct pci_dev *dev);
->> >> >>  void pcibios_penalize_isa_irq(int irq, int active);
->> >> >
->> >> >
->> >> >
->> >> 
->> >
->> >
->> >
->> 
->
->
->
+Aaron
+
+On 03/10/2015 02:48 PM, Aaron Lu wrote:
+> An ECN meant to specify possible delay optimizations is available on
+> the PCI website:
+> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
+> where it has defined two functions for an UUID specified _DSM:
+> Function 8: If system firmware assumes the responsibility of post
+> Conventional Reset delay (and informs the Operating System via this DSM
+> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
+> S4 or S3 states), the Operating System may assume sufficient time has
+> elapsed since the end of reset, and devices within the PCI subsystem are
+> ready for Configuration Access.
+> If the system firmware supports runtime power gating on any of the
+> device within PCI subsystem covered by this DSM function, the system
+> firmware is responsible for covering the necessary post power-on reset
+> delay.
+> 
+> Function 9: Specify various smaller delay values than required by the
+> SPEC for individual PCI devices like shorter delay values after
+> conventional reset, D3hot to D0 transition, functional level reset, etc.
+> 
+> This patche adds support for function 8 and part of function 9. For
+> function 8, the patch will check if the required _DSM function satisfies
+> the requirement and then set the per PCI device's d3cold_delay variable
+> to zero. For function 9, the values affecting delays after conventional
+> reset and D3hot->D0 are examined and the per PCI device's d3cold_delay
+> and d3_delay are updated if the _DSM's return value is smaller than what
+> the SPEC requires.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/pci/pci-acpi.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 61 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 489063987325..468c0733838e 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -558,6 +558,64 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+>  				      check_children);
+>  }
+>  
+> +/**
+> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
+> + * @pdev: the PCI device whose delay is to be updated
+> + * @adev: the companion ACPI device of this PCI device
+> + *
+> + * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
+> + * control method of either its own or its parent bridge.
+> + *
+> + * The UUID of the _DSM control method, together with other information like
+> + * which delay values can be optimized, etc. is defined in a ECN available on
+> + * PCIsig.com titled as: ACPI additions for FW latency optimizations.
+> + * Function 9 of the ACPI _DSM control method, if available for a specific PCI
+> + * device, provides various possible delay values that are less than what the
+> + * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
+> + * can be added later.
+> + * Function 8 of the ACPI _DSM control method, if available for a specific PCI
+> + * bridge, means all its children devices do not need the reset delay when
+> + * leaving from D3cold state.
+> + */
+> +static void pci_acpi_delay_optimize(struct pci_dev *pdev, struct acpi_device *adev)
+> +{
+> +	const u8 uuid[] = {
+> +		0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
+> +		0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+> +	};
+> +	int revision = 3, function = 9, value;
+> +	acpi_handle handle = adev->handle;
+> +	union acpi_object *obj, *elements;
+> +
+> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
+> +	if (obj) {
+> +		if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
+> +			elements = obj->package.elements;
+> +			if (elements[3].type == ACPI_TYPE_INTEGER) {
+> +				value = (int)elements[3].integer.value / 1000;
+> +				if (value < PCI_PM_D3_WAIT)
+> +					pdev->d3_delay = value;
+> +			}
+> +			if (elements[0].type == ACPI_TYPE_INTEGER) {
+> +				value = (int)elements[0].integer.value / 1000;
+> +				if (value < PCI_PM_D3COLD_WAIT)
+> +					pdev->d3cold_delay = value;
+> +			}
+> +		}
+> +		kfree(obj);
+> +	}
+> +
+> +	function = 8;
+> +	handle = ACPI_HANDLE(pdev->bus->bridge);
+> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
+> +	if (!obj)
+> +		return;
+> +
+> +	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
+> +		pdev->d3cold_delay = 0;
+> +	kfree(obj);
+> +}
+> +
+>  static void pci_acpi_setup(struct device *dev)
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -566,6 +624,9 @@ static void pci_acpi_setup(struct device *dev)
+>  	if (!adev)
+>  		return;
+>  
+> +	if (pci_dev->pm_cap)
+> +		pci_acpi_delay_optimize(pci_dev, adev);
+> +
+>  	pci_acpi_add_pm_notifier(adev, pci_dev);
+>  	if (!adev->wakeup.flags.valid)
+>  		return;
+> 
 
