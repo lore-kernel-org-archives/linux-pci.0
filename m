@@ -1,177 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46598 "EHLO
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:44118 "EHLO
 	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbbCKGnN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 02:43:13 -0400
+	with ESMTP id S1751453AbbCTDKc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:10:32 -0400
 Received: from /spool/local
 	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 11 Mar 2015 16:43:08 +1000
+	Fri, 20 Mar 2015 13:10:30 +1000
 Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B4B83357804C
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:43:05 +1100 (EST)
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 86C9F2CE8052
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:10:28 +1100 (EST)
 Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2B6gvvH14680244
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:43:05 +1100
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3AK6i47906920
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:10:28 +1100
 Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2B6gVdC005132
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:42:32 +1100
-Date: Wed, 11 Mar 2015 14:42:15 +0800
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K39slP004702
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:55 +1100
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, benh@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v12 17/21] powerpc/powernv: Shift VF resource with an
- offset
-Message-ID: <20150311064215.GD5826@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083457.32124.55534.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224090037.GK6220@google.com>
- <20150304030051.GA10797@richard>
- <20150311025519.GD10994@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150311025519.GD10994@google.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH V14 06/21] PCI: Index IOV resources in the conventional style
+Date: Fri, 20 Mar 2015 11:06:22 +0800
+Message-Id: <1426820797-6267-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 09:55:19PM -0500, Bjorn Helgaas wrote:
->On Wed, Mar 04, 2015 at 11:01:24AM +0800, Wei Yang wrote:
->> On Tue, Feb 24, 2015 at 03:00:37AM -0600, Bjorn Helgaas wrote:
->> >On Tue, Feb 24, 2015 at 02:34:57AM -0600, Bjorn Helgaas wrote:
->> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
->> >> 
->> >> On PowerNV platform, resource position in M64 implies the PE# the resource
->> >> belongs to.  In some cases, adjustment of a resource is necessary to locate
->> >> it to a correct position in M64.
->> >> 
->> >> Add pnv_pci_vf_resource_shift() to shift the 'real' PF IOV BAR address
->> >> according to an offset.
->> >> 
->> >> [bhelgaas: rework loops, rework overlap check, index resource[]
->> >> conventionally, remove pci_regs.h include, squashed with next patch]
->> >> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> >
->> >...
->> >
->> >> +#ifdef CONFIG_PCI_IOV
->> >> +static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->> >> +{
->> >> +	struct pci_dn *pdn = pci_get_pdn(dev);
->> >> +	int i;
->> >> +	struct resource *res, res2;
->> >> +	resource_size_t size;
->> >> +	u16 vf_num;
->> >> +
->> >> +	if (!dev->is_physfn)
->> >> +		return -EINVAL;
->> >> +
->> >> +	/*
->> >> +	 * "offset" is in VFs.  The M64 windows are sized so that when they
->> >> +	 * are segmented, each segment is the same size as the IOV BAR.
->> >> +	 * Each segment is in a separate PE, and the high order bits of the
->> >> +	 * address are the PE number.  Therefore, each VF's BAR is in a
->> >> +	 * separate PE, and changing the IOV BAR start address changes the
->> >> +	 * range of PEs the VFs are in.
->> >> +	 */
->> >> +	vf_num = pdn->vf_pes;
->> >> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->> >> +		res = &dev->resource[i + PCI_IOV_RESOURCES];
->> >> +		if (!res->flags || !res->parent)
->> >> +			continue;
->> >> +
->> >> +		if (!pnv_pci_is_mem_pref_64(res->flags))
->> >> +			continue;
->> >> +
->> >> +		/*
->> >> +		 * The actual IOV BAR range is determined by the start address
->> >> +		 * and the actual size for vf_num VFs BAR.  This check is to
->> >> +		 * make sure that after shifting, the range will not overlap
->> >> +		 * with another device.
->> >> +		 */
->> >> +		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
->> >> +		res2.flags = res->flags;
->> >> +		res2.start = res->start + (size * offset);
->> >> +		res2.end = res2.start + (size * vf_num) - 1;
->> >> +
->> >> +		if (res2.end > res->end) {
->> >> +			dev_err(&dev->dev, "VF BAR%d: %pR would extend past %pR (trying to enable %d VFs shifted by %d)\n",
->> >> +				i, &res2, res, vf_num, offset);
->> >> +			return -EBUSY;
->> >> +		}
->> >> +	}
->> >> +
->> >> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->> >> +		res = &dev->resource[i + PCI_IOV_RESOURCES];
->> >> +		if (!res->flags || !res->parent)
->> >> +			continue;
->> >> +
->> >> +		if (!pnv_pci_is_mem_pref_64(res->flags))
->> >> +			continue;
->> >> +
->> >> +		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
->> >> +		res2 = *res;
->> >> +		res->start += size * offset;
->> >
->> >I'm still not happy about this fiddling with res->start.
->> >
->> >Increasing res->start means that in principle, the "size * offset" bytes
->> >that we just removed from res are now available for allocation to somebody
->> >else.  I don't think we *will* give that space to anything else because of
->> >the alignment restrictions you're enforcing, but "res" now doesn't
->> >correctly describe the real resource map.
->> >
->> >Would you be able to just update the BAR here while leaving the struct
->> >resource alone?  In that case, it would look a little funny that lspci
->> >would show a BAR value in the middle of the region in /proc/iomem, but
->> >the /proc/iomem region would be more correct.
->> 
->> Bjorn,
->> 
->> I did some tests, while the result is not good.
->> 
->> What I did is still write the shifted resource address to the device by
->> pci_update_resource(), but I revert the res->start to the original one. If
->> this step is not correct, please let me know.
->> 
->> This can't work since after we revert the res->start, those VFs will be given
->> resources from res->start instead of (res->start + offset * size). This is not
->> what we expect.
->
->Hmm, yes, I suppose we'd have to have a hook in pci_bus_alloc_from_region()
->or something.  That's getting a little messy.  I still don't like messing
->with the resource after it's in the resource tree, but I don't have a
->better idea right now.  So let's just go with what you have.
->
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks  :-)
+Most of PCI uses "res = &dev->resource[i]", not "res = dev->resource + i".
+Use that style in iov.c also.
 
-I would state this in the change log and add a comment in the code to note
-this down. Hope this would be a little helpful.
+No functional change.
 
->> >> +
->> >> +		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (enabling %d VFs shifted by %d)\n",
->> >> +			 i, &res2, res, vf_num, offset);
->> >> +		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
->> >> +	}
->> >> +	pdn->max_vfs -= offset;
->> >> +	return 0;
->> >> +}
->> >> +#endif /* CONFIG_PCI_IOV */
->> 
->> -- 
->> Richard Yang
->> Help you, Help me
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5bca0e1..27b98c3 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -95,7 +95,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->multifunction = 0;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		if (!res->parent)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+@@ -212,7 +212,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		bars |= (1 << (i + PCI_IOV_RESOURCES));
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		if (res->parent)
+ 			nres++;
+ 	}
+@@ -373,7 +373,7 @@ found:
+ 
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
+ 					pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+@@ -417,7 +417,7 @@ found:
+ 
+ failed:
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		res->flags = 0;
+ 	}
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
