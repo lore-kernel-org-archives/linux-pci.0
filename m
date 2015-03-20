@@ -1,153 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:33415 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002AbbCLNdF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:33:05 -0400
-Message-ID: <55019573.4060108@huawei.com>
-Date: Thu, 12 Mar 2015 21:32:35 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mga03.intel.com ([134.134.136.65]:26495 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750889AbbCTFkv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Mar 2015 01:40:51 -0400
+Message-ID: <550BB2DE.9020804@linux.intel.com>
+Date: Fri, 20 Mar 2015 13:40:46 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 30/30] PCI: Remove pci_bus_assign_domain_nr()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-31-git-send-email-wangyijing@huawei.com> <20150312034807.GK10949@google.com>
-In-Reply-To: <20150312034807.GK10949@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	"yinghai @ kernel . org" <yinghai@kernel.org>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device
+ is disabled when unbinding
+References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com> <2835680.pSPaYk3eSL@vostro.rjw.lan> <CAErSpo4r+Brx0fgpwQ=Wr_1wxBNvuAy0cJxYBSR6hBLt=d=e8Q@mail.gmail.com> <2124988.RayodtbIxy@vostro.rjw.lan>
+In-Reply-To: <2124988.RayodtbIxy@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/12 11:48, Bjorn Helgaas wrote:
-> On Mon, Mar 09, 2015 at 10:34:27AM +0800, Yijing Wang wrote:
->> Now we save the domain number in pci_host_bridge,
->> we could remove pci_bus_assign_domain_nr() and
->> clean the domain member in pci_bus.
+On 2015/3/19 23:57, Rafael J. Wysocki wrote:
+> On Thursday, March 19, 2015 09:08:38 AM Bjorn Helgaas wrote:
+>> On Thu, Mar 19, 2015 at 6:29 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>> On Thursday, March 19, 2015 03:49:33 PM Jiang Liu wrote:
+>>>> On 2015/3/19 6:11, Bjorn Helgaas wrote:
+>>>>> On Tue, Mar 17, 2015 at 03:37:12PM +0800, Jiang Liu wrote:
+>>>>>> To support IOAPIC hot-removal, we need to release PCI interrupt resource
+>>>>>> when unbinding PCI device driver. But due to historical reason,
+>>>>>> /*
+>>>>>>  * We would love to complain here if pci_dev->is_enabled is set, that
+>>>>>>  * the driver should have called pci_disable_device(), but the
+>>>>>>  * unfortunate fact is there are too many odd BIOS and bridge setups
+>>>>>>  * that don't like drivers doing that all of the time.
+>>>>>>  * Oh well, we can dream of sane hardware when we sleep, no matter how
+>>>>>>  * horrible the crap we have to deal with is when we are awake...
+>>>>>>  */
+>>>>>
+>>>>> Quoting the comment here (especially the last two lines) is overkill and
+>>>>> obscures the real point.  The important thing is that some drivers have
+>>>>> legitimate reasons for not calling pci_disable_device().
+>>>> Hi Bjorn,
+>>>>       Thanks for review. I will rewrite the commit message.
+>>>>>> some drivers don't call pci_disable_device() when unloading, which
+>>>>>> prevents us from reallocating PCI interrupt resource on reloading
+>>>>>> PCI driver and causes regressions.
+>>>>>
+>>>>> This isn't very clear.  I can believe that "drivers not calling
+>>>>> pci_disable_device()" means we don't release IRQ resources, which might
+>>>>> prevent you from hot-removing an IOAPIC.
+>>>>>
+>>>>> But "drivers not calling pci_disable_device()" doesn't cause regressions.
+>>>>>
+>>>>>> So release PCI interrupt resource only if PCI device is disabled when
+>>>>>> unbinding. By this way, we could support IOAPIC hot-removal on latest
+>>>>>> platforms and avoid regressions on old platforms.
+>>>>>
+>>>>> Does this mean you can only hot-remove IOAPICs if all drivers for devices
+>>>>> using the IOAPIC call pci_disable_device()?  If so, it seems sort of
+>>>>> dubious that we have to rely on drivers for that.
+>>>> This is a quickfix for v4.0 merging window. We will try to solve this
+>>>> issue for next merging window.
+>>>
+>>> If that is the plan, then I'd rather revert the offending commit and try
+>>> again in the next cycle.
+>>>
+>>> Bjorn, what do you think?
 >>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->>  drivers/pci/pci.c   |    5 -----
->>  drivers/pci/probe.c |   12 ++++--------
->>  include/linux/pci.h |    3 ---
->>  3 files changed, 4 insertions(+), 16 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 2cf942b..4d8dfe4 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4581,11 +4581,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
->>  {
->>  	host->domain = pci_assign_domain_nr(host->dev.parent);
->>  }
->> -
->> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->> -{
->> -	bus->domain_nr = pci_assign_domain_nr(parent);
->> -}
+>> I don't know how hard it is to just revert that one commit at this
+>> point, but I would be in favor of doing that if it's feasible.
 > 
-> I think you forgot to remove the empty pci_bus_assign_domain_nr()
-> definition from include/linux/pci.h.
-
-Yes, I forgot it, thanks your remind.
+> The commit reverts cleanly and reverting it won't break anything that used to
+> work in 3.19 and earlier (Gerry, please let me know if that is not correct).
+Yes, revert should not cause new issues.
+Commit b4b55cda5874("Refine the way to release PCI IRQ resources")
+is a bugfix for xen-pciback. But the bugfix causes regressions on
+other platform. So it would be better to revert it and fix the issue
+in another better way in next merging window.
 
 > 
-> I'm not sure how much value is left in CONFIG_PCI_DOMAINS_GENERIC.  You're
-> removed *almost* everything that uses it.  I wonder how hard it would be to
-> get rid of that last little bit.
-
-I will take time to find it, thanks!
-
+> The only adverse consequence of reverting it I can see would be that the
+> IOAPIC hotplug won't work in 4.0, but it didn't work before either and
+> it's supposed to be a new feature in 4.0.
+IOAPIC hotplug may still work, it only causes regressions to some PCI
+drivers.
 
 > 
->>  #endif
->>  #endif
->>  
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 196f08a..9cd3ca2 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -481,7 +481,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
->>  	}
->>  }
->>  
->> -static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
->> +static struct pci_bus *pci_alloc_bus(void)
->>  {
->>  	struct pci_bus *b;
->>  
->> @@ -496,10 +496,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
->>  	INIT_LIST_HEAD(&b->resources);
->>  	b->max_bus_speed = PCI_SPEED_UNKNOWN;
->>  	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
->> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
->> -	if (parent)
->> -		b->domain_nr = parent->domain_nr;
->> -#endif
->> +
->>  	return b;
->>  }
->>  
->> @@ -646,7 +643,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->>  	/*
->>  	 * Allocate a new bus, and inherit stuff from the parent..
->>  	 */
->> -	child = pci_alloc_bus(parent);
->> +	child = pci_alloc_bus();
->>  	if (!child)
->>  		return NULL;
->>  
->> @@ -1866,14 +1863,13 @@ static struct pci_bus *pci_create_root_bus(
->>  	char *fmt;
->>  
->>  	parent = bridge->dev.parent;
->> -	b = pci_alloc_bus(NULL);
->> +	b = pci_alloc_bus();
->>  	if (!b)
->>  		return NULL;
->>  
->>  	b->sysdata = dev_get_drvdata(&bridge->dev);
->>  	b->ops = ops;
->>  	b->number = b->busn_res.start = bridge->busnum;
->> -	pci_bus_assign_domain_nr(b, parent);
->>  
->>  	bridge->bus = b;
->>  	b->bridge = get_device(&bridge->dev);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index dc1c710..ebc70bb 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -467,9 +467,6 @@ struct pci_bus {
->>  	unsigned char	primary;	/* number of primary bridge */
->>  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
->>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
->> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
->> -	int		domain_nr;
->> -#endif
->>  
->>  	char		name[48];
->>  
->> -- 
->> 1.7.1
->>
+>> We're headed toward a real morass of changelogs for a design that
+>> seems destined for overhaul.  That makes it really hard to backport
+>> and rework things later.
 > 
-> .
-> 
-
-
--- 
+> Precisely.
+Sorry for the troubles.
+When designing IOAPIC hotplug, I found architect has provided suitable
+hook points for IOAPIC pin usage track, so I adopted hook points in
+pci_enable/disable_device(). But recent regression reports remind
+me that's wrong decision, so will rework it in new way.
 Thanks!
-Yijing
-
+Gerry
+> 
+> Rafael
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
