@@ -1,98 +1,281 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <550CD574.7080900@linux.intel.com>
-Date: Sat, 21 Mar 2015 10:20:36 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bernhard Thaler <bernhard.thaler@wvnet.at>
-CC: lenb@kernel.org, linux-acpi@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
-References: <550A7674.6070306@wvnet.at> <4317184.19IeWuljky@vostro.rjw.lan> <550C5A08.3020302@wvnet.at> <2663880.nZ5V9XMenj@vostro.rjw.lan>
-In-Reply-To: <2663880.nZ5V9XMenj@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:33497 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbbCTDIJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:08:09 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:08:06 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 27B5E2BB004D
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:04 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K37u7D28835882
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:04 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K37UD8001102
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:07:30 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 00/21] Enable SRIOV on Power8
+Date: Fri, 20 Mar 2015 11:06:16 +0800
+Message-Id: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/21 8:47, Rafael J. Wysocki wrote:
-> On Friday, March 20, 2015 06:34:00 PM Bernhard Thaler wrote:
->> This is a multi-part message in MIME format.
->> --------------000805070501000906050700
->> Content-Type: text/plain; charset=windows-1252
->> Content-Transfer-Encoding: 7bit
->>
->>
->> On 19.03.2015 12:27, Rafael J. Wysocki wrote:
->>> On Thursday, March 19, 2015 08:10:44 AM Bernhard Thaler wrote:
->>>> This is a multi-part message in MIME format.
->>>> --------------000809080900050004000900
->>>> Content-Type: text/plain; charset=windows-1252
->>>> Content-Transfer-Encoding: 7bit
->>>>
->>>> Hi,
->>>>
->>>> I think this regression is not yet solved.
->>>
->>> First off, it is good to CC the commit author too (CCed now).
->>>
->>>> I encounter this or a similar problem with an PC Engines APU.1C device
->>>> (see: http://pcengines.ch/apu.htm). It has 3 network interfaces each
->>>> requiring the r8169 kernel module.
->>>>
->>>> With 4.0.0-rc4 I get this error message at boot (for each of the 3 devices):
->>>>
->>>> [    3.562301] r8169 0000:01:00.0 (unnamed net_device) (uninitialized):
->>>> rtl_chipcmd_cond == 1 (loop: 100, delay: 100).
->>>>
->>>> "ifconfig -a" shows ff:ff:ff:ff:ff:ff as MAC address for each of the
->>>> interfaces (see eth0 as example):
->>>>
->>>> eth0      Link encap:Ethernet  HWaddr ff:ff:ff:ff:ff:ff
->>>>           BROADCAST PROMISC MULTICAST  MTU:1500  Metric:1
->>>>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->>>>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->>>>           collisions:0 txqueuelen:1000
->>>>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
->>>>
->>>> The network interfaces cannot be brought up/used.
->>>>
->>>> The same device and setup did work with a previously used 3.18.0-rc5
->>>> kernel. When I boot it with this 3.18.0-rc5 kernel everything i OK,
->>>> interfaces come up and work.
->>>
->>> Second, it is not entirely clear to me that what you're seeing is actually
->>> the same regression.  Have you tested 4.0.0-rc4 with commit 593669c2ac0f
->>> reverted?
->>>
->> You are right, I was a bit quick about this conclusion. I based it on
->> Thomas Voegtle
->> bisect in http://www.spinics.net/lists/linux-pci/msg39014.html and my own
->> observation of the same problem situation with 4.0.0-rc4.
->>
->> Test Results:
->>
->> * Everything works fine before 593669c2ac0f, network interfaces are
->> available
->>    and usable e.g. with 812dbd9.
->>
->> * The problem starts for me with 593669c2ac0f as, errors at boot, network
->>    interfaces unusable as stated above.
-> 
-> And it doesn't go away in 4.0-rc4 which indicates that the fixes applied
-> so far do not work for you.
-> 
-> Gerry, can you please help here?
-Sure, but I will be out of office to handle some urgent family affair
-in following two days, so response may be slow.
+This patchset enables the SRIOV on POWER8.
 
-Hi Bernhard,
-	Could you please help to send me following info?
-1) /proc/iomem with 593669c2ac0f applied
-2) /proc/iomem with 593669c2ac0f reverted
-3) output of "acpidump > acpi.bin" or
-   "cat /sys/firmware/acpi/tables/DSDT > acpi.bin"
-Thanks!
-Gerry
-> 
-> 
+The general idea is put each VF into one individual PE and allocate required
+resources like MMIO/DMA/MSI. The major difficulty comes from the MMIO
+allocation and adjustment for PF's IOV BAR.
+
+On P8, we use M64BT to cover a PF's IOV BAR, which could make an individual VF
+sit in its own PE. This gives more flexiblity, while at the mean time it
+brings on some restrictions on the PF's IOV BAR size and alignment.
+
+To achieve this effect, we need to do some hack on pci devices's resources.
+1. Expand the IOV BAR properly.
+   Done by pnv_pci_ioda_fixup_iov_resources().
+2. Shift the IOV BAR properly.
+   Done by pnv_pci_vf_resource_shift().
+3. IOV BAR alignment is calculated by arch dependent function instead of an
+   individual VF BAR size.
+   Done by pnv_pcibios_sriov_resource_alignment().
+4. Take the IOV BAR alignment into consideration in the sizing and assigning.
+   This is achieved by commit: "PCI: Take additional IOV BAR alignment in
+   sizing and assigning"
+
+Test Environment:
+       The SRIOV device tested is Emulex Lancer(10df:e220) and
+       Mellanox ConnectX-3(15b3:1003) on POWER8.
+
+Examples on pass through a VF to guest through vfio:
+	1. unbind the original driver and bind to vfio-pci driver
+	   echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
+	   echo  1102 0002 > /sys/bus/pci/drivers/vfio-pci/new_id
+	   Note: this should be done for each device in the same iommu_group
+	2. Start qemu and pass device through vfio
+	   /home/ywywyang/git/qemu-impreza/ppc64-softmmu/qemu-system-ppc64 \
+		   -M pseries -m 2048 -enable-kvm -nographic \
+		   -drive file=/home/ywywyang/kvm/fc19.img \
+		   -monitor telnet:localhost:5435,server,nowait -boot cd \
+		   -device "spapr-pci-vfio-host-bridge,id=CXGB3,iommu=26,index=6"
+
+Verify this is the exact VF response:
+	1. ping from a machine in the same subnet(the broadcast domain)
+	2. run arp -n on this machine
+	   9.115.251.20             ether   00:00:c9:df:ed:bf   C eth0
+	3. ifconfig in the guest
+	   # ifconfig eth1
+	   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+	        inet 9.115.251.20  netmask 255.255.255.0  broadcast 9.115.251.255
+		inet6 fe80::200:c9ff:fedf:edbf  prefixlen 64  scopeid 0x20<link>
+	        ether 00:00:c9:df:ed:bf  txqueuelen 1000 (Ethernet)
+	        RX packets 175  bytes 13278 (12.9 KiB)
+	        RX errors 0  dropped 0  overruns 0  frame 0
+		TX packets 58  bytes 9276 (9.0 KiB)
+	        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+	4. They have the same MAC address
+
+	Note: make sure you shutdown other network interfaces in guest.
+
+---
+v14:
+   * call ppc_md.pcibios_fixup_sriov() in pcibios_add_device
+   * add more explanation in change log
+   * Following patches have been reordered to the beginning.
+     "EEH refactor to use pci_dn":
+     8ec20d6 powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+     a3460fc powerpc/pci: Refactor pci_dn
+     These two patches will be modified to merge with other patches which are
+     under discussion/review in ppc mail list. Some changes may also be made in
+     other patches, which I didn't include them in this series, so that the
+     auto build robot could work on this.
+     There may have several changes in powerpc arch, which not effect the pci
+     core. So after this patch set pass the review in pci community, I would
+     rebase this series on ppc brach and send out for comment.
+   * use add_res->min_align as the alignment in reassign_resources_sorted()
+   * some cleanup in Document
+v13:
+   * fix error in pcibios_iov_resource_alignment(), use pdev instead of dev
+   * rename vf_num to num_vfs in pcibios_sriov_enable(),
+     pnv_pci_vf_resource_shift(), pnv_pci_sriov_disable(),
+     pnv_pci_sriov_enable(), pnv_pci_ioda2_setup_dma_pe()
+   * add more explanation in commit "powerpc/pci: Don't unset PCI resources
+     for VFs"
+   * fix IOV BAR in hotplug path as well, and don't fixup an already added
+     device
+   * use roundup_pow_of_two() instead of __roundup_pow_of_two()
+   * this is based on v4.0-rc1
+v12:
+   * remove "align" parameter from pcibios_iov_resource_alignment()
+     default version returns pci_iov_resource_size() instead of the
+     "align" parameter
+   * in powerpc pcibios_iov_resource_alignment(), return
+     pci_iov_resource_size() if there's no ppc_md function pointer
+   * in pci_sriov_resource_alignment(), don't re-read base, since we
+     saved the required alignment when reading it the first time
+   * remove "vf_num" parameter from add_dev_pci_info() and
+     remove_dev_pci_info(); use pci_sriov_get_totalvfs() instead
+   * use dev_warn() instead of pr_warn() when possible
+   * check to be sure IOV BAR is still in range after shifting, change
+     pnv_pci_vf_resource_shift() from void to int
+   * improve sriov_enable() error message
+   * improve SR-IOV BAR sizing message
+   * index IOV resources in conventional style
+   * include preamble patches (refresh offset/stride when updating numVFs,
+     calculate max buses required
+   * restructure pci_iov_max_bus_range() to return value instead of updating
+     internally, rename to virtfn_max_buses()
+   * fix typos & formatting
+   * expand documentation
+v11:
+   * fix some compile warning
+v10:
+   * remove weak function pcibios_iov_resource_size()
+     the VF BAR size is stored in pci_sriov structure and retrieved from
+     pci_iov_resource_size()
+   * Use "Reserve additional" instead of "Expand" to be more acurate in the
+     change log
+   * add log message to show the PF's IOV BAR final size
+   * add pcibios_sriov_enable/disable() weak funcion in sriov_enable/disable()
+     for arch setup before enable VFs. Like the arch could fix up the BDF for
+     VFs, since the change of NumVFs would affect the BDF of VFs.
+   * Add some explanation of PE on Power arch in the documentation
+v9:
+   * make the change log consistent in the terminology
+     PF's IOV BAR -> the SRIOV BAR in PF
+     VF's BAR -> the normal BAR in VF's view
+   * rename all newly introduced function from _sriov_ to _iov_
+   * rename the document to Documentation/powerpc/pci_iov_resource_on_powernv.txt
+   * add the vendor id and device id of the tested devices
+   * change return value from EINVAL to ENOSYS for pci_iov_virtfn_bus() and
+     pci_iov_virtfn_devfn() when it is called on PF or SRIOV is not configured
+   * rebase on 3.18-rc2 and tested
+v8:
+   * use weak funcion pcibios_sriov_resource_size() instead of some flag to
+     retrieve the IOV BAR size.
+   * add a document Documentation/powerpc/pci_resource.txt to explain the
+     design.
+   * make pci_iov_virtfn_bus()/pci_iov_virtfn_devfn() not inline.
+   * extract a function res_to_dev_res(), so that it is more general to get
+     additional size and alignment
+   * fix one contention which is introduced in "powrepc/pci: Refactor pci_dn".
+     the root cause is pci_get_slot() takes pci_bus_sem and leads to dead
+     lock.
+v7:
+   * add IORESOURCE_ARCH flag for IOV BAR on powernv platform.
+   * when IOV BAR has IORESOURCE_ARCH flag, the size is retrieved from
+     hardware directly. If not, calculate as usual.
+   * reorder the patch set, group them by subsystem:
+     PCI, powerpc, powernv
+   * rebase it on 3.16-rc6
+v6:
+   * remove pcibios_enable_sriov()/pcibios_disable_sriov() weak function
+     similar function is moved to
+     pnv_pci_enable_device_hook()/pnv_pci_disable_device_hook(). When PF is
+     enabled, platform will try best to allocate resources for VFs.
+   * remove pcibios_sriov_resource_size weak function
+   * VF BAR size is retrieved from hardware directly in virtfn_add()
+v5:
+   * merge those SRIOV related platform functions in machdep_calls
+     wrap them in one CONFIG_PCI_IOV marco
+   * define IODA_INVALID_M64 to replace (-1)
+     use this value to represent the m64_wins is not used
+   * rename pnv_pci_release_dev_dma() to pnv_pci_ioda2_release_dma_pe()
+     this function is a conterpart to pnv_pci_ioda2_setup_dma_pe()
+   * change dev_info() to dev_dgb() in pnv_pci_ioda_fixup_iov_resources()
+     reduce some log in kernel
+   * release M64 window in pnv_pci_ioda2_release_dma_pe()
+v4:
+   * code format fix, eg. not exceed 80 chars
+   * in commit "ppc/pnv: Add function to deconfig a PE"
+     check the bus has a bridge before print the name
+     remove a PE from its own PELTV
+   * change the function name for sriov resource size/alignment
+   * rebase on 3.16-rc3
+   * VFs will not rely on device node
+     As Grant Likely's comments, kernel should have the ability to handle the
+     lack of device_node gracefully. Gavin restructure the pci_dn, which
+     makes the VF will have pci_dn even when VF's device_node is not provided
+     by firmware.
+   * clean all the patch title to make them comply with one style
+   * fix return value for pci_iov_virtfn_bus/pci_iov_virtfn_devfn
+v3:
+   * change the return type of virtfn_bus/virtfn_devfn to int
+     change the name of these two functions to pci_iov_virtfn_bus/pci_iov_virtfn_devfn
+   * reduce the second parameter or pcibios_sriov_disable()
+   * use data instead of pe in "ppc/pnv: allocate pe->iommu_table dynamically"
+   * rename __pci_sriov_resource_size to pcibios_sriov_resource_size
+   * rename __pci_sriov_resource_alignment to pcibios_sriov_resource_alignment
+v2:
+   * change the return value of virtfn_bus/virtfn_devfn to 0
+   * move some TCE related marco definition to
+     arch/powerpc/platforms/powernv/pci.h
+   * fix the __pci_sriov_resource_alignment on powernv platform
+     During the sizing stage, the IOV BAR is truncated to 0, which will
+     effect the order of allocation. Fix this, so that make sure BAR will be
+     allocated ordered by their alignment.
+v1:
+   * improve the change log for
+     "PCI: Add weak __pci_sriov_resource_size() interface"
+     "PCI: Add weak __pci_sriov_resource_alignment() interface"
+     "PCI: take additional IOV BAR alignment in sizing and assigning"
+   * wrap VF PE code in CONFIG_PCI_IOV
+   * did regression test on P7.
+
+Bjorn Helgaas (2):
+  PCI: Print more info in sriov_enable() error message
+  PCI: Index IOV resources in the conventional style
+
+Gavin Shan (1):
+  powerpc/pci: Refactor pci_dn
+
+Wei Yang (18):
+  powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+  PCI: Print PF SR-IOV resource that contains all VF(n) BAR space
+  PCI: Keep individual VF BAR size in struct pci_sriov
+  PCI: Refresh First VF Offset and VF Stride when updating NumVFs
+  PCI: Calculate maximum number of buses required for VFs
+  PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
+  PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
+  PCI: Add pcibios_iov_resource_alignment() interface
+  PCI: Consider additional PF's IOV BAR alignment in sizing and
+    assigning
+  powerpc/pci: Don't unset PCI resources for VFs
+  powerpc/powernv: Allocate struct pnv_ioda_pe iommu_table dynamically
+  powerpc/powernv: Reserve additional space for IOV BAR according to
+    the number of total_pe
+  powerpc/powernv: Implement pcibios_iov_resource_alignment() on
+    powernv
+  powerpc/powernv: Shift VF resource with an offset
+  powerpc/powernv: Reserve additional space for IOV BAR, with
+    m64_per_iov supported
+  powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
+  powerpc/pci: Remove unused struct pci_dn.pcidev field
+  powerpc/pci: Add PCI resource alignment documentation
+
+ .../powerpc/pci_iov_resource_on_powernv.txt        |  301 ++++++++
+ arch/powerpc/include/asm/device.h                  |    3 +
+ arch/powerpc/include/asm/iommu.h                   |    3 +
+ arch/powerpc/include/asm/machdep.h                 |    5 +
+ arch/powerpc/include/asm/pci-bridge.h              |   24 +-
+ arch/powerpc/kernel/pci-common.c                   |   20 +
+ arch/powerpc/kernel/pci_dn.c                       |  258 ++++++-
+ arch/powerpc/platforms/powernv/eeh-powernv.c       |   14 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c          |  766 +++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c               |   87 +--
+ arch/powerpc/platforms/powernv/pci.h               |   13 +-
+ drivers/pci/iov.c                                  |  155 ++--
+ drivers/pci/pci.h                                  |    2 +
+ drivers/pci/setup-bus.c                            |   95 ++-
+ include/linux/pci.h                                |   15 +
+ 15 files changed, 1619 insertions(+), 142 deletions(-)
+ create mode 100644 Documentation/powerpc/pci_iov_resource_on_powernv.txt
+
+-- 
+1.7.9.5
+
