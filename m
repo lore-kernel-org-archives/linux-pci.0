@@ -1,63 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:19612 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399AbbCJVCn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 17:02:43 -0400
-Message-ID: <54FF5BED.9090302@broadcom.com>
-Date: Tue, 10 Mar 2015 14:02:37 -0700
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Arnd Bergmann <arnd@arndb.de>, Hauke Mehrtens <hauke@hauke-m.de>,
-	"Paul Bolle" <pebolle@tiscali.nl>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>
-Subject: Re: [PATCH v5 1/4] PCI: Export symbols of PCI functions
-References: <1425947886-23705-1-git-send-email-rjui@broadcom.com> <1425947886-23705-2-git-send-email-rjui@broadcom.com> <20150310205651.GA32204@google.com>
-In-Reply-To: <20150310205651.GA32204@google.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:34304 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749AbbCTDM7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:12:59 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:12:58 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7C51D2BB004D
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:12:56 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3Cm0k4587610
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:12:56 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3CMtV008864
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:12:23 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 09/21] PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
+Date: Fri, 20 Mar 2015 11:06:25 +0800
+Message-Id: <1426820797-6267-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On PowerNV, some resource reservation is needed for SR-IOV VFs that don't
+exist at the bootup stage.  To do the match between resources and VFs, the
+code need to get the VF's BDF in advance.
 
-On 3/10/2015 1:56 PM, Bjorn Helgaas wrote:
-> On Mon, Mar 09, 2015 at 05:38:03PM -0700, Ray Jui wrote:
->> Export symbols of the following PCI functions so they can be referenced
->> by a PCI driver compiled as a kernel loadable module:
->>
->> pci_common_swizzle
->> pci_create_root_bus
->> pci_stop_root_bus
->> pci_remove_root_bus
->> pci_assign_unassigned_bus_resources
->> pci_fixup_irqs
-> 
-> Have you tested your driver as a loadable module?
-> 
-> If it works to load/unload/reload/etc., I'm OK with exporting these
-> symbols.  I would prefer EXPORT_SYMBOL_GPL, though, because these don't
-> constitute a very coherent interface right now, and they will likely be
-> reworked.  For example, see Yijing Wang's work to sort out the
-> pci_bus_add_devices() / resource assignment mess.
-> 
-> Bjorn
+Rename virtfn_bus() and virtfn_devfn() to pci_iov_virtfn_bus() and
+pci_iov_virtfn_devfn() and export them.
 
-Yes, I tested the driver with load/unload/reload on Cygnus. Console logs
-are included in my reply to Arnd's email from another email thread.
+[bhelgaas: changelog, make "busnr" int]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   28 ++++++++++++++++------------
+ include/linux/pci.h |   11 +++++++++++
+ 2 files changed, 27 insertions(+), 12 deletions(-)
 
-I'll wait for more feedback from you on the iProc PCIe driver itself.
-But if you have reviewed them and think they are okay then I can go
-ahead and submit v6 with changes to use EXPORT_SYMBOL_GPL.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2ae921f..5643a10 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -19,16 +19,20 @@
+ 
+ #define VIRTFN_ID_LEN	16
+ 
+-static inline u8 virtfn_bus(struct pci_dev *dev, int id)
++int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+-				    dev->sriov->stride * id) >> 8);
++				    dev->sriov->stride * vf_id) >> 8);
+ }
+ 
+-static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
+ {
++	if (!dev->is_physfn)
++		return -EINVAL;
+ 	return (dev->devfn + dev->sriov->offset +
+-		dev->sriov->stride * id) & 0xff;
++		dev->sriov->stride * vf_id) & 0xff;
+ }
+ 
+ /*
+@@ -58,11 +62,11 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int nr_virtfn;
+ 	u8 max = 0;
+-	u8 busnr;
++	int busnr;
+ 
+ 	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+ 		pci_iov_set_numvfs(dev, nr_virtfn);
+-		busnr = virtfn_bus(dev, nr_virtfn - 1);
++		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 		if (busnr > max)
+ 			max = busnr;
+ 	}
+@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_bus *bus;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
+ 	if (!bus)
+ 		goto failed;
+ 
+@@ -124,7 +128,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	if (!virtfn)
+ 		goto failed0;
+ 
+-	virtfn->devfn = virtfn_devfn(dev, id);
++	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+@@ -186,8 +190,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+-					     virtfn_bus(dev, id),
+-					     virtfn_devfn(dev, id));
++					     pci_iov_virtfn_bus(dev, id),
++					     pci_iov_virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+@@ -226,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+-	u8 bus;
++	int bus;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -263,7 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	bus = virtfn_bus(dev, nr_virtfn - 1);
++	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
+ 	if (bus > dev->bus->busn_res.end) {
+ 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
+ 			nr_virtfn, bus, &dev->bus->busn_res);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1559658..99ea948 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1669,6 +1669,9 @@ int pci_ext_cfg_avail(void);
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
+ #ifdef CONFIG_PCI_IOV
++int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
++int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
++
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+ int pci_num_vf(struct pci_dev *dev);
+@@ -1677,6 +1680,14 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
++static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
++static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++{
++	return -ENOSYS;
++}
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
+-- 
+1.7.9.5
 
-Let me know.
-
-Thanks,
-
-Ray
