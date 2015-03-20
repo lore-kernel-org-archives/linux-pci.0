@@ -1,167 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:53890 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863AbbCYI1d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:27:33 -0400
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:59129 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545AbbCTVGL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 17:06:11 -0400
 Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:27:31 +1000
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Sat, 21 Mar 2015 07:06:09 +1000
 Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 48F2E2CE8050
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:30 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8RMZn51642376
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:30 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8Qumr023535
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:56 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 07/20] PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
-Date: Wed, 25 Mar 2015 16:23:48 +0800
-Message-Id: <1427271841-28749-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6D5B42BB0047
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:06:05 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2KL5vsH35848232
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:06:05 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2KL5Vpx013355
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:05:31 +1100
+Message-ID: <1426885502.4770.159.camel@au1.ibm.com>
+Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Date: Sat, 21 Mar 2015 08:05:02 +1100
+In-Reply-To: <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <20150320054327.GA8119@shangw>
+	 <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PowerNV, some resource reservation is needed for SR-IOV VFs that don't
-exist at the bootup stage.  To do the match between resources and VFs, the
-code need to get the VF's BDF in advance.
+On Fri, 2015-03-20 at 09:34 -0500, Bjorn Helgaas wrote:
+> On Fri, Mar 20, 2015 at 12:43 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> > On Fri, Mar 20, 2015 at 11:06:16AM +0800, Wei Yang wrote:
+> >
+> > [snip]
+> >
+> >>---
+> >>v14:
+> >>   * call ppc_md.pcibios_fixup_sriov() in pcibios_add_device
+> >>   * add more explanation in change log
+> >>   * Following patches have been reordered to the beginning.
+> >>     "EEH refactor to use pci_dn":
+> >>     8ec20d6 powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+> >>     a3460fc powerpc/pci: Refactor pci_dn
+> >>     These two patches will be modified to merge with other patches which are
+> >>     under discussion/review in ppc mail list. Some changes may also be made in
+> >>     other patches, which I didn't include them in this series, so that the
+> >>     auto build robot could work on this.
+> >
+> > The comment here isn't precise enough and not the things I suggested before.
+> > Those 2 patches have been split into 3 patches (A/B/C). Some other EEH
+> > cleanup/refactor patches depends on A/B and those patches would be merged
+> > before your SRIOV patches to PowerPC tree. C, which I already sent to you,
+> > need to be integrated to your patchset right after the following one:
+> >
+> > powerpc/pci: Don't unset PCI resources for VFs
+> >
+> > I guess you can move the patches around after checking if Bjorn has further
+> > concerns/comments.
+> 
+> I think we need to move forward on this soon so it has at least a
+> little time in -next.  And it sounds like I cannot merge this v14
+> as-is because it doesn't include these additional EEH cleanup/refactor
+> patches?  (If they are only cleanup and refactoring, I don't
+> understand why they would be required, but I haven't seen them, so I'm
+> taking your word for it.)
+> 
+> So I guess I'm waiting for v15.  Don't wait for my comments on v14.
+> Ideally I'd also like an ack from a powerpc maintainer.  This has so
+> much powerpc impact that I'm not comfortable stuffing this in without
+> their OK.
 
-Rename virtfn_bus() and virtfn_devfn() to pci_iov_virtfn_bus() and
-pci_iov_virtfn_devfn() and export them.
+The other option is you put the generic changes in a topic branch which
+both of us merge and I take care of the rest.
 
-[bhelgaas: changelog, make "busnr" int]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c   |   28 ++++++++++++++++------------
- include/linux/pci.h |   11 +++++++++++
- 2 files changed, 27 insertions(+), 12 deletions(-)
+Cheers,
+Ben.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2ae921f..5643a10 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,16 +19,20 @@
- 
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
--				    dev->sriov->stride * id) >> 8);
-+				    dev->sriov->stride * vf_id) >> 8);
- }
- 
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return (dev->devfn + dev->sriov->offset +
--		dev->sriov->stride * id) & 0xff;
-+		dev->sriov->stride * vf_id) & 0xff;
- }
- 
- /*
-@@ -58,11 +62,11 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
- 	struct pci_sriov *iov = dev->sriov;
- 	int nr_virtfn;
- 	u8 max = 0;
--	u8 busnr;
-+	int busnr;
- 
- 	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
- 		pci_iov_set_numvfs(dev, nr_virtfn);
--		busnr = virtfn_bus(dev, nr_virtfn - 1);
-+		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -124,7 +128,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -186,8 +190,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -226,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
--	u8 bus;
-+	int bus;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -263,7 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	bus = virtfn_bus(dev, nr_virtfn - 1);
-+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 	if (bus > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
- 			nr_virtfn, bus, &dev->bus->busn_res);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1559658..99ea948 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1669,6 +1669,9 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
-+
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1677,6 +1680,14 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
-+}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
--- 
-1.7.9.5
+> Bjorn
+
 
