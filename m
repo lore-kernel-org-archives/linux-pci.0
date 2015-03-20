@@ -1,184 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:41094 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703AbbCZGVT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 02:21:19 -0400
-Message-ID: <5513A517.8080205@huawei.com>
-Date: Thu, 26 Mar 2015 14:20:07 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:57555 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbbCTFr2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 01:47:28 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 15:47:25 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 582D6357804C
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 16:47:23 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K5lFbD28704910
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 16:47:23 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K5knS9005293
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 16:46:49 +1100
+Date: Fri, 20 Mar 2015 16:46:25 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V14 10/21] PCI: Add pcibios_sriov_enable() and
+ pcibios_sriov_disable()
+Message-ID: <20150320054625.GB8119@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1426820797-6267-11-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Daniel Axtens <dja@axtens.net>
-CC: Liviu Dudau <liviu@dudau.co.uk>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linux-ia64@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-m68k@lists.linux-m68k.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-alpha@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
- simplicity
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>			 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>		 <1427241523.2685.18.camel@axtens.net> <551266DE.3030609@huawei.com>	 <1427321631.2575.3.camel@axtens.net> <55135E16.6060909@huawei.com> <1427347180.2575.91.camel@axtens.net>
-In-Reply-To: <1427347180.2575.91.camel@axtens.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426820797-6267-11-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/26 13:19, Daniel Axtens wrote:
-> Hi Yijing,
+On Fri, Mar 20, 2015 at 11:06:26AM +0800, Wei Yang wrote:
+>VFs are dynamically created when a driver enables them.  On some platforms,
+>like PowerNV, special resources are necessary to enable VFs.
+>
+>Add platform hooks for enabling and disabling VFs.
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> drivers/pci/iov.c |   19 +++++++++++++++++++
+> 1 file changed, 19 insertions(+)
+>
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index 5643a10..64c4692 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+> 	pci_dev_put(dev);
+> }
 > 
-> Pulled.
+>+int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>+{
+>+       return 0;
+>+}
+>+
+> static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> {
+> 	int rc;
+>@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 	struct pci_sriov *iov = dev->sriov;
+> 	int bars = 0;
+> 	int bus;
+>+	int retval;
 > 
-> I'm now getting build errors:
+> 	if (!nr_virtfn)
+> 		return 0;
+>@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+> 	if (nr_virtfn < initial)
+> 		initial = nr_virtfn;
 > 
-> /scratch/dja/linux-patches/arch/powerpc/kernel/pci-common.c: In function 'pcibios_scan_phb':
-> /scratch/dja/linux-patches/arch/powerpc/kernel/pci-common.c:1638:14: error: 'bus' undeclared (first use in this function)
-> /scratch/dja/linux-patches/arch/powerpc/kernel/pci-common.c:1638:14: note: each undeclared identifier is reported only once for each function it appears in
+>+	if ((retval = pcibios_sriov_enable(dev, initial))) {
+>+		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
+>+			retval);
+>+		return retval;
+>+	}
+>+
+> 	for (i = 0; i < initial; i++) {
+> 		rc = virtfn_add(dev, i, 0);
+> 		if (rc)
+>@@ -335,6 +347,11 @@ failed:
+> 	return rc;
+> }
 > 
-> That relates to your changes to pcibios_scan_phb:
-> -       struct pci_bus *bus;
-> +       struct pci_host_bridge *host;
-> clashing with line 1638:
-> 	hose->bus = bus;
-> which occurs later in the same unction.
-> 
-> If I fix that, I'll get more errors with lines in that function that
-> still reference hose instead of host.
-> 
-> As well as line 1638, there's still big chunks of the function that
-> reference hose, for example:
-> 
-> 	/* Get some IO space for the new PHB */
-> 	pcibios_setup_phb_io_space(hose);
-> 
-> 	/* Wire up PHB bus resources */
-> 	pcibios_setup_phb_resources(hose, &resources);
-> 
-> 	hose->busn.start = hose->first_busno;
-> 	hose->busn.end	 = hose->last_busno;
-> 	hose->busn.flags = IORESOURCE_BUS;
-> 	pci_add_resource(&resources, &hose->busn);
-> 
-> 	pci_host_ops.pci_ops = hose->ops;
-> 
-> 
-> Basically, the changes in PowerPC need to be quite a bit more through
-> just to get the changes to build.
-> 
-> I'm keen to work on simplifying PCI code in PowerPC, but at this point,
-> it will need a lot more work before it's ready to go in.
+>+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+>+{
+>+       return 0;
+>+}
+>+
 
-Hi Daniel, I'm really so sorry about that, I will update it today.
+Since you will have to v15, I would suggest to drop the return
+value for this function. It seems there isn't a reason to have "int"
+return value here.
 
-Thanks!
-Yijing.
+Thanks,
+Gavin
 
+> static void sriov_disable(struct pci_dev *dev)
+> {
+> 	int i;
+>@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
+> 	for (i = 0; i < iov->num_VFs; i++)
+> 		virtfn_remove(dev, i, 0);
 > 
-> Regards,
-> Daniel
-> 
-> 
-> On Thu, 2015-03-26 at 09:17 +0800, Yijing Wang wrote:
->> On 2015/3/26 6:13, Daniel Axtens wrote:
->>> Hi Yijing,
->>>
->>> I wasn't quite sure I understood your comments, so I was trying to apply
->>> your patch series and test it, but patch 3 doesn't apply cleanly to
->>> 4.0-rc5 or master. Can you respin the series?
->>
->> Hi Daniel,
->>    Could you pull the series from Bjorn's git tree ? The URL is
->> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enumeration-yw8
->>
->> Thanks!
->> Yijing.
->>
->>>
->>> Thanks,
->>> Daniel
->>>
->>>
->>>> Hi Daniel, thanks for your review and comments. We want to make a generic pci_host_bridge,
->>>> which would hold the common host information, for example, pci domain is common info for
->>>> pci host bridge, this series saved domain in pci_host_bridge, then we no need to
->>>> extract out domain by pci_bus->sysdata by platform specific pci_domain_nr().
->>>> Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is the platform
->>>> interface, I think use the common interface would be better.
->>>>
->>>>>> +
->>>>>> +	/* Get probe mode and perform scan */
->>>>>> +	if (hose->dn && ppc_md.pci_probe_mode)
->>>>>> +		mode = ppc_md.pci_probe_mode(bus);
->>>>>> +
->>>>>> +	pr_debug("    probe mode: %d\n", mode);
->>>>>> +	if (mode == PCI_PROBE_DEVTREE)
->>>>>> +		of_scan_bus(hose->dn, bus);
->>>>>> +
->>>>>> +	if (mode == PCI_PROBE_NORMAL) {
->>>>>> +		pci_bus_update_busn_res_end(bus, 255);
->>>>>> +		hose->last_busno = pci_scan_child_bus(bus);
->>>>>> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
->>>>>> +	}
->>>>>> +
->>>>>> +	return pci_bus_child_max_busnr(bus);
->>>>>> +}
->>>>>> +
->>>>> I'm having trouble convincing myself that this patch covers every
->>>>> variation within our PCI implementations. In particular, there's a
->>>>> stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
->>>>> identical to this function. Does that implementation need to be cleaned
->>>>> up and replaced with this function too?
->>>>>
->>>>
->>>> This is a pci_host_bridge_ops hook function, which would be called in
->>>> PCI core, and after applied this series, we only need to call pci_scan_host_bridge()
->>>> to scan pci devices, and this function is also extracted from the pcibios_scan_phb(),
->>>> it's not the redundant code.
->>>>
->>>>>
->>>>>> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
->>>>>>  		ppc_md.pcibios_fixup_phb(hose);
->>>>>>  
->>>>>>  	/* Configure PCI Express settings */
->>>>>> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->>>>>> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->>>>>>  		struct pci_bus *child;
->>>>>> -		list_for_each_entry(child, &bus->children, node)
->>>>>> +		list_for_each_entry(child, &host->bus->children, node)
->>>>>>  			pcie_bus_configure_settings(child);
->>>>>>  	}
->>>>>>  }
->>>>> Two things: Firstly, the function uses hose throughout, not host.
->>>>> Secondly, you're not deleting the bus variable: what's the purpose of
->>>>> this change?
->>>>
->>>> host is the common pci_host_bridge which is created by PCI core for pci host bridge driver,
->>>> the hose is the platform data used in powerpc. The purpose of the patch/series is to simplify
->>>> pci enumeration interface, and try to reduce the weak functions which were used to setup pci bus/devices
->>>> during PCI enumeration.
->>>>
->>>>>
->>>>> Regards,
->>>>> Daniel
->>>>>
->>>>
->>>>
->>>
->>
->>
-> 
-
-
--- 
-Thanks!
-Yijing
+>+	pcibios_sriov_disable(dev);
+>+
+> 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+> 	pci_cfg_access_lock(dev);
+> 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>-- 
+>1.7.9.5
+>
+>_______________________________________________
+>Linuxppc-dev mailing list
+>Linuxppc-dev@lists.ozlabs.org
+>https://lists.ozlabs.org/listinfo/linuxppc-dev
 
