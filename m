@@ -1,104 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14744 "EHLO
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38683 "EHLO
 	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbbCXDhL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:11 -0400
+	with ESMTP id S1750862AbbCTBTA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 21:19:00 -0400
+Message-ID: <550B757A.4090502@huawei.com>
+Date: Fri, 20 Mar 2015 09:18:50 +0800
 From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: [PATCH v8 01/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-Date: Tue, 24 Mar 2015 11:33:55 +0800
-Message-ID: <1427168064-8657-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Herring <robh@kernel.org>, <jiang.liu@linux.intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: versatile: Fix building error for resource_list_for_each_entry
+References: <1426475463-11352-1-git-send-email-wangyijing@huawei.com> <20150319155920.GG26935@google.com>
+In-Reply-To: <20150319155920.GG26935@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
+On 2015/3/19 23:59, Bjorn Helgaas wrote:
+> On Mon, Mar 16, 2015 at 11:11:03AM +0800, Yijing Wang wrote:
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/host/pci-versatile.c |    3 ++-
+>>  1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+>> index e3a2450..4352ee9 100644
+>> --- a/drivers/pci/host/pci-versatile.c
+>> +++ b/drivers/pci/host/pci-versatile.c
+>> @@ -22,6 +22,7 @@
+>>  #include <linux/of_platform.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/platform_device.h>
+>> +#include <linux/resource_ext.h>
+>>  
+>>  static void __iomem *versatile_pci_base;
+>>  static void __iomem *versatile_cfg_base[2];
+>> @@ -80,7 +81,7 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
+>>  	if (err)
+>>  		return err;
+>>  
+>> -	resource_list_for_each_entry(win, res, list) {
+>> +	resource_list_for_each_entry(win, res) {
+> 
+> This fix appeared in v4.0-rc3 as f1651a242809 ("PCI: versatile: Update for
+> list_for_each_entry() API change").
+> 
+> Rafael merged it through his tree because I think the problem happened in
+> 872912352c5b ("Merge tag 'pm+acpi-3.20-rc1' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm") where the
+> conflict resolution changed list_for_each_entry() to
+> resource_list_for_each_entry() but forgot to drop the extra parameter.
+> 
+> I rebased my "next" branch to v4.0-rc4, which picks up that fix.
 
-Use pci_scan_root_bus() instead of deprecated function
-pci_scan_bus_parented().
+OK, thanks!
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: xen-devel@lists.xenproject.org
----
- drivers/pci/xen-pcifront.c |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> 
+>>  		struct resource *parent, *res = win->res;
+>>  
+>>  		switch (resource_type(res)) {
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index b1ffebe..a69e529 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 				 unsigned int domain, unsigned int bus)
- {
- 	struct pci_bus *b;
-+	LIST_HEAD(resources);
- 	struct pcifront_sd *sd = NULL;
- 	struct pci_bus_entry *bus_entry = NULL;
- 	int err = 0;
-+	static struct resource busn_res = {
-+		.start = 0,
-+		.end = 255,
-+		.flags = IORESOURCE_BUS,
-+	};
- 
- #ifndef CONFIG_PCI_DOMAINS
- 	if (domain != 0) {
-@@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_res);
- 	pcifront_init_sd(sd, domain, bus, pdev);
- 
- 	pci_lock_rescan_remove();
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-+				  &pcifront_bus_ops, sd, &resources);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
- 		err = -ENOMEM;
- 		pci_unlock_rescan_remove();
-+		pci_free_resource_list(&resources);
- 		goto err_out;
- 	}
- 
-@@ -488,7 +498,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 
- 	list_add(&bus_entry->list, &pdev->root_buses);
- 
--	/* pci_scan_bus_parented skips devices which do not have a have
-+	/* pci_scan_root_bus skips devices which do not have a
- 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
+
 -- 
-1.7.1
+Thanks!
+Yijing
 
