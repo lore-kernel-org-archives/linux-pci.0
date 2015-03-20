@@ -1,163 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:54056 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754493AbbCCCiB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 21:38:01 -0500
-Received: by mail-ob0-f173.google.com with SMTP id uy5so35789427obc.4
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 18:38:00 -0800 (PST)
-Date: Mon, 2 Mar 2015 20:37:50 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v4 09/30] PCI: Separate pci_host_bridge creation out of
- pci_create_root_bus()
-Message-ID: <20150303023750.GE11978@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
- <1424938344-4017-10-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-10-git-send-email-wangyijing@huawei.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:33702 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbbCTDJr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:09:47 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:09:46 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 0078F2BB0052
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:45 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K39aR333685566
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:44 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K39AqG003513
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:11 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 04/21] PCI: Print PF SR-IOV resource that contains all VF(n) BAR space
+Date: Fri, 20 Mar 2015 11:06:20 +0800
+Message-Id: <1426820797-6267-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:12:03PM +0800, Yijing Wang wrote:
-> This patch separate pci_host_bridge creation out
-> of pci_create_root_bus(), and try to make a generic
-> pci_host_bridge, then we could place generic PCI
-> infos like domain number in it. Also Ripping out
-> pci_host_bridge creation from pci_create_root_bus()
-> make code more better readability. Further more,
-> we could use the generic pci_host_bridge to hold
-> host bridge specific operations like
-> pcibios_root_bridge_prepare(). The changes are
-> transparent to platform host bridge drivers.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/host-bridge.c |   56 ++++++++++++++++++++++
->  drivers/pci/probe.c       |  114 ++++++++++++++++++++-------------------------
->  include/linux/pci.h       |    5 ++-
->  3 files changed, 110 insertions(+), 65 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 39b2dbe..f304f26 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -8,6 +8,62 @@
->  
->  #include "pci.h"
->  
-> +static void pci_release_host_bridge_dev(struct device *dev)
-> +{
-> +	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> +
-> +	if (bridge->release_fn)
-> +		bridge->release_fn(bridge);
-> +
-> +	pci_free_resource_list(&bridge->windows);
-> +	kfree(bridge);
-> +}
-> +
-> +struct pci_host_bridge *pci_create_host_bridge(
-> +		struct device *parent, u32 db, struct list_head *resources)
-> +{
-> +	int error;
-> +	int bus = PCI_BUSNUM(db);
-> +	int domain = PCI_DOMAIN(db);
-> +	struct pci_host_bridge *host;
-> +	struct resource_entry *window, *n;
-> +
-> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return NULL;
-> +
-> +	host->busnum = bus;
-> +	host->domain = domain;
-> +	/* If support CONFIG_PCI_DOMAINS_GENERIC, use
-> +	 * pci_host_assign_domain_nr() to assign domain
-> +	 * number instead PCI_DOMAIN(db).
-> +	 */
-> +	pci_host_assign_domain_nr(host);
-> +
-> +	host->dev.parent = parent;
-> +	INIT_LIST_HEAD(&host->windows);
-> +	host->dev.release = pci_release_host_bridge_dev;
-> +	dev_set_name(&host->dev, "pci%04x:%02x", host->domain, 
-> +			host->busnum);
-> +
-> +	error = device_register(&host->dev);
-> +	if (error) {
-> +		put_device(&host->dev);
-> +		return NULL;
-> +	}
-> +
-> +	resource_list_for_each_entry_safe(window, n, resources)
-> +		list_move_tail(&window->node, &host->windows);
-> +
-> +	return host;
-> +}
-> +EXPORT_SYMBOL(pci_create_host_bridge);
+When we size VF BAR0, VF BAR1, etc., from the SR-IOV Capability of a PF, we
+learn the alignment requirement and amount of space consumed by a single
+VF.  But when VFs are enabled, *each* of the NumVFs consumes that amount of
+space, so the total size of the PF resource is "VF BAR size * NumVFs".
 
-Why does this need to be exported?  I don't want code outside drivers/pci
-using something like this.
+Add a printk of the total space consumed by the VFs corresponding to what
+we already do for normal non-IOV BARs.
 
-> +void pci_free_host_bridge(struct pci_host_bridge *host)
-> +{
-> +	device_unregister(&host->dev);
-> +}
-> +
->  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->  {
->  	while (bus->parent)
-> ...
+No functional change; new message only.
 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index efd9917..13b6b25 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -402,6 +402,7 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
->  
->  struct pci_host_bridge {
->  	u16	domain;
-> +	u16 busnum;
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
->  	struct list_head windows;	/* resource_entry */
-> @@ -415,7 +416,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->  		     void *release_data);
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
-> -
-> +struct pci_host_bridge *pci_create_host_bridge(
-> +		struct device *parent, u32 dombus, struct list_head *resources);
+[bhelgaas: split out into its own patch]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Can these function declarations go in drivers/pci/pci.h instead?  I'd
-rather not expose them to the rest of the kernel unless we have to.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c4c33ea..05f9d97 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -372,6 +372,8 @@ found:
+ 			goto failed;
+ 		}
+ 		res->end = res->start + resource_size(res) * total - 1;
++		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
++			 i, res, i, total);
+ 		nres++;
+ 	}
+ 
+-- 
+1.7.9.5
 
->  /*
->   * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
->   * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
-> @@ -774,6 +776,7 @@ struct pci_bus *pci_scan_bus_legacy(u32 dombus, struct pci_ops *ops, void *sysda
->  struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
->  				    struct pci_ops *ops, void *sysdata,
->  				    struct list_head *resources);
-> +void pci_free_host_bridge(struct pci_host_bridge *host);
->  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
->  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
->  void pci_bus_release_busn_res(struct pci_bus *b);
-> -- 
-> 1.7.1
-> 
