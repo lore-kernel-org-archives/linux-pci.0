@@ -1,104 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v6 1/4] PCI: Export symbols of PCI functions
-Date: Wed, 11 Mar 2015 11:06:06 -0700
-Message-ID: <1426097169-20805-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
-References: <1426097169-20805-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:44690 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782AbbCTDOS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:14:18 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:14:16 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 05ED82CE8040
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:14:15 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3E6l440435848
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:14:14 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3DeGi010937
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:41 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 13/21] powerpc/pci: Don't unset PCI resources for VFs
+Date: Fri, 20 Mar 2015 11:06:29 +0800
+Message-Id: <1426820797-6267-14-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export symbols of the following PCI functions so they can be referenced
-by a PCI driver compiled as a kernel loadable module:
+Flag PCI_REASSIGN_ALL_RSRC is used to ignore resources information setup by
+firmware, so that kernel would re-assign all resources of pci devices.
 
-pci_common_swizzle
-pci_create_root_bus
-pci_stop_root_bus
-pci_remove_root_bus
-pci_assign_unassigned_bus_resources
-pci_fixup_irqs
+On powerpc arch, this happens in a header fixup function
+pcibios_fixup_resources(), which will clean up the resources if this flag
+is set. This works fine for PFs, since after clean up, kernel will
+re-assign the resources in pcibios_resource_survey().
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
+Below is a simple call flow on how it works:
+
+    pcibios_init
+      pcibios_scan_phb
+        pci_scan_child_bus
+          ...
+            pci_device_add
+              pci_fixup_device(pci_fixup_header)
+                pcibios_fixup_resources                     # header fixup
+                  for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
+                    dev->resource[i].start = 0
+      pcibios_resource_survey                               # re-assign
+        pcibios_allocate_resources
+
+However, the VF resources won't be re-assigned, since the VF resources are
+completely determined by the PF resources, and the PF resources have
+already been reassigned. This means we need to leave VF's resources
+un-cleared in pcibios_fixup_resources().
+
+In this patch, we skip the resource unset process in
+pcibios_fixup_resources(), if the pci_dev is a VF.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/pci/pci.c       |    1 +
- drivers/pci/probe.c     |    1 +
- drivers/pci/remove.c    |    2 ++
- drivers/pci/setup-bus.c |    1 +
- drivers/pci/setup-irq.c |    1 +
- 5 files changed, 6 insertions(+)
+ arch/powerpc/kernel/pci-common.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..14e7f3c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
- 	*pinp = pin;
- 	return PCI_SLOT(dev->devfn);
- }
-+EXPORT_SYMBOL_GPL(pci_common_swizzle);
- 
- /**
-  *	pci_release_region - Release a PCI bar
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..f13a78a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1993,6 +1993,7 @@ err_out:
- 	kfree(b);
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(pci_create_root_bus);
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8bd76c9..8a280e9 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
- 	/* stop the host bridge */
- 	device_release_driver(&host_bridge->dev);
- }
-+EXPORT_SYMBOL_GPL(pci_stop_root_bus);
- 
- void pci_remove_root_bus(struct pci_bus *bus)
- {
-@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	/* remove the host bridge */
- 	device_unregister(&host_bridge->dev);
- }
-+EXPORT_SYMBOL_GPL(pci_remove_root_bus);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e3e17f3..8169597 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
- }
-+EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 4e2d595..95c225b 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	for_each_pci_dev(dev)
- 		pdev_fixup_irq(dev, swizzle, map_irq);
- }
-+EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 2a525c9..8203101 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -788,6 +788,10 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+ 		       pci_name(dev));
+ 		return;
+ 	}
++
++	if (dev->is_virtfn)
++		return;
++
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		struct resource *res = dev->resource + i;
+ 		struct pci_bus_region reg;
 -- 
 1.7.9.5
 
