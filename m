@@ -1,87 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:36269 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755288AbbCFTxX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 14:53:23 -0500
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:32880 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbbCTNLr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 09:11:47 -0400
+Received: by qgfa8 with SMTP id a8so91966611qgf.0
+        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 06:11:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
-	<20150304101649.GA3663@pd.tnic>
-	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
-	<20150304200000.GB6276@gmail.com>
-	<CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
-	<20150306133312.GC4259@pd.tnic>
-	<CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
-Date: Fri, 6 Mar 2015 11:53:22 -0800
-Message-ID: <CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@suse.de>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <550B8F50.3070402@linux.intel.com>
+References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com>
+ <20150318221152.GA2495@google.com> <550A7F8D.90404@linux.intel.com>
+ <2835680.pSPaYk3eSL@vostro.rjw.lan> <CAErSpo4r+Brx0fgpwQ=Wr_1wxBNvuAy0cJxYBSR6hBLt=d=e8Q@mail.gmail.com>
+ <550B8F50.3070402@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 20 Mar 2015 08:11:26 -0500
+Message-ID: <CAErSpo7a9Pnxq77DSL3insZ_k1-Re5FixZ16sqbwd+mNbDxXig@mail.gmail.com>
+Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is
+ disabled when unbinding
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Alex Williamson <alex.williamson@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
+	"yinghai @ kernel . org" <yinghai@kernel.org>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 6, 2015 at 11:50 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Mar 6, 2015 at 5:33 AM, Borislav Petkov <bp@suse.de> wrote:
->
+On Thu, Mar 19, 2015 at 10:09 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> On 2015/3/19 22:08, Bjorn Helgaas wrote:
+
+>> There are two other possibilities I can see:
 >>
->> "However, the setup_data linked list and thus the element which contains
->> kaslr_enabled is chained together using physical addresses. At the
->> time when we access it in the kernel proper, we're already running
->> with paging enabled and therefore must access it through its virtual
->> address."
->>
->> That's it, now how hard was to explain it that way?
+>> 1) Decide that a driver that captures the IRQ and then calls
+>> pci_enable_device() is just broken, and fix those drivers to
+>> re-capture the IRQ every time they call pci_enable_device().  I assume
+>> you've looked at this already and concluded it's not practical?
+
+Did you look at this or not?  I don't have any idea of the scope of the problem.
+
+I think in general we want drivers to start from scratch whenever they
+call pci_enable_device().  They should not assume that BARs are the
+same, IRQs are the same, etc.  If we ever want to dynamically reassign
+resources, e.g., move BARs around to accommodate new hotplugged
+devices, a path involving pci_enable_device() seems a likely route of
+having the drivers learn about resource changes.
+
+>> 2) Configure the IRQ in pci_device_probe().  Then it would be
+>> configured before the driver sees the device, and you could dispose of
+>> it in pci_device_remove() when the driver is unbound.
+> Actually I prefer solution 2 above. The key idea is to decouple
+> IRQ resource allocation from pci_enabe/disable_device(), so irq
+> resource will be allocated just before driver binding and will
+> be released after driver unbinding.
+
+Solution 2 does have the advantage of making it simpler for driver writers.
+
+One disadvantage is that it *forces* us to do IRQ allocation, even
+though it may not be required.  There are drivers that don't need IRQs
+because they use MSI or don't need interrupts at all.  If we do IRQ
+allocation before binding the driver, and the allocation fails, these
+driver will no longer work even though they don't need the IRQs.
+
+> One issue left is the way to hook driver binding/unbinding events.
+> Currently pcibios_enable/disable_irq() are x86 specific, so I use
+> PCI notification to hook driver binding/unbinding evetns.
+> If you are OK with introducing two new weak functions
+> pcibios_enable/disable_irq() into PCI core, that's obviously
+> a clear solution, easier to maintain and may benefit other platforms
+> too in future.
 >
-> No, I don't think your change log is right.
->
-> Actually the old code is using address as value.
->
-> if the old code would be like:
->
-> kaslr_enabled = (bool)(*(unsigned char *)(pa_data + sizeof(struct setup_data)));
->
-> then your change log would be good, but the old code is
->
-> kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
+> So should I introduce pcibios_enable/disable_irq() into PCI core?
 
-Please check if you are ok with this:
+I think it would be better to add new weak interfaces than to use
+bus_register_notifier().  New interfaces are much more explicit when
+reading the code, and their ordering is very clearly defined.
 
-Subject: [PATCH v4] x86, kaslr: Access the correct kaslr_enabled variable
-
-commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
-started passing KASLR status to kernel proper, but it uses address as
-the vaule.
-
-That will get wrong value back for kaslr_enabled in kernel stage.
-1. When kaslr is not enabled at boot/choose_kernel_location, if kaslr_enabled
-get set wrongly in setup.c, late in module.c::get_module_load_offset
-will return not wanted random module load offset.
-That change behavior when HIBERNATION is defined or nokaslr is passed.
-
-2. When kaslr is enabled at boot/choose_kernel_location, if kaslr_enabled
-get cleared wrongly in setup.c, late in module.c::get_module_load_offset
-will not return wanted random module load offset.
-
-The setup_data linked list and thus the element which contains
-kaslr_enabled is chained together using physical addresses. At the
-time when we access it in the kernel proper, we're already running
-with paging enabled and therefore must access it through its virtual
-address.
-
-This patch changes the code to use early_memmap and access the value,
-and will keep boot and kernel consistent with kaslr.
-
--v3: add checking return from early_memmap according to Boris.
+Bjorn
