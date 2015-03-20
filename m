@@ -1,40 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26671 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752519AbbCaREL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 13:04:11 -0400
-Message-ID: <551AD384.50000@oracle.com>
-Date: Tue, 31 Mar 2015 11:04:04 -0600
-From: David Ahern <david.ahern@oracle.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: David Miller <davem@davemloft.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:60352 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997AbbCTVaD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 17:30:03 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Sat, 21 Mar 2015 07:30:00 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E43403578047
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:29:57 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2KLTnbn27590786
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:29:57 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2KLTO2H026377
+	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:29:24 +1100
+Message-ID: <1426886935.4770.178.camel@au1.ibm.com>
+Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-References: <5514391F.2030300@oracle.com>	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>	<551495EE.20201@oracle.com>	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>	<5515F6B8.8020606@oracle.com>	<5515F782.7060301@oracle.com>	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>	<551623C1.2040300@oracle.com>	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>	<5516BF4B.9030901@oracle.com>	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>	<55181065.8090807@oracle.com>	<CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>	<5519D40D.20903@oracle.com>	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>	<551A1E32.1010309@oracle.com> <CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Date: Sat, 21 Mar 2015 08:28:55 +1100
+In-Reply-To: <CAErSpo4vsw89bNbzJbqRiW4vy2Vzpmr-3DTdnUEhzUMPLUTn+g@mail.gmail.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	 <20150320054327.GA8119@shangw>
+	 <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
+	 <1426885502.4770.159.camel@au1.ibm.com>
+	 <CAErSpo4vsw89bNbzJbqRiW4vy2Vzpmr-3DTdnUEhzUMPLUTn+g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/31/15 10:53 AM, Yinghai Lu wrote:
-> On Mon, Mar 30, 2015 at 9:10 PM, David Ahern <david.ahern@oracle.com> wrote:
->> On 3/30/15 7:06 PM, Yinghai Lu wrote:
->> To make sure I am on the same page: these are a new round of patches? clear
->> out the old, apply these?
->
-> Clear out the old and apply these new ones.
+On Fri, 2015-03-20 at 16:16 -0500, Bjorn Helgaas wrote:
+> 
+> > The other option is you put the generic changes in a topic branch
+> which
+> > both of us merge and I take care of the rest.
+> 
+> Yeah, I chatted with Wei this morning, and he reminded me that there's
+> really not very much drivers/pci content there.  So I think I can just
+> ack those bits and you can take the whole thing.  I noticed some
+> changelog typos I'll point out, then I'll be done.
 
-I take DaveM's response to mean the patches (3rd one?) needs another 
-version.
+Excellent, thanks.
 
-I will be on PTO Wed-Fri with limited access through Sunday. If you have 
-something to try out later today I can do that; else it needs to wait 
-until next week. Given the likelihood that Linus will release 4.0 this 
-weekend that means both 3.19 and 4.0 will be broken for these systems.
+Cheers,
+Ben.
 
-David
 
