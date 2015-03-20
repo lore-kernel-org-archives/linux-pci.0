@@ -1,113 +1,66 @@
-MIME-Version: 1.0
-Reply-To: bjorn@helgaas.com
-In-Reply-To: <20150327.145016.86183910134380870.davem@davemloft.net>
-References: <CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<20150327.145016.86183910134380870.davem@davemloft.net>
-Date: Sun, 29 Mar 2015 08:30:40 -0500
-Message-ID: <CABhMZUVqgsYdT4wn2H8hsrh4f=6hT0G+sg=wwYSt33+jtvBS9A@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org, yinghai@kernel.org,
-	david.ahern@oracle.com, bhelgaas@google.com, linux-kernel@vger.kernel.org
-Content-Type: multipart/alternative; boundary=001a113c531425054005126d5fb6
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:60968 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbbCTDQ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:16:29 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:16:27 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 756362CE8040
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:24 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3GGLo48496818
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:24 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3FnDj014764
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:50 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 20/21] powerpc/pci: Remove unused struct pci_dn.pcidev field
+Date: Fri, 20 Mar 2015 11:06:36 +0800
+Message-Id: <1426820797-6267-21-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a113c531425054005126d5fb6
-Content-Type: text/plain; charset=UTF-8
+In struct pci_dn, the pcidev field is assigned but not used, so remove it.
 
-On Mar 27, 2015 3:46 PM, "David Miller" <davem@davemloft.net> wrote:
->
-> From: Yinghai Lu <yinghai@kernel.org>
-> Date: Fri, 27 Mar 2015 14:01:54 -0700
->
-> > On Thu, Mar 26, 2015 at 4:27 PM, David Ahern <david.ahern@oracle.com>
-wrote:
-> >> On 3/26/15 2:43 PM, Yinghai Lu wrote:
-> >>>
-> >>> Can you send out boot log with "debug ignore_loglevel"?
-> >>
-> >>
-> >> attached
-> >
-> > So the kernel config is sparc32 or sparc64 ?
-> >
-> > pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
-> > 0x110204000)
-> >
-> >
-> > only could happen when dma_addr_t is 32bit.
->
-> All DMA occurs behind an IOMMU and these IOMMUs only
-> support 32-bit addressing, therefore dma_addr_t is
-> 32-bit on sparc64.
->
-> If you want to represent PCI address in some way, you
-> absolutely cannot use dma_addr_t as your data type.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    1 -
+ arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-I'm on vacation until April 2, so I can't deal with this until then.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index ec83b51..680ae56 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -168,7 +168,6 @@ struct pci_dn {
+ 
+ 	int	pci_ext_config_space;	/* for pci devices */
+ 
+-	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+ #endif
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 8e8399f..3a79dfa 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1028,7 +1028,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ 				pci_name(dev));
+ 			continue;
+ 		}
+-		pdn->pcidev = dev;
+ 		pdn->pe_number = pe->pe_number;
+ 		pe->dma_weight += pnv_ioda_dma_weight(dev);
+ 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+-- 
+1.7.9.5
 
-Help me understand the sparc64 situation: are you saying that BAR
-addresses, i.e., MMIO transactions from a CPU or a peer-to-peer DMA can be
-64 bits, but a DMA to main memory can only be 32 bits?
-
-I assume this would work if we made dma_addr_t 64 bits on sparc64.  What
-would be the cost of doing that?
-
-I assume Yinghai is adding a new typedef just for those MMIO addresses.
-That would be another solution, but it does add significant complexity.
-
-Bjorn
-
---001a113c531425054005126d5fb6
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<p dir=3D"ltr"><br>
-On Mar 27, 2015 3:46 PM, &quot;David Miller&quot; &lt;<a href=3D"mailto:dav=
-em@davemloft.net">davem@davemloft.net</a>&gt; wrote:<br>
-&gt;<br>
-&gt; From: Yinghai Lu &lt;<a href=3D"mailto:yinghai@kernel.org">yinghai@ker=
-nel.org</a>&gt;<br>
-&gt; Date: Fri, 27 Mar 2015 14:01:54 -0700<br>
-&gt;<br>
-&gt; &gt; On Thu, Mar 26, 2015 at 4:27 PM, David Ahern &lt;<a href=3D"mailt=
-o:david.ahern@oracle.com">david.ahern@oracle.com</a>&gt; wrote:<br>
-&gt; &gt;&gt; On 3/26/15 2:43 PM, Yinghai Lu wrote:<br>
-&gt; &gt;&gt;&gt;<br>
-&gt; &gt;&gt;&gt; Can you send out boot log with &quot;debug ignore_logleve=
-l&quot;?<br>
-&gt; &gt;&gt;<br>
-&gt; &gt;&gt;<br>
-&gt; &gt;&gt; attached<br>
-&gt; &gt;<br>
-&gt; &gt; So the kernel config is sparc32 or sparc64 ?<br>
-&gt; &gt;<br>
-&gt; &gt; pci 0000:06:00.0: reg 0x184: can&#39;t handle BAR above 4GB (bus =
-address<br>
-&gt; &gt; 0x110204000)<br>
-&gt; &gt;<br>
-&gt; &gt;<br>
-&gt; &gt; only could happen when dma_addr_t is 32bit.<br>
-&gt;<br>
-&gt; All DMA occurs behind an IOMMU and these IOMMUs only<br>
-&gt; support 32-bit addressing, therefore dma_addr_t is<br>
-&gt; 32-bit on sparc64.<br>
-&gt;<br>
-&gt; If you want to represent PCI address in some way, you<br>
-&gt; absolutely cannot use dma_addr_t as your data type.</p>
-<p dir=3D"ltr">I&#39;m on vacation until April 2, so I can&#39;t deal with =
-this until then.</p>
-<p dir=3D"ltr">Help me understand the sparc64 situation: are you saying tha=
-t BAR addresses, i.e., MMIO transactions from a CPU or a peer-to-peer DMA c=
-an be 64 bits, but a DMA to main memory can only be 32 bits?</p>
-<p dir=3D"ltr">I assume this would work if we made dma_addr_t 64 bits on sp=
-arc64.=C2=A0 What would be the cost of doing that?</p>
-<p dir=3D"ltr">I assume Yinghai is adding a new typedef just for those MMIO=
- addresses.=C2=A0 That would be another solution, but it does add significa=
-nt complexity.</p>
-<p dir=3D"ltr">Bjorn</p>
-
---001a113c531425054005126d5fb6--
