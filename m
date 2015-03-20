@@ -1,79 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32862 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370AbbC3GtM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Mar 2015 02:49:12 -0400
-Date: Mon, 30 Mar 2015 08:48:44 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330083707-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-2-git-send-email-mst@redhat.com>
- <20150329204047.GA5902@kroah.com>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:38298 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314AbbCTVUt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 17:20:49 -0400
+Received: by igbqf9 with SMTP id qf9so2437693igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:20:48 -0700 (PDT)
+Date: Fri, 20 Mar 2015 16:20:45 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: benh@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
+Message-ID: <20150320212045.GL26935@google.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150329204047.GA5902@kroah.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
-> On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
-> > The macros in pci_ids.h are pretty useful for userspace
-> > using the pci sysfs interface.
-> > At the moment userspace is forced to duplicate these macros
-> > (e.g. QEMU does this), it is better to expose them in
-> > /usr/include/linux/pci_ids.h so everyone can just include
-> > this header.
-> > 
-> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > ---
-> >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
-> >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
+On Fri, Mar 20, 2015 at 11:06:16AM +0800, Wei Yang wrote:
+> This patchset enables the SRIOV on POWER8.
 > 
-> No, please use the pci ids file from the upstream pci id database
-> instead.
-
-
->  We shouldn't be putting these all in one file,
-
-pci.txt says:
-	Please add PCI_VENDOR_ID_xxx for vendors
-You want to change this policy, and get rid of
-vendor ids in pci_ids.h completely?
-Bjorn, what do you think of this?
-
->  and pulling
-> them out of drivers isn't ok.
-
-This patchset is not pulling any files out of drivers fwiw.
-
-> Userspace shouldn't need to know any of these, use libpci.
-
-Unless I'm mistaken, libpci does not export a header with defines. It
-has a text file pci.ids, but parsing that when all I want is e.g. locate
-all intel devices is just too much overhead. No one wants that, so
-people just duplicate headers.
-
-Standard class IDs are even sillier to duplicate.
-
-
-> thanks,
+> The general idea is put each VF into one individual PE and allocate required
+> resources like MMIO/DMA/MSI. The major difficulty comes from the MMIO
+> allocation and adjustment for PF's IOV BAR.
 > 
-> greg k-h
+> On P8, we use M64BT to cover a PF's IOV BAR, which could make an individual VF
+> sit in its own PE. This gives more flexiblity, while at the mean time it
+> brings on some restrictions on the PF's IOV BAR size and alignment.
+
+For patches 03-12 (the "PCI: " ones):
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+It's fine if you want to take all these via the powerpc tree.  I don't see
+much if anything in my queue that will conflict with them.
+
+Bjorn
