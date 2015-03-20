@@ -1,78 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53393 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752666AbbCZLiF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Mar 2015 07:38:05 -0400
-Date: Thu, 26 Mar 2015 12:38:00 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: [PATCH v4 10/10] pci: unexport pci_msi_off
-Message-ID: <1427369811-11721-11-git-send-email-mst@redhat.com>
-References: <1427369811-11721-1-git-send-email-mst@redhat.com>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38729 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbbCTWH6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 18:07:58 -0400
+Received: by igbqf9 with SMTP id qf9so279841igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 15:07:57 -0700 (PDT)
+Date: Fri, 20 Mar 2015 17:07:53 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
+	linux-pci@vger.kernel.org, kernel@pengutronix.de
+Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
+Message-ID: <20150320220753.GN26935@google.com>
+References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
+ <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427369811-11721-1-git-send-email-mst@redhat.com>
+In-Reply-To: <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now one should be using pci_msi_off now, unexport it and move the
-declaration to internal header to prevent misuse.
+On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
+> Allows to properly set up multiple MSI irqs per device.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> The ifdef is needed to avoid a compile error on
+> !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> when the kernel is compiled with MSI support.
+> ---
+>  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 1f4ea6f2d910..8a15ea2e8eab 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>  	}
+>  
+>  	*pos = pos0;
+> +	desc->nvec_used = no_irqs;
+> +	desc->msi_attrib.multiple = order_base_2(no_irqs);
+> +
+>  	return irq;
+>  
+>  no_valid_irq:
+> @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+>  
+>  	return 0;
+>  }
+> +#ifdef CONFIG_PCI_MSI
+> +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> +			     int nvec, int type)
+> +{
+> +	int irq, pos;
+> +	struct msi_desc *desc;
+> +	struct msi_msg msg;
+> +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> +
+> +	/* MSI-X interrupts are not supported */
+> +	if (type == PCI_CAP_ID_MSIX)
+> +		return -EINVAL;
+> +
+> +	WARN_ON(!list_is_singular(&pdev->msi_list));
+> +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> +
+> +	irq = assign_irq(nvec, desc, &pos);
+> +	if (irq < 0)
+> +		return irq;
+> +
+> +	if (pp->ops->get_msi_addr)
+> +		msg.address_lo = pp->ops->get_msi_addr(pp);
+> +	else
+> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> +	msg.address_hi = 0x0;
+> +
+> +	if (pp->ops->get_msi_data)
+> +		msg.data = pp->ops->get_msi_data(pp, pos);
+> +	else
+> +		msg.data = pos;
+> +
+> +	pci_write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +#else
+> +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
+> +			     int nvec, int type)
+> +{
+> +	return -ENOSYS;
+> +}
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/pci/pci.h   | 2 ++
- include/linux/pci.h | 1 -
- drivers/pci/pci.c   | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+Seems strange that we need even this stub function when we don't have
+CONFIG_PCI_MSI.  Is there some way we can fix this so dw_pcie_msi_chip is
+only defined when we have CONFIG_PCI_MSI?
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index a964569..dd17615 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -144,6 +144,8 @@ void pci_no_msi(void);
- static inline void pci_no_msi(void) { }
- #endif
- 
-+void pci_msi_off(struct pci_dev *dev);
-+
- static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
- {
- 	u16 control;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a34df45..ef15f91 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -970,7 +970,6 @@ void pci_intx(struct pci_dev *dev, int enable);
- bool pci_intx_mask_supported(struct pci_dev *dev);
- bool pci_check_and_mask_intx(struct pci_dev *dev);
- bool pci_check_and_unmask_intx(struct pci_dev *dev);
--void pci_msi_off(struct pci_dev *dev);
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
- int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
- int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fcee8ea..54cefb4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3103,6 +3103,7 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
-  * If you want to use MSI, see pci_enable_msi() and friends.
-  * This is a lower-level primitive that allows us to disable
-  * MSI operation at the device level.
-+ * Not for use by drivers.
-  */
- void pci_msi_off(struct pci_dev *dev)
- {
-@@ -3112,7 +3113,6 @@ void pci_msi_off(struct pci_dev *dev)
- 	if (dev->msix_cap)
- 		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
- }
--EXPORT_SYMBOL_GPL(pci_msi_off);
- 
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
- {
--- 
-MST
-
+> +#endif
+>  
+>  static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>  {
+> @@ -317,6 +362,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>  
+>  static struct msi_controller dw_pcie_msi_chip = {
+>  	.setup_irq = dw_msi_setup_irq,
+> +	.setup_irqs = dw_msi_setup_irqs,
+>  	.teardown_irq = dw_msi_teardown_irq,
+>  };
+>  
+> -- 
+> 2.1.4
+> 
