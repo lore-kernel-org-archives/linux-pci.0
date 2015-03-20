@@ -1,237 +1,267 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43276 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757844AbbCCRw5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 Mar 2015 12:52:57 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v8 2/7] of: Move of_dma_configure() to device.c to help re-use
-Date: Tue, 3 Mar 2015 12:52:09 -0500
-Message-ID: <1425405134-24707-3-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:32939 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbbCTDJH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:09:07 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:09:05 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A72BB2CE8040
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:02 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K38s2s29491344
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:09:02 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K38STq002554
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:29 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 02/21] powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+Date: Fri, 20 Mar 2015 11:06:18 +0800
+Message-Id: <1426820797-6267-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move of_dma_configure() to device.c so it can be re-used for PCI devices to
-obtain DMA configuration from DT.  Also add a second argument so that for
-PCI, the DT node of root bus host bridge can be used to obtain the DMA
-configuration for the slave PCI device.
+The PCI config accessors previously relied on device_node.  Unfortunately,
+VFs don't have a corresponding device_node, so change the accessors to use
+pci_dn instead.
 
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Acked-by: Rob Herring <robh+dt@kernel.org>
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Arnd Bergmann <arnd@arndb.de>
+[bhelgaas: changelog]
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/of/device.c       |   59 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/of/platform.c     |   58 ++------------------------------------------
- include/linux/of_device.h |    3 +++
- 3 files changed, 64 insertions(+), 56 deletions(-)
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   14 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   69 ++++++++++----------------
+ arch/powerpc/platforms/powernv/pci.h         |    4 +-
+ 3 files changed, 40 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 46d6c75c..31a7875 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -2,6 +2,9 @@
- #include <linux/kernel.h>
- #include <linux/of.h>
- #include <linux/of_device.h>
-+#include <linux/of_address.h>
-+#include <linux/of_iommu.h>
-+#include <linux/dma-mapping.h>
- #include <linux/init.h>
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
-@@ -66,6 +69,62 @@ int of_device_add(struct platform_device *ofdev)
- 	return device_add(&ofdev->dev);
- }
- 
-+/**
-+ * of_dma_configure - Setup DMA configuration
-+ * @dev:	Device to apply DMA configuration
-+ * @np:		Pointer to OF node having DMA configuration
-+ *
-+ * Try to get devices's DMA configuration from DT and update it
-+ * accordingly.
-+ *
-+ * If platform code needs to use its own special DMA configuration, it
-+ * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
-+ * to fix up DMA configuration.
-+ */
-+void of_dma_configure(struct device *dev, struct device_node *np)
-+{
-+	u64 dma_addr, paddr, size;
-+	int ret;
-+	bool coherent;
-+	unsigned long offset;
-+	struct iommu_ops *iommu;
-+
-+	/*
-+	 * Set default dma-mask to 32 bit.  Drivers are expected to setup
-+	 * the correct supported dma_mask.
-+	 */
-+	dev->coherent_dma_mask = DMA_BIT_MASK(32);
-+
-+	/*
-+	 * Set it to coherent_dma_mask by default if the architecture
-+	 * code has not set it.
-+	 */
-+	if (!dev->dma_mask)
-+		dev->dma_mask = &dev->coherent_dma_mask;
-+
-+	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-+	if (ret < 0) {
-+		dma_addr = offset = 0;
-+		size = dev->coherent_dma_mask;
-+	} else {
-+		offset = PFN_DOWN(paddr - dma_addr);
-+		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
-+	}
-+
-+	dev->dma_pfn_offset = offset;
-+
-+	coherent = of_dma_is_coherent(np);
-+	dev_dbg(dev, "device is%sdma coherent\n",
-+		coherent ? " " : " not ");
-+
-+	iommu = of_iommu_configure(dev, np);
-+	dev_dbg(dev, "device is%sbehind an iommu\n",
-+		iommu ? " " : " not ");
-+
-+	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
-+}
-+EXPORT_SYMBOL_GPL(of_dma_configure);
-+
- int of_device_register(struct platform_device *pdev)
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index e261869..7a5021b 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -430,21 +430,31 @@ static inline bool powernv_eeh_cfg_blocked(struct device_node *dn)
+ static int powernv_eeh_read_config(struct device_node *dn,
+ 				   int where, int size, u32 *val)
  {
- 	device_initialize(&pdev->dev);
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index 667c6f1..a01f57c 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -19,7 +19,6 @@
- #include <linux/slab.h>
- #include <linux/of_address.h>
- #include <linux/of_device.h>
--#include <linux/of_iommu.h>
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-@@ -150,59 +149,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
- }
- EXPORT_SYMBOL(of_device_alloc);
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn)) {
+ 		*val = 0xFFFFFFFF;
+ 		return PCIBIOS_SET_FAILED;
+ 	}
  
--/**
-- * of_dma_configure - Setup DMA configuration
-- * @dev:	Device to apply DMA configuration
-- *
-- * Try to get devices's DMA configuration from DT and update it
-- * accordingly.
-- *
-- * In case if platform code need to use own special DMA configuration,it
-- * can use Platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE event
-- * to fix up DMA configuration.
-- */
--static void of_dma_configure(struct device *dev)
--{
--	u64 dma_addr, paddr, size;
--	int ret;
--	bool coherent;
--	unsigned long offset;
--	struct iommu_ops *iommu;
--
--	/*
--	 * Set default dma-mask to 32 bit. Drivers are expected to setup
--	 * the correct supported dma_mask.
--	 */
--	dev->coherent_dma_mask = DMA_BIT_MASK(32);
--
--	/*
--	 * Set it to coherent_dma_mask by default if the architecture
--	 * code has not set it.
--	 */
--	if (!dev->dma_mask)
--		dev->dma_mask = &dev->coherent_dma_mask;
--
--	ret = of_dma_get_range(dev->of_node, &dma_addr, &paddr, &size);
--	if (ret < 0) {
--		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask;
--	} else {
--		offset = PFN_DOWN(paddr - dma_addr);
--		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+-	return pnv_pci_cfg_read(dn, where, size, val);
++	return pnv_pci_cfg_read(pdn, where, size, val);
+ }
+ 
+ static int powernv_eeh_write_config(struct device_node *dn,
+ 				    int where, int size, u32 val)
+ {
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 	if (powernv_eeh_cfg_blocked(dn))
+ 		return PCIBIOS_SET_FAILED;
+ 
+-	return pnv_pci_cfg_write(dn, where, size, val);
++	return pnv_pci_cfg_write(pdn, where, size, val);
+ }
+ 
+ /**
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index e69142f..6c20d6e 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -366,9 +366,9 @@ static void pnv_pci_handle_eeh_config(struct pnv_phb *phb, u32 pe_no)
+ 	spin_unlock_irqrestore(&phb->lock, flags);
+ }
+ 
+-static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+-				     struct device_node *dn)
++static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
+ {
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u8	fstate;
+ 	__be16	pcierr;
+ 	int	pe_no;
+@@ -379,7 +379,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	 * setup that yet. So all ER errors should be mapped to
+ 	 * reserved PE.
+ 	 */
+-	pe_no = PCI_DN(dn)->pe_number;
++	pe_no = pdn->pe_number;
+ 	if (pe_no == IODA_INVALID_PE) {
+ 		if (phb->type == PNV_PHB_P5IOC2)
+ 			pe_no = 0;
+@@ -407,8 +407,7 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ 
+ 	cfg_dbg(" -> EEH check, bdfn=%04x PE#%d fstate=%x\n",
+-		(PCI_DN(dn)->busno << 8) | (PCI_DN(dn)->devfn),
+-		pe_no, fstate);
++		(pdn->busno << 8) | (pdn->devfn), pe_no, fstate);
+ 
+ 	/* Clear the frozen state if applicable */
+ 	if (fstate == OPAL_EEH_STOPPED_MMIO_FREEZE ||
+@@ -425,10 +424,9 @@ static void pnv_pci_config_check_eeh(struct pnv_phb *phb,
+ 	}
+ }
+ 
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 	s64 rc;
+@@ -462,10 +460,9 @@ int pnv_pci_cfg_read(struct device_node *dn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val)
+ {
+-	struct pci_dn *pdn = PCI_DN(dn);
+ 	struct pnv_phb *phb = pdn->phb->private_data;
+ 	u32 bdfn = (pdn->busno << 8) | pdn->devfn;
+ 
+@@ -489,18 +486,17 @@ int pnv_pci_cfg_write(struct device_node *dn,
+ }
+ 
+ #if CONFIG_EEH
+-static bool pnv_pci_cfg_check(struct pci_controller *hose,
+-			      struct device_node *dn)
++static bool pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = NULL;
+-	struct pnv_phb *phb = hose->private_data;
++	struct pnv_phb *phb = pdn->phb->private_data;
+ 
+ 	/* EEH not enabled ? */
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+ 		return true;
+ 
+ 	/* PE reset or device removed ? */
+-	edev = of_node_to_eeh_dev(dn);
++	edev = pdn->edev;
+ 	if (edev) {
+ 		if (edev->pe &&
+ 		    (edev->pe->state & EEH_PE_CFG_BLOCKED))
+@@ -513,8 +509,7 @@ static bool pnv_pci_cfg_check(struct pci_controller *hose,
+ 	return true;
+ }
+ #else
+-static inline pnv_pci_cfg_check(struct pci_controller *hose,
+-				struct device_node *dn)
++static inline pnv_pci_cfg_check(struct pci_dn *pdn)
+ {
+ 	return true;
+ }
+@@ -524,32 +519,26 @@ static int pnv_pci_read_config(struct pci_bus *bus,
+ 			       unsigned int devfn,
+ 			       int where, int size, u32 *val)
+ {
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
+ 
+ 	*val = 0xFFFFFFFF;
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
 -	}
--	dev->dma_pfn_offset = offset;
--
--	coherent = of_dma_is_coherent(dev->of_node);
--	dev_dbg(dev, "device is%sdma coherent\n",
--		coherent ? " " : " not ");
--
--	iommu = of_iommu_configure(dev, dev->of_node);
--	dev_dbg(dev, "device is%sbehind an iommu\n",
--		iommu ? " " : " not ");
--
--	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
--}
--
- static void of_dma_deconfigure(struct device *dev)
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	ret = pnv_pci_cfg_read(dn, where, size, val);
+-	if (phb->flags & PNV_PHB_FLAG_EEH) {
++	ret = pnv_pci_cfg_read(pdn, where, size, val);
++	phb = pdn->phb->private_data;
++	if (phb->flags & PNV_PHB_FLAG_EEH && pdn->edev) {
+ 		if (*val == EEH_IO_ERROR_VALUE(size) &&
+-		    eeh_dev_check_failure(of_node_to_eeh_dev(dn)))
++		    eeh_dev_check_failure(pdn->edev))
+                         return PCIBIOS_DEVICE_NOT_FOUND;
+ 	} else {
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 	}
+ 
+ 	return ret;
+@@ -559,27 +548,21 @@ static int pnv_pci_write_config(struct pci_bus *bus,
+ 				unsigned int devfn,
+ 				int where, int size, u32 val)
  {
- 	arch_teardown_dma_ops(dev);
-@@ -236,7 +182,7 @@ static struct platform_device *of_platform_device_create_pdata(
+-	struct device_node *dn, *busdn = pci_bus_to_OF_node(bus);
+ 	struct pci_dn *pdn;
+ 	struct pnv_phb *phb;
+-	bool found = false;
+ 	int ret;
  
- 	dev->dev.bus = &platform_bus_type;
- 	dev->dev.platform_data = platform_data;
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
+-	for (dn = busdn->child; dn; dn = dn->sibling) {
+-		pdn = PCI_DN(dn);
+-		if (pdn && pdn->devfn == devfn) {
+-			phb = pdn->phb->private_data;
+-			found = true;
+-			break;
+-		}
+-	}
++	pdn = pci_get_pdn_by_devfn(bus, devfn);
++	if (!pdn)
++		return PCIBIOS_DEVICE_NOT_FOUND;
  
- 	if (of_device_add(dev) != 0) {
- 		of_dma_deconfigure(&dev->dev);
-@@ -299,7 +245,7 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
- 		dev_set_name(&dev->dev, "%s", bus_id);
- 	else
- 		of_device_make_bus_id(&dev->dev);
--	of_dma_configure(&dev->dev);
-+	of_dma_configure(&dev->dev, dev->dev.of_node);
+-	if (!found || !pnv_pci_cfg_check(pdn->phb, dn))
++	if (!pnv_pci_cfg_check(pdn))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
  
- 	/* Allow the HW Peripheral ID to be overridden */
- 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index ef37021..22801b1 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -53,6 +53,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- 	return of_node_get(cpu_dev->of_node);
+-	ret = pnv_pci_cfg_write(dn, where, size, val);
++	ret = pnv_pci_cfg_write(pdn, where, size, val);
++	phb = pdn->phb->private_data;
+ 	if (!(phb->flags & PNV_PHB_FLAG_EEH))
+-		pnv_pci_config_check_eeh(phb, dn);
++		pnv_pci_config_check_eeh(pdn);
+ 
+ 	return ret;
  }
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 6c02ff8..e5b75b2 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -219,9 +219,9 @@ extern struct pnv_eeh_ops ioda_eeh_ops;
  
-+void of_dma_configure(struct device *dev, struct device_node *np);
- #else /* CONFIG_OF */
- 
- static inline int of_driver_match_device(struct device *dev,
-@@ -90,6 +91,8 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- {
- 	return NULL;
- }
-+static inline void of_dma_configure(struct device *dev, struct device_node *np)
-+{}
- #endif /* CONFIG_OF */
- 
- #endif /* _LINUX_OF_DEVICE_H */
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+-int pnv_pci_cfg_read(struct device_node *dn,
++int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 		     int where, int size, u32 *val);
+-int pnv_pci_cfg_write(struct device_node *dn,
++int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val);
+ extern void pnv_pci_setup_iommu_table(struct iommu_table *tbl,
+ 				      void *tce_mem, u64 tce_size,
 -- 
 1.7.9.5
 
