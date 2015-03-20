@@ -1,231 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23901 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189AbbCICnQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 17/30] powerpc/pci: Use pci_scan_host_bridge() for simplicity
-Date: Mon, 9 Mar 2015 10:34:14 +0800
-Message-ID: <1425868467-9667-18-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:49842 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbbCTDNj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:13:39 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:13:37 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E481B3578048
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:33 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3DPUe42860558
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:33 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3CxFT010025
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:13:00 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 11/21] PCI: Add pcibios_iov_resource_alignment() interface
+Date: Fri, 20 Mar 2015 11:06:27 +0800
+Message-Id: <1426820797-6267-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_host_bridge() to scan
-pci buses, provide powerpc specific pci_host_bridge_ops.
+Per the SR-IOV spec r1.1, sec 3.3.14, the required alignment of a PF's IOV
+BAR is the size of an individual VF BAR, and the size consumed is the
+individual VF BAR size times NumVFs.
 
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The PowerNV platform has additional alignment requirements to help support
+its Partitionable Endpoint device isolation feature (see
+Documentation/powerpc/pci_iov_resource_on_powernv.txt).
+
+Add a pcibios_iov_resource_alignment() interface to allow platforms to
+request additional alignment.
+
+[bhelgaas: changelog, adapt to reworked pci_sriov_resource_alignment(),
+drop "align" parameter]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |   63 +++++++++++++++++------------
- arch/powerpc/platforms/pseries/pci.c     |    8 ++--
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- 4 files changed, 43 insertions(+), 32 deletions(-)
+ drivers/pci/iov.c   |    8 +++++++-
+ include/linux/pci.h |    1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 8e7f2a8..b811d12 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -129,7 +129,7 @@ struct machdep_calls {
- 	void		(*pcibios_fixup)(void);
- 	int		(*pci_probe_mode)(struct pci_bus *);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
-+	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0d8b369..74cbb5d 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -767,14 +767,35 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 64c4692..ee0ebff 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -569,6 +569,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ 		4 * (resno - PCI_IOV_RESOURCES);
  }
  
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+static void pci_host_bridge_set_root_bus_speed(
-+		struct pci_host_bridge *bridge)
- {
- 	if (ppc_md.pcibios_set_root_bus_speed)
--		return ppc_md.pcibios_set_root_bus_speed(bridge);
-+		ppc_md.pcibios_set_root_bus_speed(bridge);
-+}
- 
--	return 0;
-+static void pci_host_bridge_of_scan_bus(struct pci_host_bridge *host)
++resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
++						      int resno)
 +{
-+	int mode = PCI_PROBE_NORMAL;
-+	struct pci_bus *bus = host->bus;
-+	struct pci_controller *hose = dev_get_drvdata(&host->dev);
-+
-+	/* Get probe mode and perform scan */
-+	if (hose->dn && ppc_md.pci_probe_mode)
-+		mode = ppc_md.pci_probe_mode(bus);
-+
-+	pr_debug("    probe mode: %d\n", mode);
-+	if (mode == PCI_PROBE_DEVTREE)
-+		of_scan_bus(hose->dn, bus);
-+
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
-+		hose->last_busno = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, hose->last_busno);
-+	}
- }
- 
-+
- /* This header fixup will do the resource fixup for all devices as they are
-  * probed, but not for bridge ranges
-  */
-@@ -1587,6 +1608,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- 	return of_node_get(hose->dn);
- }
- 
-+static struct pci_host_bridge_ops phb_ops = {
-+	.set_root_bus_speed = pci_host_bridge_set_root_bus_speed,
-+	.scan_bus = pci_host_bridge_of_scan_bus,
-+};
++	return pci_iov_resource_size(dev, resno);
++}
 +
  /**
-  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-  * @hose: Pointer to the PCI host controller instance structure
-@@ -1594,9 +1620,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- void pcibios_scan_phb(struct pci_controller *hose)
+  * pci_sriov_resource_alignment - get resource alignment for VF BAR
+  * @dev: the PCI device
+@@ -581,7 +587,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+  */
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
  {
- 	LIST_HEAD(resources);
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host;
- 	struct device_node *node = hose->dn;
--	int mode;
- 
- 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
- 
-@@ -1612,30 +1637,16 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	pci_add_resource(&resources, &hose->busn);
- 
- 	/* Create an empty bus for the toplevel */
--	bus = pci_create_root_bus(hose->parent,
-+	host = pci_scan_host_bridge(hose->parent,
- 			PCI_DOMBUS(hose->global_number, hose->first_busno),
--			hose->ops, hose, &resources);
--	if (bus == NULL) {
--		pr_err("Failed to create bus for PCI domain %04x\n",
-+			hose->ops, hose, &resources, &phb_ops);
-+	if (host == NULL) {
-+		pr_err("Failed to create host bridge for PCI domain %04x\n",
- 			hose->global_number);
- 		pci_free_resource_list(&resources);
- 		return;
- 	}
--	hose->bus = bus;
--
--	/* Get probe mode and perform scan */
--	mode = PCI_PROBE_NORMAL;
--	if (node && ppc_md.pci_probe_mode)
--		mode = ppc_md.pci_probe_mode(bus);
--	pr_debug("    probe mode: %d\n", mode);
--	if (mode == PCI_PROBE_DEVTREE)
--		of_scan_bus(node, bus);
--
--	if (mode == PCI_PROBE_NORMAL) {
--		pci_bus_update_busn_res_end(bus, 255);
--		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
--	}
-+	hose->bus = host->bus;
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
-@@ -1644,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
- 	/* Configure PCI Express settings */
--	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node)
-+		list_for_each_entry(child, &host->bus->children, node)
- 			pcie_bus_configure_settings(child);
- 	}
+-	return pci_iov_resource_size(dev, resno);
++	return pcibios_iov_resource_alignment(dev, resno);
  }
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index af685d6..89ff79c 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
  
--int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-@@ -121,7 +121,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 99ea948..4e1f17d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1174,6 +1174,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
  
- 	dn = pcibios_get_phb_of_node(bus);
- 	if (!dn)
--		return 0;
-+		return;
- 
- 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
- 		rc = of_property_read_u32_array(pdn,
-@@ -135,7 +135,7 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- 
- 	if (rc) {
- 		pr_debug("no ibm,pcie-link-speed-stats property\n");
--		return 0;
-+		return;
- 	}
- 
- 	switch (pcie_link_speed_stats[0]) {
-@@ -168,5 +168,5 @@ int pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- 		break;
- 	}
- 
--	return 0;
-+	return;
- }
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 5d0be3a..9aa9c13 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
- 
- unsigned long pseries_memory_block_size(void);
- 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
 -- 
-1.7.1
+1.7.9.5
 
