@@ -1,357 +1,435 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5506EAD9.1070900@linaro.org>
-Date: Mon, 16 Mar 2015 15:38:17 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-MIME-Version: 1.0
-To: Mark Salter <msalter@redhat.com>
-CC: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH v3 4/9] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>	 <1425987320-15020-5-git-send-email-tomasz.nowicki@linaro.org> <1426264500.20110.22.camel@deneb.redhat.com>
-In-Reply-To: <1426264500.20110.22.camel@deneb.redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:60936 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbbCTDIc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:08:32 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:08:29 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D70F22CE8040
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:27 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K38Jbu47120544
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:08:27 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K37riK001779
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:07:54 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH V14 01/21] powerpc/pci: Refactor pci_dn
+Date: Fri, 20 Mar 2015 11:06:17 +0800
+Message-Id: <1426820797-6267-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13.03.2015 17:35, Mark Salter wrote:
-> On Tue, 2015-03-10 at 12:35 +0100, Tomasz Nowicki wrote:
->> ECAM standard and MCFG table are architecture independent and it makes
->> sense to share common code across all architectures. Both are going to
->> corresponding files - ecam.c and mcfg.c
->>
->> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
->> We already have acpi_parse_mcfg prototype which is used nowhere.
->> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
->> can be used perfectly here.
->>
->> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->> ---
->>   arch/x86/Kconfig               |   2 +
->>   arch/x86/include/asm/pci_x86.h |  33 -----
->>   arch/x86/pci/acpi.c            |   1 +
->>   arch/x86/pci/mmconfig-shared.c | 296 +----------------------------------------
->>   arch/x86/pci/mmconfig_32.c     |   1 +
->>   arch/x86/pci/mmconfig_64.c     |   1 +
->>   arch/x86/pci/numachip.c        |   1 +
->>   drivers/acpi/Makefile          |   1 +
->>   drivers/acpi/mcfg.c            |  81 +++++++++++
->>   drivers/pci/Kconfig            |   4 +
->>   drivers/pci/Makefile           |   5 +
->>   drivers/pci/ecam.c             | 243 +++++++++++++++++++++++++++++++++
->>   include/linux/ecam.h           |  51 +++++++
->>   13 files changed, 394 insertions(+), 326 deletions(-)
->>   create mode 100644 drivers/acpi/mcfg.c
->>   create mode 100644 drivers/pci/ecam.c
->>   create mode 100644 include/linux/ecam.h
->>
->> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
->> index c2fb8a8..dd926f4 100644
->> --- a/arch/x86/Kconfig
->> +++ b/arch/x86/Kconfig
->> @@ -2276,6 +2276,7 @@ config PCI_DIRECT
->>
->>   config PCI_MMCONFIG
->>   	def_bool y
->> +	select PCI_ECAM
->>   	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
->>
->>   config PCI_OLPC
->> @@ -2293,6 +2294,7 @@ config PCI_DOMAINS
->>
->>   config PCI_MMCONFIG
->>   	bool "Support mmconfig PCI config space access"
->> +	select PCI_ECAM
->>   	depends on X86_64 && PCI && ACPI
->>
->>   config PCI_CNB20LE_QUIRK
->> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
->> index c57c225..e8a237f 100644
->> --- a/arch/x86/include/asm/pci_x86.h
->> +++ b/arch/x86/include/asm/pci_x86.h
->> @@ -122,41 +122,8 @@ extern int pci_legacy_init(void);
->>   extern void pcibios_fixup_irqs(void);
->>
->>   /* pci-mmconfig.c */
->> -
->> -/* "PCI MMCONFIG %04x [bus %02x-%02x]" */
->> -#define PCI_MMCFG_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
->> -
->> -struct pci_mmcfg_region {
->> -	struct list_head list;
->> -	struct resource res;
->> -	u64 address;
->> -	char __iomem *virt;
->> -	u16 segment;
->> -	u8 start_bus;
->> -	u8 end_bus;
->> -	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
->> -};
->> -
->> -struct pci_mmcfg_mmio_ops {
->> -	u32 (*read)(int len, void __iomem *addr);
->> -	void (*write)(int len, void __iomem *addr, u32 value);
->> -};
->> -
->> -extern int __init pci_mmcfg_arch_init(void);
->> -extern void __init pci_mmcfg_arch_free(void);
->> -extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
->> -extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
->>   extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->>   			       phys_addr_t addr);
->> -extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
->> -extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
->> -extern u32 pci_mmio_read(int len, void __iomem *addr);
->> -extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
->> -extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
->> -
->> -extern struct list_head pci_mmcfg_list;
->> -
->> -#define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
->>
->>   /*
->>    * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index 6ac2738..5dfccef 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -4,6 +4,7 @@
->>   #include <linux/irq.h>
->>   #include <linux/dmi.h>
->>   #include <linux/slab.h>
->> +#include <linux/ecam.h>
->>   #include <asm/numa.h>
->>   #include <asm/pci_x86.h>
->>
->> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
->> index 685cd4c..5064302 100644
->> --- a/arch/x86/pci/mmconfig-shared.c
->> +++ b/arch/x86/pci/mmconfig-shared.c
->> @@ -18,6 +18,7 @@
->>   #include <linux/slab.h>
->>   #include <linux/mutex.h>
->>   #include <linux/rculist.h>
->> +#include <linux/ecam.h>
->>   #include <asm/e820.h>
->>   #include <asm/pci_x86.h>
->>   #include <asm/acpi.h>
->> @@ -27,52 +28,6 @@
->>   /* Indicate if the mmcfg resources have been placed into the resource table. */
->>   static bool pci_mmcfg_running_state;
->>   static bool pci_mmcfg_arch_init_failed;
->> -static DEFINE_MUTEX(pci_mmcfg_lock);
->> -
->> -LIST_HEAD(pci_mmcfg_list);
->> -
->> -static u32
->> -pci_mmconfig_generic_read(int len, void __iomem *addr)
->> -{
->> -	u32 data = 0;
->> -
->> -	switch (len) {
->> -	case 1:
->> -		data = readb(addr);
->> -		break;
->> -	case 2:
->> -		data = readw(addr);
->> -		break;
->> -	case 4:
->> -		data = readl(addr);
->> -		break;
->> -	}
->> -
->> -	return data;
->> -}
->> -
->> -static void
->> -pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
->> -{
->> -	switch (len) {
->> -	case 1:
->> -		writeb(value, addr);
->> -		break;
->> -	case 2:
->> -		writew(value, addr);
->> -		break;
->> -	case 4:
->> -		writel(value, addr);
->> -		break;
->> -	}
->> -}
->> -
->> -static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
->> -	.read = pci_mmconfig_generic_read,
->> -	.write = pci_mmconfig_generic_write,
->> -};
->> -
->> -static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
->>
->>   static u32
->>   pci_mmconfig_amd_read(int len, void __iomem *addr)
->> @@ -115,128 +70,6 @@ static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
->>   	.write = pci_mmconfig_amd_write,
->>   };
->>
->> -void
->> -pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
->> -{
->> -	pci_mmcfg_mmio = ops;
->> -}
->> -
->> -u32
->> -pci_mmio_read(int len, void __iomem *addr)
->> -{
->> -	if (!pci_mmcfg_mmio) {
->> -		pr_err("PCI config space has no accessors !");
->> -		return 0;
->> -	}
->> -
->> -	return pci_mmcfg_mmio->read(len, addr);
->> -}
->> -
->> -void
->> -pci_mmio_write(int len, void __iomem *addr, u32 value)
->> -{
->> -	if (!pci_mmcfg_mmio) {
->> -		pr_err("PCI config space has no accessors !");
->> -		return;
->> -	}
->> -
->> -	pci_mmcfg_mmio->write(len, addr, value);
->> -}
->> -
->> -static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
->> -{
->> -	if (cfg->res.parent)
->> -		release_resource(&cfg->res);
->> -	list_del(&cfg->list);
->> -	kfree(cfg);
->> -}
->> -
->> -static void __init free_all_mmcfg(void)
->> -{
->> -	struct pci_mmcfg_region *cfg, *tmp;
->> -
->> -	pci_mmcfg_arch_free();
->> -	list_for_each_entry_safe(cfg, tmp, &pci_mmcfg_list, list)
->> -		pci_mmconfig_remove(cfg);
->> -}
->> -
->> -static void list_add_sorted(struct pci_mmcfg_region *new)
->> -{
->> -	struct pci_mmcfg_region *cfg;
->> -
->> -	/* keep list sorted by segment and starting bus number */
->> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
->> -		if (cfg->segment > new->segment ||
->> -		    (cfg->segment == new->segment &&
->> -		     cfg->start_bus >= new->start_bus)) {
->> -			list_add_tail_rcu(&new->list, &cfg->list);
->> -			return;
->> -		}
->> -	}
->> -	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
->> -}
->> -
->> -static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
->> -						   int end, u64 addr)
->> -{
->> -	struct pci_mmcfg_region *new;
->> -	struct resource *res;
->> -
->> -	if (addr == 0)
->> -		return NULL;
->> -
->> -	new = kzalloc(sizeof(*new), GFP_KERNEL);
->> -	if (!new)
->> -		return NULL;
->> -
->> -	new->address = addr;
->> -	new->segment = segment;
->> -	new->start_bus = start;
->> -	new->end_bus = end;
->> -
->> -	res = &new->res;
->> -	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
->> -	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
->> -	res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
->> -	snprintf(new->name, PCI_MMCFG_RESOURCE_NAME_LEN,
->> -		 "PCI MMCONFIG %04x [bus %02x-%02x]", segment, start, end);
->> -	res->name = new->name;
->> -
->> -	return new;
->> -}
->> -
->> -static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
->> -							int end, u64 addr)
->> -{
->> -	struct pci_mmcfg_region *new;
->> -
->> -	new = pci_mmconfig_alloc(segment, start, end, addr);
->> -	if (new) {
->> -		mutex_lock(&pci_mmcfg_lock);
->> -		list_add_sorted(new);
->> -		mutex_unlock(&pci_mmcfg_lock);
->> -
->> -		pr_info(PREFIX
->> -		       "MMCONFIG for domain %04x [bus %02x-%02x] at %pR "
->> -		       "(base %#lx)\n",
->> -		       segment, start, end, &new->res, (unsigned long)addr);
->> -	}
->> -
->> -	return new;
->> -}
->> -
->> -struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
->> -{
->> -	struct pci_mmcfg_region *cfg;
->> -
->> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
->> -		if (cfg->segment == segment &&
->> -		    cfg->start_bus <= bus && bus <= cfg->end_bus)
->> -			return cfg;
->> -
->> -	return NULL;
->> -}
->> -
->>   static const char *__init pci_mmcfg_e7520(void)
->>   {
->>   	u32 win;
->> @@ -657,73 +490,6 @@ static void __init pci_mmcfg_reject_broken(int early)
->>   	}
->>   }
->>
->> -static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
->> -					struct acpi_mcfg_allocation *cfg)
->> -{
->> -	int year;
->> -
->> -	if (cfg->address < 0xFFFFFFFF)
->> -		return 0;
->> -
->> -	if (!strncmp(mcfg->header.oem_id, "SGI", 3))
->> -		return 0;
->> -
->> -	if (mcfg->header.revision >= 1) {
->> -		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
->> -		    year >= 2010)
->> -			return 0;
->> -	}
->> -
->> -	pr_err(PREFIX "MCFG region for %04x [bus %02x-%02x] at %#llx "
->> -	       "is above 4GB, ignored\n", cfg->pci_segment,
->> -	       cfg->start_bus_number, cfg->end_bus_number, cfg->address);
->> -	return -EINVAL;
->> -}
->
-> This looks very arch-specific. Shouldn't this be only generic checks
-> with some hook for architectures to add arch-specific checks?
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Yes, you are right it should go to arch specific call. Thanks.
+pci_dn is the extension of PCI device node and is created from device node.
+Unfortunately, VFs are enabled dynamically by PF's driver and they don't
+have corresponding device nodes, and pci_dn.  Refactor pci_dn to support
+VFs:
 
-Tomasz
+   * pci_dn is organized as a hierarchy tree.  VF's pci_dn is put
+     to the child list of pci_dn of PF's bridge.  pci_dn of other device
+     put to the child list of pci_dn of its upstream bridge.
+
+   * VF's pci_dn is expected to be created dynamically when PF
+     enabling VFs.  VF's pci_dn will be destroyed when PF disabling VFs.
+     pci_dn of other device is still created from device node as before.
+
+   * For one particular PCI device (VF or not), its pci_dn can be
+     found from pdev->dev.archdata.firmware_data, PCI_DN(devnode), or
+     parent's list.  The fast path (fetching pci_dn through PCI device
+     instance) is populated during early fixup time.
+
+[bhelgaas: add ifdef around add_one_dev_pci_info(), use dev_printk()]
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/device.h         |    3 +
+ arch/powerpc/include/asm/pci-bridge.h     |   14 +-
+ arch/powerpc/kernel/pci_dn.c              |  245 ++++++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci-ioda.c |   16 ++
+ 4 files changed, 272 insertions(+), 6 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/device.h b/arch/powerpc/include/asm/device.h
+index 38faede..29992cd 100644
+--- a/arch/powerpc/include/asm/device.h
++++ b/arch/powerpc/include/asm/device.h
+@@ -34,6 +34,9 @@ struct dev_archdata {
+ #ifdef CONFIG_SWIOTLB
+ 	dma_addr_t		max_direct_dma_addr;
+ #endif
++#ifdef CONFIG_PPC64
++	void			*firmware_data;
++#endif
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev		*edev;
+ #endif
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 546d036..513f8f2 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -89,6 +89,7 @@ struct pci_controller {
+ 
+ #ifdef CONFIG_PPC64
+ 	unsigned long buid;
++	void *firmware_data;
+ #endif	/* CONFIG_PPC64 */
+ 
+ 	void *private_data;
+@@ -154,9 +155,13 @@ static inline int isa_vaddr_is_ioport(void __iomem *address)
+ struct iommu_table;
+ 
+ struct pci_dn {
++	int     flags;
++#define PCI_DN_FLAG_IOV_VF     0x01
++
+ 	int	busno;			/* pci bus number */
+ 	int	devfn;			/* pci device and function number */
+ 
++	struct  pci_dn *parent;
+ 	struct  pci_controller *phb;	/* for pci devices */
+ 	struct	iommu_table *iommu_table;	/* for phb's or bridges */
+ 	struct	device_node *node;	/* back-pointer to the device_node */
+@@ -171,14 +176,19 @@ struct pci_dn {
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
+ #endif
++	struct list_head child_list;
++	struct list_head list;
+ };
+ 
+ /* Get the pointer to a device_node's pci_dn */
+ #define PCI_DN(dn)	((struct pci_dn *) (dn)->data)
+ 
++extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
++					   int devfn);
+ extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
+-
+-extern void * update_dn_pci_info(struct device_node *dn, void *data);
++extern struct pci_dn *add_dev_pci_info(struct pci_dev *pdev);
++extern void remove_dev_pci_info(struct pci_dev *pdev);
++extern void *update_dn_pci_info(struct device_node *dn, void *data);
+ 
+ static inline int pci_device_from_OF_node(struct device_node *np,
+ 					  u8 *bus, u8 *devfn)
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index 83df307..f3a1a81 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -32,12 +32,223 @@
+ #include <asm/ppc-pci.h>
+ #include <asm/firmware.h>
+ 
++/*
++ * The function is used to find the firmware data of one
++ * specific PCI device, which is attached to the indicated
++ * PCI bus. For VFs, their firmware data is linked to that
++ * one of PF's bridge. For other devices, their firmware
++ * data is linked to that of their bridge.
++ */
++static struct pci_dn *pci_bus_to_pdn(struct pci_bus *bus)
++{
++	struct pci_bus *pbus;
++	struct device_node *dn;
++	struct pci_dn *pdn;
++
++	/*
++	 * We probably have virtual bus which doesn't
++	 * have associated bridge.
++	 */
++	pbus = bus;
++	while (pbus) {
++		if (pci_is_root_bus(pbus) || pbus->self)
++			break;
++
++		pbus = pbus->parent;
++	}
++
++	/*
++	 * Except virtual bus, all PCI buses should
++	 * have device nodes.
++	 */
++	dn = pci_bus_to_OF_node(pbus);
++	pdn = dn ? PCI_DN(dn) : NULL;
++
++	return pdn;
++}
++
++struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
++				    int devfn)
++{
++	struct device_node *dn = NULL;
++	struct pci_dn *parent, *pdn;
++	struct pci_dev *pdev = NULL;
++
++	/* Fast path: fetch from PCI device */
++	list_for_each_entry(pdev, &bus->devices, bus_list) {
++		if (pdev->devfn == devfn) {
++			if (pdev->dev.archdata.firmware_data)
++				return pdev->dev.archdata.firmware_data;
++
++			dn = pci_device_to_OF_node(pdev);
++			break;
++		}
++	}
++
++	/* Fast path: fetch from device node */
++	pdn = dn ? PCI_DN(dn) : NULL;
++	if (pdn)
++		return pdn;
++
++	/* Slow path: fetch from firmware data hierarchy */
++	parent = pci_bus_to_pdn(bus);
++	if (!parent)
++		return NULL;
++
++	list_for_each_entry(pdn, &parent->child_list, list) {
++		if (pdn->busno == bus->number &&
++                    pdn->devfn == devfn)
++                        return pdn;
++        }
++
++	return NULL;
++}
++
+ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ {
+-	struct device_node *dn = pci_device_to_OF_node(pdev);
+-	if (!dn)
++	struct device_node *dn;
++	struct pci_dn *parent, *pdn;
++
++	/* Search device directly */
++	if (pdev->dev.archdata.firmware_data)
++		return pdev->dev.archdata.firmware_data;
++
++	/* Check device node */
++	dn = pci_device_to_OF_node(pdev);
++	pdn = dn ? PCI_DN(dn) : NULL;
++	if (pdn)
++		return pdn;
++
++	/*
++	 * VFs don't have device nodes. We hook their
++	 * firmware data to PF's bridge.
++	 */
++	parent = pci_bus_to_pdn(pdev->bus);
++	if (!parent)
+ 		return NULL;
+-	return PCI_DN(dn);
++
++	list_for_each_entry(pdn, &parent->child_list, list) {
++		if (pdn->busno == pdev->bus->number &&
++		    pdn->devfn == pdev->devfn)
++			return pdn;
++	}
++
++	return NULL;
++}
++
++#ifdef CONFIG_PCI_IOV
++static struct pci_dn *add_one_dev_pci_info(struct pci_dn *parent,
++					   struct pci_dev *pdev,
++					   int busno, int devfn)
++{
++	struct pci_dn *pdn;
++
++	/* Except PHB, we always have parent firmware data */
++	if (!parent)
++		return NULL;
++
++	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
++	if (!pdn) {
++		dev_warn(&pdev->dev, "%s: Out of memory!\n", __func__);
++		return NULL;
++	}
++
++	pdn->phb = parent->phb;
++	pdn->parent = parent;
++	pdn->busno = busno;
++	pdn->devfn = devfn;
++#ifdef CONFIG_PPC_POWERNV
++	pdn->pe_number = IODA_INVALID_PE;
++#endif
++	INIT_LIST_HEAD(&pdn->child_list);
++	INIT_LIST_HEAD(&pdn->list);
++	list_add_tail(&pdn->list, &parent->child_list);
++
++	/*
++	 * If we already have PCI device instance, lets
++	 * bind them.
++	 */
++	if (pdev)
++		pdev->dev.archdata.firmware_data = pdn;
++
++	return pdn;
++}
++#endif
++
++struct pci_dn *add_dev_pci_info(struct pci_dev *pdev)
++{
++#ifdef CONFIG_PCI_IOV
++	struct pci_dn *parent, *pdn;
++	int i;
++
++	/* Only support IOV for now */
++	if (!pdev->is_physfn)
++		return pci_get_pdn(pdev);
++
++	/* Check if VFs have been populated */
++	pdn = pci_get_pdn(pdev);
++	if (!pdn || (pdn->flags & PCI_DN_FLAG_IOV_VF))
++		return NULL;
++
++	pdn->flags |= PCI_DN_FLAG_IOV_VF;
++	parent = pci_bus_to_pdn(pdev->bus);
++	if (!parent)
++		return NULL;
++
++	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
++		pdn = add_one_dev_pci_info(parent, NULL,
++					   pci_iov_virtfn_bus(pdev, i),
++					   pci_iov_virtfn_devfn(pdev, i));
++		if (!pdn) {
++			dev_warn(&pdev->dev, "%s: Cannot create firmware data for VF#%d\n",
++				 __func__, i);
++			return NULL;
++		}
++	}
++#endif
++
++	return pci_get_pdn(pdev);
++}
++
++void remove_dev_pci_info(struct pci_dev *pdev)
++{
++#ifdef CONFIG_PCI_IOV
++	struct pci_dn *parent;
++	struct pci_dn *pdn, *tmp;
++	int i;
++
++	/* Only support IOV PF for now */
++	if (!pdev->is_physfn)
++		return;
++
++	/* Check if VFs have been populated */
++	pdn = pci_get_pdn(pdev);
++	if (!pdn || !(pdn->flags & PCI_DN_FLAG_IOV_VF))
++		return;
++
++	pdn->flags &= ~PCI_DN_FLAG_IOV_VF;
++	parent = pci_bus_to_pdn(pdev->bus);
++	if (!parent)
++		return;
++
++	/*
++	 * We might introduce flag to pci_dn in future
++	 * so that we can release VF's firmware data in
++	 * a batch mode.
++	 */
++	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
++		list_for_each_entry_safe(pdn, tmp,
++			&parent->child_list, list) {
++			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
++			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
++				continue;
++
++			if (!list_empty(&pdn->list))
++				list_del(&pdn->list);
++			kfree(pdn);
++		}
++	}
++#endif
+ }
+ 
+ /*
+@@ -49,6 +260,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 	struct pci_controller *phb = data;
+ 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
+ 	const __be32 *regs;
++	struct device_node *parent;
+ 	struct pci_dn *pdn;
+ 
+ 	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
+@@ -70,6 +282,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 	}
+ 
+ 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
++
++	/* Attach to parent node */
++	INIT_LIST_HEAD(&pdn->child_list);
++	INIT_LIST_HEAD(&pdn->list);
++	parent = of_get_parent(dn);
++	pdn->parent = parent ? PCI_DN(parent) : NULL;
++	if (pdn->parent)
++		list_add_tail(&pdn->list, &pdn->parent->child_list);
++
+ 	return NULL;
+ }
+ 
+@@ -147,8 +368,11 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	/* PHB nodes themselves must not match */
+ 	update_dn_pci_info(dn, phb);
+ 	pdn = dn->data;
+-	if (pdn)
++	if (pdn) {
+ 		pdn->devfn = pdn->busno = -1;
++		pdn->phb = phb;
++		phb->firmware_data = pdn;
++	}
+ 
+ 	/* Update dn->phb ptrs for new phb and children devices */
+ 	traverse_pci_devices(dn, update_dn_pci_info, phb);
+@@ -171,3 +395,16 @@ void __init pci_devs_phb_init(void)
+ 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+ 		pci_devs_phb_init_dynamic(phb);
+ }
++
++static void pci_dev_pdn_setup(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn;
++
++	if (pdev->dev.archdata.firmware_data)
++		return;
++
++	/* Setup the fast path */
++	pdn = pci_get_pdn(pdev);
++	pdev->dev.archdata.firmware_data = pdn;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 6c9ff2b..df4a295 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -974,6 +974,22 @@ static void pnv_pci_ioda_setup_PEs(void)
+ 	}
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++int pcibios_sriov_disable(struct pci_dev *pdev)
++{
++	/* Release firmware data */
++	remove_dev_pci_info(pdev);
++	return 0;
++}
++
++int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++	/* Allocate firmware data */
++	add_dev_pci_info(pdev);
++	return 0;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static void pnv_pci_ioda_dma_dev_setup(struct pnv_phb *phb, struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn(pdev);
+-- 
+1.7.9.5
+
