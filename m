@@ -1,104 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v4 2/4] pci: iProc: define iProc PCIe platform bus binding
-Date: Mon, 9 Mar 2015 17:21:15 -0700
-Message-ID: <1425946878-13169-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1425946878-13169-1-git-send-email-rjui@broadcom.com>
-References: <1425946878-13169-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:33876 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbbCTDLH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:11:07 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 20 Mar 2015 13:11:05 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8FE152BB0047
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:11:03 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3AtWo42860762
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:11:03 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3ATd2005531
+	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:10:30 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V14 08/21] PCI: Calculate maximum number of buses required for VFs
+Date: Fri, 20 Mar 2015 11:06:24 +0800
+Message-Id: <1426820797-6267-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document the Broadcom iProc PCIe platform interface device tree binding
+An SR-IOV device can change its First VF Offset and VF Stride based on the
+values of ARI Capable Hierarchy and NumVFs.  The number of buses required
+for all VFs is determined by NumVFs, First VF Offset, and VF Stride (see
+SR-IOV spec r1.1, sec 2.1.2).
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbraden@broadcom.com>
+Previously pci_iov_bus_range() computed how many buses would be required by
+TotalVFs, but this was based on a single NumVFs value and may not have been
+the maximum for all NumVFs configurations.
+
+Iterate over all valid NumVFs and calculate the maximum number of bus
+numbers that could ever be required for VFs of this device.
+
+[bhelgaas: changelog, compute busnr of NumVFs, not TotalVFs, remove
+kerenl-doc comment marker]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+ drivers/pci/iov.c |   31 +++++++++++++++++++++++++++----
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-new file mode 100644
-index 0000000..f7ce50e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -0,0 +1,63 @@
-+* Broadcom iProc PCIe controller with the platform bus interface
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index a8752c2..2ae921f 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -46,6 +46,30 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
+ }
+ 
++/*
++ * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
++ * determine how many additional bus numbers will be consumed by VFs.
++ *
++ * Iterate over all valid NumVFs and calculate the maximum number of bus
++ * numbers that could ever be required.
++ */
++static inline u8 virtfn_max_buses(struct pci_dev *dev)
++{
++	struct pci_sriov *iov = dev->sriov;
++	int nr_virtfn;
++	u8 max = 0;
++	u8 busnr;
 +
-+Required properties:
-+- compatible: Must be "brcm,iproc-pcie"
-+- reg: base address and length of the PCIe controller I/O register space
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+  mapping of the PCIe interface to interrupt numbers
-+- linux,pci-domain: PCI domain ID. Should be unique for each host controller
-+- bus-range: PCI bus numbers covered
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
++	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
++		pci_iov_set_numvfs(dev, nr_virtfn);
++		busnr = virtfn_bus(dev, nr_virtfn - 1);
++		if (busnr > max)
++			max = busnr;
++	}
 +
-+Optional properties:
-+- phys: phandle of the PCIe PHY device
-+- phy-names: must be "pcie-phy"
++	return max;
++}
 +
-+Example:
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <0>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
-+
-+		phys = <&phy 0 5>;
-+		phy-names = "pcie-phy";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <1>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+
-+		phys = <&phy 1 6>;
-+		phy-names = "pcie-phy";
-+	};
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -427,6 +451,7 @@ found:
+ 
+ 	dev->sriov = iov;
+ 	dev->is_physfn = 1;
++	iov->max_VF_buses = virtfn_max_buses(dev);
+ 
+ 	return 0;
+ 
+@@ -556,15 +581,13 @@ void pci_restore_iov_state(struct pci_dev *dev)
+ int pci_iov_bus_range(struct pci_bus *bus)
+ {
+ 	int max = 0;
+-	u8 busnr;
+ 	struct pci_dev *dev;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (!dev->is_physfn)
+ 			continue;
+-		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
+-		if (busnr > max)
+-			max = busnr;
++		if (dev->sriov->max_VF_buses > max)
++			max = dev->sriov->max_VF_buses;
+ 	}
+ 
+ 	return max ? max - bus->number : 0;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5732964..bae593c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -243,6 +243,7 @@ struct pci_sriov {
+ 	u16 stride;		/* following VF stride */
+ 	u32 pgsz;		/* page size for BAR alignment */
+ 	u8 link;		/* Function Dependency Link */
++	u8 max_VF_buses;	/* max buses consumed by VFs */
+ 	u16 driver_max_VFs;	/* max num VFs driver supports */
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
 -- 
 1.7.9.5
 
