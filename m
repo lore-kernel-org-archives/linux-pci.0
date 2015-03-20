@@ -1,106 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50715 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbbCYFwl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:52:41 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 15:52:39 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 2397D2CE8050
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:38 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5qT3x40632566
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:38 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5q4lr023622
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:04 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V15 07/21] PCI: Refresh First VF Offset and VF Stride when updating NumVFs
-Date: Wed, 25 Mar 2015 13:44:43 +0800
-Message-Id: <1427262297-5694-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:36169 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920AbbCTVQ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 17:16:28 -0400
+Received: by qcto4 with SMTP id o4so104317871qct.3
+        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1426885502.4770.159.camel@au1.ibm.com>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150320054327.GA8119@shangw> <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
+ <1426885502.4770.159.camel@au1.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 20 Mar 2015 16:16:06 -0500
+Message-ID: <CAErSpo4vsw89bNbzJbqRiW4vy2Vzpmr-3DTdnUEhzUMPLUTn+g@mail.gmail.com>
+Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The First VF Offset and VF Stride fields depend on the NumVFs setting, so
-refresh the cached fields in struct pci_sriov when updating NumVFs.  See
-the SR-IOV spec r1.1, sec 3.3.9 and 3.3.10.
+On Fri, Mar 20, 2015 at 4:05 PM, Benjamin Herrenschmidt
+<benh@au1.ibm.com> wrote:
+> On Fri, 2015-03-20 at 09:34 -0500, Bjorn Helgaas wrote:
+>> On Fri, Mar 20, 2015 at 12:43 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> > On Fri, Mar 20, 2015 at 11:06:16AM +0800, Wei Yang wrote:
+>> >
+>> > [snip]
+>> >
+>> >>---
+>> >>v14:
+>> >>   * call ppc_md.pcibios_fixup_sriov() in pcibios_add_device
+>> >>   * add more explanation in change log
+>> >>   * Following patches have been reordered to the beginning.
+>> >>     "EEH refactor to use pci_dn":
+>> >>     8ec20d6 powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+>> >>     a3460fc powerpc/pci: Refactor pci_dn
+>> >>     These two patches will be modified to merge with other patches which are
+>> >>     under discussion/review in ppc mail list. Some changes may also be made in
+>> >>     other patches, which I didn't include them in this series, so that the
+>> >>     auto build robot could work on this.
+>> >
+>> > The comment here isn't precise enough and not the things I suggested before.
+>> > Those 2 patches have been split into 3 patches (A/B/C). Some other EEH
+>> > cleanup/refactor patches depends on A/B and those patches would be merged
+>> > before your SRIOV patches to PowerPC tree. C, which I already sent to you,
+>> > need to be integrated to your patchset right after the following one:
+>> >
+>> > powerpc/pci: Don't unset PCI resources for VFs
+>> >
+>> > I guess you can move the patches around after checking if Bjorn has further
+>> > concerns/comments.
+>>
+>> I think we need to move forward on this soon so it has at least a
+>> little time in -next.  And it sounds like I cannot merge this v14
+>> as-is because it doesn't include these additional EEH cleanup/refactor
+>> patches?  (If they are only cleanup and refactoring, I don't
+>> understand why they would be required, but I haven't seen them, so I'm
+>> taking your word for it.)
+>>
+>> So I guess I'm waiting for v15.  Don't wait for my comments on v14.
+>> Ideally I'd also like an ack from a powerpc maintainer.  This has so
+>> much powerpc impact that I'm not comfortable stuffing this in without
+>> their OK.
+>
+> The other option is you put the generic changes in a topic branch which
+> both of us merge and I take care of the rest.
 
-[bhelgaas: changelog, remove kernel-doc comment marker]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |   23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+Yeah, I chatted with Wei this morning, and he reminded me that there's
+really not very much drivers/pci content there.  So I think I can just
+ack those bits and you can take the whole thing.  I noticed some
+changelog typos I'll point out, then I'll be done.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 27b98c3..a8752c2 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
- 		dev->sriov->stride * id) & 0xff;
- }
- 
-+/*
-+ * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
-+ * change when NumVFs changes.
-+ *
-+ * Update iov->offset and iov->stride when NumVFs is written.
-+ */
-+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
-+}
-+
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -253,7 +268,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_iov_set_numvfs(dev, nr_virtfn);
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -282,7 +297,7 @@ failed:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-@@ -313,7 +328,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
- 	iov->num_VFs = 0;
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- }
- 
- static int sriov_init(struct pci_dev *dev, int pos)
-@@ -452,7 +467,7 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		pci_update_resource(dev, i);
- 
- 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
-+	pci_iov_set_numvfs(dev, iov->num_VFs);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
- 		msleep(100);
--- 
-1.7.9.5
-
+Bjorn
