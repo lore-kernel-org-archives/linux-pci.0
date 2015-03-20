@@ -1,94 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:33965 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbbCLDnJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:43:09 -0400
-Received: by obcwp18 with SMTP id wp18so13103439obc.1
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:43:08 -0700 (PDT)
-Date: Wed, 11 Mar 2015 22:43:05 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 28/30] PCI: Export find_pci_host_bridge() and rename
- to pci_find_host_bridge()
-Message-ID: <20150312034305.GJ10949@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-29-git-send-email-wangyijing@huawei.com>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:33143 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750801AbbCTOe0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 10:34:26 -0400
+Received: by qgfa8 with SMTP id a8so94221073qgf.0
+        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 07:34:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-29-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <20150320054327.GA8119@shangw>
+References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com> <20150320054327.GA8119@shangw>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 20 Mar 2015 09:34:04 -0500
+Message-ID: <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
+Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:25AM +0800, Yijing Wang wrote:
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/host-bridge.c |    6 +++---
->  drivers/pci/pci.h         |    2 ++
->  2 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index bc1de59..51f0a82 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -103,7 +103,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
->  	return bus;
->  }
->  
-> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
-> +struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
->  {
->  	struct pci_bus *root_bus = find_pci_root_bus(bus);
->  
-> @@ -121,7 +121,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->  void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
->  			     struct resource *res)
->  {
-> -	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-> +	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
->  	struct resource_entry *window;
->  	resource_size_t offset = 0;
->  
-> @@ -146,7 +146,7 @@ static bool region_contains(struct pci_bus_region *region1,
->  void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
->  			     struct pci_bus_region *region)
->  {
-> -	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
-> +	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
->  	struct resource_entry *window;
->  	resource_size_t offset = 0;
->  
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index a1dc9f2..45252dd 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -328,4 +328,6 @@ struct pci_host_bridge *pci_create_host_bridge(
->  		void *sysdata, struct pci_host_bridge_ops *ops);
->  
->  void pci_free_host_bridge(struct pci_host_bridge *host);
-> +struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+On Fri, Mar 20, 2015 at 12:43 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> On Fri, Mar 20, 2015 at 11:06:16AM +0800, Wei Yang wrote:
+>
+> [snip]
+>
+>>---
+>>v14:
+>>   * call ppc_md.pcibios_fixup_sriov() in pcibios_add_device
+>>   * add more explanation in change log
+>>   * Following patches have been reordered to the beginning.
+>>     "EEH refactor to use pci_dn":
+>>     8ec20d6 powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
+>>     a3460fc powerpc/pci: Refactor pci_dn
+>>     These two patches will be modified to merge with other patches which are
+>>     under discussion/review in ppc mail list. Some changes may also be made in
+>>     other patches, which I didn't include them in this series, so that the
+>>     auto build robot could work on this.
+>
+> The comment here isn't precise enough and not the things I suggested before.
+> Those 2 patches have been split into 3 patches (A/B/C). Some other EEH
+> cleanup/refactor patches depends on A/B and those patches would be merged
+> before your SRIOV patches to PowerPC tree. C, which I already sent to you,
+> need to be integrated to your patchset right after the following one:
+>
+> powerpc/pci: Don't unset PCI resources for VFs
+>
+> I guess you can move the patches around after checking if Bjorn has further
+> concerns/comments.
 
-This is only used in drivers/pci/host-bridge.c and in drivers/pci/pci.c for
-pci_domain_nr().  Can you drop this patch and put the generic
-pci_domain_nr() implementation (next patch) in host-bridge.c instead of in
-pci.c?
+I think we need to move forward on this soon so it has at least a
+little time in -next.  And it sounds like I cannot merge this v14
+as-is because it doesn't include these additional EEH cleanup/refactor
+patches?  (If they are only cleanup and refactoring, I don't
+understand why they would be required, but I haven't seen them, so I'm
+taking your word for it.)
 
-> +
->  #endif /* DRIVERS_PCI_H */
-> -- 
-> 1.7.1
-> 
+So I guess I'm waiting for v15.  Don't wait for my comments on v14.
+Ideally I'd also like an ack from a powerpc maintainer.  This has so
+much powerpc impact that I'm not comfortable stuffing this in without
+their OK.
+
+Bjorn
