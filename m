@@ -1,69 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22763 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbbCZHbc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 03:31:32 -0400
-Message-ID: <5513B5A4.1070209@huawei.com>
-Date: Thu, 26 Mar 2015 15:30:44 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <550CD574.7080900@linux.intel.com>
+Date: Sat, 21 Mar 2015 10:20:36 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@vger.kernel.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
-Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com> <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com> <55024D35.6050509@huawei.com> <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com> <20150313140132.GH5378@l.oracle.com> <CAErSpo69ytCxBK5AD79Nz05wy=GwzcOGV7WkiKFxpLDH4wtJXw@mail.gmail.com> <20150325192331.GG25884@l.oracle.com>
-In-Reply-To: <20150325192331.GG25884@l.oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bernhard Thaler <bernhard.thaler@wvnet.at>
+CC: lenb@kernel.org, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
+References: <550A7674.6070306@wvnet.at> <4317184.19IeWuljky@vostro.rjw.lan> <550C5A08.3020302@wvnet.at> <2663880.nZ5V9XMenj@vostro.rjw.lan>
+In-Reply-To: <2663880.nZ5V9XMenj@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> Is there an git tree with this so I can just try it out?
+On 2015/3/21 8:47, Rafael J. Wysocki wrote:
+> On Friday, March 20, 2015 06:34:00 PM Bernhard Thaler wrote:
+>> This is a multi-part message in MIME format.
+>> --------------000805070501000906050700
+>> Content-Type: text/plain; charset=windows-1252
+>> Content-Transfer-Encoding: 7bit
 >>
->> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
->> pci/enumeration-yw6 has similar code (it exports the single
+>>
+>> On 19.03.2015 12:27, Rafael J. Wysocki wrote:
+>>> On Thursday, March 19, 2015 08:10:44 AM Bernhard Thaler wrote:
+>>>> This is a multi-part message in MIME format.
+>>>> --------------000809080900050004000900
+>>>> Content-Type: text/plain; charset=windows-1252
+>>>> Content-Transfer-Encoding: 7bit
+>>>>
+>>>> Hi,
+>>>>
+>>>> I think this regression is not yet solved.
+>>>
+>>> First off, it is good to CC the commit author too (CCed now).
+>>>
+>>>> I encounter this or a similar problem with an PC Engines APU.1C device
+>>>> (see: http://pcengines.ch/apu.htm). It has 3 network interfaces each
+>>>> requiring the r8169 kernel module.
+>>>>
+>>>> With 4.0.0-rc4 I get this error message at boot (for each of the 3 devices):
+>>>>
+>>>> [    3.562301] r8169 0000:01:00.0 (unnamed net_device) (uninitialized):
+>>>> rtl_chipcmd_cond == 1 (loop: 100, delay: 100).
+>>>>
+>>>> "ifconfig -a" shows ff:ff:ff:ff:ff:ff as MAC address for each of the
+>>>> interfaces (see eth0 as example):
+>>>>
+>>>> eth0      Link encap:Ethernet  HWaddr ff:ff:ff:ff:ff:ff
+>>>>           BROADCAST PROMISC MULTICAST  MTU:1500  Metric:1
+>>>>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>>>>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>>>>           collisions:0 txqueuelen:1000
+>>>>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+>>>>
+>>>> The network interfaces cannot be brought up/used.
+>>>>
+>>>> The same device and setup did work with a previously used 3.18.0-rc5
+>>>> kernel. When I boot it with this 3.18.0-rc5 kernel everything i OK,
+>>>> interfaces come up and work.
+>>>
+>>> Second, it is not entirely clear to me that what you're seeing is actually
+>>> the same regression.  Have you tested 4.0.0-rc4 with commit 593669c2ac0f
+>>> reverted?
+>>>
+>> You are right, I was a bit quick about this conclusion. I based it on
+>> Thomas Voegtle
+>> bisect in http://www.spinics.net/lists/linux-pci/msg39014.html and my own
+>> observation of the same problem situation with 4.0.0-rc4.
+>>
+>> Test Results:
+>>
+>> * Everything works fine before 593669c2ac0f, network interfaces are
+>> available
+>>    and usable e.g. with 812dbd9.
+>>
+>> * The problem starts for me with 593669c2ac0f as, errors at boot, network
+>>    interfaces unusable as stated above.
 > 
-> I presume now it is bjorn/pci/enumeration-yw8 ? Going to test this out
-> this week.
+> And it doesn't go away in 4.0-rc4 which indicates that the fixes applied
+> so far do not work for you.
+> 
+> Gerry, can you please help here?
+Sure, but I will be out of office to handle some urgent family affair
+in following two days, so response may be slow.
 
-Hi Konrad, I fixed two issues found by Tomasz and Daniel for the current v8 version.
-I posted out the latest v9 in my github tree. Could you pull this series from my
-github tree ?
-The URL is: https://github.com/YijingWang/linux-pci.git enumer9
-
+Hi Bernhard,
+	Could you please help to send me following info?
+1) /proc/iomem with 593669c2ac0f applied
+2) /proc/iomem with 593669c2ac0f reverted
+3) output of "acpidump > acpi.bin" or
+   "cat /sys/firmware/acpi/tables/DSDT > acpi.bin"
 Thanks!
-Yijing.
-
->> busn_resource and makes xen use it).  That should be functionally
->> identical to what v4.0-rc1 does.
->>
->> Yijing hasn't posted the static busn_res proposal above yet, so I
->> don't have a branch with that in it.
->>
->> Bjorn
+Gerry
 > 
-> .
 > 
-
-
--- 
-Thanks!
-Yijing
-
