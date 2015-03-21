@@ -1,96 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45817 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997AbbCXAYe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Mar 2015 20:24:34 -0400
-Message-ID: <1427156635.4770.290.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3 1/2] PCI: One more parameter to
- pci_set_pcie_reset_state()
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: cascardo@linux.vnet.ibm.com,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, Brian King <brking@us.ibm.com>,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Ian Munsie <imunsie@au1.ibm.com>
-Date: Tue, 24 Mar 2015 11:23:55 +1100
-In-Reply-To: <1427144881.3643.680.camel@redhat.com>
-References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1427081673.3643.547.camel@redhat.com> <20150323035656.GA27802@shangw>
-	 <1427083561.3643.551.camel@redhat.com> <20150323044033.GA1874@shangw>
-	 <1427114434.3643.554.camel@redhat.com>
-	 <20150323200729.GB1368@oc0812247204.ltc.br.ibm.com>
-	 <1427144881.3643.680.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Received: from 178.115.130.42.wireless.dyn.drei.com (HELO [172.16.0.2]) (bernhard.thaler@wvnet.at@[178.115.130.42])
+          (envelope-sender <bernhard.thaler@wvnet.at>)
+          by smtp.wvnet.at (qmail-ldap-1.03) with SMTP
+          for <linux-pci@vger.kernel.org>; 21 Mar 2015 21:12:41 -0000
+Message-ID: <550DDEC2.2050500@wvnet.at>
+Date: Sat, 21 Mar 2015 22:12:34 +0100
+From: Bernhard Thaler <bernhard.thaler@wvnet.at>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: lenb@kernel.org, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
+References: <550A7674.6070306@wvnet.at> <4317184.19IeWuljky@vostro.rjw.lan> <550C5A08.3020302@wvnet.at> <2663880.nZ5V9XMenj@vostro.rjw.lan> <550D890C.5090900@linux.intel.com>
+In-Reply-To: <550D890C.5090900@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-03-23 at 15:08 -0600, Alex Williamson wrote:
+
+
+On 21.03.2015 16:06, Jiang Liu wrote:
+> On 2015/3/21 8:47, Rafael J. Wysocki wrote:
+>> On Friday, March 20, 2015 06:34:00 PM Bernhard Thaler wrote:
+>>> This is a multi-part message in MIME format.
+>>> --------------000805070501000906050700
+>>> Content-Type: text/plain; charset=windows-1252
+>>> Content-Transfer-Encoding: 7bit
+>>>
+>>>
+>>> On 19.03.2015 12:27, Rafael J. Wysocki wrote:
+>>>> On Thursday, March 19, 2015 08:10:44 AM Bernhard Thaler wrote:
+>>>>> This is a multi-part message in MIME format.
+>>>>> --------------000809080900050004000900
+>>>>> Content-Type: text/plain; charset=windows-1252
+>>>>> Content-Transfer-Encoding: 7bit
+>>>>>
+>>>>> Hi,
+>>>>>
+>>>>> I think this regression is not yet solved.
+>>>>
+>>>> First off, it is good to CC the commit author too (CCed now).
+>>>>
+>>>>> I encounter this or a similar problem with an PC Engines APU.1C device
+>>>>> (see: http://pcengines.ch/apu.htm). It has 3 network interfaces each
+>>>>> requiring the r8169 kernel module.
+>>>>>
+>>>>> With 4.0.0-rc4 I get this error message at boot (for each of the 3 devices):
+>>>>>
+>>>>> [    3.562301] r8169 0000:01:00.0 (unnamed net_device) (uninitialized):
+>>>>> rtl_chipcmd_cond == 1 (loop: 100, delay: 100).
+>>>>>
+>>>>> "ifconfig -a" shows ff:ff:ff:ff:ff:ff as MAC address for each of the
+>>>>> interfaces (see eth0 as example):
+>>>>>
+>>>>> eth0      Link encap:Ethernet  HWaddr ff:ff:ff:ff:ff:ff
+>>>>>           BROADCAST PROMISC MULTICAST  MTU:1500  Metric:1
+>>>>>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>>>>>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>>>>>           collisions:0 txqueuelen:1000
+>>>>>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+>>>>>
+>>>>> The network interfaces cannot be brought up/used.
+>>>>>
+>>>>> The same device and setup did work with a previously used 3.18.0-rc5
+>>>>> kernel. When I boot it with this 3.18.0-rc5 kernel everything i OK,
+>>>>> interfaces come up and work.
+>>>>
+>>>> Second, it is not entirely clear to me that what you're seeing is actually
+>>>> the same regression.  Have you tested 4.0.0-rc4 with commit 593669c2ac0f
+>>>> reverted?
+>>>>
+>>> You are right, I was a bit quick about this conclusion. I based it on
+>>> Thomas Voegtle
+>>> bisect in http://www.spinics.net/lists/linux-pci/msg39014.html and my own
+>>> observation of the same problem situation with 4.0.0-rc4.
+>>>
+>>> Test Results:
+>>>
+>>> * Everything works fine before 593669c2ac0f, network interfaces are
+>>> available
+>>>    and usable e.g. with 812dbd9.
+>>>
+>>> * The problem starts for me with 593669c2ac0f as, errors at boot, network
+>>>    interfaces unusable as stated above.
+>>
+>> And it doesn't go away in 4.0-rc4 which indicates that the fixes applied
+>> so far do not work for you.
+>>
+>> Gerry, can you please help here?
+> Hi Bernhard,
+> 	Thanks for providing acpi data. I have figured out the cause of
+> the regression. Your platform defines PCI host bridge MMIO resources as:
+>             Name (CRES, ResourceTemplate ()
+>             {
+>                 IO (Decode16,
+>                     0x0CF8,             // Range Minimum
+>                     0x0CF8,             // Range Maximum
+>                     0x01,               // Alignment
+>                     0x08,               // Length
+>                     )
+>                 WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
+> EntireRange,
+>                     0x0000,             // Granularity
+>                     0x0000,             // Range Minimum
+>                     0x0CF7,             // Range Maximum
+>                     0x0000,             // Translation Offset
+>                     0x0CF8,             // Length
+>                     ,, , TypeStatic)
+>                 WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
+> EntireRange,
+>                     0x0000,             // Granularity
+>                     0x0D00,             // Range Minimum
+>                     0xFFFF,             // Range Maximum
+>                     0x0000,             // Translation Offset
+>                     0xF300,             // Length
+>                     ,, , TypeStatic)
+>                 Memory32Fixed (ReadOnly,
+>                     0x000A0000,         // Address Base
+>                     0x00020000,         // Address Length
+>                     )
+>                 Memory32Fixed (ReadOnly,
+>                     0x00000000,         // Address Base
+>                     0x00000000,         // Address Length
+>                     _Y00)
+>             })
 > 
-> I don't know what you're doing on POWER, I thought groups were
-> equivalent to PEs, but on x86 we learn about isolation of PCI functions
-> by standard PCI properties.  Devices need to tell us that they're
-> isolated via ACS capabilities (or quirks, with vendor approval).
-> Otherwise we assume there is no isolation and multi-function devices
-> will be grouped together, preventing the individual functions from being
-> assigned to separate userspace instances.  VFIO does not ignore the
-> problem of internal communication between functions, it uses ACS... at
-> least on most platforms.
+> With commit (x86/PCI/ACPI: Ignore resources consumed by host bridge
+> itself), all resources without PRODUCER flag will be ignored, so
+> MMIO defined by Memory32Fixed operator gets ignored. The fix is only
+> to ignore IO resources without PRODUCER flag and keeps all MMIO
+> resources no matter PRODUCER is set or not.
+> Could you please help to try following patch?
 
-POWER doesn't allow functions in different PEs today (mostly for a
-different reason which is the problem we have with MMIO assignment to
-different PEs, though we are working on ways to fix that in the future
-in which case we might start using ACS).
+This patches fixes it. Applied it, tested it and can confirm that
+network interfaces work again on my PC Engines APU1.C device.
 
-There's still a potential issue with LSIs though, I haven't looked how
-you handle it on x86.
+Thank You!
 
-> Firmware shared between functions is an unsolvable problem outside of
-> restricting device assignment only to SR-IOV virtual functions.  We
-> cannot know the programming method to block firmware updates of an
-> assigned device nor can we control which functions share the firmware.
-> If you're worried about this level of attack against the hardware, use
-> VFs exclusively.
-
-You cannot trust HW :-)
-
-> If you're unsatisfied with the grouping of devices on your platform,
-> this is entirely within your control since VFIO relies on IOMMU groups,
-> which are managed via the platform IOMMU driver.  If your IOMMU driver
-> is arbitrarily splitting each PCI function into a separate group without
-> testing the isolation, that's a problem with IOMMU groups on your
-> platform.  If you would like to add a reset requirement to a group, you
-> have the ability to do that.  On x86, I expect this would be far too
-> restrictive.
-
-That means that you cannot recover devices that don't support FLR...
-
-> VFIO also knows how to do bus and slot resets, the pci_reset_bus() and
-> pci_reset_slot() interfaces were added by me with vfio-pci as the first
-> user.  Resets are generally handled as best effort though and this is
-> sometimes a property of a device that might make it unsuitable for
-> device assignment.
-
-Or unsuitable as a multi-function split assignment, we can still give
-the whole slot to the guest.
-
-> The fact that you're implying above that the devices covered by the
-> device specific reset proposed in this series can be assigned separately
-> makes ignoring the scope of pci_reset_function() all the more wrong.  If
-> you want to change grouping on POWER to require that a group can be
-> reset, that's an IOMMU driver issue.  If you want to make a change to
-> VFIO to require an opt-in/out of allowing access to groups without a
-> reset, then propose something.  Just please don't ignore the semantics
-> of existing functions because it's a quicker and easier hack than doing
-> it correctly.  Thanks,
-
-The IOMMU driver unfortunately cannot know whether the devices support a
-good reset granularity without quirks ... Oh well. It's a mess, thanks
-for Intel for not making FLR mandatory since PCI 1.0 .... :-)
-
-Cheers,
-Ben.
-
-
+> Regards!
+> Gerry
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index e4695985f9de..66d7dbe56926 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -346,7 +346,7 @@ static void probe_pci_root_info(struct pci_root_info
+> *info,
+>                         "no IO and memory resources present in _CRS\n");
+>         else
+>                 resource_list_for_each_entry_safe(entry, tmp, list) {
+> -                       if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+> +                       if ((entry->res->flags & (IORESOURCE_WINDOW |
+> IORESOURCE_IO)) == IORESOURCE_IO ||
+>                             (entry->res->flags & IORESOURCE_DISABLED))
+>                                 resource_list_destroy_entry(entry);
+>                         else
+> 
+>>
+>>
