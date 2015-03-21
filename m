@@ -1,194 +1,89 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <550FA607.8080805@intel.com>
-Date: Mon, 23 Mar 2015 13:35:03 +0800
-From: Aaron Lu <aaron.lu@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bernhard Thaler <bernhard.thaler@wvnet.at>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: lenb@kernel.org, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH update] PCI / ACPI: PCI delay optimization from ACPI
-References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com> <20150320210354.GK26935@google.com>
-In-Reply-To: <20150320210354.GK26935@google.com>
-Content-Type: text/plain; charset=windows-1252
+Subject: Re: [Debug 0/2] Fix regressions caused by commit 593669c2ac0f
+Date: Sat, 21 Mar 2015 01:47:14 +0100
+Message-ID: <2663880.nZ5V9XMenj@vostro.rjw.lan>
+In-Reply-To: <550C5A08.3020302@wvnet.at>
+References: <550A7674.6070306@wvnet.at> <4317184.19IeWuljky@vostro.rjw.lan> <550C5A08.3020302@wvnet.at>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/21/2015 05:03 AM, Bjorn Helgaas wrote:
-> On Tue, Mar 10, 2015 at 02:48:04PM +0800, Aaron Lu wrote:
->> An ECN meant to specify possible delay optimizations is available on
->> the PCI website:
->> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
->> where it has defined two functions for an UUID specified _DSM:
->> Function 8: If system firmware assumes the responsibility of post
->> Conventional Reset delay (and informs the Operating System via this DSM
->> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
->> S4 or S3 states), the Operating System may assume sufficient time has
->> elapsed since the end of reset, and devices within the PCI subsystem are
->> ready for Configuration Access.
->> If the system firmware supports runtime power gating on any of the
->> device within PCI subsystem covered by this DSM function, the system
->> firmware is responsible for covering the necessary post power-on reset
->> delay.
->>
->> Function 9: Specify various smaller delay values than required by the
->> SPEC for individual PCI devices like shorter delay values after
->> conventional reset, D3hot to D0 transition, functional level reset, etc.
->>
->> This patche adds support for function 8 and part of function 9. For
->> function 8, the patch will check if the required _DSM function satisfies
->> the requirement and then set the per PCI device's d3cold_delay variable
->> to zero. For function 9, the values affecting delays after conventional
->> reset and D3hot->D0 are examined and the per PCI device's d3cold_delay
->> and d3_delay are updated if the _DSM's return value is smaller than what
->> the SPEC requires.
->>
->> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> ---
->>  drivers/pci/pci-acpi.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 61 insertions(+)
->>
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index 489063987325..468c0733838e 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -558,6 +558,64 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
->>  				      check_children);
->>  }
->>  
->> +/**
->> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
->> + * @pdev: the PCI device whose delay is to be updated
->> + * @adev: the companion ACPI device of this PCI device
->> + *
->> + * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
->> + * control method of either its own or its parent bridge.
->> + *
->> + * The UUID of the _DSM control method, together with other information like
->> + * which delay values can be optimized, etc. is defined in a ECN available on
->> + * PCIsig.com titled as: ACPI additions for FW latency optimizations.
->> + * Function 9 of the ACPI _DSM control method, if available for a specific PCI
->> + * device, provides various possible delay values that are less than what the
->> + * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
->> + * can be added later.
->> + * Function 8 of the ACPI _DSM control method, if available for a specific PCI
->> + * bridge, means all its children devices do not need the reset delay when
->> + * leaving from D3cold state.
->> + */
->> +static void pci_acpi_delay_optimize(struct pci_dev *pdev, struct acpi_device *adev)
->> +{
->> +	const u8 uuid[] = {
->> +		0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
->> +		0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
->> +	};
+On Friday, March 20, 2015 06:34:00 PM Bernhard Thaler wrote:
+> This is a multi-part message in MIME format.
+> --------------000805070501000906050700
+> Content-Type: text/plain; charset=windows-1252
+> Content-Transfer-Encoding: 7bit
 > 
-> This is a duplicate of device_label_dsm_uuid[] from
-> drivers/pci/pci-label.c.  I don't really want two copies.
 > 
-> That UUID is not specific to device labels, so device_label_dsm_uuid[] is
-> mis-named anyway.  It's just the UUID for the single _DSM for PCI (see PCI
-> Firmware Specification, r3.0, sec 4.6), and all these different things
-> (device label, reset delay, slot info, etc.) use the same UUID with
-> different function indices.
+> On 19.03.2015 12:27, Rafael J. Wysocki wrote:
+> > On Thursday, March 19, 2015 08:10:44 AM Bernhard Thaler wrote:
+> > > This is a multi-part message in MIME format.
+> > > --------------000809080900050004000900
+> > > Content-Type: text/plain; charset=windows-1252
+> > > Content-Transfer-Encoding: 7bit
+> > >
+> > > Hi,
+> > >
+> > > I think this regression is not yet solved.
+> >
+> > First off, it is good to CC the commit author too (CCed now).
+> >
+> > > I encounter this or a similar problem with an PC Engines APU.1C device
+> > > (see: http://pcengines.ch/apu.htm). It has 3 network interfaces each
+> > > requiring the r8169 kernel module.
+> > >
+> > > With 4.0.0-rc4 I get this error message at boot (for each of the 3 devices):
+> > >
+> > > [    3.562301] r8169 0000:01:00.0 (unnamed net_device) (uninitialized):
+> > > rtl_chipcmd_cond == 1 (loop: 100, delay: 100).
+> > >
+> > > "ifconfig -a" shows ff:ff:ff:ff:ff:ff as MAC address for each of the
+> > > interfaces (see eth0 as example):
+> > >
+> > > eth0      Link encap:Ethernet  HWaddr ff:ff:ff:ff:ff:ff
+> > >           BROADCAST PROMISC MULTICAST  MTU:1500  Metric:1
+> > >           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+> > >           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+> > >           collisions:0 txqueuelen:1000
+> > >           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+> > >
+> > > The network interfaces cannot be brought up/used.
+> > >
+> > > The same device and setup did work with a previously used 3.18.0-rc5
+> > > kernel. When I boot it with this 3.18.0-rc5 kernel everything i OK,
+> > > interfaces come up and work.
+> >
+> > Second, it is not entirely clear to me that what you're seeing is actually
+> > the same regression.  Have you tested 4.0.0-rc4 with commit 593669c2ac0f
+> > reverted?
+> >
+> You are right, I was a bit quick about this conclusion. I based it on
+> Thomas Voegtle
+> bisect in http://www.spinics.net/lists/linux-pci/msg39014.html and my own
+> observation of the same problem situation with 4.0.0-rc4.
 > 
-> We should also make #defines for the function indices instead of using
-> hard-coded numbers here.
-
-OK.
-
+> Test Results:
 > 
->> +	int revision = 3, function = 9, value;
->> +	acpi_handle handle = adev->handle;
->> +	union acpi_object *obj, *elements;
->> +
->> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
->> +	if (obj) {
->> +		if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
->> +			elements = obj->package.elements;
->> +			if (elements[3].type == ACPI_TYPE_INTEGER) {
->> +				value = (int)elements[3].integer.value / 1000;
->> +				if (value < PCI_PM_D3_WAIT)
->> +					pdev->d3_delay = value;
->> +			}
->> +			if (elements[0].type == ACPI_TYPE_INTEGER) {
->> +				value = (int)elements[0].integer.value / 1000;
->> +				if (value < PCI_PM_D3COLD_WAIT)
->> +					pdev->d3cold_delay = value;
->> +			}
+> * Everything works fine before 593669c2ac0f, network interfaces are
+> available
+>    and usable e.g. with 812dbd9.
 > 
-> Unless there's a reason to do this in "element[3], element[0]" order,
-> please do it in the natural "0, 3" order.
+> * The problem starts for me with 593669c2ac0f as, errors at boot, network
+>    interfaces unusable as stated above.
 
-OK.
+And it doesn't go away in 4.0-rc4 which indicates that the fixes applied
+so far do not work for you.
 
-> 
->> +		}
->> +		kfree(obj);
->> +	}
->> +
->> +	function = 8;
->> +	handle = ACPI_HANDLE(pdev->bus->bridge);
->> +	obj = acpi_evaluate_dsm(handle, uuid, revision, function, NULL);
-> 
-> Hmm.  I think the ECN is poorly worded here.  Sec 4.6.8 says "This object
-> [_DSM] can only be placed within the scope of a PCI host bus." I think it
-> means "this _DSM *function* can only be implemented ..." (since any device
-> can have a _DSM), and I think it means "host *bridge*" (not bus, since I
-> don't think there's an ACPI object for a PCI bus).
+Gerry, can you please help here?
 
-I'm confused by this too and then I found the firmware I worked with has
-this _DSM function 8 implemented for not only the PCI0 firmware node, but
-also the RP01, RP02, etc. firmware nodes which corresponds to the 1c.0,
-1c.1, etc. PCI bridges, so I wrote the patch this way. Looks like I
-should ignore them instead :-)
 
-> 
-> It probably should say "This function can be implemented only by a _DSM
-> method within the scope of a PCI host bridge."
-
-Agreed.
-
-> 
-> Anyway, I think this patch looks for a _DSM in PCI-PCI bridge devices as
-> well as PCI host bridge devices, and the ECN says any values returned by
-> function 8 of a non-host bridge _DSM method should be ignored.  At least,
-> that's how I read it.
-
-OK, I'll rework the patch to only check the host bridge for function 8.
-
-> 
-> I think you need something in pci_root.c that evaluates _DSM function 8 for
-> the host bridge, and then some mechanism for all the devices under that
-> bridge to inherit the result.
-
-Thanks for the suggestion, will try to do this in the next revision.
-
-Regards,
-Aaron
-
-> 
->> +	if (!obj)
->> +		return;
->> +
->> +	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
->> +		pdev->d3cold_delay = 0;
->> +	kfree(obj);
->> +}
->> +
->>  static void pci_acpi_setup(struct device *dev)
->>  {
->>  	struct pci_dev *pci_dev = to_pci_dev(dev);
->> @@ -566,6 +624,9 @@ static void pci_acpi_setup(struct device *dev)
->>  	if (!adev)
->>  		return;
->>  
->> +	if (pci_dev->pm_cap)
->> +		pci_acpi_delay_optimize(pci_dev, adev);
->> +
->>  	pci_acpi_add_pm_notifier(adev, pci_dev);
->>  	if (!adev->wakeup.flags.valid)
->>  		return;
->> -- 
->> 2.1.0
->>
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
