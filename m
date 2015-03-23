@@ -1,73 +1,237 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43980 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55213 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174AbbCTS2B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Mar 2015 14:28:01 -0400
-Subject: [PATCH] PCI: Add ACS quirks for Intel 1G NICs
+	id S1751935AbbCWDeq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 22 Mar 2015 23:34:46 -0400
+Message-ID: <1427081673.3643.547.camel@redhat.com>
+Subject: Re: [PATCH v3 1/2] PCI: One more parameter to
+ pci_set_pcie_reset_state()
 From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: john.ronciak@intel.com, linux-kernel@vger.kernel.org
-Date: Fri, 20 Mar 2015 12:27:57 -0600
-Message-ID: <20150320182722.5362.75868.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev@ozlabs.org, linux-pci@vger.kernel.org,
+	cascardo@linux.vnet.ibm.com, bhelgaas@google.com,
+	Brian King <brking@us.ibm.com>,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Ian Munsie <imunsie@au1.ibm.com>
+Date: Sun, 22 Mar 2015 21:34:33 -0600
+In-Reply-To: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel has verified that there is no peer-to-peer between functions for
-the below selection of 82580, 82576, 82575, I350, and 82571 multi-port
-devices.  This adds the necessary quirks to consider the functions
-isolated from each other.  82571 quad-port devices are omitted due to
-likely lack of ACS/isolation in the onboard switch, rendering quirks
-for the downstream endpoints useless.
+On Mon, 2015-03-23 at 14:02 +1100, Gavin Shan wrote:
+> The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
+> which allows to check if one particular PCI device can be resetted by the
+> function. The function will be reused to support PCI device specific methods
+> maintained in pci_dev_reset_methods[] in subsequent patch.
+> 
+> Cc: Brian King <brking@us.ibm.com>
+> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+> Cc: Ian Munsie <imunsie@au1.ibm.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+> v3: Fix arguments of pci_set_pcie_reset_state() in cxl driver
+> v2: Reimplemented based on pci_set_pcie_reset_state()
+> ---
+>  arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
+>  drivers/misc/cxl/pci.c          |  2 +-
+>  drivers/misc/genwqe/card_base.c |  9 +++++++--
+>  drivers/pci/pci.c               | 15 +++++++++------
+>  drivers/scsi/ipr.c              |  5 +++--
+>  include/linux/pci.h             |  5 +++--
+>  6 files changed, 33 insertions(+), 17 deletions(-)
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: John Ronciak <john.ronciak@intel.com>
----
- drivers/pci/quirks.c |   32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85f247e..1bde397 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3822,6 +3822,38 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
-+	/* 82580 */
-+	{ PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x150F, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1510, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1511, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1516, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1527, pci_quirk_mf_endpoint_acs },
-+	/* 82576 */
-+	{ PCI_VENDOR_ID_INTEL, 0x10C9, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x10E6, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x10E7, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x10E8, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x150A, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x150D, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1518, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1526, pci_quirk_mf_endpoint_acs },
-+	/* 82575 */
-+	{ PCI_VENDOR_ID_INTEL, 0x10A7, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x10A9, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x10D6, pci_quirk_mf_endpoint_acs },
-+	/* I350 */
-+	{ PCI_VENDOR_ID_INTEL, 0x1521, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1522, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1523, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1524, pci_quirk_mf_endpoint_acs },
-+	/* 82571 (Quads omitted due to non-ACS switch) */
-+	{ PCI_VENDOR_ID_INTEL, 0x105E, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x105F, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1060, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x10D9, pci_quirk_mf_endpoint_acs },
-+	/* Intel PCH root ports */
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
- 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
- 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+Argh, you're trying to make pci_set_pcie_reset_state() compatible with
+pci_dev_specific_reset(), so it can be called via pci_reset_function(),
+but the whole point of the pci_reset_function() interface is to reset a
+*single* function without disturbing anything else.  These patches make
+no effort at all to limit the set of affected devices to a single
+function and take great liberties using PCI_ANY_ID for vendors.  My take
+on the powerpc version of pcibios_set_pcie_reset_state() is that it's
+effectively a slot reset, so why not hook into the
+pci_reset_hotplug_slot() via the hotplug slot ops?  Please also use
+cover letters.  Thanks,
+
+Alex
+
+> diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+> index daa68a1..cd85c18 100644
+> --- a/arch/powerpc/kernel/eeh.c
+> +++ b/arch/powerpc/kernel/eeh.c
+> @@ -726,11 +726,14 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
+>   * pcibios_set_pcie_slot_reset - Set PCI-E reset state
+>   * @dev: pci device struct
+>   * @state: reset state to enter
+> + * @probe: check if the device can take the reset
+>   *
+>   * Return value:
+>   * 	0 if success
+>   */
+> -int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+> +int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> +				 enum pcie_reset_state state,
+> +				 int probe)
+>  {
+>  	struct eeh_dev *edev = pci_dev_to_eeh_dev(dev);
+>  	struct eeh_pe *pe = eeh_dev_to_pe(edev);
+> @@ -738,9 +741,12 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+>  	if (!pe) {
+>  		pr_err("%s: No PE found on PCI device %s\n",
+>  			__func__, pci_name(dev));
+> -		return -EINVAL;
+> +		return -ENOTTY;
+>  	}
+>  
+> +	if (probe)
+> +		return 0;
+> +
+>  	switch (state) {
+>  	case pcie_deassert_reset:
+>  		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
+> @@ -762,8 +768,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+>  		break;
+>  	default:
+>  		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
+> -		return -EINVAL;
+> -	};
+> +		return -ENOTTY;
+> +	}
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
+> index 1ef0164..3a87bfc 100644
+> --- a/drivers/misc/cxl/pci.c
+> +++ b/drivers/misc/cxl/pci.c
+> @@ -789,7 +789,7 @@ int cxl_reset(struct cxl *adapter)
+>  	/* pcie_warm_reset requests a fundamental pci reset which includes a
+>  	 * PERST assert/deassert.  PERST triggers a loading of the image
+>  	 * if "user" or "factory" is selected in sysfs */
+> -	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset))) {
+> +	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset, 0))) {
+>  		dev_err(&dev->dev, "cxl: pcie_warm_reset failed\n");
+>  		return rc;
+>  	}
+> diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
+> index 4cf8f82..4871f69 100644
+> --- a/drivers/misc/genwqe/card_base.c
+> +++ b/drivers/misc/genwqe/card_base.c
+> @@ -782,17 +782,22 @@ static int genwqe_pci_fundamental_reset(struct pci_dev *pci_dev)
+>  {
+>  	int rc;
+>  
+> +	/* Probe if the device can take the reset */
+> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 1);
+> +	if (rc)
+> +		return rc;
+> +
+>  	/*
+>  	 * lock pci config space access from userspace,
+>  	 * save state and issue PCIe fundamental reset
+>  	 */
+>  	pci_cfg_access_lock(pci_dev);
+>  	pci_save_state(pci_dev);
+> -	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset);
+> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 0);
+>  	if (!rc) {
+>  		/* keep PCIe reset asserted for 250ms */
+>  		msleep(250);
+> -		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset);
+> +		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset, 0);
+>  		/* Wait for 2s to reload flash and train the link */
+>  		msleep(2000);
+>  	}
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 81f06e8..8581a5f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1558,28 +1558,31 @@ EXPORT_SYMBOL(pci_disable_device);
+>   * pcibios_set_pcie_reset_state - set reset state for device dev
+>   * @dev: the PCIe device reset
+>   * @state: Reset state to enter into
+> - *
+> + * @probe: Check if the device can take the reset
+>   *
+>   * Sets the PCIe reset state for the device. This is the default
+>   * implementation. Architecture implementations can override this.
+>   */
+>  int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> -					enum pcie_reset_state state)
+> +					enum pcie_reset_state state,
+> +					int probe)
+>  {
+> -	return -EINVAL;
+> +	return -ENOTTY;
+>  }
+>  
+>  /**
+>   * pci_set_pcie_reset_state - set reset state for device dev
+>   * @dev: the PCIe device reset
+>   * @state: Reset state to enter into
+> - *
+> + * @probe: Check if the device can take the reset
+>   *
+>   * Sets the PCI reset state for the device.
+>   */
+> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+> +int pci_set_pcie_reset_state(struct pci_dev *dev,
+> +			     enum pcie_reset_state state,
+> +			     int probe)
+>  {
+> -	return pcibios_set_pcie_reset_state(dev, state);
+> +	return pcibios_set_pcie_reset_state(dev, state, probe);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+>  
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index 9219953..89026f4 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -8317,7 +8317,8 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
+>  static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
+>  {
+>  	ENTER;
+> -	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
+> +	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev,
+> +				 pcie_deassert_reset, 0);
+>  	ipr_cmd->job_step = ipr_reset_bist_done;
+>  	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
+>  	LEAVE;
+> @@ -8339,7 +8340,7 @@ static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
+>  	struct pci_dev *pdev = ioa_cfg->pdev;
+>  
+>  	ENTER;
+> -	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
+> +	pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
+>  	ipr_cmd->job_step = ipr_reset_slot_reset_done;
+>  	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
+>  	LEAVE;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 4e1f17d..052ac63 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -960,7 +960,8 @@ extern unsigned int pcibios_max_latency;
+>  void pci_set_master(struct pci_dev *dev);
+>  void pci_clear_master(struct pci_dev *dev);
+>  
+> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+> +int pci_set_pcie_reset_state(struct pci_dev *dev,
+> +			     enum pcie_reset_state state, int probe);
+>  int pci_set_cacheline_size(struct pci_dev *dev);
+>  #define HAVE_PCI_SET_MWI
+>  int __must_check pci_set_mwi(struct pci_dev *dev);
+> @@ -1648,7 +1649,7 @@ extern unsigned long pci_hotplug_mem_size;
+>  void pcibios_disable_device(struct pci_dev *dev);
+>  void pcibios_set_master(struct pci_dev *dev);
+>  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> -				 enum pcie_reset_state state);
+> +				 enum pcie_reset_state state, int probe);
+>  int pcibios_add_device(struct pci_dev *dev);
+>  void pcibios_release_device(struct pci_dev *dev);
+>  void pcibios_penalize_isa_irq(int irq, int active);
+
+
 
