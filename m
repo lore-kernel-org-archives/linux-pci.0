@@ -1,66 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:49595 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbbCIMfe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 08:35:34 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Dmitry Torokhov <dtor@google.com>, Paul Bolle <pebolle@tiscali.nl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] pci: iproc: Add Broadcom iProc PCIe support
-Date: Mon, 09 Mar 2015 13:35:24 +0100
-Message-ID: <2314573.X8TfIpVCUq@wuerfel>
-In-Reply-To: <54F9EB42.3010804@broadcom.com>
-References: <1425603699-13416-1-git-send-email-rjui@broadcom.com> <CAE_wzQ_Rq5u83UXOYRLShxuCzcgxA0BSPFZT4RmvDj8nfTSGcg@mail.gmail.com> <54F9EB42.3010804@broadcom.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:36323 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932183AbbCWMqY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:46:24 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v7 28/31] PCI: rename to pci_find_host_bridge()
+Date: Mon, 23 Mar 2015 20:40:54 +0800
+Message-ID: <1427114457-16687-29-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 06 March 2015 10:00:34 Ray Jui wrote:
-> > 
-> 
-> Although I have not tested it, but to my best knowledge there shouldn't
-> be any technical issue by making the PCIe iProc driver a loadable module
-> and installing the module later after the kernel finishes booting.
-> 
-> But I wonder why I haven't seen any PCIe host driver being allowed to be
-> compiled as module? Maybe there's no obvious benefit of doing that.
-> People typically opt to load slave devices as module but tend to keep
-> the bus or host devices compiled in.
-> 
-> And to allow a PCI host driver to be compiled as module, some PCI
-> functions need to have their symbols exported:
-> 
-> ERROR: "pci_common_swizzle" [drivers/pci/host/pcie-iproc.ko] undefined!
-> ERROR: "pci_fixup_irqs" [drivers/pci/host/pcie-iproc.ko] undefined!
-> ERROR: "pci_assign_unassigned_bus_resources"
-> [drivers/pci/host/pcie-iproc.ko] undefined!
-> ERROR: "pci_remove_root_bus" [drivers/pci/host/pcie-iproc.ko] undefined!
-> ERROR: "pci_stop_root_bus" [drivers/pci/host/pcie-iproc.ko] undefined!
-> ERROR: "pci_create_root_bus" [drivers/pci/host/pcie-iproc.ko] undefined!
-> 
-> Maybe Bjorn can help to shed some light here? Should I go ahead and
-> export_symbol these PCI functions and make the iProc PCI driver "tristate"?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-My best guess is that no loadable driver ever tried to use these and
-we should indeed just export them.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 919ba4d..8efb3a7 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -144,7 +144,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ 	return bus;
+ }
+ 
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
++struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
+ {
+ 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+@@ -162,7 +162,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+ 	struct resource_entry *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -187,7 +187,7 @@ static bool region_contains(struct pci_bus_region *region1,
+ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+ 	struct resource_entry *window;
+ 	resource_size_t offset = 0;
+ 
+-- 
+1.7.1
 
-The call to pci_assign_unassigned_bus_resources could be avoided by using
-pci_rescan_bus(), which would simplify the driver a little, but for
-some reason, nothing else uses that, so I'm not sure about it.
-
-The pci_remove_root_bus/pci_stop_root_bus calls are rarely used anywhere
-else. Are they functional to the point where you could unload a pci
-host driver that is a loadable module? If so, that would be
-wonderful.
-
-	Arnd
