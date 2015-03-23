@@ -1,119 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:52974 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850AbbCZMgm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 08:36:42 -0400
-Message-ID: <5513FD48.3080502@huawei.com>
-Date: Thu, 26 Mar 2015 20:36:24 +0800
+Received: from szxga02-in.huawei.com ([119.145.14.65]:54032 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615AbbCWMoL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:11 -0400
 From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v7 11/31] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Mon, 23 Mar 2015 20:40:37 +0800
+Message-ID: <1427114457-16687-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "Michael S. Tsirkin" <mst@redhat.com>,
-	<linux-kernel@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Fam Zheng" <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: Re: [PATCH v4 03/10] pci: drop some duplicate code
-References: <1427369811-11721-1-git-send-email-mst@redhat.com> <1427369811-11721-4-git-send-email-mst@redhat.com>
-In-Reply-To: <1427369811-11721-4-git-send-email-mst@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/26 19:37, Michael S. Tsirkin wrote:
-> pci_msi_init_pci_dev and pci_msi_off share a lot of code.
-> This used to be justified since pci_msi_init_pci_dev
-> wasn't compiled in when CONFIG_PCI_MSI is off.
-> Now that it is, let's reuse code.
+Save platform specific sysdata in pci_host_bridge
+drvdata, host bridge specific operation need to
+access it before the pci bus creation.
 
-It's not correct, pci_msi_off() would be used in quirk when the msi_cap is not initialized.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    3 ++-
+ drivers/pci/pci.h         |    2 +-
+ drivers/pci/probe.c       |   20 ++++++++++----------
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-For example:
-
-/*
- * It's possible for the MSI to get corrupted if shpc and acpi
- * are used together on certain PXH-based systems.
- */
-static void quirk_pcie_pxh(struct pci_dev *dev)
-{
-	pci_msi_off(dev);
-	dev->no_msi = 1;
-	dev_warn(&dev->dev, "PXH quirk detected; SHPC device MSI disabled\n");
-}
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_PXHD_0,	quirk_pcie_pxh);
-
-
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/pci/pci.c   | 23 ++++-------------------
->  drivers/pci/probe.c | 11 ++++-------
->  2 files changed, 8 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 81f06e8..fcee8ea 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3106,26 +3106,11 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
->   */
->  void pci_msi_off(struct pci_dev *dev)
->  {
-> -	int pos;
-> -	u16 control;
-> +	if (dev->msi_cap)
-> +		pci_msi_set_enable(dev, 0);
->  
-> -	/*
-> -	 * This looks like it could go in msi.c, but we need it even when
-> -	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
-> -	 * dev->msi_cap or dev->msix_cap here.
-> -	 */
-> -	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -	if (pos) {
-> -		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-> -		control &= ~PCI_MSI_FLAGS_ENABLE;
-> -		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
-> -	}
-> -	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -	if (pos) {
-> -		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
-> -		control &= ~PCI_MSIX_FLAGS_ENABLE;
-> -		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
-> -	}
-> +	if (dev->msix_cap)
-> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  }
->  EXPORT_SYMBOL_GPL(pci_msi_off);
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 45d6d5c..baf8ddd 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1489,17 +1489,14 @@ static void pci_msi_init_pci_dev(struct pci_dev *dev)
->  	INIT_LIST_HEAD(&dev->msi_list);
->  #endif
->  
-> +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> +
->  	/* Disable the msi hardware to avoid screaming interrupts
->  	 * during boot.  This is the power on reset default so
->  	 * usually this should be a noop.
->  	 */
-> -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -	if (dev->msi_cap)
-> -		pci_msi_set_enable(dev, 0);
-> -
-> -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -	if (dev->msix_cap)
-> -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> +	pci_msi_off(dev);
->  }
->  
->  static void pci_init_capabilities(struct pci_dev *dev)
-> 
-
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 8af6d51..b0ed8da 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -63,7 +63,7 @@ static bool pci_host_busn_res_overlap(
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, int domain, int bus,
+-		struct list_head *resources)
++		void *sysdata, struct list_head *resources)
+ {
+ 	int error;
+ 	struct pci_host_bridge *host, *tmp;
+@@ -101,6 +101,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	mutex_unlock(&pci_host_mutex);
+ 
+ 	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 886d72f..027fba0 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -335,7 +335,7 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ #endif
+ 
+ struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+-		int domain, int bus, struct list_head *resources);
++        int domain, int bus, void *sysdata, struct list_head *resources);
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ 
+ static inline int pci_host_first_busnr(struct pci_host_bridge *host)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8517d1b..0ac2bf6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ }
+ 
+ static struct pci_bus *__pci_create_root_bus(
+-		struct pci_host_bridge *bridge, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error;
+ 	struct pci_bus *b;
+@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
++	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start =
+ 		pci_host_first_busnr(bridge);
+@@ -1956,11 +1955,12 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, domain, bus, resources);
++	host = pci_create_host_bridge(parent, domain, bus,
++			sysdata, resources);
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_create_root_bus(host, ops, sysdata);
++	host->bus = __pci_create_root_bus(host, ops);
+ 	if (!host->bus)
+ 		pci_free_host_bridge(host);
+ 
+@@ -2037,13 +2037,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ }
+ 
+ static struct pci_bus *__pci_scan_root_bus(
+-		struct pci_host_bridge *host, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *host, struct pci_ops *ops)
+ {
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	b = __pci_create_root_bus(host, ops, sysdata);
++	b = __pci_create_root_bus(host, ops);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -2064,11 +2063,12 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, domain, bus, resources);
++	host = pci_create_host_bridge(parent, domain, bus,
++			sysdata, resources);
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_scan_root_bus(host, ops, sysdata);
++	host->bus = __pci_scan_root_bus(host, ops);
+ 	if (!host->bus)
+ 		pci_free_host_bridge(host);
+ 
 -- 
-Thanks!
-Yijing
+1.7.1
 
