@@ -1,65 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 24/29] PCI/designware: Use pci_scan_root_bus() for simplicity
-Date: Fri, 6 Mar 2015 17:33:41 +0800
-Message-ID: <1425634426-437-25-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:36941 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbbCWUph (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 16:45:37 -0400
+Received: by igcqo1 with SMTP id qo1so50005329igc.0
+        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 13:45:37 -0700 (PDT)
+Date: Mon, 23 Mar 2015 15:45:34 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v2 1/4] pci: disable msi/msix at probe time
+Message-ID: <20150323204534.GU26935@google.com>
+References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+ <1426786724-22241-2-git-send-email-mst@redhat.com>
+ <20150323185006.GT26935@google.com>
+ <20150323201237-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150323201237-mutt-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_scan_root_bus() instead of pci_create_root_bus() +
-pci_scan_child_bus() for simplicity.
+On Mon, Mar 23, 2015 at 08:22:39PM +0100, Michael S. Tsirkin wrote:
+> On Mon, Mar 23, 2015 at 01:50:06PM -0500, Bjorn Helgaas wrote:
+> > Hi Michael,
+> > 
+> > On Thu, Mar 19, 2015 at 07:57:52PM +0100, Michael S. Tsirkin wrote:
+> > > commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+> > >     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
+> > > 
+> > > attempted to address the problem of kexec getting
+> > > started after linux enabled msi/msix for a device,
+> > > and drivers being confused by msi being enabled,
+> > > by disabling msi at shutdown.
+> > > 
+> > > But arguably, it's better to disable msi/msix when kexec
+> > > starts - for example, kexec might run after a crash (kdump)
+> > > and shutdown callbacks are not always invoked in that case.
+> > > 
+> > > Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> > > Cc: Ulrich Obergfell <uobergfe@redhat.com>
+> > > Cc: Fam Zheng <famz@redhat.com>
+> > > Cc: Rusty Russell <rusty@rustcorp.com.au>
+> > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > > ---
+> > >  drivers/pci/pci-driver.c | 6 ++++++
+> > >  1 file changed, 6 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > > index 3cb2210..2ebd2a8 100644
+> > > --- a/drivers/pci/pci-driver.c
+> > > +++ b/drivers/pci/pci-driver.c
+> > > @@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
+> > >  	 */
+> > >  	pm_runtime_get_sync(dev);
+> > >  	pci_dev->driver = pci_drv;
+> > > +	/*
+> > > +	 * When using kexec, msi might be left enabled by the previous kernel,
+> > > +	 * this breaks things as some drivers assume msi/msi-x is off at boot.
+> > > +	 * Fix this by forcing msi off at startup.
+> > > +	 */
+> > > +	pci_msi_off(pci_dev);
+> > 
+> > I think this makes sense, but I have a few questions.  This is a device
+> > initialization thing, so it seems like a better fit for the enumeration
+> > path, e.g,. pci_msi_init_pci_dev(), than for the driver binding path.
+> > 
+> > But when CONFIG_PCI_MSI=y, pci_msi_init_pci_dev() already does basically
+> > the same thing, so we shouldn't need this change unless CONFIG_PCI_MSI is
+> > not set in the kdump kernel.
+> > 
+> > If this is a problem just with kexeced kernels that don't have
+> > CONFIG_PCI_MSI=y, I think I would prefer to fix this by moving
+> > pci_msi_init_pci_dev() outside the #ifdef so it works regardless of
+> > CONFIG_PCI_MSI.  That would also be nice because we could clean up the
+> > duplication between pci_msi_off() and pci_msi_init_pci_dev().  It would
+> > also make the starting machine state less dependent on the new kernel,
+> > which seems like a good thing.
+> 
+> What you say above makes sense.
+> OK so the simplest fix is something like below then.
+> Fixes the duplication and kexec for CONFIG_PCI_MSI=n.
+> Acceptable? Pls let me know, if yes I'll test and
+> resubmit properly.
+> 
+> > Are there any bugzillas we could reference here?
+> 
+> I'll check this point. Maybe not - the real bugfix is
+> patch 2/4, this was just found by reading code,
+> but it's a dependency to make sure 2/4 does not
+> introduce regressions.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Mohit Kumar <mohit.kumar@st.com>
-CC: Jingoo Han <jg1.han@samsung.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+OK, can you add the bugzilla link to that patch, if there is one?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1f4ea6f..658b46b 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -728,13 +728,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pcie_port *pp = sys_to_pcie(sys);
- 
- 	pp->root_bus_nr = sys->busnr;
--	bus = pci_create_root_bus(pp->dev, sys->busnr,
-+	bus = pci_scan_root_bus(pp->dev, sys->busnr,
- 				  &dw_pcie_ops, sys, &sys->resources);
- 	if (!bus)
- 		return NULL;
- 
--	pci_scan_child_bus(bus);
--
- 	if (bus && pp->ops->scan_bus)
- 		pp->ops->scan_bus(pp);
- 
--- 
-1.7.1
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 0e037af..2ab59d4 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1062,18 +1062,8 @@ EXPORT_SYMBOL(pci_msi_enabled);
+>  void pci_msi_init_pci_dev(struct pci_dev *dev)
+>  {
+>  	INIT_LIST_HEAD(&dev->msi_list);
+> -
+> -	/* Disable the msi hardware to avoid screaming interrupts
+> -	 * during boot.  This is the power on reset default so
+> -	 * usually this should be a noop.
+> -	 */
+>  	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> -	if (dev->msi_cap)
+> -		msi_set_enable(dev, 0);
+> -
+>  	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> -	if (dev->msix_cap)
+> -		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+>  }
+>  
+>  /**
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8d2f400..c455501 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1485,6 +1485,12 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>  
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+> +	/* Disable the msi hardware to avoid screaming interrupts
+> +	 * during boot.  This is the power on reset default so
+> +	 * usually this should be a noop.
+> +	 */
+> +	pci_msi_off(dev);
+> +
+>  	/* MSI/MSI-X list */
+>  	pci_msi_init_pci_dev(dev);
 
+Could we move pci_msi_init_pci_dev() from msi.c to pci.c and make it look
+something like the following?
+
+  void pci_msi_off(struct pci_dev *dev)
+  {
+    if (dev->msi_cap) {
+      ...
+    }
+    if (dev->msix_cap) {
+      ...
+    }
+  }
+
+  void pci_msi_init_pci_dev(struct pci_dev *dev)
+  {
+  #ifdef CONFIG_PCI_MSI
+    INIT_LIST_HEAD(&dev->msi_list);
+  #endif
+
+    dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+    dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+    pci_msi_off(dev);
+  }
+
+Then I think we could remove pci_msi_off() calls from a couple quirks as
+well.  And we'd only have one MSI-related callout from
+pci_init_capabilities().
+
+Bjorn
