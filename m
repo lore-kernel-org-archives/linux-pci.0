@@ -1,84 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:35675 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754441AbbCDFWd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:22:33 -0500
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:22:31 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id D21872BB0040
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:22:27 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245MJMj54591662
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:27 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245LroA027452
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:21:54 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V13 04/21] PCI: Index IOV resources in the conventional style
-Date: Wed,  4 Mar 2015 13:18:56 +0800
-Message-Id: <1425446353-30513-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:36141 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752665AbbCWMoR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:17 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v7 17/31] x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Mon, 23 Mar 2015 20:40:43 +0800
+Message-ID: <1427114457-16687-18-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-Most of PCI uses "res = &dev->resource[i]", not "res = dev->resource + i".
-Use that style in iov.c also.
-
-No functional change.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86@kernel.org
 ---
- drivers/pci/iov.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ arch/x86/pci/acpi.c |   37 +++++++++++++++++++++----------------
+ 1 files changed, 21 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5bca0e1..27b98c3 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -95,7 +95,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	virtfn->multifunction = 0;
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index d2655d5..877acaf 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -349,6 +349,19 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 			entry->res->name = info->name;
+ }
  
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->parent)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
-@@ -212,7 +212,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		bars |= (1 << (i + PCI_IOV_RESOURCES));
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (res->parent)
- 			nres++;
- 	}
-@@ -373,7 +373,7 @@ found:
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
++
++	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops pci_host_ops = {
++	.pci_ops = &pci_root_ops,
++	.prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -359,6 +372,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	LIST_HEAD(crs_res);
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *host = NULL;
+ 	struct pci_sysdata *sd;
+ 	int node;
  
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
- 					pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
-@@ -417,7 +417,7 @@ found:
+@@ -425,14 +439,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
  
- failed:
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		res->flags = 0;
- 	}
+ 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+ 				    (u8)root->secondary.end, root->mcfg_addr))
+-			bus = pci_create_root_bus(NULL, domain, busnum,
+-					&pci_root_ops, sd, &resources);
+-
+-		if (bus) {
+-			pci_scan_child_bus(bus);
+-			pci_set_host_bridge_release(
+-				to_pci_host_bridge(bus->bridge),
+-				release_pci_root_info, info);
++			host = pci_scan_host_bridge(NULL, domain, busnum, sd,
++					&resources, &pci_host_ops);
++
++		if (host) {
++			bus = host->bus;
++			pci_set_host_bridge_release(host,
++					release_pci_root_info, info);
+ 		} else {
+ 			resource_list_free(&resources);
+ 			teardown_mcfg_map(info);
+@@ -455,14 +468,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
  
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_sysdata *sd = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	return 0;
+-}
+-
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
 -- 
-1.7.9.5
+1.7.1
 
