@@ -1,137 +1,262 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5519D40D.20903@oracle.com>
-Date: Mon, 30 Mar 2015 16:54:05 -0600
-From: David Ahern <david.ahern@oracle.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>, David Miller <davem@davemloft.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-References: <5514391F.2030300@oracle.com>	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>	<551495EE.20201@oracle.com>	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>	<5515F6B8.8020606@oracle.com>	<5515F782.7060301@oracle.com>	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>	<551623C1.2040300@oracle.com>	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>	<5516BF4B.9030901@oracle.com>	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>	<55181065.8090807@oracle.com> <CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
-In-Reply-To: <CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37173 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751171AbbCWEGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Mar 2015 00:06:14 -0400
+Message-ID: <1427083561.3643.551.camel@redhat.com>
+Subject: Re: [PATCH v3 1/2] PCI: One more parameter to
+ pci_set_pcie_reset_state()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev@ozlabs.org, linux-pci@vger.kernel.org,
+	cascardo@linux.vnet.ibm.com, bhelgaas@google.com,
+	Brian King <brking@us.ibm.com>,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Ian Munsie <imunsie@au1.ibm.com>
+Date: Sun, 22 Mar 2015 22:06:01 -0600
+In-Reply-To: <20150323035656.GA27802@shangw>
+References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1427081673.3643.547.camel@redhat.com> <20150323035656.GA27802@shangw>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/29/15 2:07 PM, Yinghai Lu wrote:
-> [  286.647560] PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
-> [  286.921232] PCI: Claiming 0000:00:01.0: Resource 15:
-> 0000800100000000..00008004afffffff [220c]
-> [  287.229190] PCI: Claiming 0000:01:00.0: Resource 15:
-> 0000800100000000..00008004afffffff [220c]
-> [  287.533428] PCI: Claiming 0000:02:04.0: Resource 15:
-> 0000800100000000..000080012fffffff [220c]
-> [  288.149831] PCI: Claiming 0000:03:00.0: Resource 15:
-> 0000800100000000..000080012fffffff [220c]
-> [  288.252466] PCI: Claiming 0000:04:06.0: Resource 14:
-> 0000800100000000..000080010fffffff [220c]
-> [  288.867196] PCI: Claiming 0000:05:00.0: Resource 0:
-> 0000800100000000..0000800100001fff [204]
-> [  288.968221] pci 0000:05:00.0: can't claim BAR 0 [mem
-> 0x800100000000-0x800100001fff]: no compatible bridge window
->
-> the bridge resource has IORESOURCE_PREFETCH, but the device doesn't have that.
->
-> So pci_claim_resource can not find parent resource for device
-> resource: we can not
-> put non pref mem under pref mem.
->
-> Can you send out result from ?
-> lspci -vvxxx -s 0000:05:00.0
+On Mon, 2015-03-23 at 14:56 +1100, Gavin Shan wrote:
+> On Sun, Mar 22, 2015 at 09:34:33PM -0600, Alex Williamson wrote:
+> >On Mon, 2015-03-23 at 14:02 +1100, Gavin Shan wrote:
+> >> The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
+> >> which allows to check if one particular PCI device can be resetted by the
+> >> function. The function will be reused to support PCI device specific methods
+> >> maintained in pci_dev_reset_methods[] in subsequent patch.
+> >> 
+> >> Cc: Brian King <brking@us.ibm.com>
+> >> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+> >> Cc: Ian Munsie <imunsie@au1.ibm.com>
+> >> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> >> ---
+> >> v3: Fix arguments of pci_set_pcie_reset_state() in cxl driver
+> >> v2: Reimplemented based on pci_set_pcie_reset_state()
+> >> ---
+> >>  arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
+> >>  drivers/misc/cxl/pci.c          |  2 +-
+> >>  drivers/misc/genwqe/card_base.c |  9 +++++++--
+> >>  drivers/pci/pci.c               | 15 +++++++++------
+> >>  drivers/scsi/ipr.c              |  5 +++--
+> >>  include/linux/pci.h             |  5 +++--
+> >>  6 files changed, 33 insertions(+), 17 deletions(-)
+> >
+> >
+> >Argh, you're trying to make pci_set_pcie_reset_state() compatible with
+> >pci_dev_specific_reset(), so it can be called via pci_reset_function(),
+> >but the whole point of the pci_reset_function() interface is to reset a
+> >*single* function without disturbing anything else.  These patches make
+> >no effort at all to limit the set of affected devices to a single
+> >function and take great liberties using PCI_ANY_ID for vendors.  My take
+> >on the powerpc version of pcibios_set_pcie_reset_state() is that it's
+> >effectively a slot reset, so why not hook into the
+> >pci_reset_hotplug_slot() via the hotplug slot ops?  Please also use
+> >cover letters.  Thanks,
+> >
+> 
+> Yep, that's the point and intention of the patches. pcibios_set_pcie_reset_state()
+> isn't equal to pci_reset_hotplug_slot(). The later one depends on PCI slot, which
+> wasn't populated on PowerNV platform yet, but pcibios_set_pcie_reseet_state() doesn't.
+> 
+> The patchset depends on improved pcibios_set_pcie_reset_state(), which can be seen
+> from following linked. With it, we don't affect any PCI devices as the config space
+> is saved/restored accordingly before/after reset:
+> 
+> https://patchwork.ozlabs.org/patch/438598/
 
-# lspci -vvxxx -s 0000:05:00.0
-0000:05:00.0 USB controller: Renesas Technology Corp. uPD720201 USB 3.0 
-Host Controller (rev 03) (prog-if 30 [XHCI])
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 00000004
-	Region 0: Memory at 100000000 (64-bit, non-prefetchable) [size=8K]
-	Region 2: [virtual] Memory at ffff800000000000 (32-bit, non-prefetchable)
-	Region 3: [virtual] Memory at ffff800000000000 (32-bit, non-prefetchable)
-	Region 4: [virtual] Memory at ffff800000000000 (32-bit, non-prefetchable)
-	Region 5: [virtual] Memory at ffff800000000000 (32-bit, non-prefetchable)
-	[virtual] Expansion ROM at ffff800000000000 [disabled]
-	Capabilities: [50] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
-PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [70] MSI: Enable- Count=1/8 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [90] MSI-X: Enable+ Count=8 Masked-
-		Vector table: BAR=0 offset=00001000
-		PBA: BAR=0 offset=00001080
-	Capabilities: [a0] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 
-unlimited
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, 
-L1 unlimited
-			ClockPM+ Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
-BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR+, OBFF 
-Not Supported
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF 
-Disabled
-		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- 
-ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, 
-EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
-MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
-MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-	Capabilities: [150 v1] Latency Tolerance Reporting
-		Max snoop latency: 0ns
-		Max no snoop latency: 0ns
-	Kernel driver in use: xhci_hcd
-00: 12 19 14 00 06 04 10 00 03 30 03 0c 10 00 00 00
-10: 04 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 50 00 00 00 00 00 00 00 00 01 00 00
-40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-50: 01 70 c3 c9 08 00 00 00 00 00 00 00 00 00 00 00
-60: 30 20 00 00 00 00 00 00 00 00 00 00 09 18 20 00
-70: 05 90 86 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 11 a0 07 80 00 10 00 00 80 10 00 00 00 00 00 00
-a0: 10 00 02 00 c0 8f 00 00 00 28 19 00 12 ec 07 00
-b0: 00 00 12 10 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 10 08 00 00 00 00 00 00 00 00 00 00
-d0: 02 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 55 00 00 00 01 05 10 20 20 00
-f0: 50 07 00 00 00 00 00 80 00 00 00 00 00 00 00 00
+Sorry, that's wrong.  pci_reset_function() can be called while other
+devices in the same multifunction package are actively in use.  It
+doesn't matter that you're saving and restoring the external state of
+the device, the internal state is lost and operation of the device is
+interrupted.  That is not how pci_reset_function() is supposed to work.
+Thanks,
+
+Alex
+
+> >> diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+> >> index daa68a1..cd85c18 100644
+> >> --- a/arch/powerpc/kernel/eeh.c
+> >> +++ b/arch/powerpc/kernel/eeh.c
+> >> @@ -726,11 +726,14 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
+> >>   * pcibios_set_pcie_slot_reset - Set PCI-E reset state
+> >>   * @dev: pci device struct
+> >>   * @state: reset state to enter
+> >> + * @probe: check if the device can take the reset
+> >>   *
+> >>   * Return value:
+> >>   * 	0 if success
+> >>   */
+> >> -int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+> >> +int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> >> +				 enum pcie_reset_state state,
+> >> +				 int probe)
+> >>  {
+> >>  	struct eeh_dev *edev = pci_dev_to_eeh_dev(dev);
+> >>  	struct eeh_pe *pe = eeh_dev_to_pe(edev);
+> >> @@ -738,9 +741,12 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+> >>  	if (!pe) {
+> >>  		pr_err("%s: No PE found on PCI device %s\n",
+> >>  			__func__, pci_name(dev));
+> >> -		return -EINVAL;
+> >> +		return -ENOTTY;
+> >>  	}
+> >>  
+> >> +	if (probe)
+> >> +		return 0;
+> >> +
+> >>  	switch (state) {
+> >>  	case pcie_deassert_reset:
+> >>  		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
+> >> @@ -762,8 +768,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+> >>  		break;
+> >>  	default:
+> >>  		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
+> >> -		return -EINVAL;
+> >> -	};
+> >> +		return -ENOTTY;
+> >> +	}
+> >>  
+> >>  	return 0;
+> >>  }
+> >> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
+> >> index 1ef0164..3a87bfc 100644
+> >> --- a/drivers/misc/cxl/pci.c
+> >> +++ b/drivers/misc/cxl/pci.c
+> >> @@ -789,7 +789,7 @@ int cxl_reset(struct cxl *adapter)
+> >>  	/* pcie_warm_reset requests a fundamental pci reset which includes a
+> >>  	 * PERST assert/deassert.  PERST triggers a loading of the image
+> >>  	 * if "user" or "factory" is selected in sysfs */
+> >> -	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset))) {
+> >> +	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset, 0))) {
+> >>  		dev_err(&dev->dev, "cxl: pcie_warm_reset failed\n");
+> >>  		return rc;
+> >>  	}
+> >> diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
+> >> index 4cf8f82..4871f69 100644
+> >> --- a/drivers/misc/genwqe/card_base.c
+> >> +++ b/drivers/misc/genwqe/card_base.c
+> >> @@ -782,17 +782,22 @@ static int genwqe_pci_fundamental_reset(struct pci_dev *pci_dev)
+> >>  {
+> >>  	int rc;
+> >>  
+> >> +	/* Probe if the device can take the reset */
+> >> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 1);
+> >> +	if (rc)
+> >> +		return rc;
+> >> +
+> >>  	/*
+> >>  	 * lock pci config space access from userspace,
+> >>  	 * save state and issue PCIe fundamental reset
+> >>  	 */
+> >>  	pci_cfg_access_lock(pci_dev);
+> >>  	pci_save_state(pci_dev);
+> >> -	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset);
+> >> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 0);
+> >>  	if (!rc) {
+> >>  		/* keep PCIe reset asserted for 250ms */
+> >>  		msleep(250);
+> >> -		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset);
+> >> +		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset, 0);
+> >>  		/* Wait for 2s to reload flash and train the link */
+> >>  		msleep(2000);
+> >>  	}
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index 81f06e8..8581a5f 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -1558,28 +1558,31 @@ EXPORT_SYMBOL(pci_disable_device);
+> >>   * pcibios_set_pcie_reset_state - set reset state for device dev
+> >>   * @dev: the PCIe device reset
+> >>   * @state: Reset state to enter into
+> >> - *
+> >> + * @probe: Check if the device can take the reset
+> >>   *
+> >>   * Sets the PCIe reset state for the device. This is the default
+> >>   * implementation. Architecture implementations can override this.
+> >>   */
+> >>  int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> >> -					enum pcie_reset_state state)
+> >> +					enum pcie_reset_state state,
+> >> +					int probe)
+> >>  {
+> >> -	return -EINVAL;
+> >> +	return -ENOTTY;
+> >>  }
+> >>  
+> >>  /**
+> >>   * pci_set_pcie_reset_state - set reset state for device dev
+> >>   * @dev: the PCIe device reset
+> >>   * @state: Reset state to enter into
+> >> - *
+> >> + * @probe: Check if the device can take the reset
+> >>   *
+> >>   * Sets the PCI reset state for the device.
+> >>   */
+> >> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+> >> +int pci_set_pcie_reset_state(struct pci_dev *dev,
+> >> +			     enum pcie_reset_state state,
+> >> +			     int probe)
+> >>  {
+> >> -	return pcibios_set_pcie_reset_state(dev, state);
+> >> +	return pcibios_set_pcie_reset_state(dev, state, probe);
+> >>  }
+> >>  EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+> >>  
+> >> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> >> index 9219953..89026f4 100644
+> >> --- a/drivers/scsi/ipr.c
+> >> +++ b/drivers/scsi/ipr.c
+> >> @@ -8317,7 +8317,8 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
+> >>  static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
+> >>  {
+> >>  	ENTER;
+> >> -	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
+> >> +	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev,
+> >> +				 pcie_deassert_reset, 0);
+> >>  	ipr_cmd->job_step = ipr_reset_bist_done;
+> >>  	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
+> >>  	LEAVE;
+> >> @@ -8339,7 +8340,7 @@ static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
+> >>  	struct pci_dev *pdev = ioa_cfg->pdev;
+> >>  
+> >>  	ENTER;
+> >> -	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
+> >> +	pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
+> >>  	ipr_cmd->job_step = ipr_reset_slot_reset_done;
+> >>  	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
+> >>  	LEAVE;
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index 4e1f17d..052ac63 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -960,7 +960,8 @@ extern unsigned int pcibios_max_latency;
+> >>  void pci_set_master(struct pci_dev *dev);
+> >>  void pci_clear_master(struct pci_dev *dev);
+> >>  
+> >> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+> >> +int pci_set_pcie_reset_state(struct pci_dev *dev,
+> >> +			     enum pcie_reset_state state, int probe);
+> >>  int pci_set_cacheline_size(struct pci_dev *dev);
+> >>  #define HAVE_PCI_SET_MWI
+> >>  int __must_check pci_set_mwi(struct pci_dev *dev);
+> >> @@ -1648,7 +1649,7 @@ extern unsigned long pci_hotplug_mem_size;
+> >>  void pcibios_disable_device(struct pci_dev *dev);
+> >>  void pcibios_set_master(struct pci_dev *dev);
+> >>  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+> >> -				 enum pcie_reset_state state);
+> >> +				 enum pcie_reset_state state, int probe);
+> >>  int pcibios_add_device(struct pci_dev *dev);
+> >>  void pcibios_release_device(struct pci_dev *dev);
+> >>  void pcibios_penalize_isa_irq(int irq, int active);
+> >
+> >
+> >
+> 
 
 
->
-> If it does have pref, could be of device layer does not pass the pref
-> flag properly
-> via pci_parse_of_addrs/of_get_property(node, "assigned-addresses".
->
-> or the addr0 from "ranges" and "assigned-address" has different definition.
->
-> Thanks
->
-> Yinghai
->
 
