@@ -1,126 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28199 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354AbbCFJgk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:40 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	<linux-parisc@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 21/29] parisc/PCI: Use pci_scan_root_bus() for simplicity
-Date: Fri, 6 Mar 2015 17:33:38 +0800
-Message-ID: <1425634426-437-22-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Bugfix] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Mon, 23 Mar 2015 15:22:14 +0800
+Message-Id: <1427095334-7430-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+Commit 63f1789ec716("Ignore resources consumed by host bridge itself")
+tries to ignore resources consumed by PCI host bridge itself by
+checking IORESOURCE_WINDOW flag, which causes regression on some
+platforms.
 
-Now pci_bus_add_devices() has been ripped out
-from pci_scan_root_bus(), we could use pci_scan_root_bus()
-instead of pci_create_root_bus() + pci_scan_child_bus()
-for simplicity.
+For example, PC Engines APU.1C platform defines PCI MMIO resources with
+ACPI Memory32Fixed operator as below:
+Name (CRES, ResourceTemplate ()
+{
+    ...
+    WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
+        0x0000,             // Granularity
+        0x0D00,             // Range Minimum
+        0xFFFF,             // Range Maximum
+        0x0000,             // Translation Offset
+        0xF300,             // Length
+        ,, , TypeStatic)
+    Memory32Fixed (ReadOnly,
+        0x000A0000,         // Address Base
+        0x00020000,         // Address Length
+        )
+    Memory32Fixed (ReadOnly,
+        0x00000000,         // Address Base
+        0x00000000,         // Address Length
+        _Y00)
+})
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
-CC: linux-parisc@vger.kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Memory32Fixed operator doesn't support concept of "producer/consumer"
+and it will be treated as "consumer" by the ACPI resource parsing
+interface, thus cause regression. So the fix is only to check
+"producer/consumer" flag for resources having "producer/consumer" flag.
+
+Another possible fix is to only ignore IO resource consumed by host
+bridge and keep IOMEM resource consumed by host bridge, please refer to:
+http://www.spinics.net/lists/linux-pci/msg39706.html
+
+Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/parisc/dino.c    |    8 +++-----
- drivers/parisc/lba_pci.c |    7 ++-----
- 2 files changed, 5 insertions(+), 10 deletions(-)
+Hi Bernhard,
+	Could you please also help to test whether this patch works for
+you too?
+Thanks!
+Gerry
+---
+ arch/x86/pci/acpi.c     |    5 ++---
+ drivers/acpi/resource.c |    3 +++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index a0580af..eb76a9d 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -981,11 +981,12 @@ static int __init dino_probe(struct parisc_device *dev)
- 	dino_dev->hba.bus_num.end = 255;
- 	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
- 	pci_add_resource(&resources, &dino_dev->hba.bus_num);
-+
- 	/*
- 	** It's not used to avoid chicken/egg problems
- 	** with configuration accessor functions.
- 	*/
--	dino_dev->hba.hba_bus = bus = pci_create_root_bus(&dev->dev,
-+	dino_dev->hba.hba_bus = bus = pci_scan_root_bus(&dev->dev,
- 			 dino_current_bus, &dino_cfg_ops, NULL, &resources);
- 	if (!bus) {
- 		printk(KERN_ERR "ERROR: failed to scan PCI bus on %s (duplicate bus number %d?)\n",
-@@ -996,13 +997,10 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
- 
--	max = pci_scan_child_bus(bus);
--	pci_bus_update_busn_res_end(bus, max);
--
- 	/* This code *depends* on scanning being single threaded
- 	 * if it isn't, this global bus number count will fail
- 	 */
--	dino_current_bus = max + 1;
-+	dino_current_bus = bus->busn_res.end + 1;
- 	pci_bus_assign_resources(bus);
- 	pci_bus_add_devices(bus);
- 	return 0;
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index dceb9dd..ba6daec 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1422,7 +1422,6 @@ lba_driver_probe(struct parisc_device *dev)
- 	void *tmp_obj;
- 	char *version;
- 	void __iomem *addr = ioremap_nocache(dev->hpa.start, 4096);
--	int max;
- 
- 	/* Read HW Rev First */
- 	func_class = READ_REG32(addr + LBA_FCLASS);
-@@ -1563,15 +1562,13 @@ lba_driver_probe(struct parisc_device *dev)
- 
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
--		pci_create_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
-+		pci_scan_root_bus(&dev->dev, lba_dev->hba.bus_num.start,
- 				    cfg_ops, NULL, &resources);
- 	if (!lba_bus) {
- 		pci_free_resource_list(&resources);
- 		return 0;
- 	}
- 
--	max = pci_scan_child_bus(lba_bus);
--
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
- 	if (is_pdc_pat()) {
- 		/* assign resources to un-initialized devices */
-@@ -1599,7 +1596,7 @@ lba_driver_probe(struct parisc_device *dev)
- 		lba_dev->flags |= LBA_FLAG_SKIP_PROBE;
- 	}
- 
--	lba_next_bus = max + 1;
-+	lba_next_bus = pci_bus_child_max_busnr(lba_bus) + 1;
- 	pci_bus_add_devices(lba_bus);
- 
- 	/* Whew! Finally done! Tell services we got this one covered. */
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index e4695985f9de..8c4b1201f340 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 	info->bridge = device;
+ 	ret = acpi_dev_get_resources(device, list,
+ 				     acpi_dev_filter_resource_type_cb,
+-				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
++				     (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
+ 	if (ret < 0)
+ 		dev_warn(&device->dev,
+ 			 "failed to parse _CRS method, error code %d\n", ret);
+@@ -346,8 +346,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 			"no IO and memory resources present in _CRS\n");
+ 	else
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
+-			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+-			    (entry->res->flags & IORESOURCE_DISABLED))
++			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+ 			else
+ 				entry->res->name = info->name;
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 5589a6e2a023..b0d3f2ceef06 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -606,6 +606,9 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+ 	case ACPI_RESOURCE_TYPE_ADDRESS32:
+ 	case ACPI_RESOURCE_TYPE_ADDRESS64:
+ 	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
++		if (((types & IORESOURCE_WINDOW) == 0) ^
++		    (ares->data.address.producer_consumer == ACPI_CONSUMER))
++			break;
+ 		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
+ 			type = IORESOURCE_MEM;
+ 		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
 -- 
-1.7.1
+1.7.10.4
 
