@@ -1,146 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <550FDA38.2090505@intel.com>
-Date: Mon, 23 Mar 2015 17:17:44 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:35404 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753450AbbCWV1B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 17:27:01 -0400
+Received: by qgf74 with SMTP id 74so40506265qgf.2
+        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:27:01 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/2] PCI / ACPI: PCI delay optimization from ACPI
-References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com> <20150320210354.GK26935@google.com>
-In-Reply-To: <20150320210354.GK26935@google.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20150320182722.5362.75868.stgit@gimli.home>
+References: <20150320182722.5362.75868.stgit@gimli.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 23 Mar 2015 16:26:40 -0500
+Message-ID: <CAErSpo5geLrWsDi24aYgnRrLV_RwoK-H=kPLd1unA3VPqmzzOg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add ACS quirks for Intel 1G NICs
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Ronciak, John" <john.ronciak@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An ECN meant to specify possible delay optimizations is available on
-the PCI website:
-https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
-where it has defined two functions for an UUID specified _DSM:
-Function 8: If system firmware assumes the responsibility of post
-Conventional Reset delay (and informs the Operating System via this DSM
-function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
-S4 or S3 states), the Operating System may assume sufficient time has
-elapsed since the end of reset, and devices within the PCI subsystem are
-ready for Configuration Access.
-If the system firmware supports runtime power gating on any of the
-device within PCI subsystem covered by this DSM function, the system
-firmware is responsible for covering the necessary post power-on reset
-delay.
+On Fri, Mar 20, 2015 at 1:27 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Intel has verified that there is no peer-to-peer between functions for
+> the below selection of 82580, 82576, 82575, I350, and 82571 multi-port
+> devices.  This adds the necessary quirks to consider the functions
+> isolated from each other.  82571 quad-port devices are omitted due to
+> likely lack of ACS/isolation in the onboard switch, rendering quirks
+> for the downstream endpoints useless.
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: John Ronciak <john.ronciak@intel.com>
 
-Function 9: Specify various smaller delay values than required by the
-SPEC for individual PCI devices like shorter delay values after
-conventional reset, D3hot to D0 transition, functional level reset, etc.
+Applied to pci/virtualization for v4.1, thanks!
 
-This patche adds support for function 8 and part of function 9. For
-function 8, the patch will check if the required _DSM function satisfies
-the requirement and then set the per PCI device's d3cold_delay variable
-to zero. For function 9, the values affecting delays after conventional
-reset and D3hot->D0 are examined and the per PCI device's d3cold_delay
-and d3_delay are updated if the _DSM's return value is smaller than what
-the SPEC requires.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/pci/pci-acpi.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h      |  2 ++
- 2 files changed, 65 insertions(+)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 6ef2019073e2..2ebd02d814d7 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -563,6 +563,66 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
- 				      check_children);
- }
- 
-+/**
-+ * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
-+ * @pdev: the PCI device whose delay is to be updated
-+ * @adev: the companion ACPI device of this PCI device
-+ *
-+ * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
-+ * control method of either its own or its parent bridge.
-+ *
-+ * The UUID of the _DSM control method, together with other information like
-+ * which delay values can be optimized, etc. is defined in a ECN available on
-+ * PCIsig.com titled as: ACPI additions for FW latency optimizations.
-+ * Function 9 of the ACPI _DSM control method, if available for a specific PCI
-+ * device, provides various possible delay values that are less than what the
-+ * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
-+ * can be added later.
-+ * Function 8 of the ACPI _DSM control method, if available for the PCI host
-+ * bridge, means all its children devices do not need the reset delay when
-+ * leaving from D3cold state.
-+ */
-+static void pci_acpi_delay_optimize(struct pci_dev *pdev,
-+				    struct acpi_device *adev)
-+{
-+	acpi_handle handle = adev->handle;
-+	int value;
-+	union acpi_object *obj, *elements;
-+
-+	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
-+				FUNCTION_DELAY_DSM, NULL);
-+	if (obj) {
-+		if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
-+			elements = obj->package.elements;
-+			if (elements[0].type == ACPI_TYPE_INTEGER) {
-+				value = (int)elements[0].integer.value / 1000;
-+				if (value < PCI_PM_D3COLD_WAIT)
-+					pdev->d3cold_delay = value;
-+			}
-+			if (elements[3].type == ACPI_TYPE_INTEGER) {
-+				value = (int)elements[3].integer.value / 1000;
-+				if (value < PCI_PM_D3_WAIT)
-+					pdev->d3_delay = value;
-+			}
-+		}
-+		kfree(obj);
-+	}
-+
-+	/* Function 8 is only applicable to host bridge */
-+	if (pdev->bus->bridge->parent)
-+		return;
-+
-+	handle = ACPI_HANDLE(pdev->bus->bridge);
-+	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
-+				RESET_DELAY_DSM, NULL);
-+	if (!obj)
-+		return;
-+
-+	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
-+		pdev->d3cold_delay = 0;
-+	kfree(obj);
-+}
-+
- static void pci_acpi_setup(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-@@ -571,6 +631,9 @@ static void pci_acpi_setup(struct device *dev)
- 	if (!adev)
- 		return;
- 
-+	if (pci_dev->pm_cap)
-+		pci_acpi_delay_optimize(pci_dev, adev);
-+
- 	pci_acpi_add_pm_notifier(adev, pci_dev);
- 	if (!adev->wakeup.flags.valid)
- 		return;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c901ab84cf3b..3eaefac5acc5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -325,6 +325,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- extern const u8 pci_acpi_dsm_uuid[];
- 
- #define DEVICE_LABEL_DSM	0x07
-+#define RESET_DELAY_DSM		0x08
-+#define FUNCTION_DELAY_DSM	0x09
- #endif
- 
- #endif /* DRIVERS_PCI_H */
--- 
-2.1.0
-
+> ---
+>  drivers/pci/quirks.c |   32 ++++++++++++++++++++++++++++++++
+>  1 file changed, 32 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 85f247e..1bde397 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3822,6 +3822,38 @@ static const struct pci_dev_acs_enabled {
+>         { PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
+>         { PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
+>         { PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
+> +       /* 82580 */
+> +       { PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x150F, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1510, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1511, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1516, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1527, pci_quirk_mf_endpoint_acs },
+> +       /* 82576 */
+> +       { PCI_VENDOR_ID_INTEL, 0x10C9, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x10E6, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x10E7, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x10E8, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x150A, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x150D, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1518, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1526, pci_quirk_mf_endpoint_acs },
+> +       /* 82575 */
+> +       { PCI_VENDOR_ID_INTEL, 0x10A7, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x10A9, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x10D6, pci_quirk_mf_endpoint_acs },
+> +       /* I350 */
+> +       { PCI_VENDOR_ID_INTEL, 0x1521, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1522, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1523, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1524, pci_quirk_mf_endpoint_acs },
+> +       /* 82571 (Quads omitted due to non-ACS switch) */
+> +       { PCI_VENDOR_ID_INTEL, 0x105E, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x105F, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x1060, pci_quirk_mf_endpoint_acs },
+> +       { PCI_VENDOR_ID_INTEL, 0x10D9, pci_quirk_mf_endpoint_acs },
+> +       /* Intel PCH root ports */
+>         { PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>         { 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+>         { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+>
