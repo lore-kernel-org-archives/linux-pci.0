@@ -1,201 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49491 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751666AbbCIRFQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Mar 2015 13:05:16 -0400
-Message-ID: <54FDD277.2060406@ti.com>
-Date: Mon, 9 Mar 2015 13:03:51 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:36114 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752375AbbCWMoQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:16 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Subject: [PATCH v7 23/31] PCI/mvebu: Use pci_common_init_dev() to simplify code
+Date: Mon, 23 Mar 2015 20:40:49 +0800
+Message-ID: <1427114457-16687-24-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PCI] BUG: unable to handle kernel
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com> <54FDAB8B.3010404@ti.com> <CAErSpo52A+S-SSp2TG=W3oskyg_pgg9LYZzrissvfTogTSazPg@mail.gmail.com> <54FDC1FC.2030807@ti.com> <54FDC52B.1070602@roeck-us.net>
-In-Reply-To: <54FDC52B.1070602@roeck-us.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/09/2015 12:07 PM, Guenter Roeck wrote:
-> On 03/09/2015 08:53 AM, Murali Karicheri wrote:
->> On 03/09/2015 10:44 AM, Bjorn Helgaas wrote:
->>> On Mon, Mar 9, 2015 at 9:17 AM, Murali Karicheri<m-karicheri2@ti.com>
->>> wrote:
->>>> On 03/06/2015 12:58 PM, Murali Karicheri wrote:
->>>>>
->>>>> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
->>>>>>
->>>>>> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
->>>>>> [ ... ]
->>>>>>
->>>>>>>> From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17
->>>>>>>> 00:00:00 2001
->>>>>>> From: Murali Karicheri<m-karicheri2@ti.com>
->>>>>>> Date: Fri, 6 Mar 2015 10:23:08 -0500
->>>>>>> Subject: [PATCH] pci: of : fix kernel crash
->>>>>>>
->>>>>>> This is a debug patch to root cause the kernel crash
->>>>>>>
->>>>>>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
->>>>>>>
->>>>>>> PCI: Update DMA configuration from DT
->>>>>>>
->>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>>>>> ---
->>>>>>> drivers/of/of_pci.c | 8 ++++++++
->>>>>>> drivers/pci/host-bridge.c | 5 +++++
->>>>>>> 2 files changed, 13 insertions(+)
->>>>>>>
->>>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>>>>>> index 86d3c38..5a59fb8 100644
->>>>>>> --- a/drivers/of/of_pci.c
->>>>>>> +++ b/drivers/of/of_pci.c
->>>>>>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev
->>>>>>> *pci_dev)
->>>>>>> struct device *dev =&pci_dev->dev;
->>>>>>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
->>>>>>>
->>>>>>> + if (!bridge || !bridge->parent) {
->>>>>>> + if (!bridge)
->>>>>>> + pr_err("PCI bridge not found\n");
->>>>>>> + if (!bridge->parent)
->>>>>>> + pr_err("PCI bridge parent not found\n");
->>>>>>
->>>>>>
->>>>>> You'll see a crash here if bridge is NULL. Maybe add an else before
->>>>>> the second
->>>>>> if statement ? Also, dev_err might be a bit more useful and would be
->>>>>> available.
->>>>>>
->>>>> Fixed and attached.
->>>>>
->>>>> Murali
->>>>>>
->>>>>> Thanks,
->>>>>> Guenter
->>>>>>
->>>>>>> + return;
->>>>>>> + }
->>>>>>> +
->>>>>>> of_dma_configure(dev, bridge->parent->of_node);
->>>>>>> pci_put_host_bridge_device(bridge);
->>>>>>> }
->>>>>>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->>>>>>> index 3e5bbf9..ef2ab51 100644
->>>>>>> --- a/drivers/pci/host-bridge.c
->>>>>>> +++ b/drivers/pci/host-bridge.c
->>>>>>> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct
->>>>>>> pci_dev *dev)
->>>>>>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>>>>>> struct device *bridge = root_bus->bridge;
->>>>>>>
->>>>>>> + if (!bridge) {
->>>>>>> + pr_err("PCI: bridge not found\n");
->>>>>>> + return NULL;
->>>>>>> + }
->>>>>>> +
->>>>>>> kobject_get(&bridge->kobj);
->>>>>>> return bridge;
->>>>>>> }
->>>>>>> --
->>>>>>> 1.7.9.5
->>>>>>>
->>>>>>
->>>>>
->>>> BJorn,
->>>>
->>>> Any chance of applying the attached debug patch to see if this fixes
->>>> and
->>>> provide some additional information on this BUG? Not sure who will
->>>> pick this
->>>> one and apply.
->>>
->>> The change that caused the oops (0b2af171520e ("PCI: Update DMA
->>> configuration from DT")) only exists on my pci/iommu branch, so I'm
->>> the one to apply it.
->>>
->>> It's much easier for me to deal with plain text patches (not
->>> attachments).
->>>
->>> I'm hesitating because I don't want to encourage use of the 0-day
->>> testing robot as a tool at which we can just throw debug patches. The
->>> robot is a service that costs somebody real money, and I want to be a
->>> good neighbor when using it.
->>
->> Thanks for the clarification as I don't have much information on the
->> testing robot. At the same time the question is how similar incidence
->> in the past have been handled. I am a newbie w.r.t to this. This is
->> first time I have introduced a patch that impacts multiple arch/machines.
->>
->>>
->>> Was the information in the robot's report enough to reproduce the
->>> oops? If not, is there additional information we could add to the
->>> report that would enable you to reproduce it? Even if we can't
->>> reproduce the oops, the report seems detailed enough that we should be
->>> able to deduce the problem and produce a fix in which we have high
->>> confidence.
->>
->> The BUG report essentially indicates the crash happened in
->> of_pci_dma_configure(). The machine specific log make sense to a
->> person familiar with this arch and I am not familiar with the same. So
->> anyone can help narrow down the root cause of this?
->>
->> Looking at the code, there are two ptr variables that are accessed
->> without checking for NULL as initial thinking was that these can never
->> be NULL. So the debug patch is just adding addition check before
->> accessing the ptr. I can send this patch without debug prints if that
->> make sense. I was thinking to get confirmation that this is indeed the
->> case before adding the check. What do you think the right approach
->> here? Send a patch for this to the ML for adding the check as a
->> potential fix? Or someone can help me investigate the crash dump and
->> root cause it? or if we can use test robot to confirm this, I can
->> re-send the patch ASIS to the list. Please clarify.
->>
-> If the assumption is that the pointers can never be NULL,
-> wouldn't it be important to see a call trace and to find out
-> if the NULL pointers can actually be seen by design,
-> or if there is some other bug ?
+Mvebu_pcie_scan_bus() is not necessary, we could use
+pci_common_init_dev() instead of pci_common_init(),
+and pass the device pointer as the parent. Then
+pci_scan_root_bus() will be called to scan the pci busses.
 
-Call trace shows
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Jason Cooper <jason@lakedaemon.net>
+---
+ drivers/pci/host/pci-mvebu.c |   18 +-----------------
+ 1 files changed, 1 insertions(+), 17 deletions(-)
 
-  [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
-[    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
-
-
-And BUG seems to be in of_pci_dma_configure() as shown in the BUG report.
-
-of_pci_dma_configure() calls newly added API call to 
-pci_get_host_bridge_device(). Seems like this has succeeded which means 
-bridge is non NULL IMO. However in this function it passes 
-bridge->parent->of_node to of_dma_configure(). So I suspect 
-bridge->parent is NULL for some reason. Is there a chance for parent 
-being NULL in this or any other platform?
-
->
-> I am a bit concerned that adding those NULL pointer checks
-> might end up hiding some other bug, ie that they just hide
-> the real bug without fixing it.
->
-
-I agree with you as well. That is the reason I had added the debug 
-prints in the attached patch to check what is NULL here and that can 
-help us dig into this more.
-
-If BJorn can accept this debug patch for finding this, that will help. I 
-can re-send it to the list as a debug patch if everyone agrees. 
-Otherwise I don't know how to proceed from here.
-
-Thanks and regards,
-
-Murali
-> Thanks,
-> Guenter
->
-
-
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 0cfc494..d5a2b70 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
+-static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
+-				  &mvebu_pcie_ops, sys, &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 						 const struct resource *res,
+ 						 resource_size_t start,
+@@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.nr_controllers = 1;
+ 	hw.private_data   = (void **)&pcie;
+ 	hw.setup          = mvebu_pcie_setup;
+-	hw.scan           = mvebu_pcie_scan_bus;
+ 	hw.map_irq        = of_irq_parse_and_map_pci;
+ 	hw.ops            = &mvebu_pcie_ops;
+ 	hw.align_resource = mvebu_pcie_align_resource;
+ 
+-	pci_common_init(&hw);
++	pci_common_init_dev(&pcie->pdev->dev, &hw);
+ }
+ 
+ /*
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.1
+
