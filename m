@@ -1,85 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:28759 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbbCMDaC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 23:30:02 -0400
-Message-ID: <550259AA.2030609@huawei.com>
-Date: Fri, 13 Mar 2015 11:29:46 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mga09.intel.com ([134.134.136.24]:21200 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752033AbbCWJRq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Mar 2015 05:17:46 -0400
+Message-ID: <550FD9DF.7050306@intel.com>
+Date: Mon, 23 Mar 2015 17:16:15 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 00/30] Refine PCI scan interfaces and make generic
- pci host bridge
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <20150312212306.GH7346@google.com>
-In-Reply-To: <20150312212306.GH7346@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/2] PCI: rename dsm uuid for PCI
+References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com> <20150320210354.GK26935@google.com>
+In-Reply-To: <20150320210354.GK26935@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/13 5:23, Bjorn Helgaas wrote:
-> On Mon, Mar 09, 2015 at 10:33:57AM +0800, Yijing Wang wrote:
->> ...
->> Yijing Wang (29):
->>   PCI: Rip out pci_bus_add_devices() from pci_scan_bus()
->>   PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
->>   sparc/PCI: Claim bus resources before pci_bus_add_devices()
-> 
-> I put the above patches plus a cleanup patch on my pci/enumeration branch.
-> Please rebase your next revision to that.  If there's anything else
-> non-controversial that we can pull in to chip away at this, let me know.
-> 
+According to the PCI firmware spec, there is only one assigned UUID used
+for PCI system so rename the device_label_dsm_uuid to something more
+common as: pci_acpi_dsm_uuid and put it in drivers/pci/pci-acpi.c. Make
+that uuid array extern in the pci.h so that other code can also make use
+of it.
 
-Nice, so we could rebase the rest series easier, thanks!
+This patch shouldn't bring any functional change.
 
->>   PCI: Export busn_resource to drivers/pci
->>   PCI: Remove deprecated pci_scan_bus_parented()
->>   PCI: Combine PCI domain and bus number in u32 arg
->>   PCI: Pass PCI domain number combined with root bus number
->>   PCI: Introduce pci_host_assign_domain_nr() to assign domain
->>   PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
->>   PCI: Introduce pci_host_bridge_list to manage host bridges
->>   PCI: Save sysdata in pci_host_bridge drvdata
->>   PCI: Introduce pci_host_bridge_ops to support host specific
->>     operations
->>   PCI: Introduce new scan function pci_scan_host_bridge()
->>   x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
->>   ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
->>   powerpc/pci: Rename pcibios_root_bridge_prepare()
->>   powerpc/pci: Use pci_scan_host_bridge() for simplicity
->>   PCI: Remove weak pcibios_root_bridge_prepare()
->>   sparc/PCI: Use pci_scan_host_bridge() for simplicity
->>   PCI: Introduce pci_bus_child_max_busnr()
->>   parisc/PCI: Use pci_scan_root_bus() for simplicity
->>   PCI/mvebu: Use pci_common_init_dev() to simplify code
->>   PCI/tegra: Remove redundant tegra_pcie_scan_bus()
->>   PCI/designware: Use pci_scan_root_bus() for simplicity
->>   PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
->>   PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
->>   PCI: Export find_pci_host_bridge() and rename to
->>     pci_find_host_bridge()
->>   PCI: Remove platform specific pci_domain_nr()
->>   PCI: Remove pci_bus_assign_domain_nr()
-> 
-> .
-> 
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ drivers/pci/pci-acpi.c  |  5 +++++
+ drivers/pci/pci-label.c | 11 ++---------
+ drivers/pci/pci.h       |  6 ++++++
+ 3 files changed, 13 insertions(+), 9 deletions(-)
 
-
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 489063987325..6ef2019073e2 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -18,6 +18,11 @@
+ #include <linux/pm_qos.h>
+ #include "pci.h"
+ 
++const u8 pci_acpi_dsm_uuid[] = {
++	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
++	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
++};
++
+ phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+ {
+ 	acpi_status status = AE_NOT_EXIST;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 2ab1b47c7651..024b5c179348 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -31,8 +31,6 @@
+ #include <linux/pci-acpi.h>
+ #include "pci.h"
+ 
+-#define	DEVICE_LABEL_DSM	0x07
+-
+ #ifdef CONFIG_DMI
+ enum smbios_attr_enum {
+ 	SMBIOS_ATTR_NONE = 0,
+@@ -148,11 +146,6 @@ static inline void pci_remove_smbiosname_file(struct pci_dev *pdev)
+ #endif
+ 
+ #ifdef CONFIG_ACPI
+-static const char device_label_dsm_uuid[] = {
+-	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
+-	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
+-};
+-
+ enum acpi_attr_enum {
+ 	ACPI_ATTR_LABEL_SHOW,
+ 	ACPI_ATTR_INDEX_SHOW,
+@@ -179,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 	if (!handle)
+ 		return -1;
+ 
+-	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
++	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+ 				DEVICE_LABEL_DSM, NULL);
+ 	if (!obj)
+ 		return -1;
+@@ -219,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
+ 	if (!handle)
+ 		return false;
+ 
+-	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
++	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+ 				1 << DEVICE_LABEL_DSM);
+ }
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82239cd..c901ab84cf3b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -321,4 +321,10 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++#ifdef CONFIG_ACPI
++extern const u8 pci_acpi_dsm_uuid[];
++
++#define DEVICE_LABEL_DSM	0x07
++#endif
++
+ #endif /* DRIVERS_PCI_H */
 -- 
-Thanks!
-Yijing
+2.1.0
 
