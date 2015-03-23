@@ -1,111 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55112899.3000904@intel.com>
-Date: Tue, 24 Mar 2015 17:04:25 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54762 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753249AbbCWTWo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Mar 2015 15:22:44 -0400
+Date: Mon, 23 Mar 2015 20:22:39 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v2 1/4] pci: disable msi/msix at probe time
+Message-ID: <20150323201237-mutt-send-email-mst@redhat.com>
+References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+ <1426786724-22241-2-git-send-email-mst@redhat.com>
+ <20150323185006.GT26935@google.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH v2 1/2] PCI: rename _DSM UUID array
-References: <54FD4FB9.2060802@intel.com> <1641780.MlgGlmpUFR@vostro.rjw.lan> <5510B158.6060006@intel.com> <13489176.3njQWsGiXL@vostro.rjw.lan>
-In-Reply-To: <13489176.3njQWsGiXL@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150323185006.GT26935@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the PCI firmware spec, there is only one assigned UUID used
-for PCI system so rename the device_label_dsm_uuid to something more
-common as: pci_acpi_dsm_uuid and put it in drivers/pci/pci-acpi.c. Make
-that UUID array extern in the pci-acpi.h so that other code can also
-make use of it.
+On Mon, Mar 23, 2015 at 01:50:06PM -0500, Bjorn Helgaas wrote:
+> Hi Michael,
+> 
+> On Thu, Mar 19, 2015 at 07:57:52PM +0100, Michael S. Tsirkin wrote:
+> > commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+> >     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
+> > 
+> > attempted to address the problem of kexec getting
+> > started after linux enabled msi/msix for a device,
+> > and drivers being confused by msi being enabled,
+> > by disabling msi at shutdown.
+> > 
+> > But arguably, it's better to disable msi/msix when kexec
+> > starts - for example, kexec might run after a crash (kdump)
+> > and shutdown callbacks are not always invoked in that case.
+> > 
+> > Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> > Cc: Ulrich Obergfell <uobergfe@redhat.com>
+> > Cc: Fam Zheng <famz@redhat.com>
+> > Cc: Rusty Russell <rusty@rustcorp.com.au>
+> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > ---
+> >  drivers/pci/pci-driver.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index 3cb2210..2ebd2a8 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
+> >  	 */
+> >  	pm_runtime_get_sync(dev);
+> >  	pci_dev->driver = pci_drv;
+> > +	/*
+> > +	 * When using kexec, msi might be left enabled by the previous kernel,
+> > +	 * this breaks things as some drivers assume msi/msi-x is off at boot.
+> > +	 * Fix this by forcing msi off at startup.
+> > +	 */
+> > +	pci_msi_off(pci_dev);
+> 
+> I think this makes sense, but I have a few questions.  This is a device
+> initialization thing, so it seems like a better fit for the enumeration
+> path, e.g,. pci_msi_init_pci_dev(), than for the driver binding path.
+> 
+> But when CONFIG_PCI_MSI=y, pci_msi_init_pci_dev() already does basically
+> the same thing, so we shouldn't need this change unless CONFIG_PCI_MSI is
+> not set in the kdump kernel.
+> 
+> If this is a problem just with kexeced kernels that don't have
+> CONFIG_PCI_MSI=y, I think I would prefer to fix this by moving
+> pci_msi_init_pci_dev() outside the #ifdef so it works regardless of
+> CONFIG_PCI_MSI.  That would also be nice because we could clean up the
+> duplication between pci_msi_off() and pci_msi_init_pci_dev().  It would
+> also make the starting machine state less dependent on the new kernel,
+> which seems like a good thing.
 
-This patch shouldn't bring any functional change.
+What you say above makes sense.
+OK so the simplest fix is something like below then.
+Fixes the duplication and kexec for CONFIG_PCI_MSI=n.
+Acceptable? Pls let me know, if yes I'll test and
+resubmit properly.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/pci/pci-acpi.c   |  9 +++++++++
- drivers/pci/pci-label.c  | 11 ++---------
- include/linux/pci-acpi.h |  3 +++
- 3 files changed, 14 insertions(+), 9 deletions(-)
+> Are there any bugzillas we could reference here?
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 489063987325..e0afc94aca01 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -18,6 +18,15 @@
- #include <linux/pm_qos.h>
- #include "pci.h"
- 
-+/*
-+ * The UUID is defined in the PCI firmware specification available here:
-+ * https://www.pcisig.com/members/downloads/pcifw_r3_1_13Dec10.pdf
-+ */
-+const u8 pci_acpi_dsm_uuid[] = {
-+	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
-+	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
-+};
-+
- phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+I'll check this point. Maybe not - the real bugfix is
+patch 2/4, this was just found by reading code,
+but it's a dependency to make sure 2/4 does not
+introduce regressions.
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0e037af..2ab59d4 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1062,18 +1062,8 @@ EXPORT_SYMBOL(pci_msi_enabled);
+ void pci_msi_init_pci_dev(struct pci_dev *dev)
  {
- 	acpi_status status = AE_NOT_EXIST;
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index 2ab1b47c7651..024b5c179348 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -31,8 +31,6 @@
- #include <linux/pci-acpi.h>
- #include "pci.h"
- 
--#define	DEVICE_LABEL_DSM	0x07
+ 	INIT_LIST_HEAD(&dev->msi_list);
 -
- #ifdef CONFIG_DMI
- enum smbios_attr_enum {
- 	SMBIOS_ATTR_NONE = 0,
-@@ -148,11 +146,6 @@ static inline void pci_remove_smbiosname_file(struct pci_dev *pdev)
- #endif
- 
- #ifdef CONFIG_ACPI
--static const char device_label_dsm_uuid[] = {
--	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
--	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
--};
+-	/* Disable the msi hardware to avoid screaming interrupts
+-	 * during boot.  This is the power on reset default so
+-	 * usually this should be a noop.
+-	 */
+ 	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+-	if (dev->msi_cap)
+-		msi_set_enable(dev, 0);
 -
- enum acpi_attr_enum {
- 	ACPI_ATTR_LABEL_SHOW,
- 	ACPI_ATTR_INDEX_SHOW,
-@@ -179,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
- 	if (!handle)
- 		return -1;
- 
--	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
-+	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
- 				DEVICE_LABEL_DSM, NULL);
- 	if (!obj)
- 		return -1;
-@@ -219,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
- 	if (!handle)
- 		return false;
- 
--	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
-+	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
- 				1 << DEVICE_LABEL_DSM);
+ 	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-	if (dev->msix_cap)
+-		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
  }
  
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 24c7728ca681..3801c704a945 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -77,6 +77,9 @@ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
- static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
- #endif
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..c455501 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1485,6 +1485,12 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
  
-+extern const u8 pci_acpi_dsm_uuid[];
-+#define DEVICE_LABEL_DSM	0x07
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
++	/* Disable the msi hardware to avoid screaming interrupts
++	 * during boot.  This is the power on reset default so
++	 * usually this should be a noop.
++	 */
++	pci_msi_off(dev);
 +
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
--- 
-2.1.0
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
+ 
 
