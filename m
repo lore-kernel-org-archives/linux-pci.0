@@ -1,56 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:37702 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816AbbCKMtZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 08:49:25 -0400
-Date: Wed, 11 Mar 2015 12:49:11 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH] pci: of : fix BUG: unable to handle kernel
-Message-ID: <20150311124911.GA8656@n2100.arm.linux.org.uk>
-References: <1426001139-18419-1-git-send-email-m-karicheri2@ti.com>
- <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:35864 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752597AbbCWMoK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:10 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"Fenghua Yu" <fenghua.yu@intel.com>
+Subject: [PATCH v7 18/31] ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Mon, 23 Mar 2015 20:40:44 +0800
+Message-ID: <1427114457-16687-19-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqJPvW5q4XwwenFTHrDG4cU5uTd7n-vLKj0mdV9FbVC4Ag@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 07:35:45AM -0500, Rob Herring wrote:
-> On Tue, Mar 10, 2015 at 10:25 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> > On some platforms such as that based on x86, ia64 etc, root bus is
-> > created with parent node passed in as NULL to pci_create_root_bus().
-> > On these platforms, the patch series "PCI: get DMA configuration from
-> > parent device" when applied causes kernel crash. So add a check for this
-> > in of_pci_dma_configure()
-> 
-> Wouldn't these arches have OF disabled and call an empty function?
-> Regardless, we still need this.
-> 
-> > Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> 
-> I'm assuming Bjorn will apply this.
-> 
-> Acked-by: Rob Herring <robh@kernel.org>
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-It might be an idea to read the subject line...
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Fenghua Yu <fenghua.yu@intel.com>
+CC: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |   34 +++++++++++++++++++---------------
+ 1 files changed, 19 insertions(+), 15 deletions(-)
 
-"fix BUG: unable to handle kernel"
-
-which is meaningless.  It needs a much better subject line before it can
-be committed.
-
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index c642bc8..95dc43b 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -420,6 +420,19 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
+ }
+ 
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *controller = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops pci_host_ops = {
++	.pci_ops = &pci_root_ops,
++	.prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -428,7 +441,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
++	struct pci_host_bridge *host;
+ 	int ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+@@ -465,26 +478,17 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, domain, bus, &pci_root_ops,
+-			controller, &info->resources);
+-	if (!pbus) {
++	host = pci_scan_host_bridge(NULL, domain, bus, controller,
++			&info->resources, &pci_host_ops);
++	if (!host) {
+ 		pci_free_resource_list(&info->resources);
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
++	pci_set_host_bridge_release(host,
+ 			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
+-}
+-
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_controller *controller = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	return 0;
++	return host->bus;
+ }
+ 
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
 -- 
-FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
-according to speedtest.net.
+1.7.1
+
