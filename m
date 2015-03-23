@@ -1,142 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:33756 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbbCXX7A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Mar 2015 19:59:00 -0400
-Received: by pdnc3 with SMTP id c3so9249234pdn.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2015 16:58:59 -0700 (PDT)
-Message-ID: <1427241523.2685.18.camel@axtens.net>
-Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
- simplicity
-From: Daniel Axtens <dja@axtens.net>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-ia64@vger.kernel.org,
-	linux-pci@vger.kernel.org, Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linux-m68k@lists.linux-m68k.org,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Wed, 25 Mar 2015 10:58:43 +1100
-In-Reply-To: <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-	 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-f8VqFOdjSIDYlQlsKBNk"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: [PATCH v7 08/31] PCI: Update pci_host_bridge bus resource
+Date: Mon, 23 Mar 2015 20:40:34 +0800
+Message-ID: <1427114457-16687-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Yijing Wang <wangyijing0307@gmail.com>
 
---=-f8VqFOdjSIDYlQlsKBNk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Sometimes, the bus resource start number is not equal to
+root bus number. For example, in pci_scan_bus(), we always
+add the default bus resource which start bus number is 0,
+but the root bus number callers given may != 0, so
+we need to update pci_host_bridge bus resource, because we
+would check whether host bridge bus resoruce is confict
+in later patch.
 
-On Tue, 2015-03-24 at 11:34 +0800, Yijing Wang wrote:
-> Now we could use pci_scan_host_bridge() to scan
-> pci buses, provide powerpc specific pci_host_bridge_ops.
->=20
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> CC: linuxppc-dev@lists.ozlabs.org
-> ---
->  arch/powerpc/kernel/pci-common.c |   60 +++++++++++++++++++++++---------=
------
->  1 files changed, 37 insertions(+), 23 deletions(-)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-c=
-ommon.c
-> index 2c58200..e2b50a2 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -773,6 +773,29 @@ void pcibios_set_root_bus_speed(struct pci_host_brid=
-ge *bridge)
->  		return ppc_md.pcibios_set_root_bus_speed(bridge);
->  }
-> =20
-> +static int pci_host_scan_bus(struct pci_host_bridge *host)
-> +{
-> +	int mode =3D PCI_PROBE_NORMAL;
-> +	struct pci_bus *bus =3D host->bus;
-> +	struct pci_controller *hose =3D dev_get_drvdata(&host->dev);
-Is there any reason this isn't *hose =3D pci_bus_to_host(bus)?
-> +
-> +	/* Get probe mode and perform scan */
-> +	if (hose->dn && ppc_md.pci_probe_mode)
-> +		mode =3D ppc_md.pci_probe_mode(bus);
-> +
-> +	pr_debug("    probe mode: %d\n", mode);
-> +	if (mode =3D=3D PCI_PROBE_DEVTREE)
-> +		of_scan_bus(hose->dn, bus);
-> +
-> +	if (mode =3D=3D PCI_PROBE_NORMAL) {
-> +		pci_bus_update_busn_res_end(bus, 255);
-> +		hose->last_busno =3D pci_scan_child_bus(bus);
-> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
-> +	}
-> +
-> +	return pci_bus_child_max_busnr(bus);
-> +}
-> +
-I'm having trouble convincing myself that this patch covers every
-variation within our PCI implementations. In particular, there's a
-stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
-identical to this function. Does that implementation need to be cleaned
-up and replaced with this function too?
-
-
-> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
->  		ppc_md.pcibios_fixup_phb(hose);
-> =20
->  	/* Configure PCI Express settings */
-> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->  		struct pci_bus *child;
-> -		list_for_each_entry(child, &bus->children, node)
-> +		list_for_each_entry(child, &host->bus->children, node)
->  			pcie_bus_configure_settings(child);
->  	}
->  }
-Two things: Firstly, the function uses hose throughout, not host.
-Secondly, you're not deleting the bus variable: what's the purpose of
-this change?
-
-Regards,
-Daniel
-
-
---=-f8VqFOdjSIDYlQlsKBNk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAABCAAGBQJVEfo/AAoJEPC3R3P2I92FxmIQAIshxMc6nPL6aTLS4mmTONnj
-6s9KW71n2ni64pT74/Q97KF4YJ/KLAPPNUpOZtZ46MbLtCXyFkZyxGtb+dArOUfy
-1G0LpoZOk06zszw/KuNwRSscZEYWf7AT35E4/BlONWjoPoNL2BQUexICrd38+/aE
-gV6zZfWZJrRzWtdxAIMsyoz33bKhRJgf6WGBGwh8aJj9TtXCc/Bz9UZT4ZbhIkWG
-QH7jly1n06OPXTn6Ap74VlbIGDnJBtvfm+hduFXqL5NlgmZJh9YSktjpq4PgmWVT
-EcNE5xfHyD884GpxYjckWqC+qKUynrFMtGT2a7t3HoylfcCQSbdYScAw4VHbDUR8
-yEvtbuWvoKUxdGKG8xBbNwIVkASoZMSld377hC9WVO5b42670JMIncGCZOr4svO0
-cCufQm9i01cplYD25rEwU7GEI7ZU+JLKsb/gihBmjht37Z4wjMtsiAgl+zuY9Tb5
-ilIUJJb00sXCLKYWhenplcVrTxX8RUbrU3FUG5M4FM+/WDYVLiMRcjTJshC897Em
-N/K2kXAYLYAi4THnRwS8wqFeYqEYUSKaTC2kz/LcEAg0rUwt1VPvwMJu/HeaBNLu
-b6Tpgf3QKihKqv78cY4oACebmzaSQBXPPs2p4uM5v/Xuk3M2KKWzcFdbXnBRiBk4
-wOFxmReRgVfXP7L2rniG
-=dWhE
------END PGP SIGNATURE-----
-
---=-f8VqFOdjSIDYlQlsKBNk--
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index ecc1a7c..1a9834b 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -26,8 +26,11 @@ static void pci_host_update_busn_res(
+ 	struct resource_entry *window;
+ 
+ 	resource_list_for_each_entry(window, resources)
+-		if (window->res->flags & IORESOURCE_BUS)
++		if (window->res->flags & IORESOURCE_BUS) {
++			if (bus > window->res->start)
++				window->res->start = bus;
+ 			return;
++		}
+ 
+ 	pr_info(
+ 	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
+-- 
+1.7.1
 
