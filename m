@@ -1,91 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34964 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752888AbbCKW3B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 18:29:01 -0400
-Received: by ieclw3 with SMTP id lw3so3006877iec.2
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 15:29:01 -0700 (PDT)
-Date: Wed, 11 Mar 2015 17:28:35 -0500
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:35332 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752881AbbCWSuK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 14:50:10 -0400
+Received: by igcau2 with SMTP id au2so51173801igc.0
+        for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 11:50:10 -0700 (PDT)
+Date: Mon, 23 Mar 2015 13:50:06 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 03/30] PCI: Export busn_resource to drivers/pci
-Message-ID: <20150311222835.GA1082@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-4-git-send-email-wangyijing@huawei.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v2 1/4] pci: disable msi/msix at probe time
+Message-ID: <20150323185006.GT26935@google.com>
+References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+ <1426786724-22241-2-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1426786724-22241-2-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:00AM +0800, Yijing Wang wrote:
-> Export out busn_resource. Xen pcifront module need it.
+Hi Michael,
+
+On Thu, Mar 19, 2015 at 07:57:52PM +0100, Michael S. Tsirkin wrote:
+> commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
+>     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> attempted to address the problem of kexec getting
+> started after linux enabled msi/msix for a device,
+> and drivers being confused by msi being enabled,
+> by disabling msi at shutdown.
+> 
+> But arguably, it's better to disable msi/msix when kexec
+> starts - for example, kexec might run after a crash (kdump)
+> and shutdown callbacks are not always invoked in that case.
+> 
+> Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> Cc: Ulrich Obergfell <uobergfe@redhat.com>
+> Cc: Fam Zheng <famz@redhat.com>
+> Cc: Rusty Russell <rusty@rustcorp.com.au>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 > ---
->  drivers/pci/pci.h   |    2 ++
->  drivers/pci/probe.c |    3 ++-
->  2 files changed, 4 insertions(+), 1 deletions(-)
+>  drivers/pci/pci-driver.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4091f82..eeacab9 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -10,6 +10,8 @@ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
->  
->  /* Functions internal to the PCI core code */
->  
-> +extern struct resource busn_resource;
-> +
->  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
->  void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
->  #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8ef0375..b97ea81 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -17,12 +17,13 @@
->  #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
->  #define CARDBUS_RESERVE_BUSNR	3
->  
-> -static struct resource busn_resource = {
-> +struct resource busn_resource = {
->  	.name	= "PCI busn",
->  	.start	= 0,
->  	.end	= 255,
->  	.flags	= IORESOURCE_BUS,
->  };
-> +EXPORT_SYMBOL(busn_resource);
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3cb2210..2ebd2a8 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
+>  	 */
+>  	pm_runtime_get_sync(dev);
+>  	pci_dev->driver = pci_drv;
+> +	/*
+> +	 * When using kexec, msi might be left enabled by the previous kernel,
+> +	 * this breaks things as some drivers assume msi/msi-x is off at boot.
+> +	 * Fix this by forcing msi off at startup.
+> +	 */
+> +	pci_msi_off(pci_dev);
 
-I don't think this is a good idea.  We support multiple PCI domains, and
-each domain has its own 0-255 bus number range.  This busn_resource is
-only for domain 0 and probably should be handled in arch code instead of
-the PCI core.
+I think this makes sense, but I have a few questions.  This is a device
+initialization thing, so it seems like a better fit for the enumeration
+path, e.g,. pci_msi_init_pci_dev(), than for the driver binding path.
 
-Right now, I think it's possible to call pci_scan_bus_parented() or
-pci_scan_bus() several times for buses in different domains, and they would
-all share the same busn_resource, which would cause corruption.
+But when CONFIG_PCI_MSI=y, pci_msi_init_pci_dev() already does basically
+the same thing, so we shouldn't need this change unless CONFIG_PCI_MSI is
+not set in the kdump kernel.
 
-So it's already broken, but I don't want to make it harder to fix by
-exporting this stuff.
+If this is a problem just with kexeced kernels that don't have
+CONFIG_PCI_MSI=y, I think I would prefer to fix this by moving
+pci_msi_init_pci_dev() outside the #ifdef so it works regardless of
+CONFIG_PCI_MSI.  That would also be nice because we could clean up the
+duplication between pci_msi_off() and pci_msi_init_pci_dev().  It would
+also make the starting machine state less dependent on the new kernel,
+which seems like a good thing.
 
->  
->  /* Ugh.  Need to stop exporting this to modules. */
->  LIST_HEAD(pci_root_buses);
+Are there any bugzillas we could reference here?
+
+>  	rc = pci_drv->probe(pci_dev, ddi->id);
+>  	if (!rc)
+>  		return rc;
 > -- 
-> 1.7.1
+> MST
 > 
