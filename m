@@ -1,85 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:43273 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbbCYFwW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:52:22 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 15:52:20 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D68AC2CE8040
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:17 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5q9V838535376
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:17 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5pho3023220
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:51:44 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V15 06/21] PCI: Index IOV resources in the conventional style
-Date: Wed, 25 Mar 2015 13:44:42 +0800
-Message-Id: <1427262297-5694-7-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v7 15/31] PCI: Introduce new scan function pci_scan_host_bridge()
+Date: Mon, 23 Mar 2015 20:40:41 +0800
+Message-ID: <1427114457-16687-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Introduce new scan function pci_scan_host_bridge() to
+support host bridge drivers that need to provide platform
+own pci_host_bridge_ops.
 
-Most of PCI uses "res = &dev->resource[i]", not "res = dev->resource + i".
-Use that style in iov.c also.
-
-No functional change.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/iov.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/probe.c |   22 ++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 25 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5bca0e1..27b98c3 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -95,7 +95,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	virtfn->multifunction = 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 36dfee0..b3d9b1b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2064,6 +2064,28 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	return b;
+ }
  
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->parent)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
-@@ -212,7 +212,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		bars |= (1 << (i + PCI_IOV_RESOURCES));
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (res->parent)
- 			nres++;
- 	}
-@@ -373,7 +373,7 @@ found:
- 
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
- 					pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
-@@ -417,7 +417,7 @@ found:
- 
- failed:
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		res->flags = 0;
- 	}
- 
++struct pci_host_bridge *pci_scan_host_bridge(
++		struct device *parent, int domain, int bus,
++		void *sysdata, struct list_head *resources,
++		struct pci_host_bridge_ops *ops)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, domain, bus, sysdata,
++			resources, ops);
++	if (!host)
++		return NULL;
++
++	host->bus = __pci_scan_root_bus(host, ops->pci_ops);
++	if (!host->bus) {
++		pci_free_host_bridge(host);
++		return NULL;
++	}
++
++	return host;
++}
++EXPORT_SYMBOL(pci_scan_host_bridge);
++
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 		int bus, struct pci_ops *ops, void *sysdata,
+ 		struct list_head *resources)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2702a51..7f4f182 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
++struct pci_host_bridge *pci_scan_host_bridge(struct device *parent, int domain,
++		int bus, void *sysdata, struct list_head *resources,
++		struct pci_host_bridge_ops *ops);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+ void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
 -- 
-1.7.9.5
+1.7.1
 
