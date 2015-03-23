@@ -1,50 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55333 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933075AbbCPRUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Mar 2015 13:20:32 -0400
-Date: Mon, 16 Mar 2015 18:20:23 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: [PATCH RFC 0/4] pci: fix unhandled interrupt on shutdown
-Message-ID: <1426526415-13299-1-git-send-email-mst@redhat.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:36320 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752731AbbCWMoW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:22 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v7 26/31] PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+Date: Mon, 23 Mar 2015 20:40:52 +0800
+Message-ID: <1427114457-16687-27-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fam Zheng noticed that pci shutdown disables msi and msix of a device while
-device is still active. This was intended to fix kexec with fusion devices but
-had the unintended effect of breaking even regular shutdown when using virtio.
+Use pci_scan_root_bus() instead of pci_create_root_bus() +
+pci_scan_child_bus() for simplicity.
 
-The same problem would affect any driver which doesn't register
-a level interrupt handler when using msix.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/host/pci-xgene.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-I think the fix is to avoid touching device on shutdown:
-we clear bus master anyway, so we won't get any more
-msi interrupts, and bus reset will clear the msi/msix
-state eventually anyway.
-
-Fam, could you please confirm whether this patchset fixes
-the problem you have observed?
-
-Thanks!
-
-Michael S. Tsirkin (4):
-  pci: disable msi/msix at probe time
-  pci: don't disable msi/msix at shutdown
-  pci: make msi/msix shutdown functions static
-  virtio_pci: drop msi_off on probe
-
- include/linux/pci.h                | 4 ----
- drivers/pci/msi.c                  | 4 ++--
- drivers/pci/pci-driver.c           | 8 ++++++--
- drivers/virtio/virtio_pci_common.c | 3 ---
- 4 files changed, 8 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 078e853..380c259 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	bus = pci_create_root_bus(&pdev->dev, -1, 0,
++	bus = pci_scan_root_bus(&pdev->dev, -1, 0,
+ 					&xgene_pcie_ops, port, &res);
+ 	if (!bus)
+ 		return -ENOMEM;
+ 
+-	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 
 -- 
-MST
+1.7.1
 
