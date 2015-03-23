@@ -1,105 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:42248 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753859AbbCDFWv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:22:51 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:22:49 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id C19AA3578047
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:22:45 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245MbwM40632390
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:45 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245MB5D028006
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:12 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 05/21] PCI: Refresh First VF Offset and VF Stride when updating NumVFs
-Date: Wed,  4 Mar 2015 13:18:57 +0800
-Message-Id: <1425446353-30513-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38886 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291AbbCWEyb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Mar 2015 00:54:31 -0400
+Date: Mon, 23 Mar 2015 12:54:26 +0800
+From: Fam Zheng <famz@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: Re: [PATCH v2 0/4] pci: fix unhandled interrupt on shutdown
+Message-ID: <20150323045426.GA21164@ad.nay.redhat.com>
+References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426786724-22241-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The First VF Offset and VF Stride fields depend on the NumVFs setting, so
-refresh the cached fields in struct pci_sriov when updating NumVFs.  See
-the SR-IOV spec r1.1, sec 3.3.9 and 3.3.10.
+On Thu, 03/19 19:57, Michael S. Tsirkin wrote:
+> Fam Zheng noticed that pci shutdown disables msi and msix of a device while
+> device is still active. This was intended to fix kexec with fusion devices but
+> had the unintended effect of breaking even regular shutdown when using virtio.
 
-[bhelgaas: changelog, remove kernel-doc comment marker]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c |   23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+Series:
+Reviewed-by: Fam Zheng <famz@redhat.com>
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 27b98c3..a8752c2 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
- 		dev->sriov->stride * id) & 0xff;
- }
- 
-+/*
-+ * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
-+ * change when NumVFs changes.
-+ *
-+ * Update iov->offset and iov->stride when NumVFs is written.
-+ */
-+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
-+	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
-+}
-+
- static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- {
- 	struct pci_bus *child;
-@@ -253,7 +268,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
-+	pci_iov_set_numvfs(dev, nr_virtfn);
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-@@ -282,7 +297,7 @@ failed:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-@@ -313,7 +328,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
- 	iov->num_VFs = 0;
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
-+	pci_iov_set_numvfs(dev, 0);
- }
- 
- static int sriov_init(struct pci_dev *dev, int pos)
-@@ -452,7 +467,7 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		pci_update_resource(dev, i);
- 
- 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
-+	pci_iov_set_numvfs(dev, iov->num_VFs);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
- 		msleep(100);
--- 
-1.7.9.5
-
+> 
+> The same problem would affect any driver which doesn't register
+> a level interrupt handler when using msix.
+> 
+> I think the fix is to avoid touching device on shutdown:
+> we clear bus master anyway, so we won't get any more
+> msi interrupts, and bus reset will clear the msi/msix
+> state eventually anyway.
+> 
+> The patches seems to all work well for me.  Given they affect all pci devices,
+> and the bug has been there since 2.6 times, I think there's no rush: we can
+> merge them for 4.1.
+> 
+> At the same time, once merged, they will likely make a good
+> stable candidate.
+> 
+> Michael S. Tsirkin (4):
+>   pci: disable msi/msix at probe time
+>   pci: don't disable msi/msix at shutdown
+>   pci: make msi/msix shutdown functions static
+>   virtio_pci: drop msi_off on probe
+> 
+>  include/linux/pci.h                | 4 ----
+>  drivers/pci/msi.c                  | 4 ++--
+>  drivers/pci/pci-driver.c           | 8 ++++++--
+>  drivers/virtio/virtio_pci_common.c | 3 ---
+>  4 files changed, 8 insertions(+), 11 deletions(-)
+> 
+> -- 
+> MST
+> 
