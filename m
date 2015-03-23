@@ -1,69 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:35004 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbbCDFUv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:20:51 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:20:49 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id F0D2C2BB0040
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:20:46 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245KcvA19267648
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:20:46 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245KCpv024961
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:20:13 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V13 01/21] PCI: Print more info in sriov_enable() error message
-Date: Wed,  4 Mar 2015 13:18:53 +0800
-Message-Id: <1425446353-30513-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:42000 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752145AbbCWQQy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Mar 2015 12:16:54 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: RE: [PATCH] PCI: rcar: Add PCIE_CONF_REGNO macro for PCIECAR register
+Date: Mon, 23 Mar 2015 16:16:48 +0000
+Message-ID: <SIXPR06MB063992D48AEAC6FAD3484C58F50D0@SIXPR06MB0639.apcprd06.prod.outlook.com>
+References: <1426047830-26410-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com>
+ <20150320224446.GO26935@google.com>
+In-Reply-To: <20150320224446.GO26935@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi Iwamatsu-san, Bjorn,
 
-If we don't have space for all the bus numbers required to enable VFs,
-print the largest bus number required and the range available.
+On 20 March 2015 22:45, Bjorn Helgaas wrote:
+> On Wed, Mar 11, 2015 at 01:23:50PM +0900, Nobuhiro Iwamatsu wrote:
+> > The reg variable used when setting PCIECAR register need to be masked by
+> 0xFC
+> > by restriction of the corresponding register.
+> > This adds PCIE_CONF_REGNO are macros for masking changes that
+> PCIE_CONF_REGNO
+> > is used when setting PCIECAR register.
+> >
+> > Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
+> > ---
+> >  drivers/pci/host/pcie-rcar.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > index c57bd0a..1f493ef 100644
+> > --- a/drivers/pci/host/pcie-rcar.c
+> > +++ b/drivers/pci/host/pcie-rcar.c
+> > @@ -104,6 +104,7 @@
+> >  #define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
+> >  #define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
+> >  #define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
+> > +#define  PCIE_CONF_REGNO(r)	(r & 0xfc)
+> >
+> >  #define RCAR_PCI_MAX_RESOURCES 4
+> >  #define MAX_NR_INBOUND_MAPS 6
+> > @@ -227,7 +228,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+> >
+> >  	/* Set the PIO address */
+> >  	rcar_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
+> > -		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, PCIECAR);
+> > +		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) |
+> > +		PCIE_CONF_REGNO(reg), PCIECAR);
+> 
+> What about the other rcar_pci_read_reg()/rcar_pci_write_reg() calls (the
+> ones for "if (pci_is_root_bus())"?  Do those need to be limited to the
+> first 256 bytes also?
+> 
+> It seems a little strange to mask "reg = where & ~3" at the top (making it
+> 4-byte aligned), then mask "r & 0xfc" here (limiting to first 256 bytes and
+> also making it 4-byte aligned).
+> 
+> Seems like those two operations should either be combined or completely
+> split.
 
-No functional change; improved error message only.
+I would prefer that we return an error if the register is outside the supported
+range instead of simply masking it off. Also, shouldn't the valid range include
+the Extended register numbers?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> >  	/* Enable the configuration access */
+> >  	if (bus->parent->number == pcie->root_bus_nr)
+> > --
+> > 2.1.3
+> >
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4b3a4ea..c4c33ea 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -180,6 +180,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
-+	u8 bus;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -216,8 +217,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
--		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
-+	bus = virtfn_bus(dev, nr_virtfn - 1);
-+	if (bus > dev->bus->busn_res.end) {
-+		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
-+			nr_virtfn, bus, &dev->bus->busn_res);
- 		return -ENOMEM;
- 	}
- 
--- 
-1.7.9.5
-
+Thanks
+Phil
