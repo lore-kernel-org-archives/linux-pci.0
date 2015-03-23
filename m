@@ -1,164 +1,271 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 Mar 2015 22:36:41 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-cc: bhelgaas@google.com, mingo@redhat.com, tglx@linutronix.de,
-	hpa@zytor.com, pure.logic@nexus-software.ie, jgross@suse.com,
-	luto@amacapital.net, andy.shevchenko@gmail.com,
-	thomas.petazzoni@free-electrons.com, JBeulich@suse.com, bp@suse.de,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v1 1/2] x86: kconfig: remove X86_UP_IOAPIC
-In-Reply-To: <1426115422-1823-2-git-send-email-mcgrof@do-not-panic.com>
-Message-ID: <alpine.DEB.2.10.1503112232230.8492@chino.kir.corp.google.com>
-References: <1426115422-1823-1-git-send-email-mcgrof@do-not-panic.com> <1426115422-1823-2-git-send-email-mcgrof@do-not-panic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:39011 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbbCWD6A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Mar 2015 23:58:00 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 23 Mar 2015 13:57:58 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id EA4322CE8050
+	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:57:54 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2N3vkAZ34996434
+	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:57:54 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2N3vKmu026639
+	for <linux-pci@vger.kernel.org>; Mon, 23 Mar 2015 14:57:21 +1100
+Date: Mon, 23 Mar 2015 14:56:56 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org,
+	linux-pci@vger.kernel.org, cascardo@linux.vnet.ibm.com,
+	bhelgaas@google.com, Brian King <brking@us.ibm.com>,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Ian Munsie <imunsie@au1.ibm.com>
+Subject: Re: [PATCH v3 1/2] PCI: One more parameter to
+ pci_set_pcie_reset_state()
+Message-ID: <20150323035656.GA27802@shangw>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1427079771-18472-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1427081673.3643.547.camel@redhat.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427081673.3643.547.camel@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 11 Mar 2015, Luis R. Rodriguez wrote:
+On Sun, Mar 22, 2015 at 09:34:33PM -0600, Alex Williamson wrote:
+>On Mon, 2015-03-23 at 14:02 +1100, Gavin Shan wrote:
+>> The patch adds one more parameter ("probe") to pci_set_pcie_reset_state(),
+>> which allows to check if one particular PCI device can be resetted by the
+>> function. The function will be reused to support PCI device specific methods
+>> maintained in pci_dev_reset_methods[] in subsequent patch.
+>> 
+>> Cc: Brian King <brking@us.ibm.com>
+>> Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+>> Cc: Ian Munsie <imunsie@au1.ibm.com>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>> v3: Fix arguments of pci_set_pcie_reset_state() in cxl driver
+>> v2: Reimplemented based on pci_set_pcie_reset_state()
+>> ---
+>>  arch/powerpc/kernel/eeh.c       | 14 ++++++++++----
+>>  drivers/misc/cxl/pci.c          |  2 +-
+>>  drivers/misc/genwqe/card_base.c |  9 +++++++--
+>>  drivers/pci/pci.c               | 15 +++++++++------
+>>  drivers/scsi/ipr.c              |  5 +++--
+>>  include/linux/pci.h             |  5 +++--
+>>  6 files changed, 33 insertions(+), 17 deletions(-)
+>
+>
+>Argh, you're trying to make pci_set_pcie_reset_state() compatible with
+>pci_dev_specific_reset(), so it can be called via pci_reset_function(),
+>but the whole point of the pci_reset_function() interface is to reset a
+>*single* function without disturbing anything else.  These patches make
+>no effort at all to limit the set of affected devices to a single
+>function and take great liberties using PCI_ANY_ID for vendors.  My take
+>on the powerpc version of pcibios_set_pcie_reset_state() is that it's
+>effectively a slot reset, so why not hook into the
+>pci_reset_hotplug_slot() via the hotplug slot ops?  Please also use
+>cover letters.  Thanks,
+>
 
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> X86_UP_IOAPIC is a way so that 32-bit UP systems can enable
-> X86_IOAPIC. X86_UP_IOAPIC is only as a visible user option if
-> you are on a 32-bit system but have X86_UP_APIC enabled. X86_UP_APIC
-> will be enabled by force if you have PCI_MSI on 32-bit systems
-> now, X86_UP_APIC will now only be user selectable if you didn't
-> have PCI_MSI enabled and are also not on a X86_32_NON_STANDARD
-> system. Bryan's original patch (refactored commit log in commit
-> 38a1dfda) [0] describes that Intel CE, Intel MID and Intel Quark
-> are all 32-bit uniprocessor systems with IO-APICs, the code change
-> however only *re-enabled* UP_IOAPIC as an *option* when PCI_MSI
-> was enabled, but given that:
-> 
-> 1) enabling X86_IOAPIC is the real end goal here
-> 2) enabling X86_IOAPIC only increases the kernel only by 12064 bytes (~12 KiB)
-> 3) enabling X86_IOAPIC will in no way slow down your kernel
-> 
-> Let's make a compromise for 32-bit systems and always enable X86_IOAPIC
-> when X86_UP_IOAPIC is enabled as 32-bit systems are not in a state
-> of flux and the price for the size is small with no performance impact.
-> 
-> Using:
-> 
-> export ARCH=i386
-> make allnoconfig
-> --> Enabling PCI_MSI
-> make localyesconfig
-> 
-> With X86_IO_APIC:
-> mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
-> 734608  arch/x86/boot/bzImage
-> 
-> Without X86_IO_APIC:
-> mcgrof@ergon ~/linux-next (git::master)$ du -b arch/x86/boot/bzImage
-> 722544  arch/x86/boot/bzImage
-> 
+Yep, that's the point and intention of the patches. pcibios_set_pcie_reset_state()
+isn't equal to pci_reset_hotplug_slot(). The later one depends on PCI slot, which
+wasn't populated on PowerNV platform yet, but pcibios_set_pcie_reseet_state() doesn't.
 
-1.6% increase.
+The patchset depends on improved pcibios_set_pcie_reset_state(), which can be seen
+from following linked. With it, we don't affect any PCI devices as the config space
+is saved/restored accordingly before/after reset:
 
-> [0] https://lkml.org/lkml/2015/1/22/718
-> 
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Bryan O'Donoghue <pure.logic@nexus-software.ie>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Ingo Molnar <mingo@kernel.org>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: H. Peter Anvin <hpa@zytor.com>
-> Cc: Jan Beulich <JBeulich@suse.com>
-> Cc: Juergen Gross <jgross@suse.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: x86@kernel.org
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> ---
->  arch/x86/Kconfig | 15 ++-------------
->  1 file changed, 2 insertions(+), 13 deletions(-)
-> 
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index 110f6ae..b17a8ea 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -899,6 +899,7 @@ config X86_UP_APIC
->  	bool "Local APIC support on uniprocessors" if !PCI_MSI
->  	default PCI_MSI
->  	depends on X86_32 && !SMP && !X86_32_NON_STANDARD
-> +	select X86_IO_APIC
->  	---help---
->  	  A local APIC (Advanced Programmable Interrupt Controller) is an
->  	  integrated interrupt controller in the CPU. If you have a single-CPU
-> @@ -909,18 +910,6 @@ config X86_UP_APIC
->  	  performance counters), and the NMI watchdog which detects hard
->  	  lockups.
->  
-> -config X86_UP_IOAPIC
-> -	bool "IO-APIC support on uniprocessors"
-> -	depends on X86_UP_APIC
-> -	---help---
-> -	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
-> -	  SMP-capable replacement for PC-style interrupt controllers. Most
-> -	  SMP systems and many recent uniprocessor systems have one.
-> -
-> -	  If you have a single-CPU system with an IO-APIC, you can say Y here
-> -	  to use it. If you say Y here even though your machine doesn't have
-> -	  an IO-APIC, then the kernel will still run with no slowdown at all.
-> -
->  config X86_LOCAL_APIC
->  	def_bool y
->  	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
-> @@ -928,7 +917,7 @@ config X86_LOCAL_APIC
->  
->  config X86_IO_APIC
->  	def_bool y
-> -	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
-> +	depends on X86_LOCAL_APIC
->  	select IRQ_DOMAIN
->  
->  config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+https://patchwork.ozlabs.org/patch/438598/
 
-I think it would be best to remove the "select" so the "depends" for both 
-config options won't diverge in the future.  This should be equivalent, 
-right?
+Sorry that I didn't use cover letter again. I'll have one next time always.
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -909,18 +909,6 @@ config X86_UP_APIC
- 	  performance counters), and the NMI watchdog which detects hard
- 	  lockups.
- 
--config X86_UP_IOAPIC
--	bool "IO-APIC support on uniprocessors"
--	depends on X86_UP_APIC
--	---help---
--	  An IO-APIC (I/O Advanced Programmable Interrupt Controller) is an
--	  SMP-capable replacement for PC-style interrupt controllers. Most
--	  SMP systems and many recent uniprocessor systems have one.
--
--	  If you have a single-CPU system with an IO-APIC, you can say Y here
--	  to use it. If you say Y here even though your machine doesn't have
--	  an IO-APIC, then the kernel will still run with no slowdown at all.
--
- config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
-@@ -928,7 +916,7 @@ config X86_LOCAL_APIC
- 
- config X86_IO_APIC
- 	def_bool y
--	depends on X86_LOCAL_APIC || X86_UP_IOAPIC
-+	depends on X86_LOCAL_APIC || X86_UP_APIC
- 	select IRQ_DOMAIN
- 
- config X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+Thanks,
+Gavin
 
-And then the second patch adds a 3.8% increase on top of this (and the two 
-"select" statements in that patch shouldn't be necessary, both 
-X86_LOCAL_APIC and X86_IO_APIC are def_bool y for PCI_MSI configs).  If 
-these are just cleanup patches, I'm not sure I understand why a 
-considerable kernel text size increase is worth it.
+
+>Alex
+>
+>> diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+>> index daa68a1..cd85c18 100644
+>> --- a/arch/powerpc/kernel/eeh.c
+>> +++ b/arch/powerpc/kernel/eeh.c
+>> @@ -726,11 +726,14 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
+>>   * pcibios_set_pcie_slot_reset - Set PCI-E reset state
+>>   * @dev: pci device struct
+>>   * @state: reset state to enter
+>> + * @probe: check if the device can take the reset
+>>   *
+>>   * Return value:
+>>   * 	0 if success
+>>   */
+>> -int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+>> +int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>> +				 enum pcie_reset_state state,
+>> +				 int probe)
+>>  {
+>>  	struct eeh_dev *edev = pci_dev_to_eeh_dev(dev);
+>>  	struct eeh_pe *pe = eeh_dev_to_pe(edev);
+>> @@ -738,9 +741,12 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+>>  	if (!pe) {
+>>  		pr_err("%s: No PE found on PCI device %s\n",
+>>  			__func__, pci_name(dev));
+>> -		return -EINVAL;
+>> +		return -ENOTTY;
+>>  	}
+>>  
+>> +	if (probe)
+>> +		return 0;
+>> +
+>>  	switch (state) {
+>>  	case pcie_deassert_reset:
+>>  		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
+>> @@ -762,8 +768,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
+>>  		break;
+>>  	default:
+>>  		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
+>> -		return -EINVAL;
+>> -	};
+>> +		return -ENOTTY;
+>> +	}
+>>  
+>>  	return 0;
+>>  }
+>> diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
+>> index 1ef0164..3a87bfc 100644
+>> --- a/drivers/misc/cxl/pci.c
+>> +++ b/drivers/misc/cxl/pci.c
+>> @@ -789,7 +789,7 @@ int cxl_reset(struct cxl *adapter)
+>>  	/* pcie_warm_reset requests a fundamental pci reset which includes a
+>>  	 * PERST assert/deassert.  PERST triggers a loading of the image
+>>  	 * if "user" or "factory" is selected in sysfs */
+>> -	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset))) {
+>> +	if ((rc = pci_set_pcie_reset_state(dev, pcie_warm_reset, 0))) {
+>>  		dev_err(&dev->dev, "cxl: pcie_warm_reset failed\n");
+>>  		return rc;
+>>  	}
+>> diff --git a/drivers/misc/genwqe/card_base.c b/drivers/misc/genwqe/card_base.c
+>> index 4cf8f82..4871f69 100644
+>> --- a/drivers/misc/genwqe/card_base.c
+>> +++ b/drivers/misc/genwqe/card_base.c
+>> @@ -782,17 +782,22 @@ static int genwqe_pci_fundamental_reset(struct pci_dev *pci_dev)
+>>  {
+>>  	int rc;
+>>  
+>> +	/* Probe if the device can take the reset */
+>> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 1);
+>> +	if (rc)
+>> +		return rc;
+>> +
+>>  	/*
+>>  	 * lock pci config space access from userspace,
+>>  	 * save state and issue PCIe fundamental reset
+>>  	 */
+>>  	pci_cfg_access_lock(pci_dev);
+>>  	pci_save_state(pci_dev);
+>> -	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset);
+>> +	rc = pci_set_pcie_reset_state(pci_dev, pcie_warm_reset, 0);
+>>  	if (!rc) {
+>>  		/* keep PCIe reset asserted for 250ms */
+>>  		msleep(250);
+>> -		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset);
+>> +		pci_set_pcie_reset_state(pci_dev, pcie_deassert_reset, 0);
+>>  		/* Wait for 2s to reload flash and train the link */
+>>  		msleep(2000);
+>>  	}
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 81f06e8..8581a5f 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1558,28 +1558,31 @@ EXPORT_SYMBOL(pci_disable_device);
+>>   * pcibios_set_pcie_reset_state - set reset state for device dev
+>>   * @dev: the PCIe device reset
+>>   * @state: Reset state to enter into
+>> - *
+>> + * @probe: Check if the device can take the reset
+>>   *
+>>   * Sets the PCIe reset state for the device. This is the default
+>>   * implementation. Architecture implementations can override this.
+>>   */
+>>  int __weak pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>> -					enum pcie_reset_state state)
+>> +					enum pcie_reset_state state,
+>> +					int probe)
+>>  {
+>> -	return -EINVAL;
+>> +	return -ENOTTY;
+>>  }
+>>  
+>>  /**
+>>   * pci_set_pcie_reset_state - set reset state for device dev
+>>   * @dev: the PCIe device reset
+>>   * @state: Reset state to enter into
+>> - *
+>> + * @probe: Check if the device can take the reset
+>>   *
+>>   * Sets the PCI reset state for the device.
+>>   */
+>> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
+>> +int pci_set_pcie_reset_state(struct pci_dev *dev,
+>> +			     enum pcie_reset_state state,
+>> +			     int probe)
+>>  {
+>> -	return pcibios_set_pcie_reset_state(dev, state);
+>> +	return pcibios_set_pcie_reset_state(dev, state, probe);
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+>>  
+>> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+>> index 9219953..89026f4 100644
+>> --- a/drivers/scsi/ipr.c
+>> +++ b/drivers/scsi/ipr.c
+>> @@ -8317,7 +8317,8 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
+>>  static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
+>>  {
+>>  	ENTER;
+>> -	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
+>> +	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev,
+>> +				 pcie_deassert_reset, 0);
+>>  	ipr_cmd->job_step = ipr_reset_bist_done;
+>>  	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
+>>  	LEAVE;
+>> @@ -8339,7 +8340,7 @@ static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
+>>  	struct pci_dev *pdev = ioa_cfg->pdev;
+>>  
+>>  	ENTER;
+>> -	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
+>> +	pci_set_pcie_reset_state(pdev, pcie_warm_reset, 0);
+>>  	ipr_cmd->job_step = ipr_reset_slot_reset_done;
+>>  	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
+>>  	LEAVE;
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 4e1f17d..052ac63 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -960,7 +960,8 @@ extern unsigned int pcibios_max_latency;
+>>  void pci_set_master(struct pci_dev *dev);
+>>  void pci_clear_master(struct pci_dev *dev);
+>>  
+>> -int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+>> +int pci_set_pcie_reset_state(struct pci_dev *dev,
+>> +			     enum pcie_reset_state state, int probe);
+>>  int pci_set_cacheline_size(struct pci_dev *dev);
+>>  #define HAVE_PCI_SET_MWI
+>>  int __must_check pci_set_mwi(struct pci_dev *dev);
+>> @@ -1648,7 +1649,7 @@ extern unsigned long pci_hotplug_mem_size;
+>>  void pcibios_disable_device(struct pci_dev *dev);
+>>  void pcibios_set_master(struct pci_dev *dev);
+>>  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>> -				 enum pcie_reset_state state);
+>> +				 enum pcie_reset_state state, int probe);
+>>  int pcibios_add_device(struct pci_dev *dev);
+>>  void pcibios_release_device(struct pci_dev *dev);
+>>  void pcibios_penalize_isa_irq(int irq, int active);
+>
+>
+>
+
