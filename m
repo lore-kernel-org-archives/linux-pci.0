@@ -1,361 +1,296 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:57331 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbbCTDQI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:16:08 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:16:07 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 219382BB0052
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:06 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3Fv7Z12320990
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:06 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3FVkB014056
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:32 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 19/21] powerpc/powernv: Group VF PE when IOV BAR is big on PHB3
-Date: Fri, 20 Mar 2015 11:06:35 +0800
-Message-Id: <1426820797-6267-20-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:64269 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752900AbbCWMrL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:47:11 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v7 30/31] PCI: Remove pci_bus_assign_domain_nr()
+Date: Mon, 23 Mar 2015 20:40:56 +0800
+Message-ID: <1427114457-16687-31-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When IOV BAR is big, each is covered by 4 M64 windows.  This leads to
-several VF PE sits in one PE in terms of M64.
+Now we save the domain number in pci_host_bridge,
+we could remove pci_bus_assign_domain_nr() and
+clean the domain member in pci_bus. Also move
+pci_host_assign_domain_nr() to drivers/pci/host-bridge.c
+for simplicity.
 
-Group VF PEs according to the M64 allocation.
-
-[bhelgaas: use dev_printk() when possible]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h     |    2 +-
- arch/powerpc/platforms/powernv/pci-ioda.c |  197 ++++++++++++++++++++++-------
- 2 files changed, 154 insertions(+), 45 deletions(-)
+ drivers/pci/host-bridge.c |   61 +++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c         |   67 ---------------------------------------------
+ drivers/pci/pci.h         |   13 ---------
+ drivers/pci/probe.c       |   11 ++-----
+ include/linux/pci.h       |    3 --
+ 5 files changed, 64 insertions(+), 91 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index d6942c9..ec83b51 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -182,7 +182,7 @@ struct pci_dn {
- #define M64_PER_IOV 4
- 	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
--	int     m64_wins[PCI_SRIOV_NUM_BARS];
-+	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
- #endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 89bbcc4..8e8399f 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1156,26 +1156,27 @@ static int pnv_pci_vf_release_m64(struct pci_dev *pdev)
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
- 	struct pci_dn         *pdn;
--	int                    i;
-+	int                    i, j;
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index fa19023..5b85621 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -11,6 +11,8 @@
+ static LIST_HEAD(pci_host_bridge_list);
+ static DEFINE_MUTEX(pci_host_mutex);
  
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
- 	phb = hose->private_data;
- 	pdn = pci_get_pdn(pdev);
- 
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		if (pdn->m64_wins[i] == IODA_INVALID_M64)
--			continue;
--		opal_pci_phb_mmio_enable(phb->opal_id,
--				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 0);
--		clear_bit(pdn->m64_wins[i], &phb->ioda.m64_bar_alloc);
--		pdn->m64_wins[i] = IODA_INVALID_M64;
--	}
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-+		for (j = 0; j < M64_PER_IOV; j++) {
-+			if (pdn->m64_wins[i][j] == IODA_INVALID_M64)
-+				continue;
-+			opal_pci_phb_mmio_enable(phb->opal_id,
-+				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 0);
-+			clear_bit(pdn->m64_wins[i][j], &phb->ioda.m64_bar_alloc);
-+			pdn->m64_wins[i][j] = IODA_INVALID_M64;
-+		}
- 
- 	return 0;
- }
- 
--static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
-+static int pnv_pci_vf_assign_m64(struct pci_dev *pdev, u16 num_vfs)
- {
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
-@@ -1183,17 +1184,33 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
- 	struct pci_dn         *pdn;
- 	unsigned int           win;
- 	struct resource       *res;
--	int                    i;
-+	int                    i, j;
- 	int64_t                rc;
-+	int                    total_vfs;
-+	resource_size_t        size, start;
-+	int                    pe_num;
-+	int                    vf_groups;
-+	int                    vf_per_group;
- 
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
- 	phb = hose->private_data;
- 	pdn = pci_get_pdn(pdev);
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
- 
- 	/* Initialize the m64_wins to IODA_INVALID_M64 */
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
--		pdn->m64_wins[i] = IODA_INVALID_M64;
-+		for (j = 0; j < M64_PER_IOV; j++)
-+			pdn->m64_wins[i][j] = IODA_INVALID_M64;
++void pci_host_assign_domain_nr(struct pci_host_bridge *host);
 +
-+	if (pdn->m64_per_iov == M64_PER_IOV) {
-+		vf_groups = (num_vfs <= M64_PER_IOV) ? num_vfs: M64_PER_IOV;
-+		vf_per_group = (num_vfs <= M64_PER_IOV)? 1:
-+			roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
+ static void pci_release_host_bridge_dev(struct device *dev)
+ {
+ 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+@@ -159,6 +161,65 @@ int pci_domain_nr(struct pci_bus *bus)
+ 	return host->domain;
+ }
+ EXPORT_SYMBOL(pci_domain_nr);
++
++static atomic_t __domain_nr = ATOMIC_INIT(-1);
++
++int pci_get_new_domain_nr(void)
++{
++	return atomic_inc_return(&__domain_nr);
++}
++
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++static int pci_assign_domain_nr(struct device *dev)
++{
++	static int use_dt_domains = -1;
++	int domain = of_get_pci_domain_nr(dev->of_node);
++
++	/*
++	 * Check DT domain and use_dt_domains values.
++	 *
++	 * If DT domain property is valid (domain >= 0) and
++	 * use_dt_domains != 0, the DT assignment is valid since this means
++	 * we have not previously allocated a domain number by using
++	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
++	 * 1, to indicate that we have just assigned a domain number from
++	 * DT.
++	 *
++	 * If DT domain property value is not valid (ie domain < 0), and we
++	 * have not previously assigned a domain number from DT
++	 * (use_dt_domains != 1) we should assign a domain number by
++	 * using the:
++	 *
++	 * pci_get_new_domain_nr()
++	 *
++	 * API and update the use_dt_domains value to keep track of method we
++	 * are using to assign domain numbers (use_dt_domains = 0).
++	 *
++	 * All other combinations imply we have a platform that is trying
++	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
++	 * which is a recipe for domain mishandling and it is prevented by
++	 * invalidating the domain value (domain = -1) and printing a
++	 * corresponding error.
++	 */
++	if (domain >= 0 && use_dt_domains) {
++		use_dt_domains = 1;
++	} else if (domain < 0 && use_dt_domains != 1) {
++		use_dt_domains = 0;
++		domain = pci_get_new_domain_nr();
 +	} else {
-+		vf_groups = 1;
-+		vf_per_group = 1;
++		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++			dev->of_node->full_name);
++		domain = -1;
 +	}
++
++	return domain;
++}
++
++void pci_host_assign_domain_nr(struct pci_host_bridge *host)
++{
++	host->domain = pci_assign_domain_nr(host->dev.parent);
++}
++#endif
+ #endif
  
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-@@ -1203,35 +1220,61 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev)
- 		if (!pnv_pci_is_mem_pref_64(res->flags))
- 			continue;
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8a2f12c..044801c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4515,73 +4515,6 @@ static void pci_no_domains(void)
+ #endif
+ }
  
--		do {
--			win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
--					phb->ioda.m64_bar_idx + 1, 0);
+-#ifdef CONFIG_PCI_DOMAINS
+-static atomic_t __domain_nr = ATOMIC_INIT(-1);
 -
--			if (win >= phb->ioda.m64_bar_idx + 1)
--				goto m64_failed;
--		} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
-+		for (j = 0; j < vf_groups; j++) {
-+			do {
-+				win = find_next_zero_bit(&phb->ioda.m64_bar_alloc,
-+						phb->ioda.m64_bar_idx + 1, 0);
-+
-+				if (win >= phb->ioda.m64_bar_idx + 1)
-+					goto m64_failed;
-+			} while (test_and_set_bit(win, &phb->ioda.m64_bar_alloc));
-+
-+			pdn->m64_wins[i][j] = win;
-+
-+			if (pdn->m64_per_iov == M64_PER_IOV) {
-+				size = pci_iov_resource_size(pdev,
-+							PCI_IOV_RESOURCES + i);
-+				size = size * vf_per_group;
-+				start = res->start + size * j;
-+			} else {
-+				size = resource_size(res);
-+				start = res->start;
-+			}
+-int pci_get_new_domain_nr(void)
+-{
+-	return atomic_inc_return(&__domain_nr);
+-}
+-
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-static int pci_assign_domain_nr(struct device *dev)
+-{
+-	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(dev->of_node);
+-
+-	/*
+-	 * Check DT domain and use_dt_domains values.
+-	 *
+-	 * If DT domain property is valid (domain >= 0) and
+-	 * use_dt_domains != 0, the DT assignment is valid since this means
+-	 * we have not previously allocated a domain number by using
+-	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+-	 * 1, to indicate that we have just assigned a domain number from
+-	 * DT.
+-	 *
+-	 * If DT domain property value is not valid (ie domain < 0), and we
+-	 * have not previously assigned a domain number from DT
+-	 * (use_dt_domains != 1) we should assign a domain number by
+-	 * using the:
+-	 *
+-	 * pci_get_new_domain_nr()
+-	 *
+-	 * API and update the use_dt_domains value to keep track of method we
+-	 * are using to assign domain numbers (use_dt_domains = 0).
+-	 *
+-	 * All other combinations imply we have a platform that is trying
+-	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+-	 * which is a recipe for domain mishandling and it is prevented by
+-	 * invalidating the domain value (domain = -1) and printing a
+-	 * corresponding error.
+-	 */
+-	if (domain >= 0 && use_dt_domains) {
+-		use_dt_domains = 1;
+-	} else if (domain < 0 && use_dt_domains != 1) {
+-		use_dt_domains = 0;
+-		domain = pci_get_new_domain_nr();
+-	} else {
+-		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			dev->of_node->full_name);
+-		domain = -1;
+-	}
+-
+-	return domain;
+-}
+-
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+-{
+-	bus->domain_nr = pci_assign_domain_nr(parent);
+-}
+-
+-void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+-{
+-	host->domain = pci_assign_domain_nr(host->dev.parent);
+-}
+-
+-#endif
+-#endif
+-
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ef10cc1..a6e4d8f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -321,19 +321,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
  
--		pdn->m64_wins[i] = win;
-+			/* Map the M64 here */
-+			if (pdn->m64_per_iov == M64_PER_IOV) {
-+				pe_num = pdn->offset + j;
-+				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+						pe_num, OPAL_M64_WINDOW_TYPE,
-+						pdn->m64_wins[i][j], 0);
-+			}
- 
--		/* Map the M64 here */
--		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-+			rc = opal_pci_set_phb_mem_window(phb->opal_id,
- 						 OPAL_M64_WINDOW_TYPE,
--						 pdn->m64_wins[i],
--						 res->start,
-+						 pdn->m64_wins[i][j],
-+						 start,
- 						 0, /* unused */
--						 resource_size(res));
--		if (rc != OPAL_SUCCESS) {
--			dev_err(&pdev->dev, "Failed to map M64 window #%d: %lld\n",
--				win, rc);
--			goto m64_failed;
--		}
-+						 size);
- 
--		rc = opal_pci_phb_mmio_enable(phb->opal_id,
--				OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i], 1);
--		if (rc != OPAL_SUCCESS) {
--			dev_err(&pdev->dev, "Failed to enable M64 window #%d: %llx\n",
--				win, rc);
--			goto m64_failed;
-+
-+			if (rc != OPAL_SUCCESS) {
-+				dev_err(&pdev->dev, "Failed to map M64 window #%d: %lld\n",
-+					win, rc);
-+				goto m64_failed;
-+			}
-+
-+			if (pdn->m64_per_iov == M64_PER_IOV)
-+				rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 2);
-+			else
-+				rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+				     OPAL_M64_WINDOW_TYPE, pdn->m64_wins[i][j], 1);
-+
-+			if (rc != OPAL_SUCCESS) {
-+				dev_err(&pdev->dev, "Failed to enable M64 window #%d: %llx\n",
-+					win, rc);
-+				goto m64_failed;
-+			}
- 		}
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+-void pci_host_assign_domain_nr(struct pci_host_bridge *host);
+-#else
+-static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-					struct device *parent)
+-{
+-}
+-static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+-{
+-}
+-#endif
+-
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, int domain, int bus, void *sysdata,
+ 		struct list_head *resources, struct pci_host_bridge_ops *ops);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cb0237f..53e4887 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -480,7 +480,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
  	}
- 	return 0;
-@@ -1273,22 +1316,53 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
- 	pe->tce32_table = NULL;
  }
  
--static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
-+static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+-static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
++static struct pci_bus *pci_alloc_bus(void)
  {
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
- 	struct pnv_ioda_pe    *pe, *pe_n;
- 	struct pci_dn         *pdn;
-+	u16                    vf_index;
-+	int64_t                rc;
+ 	struct pci_bus *b;
  
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
- 	phb = hose->private_data;
-+	pdn = pci_get_pdn(pdev);
- 
- 	if (!pdev->is_physfn)
- 		return;
- 
--	pdn = pci_get_pdn(pdev);
-+	if (pdn->m64_per_iov == M64_PER_IOV && num_vfs > M64_PER_IOV) {
-+		int   vf_group;
-+		int   vf_per_group;
-+		int   vf_index1;
-+
-+		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
-+
-+		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++)
-+			for (vf_index = vf_group * vf_per_group;
-+				vf_index < (vf_group + 1) * vf_per_group &&
-+				vf_index < num_vfs;
-+				vf_index++)
-+				for (vf_index1 = vf_group * vf_per_group;
-+					vf_index1 < (vf_group + 1) * vf_per_group &&
-+					vf_index1 < num_vfs;
-+					vf_index1++){
-+
-+					rc = opal_pci_set_peltv(phb->opal_id,
-+						pdn->offset + vf_index,
-+						pdn->offset + vf_index1,
-+						OPAL_REMOVE_PE_FROM_DOMAIN);
-+
-+					if (rc)
-+					    dev_warn(&pdev->dev, "%s: Failed to unlink same group PE#%d(%lld)\n",
-+						__func__,
-+						pdn->offset + vf_index1, rc);
-+				}
-+	}
-+
- 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
- 		if (pe->parent_dev != pdev)
- 			continue;
-@@ -1323,10 +1397,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
- 	num_vfs = pdn->num_vfs;
- 
- 	/* Release VF PEs */
--	pnv_ioda_release_vf_PE(pdev);
-+	pnv_ioda_release_vf_PE(pdev, num_vfs);
- 
- 	if (phb->type == PNV_PHB_IODA2) {
--		pnv_pci_vf_resource_shift(pdev, -pdn->offset);
-+		if (pdn->m64_per_iov == 1)
-+			pnv_pci_vf_resource_shift(pdev, -pdn->offset);
- 
- 		/* Release M64 windows */
- 		pnv_pci_vf_release_m64(pdev);
-@@ -1348,6 +1423,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	int                    pe_num;
- 	u16                    vf_index;
- 	struct pci_dn         *pdn;
-+	int64_t                rc;
- 
- 	bus = pdev->bus;
- 	hose = pci_bus_to_host(bus);
-@@ -1396,6 +1472,37 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 
- 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
- 	}
-+
-+	if (pdn->m64_per_iov == M64_PER_IOV && num_vfs > M64_PER_IOV) {
-+		int   vf_group;
-+		int   vf_per_group;
-+		int   vf_index1;
-+
-+		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
-+
-+		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
-+			for (vf_index = vf_group * vf_per_group;
-+			     vf_index < (vf_group + 1) * vf_per_group &&
-+			     vf_index < num_vfs;
-+			     vf_index++) {
-+				for (vf_index1 = vf_group * vf_per_group;
-+				     vf_index1 < (vf_group + 1) * vf_per_group &&
-+				     vf_index1 < num_vfs;
-+				     vf_index1++) {
-+
-+					rc = opal_pci_set_peltv(phb->opal_id,
-+						pdn->offset + vf_index,
-+						pdn->offset + vf_index1,
-+						OPAL_ADD_PE_TO_DOMAIN);
-+
-+					if (rc)
-+					    dev_warn(&pdev->dev, "%s: Failed to link same group PE#%d(%lld)\n",
-+						__func__,
-+						pdn->offset + vf_index1, rc);
-+				}
-+			}
-+		}
-+	}
+@@ -495,10 +495,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	if (parent)
+-		b->domain_nr = parent->domain_nr;
+-#endif
+ 	return b;
  }
  
- int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-@@ -1428,16 +1535,18 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 		mutex_unlock(&phb->ioda.pe_alloc_mutex);
+@@ -645,7 +641,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus(parent);
++	child = pci_alloc_bus();
+ 	if (!child)
+ 		return NULL;
  
- 		/* Assign M64 window accordingly */
--		ret = pnv_pci_vf_assign_m64(pdev);
-+		ret = pnv_pci_vf_assign_m64(pdev, num_vfs);
- 		if (ret) {
- 			dev_info(&pdev->dev, "Not enough M64 window resources\n");
- 			goto m64_failed;
- 		}
+@@ -1865,7 +1861,7 @@ static struct pci_bus *pci_create_root_bus(
+ 	char *fmt;
  
- 		/* Do some magic shift */
--		ret = pnv_pci_vf_resource_shift(pdev, pdn->offset);
--		if (ret)
--			goto m64_failed;
-+		if (pdn->m64_per_iov == 1) {
-+			ret = pnv_pci_vf_resource_shift(pdev, pdn->offset);
-+			if (ret)
-+				goto m64_failed;
-+		}
- 	}
+ 	parent = bridge->dev.parent;
+-	b = pci_alloc_bus(NULL);
++	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
  
- 	/* Setup VF PEs */
+@@ -1873,7 +1869,6 @@ static struct pci_bus *pci_create_root_bus(
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start =
+ 		pci_host_first_busnr(bridge);
+-	pci_bus_assign_domain_nr(b, parent);
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c2c6675..7ef205c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -469,9 +469,6 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	int		domain_nr;
+-#endif
+ 
+ 	char		name[48];
+ 
 -- 
-1.7.9.5
+1.7.1
 
