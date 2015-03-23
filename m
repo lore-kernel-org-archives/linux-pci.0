@@ -1,177 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52405 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751086AbbCFNeb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Mar 2015 08:34:31 -0500
-Date: Fri, 6 Mar 2015 14:33:12 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from szxga03-in.huawei.com ([119.145.14.66]:35958 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632AbbCWMoM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:12 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-Message-ID: <20150306133312.GC4259@pd.tnic>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
- <1425456048-16236-5-git-send-email-yinghai@kernel.org>
- <20150304101649.GA3663@pd.tnic>
- <CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
- <20150304200000.GB6276@gmail.com>
- <CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v7 20/31] PCI: Remove pcibios_root_bridge_prepare() and pcibos_set_root_bus_speed()
+Date: Mon, 23 Mar 2015 20:40:46 +0800
+Message-ID: <1427114457-16687-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 04, 2015 at 01:32:53PM -0800, Yinghai Lu wrote:
-> On Wed, Mar 4, 2015 at 12:00 PM, Ingo Molnar <mingo@kernel.org> wrote:
-> >
-> > It is totally unacceptable that you don't do proper analysis of the
-> > patches you submit, and that you don't bother writing proper, readable
-> > changelogs.
-> 
-> Sorry, please check it again:
-> 
-> Subject: [PATCH v4] x86, kaslr: Get kaslr_enabled back correctly
+Now no one use weak pcibios_root_bridge_prepare() and
+pcibios_set_root_bus_speed, we could clean up them.
 
-Subject: x86/kaslr: Access the correct kaslr_enabled variable
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    4 ----
+ drivers/pci/probe.c       |   18 +-----------------
+ include/linux/pci.h       |    2 --
+ 3 files changed, 1 insertions(+), 23 deletions(-)
 
-> commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
-> is using address as value for kaslr_enabled.
-
-"commit ... started passing KASLR status to kernel proper."
-
-> That will get wrong value back for kaslr_enabled in kernel stage.
-> 1. When kaslr is not enabled at boot/choose_kernel_location, if kaslr_enabled
-> get set wrongly in setup.c, late in module.c::get_module_load_offset
-> will return not wanted random module load offset.
-> That change behavior when HIBERNATION is defined or nokaslr is passed.
-> 
-> 2. When kaslr is enabled at boot/choose_kernel_location, if kaslr_enabled
-> get cleared wrongly in setup.c, late in module.c::get_module_load_offset
-> will not return wanted random module load offset.
-> 
-> This patch changes the code to use early_memmap and access the value,
-> and will keep boot and kernel consistent with kaslr.
-
-Replace all that with:
-
-"However, the setup_data linked list and thus the element which contains
-kaslr_enabled is chained together using physical addresses. At the
-time when we access it in the kernel proper, we're already running
-with paging enabled and therefore must access it through its virtual
-address."
-
-That's it, now how hard was to explain it that way?
-
-> -v3: add checking return from early_memmap according to bp.
-
-I guess with "bp" you mean me? You can call me Boris.
-
-> Fixes: f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
-> Cc: Matt Fleming <matt.fleming@intel.com>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: Kees Cook <keescook@chromium.org>
-> Cc: Jiri Kosina <jkosina@suse.cz>
-> Acked-by: Jiri Kosina <jkosina@suse.cz>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  arch/x86/kernel/setup.c |   13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
-> 
-> Index: linux-2.6/arch/x86/kernel/setup.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/kernel/setup.c
-> +++ linux-2.6/arch/x86/kernel/setup.c
-> @@ -429,7 +429,18 @@ static void __init reserve_initrd(void)
-> 
->  static void __init parse_kaslr_setup(u64 pa_data, u32 data_len)
->  {
-> -    kaslr_enabled = (bool)(pa_data + sizeof(struct setup_data));
-> +    /* kaslr_setup_data is defined in aslr.c */
-> +    unsigned char *data;
-> +    unsigned long offset = sizeof(struct setup_data);
-> +
-> +    data = early_memremap(pa_data, offset + 1);
-> +    if (!data) {
-> +        kaslr_enabled = true;
-> +        return;
-> +    }
-> +
-> +    kaslr_enabled = *(data + offset);
-> +    early_memunmap(data, offset + 1);
->  }
-> 
->  static void __init parse_setup_data(void)
-
-Please use checkpatch before submitting patches:
-
-WARNING: please, no spaces at the start of a line
-#71: FILE: arch/x86/kernel/setup.c:433:
-+    unsigned char *data;$
-
-WARNING: please, no spaces at the start of a line
-#72: FILE: arch/x86/kernel/setup.c:434:
-+    unsigned long offset = sizeof(struct setup_data);$
-
-WARNING: please, no spaces at the start of a line
-#74: FILE: arch/x86/kernel/setup.c:436:
-+    data = early_memremap(pa_data, offset + 1);$
-
-WARNING: please, no spaces at the start of a line
-#75: FILE: arch/x86/kernel/setup.c:437:
-+    if (!data) {$
-
-ERROR: code indent should use tabs where possible
-#76: FILE: arch/x86/kernel/setup.c:438:
-+        kaslr_enabled = true;$
-
-WARNING: please, no spaces at the start of a line
-#76: FILE: arch/x86/kernel/setup.c:438:
-+        kaslr_enabled = true;$
-
-ERROR: code indent should use tabs where possible
-#77: FILE: arch/x86/kernel/setup.c:439:
-+        return;$
-
-WARNING: please, no spaces at the start of a line
-#77: FILE: arch/x86/kernel/setup.c:439:
-+        return;$
-
-WARNING: please, no spaces at the start of a line
-#78: FILE: arch/x86/kernel/setup.c:440:
-+    }$
-
-WARNING: please, no spaces at the start of a line
-#80: FILE: arch/x86/kernel/setup.c:442:
-+    kaslr_enabled = *(data + offset);$
-
-WARNING: please, no spaces at the start of a line
-#81: FILE: arch/x86/kernel/setup.c:443:
-+    early_memunmap(data, offset + 1);$
-
-total: 2 errors, 9 warnings, 19 lines checked
-
-NOTE: whitespace errors detected, you may wish to use scripts/cleanpatch or
-      scripts/cleanfile
-
-Your patch has style problems, please review.
-
-If any of these errors are false positives, please report
-them to the maintainer, see CHECKPATCH in MAINTAINERS.
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index b439264..919ba4d 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -110,10 +110,6 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 			goto list_del;
+ 	}
+ 
+-	error = pcibios_root_bridge_prepare(host);
+-	if (error)
+-		goto list_del;
+-
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b3d9b1b..7796bf8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1844,22 +1844,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+ 
+-/**
+- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
+- * @bridge: Host bridge to set up.
+- *
+- * Default empty implementation.  Replace with an architecture-specific setup
+- * routine, if necessary.
+- */
+-int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	return 0;
+-}
+-
+-void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+-{
+-}
+-
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1896,7 +1880,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	if (bridge->ops && bridge->ops->set_root_bus_speed)
+ 		bridge->ops->set_root_bus_speed(bridge);
+-	pcibios_set_root_bus_speed(bridge);
++
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0b921d6..61e0853 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -426,8 +426,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
 
-ECO tip #101: Trim your mails when you reply.
---
