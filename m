@@ -1,40 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:2164 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752767AbbCFHWB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 02:22:01 -0500
-Date: Fri, 6 Mar 2015 12:56:25 +0530
-From: Hariprasad S <hariprasad@chelsio.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCIE link reset in older kernels < 2.6.33
-Message-ID: <20150306072450.GA22416@hariprasad-pc.asicdesigners.com>
-References: <26E3F92EC670BD429DB5CB319D773C13C9E62D@nice.asicdesigners.com>
- <1425622481.5200.372.camel@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1425622481.5200.372.camel@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <OF3F22FEC8.8B4BEFD3-ON85257E12.007A8088-85257E12.007B5FAC@gdeb.com>
+References: <OF77E25ED8.9CA80CE3-ON85257E12.004F7B31-85257E12.0053B9A0@gdeb.com>
+ <20150324152806.GD14418@l.oracle.com> <20150324172702.GC2495@google.com> <OF3F22FEC8.8B4BEFD3-ON85257E12.007A8088-85257E12.007B5FAC@gdeb.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Mar 2015 18:31:39 -0500
+Message-ID: <CAErSpo46hAg7kfEZ9hiNFP1jr=-_L55_iNd0RXXBcO-10G1fDQ@mail.gmail.com>
+Subject: Re: [Xen-devel] 3.18 xen-pcifront regression?
+To: Michael D Labriola <mlabriol@gdeb.com>
+Cc: Jayson A Dyke <jdyke@gdeb.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	michael.d.labriola@gmail.com,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Stuart Wehrly <swehrly@gdeb.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 05, 2015 at 23:14:41 -0700, Alex Williamson wrote:
-> On Fri, 2015-03-06 at 05:24 +0000, Hariprasad S wrote:
-> > Hi Alex,
-> > 
-> > I am a newbie to PCIE driver. 
-> > How can we achieve PCIE link reset in older kernels?
-> > 
-> > I do see that in newer kernels we can achieve it by pci_try_reset_slot(). Is there a similar API available for older kernels.
-> 
-> pci_reset_function() has been around for quite a while, but it has the
-> limitation that it will only do a bus reset if there are no other reset
-> mechanisms available and the bus only hosts a single device.  Otherwise,
-> no, there's no API I'm aware of that would be available on older
-> kernels, which is why I created the bus/slot reset interfaces we have
-> today on newer kernels.  Thanks,
-> 
-> Alex
-> 
-Thanks. Will have a look into it.
+On Tue, Mar 24, 2015 at 5:27 PM, Michael D Labriola <mlabriol@gdeb.com> wrote:
+> Bjorn Helgaas <bhelgaas@google.com> wrote on 03/24/2015 01:27:02 PM:
 
-Hariprasad
+>> Thanks for the report, Michael, and sorry for the inconvenience.  I
+> think
+>> the patch below will fix it, but I don't think it's the right fix either
+>> because it seems a little ad hoc to sprinkle "acpi_pci_disabled" tests
+>> around like fairy dust.  I wonder if we can set things up so ACPI
+> methods
+>> would fail gracefully like they do when ACPI is disabled at
+> compile-time.
+>>
+>> I can boot with "acpi=off" on qemu just fine, and when we look up the
+> ACPI
+>> device handles, we just get NULL pointers, so everything works out even
+>> without a fix like the one below.
+>
+> FYI, I'm not passing "acpi=off" on the guest's command line...  I believe
+> it's getting turned off dynamically by the guest kernel.  I get the
+> following in dmesg within the 1st dozen lines:
+>
+> ACPI in unprivileged domain disabled
+
+That's from xen_arch_setup(), which prints it when it calls
+disable_acpi().  Booting with "acpi=off" also calls disable_acpi(), so
+the effect should be similar.  But of course xen's PCI enumeration is
+started a little differently and my guess is that difference is what
+leads to this oops.
+
+Bjorn
