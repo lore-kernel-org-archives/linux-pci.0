@@ -1,106 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42483 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751365AbbCYFkM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Mar 2015 01:40:12 -0400
-Date: Wed, 25 Mar 2015 06:40:08 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:16224 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753551AbbCXDho (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:44 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>
-Subject: Re: [PATCH v3 03/10] pci: drop some duplicate code
-Message-ID: <20150325063929-mutt-send-email-mst@redhat.com>
-References: <1427211032-2270-1-git-send-email-mst@redhat.com>
- <1427211032-2270-4-git-send-email-mst@redhat.com>
- <20150324233357.GF2495@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 30/30] PCI: Clean up CONFIG_PCI_DOMAINS_GENERIC
+Date: Tue, 24 Mar 2015 11:34:24 +0800
+Message-ID: <1427168064-8657-31-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150324233357.GF2495@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 24, 2015 at 06:33:57PM -0500, Bjorn Helgaas wrote:
-> On Tue, Mar 24, 2015 at 04:42:35PM +0100, Michael S. Tsirkin wrote:
-> > pci_msi_init_pci_dev and pci_msi_off share a lot of code.
-> > This used to be justified since pci_msi_init_pci_dev
-> > wasn't compiled in when CONFIG_PCI_MSI is off.
-> > Now that it is, let's reuse code.
-> > 
-> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > ---
-> >  drivers/pci/pci.c   | 24 +++++-------------------
-> >  drivers/pci/probe.c | 11 ++++-------
-> >  2 files changed, 9 insertions(+), 26 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 81f06e8..d5f297a 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3106,26 +3106,12 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
-> >   */
-> >  void pci_msi_off(struct pci_dev *dev)
-> >  {
-> > -	int pos;
-> > -	u16 control;
-> > +	if (dev->msi_cap)
-> > +		pci_msi_set_enable(dev, 0);
-> >  
-> > -	/*
-> > -	 * This looks like it could go in msi.c, but we need it even when
-> > -	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
-> > -	 * dev->msi_cap or dev->msix_cap here.
-> > -	 */
-> > -	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> > -	if (pos) {
-> > -		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-> > -		control &= ~PCI_MSI_FLAGS_ENABLE;
-> > -		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
-> > -	}
-> > -	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> > -	if (pos) {
-> > -		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
-> > -		control &= ~PCI_MSIX_FLAGS_ENABLE;
-> > -		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
-> > -	}
-> > +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> 
-> I think the above line is superfluous, isn't it?  You already do the same
-> in pci_msi_init_pci_dev() (below).
+Now we could clean up CONFIG_PCI_DOMAINS_GENERIC.
 
-Ugh. Yea. I'll fix that up, thanks!
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/arm/Kconfig          |    3 ---
+ arch/arm64/Kconfig        |    3 ---
+ drivers/pci/host-bridge.c |   11 ++++++-----
+ drivers/pci/pci.c         |    2 --
+ 4 files changed, 6 insertions(+), 13 deletions(-)
 
-> > +	if (dev->msix_cap)
-> > +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_msi_off);
-> >  
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 45d6d5c..baf8ddd 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1489,17 +1489,14 @@ static void pci_msi_init_pci_dev(struct pci_dev *dev)
-> >  	INIT_LIST_HEAD(&dev->msi_list);
-> >  #endif
-> >  
-> > +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> > +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> > +
-> >  	/* Disable the msi hardware to avoid screaming interrupts
-> >  	 * during boot.  This is the power on reset default so
-> >  	 * usually this should be a noop.
-> >  	 */
-> > -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> > -	if (dev->msi_cap)
-> > -		pci_msi_set_enable(dev, 0);
-> > -
-> > -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> > -	if (dev->msix_cap)
-> > -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> > +	pci_msi_off(dev);
-> >  }
-> >  
-> >  static void pci_init_capabilities(struct pci_dev *dev)
-> > -- 
-> > MST
-> > 
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 9f1f09a..b5dab6c 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1283,9 +1283,6 @@ config PCI_DOMAINS
+ 	bool
+ 	depends on PCI
+ 
+-config PCI_DOMAINS_GENERIC
+-	def_bool PCI_DOMAINS
+-
+ config PCI_NANOENGINE
+ 	bool "BSE nanoEngine PCI support"
+ 	depends on SA1100_NANOENGINE
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 1b8e973..4b1cc27 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -242,9 +242,6 @@ config PCI
+ config PCI_DOMAINS
+ 	def_bool PCI
+ 
+-config PCI_DOMAINS_GENERIC
+-	def_bool PCI
+-
+ config PCI_SYSCALL
+ 	def_bool PCI
+ 
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index c78f4d0..18a0f6c 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -4,6 +4,8 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/of_pci.h>
++#include <linux/of.h>
+ #include <linux/module.h>
+ 
+ #include "pci.h"
+@@ -82,12 +84,13 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	resource_list_for_each_entry_safe(window, n, resources)
+ 		list_move_tail(&window->node, &host->windows);
+ 	/*
+-	 * If support CONFIG_PCI_DOMAINS_GENERIC, use
++	 * If domain == -1, we need to use
+ 	 * pci_host_assign_domain_nr() to update domain
+ 	 * number.
+ 	 */
+ 	host->domain = domain;
+-	pci_host_assign_domain_nr(host);
++	if (host->domain == -1)
++		pci_host_assign_domain_nr(host);
+ 	mutex_lock(&pci_host_mutex);
+ 	list_for_each_entry(tmp, &pci_host_bridge_list, list) {
+ 		if (tmp->domain != host->domain
+@@ -169,7 +172,6 @@ int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
+ }
+ 
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static int pci_assign_domain_nr(struct device *dev)
+ {
+ 	static int use_dt_domains = -1;
+@@ -215,11 +217,10 @@ static int pci_assign_domain_nr(struct device *dev)
+ 	return domain;
+ }
+ #endif
+-#endif
+ 
+ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ {
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
++#ifdef CONFIG_PCI_DOMAINS
+ 	host->domain = pci_assign_domain_nr(host->dev.parent);
+ #endif
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 044801c..5b18429 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -10,8 +10,6 @@
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+-#include <linux/of.h>
+-#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pm.h>
+ #include <linux/slab.h>
+-- 
+1.7.1
+
