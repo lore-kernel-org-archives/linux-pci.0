@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15322 "EHLO
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15834 "EHLO
 	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263AbbCXDhW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:22 -0400
+	with ESMTP id S1753462AbbCXDhf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:35 -0400
 From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
@@ -20,10 +20,11 @@ CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
 	"Arnd Bergmann" <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 12/30] powerpc/PCI: Rename pcibios_root_bridge_prepare() to pcibios_set_root_bus_speed()
-Date: Tue, 24 Mar 2015 11:34:06 +0800
-Message-ID: <1427168064-8657-13-git-send-email-wangyijing@huawei.com>
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for simplicity
+Date: Tue, 24 Mar 2015 11:34:13 +0800
+Message-ID: <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
 In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
@@ -31,145 +32,123 @@ Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcibios_root_bridge_prepare() in powerpc set
-root bus speed, it's not the preparation for
-pci host bridge. Rename it for better readability,
-and we could move pcibios_root_bridge_prepare()
-to pci_create_host_bridge(), in which root bus
-is not created. We will clean up these weak functions,
-and add pci_host_bridge_ops to do the same thing
-in later patch.
+Now we could use pci_scan_host_bridge() to scan
+pci buses, provide powerpc specific pci_host_bridge_ops.
 
 Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
 ---
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |    8 +++-----
- arch/powerpc/platforms/pseries/pci.c     |    8 ++++----
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- drivers/pci/probe.c                      |    5 +++++
- 6 files changed, 15 insertions(+), 12 deletions(-)
+ arch/powerpc/kernel/pci-common.c |   60 +++++++++++++++++++++++--------------
+ 1 files changed, 37 insertions(+), 23 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index c8175a3..b811d12 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -129,7 +129,7 @@ struct machdep_calls {
- 	void		(*pcibios_fixup)(void);
- 	int		(*pci_probe_mode)(struct pci_bus *);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
-+	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
 diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 9913f6c..2c58200 100644
+index 2c58200..e2b50a2 100644
 --- a/arch/powerpc/kernel/pci-common.c
 +++ b/arch/powerpc/kernel/pci-common.c
-@@ -767,12 +767,10 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
+@@ -773,6 +773,29 @@ void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 		return ppc_md.pcibios_set_root_bus_speed(bridge);
  }
  
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
--	if (ppc_md.pcibios_root_bridge_prepare)
--		return ppc_md.pcibios_root_bridge_prepare(bridge);
--
--	return 0;
-+	if (ppc_md.pcibios_set_root_bus_speed)
-+		return ppc_md.pcibios_set_root_bus_speed(bridge);
- }
- 
- /* This header fixup will do the resource fixup for all devices as they are
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index fe16a50..89ff79c 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-@@ -121,7 +121,7 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
- 
- 	dn = pcibios_get_phb_of_node(bus);
- 	if (!dn)
--		return 0;
-+		return;
- 
- 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
- 		rc = of_property_read_u32_array(pdn,
-@@ -135,7 +135,7 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
- 
- 	if (rc) {
- 		pr_debug("no ibm,pcie-link-speed-stats property\n");
--		return 0;
-+		return;
- 	}
- 
- 	switch (pcie_link_speed_stats[0]) {
-@@ -168,5 +168,5 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
- 		break;
- 	}
- 
--	return 0;
-+	return;
- }
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 1796c54..9aa9c13 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
- 
- unsigned long pseries_memory_block_size(void);
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index e445b67..b196c0d 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
- 	}
- 
--	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
-+	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
- 
- 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
- 		long rc;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0ac2bf6..418a426 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1856,6 +1856,10 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
- 
-+void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
++static int pci_host_scan_bus(struct pci_host_bridge *host)
 +{
++	int mode = PCI_PROBE_NORMAL;
++	struct pci_bus *bus = host->bus;
++	struct pci_controller *hose = dev_get_drvdata(&host->dev);
++
++	/* Get probe mode and perform scan */
++	if (hose->dn && ppc_md.pci_probe_mode)
++		mode = ppc_md.pci_probe_mode(bus);
++
++	pr_debug("    probe mode: %d\n", mode);
++	if (mode == PCI_PROBE_DEVTREE)
++		of_scan_bus(hose->dn, bus);
++
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
++		hose->last_busno = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, hose->last_busno);
++	}
++
++	return pci_bus_child_max_busnr(bus);
 +}
 +
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -1585,6 +1608,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ 	return of_node_get(hose->dn);
  }
-@@ -1893,6 +1897,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (error)
- 		goto put_dev;
  
-+	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
++static struct pci_host_bridge_ops pci_host_ops = {
++	.set_root_bus_speed = pcibios_set_root_bus_speed,
++	.scan_bus = pci_host_scan_bus,
++};
++
+ /**
+  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
+  * @hose: Pointer to the PCI host controller instance structure
+@@ -1592,9 +1620,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ void pcibios_scan_phb(struct pci_controller *hose)
+ {
+ 	LIST_HEAD(resources);
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host;
+ 	struct device_node *node = hose->dn;
+-	int mode;
  
+ 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
+ 
+@@ -1609,31 +1636,18 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	hose->busn.flags = IORESOURCE_BUS;
+ 	pci_add_resource(&resources, &hose->busn);
+ 
++	pci_host_ops.pci_ops = hose->ops;
+ 	/* Create an empty bus for the toplevel */
+-	bus = pci_create_root_bus(hose->parent, hose->global_number,
+-			hose->first_busno, hose->ops, hose, &resources);
+-	if (bus == NULL) {
+-		pr_err("Failed to create bus for PCI domain %04x\n",
+-			hose->global_number);
++	host = pci_scan_host_bridge(hose->parent, hose->global_number,
++			hose->first_busno, hose, &resources, &pci_host_ops);
++	if (host == NULL) {
++		pr_err("Failed to create host bridge for pci%04x:%02x\n",
++			hose->global_number, hose->first_busno);
+ 		pci_free_resource_list(&resources);
+ 		return;
+ 	}
+ 	hose->bus = bus;
+ 
+-	/* Get probe mode and perform scan */
+-	mode = PCI_PROBE_NORMAL;
+-	if (node && ppc_md.pci_probe_mode)
+-		mode = ppc_md.pci_probe_mode(bus);
+-	pr_debug("    probe mode: %d\n", mode);
+-	if (mode == PCI_PROBE_DEVTREE)
+-		of_scan_bus(node, bus);
+-
+-	if (mode == PCI_PROBE_NORMAL) {
+-		pci_bus_update_busn_res_end(bus, 255);
+-		hose->last_busno = pci_scan_child_bus(bus);
+-		pci_bus_update_busn_res_end(bus, hose->last_busno);
+-	}
+-
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+ 	 */
+@@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
+ 	/* Configure PCI Express settings */
+-	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node)
++		list_for_each_entry(child, &host->bus->children, node)
+ 			pcie_bus_configure_settings(child);
+ 	}
+ }
 -- 
 1.7.1
 
