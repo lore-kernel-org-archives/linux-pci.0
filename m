@@ -1,85 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:37180 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753842AbbCLLnH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 07:43:07 -0400
-Message-ID: <55017BA1.7020700@huawei.com>
-Date: Thu, 12 Mar 2015 19:42:25 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+In-Reply-To: <5510D327.5060400@linux.intel.com>
+References: <1427095334-7430-1-git-send-email-jiang.liu@linux.intel.com>
+ <20150323164809.GS26935@google.com> <5510CA69.30309@linux.intel.com>
+ <CAErSpo72DoOu1XR8jYW_VsEKfnhcL9ydqtkjwBTUSm-mN-Rn2A@mail.gmail.com> <5510D327.5060400@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Mar 2015 08:18:35 -0500
+Message-ID: <CAErSpo6uBK2FWK838BUob+54T1NHoak9HiO34TstPwGPazp72A@mail.gmail.com>
+Subject: Re: [Bugfix] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 03/30] PCI: Export busn_resource to drivers/pci
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-4-git-send-email-wangyijing@huawei.com> <20150311222835.GA1082@google.com>
-In-Reply-To: <20150311222835.GA1082@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> -static struct resource busn_resource = {
->> +struct resource busn_resource = {
->>  	.name	= "PCI busn",
->>  	.start	= 0,
->>  	.end	= 255,
->>  	.flags	= IORESOURCE_BUS,
->>  };
->> +EXPORT_SYMBOL(busn_resource);
-> 
-> I don't think this is a good idea.  We support multiple PCI domains, and
-> each domain has its own 0-255 bus number range.  This busn_resource is
-> only for domain 0 and probably should be handled in arch code instead of
-> the PCI core.
-> 
-> Right now, I think it's possible to call pci_scan_bus_parented() or
-> pci_scan_bus() several times for buses in different domains, and they would
-> all share the same busn_resource, which would cause corruption.
-> 
-> So it's already broken, but I don't want to make it harder to fix by
-> exporting this stuff.
-
-Hi Bjorn, busn_resource may would not be shared by multi domains,
-
-We insert bus number resource like:
-
-pci_add_resource(&resources, &busn_resource);	
-	pci_bus_insert_busn_res(root_bus, start, bus_max);	//start is the root bus number provided by arch pci host driver, bus max here == 255
-		get_pci_domain_busn_res(domain)	//for root bus	//try to get a domain specific pci_domain_busn_res, if not exist, create it.
-			request_resource_conflict(domain_specific_busn_res, res)   //request busn res(start, bus_max) from the pci_domain_busn_res.
-
-So every domain has its own pci_domain_busn_res , different domain would not share the same bus number resource.
-
-Do I understand correct ?
-
-Thanks!
-Yijing.
-
-> 
->>  
->>  /* Ugh.  Need to stop exporting this to modules. */
->>  LIST_HEAD(pci_root_buses);
->> -- 
->> 1.7.1
+On Mon, Mar 23, 2015 at 9:59 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> On 2015/3/24 10:42, Bjorn Helgaas wrote:
+>> On Mon, Mar 23, 2015 at 9:22 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>> On 2015/3/24 0:48, Bjorn Helgaas wrote:
+>>>> On Mon, Mar 23, 2015 at 03:22:14PM +0800, Jiang Liu wrote:
+>>>>> Commit 63f1789ec716("Ignore resources consumed by host bridge itself")
+>>>>> tries to ignore resources consumed by PCI host bridge itself by
+>>>>> checking IORESOURCE_WINDOW flag, which causes regression on some
+>>>>> platforms.
+>>>>
+>>>> "Do.  Or do not.  There is no try."
+>>>> [http://www.starwars.com/video/do-or-do-not]
+>>>>
+>>>> That commit doesn't *try* to do something.  It *does* something.  Just
+>>>> explain what it does and what's wrong with what it does.
+>>>>
+>>>>> For example, PC Engines APU.1C platform defines PCI MMIO resources with
+>>>>> ACPI Memory32Fixed operator as below:
+>>>>> Name (CRES, ResourceTemplate ()
+>>>>> {
+>>>>>     ...
+>>>>>     WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
+>>>>>         0x0000,             // Granularity
+>>>>>         0x0D00,             // Range Minimum
+>>>>>         0xFFFF,             // Range Maximum
+>>>>>         0x0000,             // Translation Offset
+>>>>>         0xF300,             // Length
+>>>>>         ,, , TypeStatic)
+>>>>>     Memory32Fixed (ReadOnly,
+>>>>>         0x000A0000,         // Address Base
+>>>>>         0x00020000,         // Address Length
+>>>>>         )
+>>>>>     Memory32Fixed (ReadOnly,
+>>>>>         0x00000000,         // Address Base
+>>>>>         0x00000000,         // Address Length
+>>>>>         _Y00)
+>>>>> })
+>>>>>
+>>>>> Memory32Fixed operator doesn't support concept of "producer/consumer"
+>>>>> and it will be treated as "consumer" by the ACPI resource parsing
+>>>>> interface, thus cause regression. So the fix is only to check
+>>>>> "producer/consumer" flag for resources having "producer/consumer" flag.
+>>>>
+>>>> Apparently the problem is with the Memory32Fixed resources above; it sounds
+>>>> like we ignore them after 63f1789ec716?  I don't quite understand how this
+>>>> fix works.  acpi_dev_filter_resource_type() has cases for both
+>>>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 and ACPI_RESOURCE_TYPE_ADDRESSxx, but
+>>>> this patch only touches the latter, not the
+>>>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 case.
+>>> The idea is:
+>>> 1) caller specifies IORESOURCE_WINDOW to query resources provided
+>>>    by the device, otherwise it's querying resources consumed by
+>>>    the device.
+>>> 2) For resource descriptors having producer/consumer flag, such as
+>>>     ACPI_RESOURCE_TYPE_ADDRESSxx, we check the producer/consumer flag.
+>>> 3) For resource descriptors not having producer/consumer flag, such
+>>>    as ACPI_RESOURCE_TYPE_FIXED_MEMORY32, we skip checking the
+>>>    producer/consumer flag.
 >>
-> 
-> .
-> 
+>> I figured out that much by reading the code.  But I think the code is
+>> very hard to read, and I still don't really understand how it works.
+>>
+>> Before this fix, we ignore Memory32Fixed resources.  After this fix,
+>> we use Memory32Fixed as a window.  I think that's an incorrect
+>> interpretation of Memory32Fixed.
+> Hi Bjorn,
+>         I think it's illegal to use Memory32Fixed for PCI host
+> bridge resource window too. The fix is to solve the regression
+> by relaxing constraints, but that may not be the right solution.
 
+Relaxing the constraint for all platforms is only a solution if we're
+confident that it works for all platforms.  I'm not confident because
+I don't know what effect this patch has on systems that use
+Memory32Fixed correctly.
 
--- 
-Thanks!
-Yijing
+It's possible that you can analyze the behavior and explain that if
+you relax the constraint, the Memory32Fixed handling (both for bridge
+and non-bridge devices) will be the same as it was before
+63f1789ec716.  If you can do that, I think it would be reasonable
+because you'd be preserving the previous, known-working behavior.
 
+If you go that route, I'd like to see a patch that explicitly touches
+the Memory32Fixed handling.  The current patch claims to change the
+way we handle Memory32Fixed, but nothing in the code change is
+directly related to Memory32Fixed, so it's very confusing.
+
+>         How about waiting for a while to see whether there are more
+> bug reports related to this. If only limited platform affected,
+> we could treat it as BIOS bugs and use quirk to handle it.
+> Otherwise we may need to relax the constraint.
+
+I don't think waiting is a good strategy.  We know we have a
+regression, and I think we need to fix that ASAP without waiting for
+more failure reports.
+
+Bjorn
