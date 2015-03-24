@@ -1,59 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46103 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753010AbbC2PEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Mar 2015 11:04:41 -0400
-Date: Sun, 29 Mar 2015 17:04:11 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH v5 04/10] pci: don't disable msi/msix at shutdown
-Message-ID: <1427641227-7574-5-git-send-email-mst@redhat.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 11/30] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Tue, 24 Mar 2015 11:34:05 +0800
+Message-ID: <1427168064-8657-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This partially reverts commit d52877c7b1afb8c37ebe17e2005040b79cb618b0:
-	"pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
+Save platform specific sysdata in pci_host_bridge
+drvdata, host bridge specific operation need to
+access it before the pci bus creation.
 
-It's un-necessary now that we disable msi at start, and it actually
-turns out to cause problems: some device drivers don't register a level
-interrupt handler when they detect msi/msix capability, switching off
-msi while device is going causes device to assert a level interrupt
-which is never de-asserted, causing a kernel hang.
-
-In particular, this was observed with virtio.
-
-Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
-Cc: Ulrich Obergfell <uobergfe@redhat.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Reported-by: Fam Zheng <famz@redhat.com>
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/pci-driver.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/pci/host-bridge.c |    3 ++-
+ drivers/pci/pci.h         |    2 +-
+ drivers/pci/probe.c       |   20 ++++++++++----------
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3cb2210..38a602c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 8af6d51..b0ed8da 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -63,7 +63,7 @@ static bool pci_host_busn_res_overlap(
  
- 	if (drv && drv->shutdown)
- 		drv->shutdown(pci_dev);
--	pci_msi_shutdown(pci_dev);
--	pci_msix_shutdown(pci_dev);
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, int domain, int bus,
+-		struct list_head *resources)
++		void *sysdata, struct list_head *resources)
+ {
+ 	int error;
+ 	struct pci_host_bridge *host, *tmp;
+@@ -101,6 +101,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	mutex_unlock(&pci_host_mutex);
  
- #ifdef CONFIG_KEXEC
- 	/*
+ 	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 886d72f..027fba0 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -335,7 +335,7 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ #endif
+ 
+ struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+-		int domain, int bus, struct list_head *resources);
++        int domain, int bus, void *sysdata, struct list_head *resources);
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ 
+ static inline int pci_host_first_busnr(struct pci_host_bridge *host)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8517d1b..0ac2bf6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ }
+ 
+ static struct pci_bus *__pci_create_root_bus(
+-		struct pci_host_bridge *bridge, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error;
+ 	struct pci_bus *b;
+@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
++	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start =
+ 		pci_host_first_busnr(bridge);
+@@ -1956,11 +1955,12 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, domain, bus, resources);
++	host = pci_create_host_bridge(parent, domain, bus,
++			sysdata, resources);
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_create_root_bus(host, ops, sysdata);
++	host->bus = __pci_create_root_bus(host, ops);
+ 	if (!host->bus)
+ 		pci_free_host_bridge(host);
+ 
+@@ -2037,13 +2037,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ }
+ 
+ static struct pci_bus *__pci_scan_root_bus(
+-		struct pci_host_bridge *host, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *host, struct pci_ops *ops)
+ {
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	b = __pci_create_root_bus(host, ops, sysdata);
++	b = __pci_create_root_bus(host, ops);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -2064,11 +2063,12 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ {
+ 	struct pci_host_bridge *host;
+ 
+-	host = pci_create_host_bridge(parent, domain, bus, resources);
++	host = pci_create_host_bridge(parent, domain, bus,
++			sysdata, resources);
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_scan_root_bus(host, ops, sysdata);
++	host->bus = __pci_scan_root_bus(host, ops);
+ 	if (!host->bus)
+ 		pci_free_host_bridge(host);
+ 
 -- 
-MST
+1.7.1
 
