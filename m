@@ -1,122 +1,199 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55135E16.6060909@huawei.com>
-Date: Thu, 26 Mar 2015 09:17:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47404 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753069AbbCXPme (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Mar 2015 11:42:34 -0400
+Date: Tue, 24 Mar 2015 16:42:28 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v3 01/10] pci: export functions for msi/msix ctrl
+Message-ID: <1427211032-2270-2-git-send-email-mst@redhat.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Daniel Axtens <dja@axtens.net>
-CC: Liviu Dudau <liviu@dudau.co.uk>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linux-ia64@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-m68k@lists.linux-m68k.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-alpha@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
- simplicity
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>		 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>	 <1427241523.2685.18.camel@axtens.net> <551266DE.3030609@huawei.com> <1427321631.2575.3.camel@axtens.net>
-In-Reply-To: <1427321631.2575.3.camel@axtens.net>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/26 6:13, Daniel Axtens wrote:
-> Hi Yijing,
-> 
-> I wasn't quite sure I understood your comments, so I was trying to apply
-> your patch series and test it, but patch 3 doesn't apply cleanly to
-> 4.0-rc5 or master. Can you respin the series?
+move pci_msi_set_enable and pci_msix_clear_and_set_ctrl out of msi.c, so
+we can use them will be used which MSI isn't configured in kernel.
 
-Hi Daniel,
-   Could you pull the series from Bjorn's git tree ? The URL is
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enumeration-yw8
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/pci.h | 21 +++++++++++++++++++++
+ drivers/pci/msi.c | 45 ++++++++++++---------------------------------
+ 2 files changed, 33 insertions(+), 33 deletions(-)
 
-Thanks!
-Yijing.
-
-> 
-> Thanks,
-> Daniel
-> 
-> 
->> Hi Daniel, thanks for your review and comments. We want to make a generic pci_host_bridge,
->> which would hold the common host information, for example, pci domain is common info for
->> pci host bridge, this series saved domain in pci_host_bridge, then we no need to
->> extract out domain by pci_bus->sysdata by platform specific pci_domain_nr().
->> Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is the platform
->> interface, I think use the common interface would be better.
->>
->>>> +
->>>> +	/* Get probe mode and perform scan */
->>>> +	if (hose->dn && ppc_md.pci_probe_mode)
->>>> +		mode = ppc_md.pci_probe_mode(bus);
->>>> +
->>>> +	pr_debug("    probe mode: %d\n", mode);
->>>> +	if (mode == PCI_PROBE_DEVTREE)
->>>> +		of_scan_bus(hose->dn, bus);
->>>> +
->>>> +	if (mode == PCI_PROBE_NORMAL) {
->>>> +		pci_bus_update_busn_res_end(bus, 255);
->>>> +		hose->last_busno = pci_scan_child_bus(bus);
->>>> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
->>>> +	}
->>>> +
->>>> +	return pci_bus_child_max_busnr(bus);
->>>> +}
->>>> +
->>> I'm having trouble convincing myself that this patch covers every
->>> variation within our PCI implementations. In particular, there's a
->>> stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
->>> identical to this function. Does that implementation need to be cleaned
->>> up and replaced with this function too?
->>>
->>
->> This is a pci_host_bridge_ops hook function, which would be called in
->> PCI core, and after applied this series, we only need to call pci_scan_host_bridge()
->> to scan pci devices, and this function is also extracted from the pcibios_scan_phb(),
->> it's not the redundant code.
->>
->>>
->>>> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
->>>>  		ppc_md.pcibios_fixup_phb(hose);
->>>>  
->>>>  	/* Configure PCI Express settings */
->>>> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->>>> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
->>>>  		struct pci_bus *child;
->>>> -		list_for_each_entry(child, &bus->children, node)
->>>> +		list_for_each_entry(child, &host->bus->children, node)
->>>>  			pcie_bus_configure_settings(child);
->>>>  	}
->>>>  }
->>> Two things: Firstly, the function uses hose throughout, not host.
->>> Secondly, you're not deleting the bus variable: what's the purpose of
->>> this change?
->>
->> host is the common pci_host_bridge which is created by PCI core for pci host bridge driver,
->> the hose is the platform data used in powerpc. The purpose of the patch/series is to simplify
->> pci enumeration interface, and try to reduce the weak functions which were used to setup pci bus/devices
->> during PCI enumeration.
->>
->>>
->>> Regards,
->>> Daniel
->>>
->>
->>
-> 
-
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82..17f213d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -146,6 +146,27 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
++static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
++{
++	u16 control;
++
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
++	control &= ~PCI_MSI_FLAGS_ENABLE;
++	if (enable)
++		control |= PCI_MSI_FLAGS_ENABLE;
++	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
++}
++
++static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
++{
++	u16 ctrl;
++
++	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
++	ctrl &= ~clear;
++	ctrl |= set;
++	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
++}
++
+ void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c3e7dfc..9942f68 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -185,27 +185,6 @@ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+ 	return default_restore_msi_irqs(dev);
+ }
+ 
+-static void msi_set_enable(struct pci_dev *dev, int enable)
+-{
+-	u16 control;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	control &= ~PCI_MSI_FLAGS_ENABLE;
+-	if (enable)
+-		control |= PCI_MSI_FLAGS_ENABLE;
+-	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+-}
+-
+-static void msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
+-{
+-	u16 ctrl;
+-
+-	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
+-	ctrl &= ~clear;
+-	ctrl |= set;
+-	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
+-}
+-
+ static inline __attribute_const__ u32 msi_mask(unsigned x)
+ {
+ 	/* Don't shift by >= width of type */
+@@ -452,7 +431,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 	entry = irq_get_msi_desc(dev->irq);
+ 
+ 	pci_intx_for_msi(dev, 0);
+-	msi_set_enable(dev, 0);
++	pci_msi_set_enable(dev, 0);
+ 	arch_restore_msi_irqs(dev);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+@@ -473,14 +452,14 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	/* route the table */
+ 	pci_intx_for_msi(dev, 0);
+-	msix_clear_and_set_ctrl(dev, 0,
++	pci_msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+ 
+ 	arch_restore_msi_irqs(dev);
+ 	list_for_each_entry(entry, &dev->msi_list, list)
+ 		msix_mask_irq(entry, entry->masked);
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ }
+ 
+ void pci_restore_msi_state(struct pci_dev *dev)
+@@ -647,7 +626,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	int ret;
+ 	unsigned mask;
+ 
+-	msi_set_enable(dev, 0);	/* Disable MSI during set up */
++	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
+ 
+ 	entry = msi_setup_entry(dev, nvec);
+ 	if (!entry)
+@@ -683,7 +662,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 
+ 	/* Set MSI enabled bits	 */
+ 	pci_intx_for_msi(dev, 0);
+-	msi_set_enable(dev, 1);
++	pci_msi_set_enable(dev, 1);
+ 	dev->msi_enabled = 1;
+ 
+ 	dev->irq = entry->irq;
+@@ -775,7 +754,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	void __iomem *base;
+ 
+ 	/* Ensure MSI-X is disabled while it is set up */
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 
+ 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
+ 	/* Request & Map MSI-X table region */
+@@ -801,7 +780,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	 * MSI-X registers.  We need to mask all the vectors to prevent
+ 	 * interrupts coming in before they're fully set up.
+ 	 */
+-	msix_clear_and_set_ctrl(dev, 0,
++	pci_msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
+ 
+ 	msix_program_entries(dev, entries);
+@@ -814,7 +793,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ 
+ 	return 0;
+ 
+@@ -919,7 +898,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 	BUG_ON(list_empty(&dev->msi_list));
+ 	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
+ 
+-	msi_set_enable(dev, 0);
++	pci_msi_set_enable(dev, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msi_enabled = 0;
+ 
+@@ -1027,7 +1006,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 		__pci_msix_desc_mask_irq(entry, 1);
+ 	}
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msix_enabled = 0;
+ }
+@@ -1069,11 +1048,11 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+ 	 */
+ 	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+ 	if (dev->msi_cap)
+-		msi_set_enable(dev, 0);
++		pci_msi_set_enable(dev, 0);
+ 
+ 	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+ 	if (dev->msix_cap)
+-		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ }
+ 
+ /**
 -- 
-Thanks!
-Yijing
+MST
 
