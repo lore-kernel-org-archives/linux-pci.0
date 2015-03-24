@@ -1,96 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23382 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752277AbbCICnI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 13/30] PCI: Introduce new scan function pci_scan_host_bridge()
-Date: Mon, 9 Mar 2015 10:34:10 +0800
-Message-ID: <1425868467-9667-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Mar 2015 16:42:31 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>, stable@kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: [PATCH v3 02/10] pci: move pci_msi_init_pci_dev to pci.c
+Message-ID: <1427211032-2270-3-git-send-email-mst@redhat.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new scan function pci_scan_host_bridge() to
-support host bridge drivers that need to provide platform
-own pci_host_bridge_ops.
+commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
+    "PCI: msi: Disable msi interrupts when we initialize a pci device"
+fixes kexec when the booting kernel does not enable msi interupts.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Unfortunately the relevant functionality is in msi.c so it isn't
+compiled in when CONFIG_PCI_MSI is off, which means such configurations
+would still get interrupt storms.
+
+Fix by moving the function to pci.c, and compiling it unconditionally.
+
+Cc: stable@kernel.org
+Cc: Eric W. Biederman <ebiederm@xmission.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/pci/probe.c |   22 ++++++++++++++++++++++
- include/linux/pci.h |    4 ++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ drivers/pci/pci.h   |  2 --
+ drivers/pci/msi.c   | 17 -----------------
+ drivers/pci/probe.c | 19 +++++++++++++++++++
+ 3 files changed, 19 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 17f213d..a964569 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -140,10 +140,8 @@ extern unsigned int pci_pm_d3_delay;
+ 
+ #ifdef CONFIG_PCI_MSI
+ void pci_no_msi(void);
+-void pci_msi_init_pci_dev(struct pci_dev *dev);
+ #else
+ static inline void pci_no_msi(void) { }
+-static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
+ static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9942f68..ae3f7cc 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1038,23 +1038,6 @@ int pci_msi_enabled(void)
+ }
+ EXPORT_SYMBOL(pci_msi_enabled);
+ 
+-void pci_msi_init_pci_dev(struct pci_dev *dev)
+-{
+-	INIT_LIST_HEAD(&dev->msi_list);
+-
+-	/* Disable the msi hardware to avoid screaming interrupts
+-	 * during boot.  This is the power on reset default so
+-	 * usually this should be a noop.
+-	 */
+-	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+-	if (dev->msi_cap)
+-		pci_msi_set_enable(dev, 0);
+-
+-	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-	if (dev->msix_cap)
+-		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+-}
+-
+ /**
+  * pci_enable_msi_range - configure device's MSI capability structure
+  * @dev: device to configure
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 59d9be3..99f17e3 100644
+index 8d2f400..45d6d5c 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -2064,6 +2064,28 @@ static struct pci_bus *__pci_scan_root_bus(
- 	return b;
+@@ -1483,6 +1483,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
  }
  
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-+		u32 db, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources,
-+		struct pci_host_bridge_ops *phb_ops)
++static void pci_msi_init_pci_dev(struct pci_dev *dev)
 +{
-+	struct pci_host_bridge *host;
-+	struct pci_bus *bus;
++#ifdef CONFIG_PCI_MSI
++	INIT_LIST_HEAD(&dev->msi_list);
++#endif
 +
-+	host = pci_create_host_bridge(parent, db, resources,
-+			sysdata, phb_ops);
-+	if (!host)
-+		return NULL;
++	/* Disable the msi hardware to avoid screaming interrupts
++	 * during boot.  This is the power on reset default so
++	 * usually this should be a noop.
++	 */
++	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
++	if (dev->msi_cap)
++		pci_msi_set_enable(dev, 0);
 +
-+	bus = __pci_scan_root_bus(host, ops);
-+	if (!bus)
-+		pci_free_host_bridge(host);
-+
-+	return host;
++	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
++	if (dev->msix_cap)
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
 +}
-+EXPORT_SYMBOL(pci_scan_host_bridge);
 +
-+
- struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ static void pci_init_capabilities(struct pci_dev *dev)
  {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e9922b1..28eafb5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -790,6 +790,10 @@ void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-+		u32 dombus, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources,
-+		struct pci_host_bridge_ops *phb_ops);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+ 	/* MSI/MSI-X list */
 -- 
-1.7.1
+MST
 
