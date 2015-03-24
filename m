@@ -1,132 +1,246 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:33401 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbbC1DTK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 23:19:10 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 24 Mar 2015 09:08:12 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
+Message-ID: <20150324140812.GB2495@google.com>
+References: <54FD4FB9.2060802@intel.com>
+ <5222588.FaRe37n2T1@vostro.rjw.lan>
+ <54FE93A4.9040908@intel.com>
+ <20150320210354.GK26935@google.com>
+ <550FDA38.2090505@intel.com>
+ <20150323150955.GR26935@google.com>
+ <551128BA.7070508@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <5515F782.7060301@oracle.com>
-References: <5514391F.2030300@oracle.com>
-	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
-	<5515F6B8.8020606@oracle.com>
-	<5515F782.7060301@oracle.com>
-Date: Fri, 27 Mar 2015 20:19:09 -0700
-Message-ID: <CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Ahern <david.ahern@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7bdc9f505d71e5051250b672
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <551128BA.7070508@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7bdc9f505d71e5051250b672
-Content-Type: text/plain; charset=UTF-8
+On Tue, Mar 24, 2015 at 05:04:58PM +0800, Aaron Lu wrote:
+> On 03/23/2015 11:09 PM, Bjorn Helgaas wrote:
+> > The ECN says this function is in a host bridge scope and applies to the
+> > PCI subsystem beneath the bridge.  This code does not map well to that
+> > because:
+> > 
+> >   1) It evaluates _DSM more times than necessary (we only need to do it
+> >   once per host bridge, and this does it once for every PCI device
+> >   immediately below a host brige).
+> > 
+> >   2) The settings are only applied to immediate children of the host
+> >   bridge, not to devices deeper in the hierarchy.
+> > 
+> >   3) A reader of the ECN will expect the corresponding code to be in the
+> >   host bridge driver (pci_root.c) where we deal with other host bridge
+> >   properties, not in per-PCI device code like this.
+> > 
+> >   4) The ECN is not explicit about this, but if both function 8 (which
+> >   applies to a whole hierarchy) and function 9 (which applies to a single
+> >   PCI device) are implemented for the same PCI device, I would expect
+> >   function 9 to take precedence over function 8.  This patch does the
+> >   reverse, since function 8 will overwrite any d3cold_delay that was set
+> >   above by function 9.
+> 
+> I tried to do this in drivers/acpi/pci_root.c, but didn't find a proper
+> way to pass this information down during PCI device scan time. So
+> instead, I did it in the pci root bus add time: acpi_pci_add_bus, which
+> is used by both the x86 code and ia64 code. Suggestions are welcome and
+> appreciated.
+> 
+> 
+> From 05b625d2444d90e37392dd835a97c0b582fd221f Mon Sep 17 00:00:00 2001
+> From: Aaron Lu <aaron.lu@intel.com>
+> Date: Fri, 14 Nov 2014 16:56:43 +0800
+> Subject: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
+> 
+> An ECN meant to specify possible delay optimizations is available on
+> the PCI website:
+> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
+> where it has defined two functions for an UUID specified _DSM:
+> Function 8: If system firmware assumes the responsibility of post
+> Conventional Reset delay (and informs the Operating System via this DSM
+> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
+> S4 or S3 states), the Operating System may assume sufficient time has
+> elapsed since the end of reset, and devices within the PCI subsystem are
+> ready for Configuration Access.
+> If the system firmware supports runtime power gating on any of the
+> device within PCI subsystem covered by this DSM function, the system
+> firmware is responsible for covering the necessary post power-on reset
+> delay.
+> 
+> Function 9: Specify various smaller delay values than required by the
+> SPEC for individual PCI devices like shorter delay values after
+> conventional reset, D3hot to D0 transition, functional level reset, etc.
+> 
+> This patche adds support for function 8 and part of function 9. For
+> function 8, the patch will check if the required _DSM function satisfies
+> the requirement and then all the host bus' immediate children PCI device's
+> d3cold_delay variable will be updated to zero. For function 9, the values
+> affecting delays after conventional reset and D3hot->D0 are examined and
+> the per PCI device's d3cold_delay and d3_delay are updated if the _DSM's
+> return value is smaller than what the SPEC requires. Function 9's value
+> takes precedence over function 8.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/pci/pci-acpi.c   | 65 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-acpi.h |  2 ++
+>  include/linux/pci.h      |  1 +
+>  3 files changed, 68 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index e0afc94aca01..220371c2def4 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -537,11 +537,24 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+>  
+>  void acpi_pci_add_bus(struct pci_bus *bus)
+>  {
+> +	union acpi_object *obj;
+> +
+>  	if (acpi_pci_disabled || !bus->bridge)
+>  		return;
+>  
+>  	acpi_pci_slot_enumerate(bus);
+>  	acpiphp_enumerate_slots(bus);
+> +
+> +	/*
+> +	 * For a host bridge, check its _DSM for function 8 and if
+> +	 * that is available, mark it in the corresponding pci_bus.
+> +	 */
+> +	if (bus->bridge->parent)
+> +		return;
 
-On Fri, Mar 27, 2015 at 5:36 PM, David Ahern <david.ahern@oracle.com> wrote:
->>>
->>>> Also please make sure your config have
->>>>
->>>> CONFIG_PCI_DEBUG=y
->>>>
->>>> and capture serial console with "debug ignore_loglevel", so we check if
->>>> pci 0000:00:01.0 really have resource assigned.
->>>
->>>
->>> Please check attached patch and send out boot log with above config.
->>
->>
->> patched applied. PCI_DEBUG enabled. options added. log attached. This is
->> with d63e2e1f3df reverted still.
->>
->
-> oops lied about that last one; I forgot to revert the patch this round. That
-> the system booted with it applied is progress.
+This is not really an obvious way of testing for a host bridge.  I think
+pci_is_root_bus() would be a better way, but I'm still hoping for something
+in pci_root.c instead.  There is find_pci_host_bridge(), which might be
+useful (it's currently static but we might want to rename and export it for
+this and other reasons).
 
-Good. But we still have annoying warning about "no compatible window".
+> +	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 3,
+> +				RESET_DELAY_DSM, NULL);
+> +	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
+> +		bus->ignore_reset_delay = 1;
 
-Please try attached patch that support 64bit pci mem space for sparc.
+I think you need to free "obj" here.  Other acpi_evaluate_dsm() callers use
+ACPI_FREE().
 
-BTW, looks like you still do not have   CONFIG_PCI_DEBUG=y in your .config.
-otherwise we should more verbose print out.
-Or did you have DYNAMIC_DEBUG enabled ?
-If it is that case, can you remove that?
+>  }
+>  
+>  void acpi_pci_remove_bus(struct pci_bus *bus)
+> @@ -567,6 +580,55 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+>  				      check_children);
+>  }
+>  
+> +/**
+> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
+> + * @pdev: the PCI device whose delay is to be updated
+> + * @adev: the companion ACPI device of this PCI device
+> + *
+> + * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
+> + * control method of either its own or its parent bridge.
+> + *
+> + * The UUID of the _DSM control method, together with other information like
+> + * which delay values can be optimized, etc. is defined in a ECN available on
+> + * PCIsig.com titled as: ACPI additions for FW latency optimizations.
+> + * Function 9 of the ACPI _DSM control method, if available for a specific PCI
+> + * device, provides various possible delay values that are less than what the
+> + * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
+> + * can be added later.
+> + * Function 8 of the ACPI _DSM control method, if available for the PCI host
+> + * bridge(reflected by the bus' ignore_reset_delay filed), means all its
+> + * children devices do not need the reset delay when leaving from D3cold state.
+> + */
+> +static void pci_acpi_delay_optimize(struct pci_dev *pdev,
+> +				    acpi_handle handle)
+> +{
+> +	int value;
+> +	union acpi_object *obj, *elements;
+> +
+> +	if (pdev->bus->ignore_reset_delay)
+> +		pdev->d3cold_delay = 0;
 
-Thanks
+I think this only propagates the function 8 result to the immediate
+children of the host bridge, i.e., devices on the root bus.  But the ECN
+says it affects the entire hierarchy.  Can you put the ignore_reset_delay
+bit in the struct pci_host_bridge instead?
 
-Yinghai
+> +
+> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
+> +				FUNCTION_DELAY_DSM, NULL);
+> +	if (!obj)
+> +		return;
+> +
+> +	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
+> +		elements = obj->package.elements;
+> +		if (elements[0].type == ACPI_TYPE_INTEGER) {
+> +			value = (int)elements[0].integer.value / 1000;
+> +			if (value < PCI_PM_D3COLD_WAIT)
+> +				pdev->d3cold_delay = value;
+> +		}
+> +		if (elements[3].type == ACPI_TYPE_INTEGER) {
+> +			value = (int)elements[3].integer.value / 1000;
+> +			if (value < PCI_PM_D3_WAIT)
+> +				pdev->d3_delay = value;
+> +		}
+> +	}
+> +	kfree(obj);
+> +}
+> +
+>  static void pci_acpi_setup(struct device *dev)
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -575,6 +637,9 @@ static void pci_acpi_setup(struct device *dev)
+>  	if (!adev)
+>  		return;
+>  
+> +	if (pci_dev->pm_cap)
+> +		pci_acpi_delay_optimize(pci_dev, adev->handle);
 
---047d7bdc9f505d71e5051250b672
-Content-Type: text/x-patch; charset=US-ASCII; name="sparc_sun4v_mem64.patch"
-Content-Disposition: attachment; filename="sparc_sun4v_mem64.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i7sg1mtq0
+Is the "pm_cap" test really necessary?  If we do it this way, we then have
+to convince ourselves that pdev->d3cold_delay and pdev->d3_delay are only
+needed when pdev has a pm_cap.
 
-U3ViamVjdDogW1JGQyBQQVRDSF0gc3BhcmMvUENJOiBBZGQgbWVtNjQgcmVzb3VyY2UgcGFyc2lu
-ZyBmb3Igcm9vdCBidXMKCkZvdW5kIG5vIGNvbXBhdGlibGUgYnJpZGdlIHdpbmRvdyB3YXJuaW5n
-IGluIGJvb3QgbG9nIGZyb20gVDUtOC4KCnBjaSAwMDAwOjAwOjAxLjA6IGNhbid0IGNsYWltIEJB
-UiAxNSBbbWVtIDB4MTAwMDAwMDAwLTB4NGFmZmZmZmZmIHByZWZdOiBubyBjb21wYXRpYmxlIGJy
-aWRnZSB3aW5kb3cKCmFuZCByb290IGJ1cyBvbmx5IHJlcG9ydCBpbyBhbmQgbWVtMzIuCgpwY2lf
-c3VuNHYgZjAyZGJjZmM6IFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMDowMApwY2lfYnVzIDAw
-MDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFtpbyAgMHg4MDQwMDAwMDAwMDAtMHg4MDQwMGZmZmZm
-ZmZdIChidXMgYWRkcmVzcyBbMHgwMDAwLTB4ZmZmZmZmZl0pCnBjaV9idXMgMDAwMDowMDogcm9v
-dCBidXMgcmVzb3VyY2UgW21lbSAweDgwMDAwMDAwMDAwMC0weDgwMDA3ZWZmZmZmZl0gKGJ1cyBh
-ZGRyZXNzIFsweDAwMDAwMDAwLTB4N2VmZmZmZmZdKQpwY2lfYnVzIDAwMDA6MDA6IHJvb3QgYnVz
-IHJlc291cmNlIFtidXMgMDAtNzddCgpBZGQgbWVtNjQgaGFuZGxpbmcgaW4gcGNpX2NvbW1vbiBm
-b3Igc3BhcmMsIHNvIHdlIGNhbiBoYXZlIDY0Yml0IHJlc291cmNlCnJlZ2lzdGVyZWQgZm9yIGJ1
-cyBhdCBmaXJzdC4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9y
-Zz4KCi0tLQogYXJjaC9zcGFyYy9rZXJuZWwvcGNpLmMgICAgICAgIHwgICAgMyArKysKIGFyY2gv
-c3BhcmMva2VybmVsL3BjaV9jb21tb24uYyB8ICAgMTUgKysrKysrKysrKysrKy0tCiBhcmNoL3Nw
-YXJjL2tlcm5lbC9wY2lfaW1wbC5oICAgfCAgICAxICsKIDMgZmlsZXMgY2hhbmdlZCwgMTcgaW5z
-ZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvYXJjaC9zcGFyYy9r
-ZXJuZWwvcGNpLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC9zcGFyYy9rZXJu
-ZWwvcGNpLmMKKysrIGxpbnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2kuYwpAQCAtNjYzLDYg
-KzY2Myw5IEBAIHN0cnVjdCBwY2lfYnVzICpwY2lfc2Nhbl9vbmVfcGJtKHN0cnVjdAogCQkJCXBi
-bS0+aW9fc3BhY2Uuc3RhcnQpOwogCXBjaV9hZGRfcmVzb3VyY2Vfb2Zmc2V0KCZyZXNvdXJjZXMs
-ICZwYm0tPm1lbV9zcGFjZSwKIAkJCQlwYm0tPm1lbV9zcGFjZS5zdGFydCk7CisJaWYgKHBibS0+
-bWVtNjRfc3BhY2UuZmxhZ3MpCisJCXBjaV9hZGRfcmVzb3VyY2Vfb2Zmc2V0KCZyZXNvdXJjZXMs
-ICZwYm0tPm1lbTY0X3NwYWNlLAorCQkJCQlwYm0tPm1lbTY0X3NwYWNlLnN0YXJ0KTsKIAlwYm0t
-PmJ1c24uc3RhcnQgPSBwYm0tPnBjaV9maXJzdF9idXNubzsKIAlwYm0tPmJ1c24uZW5kCT0gcGJt
-LT5wY2lfbGFzdF9idXNubzsKIAlwYm0tPmJ1c24uZmxhZ3MJPSBJT1JFU09VUkNFX0JVUzsKSW5k
-ZXg6IGxpbnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfY29tbW9uLmMKPT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQot
-LS0gbGludXgtMi42Lm9yaWcvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jCisrKyBsaW51
-eC0yLjYvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jCkBAIC00MDYsNiArNDA2LDcgQEAg
-dm9pZCBwY2lfZGV0ZXJtaW5lX21lbV9pb19zcGFjZShzdHJ1Y3QgcAogCX0KIAogCW51bV9wYm1f
-cmFuZ2VzID0gaSAvIHNpemVvZigqcGJtX3Jhbmdlcyk7CisJbWVtc2V0KCZwYm0tPm1lbTY0X3Nw
-YWNlLCAwLCBzaXplb2Yoc3RydWN0IHJlc291cmNlKSk7CiAKIAlmb3IgKGkgPSAwOyBpIDwgbnVt
-X3BibV9yYW5nZXM7IGkrKykgewogCQljb25zdCBzdHJ1Y3QgbGludXhfcHJvbV9wY2lfcmFuZ2Vz
-ICpwciA9ICZwYm1fcmFuZ2VzW2ldOwpAQCAtNDUxLDcgKzQ1MiwxMSBAQCB2b2lkIHBjaV9kZXRl
-cm1pbmVfbWVtX2lvX3NwYWNlKHN0cnVjdCBwCiAJCQlicmVhazsKIAogCQljYXNlIDM6Ci0JCQkv
-KiBYWFggNjQtYml0IE1FTSBoYW5kbGluZyBYWFggKi8KKwkJCS8qIDY0LWJpdCBNRU0gaGFuZGxp
-bmcgKi8KKwkJCXBibS0+bWVtNjRfc3BhY2Uuc3RhcnQgPSBhOworCQkJcGJtLT5tZW02NF9zcGFj
-ZS5lbmQgPSBhICsgc2l6ZSAtIDFVTDsKKwkJCXBibS0+bWVtNjRfc3BhY2UuZmxhZ3MgPSBJT1JF
-U09VUkNFX01FTTsKKwkJCWJyZWFrOwogCiAJCWRlZmF1bHQ6CiAJCQlicmVhazsKQEAgLTQ2NSwx
-NSArNDcwLDIxIEBAIHZvaWQgcGNpX2RldGVybWluZV9tZW1faW9fc3BhY2Uoc3RydWN0IHAKIAkJ
-cHJvbV9oYWx0KCk7CiAJfQogCi0JcHJpbnRrKCIlczogUENJIElPWyVsbHhdIE1FTVslbGx4XVxu
-IiwKKwlwcmludGsoIiVzOiBQQ0kgSU9bJWxseF0gTUVNWyVsbHhdIiwKIAkgICAgICAgcGJtLT5u
-YW1lLAogCSAgICAgICBwYm0tPmlvX3NwYWNlLnN0YXJ0LAogCSAgICAgICBwYm0tPm1lbV9zcGFj
-ZS5zdGFydCk7CisJaWYgKHBibS0+bWVtNjRfc3BhY2UuZmxhZ3MpCisJCXByaW50aygiIE1FTTY0
-WyVsbHhdIiwKKwkJICAgICAgIHBibS0+bWVtNjRfc3BhY2Uuc3RhcnQpOworCXByaW50aygiXG4i
-KTsKIAogCXBibS0+aW9fc3BhY2UubmFtZSA9IHBibS0+bWVtX3NwYWNlLm5hbWUgPSBwYm0tPm5h
-bWU7CiAKIAlyZXF1ZXN0X3Jlc291cmNlKCZpb3BvcnRfcmVzb3VyY2UsICZwYm0tPmlvX3NwYWNl
-KTsKIAlyZXF1ZXN0X3Jlc291cmNlKCZpb21lbV9yZXNvdXJjZSwgJnBibS0+bWVtX3NwYWNlKTsK
-KwlpZiAocGJtLT5tZW02NF9zcGFjZS5mbGFncykKKwkJcmVxdWVzdF9yZXNvdXJjZSgmaW9tZW1f
-cmVzb3VyY2UsICZwYm0tPm1lbTY0X3NwYWNlKTsKIAogCXBjaV9yZWdpc3Rlcl9sZWdhY3lfcmVn
-aW9ucygmcGJtLT5pb19zcGFjZSwKIAkJCQkgICAgJnBibS0+bWVtX3NwYWNlKTsKSW5kZXg6IGxp
-bnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfaW1wbC5oCj09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4
-LTIuNi5vcmlnL2FyY2gvc3BhcmMva2VybmVsL3BjaV9pbXBsLmgKKysrIGxpbnV4LTIuNi9hcmNo
-L3NwYXJjL2tlcm5lbC9wY2lfaW1wbC5oCkBAIC05Nyw2ICs5Nyw3IEBAIHN0cnVjdCBwY2lfcGJt
-X2luZm8gewogCS8qIFBCTSBJL08gYW5kIE1lbW9yeSBzcGFjZSByZXNvdXJjZXMuICovCiAJc3Ry
-dWN0IHJlc291cmNlCQkJaW9fc3BhY2U7CiAJc3RydWN0IHJlc291cmNlCQkJbWVtX3NwYWNlOwor
-CXN0cnVjdCByZXNvdXJjZQkJCW1lbTY0X3NwYWNlOwogCXN0cnVjdCByZXNvdXJjZQkJCWJ1c247
-CiAKIAkvKiBCYXNlIG9mIFBDSSBDb25maWcgc3BhY2UsIGNhbiBiZSBwZXItUEJNIG9yIHNoYXJl
-ZC4gKi8K
---047d7bdc9f505d71e5051250b672--
+If we *always* fill in the delay values, it's possible they won't be used,
+but we don't have to prove any connection between them and a pm_cap, so
+the code is easier to analyze.
+
+> +
+>  	pci_acpi_add_pm_notifier(adev, pci_dev);
+>  	if (!adev->wakeup.flags.valid)
+>  		return;
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 3801c704a945..a965efa52152 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -79,6 +79,8 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+>  
+>  extern const u8 pci_acpi_dsm_uuid[];
+>  #define DEVICE_LABEL_DSM	0x07
+> +#define RESET_DELAY_DSM		0x08
+> +#define FUNCTION_DELAY_DSM	0x09
+>  
+>  #else	/* CONFIG_ACPI */
+>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a379513bddef..1e56c464d058 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -471,6 +471,7 @@ struct pci_bus {
+>  	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
+>  	struct bin_attribute	*legacy_mem; /* legacy mem */
+>  	unsigned int		is_added:1;
+> +	unsigned int		ignore_reset_delay:1;
+>  };
+>  
+>  #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
+> -- 
+> 2.1.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
