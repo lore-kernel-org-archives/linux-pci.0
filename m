@@ -1,122 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:50114 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbbCTDPu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:15:50 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:15:48 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 50A92357804F
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:46 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3FcHL42795018
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:46 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3FCPp013498
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:12 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 18/21] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
-Date: Fri, 20 Mar 2015 11:06:34 +0800
-Message-Id: <1426820797-6267-19-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15125 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753180AbbCXDhT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:19 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 10/30] PCI: Introduce pci_host_bridge_list to manage host bridges
+Date: Tue, 24 Mar 2015 11:34:04 +0800
+Message-ID: <1427168064-8657-11-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
-will exceed the limitation and failed to be assigned.
+Introduce pci_host_bridge_list to manage pci host
+bridges in system, this make us have the ability
+to check whether the new host would conflict with
+existing one. Then we could remove bus alreay exist
+check in __pci_create_root_bus().
 
-Introduce a different mechanism based on the IOV BAR size:
-
-  - if IOV BAR size is smaller than 64MB, expand to total_pe
-  - if IOV BAR size is bigger than 64MB, roundup power2
-
-[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 3 deletions(-)
+ drivers/pci/host-bridge.c |   41 ++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/probe.c       |    9 +--------
+ include/linux/pci.h       |    1 +
+ 3 files changed, 42 insertions(+), 9 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 3c95097..d6942c9 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -179,6 +179,8 @@ struct pci_dn {
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
- 	int     offset;			/* PE# for the first VF PE */
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index bd1b678..89bbcc4 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2246,6 +2246,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 1a9834b..8af6d51 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -8,6 +8,9 @@
  
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -2256,6 +2257,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->vfs_expanded = 0;
+ #include "pci.h"
  
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
++static LIST_HEAD(pci_host_bridge_list);
++static DEFINE_MUTEX(pci_host_mutex);
 +
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
-+				 i, res);
-+			continue;
-+		}
+ static void pci_release_host_bridge_dev(struct device *dev)
+ {
+ 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+@@ -41,12 +44,29 @@ static void pci_host_update_busn_res(
+ 	pci_add_resource(resources, &host->busn_res);
+ }
+ 
++static bool pci_host_busn_res_overlap(
++		struct pci_host_bridge *new, struct pci_host_bridge *old)
++{
++	struct resource_entry *entry;
++	struct resource *res1 = NULL, *res2 = NULL;
 +
-+		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++	resource_list_for_each_entry(entry, &old->windows)
++		if (entry->res->flags & IORESOURCE_BUS)
++			res1 = entry->res;
 +
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
-+				 i, res);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = roundup_pow_of_two(total_vfs);
-+			break;
++	resource_list_for_each_entry(entry, &new->windows)
++		if (entry->res->flags & IORESOURCE_BUS)
++			res2 = entry->res;
++
++	return resource_overlaps(res1, res2);
++}
++
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, int domain, int bus,
+ 		struct list_head *resources)
+ {
+ 	int error;
+-	struct pci_host_bridge *host;
++	struct pci_host_bridge *host, *tmp;
+ 	struct resource_entry *window, *n;
+ 
+ 	host = kzalloc(sizeof(*host), GFP_KERNEL);
+@@ -65,6 +85,21 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	 */
+ 	host->domain = domain;
+ 	pci_host_assign_domain_nr(host);
++	mutex_lock(&pci_host_mutex);
++	list_for_each_entry(tmp, &pci_host_bridge_list, list) {
++		if (tmp->domain != host->domain
++			  || pci_host_busn_res_overlap(host, tmp)) {
++			pr_warn("pci host bridge pci%04x:%02x exist\n",
++					host->domain, bus);
++			mutex_unlock(&pci_host_mutex);
++			pci_free_resource_list(&host->windows);
++			kfree(host);
++			return NULL;
 +		}
 +	}
++	list_add_tail(&host->list, &pci_host_bridge_list);
++	mutex_unlock(&pci_host_mutex);
 +
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->flags || res->parent)
-@@ -2268,12 +2295,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	host->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
+@@ -80,6 +115,10 @@ struct pci_host_bridge *pci_create_host_bridge(
  
- 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
- 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
--				i, res, phb->ioda.total_pe);
-+			 i, res, mul);
- 	}
--	pdn->vfs_expanded = phb->ioda.total_pe;
-+	pdn->vfs_expanded = mul;
+ void pci_free_host_bridge(struct pci_host_bridge *host)
+ {
++	mutex_lock(&pci_host_mutex);
++	list_del(&host->list);
++	mutex_unlock(&pci_host_mutex);
++
+ 	device_unregister(&host->dev);
  }
- #endif /* CONFIG_PCI_IOV */
  
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 25ac741..8517d1b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1869,7 +1869,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 		void *sysdata)
+ {
+ 	int error;
+-	struct pci_bus *b, *b2;
++	struct pci_bus *b;
+ 	struct resource_entry *window;
+ 	struct device *parent;
+ 	struct resource *res;
+@@ -1887,12 +1887,6 @@ static struct pci_bus *__pci_create_root_bus(
+ 	b->number = b->busn_res.start =
+ 		pci_host_first_busnr(bridge);
+ 	pci_bus_assign_domain_nr(b, parent);
+-	b2 = pci_find_bus(pci_domain_nr(b), b->number);
+-	if (b2) {
+-		/* If we already got to this bus through a different bridge, ignore it */
+-		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
+-	}
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+@@ -1952,7 +1946,6 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ put_dev:
+ 	put_device(&bridge->dev);
+-err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f189dfb..91cba01 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -407,6 +407,7 @@ struct pci_host_bridge {
+ 	/* we use default bus resource if no bus resource provided */
+ 	struct resource busn_res;
+ 	struct list_head windows;	/* resource_entry */
++	struct list_head list;
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
 -- 
-1.7.9.5
+1.7.1
 
