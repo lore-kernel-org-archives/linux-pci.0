@@ -1,180 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15631 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413AbbCXDhc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 14/30] PCI: Introduce pci_host_bridge_ops to support host specific operations
-Date: Tue, 24 Mar 2015 11:34:08 +0800
-Message-ID: <1427168064-8657-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Mar 2015 16:43:00 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v3 10/10] pci: unexport pci_msi_off
+Message-ID: <1427211032-2270-11-git-send-email-mst@redhat.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have weak functions like pcibios_root_bridge_prepare()
-to setup pci host bridge, We could introduce pci_host_bridge_ops
-which contain host bridge specific ops to setup pci_host_bridge.
-Then host bridge driver could add pci_host_bridge_ops hooks
-intead of weak function to setup pci_host_bridge.
-This patch add following pci_host_bridge_ops hooks:
+Now one should be using pci_msi_off now, unexport it and move the
+declaration to internal header to prevent misuse.
 
-pci_host_bridge_ops {
-	struct pci_ops *ops;
-	/* set root bus speed, some platform need this like powerpc */
-	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-	int (*prepare)(struct pci_host_bridge *host);
-	/* platform specific of scan hook to scan pci device */
-	int (*scan_bus)(struct pci_host_bridge *);
-}
-We could easily extend it to support different host bridge
-specific operations.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/pci/host-bridge.c |    9 ++++++++-
- drivers/pci/pci.h         |    5 +++--
- drivers/pci/probe.c       |   11 ++++++++---
- include/linux/pci.h       |    9 +++++++++
- 4 files changed, 28 insertions(+), 6 deletions(-)
+ drivers/pci/pci.h   | 2 ++
+ include/linux/pci.h | 1 -
+ drivers/pci/pci.c   | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 87c4fc5..b439264 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -63,7 +63,8 @@ static bool pci_host_busn_res_overlap(
- 
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
--		void *sysdata, struct list_head *resources)
-+		void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops)
- {
- 	int error;
- 	struct pci_host_bridge *host, *tmp;
-@@ -98,10 +99,16 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	list_add_tail(&host->list, &pci_host_bridge_list);
- 	mutex_unlock(&pci_host_mutex);
- 
-+	host->ops = ops;
- 	host->dev.release = pci_release_host_bridge_dev;
- 	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
-+	if (host->ops && host->ops->prepare) {
-+		error = host->ops->prepare(host);
-+		if (error)
-+			goto list_del;
-+	}
- 
- 	error = pcibios_root_bridge_prepare(host);
- 	if (error)
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 027fba0..ef10cc1 100644
+index a964569..dd17615 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -334,8 +334,9 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- }
+@@ -144,6 +144,8 @@ void pci_no_msi(void);
+ static inline void pci_no_msi(void) { }
  #endif
  
--struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
--        int domain, int bus, void *sysdata, struct list_head *resources);
-+struct pci_host_bridge *pci_create_host_bridge(
-+		struct device *parent, int domain, int bus, void *sysdata,
-+		struct list_head *resources, struct pci_host_bridge_ops *ops);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- 
- static inline int pci_host_first_busnr(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ee17d9a..36dfee0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1894,6 +1894,8 @@ static struct pci_bus *__pci_create_root_bus(
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
- 
-+	if (bridge->ops && bridge->ops->set_root_bus_speed)
-+		bridge->ops->set_root_bus_speed(bridge);
- 	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-@@ -1958,7 +1960,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
- 	struct pci_host_bridge *host;
- 
- 	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources);
-+			sysdata, resources, NULL);
- 	if (!host)
- 		return NULL;
- 
-@@ -2048,7 +2050,10 @@ static struct pci_bus *__pci_scan_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	max = pci_scan_child_bus(b);
-+	if (host->ops && host->ops->scan_bus)
-+		max = host->ops->scan_bus(host);
-+	else
-+		max = pci_scan_child_bus(b);
- 
- 	/* If default busn resource used, update the max bus number */
- 	if (host->busn_res.flags & IORESOURCE_BUS) {
-@@ -2066,7 +2071,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 	struct pci_host_bridge *host;
- 
- 	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources);
-+			sysdata, resources, NULL);
- 	if (!host)
- 		return NULL;
- 
++void pci_msi_off(struct pci_dev *dev);
++
+ static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
+ {
+ 	u16 control;
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 91cba01..2702a51 100644
+index a34df45..ef15f91 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -400,6 +400,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
+@@ -970,7 +970,6 @@ void pci_intx(struct pci_dev *dev, int enable);
+ bool pci_intx_mask_supported(struct pci_dev *dev);
+ bool pci_check_and_mask_intx(struct pci_dev *dev);
+ bool pci_check_and_unmask_intx(struct pci_dev *dev);
+-void pci_msi_off(struct pci_dev *dev);
+ int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
+ int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
+ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d5f297a..04063cc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3103,6 +3103,7 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
+  * If you want to use MSI, see pci_enable_msi() and friends.
+  * This is a lower-level primitive that allows us to disable
+  * MSI operation at the device level.
++ * Not for use by drivers.
+  */
+ void pci_msi_off(struct pci_dev *dev)
+ {
+@@ -3113,7 +3114,6 @@ void pci_msi_off(struct pci_dev *dev)
+ 	if (dev->msix_cap)
+ 		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
  }
+-EXPORT_SYMBOL_GPL(pci_msi_off);
  
-+struct pci_host_bridge;
-+struct pci_host_bridge_ops {
-+	struct pci_ops *pci_ops;
-+	int (*prepare)(struct pci_host_bridge *host);
-+	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-+	int (*scan_bus)(struct pci_host_bridge *host);
-+};
-+
- struct pci_host_bridge {
- 	int domain;
- 	struct device dev;
-@@ -408,6 +416,7 @@ struct pci_host_bridge {
- 	struct resource busn_res;
- 	struct list_head windows;	/* resource_entry */
- 	struct list_head list;
-+	struct pci_host_bridge_ops *ops;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
+ int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
+ {
 -- 
-1.7.1
+MST
 
