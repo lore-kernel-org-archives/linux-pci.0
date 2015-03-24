@@ -1,72 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	"bp @ alien8 . de" <bp@alien8.de>, Lv Zheng <lv.zheng@intel.com>,
-	"yinghai @ kernel . org" <yinghai@kernel.org>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix] x86/PCI: Release PCI IRQ resource only if PCI device is disabled when unbinding
-Date: Thu, 19 Mar 2015 12:29:06 +0100
-Message-ID: <2835680.pSPaYk3eSL@vostro.rjw.lan>
-In-Reply-To: <550A7F8D.90404@linux.intel.com>
-References: <1426577832-23164-1-git-send-email-jiang.liu@linux.intel.com> <20150318221152.GA2495@google.com> <550A7F8D.90404@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Mar 2015 16:42:45 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	virtualization@lists.linux-foundation.org
+Subject: [PATCH v3 06/10] virtio_pci: drop msi_off on probe
+Message-ID: <1427211032-2270-7-git-send-email-mst@redhat.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, March 19, 2015 03:49:33 PM Jiang Liu wrote:
-> On 2015/3/19 6:11, Bjorn Helgaas wrote:
-> > On Tue, Mar 17, 2015 at 03:37:12PM +0800, Jiang Liu wrote:
-> >> To support IOAPIC hot-removal, we need to release PCI interrupt resource
-> >> when unbinding PCI device driver. But due to historical reason,
-> >> /*
-> >>  * We would love to complain here if pci_dev->is_enabled is set, that
-> >>  * the driver should have called pci_disable_device(), but the
-> >>  * unfortunate fact is there are too many odd BIOS and bridge setups
-> >>  * that don't like drivers doing that all of the time.
-> >>  * Oh well, we can dream of sane hardware when we sleep, no matter how
-> >>  * horrible the crap we have to deal with is when we are awake...
-> >>  */
-> > 
-> > Quoting the comment here (especially the last two lines) is overkill and
-> > obscures the real point.  The important thing is that some drivers have
-> > legitimate reasons for not calling pci_disable_device().
-> Hi Bjorn,
-> 	Thanks for review. I will rewrite the commit message.
-> >> some drivers don't call pci_disable_device() when unloading, which
-> >> prevents us from reallocating PCI interrupt resource on reloading
-> >> PCI driver and causes regressions.
-> > 
-> > This isn't very clear.  I can believe that "drivers not calling
-> > pci_disable_device()" means we don't release IRQ resources, which might
-> > prevent you from hot-removing an IOAPIC.
-> > 
-> > But "drivers not calling pci_disable_device()" doesn't cause regressions.
-> > 
-> >> So release PCI interrupt resource only if PCI device is disabled when
-> >> unbinding. By this way, we could support IOAPIC hot-removal on latest
-> >> platforms and avoid regressions on old platforms.
-> > 
-> > Does this mean you can only hot-remove IOAPICs if all drivers for devices
-> > using the IOAPIC call pci_disable_device()?  If so, it seems sort of
-> > dubious that we have to rely on drivers for that.
-> This is a quickfix for v4.0 merging window. We will try to solve this
-> issue for next merging window.
+pci core now disables msi on probe automatically,
+drop this from device-specific code.
 
-If that is the plan, then I'd rather revert the offending commit and try
-again in the next cycle.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/virtio/virtio_pci_common.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Bjorn, what do you think?
-
-
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index e894eb2..806bb2c 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -501,9 +501,6 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
+ 	INIT_LIST_HEAD(&vp_dev->virtqueues);
+ 	spin_lock_init(&vp_dev->lock);
+ 
+-	/* Disable MSI/MSIX to bring device to a known good state. */
+-	pci_msi_off(pci_dev);
+-
+ 	/* enable the device */
+ 	rc = pci_enable_device(pci_dev);
+ 	if (rc)
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+MST
+
