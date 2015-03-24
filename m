@@ -1,99 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37333 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750874AbbCMENq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Mar 2015 00:13:46 -0400
-Message-ID: <1426220023.3643.93.camel@redhat.com>
-Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bandan Das <bsd@redhat.com>
-Cc: Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Thu, 12 Mar 2015 22:13:43 -0600
-In-Reply-To: <jpg8uf1twxs.fsf@redhat.com>
-References: <1426137682-12287-1-git-send-email-famz@redhat.com>
-	 <jpgk2ylzs62.fsf@redhat.com> <20150313020919.GD32054@ad.nay.redhat.com>
-	 <jpg8uf1twxs.fsf@redhat.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:36392 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbbCXDlK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:41:10 -0400
+Message-ID: <5510DCCE.5060007@huawei.com>
+Date: Tue, 24 Mar 2015 11:41:02 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: kbuild test robot <fengguang.wu@intel.com>,
+	"kbuild-all@01.org" <kbuild-all@01.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [pci:pci/enumeration-yw7 32/35] drivers/pci/host-bridge.c:147:24:
+ sparse: symbol 'pci_find_host_bridge' was not declared. Should it be static?
+References: <201503240247.Lu2Ttzhc%fengguang.wu@intel.com> <CAErSpo6zfA7t-CeYx1_aBYEcV=LFueWYE_bndH-s-ktjL_goPg@mail.gmail.com> <5510BAAD.3080607@huawei.com> <CAErSpo5ycJbuUi4A903=DbWABDr9kKti+b68VCdtgzgpAmp2sQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5ycJbuUi4A903=DbWABDr9kKti+b68VCdtgzgpAmp2sQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-03-12 at 23:09 -0400, Bandan Das wrote:
-> Ccing Alex, he can probably confirm if my understanding is indeed correct.
+On 2015/3/24 10:29, Bjorn Helgaas wrote:
+> On Mon, Mar 23, 2015 at 8:15 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>> sparse warnings: (new ones prefixed by >>)
+>>>>
+>>>>>> drivers/pci/host-bridge.c:147:24: sparse: symbol 'pci_find_host_bridge' was not declared. Should it be static?
+>>>>
+>>>> Please review and possibly fold the followup patch.
+>>>
+>>> It does look like pci_find_host_bridge() is only used inside
+>>> drivers/pci/host-bridge.c and could be static.  Given that it's only
+>>> used there, it doesn't even need to be renamed, so maybe you could
+>>> even just drop the rename patch, too.
+>>
+>> OK.
+>>
+>> Hi Bjorn, because this series involved lots platforms and host bridge chips, and this version takes a lot of changes.
+>> So I didn't take lot of time to cross build this series in all the platforms in my local. I hope you could see the changes
+>> first, and I will refresh and fix the details soon.
 > 
-> Fam Zheng <famz@redhat.com> writes:
+> I just put them on a branch for build testing.  I will review them
+> more closely when the build problems are resolved.
 > 
-> > On Thu, 03/12 19:56, Bandan Das wrote:
-> >> Hi Fam,
-> >> 
-> >> Fam Zheng <famz@redhat.com> writes:
-> >> 
-> >> > If the device doesn't support shutdown, disabling interrupts may cause
-> >> > trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
-> >> > after we disable MSI-X, futher notifications from device will be
-> >> > delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
-> >> > may prevent us from making progress, by keep triggering interrupts.
+> FYI, I'll be on vacation from Mar 25 - Apr 2, so I won't be able to do
+> much then.
 
-Won't it be disabled as a spurious interrupt if it's retriggering that
-quickly?  Is there something unique about virtio that makes this worse
-than bare metal?
+OK, I post out the new v8 version which fixed the build problems and drop the unnecessary patch.
 
-> >> > Signed-off-by: Fam Zheng <famz@redhat.com>
-> >> > ---
-> >> >  drivers/pci/pci-driver.c | 7 ++++---
-> >> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> > index 3cb2210..fb29c96 100644
-> >> > --- a/drivers/pci/pci-driver.c
-> >> > +++ b/drivers/pci/pci-driver.c
-> >> > @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
-> >> >  
-> >> >  	pm_runtime_resume(dev);
-> >> >  
-> >> > -	if (drv && drv->shutdown)
-> >> > +	if (drv && drv->shutdown) {
-> >> >  		drv->shutdown(pci_dev);
-> >> > -	pci_msi_shutdown(pci_dev);
-> >> > -	pci_msix_shutdown(pci_dev);
-> >> > +		pci_msi_shutdown(pci_dev);
-> >> > +		pci_msix_shutdown(pci_dev);
-> >> > +	}
-> >> 
-> >> If the driver doesn't provide a shutdown method and doesn't itself
-> >> disable MSI/MSI-X, then pci_msi(x)_shutdown won't be called anymore,
-> >> no ?
-> >
-> > Right.
-> >
-> >> 
-> >> This is probably ok (but unclean) for a system shutdown, but could
-> >> cause problems for something like kexec ?
-> >
-> > Doesn't the reset in kexec clean this up during initialization?
+Happy vacation!
+
+Thanks!
+Yijing.
+
 > 
-> I guess it would take the same path as a reboot.
-
-If we were to kexec, the only thing I see touching MSI/X enable bits is
-pci_msi_init_pci_dev(), which unconditionally disables MSI/X as we walk
-PCI and discover devices.  Why is disabling there any different?  A new
-instance of the virtio driver hasn't yet been bound to the device to
-quiesce it.
-
-> > Without shutdown, anything in the driver is unclean anyway, for example
-> > free_irq is not called.
+> Bjorn
 > 
-> True, And that is why the MSI/-X shutdown functions are called here
-> because pci can't always rely on the individual device drivers to do
-> the right thing, but atleast can make a best effort at cleaning up.
+> 
 
-A concern with this patch would be that some drivers potentially don't
-implement a shutdown routine because they rely on pci-core to do this
-minimal cleanup.  I'm tempted to suggest adding a call to pci_intx() to
-disable INTx as part of the PCI-core shutdown, but that sounds like
-asking for trouble with broken legacy devices.  It sure seems a lot
-safer to make a virtio-scsi-pci shutdown function.  Thanks,
 
-Alex
+-- 
+Thanks!
+Yijing
 
