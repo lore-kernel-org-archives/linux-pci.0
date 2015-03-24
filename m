@@ -1,96 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:29979 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932628AbbCFJg3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:29 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 12/29] PCI: Introduce new scan function pci_scan_host_bridge()
-Date: Fri, 6 Mar 2015 17:33:29 +0800
-Message-ID: <1425634426-437-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Received: from mga11.intel.com ([192.55.52.93]:48257 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752309AbbCXOQ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Mar 2015 10:16:28 -0400
+Date: Tue, 24 Mar 2015 22:16:21 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH pci] PCI: pci_host_assign_domain_nr() can be static
+Message-ID: <20150324141621.GA47322@lkp-sb04>
+References: <201503242214.tdp6GlHv%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201503242214.tdp6GlHv%fengguang.wu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new scan function pci_scan_host_bridge() to
-support host bridge drivers that need to provide platform
-own pci_host_bridge_ops.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- drivers/pci/probe.c |   22 ++++++++++++++++++++++
- include/linux/pci.h |    4 ++++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ host-bridge.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b76fca6..54557a1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2063,6 +2063,28 @@ static struct pci_bus *__pci_scan_root_bus(
- 	return b;
- }
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index c78f4d0..6c2ca7c 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -217,7 +217,7 @@ static int pci_assign_domain_nr(struct device *dev)
+ #endif
+ #endif
  
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-+		u32 db, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources,
-+		struct pci_host_bridge_ops *phb_ops)
-+{
-+	struct pci_host_bridge *host;
-+	struct pci_bus *bus;
-+
-+	host = pci_create_host_bridge(parent, db, resources,
-+			sysdata, phb_ops);
-+	if (!host)
-+		return NULL;
-+
-+	bus = __pci_scan_root_bus(host, ops);
-+	if (!bus)
-+		pci_free_host_bridge(host);
-+
-+	return host;
-+}
-+EXPORT_SYMBOL(pci_scan_host_bridge);
-+
-+
- struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+-void pci_host_assign_domain_nr(struct pci_host_bridge *host)
++static void pci_host_assign_domain_nr(struct pci_host_bridge *host)
  {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e9922b1..28eafb5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -790,6 +790,10 @@ void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-+		u32 dombus, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources,
-+		struct pci_host_bridge_ops *phb_ops);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
--- 
-1.7.1
-
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ 	host->domain = pci_assign_domain_nr(host->dev.parent);
