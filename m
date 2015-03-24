@@ -1,103 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60993 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391AbbCMAqj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:46:39 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rob Herring" <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15967 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302AbbCXDhi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:38 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v7 0/4] pci: iproc: Add Broadcom iProc PCIe support
-Date: Thu, 12 Mar 2015 17:48:48 -0700
-Message-ID: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 27/30] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+Date: Tue, 24 Mar 2015 11:34:21 +0800
+Message-ID: <1427168064-8657-28-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds the support for Broadcom iProc PCIe controller
+Now no one use pci_create_root_bus(), we could remove it
+and rename __pci_create_root_bus() to pci_create_root_bus().
 
-pcie-iproc.c servers as the common core driver, and front-end bus
-interface needs to be added to support different bus interfaces
+Signed-off-by: wangyijing@huawei.com
+---
+ drivers/pci/probe.c |   35 +++++++++--------------------------
+ include/linux/pci.h |    3 ---
+ 2 files changed, 9 insertions(+), 29 deletions(-)
 
-pcie-iproc-pltfm.c contains the support for the platform bus interface
-
-Changes from v6:
- - Fix print formatting
- - Fix section mismatch warning by removing __init from the probe function
- - Fix Kconfig to force it only compiling for ARM based platforms
-
-Changes from v5:
- - Sync code base to v4.0-rc2
- - Change export symbols of common PCI functions to GPL only
- - Add comment to describe how configuration register access are protected
-   at the higher layer through 'pci_lock'
- - Use generic PCI functions for configuration register access and implement
-   'map_bus' callback to support it
- - Move 'pci_fixup_irqs' to before devices are added to the bus
- - Remove 'extern' from function prototype declared in the header
-
-Changes from v4:
- - iProc PCIe driver module support was not included in patch series v4.
-   This patch series (v5) fixes it
-
-Changes from v3:
- - Export symbols of several PCI functions so they can be used by drivers
-   compiled as kernel module
- - Add additional support to the Broadcom iProc PCIe driver so it can be
-   installed/uninstalled as kernel loadable module
-
-Changes from v2:
- - Major rework of the PCIe driver to factor out common generic code from
-   front-end bus interface. Support for generic platform bus interface is
-   also added
- - Adapt to several new PCI APIs that have been introduced lately
-
-Changes from v1:
- - Add standard PCI interrupt DT properties "#interrupt-cells",
-   "interrupt-map-mask" and "interrupt-map" so legacy INTx interrupts can be
-   supported by using standard PCI OF IRQ parsing function
- - Get rid of custom IRQ mapping function in the driver. Use
-   of_irq_parse_and_map_pci instead
-
-Ray Jui (4):
-  PCI: Export symbols of PCI functions
-  pci: iProc: define iProc PCIe platform bus binding
-  pci: iproc: Add Broadcom iProc PCIe support
-  ARM: dts: enable PCIe support for Cygnus
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 +++++
- arch/arm/boot/dts/bcm-cygnus.dtsi                  |   42 +++
- arch/arm/boot/dts/bcm958300k.dts                   |    8 +
- drivers/pci/host/Kconfig                           |   17 ++
- drivers/pci/host/Makefile                          |    2 +
- drivers/pci/host/pcie-iproc-pltfm.c                |  108 ++++++++
- drivers/pci/host/pcie-iproc.c                      |  268 ++++++++++++++++++++
- drivers/pci/host/pcie-iproc.h                      |   42 +++
- drivers/pci/pci.c                                  |    1 +
- drivers/pci/probe.c                                |    1 +
- drivers/pci/remove.c                               |    2 +
- drivers/pci/setup-bus.c                            |    1 +
- drivers/pci/setup-irq.c                            |    1 +
- 13 files changed, 556 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
- create mode 100644 drivers/pci/host/pcie-iproc-pltfm.c
- create mode 100644 drivers/pci/host/pcie-iproc.c
- create mode 100644 drivers/pci/host/pcie-iproc.h
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7796bf8..cb0237f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-static struct pci_bus *__pci_create_root_bus(
++static struct pci_bus *pci_create_root_bus(
+ 		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error;
+@@ -1937,24 +1937,6 @@ put_dev:
+ 	return NULL;
+ }
+ 
+-struct pci_bus *pci_create_root_bus(struct device *parent,
+-		int domain, int bus, struct pci_ops *ops, void *sysdata,
+-		struct list_head *resources)
+-{
+-	struct pci_host_bridge *host;
+-
+-	host = pci_create_host_bridge(parent, domain, bus,
+-			sysdata, resources, NULL);
+-	if (!host)
+-		return NULL;
+-
+-	host->bus = __pci_create_root_bus(host, ops);
+-	if (!host->bus)
+-		pci_free_host_bridge(host);
+-
+-	return host->bus;
+-}
+-
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+@@ -2030,7 +2012,7 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	b = __pci_create_root_bus(host, ops);
++	b = pci_create_root_bus(host, ops);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -2093,19 +2075,20 @@ struct pci_bus *pci_scan_bus(int domain, int bus,
+ 		struct pci_ops *ops, void *sysdata)
+ {
+ 	LIST_HEAD(resources);
+-	struct pci_bus *b;
++	struct pci_host_bridge *host;
+ 
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, domain, bus, ops, sysdata,
+-			&resources);
+-	if (b) {
+-		pci_scan_child_bus(b);
++	host = pci_create_host_bridge(NULL, domain, bus, sysdata,
++			&resources, NULL);
++	if (host) {
++		__pci_scan_root_bus(host, ops);
++		return host->bus;
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+-	return b;
++	return NULL;
+ }
+ EXPORT_SYMBOL(pci_scan_bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 61e0853..62333ff 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -782,9 +782,6 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus *pci_scan_bus(int domain, int bus, struct pci_ops *ops,
+ 					void *sysdata);
+-struct pci_bus *pci_create_root_bus(struct device *parent, int domain, int bus,
+-				    struct pci_ops *ops, void *sysdata,
+-				    struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
-1.7.9.5
+1.7.1
 
