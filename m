@@ -1,60 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15377 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753300AbbCXDhX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:23 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v2 2/2] pci: iproc: change PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM
-Date: Wed, 25 Mar 2015 00:08:13 -0700
-Message-ID: <1427267293-29585-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
-References: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 17/30] x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Tue, 24 Mar 2015 11:34:11 +0800
+Message-ID: <1427168064-8657-18-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change the config name of the iProc PCIe platform bus driver from
-PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM. Also change the driver name
-from pcie-iproc-pltfm.c to pcie-iproc-platform.c to match the config
-name
-
-Signed-off-by: Ray Jui <rjui@broadcom.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>
+CC: x86@kernel.org
 ---
- drivers/pci/host/Kconfig                           |    2 +-
- drivers/pci/host/Makefile                          |    2 +-
- .../{pcie-iproc-pltfm.c => pcie-iproc-platform.c}  |    0
- 3 files changed, 2 insertions(+), 2 deletions(-)
- rename drivers/pci/host/{pcie-iproc-pltfm.c => pcie-iproc-platform.c} (100%)
+ arch/x86/pci/acpi.c |   37 +++++++++++++++++++++----------------
+ 1 files changed, 21 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 963b507..1dfb567 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -115,7 +115,7 @@ config PCIE_IPROC
- 	  iProc family of SoCs. An appropriate bus interface driver also needs
- 	  to be enabled
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index d2655d5..877acaf 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -349,6 +349,19 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 			entry->res->name = info->name;
+ }
  
--config PCIE_IPROC_PLTFM
-+config PCIE_IPROC_PLATFORM
- 	tristate "Broadcom iProc PCIe platform bus driver"
- 	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
- 	depends on OF
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 2e02d20..f733b4e 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -14,4 +14,4 @@ obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
- obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
- obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
- obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
--obj-$(CONFIG_PCIE_IPROC_PLTFM) += pcie-iproc-pltfm.o
-+obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
-diff --git a/drivers/pci/host/pcie-iproc-pltfm.c b/drivers/pci/host/pcie-iproc-platform.c
-similarity index 100%
-rename from drivers/pci/host/pcie-iproc-pltfm.c
-rename to drivers/pci/host/pcie-iproc-platform.c
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
++
++	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops pci_host_ops = {
++	.pci_ops = &pci_root_ops,
++	.prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -359,6 +372,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	LIST_HEAD(crs_res);
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *host = NULL;
+ 	struct pci_sysdata *sd;
+ 	int node;
+ 
+@@ -425,14 +439,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+ 				    (u8)root->secondary.end, root->mcfg_addr))
+-			bus = pci_create_root_bus(NULL, domain, busnum,
+-					&pci_root_ops, sd, &resources);
+-
+-		if (bus) {
+-			pci_scan_child_bus(bus);
+-			pci_set_host_bridge_release(
+-				to_pci_host_bridge(bus->bridge),
+-				release_pci_root_info, info);
++			host = pci_scan_host_bridge(NULL, domain, busnum, sd,
++					&resources, &pci_host_ops);
++
++		if (host) {
++			bus = host->bus;
++			pci_set_host_bridge_release(host,
++					release_pci_root_info, info);
+ 		} else {
+ 			resource_list_free(&resources);
+ 			teardown_mcfg_map(info);
+@@ -455,14 +468,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_sysdata *sd = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	return 0;
+-}
+-
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
 -- 
-1.7.9.5
+1.7.1
 
