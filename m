@@ -1,14 +1,14 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Mar 2015 16:42:45 +0100
+Date: Tue, 24 Mar 2015 16:42:38 +0100
 From: "Michael S. Tsirkin" <mst@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
 	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	virtualization@lists.linux-foundation.org
-Subject: [PATCH v3 06/10] virtio_pci: drop msi_off on probe
-Message-ID: <1427211032-2270-7-git-send-email-mst@redhat.com>
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH v3 04/10] pci: don't disable msi/msix at shutdown
+Message-ID: <1427211032-2270-5-git-send-email-mst@redhat.com>
 References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -16,30 +16,39 @@ In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci core now disables msi on probe automatically,
-drop this from device-specific code.
+This partially reverts commit d52877c7b1afb8c37ebe17e2005040b79cb618b0:
+	"pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+It's un-necessary now that we disable msi at start, and it actually
+turns out to cause problems: some device drivers don't register a level
+interrupt handler when they detect msi/msix capability, switching off
+msi while device is going causes device to assert a level interrupt
+which is never de-asserted, causing a kernel hang.
+
+In particular, this was observed with virtio.
+
+Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+Cc: Ulrich Obergfell <uobergfe@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Reported-by: Fam Zheng <famz@redhat.com>
 Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/virtio/virtio_pci_common.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/pci/pci-driver.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index e894eb2..806bb2c 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -501,9 +501,6 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
- 	INIT_LIST_HEAD(&vp_dev->virtqueues);
- 	spin_lock_init(&vp_dev->lock);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..38a602c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
  
--	/* Disable MSI/MSIX to bring device to a known good state. */
--	pci_msi_off(pci_dev);
--
- 	/* enable the device */
- 	rc = pci_enable_device(pci_dev);
- 	if (rc)
+ 	if (drv && drv->shutdown)
+ 		drv->shutdown(pci_dev);
+-	pci_msi_shutdown(pci_dev);
+-	pci_msix_shutdown(pci_dev);
+ 
+ #ifdef CONFIG_KEXEC
+ 	/*
 -- 
 MST
 
