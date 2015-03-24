@@ -1,136 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41081 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbbC3KHt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 06:07:49 -0400
-Date: Mon, 30 Mar 2015 12:07:44 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Stephane Eranian <eranian@google.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Peter Neubauer <pneubauer@bluerwhite.org>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 01/86] pci: export pci_ids.h
-Message-ID: <20150330100744.GA16291@kroah.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-2-git-send-email-mst@redhat.com>
- <20150329204047.GA5902@kroah.com>
- <20150330083707-mutt-send-email-mst@redhat.com>
- <20150330065522.GA10105@kroah.com>
- <20150330085617-mutt-send-email-mst@redhat.com>
- <20150330075331.GA17823@kroah.com>
- <20150330101830-mutt-send-email-mst@redhat.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:37058 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752380AbbCXWJr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Mar 2015 18:09:47 -0400
+Received: by igcxg11 with SMTP id xg11so10513050igc.0
+        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2015 15:09:47 -0700 (PDT)
+Date: Tue, 24 Mar 2015 17:09:43 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
+Message-ID: <20150324220943.GD2495@google.com>
+References: <54FD4FB9.2060802@intel.com>
+ <5222588.FaRe37n2T1@vostro.rjw.lan>
+ <54FE93A4.9040908@intel.com>
+ <20150320210354.GK26935@google.com>
+ <550FDA38.2090505@intel.com>
+ <20150323150955.GR26935@google.com>
+ <551128BA.7070508@intel.com>
+ <20150324140812.GB2495@google.com>
+ <55117FD6.5090903@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150330101830-mutt-send-email-mst@redhat.com>
+In-Reply-To: <55117FD6.5090903@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 30, 2015 at 10:31:54AM +0200, Michael S. Tsirkin wrote:
-> On Mon, Mar 30, 2015 at 09:53:31AM +0200, Greg KH wrote:
-> > On Mon, Mar 30, 2015 at 09:15:26AM +0200, Michael S. Tsirkin wrote:
-> > > On Mon, Mar 30, 2015 at 08:55:22AM +0200, Greg KH wrote:
-> > > > On Mon, Mar 30, 2015 at 08:48:44AM +0200, Michael S. Tsirkin wrote:
-> > > > > On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
-> > > > > > On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
-> > > > > > > The macros in pci_ids.h are pretty useful for userspace
-> > > > > > > using the pci sysfs interface.
-> > > > > > > At the moment userspace is forced to duplicate these macros
-> > > > > > > (e.g. QEMU does this), it is better to expose them in
-> > > > > > > /usr/include/linux/pci_ids.h so everyone can just include
-> > > > > > > this header.
-> > > > > > > 
-> > > > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > > > > ---
-> > > > > > >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
-> > > > > > >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
-> > > > > > 
-> > > > > > No, please use the pci ids file from the upstream pci id database
-> > > > > > instead.
-> > > > > 
-> > > > > 
-> > > > > >  We shouldn't be putting these all in one file,
-> > > > > 
-> > > > > pci.txt says:
-> > > > > 	Please add PCI_VENDOR_ID_xxx for vendors
-> > > > > You want to change this policy, and get rid of
-> > > > > vendor ids in pci_ids.h completely?
-> > > > 
-> > > > Please read the top of pci_ids.h.  It hasn't had new ids added to it in
-> > > > a long time.
-> > > 
-> > > OK, looks like pci.txt should be fixed then.
-> > 
-> > Please send a patch.  As the original PCI kernel maintainer, I don't
-> > think I ever noticed pci.txt.  It was last "updated" in 2006...
-> > 
-> > > > Why would userspace need the pci id of anything?
-> > > 
-> > > Look at how they are used e.g. by QEMU, seabios, gpxe.
-> > > People want to say e.g. "find all network class devices".
-> > 
-> > Then use libpci.
-> > 
-> > > >  Again, just use
-> > > > libpci, isn't it fast enough?  Don't duplicate existing logic.
-> > > 
-> > > This really depends on whether you want something else that
-> > > libpci provides. But if I just want e.g. standard class IDs,
-> > > I don't want to depend on libpci.
-> > 
-> > Why not?  Don't duplicate things that already are there just for this
-> > very use.
-> > 
-> > Don't make us do kernel changes just because you don't want to depend on
-> > either of the two different userspace packages that provide this
-> > information in a standard way for userspace.  Your system will have one
-> > of those two packages in it, depending on it isn't a "burden" at all.
-> > 
-> > > > Or use the hw database that libudev exports, which is already on your
-> > > > machine and exports all of the pci ids from libpci directly.
-> > > 
-> > > Same argument really.
-> > 
-> > Because you don't want to depend on existing packages, doesn't mean we
-> > have to accept kernel changes and maintain them for forever, as you are
-> > now creating a new api that we will have to keep up to date and correct
-> > for all time.
-> > 
-> > Again, depend on the packages that are already doing this work please.
-> > 
+On Tue, Mar 24, 2015 at 11:16:38PM +0800, Aaron Lu wrote:
+> Here is an updat, kind of a proof of concept one, to see if it goes the
+> right way:
+
+I think what you've outlined below makes sense.  I had a few minor
+comments.
+
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 3e5bbf9e8889..e40512d3f373 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>  	return bus;
+>  }
+>  
+> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+
+I'd change the name to "pci_find_host_bridge()" to be more like other
+interfaces.  Do that in a separate patch because it changes some callers
+and can be done separately.
+
+>  {
+>  	struct pci_bus *root_bus = find_pci_root_bus(bus);
+>  
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index e0afc94aca01..04d5b5befbe9 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -537,11 +537,32 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+>  
+>  void acpi_pci_add_bus(struct pci_bus *bus)
+>  {
+> +	union acpi_object *obj;
+> +	struct pci_host_bridge *bridge;
+> +
+>  	if (acpi_pci_disabled || !bus->bridge)
+>  		return;
+>  
+>  	acpi_pci_slot_enumerate(bus);
+>  	acpiphp_enumerate_slots(bus);
+> +
+> +	/*
+> +	 * For a host bridge, check its _DSM for function 8 and if
+> +	 * that is available, mark it in pci_host_bridge.
+> +	 */
+> +	if (!pci_is_root_bus(bus))
+> +		return;
+> +
+> +	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 3,
+> +				RESET_DELAY_DSM, NULL);
+> +	if (obj) {
+> +		if (obj->type == ACPI_TYPE_INTEGER &&
+> +		    obj->integer.value == 1) {
+> +			bridge = find_pci_host_bridge(bus);
+> +			bridge->ignore_reset_delay = true;
+> +		}
+> +		ACPI_FREE(obj);
+> +	}
+
+    if (!obj)
+	return;
+
+    <mainline code is normal path, as you did below>
+    ACPI_FREE(obj);
+
+>  }
+>  
+>  void acpi_pci_remove_bus(struct pci_bus *bus)
+> @@ -567,6 +588,56 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+>  				      check_children);
+>  }
+>  
+> +/**
+> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
+> + * @pdev: the PCI device whose delay is to be updated
+> + * @adev: the companion ACPI device of this PCI device
+> + *
+> + * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
+> + * control method of either its own or its parent bridge.
+> + *
+> + * The UUID of the _DSM control method, together with other information like
+> + * which delay values can be optimized, etc. is defined in a ECN available on
+> + * PCIsig.com titled as: ACPI additions for FW latency optimizations.
+> + * Function 9 of the ACPI _DSM control method, if available for a specific PCI
+> + * device, provides various possible delay values that are less than what the
+> + * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
+> + * can be added later.
+> + * Function 8 of the ACPI _DSM control method, if available for the PCI host
+> + * bridge(reflected by the bus' ignore_reset_delay filed), means all its
+> + * children devices do not need the reset delay when leaving from D3cold state.
+> + */
+> +static void pci_acpi_delay_optimize(struct pci_dev *pdev,
+> +				    acpi_handle handle)
+> +{
+> +	struct pci_host_bridge *bridge = find_pci_host_bridge(pdev->bus);
+> +	int value;
+> +	union acpi_object *obj, *elements;
+> +
+> +	if (bridge->ignore_reset_delay)
+> +		pdev->d3cold_delay = 0;
+> +
+> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
+> +				FUNCTION_DELAY_DSM, NULL);
+> +	if (!obj)
+> +		return;
+> +
+> +	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
+> +		elements = obj->package.elements;
+> +		if (elements[0].type == ACPI_TYPE_INTEGER) {
+> +			value = (int)elements[0].integer.value / 1000;
+> +			if (value < PCI_PM_D3COLD_WAIT)
+> +				pdev->d3cold_delay = value;
+> +		}
+> +		if (elements[3].type == ACPI_TYPE_INTEGER) {
+> +			value = (int)elements[3].integer.value / 1000;
+> +			if (value < PCI_PM_D3_WAIT)
+> +				pdev->d3_delay = value;
+> +		}
+> +	}
+> +	ACPI_FREE(obj);
+> +}
+> +
+>  static void pci_acpi_setup(struct device *dev)
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -575,6 +646,8 @@ static void pci_acpi_setup(struct device *dev)
+>  	if (!adev)
+>  		return;
+>  
+> +	pci_acpi_delay_optimize(pci_dev, adev->handle);
+> +
+>  	pci_acpi_add_pm_notifier(adev, pci_dev);
+>  	if (!adev->wakeup.flags.valid)
+>  		return;
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4091f82239cd..802e7c0c7f9f 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -321,4 +321,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  }
+>  #endif
+>  
+> +struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus);
+> +
+>  #endif /* DRIVERS_PCI_H */
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 3801c704a945..a965efa52152 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -79,6 +79,8 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+>  
+>  extern const u8 pci_acpi_dsm_uuid[];
+>  #define DEVICE_LABEL_DSM	0x07
+> +#define RESET_DELAY_DSM		0x08
+> +#define FUNCTION_DELAY_DSM	0x09
+>  
+>  #else	/* CONFIG_ACPI */
+>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a379513bddef..e587832885e9 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -406,6 +406,7 @@ struct pci_host_bridge {
+>  	struct list_head windows;	/* resource_entry */
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+> +	bool ignore_reset_delay;
+
+I'm not sold on this new-fangled "bool" thing yet.  Please just use
+"unsigned int ignore_reset_delay:1" like most other uses in pci.h.
+
+>  };
+>  
+>  #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+> -- 
+> 2.1.0
 > 
-> Maintaining correct class IDs is more or less a requirement
-> for kernel to work properly, isn't it?
-
-Yes, but maintaining them internally, not externally.
-
-> Wouldn't the same thing apply to pci_regs.h?
-> Why does it make sense to export PCI_CLASS_REVISION
-> so I know where to read the class value from
-> configuration, but not what the values are?
-
-That's just due to history, we made the mistake to export those a long
-time ago, I wouldn't recommend doing any more, and again, instead rely
-on the programs that properly maintain that for you.
-
-> What's the work you refer to?  This is just hardware description it
-> can't change and doesn't need to be maintained.
-
-Hardware descriptions always change over time and need to be
-maintained...
-
-thanks,
-
-greg k-h
