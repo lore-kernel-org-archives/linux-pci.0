@@ -1,78 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58745 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750752AbbCGVGe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 7 Mar 2015 16:06:34 -0500
-Date: Sat, 7 Mar 2015 22:05:14 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15631 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413AbbCXDhc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-Message-ID: <20150307210514.GC3380@pd.tnic>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
- <1425456048-16236-5-git-send-email-yinghai@kernel.org>
- <20150304101649.GA3663@pd.tnic>
- <CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
- <20150304200000.GB6276@gmail.com>
- <CAE9FiQXJ-ujbhpw8phk5iQM8QFw=9QxDrXK6AdyXqDxmch_bbw@mail.gmail.com>
- <20150306133312.GC4259@pd.tnic>
- <CAE9FiQVt8Bi==r7pPhSOcSTmmpkjZ4c7O6iphbzFkgbugzKbqw@mail.gmail.com>
- <CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 14/30] PCI: Introduce pci_host_bridge_ops to support host specific operations
+Date: Tue, 24 Mar 2015 11:34:08 +0800
+Message-ID: <1427168064-8657-15-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAE9FiQXbQ37A7+a+dk4LdPs7DCr68EfWwypR9X4dyPfixH8PZA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 06, 2015 at 11:53:22AM -0800, Yinghai Lu wrote:
-> That will get wrong value back for kaslr_enabled in kernel stage.
-> 1. When kaslr is not enabled at boot/choose_kernel_location, if kaslr_enabled
-> get set wrongly in setup.c, late in module.c::get_module_load_offset
-> will return not wanted random module load offset.
-> That change behavior when HIBERNATION is defined or nokaslr is passed.
-> 
-> 2. When kaslr is enabled at boot/choose_kernel_location, if kaslr_enabled
-> get cleared wrongly in setup.c, late in module.c::get_module_load_offset
-> will not return wanted random module load offset.
+Now we have weak functions like pcibios_root_bridge_prepare()
+to setup pci host bridge, We could introduce pci_host_bridge_ops
+which contain host bridge specific ops to setup pci_host_bridge.
+Then host bridge driver could add pci_host_bridge_ops hooks
+intead of weak function to setup pci_host_bridge.
+This patch add following pci_host_bridge_ops hooks:
 
-Now you went from the one extreme to the other. Initially it was
-"trivial and obvious" now it is too much unreadable detail which no one
-needs.
+pci_host_bridge_ops {
+	struct pci_ops *ops;
+	/* set root bus speed, some platform need this like powerpc */
+	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
+	int (*prepare)(struct pci_host_bridge *host);
+	/* platform specific of scan hook to scan pci device */
+	int (*scan_bus)(struct pci_host_bridge *);
+}
+We could easily extend it to support different host bridge
+specific operations.
 
-How about this:
-
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
-Commit
+ drivers/pci/host-bridge.c |    9 ++++++++-
+ drivers/pci/pci.h         |    5 +++--
+ drivers/pci/probe.c       |   11 ++++++++---
+ include/linux/pci.h       |    9 +++++++++
+ 4 files changed, 28 insertions(+), 6 deletions(-)
 
-  f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
-
-started passing KASLR status to kernel proper, but it uses a physical
-address as the vaule, leading to parsing bogus KASLR status in kernel
-proper.
-
-The setup_data linked list and thus the element which contains
-kaslr_enabled is chained together using physical addresses. At the time
-when we access it in the kernel proper, we're already running with
-paging enabled and therefore must access it through its virtual address.
-
-This patch changes the code to use early_memmap() and access the value.
----
-
-Complaints?
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 87c4fc5..b439264 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -63,7 +63,8 @@ static bool pci_host_busn_res_overlap(
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, int domain, int bus,
+-		void *sysdata, struct list_head *resources)
++		void *sysdata, struct list_head *resources,
++		struct pci_host_bridge_ops *ops)
+ {
+ 	int error;
+ 	struct pci_host_bridge *host, *tmp;
+@@ -98,10 +99,16 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	list_add_tail(&host->list, &pci_host_bridge_list);
+ 	mutex_unlock(&pci_host_mutex);
+ 
++	host->ops = ops;
+ 	host->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
++	if (host->ops && host->ops->prepare) {
++		error = host->ops->prepare(host);
++		if (error)
++			goto list_del;
++	}
+ 
+ 	error = pcibios_root_bridge_prepare(host);
+ 	if (error)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 027fba0..ef10cc1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -334,8 +334,9 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ }
+ #endif
+ 
+-struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+-        int domain, int bus, void *sysdata, struct list_head *resources);
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, int domain, int bus, void *sysdata,
++		struct list_head *resources, struct pci_host_bridge_ops *ops);
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ 
+ static inline int pci_host_first_busnr(struct pci_host_bridge *host)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ee17d9a..36dfee0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1894,6 +1894,8 @@ static struct pci_bus *__pci_create_root_bus(
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+ 
++	if (bridge->ops && bridge->ops->set_root_bus_speed)
++		bridge->ops->set_root_bus_speed(bridge);
+ 	pcibios_set_root_bus_speed(bridge);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+@@ -1958,7 +1960,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+ 	struct pci_host_bridge *host;
+ 
+ 	host = pci_create_host_bridge(parent, domain, bus,
+-			sysdata, resources);
++			sysdata, resources, NULL);
+ 	if (!host)
+ 		return NULL;
+ 
+@@ -2048,7 +2050,10 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	max = pci_scan_child_bus(b);
++	if (host->ops && host->ops->scan_bus)
++		max = host->ops->scan_bus(host);
++	else
++		max = pci_scan_child_bus(b);
+ 
+ 	/* If default busn resource used, update the max bus number */
+ 	if (host->busn_res.flags & IORESOURCE_BUS) {
+@@ -2066,7 +2071,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 	struct pci_host_bridge *host;
+ 
+ 	host = pci_create_host_bridge(parent, domain, bus,
+-			sysdata, resources);
++			sysdata, resources, NULL);
+ 	if (!host)
+ 		return NULL;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 91cba01..2702a51 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -400,6 +400,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
+ }
+ 
++struct pci_host_bridge;
++struct pci_host_bridge_ops {
++	struct pci_ops *pci_ops;
++	int (*prepare)(struct pci_host_bridge *host);
++	void (*set_root_bus_speed)(struct pci_host_bridge *host);
++	int (*scan_bus)(struct pci_host_bridge *host);
++};
++
+ struct pci_host_bridge {
+ 	int domain;
+ 	struct device dev;
+@@ -408,6 +416,7 @@ struct pci_host_bridge {
+ 	struct resource busn_res;
+ 	struct list_head windows;	/* resource_entry */
+ 	struct list_head list;
++	struct pci_host_bridge_ops *ops;
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
 
-ECO tip #101: Trim your mails when you reply.
---
