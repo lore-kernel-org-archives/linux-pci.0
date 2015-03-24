@@ -1,47 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:41632 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbbC0Vlk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 17:41:40 -0400
-Date: Fri, 27 Mar 2015 14:50:16 -0700 (PDT)
-Message-Id: <20150327.145016.86183910134380870.davem@davemloft.net>
-To: yinghai@kernel.org
-Cc: david.ahern@oracle.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-References: <CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 20/30] PCI: Remove pcibios_root_bridge_prepare() and pcibos_set_root_bus_speed()
+Date: Tue, 24 Mar 2015 11:34:14 +0800
+Message-ID: <1427168064-8657-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 27 Mar 2015 14:01:54 -0700
+Now no one use weak pcibios_root_bridge_prepare() and
+pcibios_set_root_bus_speed, we could clean up them.
 
-> On Thu, Mar 26, 2015 at 4:27 PM, David Ahern <david.ahern@oracle.com> wrote:
->> On 3/26/15 2:43 PM, Yinghai Lu wrote:
->>>
->>> Can you send out boot log with "debug ignore_loglevel"?
->>
->>
->> attached
-> 
-> So the kernel config is sparc32 or sparc64 ?
-> 
-> pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
-> 0x110204000)
-> 
-> 
-> only could happen when dma_addr_t is 32bit.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    4 ----
+ drivers/pci/probe.c       |   18 +-----------------
+ include/linux/pci.h       |    2 --
+ 3 files changed, 1 insertions(+), 23 deletions(-)
 
-All DMA occurs behind an IOMMU and these IOMMUs only
-support 32-bit addressing, therefore dma_addr_t is
-32-bit on sparc64.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index b439264..919ba4d 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -110,10 +110,6 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 			goto list_del;
+ 	}
+ 
+-	error = pcibios_root_bridge_prepare(host);
+-	if (error)
+-		goto list_del;
+-
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b3d9b1b..7796bf8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1844,22 +1844,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+ 
+-/**
+- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
+- * @bridge: Host bridge to set up.
+- *
+- * Default empty implementation.  Replace with an architecture-specific setup
+- * routine, if necessary.
+- */
+-int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	return 0;
+-}
+-
+-void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+-{
+-}
+-
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1896,7 +1880,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	if (bridge->ops && bridge->ops->set_root_bus_speed)
+ 		bridge->ops->set_root_bus_speed(bridge);
+-	pcibios_set_root_bus_speed(bridge);
++
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0b921d6..61e0853 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -426,8 +426,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+-- 
+1.7.1
 
-If you want to represent PCI address in some way, you
-absolutely cannot use dma_addr_t as your data type.
