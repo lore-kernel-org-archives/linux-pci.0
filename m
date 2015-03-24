@@ -1,12 +1,9 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3780 "EHLO
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15068 "EHLO
 	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753604AbbCLNZN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:25:13 -0400
-Message-ID: <550193A3.1020102@huawei.com>
-Date: Thu, 12 Mar 2015 21:24:51 +0800
+	with ESMTP id S1753042AbbCXDhS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:18 -0400
 From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
 CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
@@ -23,154 +20,125 @@ CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
 	"Arnd Bergmann" <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [PATCH v6 21/30] PCI: Introduce pci_bus_child_max_busnr()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-22-git-send-email-wangyijing@huawei.com> <20150312033305.GH10949@google.com>
-In-Reply-To: <20150312033305.GH10949@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v8 09/30] PCI: Introduce pci_host_first_busnr() function
+Date: Tue, 24 Mar 2015 11:34:03 +0800
+Message-ID: <1427168064-8657-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/12 11:33, Bjorn Helgaas wrote:
-> On Mon, Mar 09, 2015 at 10:34:18AM +0800, Yijing Wang wrote:
->> Sometimes, we need to know the highest reserved
->> busnr for children bus. Because parent's
->> bus->busn_res could have padding in it.
->> This function return the max child busnr as
->> pci_scan_child_bus().
-> 
-> I'm not convinced about this one.  The fact that it's only used by parisc
-> lba_pci.c and acpiphp makes me suspicious that either they're doing
-> something funny, or other drivers *should* be using it, too.
+Use it to get the first bus number of the bus
+resource.
 
-Yes, what lba_pci.c do looks some strange, I did this patch just try to
-keep the original logic, but it seems to make code more complex, I would
-consider this again and try to find a better solution, thanks.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.h   |   11 +++++++++++
+ drivers/pci/probe.c |   19 ++++++++++---------
+ 2 files changed, 21 insertions(+), 9 deletions(-)
 
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
->>  drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
->>  include/linux/pci.h                |    2 +-
->>  3 files changed, 27 insertions(+), 31 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index bcb90e4..84f2584 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->>  	acpi_unlock_hp_context();
->>  }
->>  
->> -/**
->> - * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
->> - * @bus: bus to start search with
->> - */
->> -static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
->> -{
->> -	struct pci_bus *tmp;
->> -	unsigned char max, n;
->> -
->> -	/*
->> -	 * pci_bus_max_busnr will return the highest
->> -	 * reserved busnr for all these children.
->> -	 * that is equivalent to the bus->subordinate
->> -	 * value.  We don't want to use the parent's
->> -	 * bus->subordinate value because it could have
->> -	 * padding in it.
->> -	 */
->> -	max = bus->busn_res.start;
->> -
->> -	list_for_each_entry(tmp, &bus->children, node) {
->> -		n = pci_bus_max_busnr(tmp);
->> -		if (n > max)
->> -			max = n;
->> -	}
->> -	return max;
->> -}
->> -
->>  static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
->>  {
->>  	struct acpiphp_func *func;
->> @@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
->>  	LIST_HEAD(add_list);
->>  
->>  	acpiphp_rescan_slot(slot);
->> -	max = acpiphp_max_busnr(bus);
->> +	max = pci_bus_child_max_busnr(bus);
->>  	for (pass = 0; pass < 2; pass++) {
->>  		list_for_each_entry(dev, &bus->devices, bus_list) {
->>  			if (PCI_SLOT(dev->devfn) != slot->device)
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index c49eec1..0001896 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
->>   * Given a PCI bus, returns the highest PCI bus number present in the set
->>   * including the given PCI bus and its list of child PCI buses.
->>   */
->> -unsigned char pci_bus_max_busnr(struct pci_bus *bus)
->> +static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
->>  {
->>  	struct pci_bus *tmp;
->>  	unsigned char max, n;
->> @@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
->>  	}
->>  	return max;
->>  }
->> -EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
->> +
->> +unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
->> +{
->> +	struct pci_bus *tmp;
->> +	unsigned char max, n;
->> +
->> +	/*
->> +	 * pci_bus_max_busnr will return the highest
->> +	 * reserved busnr for all these children.
->> +	 * that is equivalent to the bus->subordinate
->> +	 * value.  We don't want to use the parent's
->> +	 * bus->subordinate value because it could have
->> +	 * padding in it.
->> +	 */
->> +	max = bus->busn_res.start;
->> +
->> +	list_for_each_entry(tmp, &bus->children, node) {
->> +		n = pci_bus_max_busnr(tmp);
->> +		if (n > max)
->> +			max = n;
->> +	}
->> +	return max;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
->>  
->>  #ifdef CONFIG_HAS_IOMEM
->>  void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index cfaf217..261b8de 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1181,7 +1181,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->>  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->>  		  void *userdata);
->>  int pci_cfg_space_size(struct pci_dev *dev);
->> -unsigned char pci_bus_max_busnr(struct pci_bus *bus);
->> +unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
->>  void pci_setup_bridge(struct pci_bus *bus);
->>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
->>  					 unsigned long type);
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8526790..886d72f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -337,4 +337,15 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+ 		int domain, int bus, struct list_head *resources);
+ void pci_free_host_bridge(struct pci_host_bridge *host);
++
++static inline int pci_host_first_busnr(struct pci_host_bridge *host)
++{
++	struct resource_entry *window;
++
++	resource_list_for_each_entry(window, &host->windows)
++		if (window->res->flags & IORESOURCE_BUS)
++			return window->res->start;
++	return -1;
++}
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index d5a12d9..25ac741 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1864,7 +1864,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
+ }
+ 
+-static struct pci_bus *__pci_create_root_bus(int bus,
++static struct pci_bus *__pci_create_root_bus(
+ 		struct pci_host_bridge *bridge, struct pci_ops *ops,
+ 		void *sysdata)
+ {
+@@ -1884,9 +1884,10 @@ static struct pci_bus *__pci_create_root_bus(int bus,
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+-	b->number = b->busn_res.start = bus;
++	b->number = b->busn_res.start =
++		pci_host_first_busnr(bridge);
+ 	pci_bus_assign_domain_nr(b, parent);
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
++	b2 = pci_find_bus(pci_domain_nr(b), b->number);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+@@ -1907,7 +1908,7 @@ static struct pci_bus *__pci_create_root_bus(int bus,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", bridge->domain, bus);
++	dev_set_name(&b->dev, "%04x:%02x", bridge->domain, b->number);
+ 	error = device_register(&b->dev);
+ 	if (error)
+ 		goto put_dev;
+@@ -1927,7 +1928,7 @@ static struct pci_bus *__pci_create_root_bus(int bus,
+ 		res = window->res;
+ 		offset = window->offset;
+ 		if (res->flags & IORESOURCE_BUS)
+-			pci_bus_insert_busn_res(b, bus, res->end);
++			pci_bus_insert_busn_res(b, b->number, res->end);
+ 		else
+ 			pci_bus_add_resource(b, res, 0);
+ 		if (offset) {
+@@ -1966,7 +1967,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_create_root_bus(bus, host, ops, sysdata);
++	host->bus = __pci_create_root_bus(host, ops, sysdata);
+ 	if (!host->bus)
+ 		pci_free_host_bridge(host);
+ 
+@@ -2042,14 +2043,14 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-static struct pci_bus *__pci_scan_root_bus(int bus,
++static struct pci_bus *__pci_scan_root_bus(
+ 		struct pci_host_bridge *host, struct pci_ops *ops,
+ 		void *sysdata)
+ {
+ 	struct pci_bus *b;
+ 	int max;
+ 
+-	b = __pci_create_root_bus(bus, host, ops, sysdata);
++	b = __pci_create_root_bus(host, ops, sysdata);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -2074,7 +2075,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_scan_root_bus(bus, host, ops, sysdata);
++	host->bus = __pci_scan_root_bus(host, ops, sysdata);
+ 	if (!host->bus)
+ 		pci_free_host_bridge(host);
+ 
 -- 
-Thanks!
-Yijing
+1.7.1
 
