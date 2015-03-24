@@ -1,92 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:52580 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbbCFQzN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 11:55:13 -0500
-Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
-	(envelope-from <linux@roeck-us.net>)
-	id 1YTvWq-000eRS-TW
-	for linux-pci@vger.kernel.org; Fri, 06 Mar 2015 16:55:13 +0000
-Date: Fri, 6 Mar 2015 08:55:04 -0800
-From: Guenter Roeck <linux@roeck-us.net>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, LKP <lkp@01.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PCI] BUG: unable to handle kernel
-Message-ID: <20150306165504.GA30094@roeck-us.net>
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com>
- <54F9C407.5020602@ti.com>
- <54F9CC6B.5070803@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI: rename _DSM UUID array
+Date: Tue, 24 Mar 2015 22:57:35 +0100
+Message-ID: <2882393.gnxeIGK6OM@vostro.rjw.lan>
+In-Reply-To: <55112899.3000904@intel.com>
+References: <54FD4FB9.2060802@intel.com> <13489176.3njQWsGiXL@vostro.rjw.lan> <55112899.3000904@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54F9CC6B.5070803@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
-[ ... ]
+On Tuesday, March 24, 2015 05:04:25 PM Aaron Lu wrote:
+> According to the PCI firmware spec, there is only one assigned UUID used
+> for PCI system so rename the device_label_dsm_uuid to something more
+> common as: pci_acpi_dsm_uuid and put it in drivers/pci/pci-acpi.c. Make
+> that UUID array extern in the pci-acpi.h so that other code can also
+> make use of it.
+> 
+> This patch shouldn't bring any functional change.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 
-> >From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17 00:00:00 2001
-> From: Murali Karicheri <m-karicheri2@ti.com>
-> Date: Fri, 6 Mar 2015 10:23:08 -0500
-> Subject: [PATCH] pci: of : fix kernel crash
-> 
-> This is a debug patch to root cause the kernel crash
-> 
-> 	commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
-> 
-> 	PCI: Update DMA configuration from DT
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
 > ---
->  drivers/of/of_pci.c       |    8 ++++++++
->  drivers/pci/host-bridge.c |    5 +++++
->  2 files changed, 13 insertions(+)
+>  drivers/pci/pci-acpi.c   |  9 +++++++++
+>  drivers/pci/pci-label.c  | 11 ++---------
+>  include/linux/pci-acpi.h |  3 +++
+>  3 files changed, 14 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 86d3c38..5a59fb8 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
->  	struct device *dev = &pci_dev->dev;
->  	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 489063987325..e0afc94aca01 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -18,6 +18,15 @@
+>  #include <linux/pm_qos.h>
+>  #include "pci.h"
 >  
-> +	if (!bridge || !bridge->parent) {
-> +		if (!bridge)
-> +			pr_err("PCI bridge not found\n");
-> +		if (!bridge->parent)
-> +			pr_err("PCI bridge parent not found\n");
-
-You'll see a crash here if bridge is NULL. Maybe add an else before the second
-if statement ? Also, dev_err might be a bit more useful and would be available.
-
-Thanks,
-Guenter
-
-> +		return;
-> +	}
+> +/*
+> + * The UUID is defined in the PCI firmware specification available here:
+> + * https://www.pcisig.com/members/downloads/pcifw_r3_1_13Dec10.pdf
+> + */
+> +const u8 pci_acpi_dsm_uuid[] = {
+> +	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
+> +	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+> +};
 > +
->  	of_dma_configure(dev, bridge->parent->of_node);
->  	pci_put_host_bridge_device(bridge);
->  }
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 3e5bbf9..ef2ab51 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
->  	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->  	struct device *bridge = root_bus->bridge;
+>  phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+>  {
+>  	acpi_status status = AE_NOT_EXIST;
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index 2ab1b47c7651..024b5c179348 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -31,8 +31,6 @@
+>  #include <linux/pci-acpi.h>
+>  #include "pci.h"
 >  
-> +	if (!bridge) {
-> +		pr_err("PCI: bridge not found\n");
-> +		return NULL;
-> +	}
-> +
->  	kobject_get(&bridge->kobj);
->  	return bridge;
+> -#define	DEVICE_LABEL_DSM	0x07
+> -
+>  #ifdef CONFIG_DMI
+>  enum smbios_attr_enum {
+>  	SMBIOS_ATTR_NONE = 0,
+> @@ -148,11 +146,6 @@ static inline void pci_remove_smbiosname_file(struct pci_dev *pdev)
+>  #endif
+>  
+>  #ifdef CONFIG_ACPI
+> -static const char device_label_dsm_uuid[] = {
+> -	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
+> -	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
+> -};
+> -
+>  enum acpi_attr_enum {
+>  	ACPI_ATTR_LABEL_SHOW,
+>  	ACPI_ATTR_INDEX_SHOW,
+> @@ -179,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+>  	if (!handle)
+>  		return -1;
+>  
+> -	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
+> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+>  				DEVICE_LABEL_DSM, NULL);
+>  	if (!obj)
+>  		return -1;
+> @@ -219,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
+>  	if (!handle)
+>  		return false;
+>  
+> -	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
+> +	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+>  				1 << DEVICE_LABEL_DSM);
 >  }
-> -- 
-> 1.7.9.5
+>  
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 24c7728ca681..3801c704a945 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -77,6 +77,9 @@ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+>  static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+>  #endif
+>  
+> +extern const u8 pci_acpi_dsm_uuid[];
+> +#define DEVICE_LABEL_DSM	0x07
+> +
+>  #else	/* CONFIG_ACPI */
+>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+>  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
 > 
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
