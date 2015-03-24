@@ -1,48 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:48156 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbbC2XPs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Mar 2015 19:15:48 -0400
-Date: Mon, 30 Mar 2015 01:15:39 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 00/86] pci: export pci_ids.h and related cleanups
-Message-ID: <20150330011539.4bfa5288@kant>
-In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH v8 25/30] PCI/designware: Use pci_scan_root_bus() for simplicity
+Date: Tue, 24 Mar 2015 11:34:19 +0800
+Message-ID: <1427168064-8657-26-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mar 29 Michael S. Tsirkin wrote:
-> The macros in pci_ids.h are pretty useful for userspace
-> using the pci sysfs interface, e.g. to decode class
-> device and vendor sysfs files.
-> 
-> At the moment userspace is forced to duplicate these macros (e.g. QEMU does
-> this, so does gpxe, seabios, etc), it is better to export them in
-> /usr/include/linux/pci_ids.h so everyone can just include this header.
-> 
-> This patchset is structured as follows:
-> 1. include/linux/pci_ids.h is moved to include/uapi/linux/pci_ids.h;
->    a stub file is created in include/linux/pci_ids.h to avoid breaking
->    bisect
+Use pci_scan_root_bus() instead of pci_create_root_bus() +
+pci_scan_child_bus() for simplicity.
 
-Since linux' include/linux/pci_ids.h is incomplete, I am doubtful that it
-is appropriate for userspace.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Mohit Kumar <mohit.kumar@st.com>
+CC: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pcie-designware.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-> 2. all users are converted to use the new header
-
-This step should not be necessary.  It has not been done with other
-headers which were moved to include/uapi.
-
-> 3. include/linux/pci_ids.h is removed
-> 4. cleanups for several issues detected during step 2
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 93778b9..3d7d6fb 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -728,13 +728,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	struct pcie_port *pp = sys_to_pcie(sys);
+ 
+ 	pp->root_bus_nr = sys->busnr;
+-	bus = pci_create_root_bus(pp->dev, -1, sys->busnr,
++	bus = pci_scan_root_bus(pp->dev, -1, sys->busnr,
+ 				  &dw_pcie_ops, sys, &sys->resources);
+ 	if (!bus)
+ 		return NULL;
+ 
+-	pci_scan_child_bus(bus);
+-
+ 	if (bus && pp->ops->scan_bus)
+ 		pp->ops->scan_bus(pp);
+ 
 -- 
-Stefan Richter
--=====-===== --== ====-
-http://arcgraph.de/sr/
+1.7.1
+
