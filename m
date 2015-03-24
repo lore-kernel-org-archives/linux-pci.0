@@ -1,359 +1,209 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:35801 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbbCFJt1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:49:27 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Richard Henderson <rth@twiddle.net>,
-	"Ivan Kokshaysky" <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	"Ralf Baechle" <ralf@linux-mips.org>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	"Chris Zankel" <chris@zankel.net>,
-	Max Filippov <jcmvbkbc@gmail.com>, <linux-mips@linux-mips.org>,
-	<linux-am33-list@redhat.com>, <linux-s390@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>, <sparclinux@vger.kernel.org>,
-	<linux-xtensa@linux-xtensa.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 02/29] PCI: Rip out pci_bus_add_devices() from pci_scan_root_bus()
-Date: Fri, 6 Mar 2015 17:33:19 +0800
-Message-ID: <1425634426-437-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <551128BA.7070508@intel.com>
+Date: Tue, 24 Mar 2015 17:04:58 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
+References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com> <20150320210354.GK26935@google.com> <550FDA38.2090505@intel.com> <20150323150955.GR26935@google.com>
+In-Reply-To: <20150323150955.GR26935@google.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just like pci_scan_bus(), we also should rip out
-pci_bus_add_devices() from pci_scan_root_bus().
-Lots platforms first call pci_scan_root_bus(), but
-after that, they call pci_bus_size_bridges() and
-pci_bus_assign_resources(). Place pci_bus_add_devices()
-in pci_scan_root_bus() hurts PCI scan logic.
-For arm hw_pci->scan() functions which call
-pci_scan_root_bus(), it's no need to change anything,
-because pci_bus_add_devices() will be called later
-in pci_common_init_dev().
+On 03/23/2015 11:09 PM, Bjorn Helgaas wrote:
+> The ECN says this function is in a host bridge scope and applies to the
+> PCI subsystem beneath the bridge.  This code does not map well to that
+> because:
+> 
+>   1) It evaluates _DSM more times than necessary (we only need to do it
+>   once per host bridge, and this does it once for every PCI device
+>   immediately below a host brige).
+> 
+>   2) The settings are only applied to immediate children of the host
+>   bridge, not to devices deeper in the hierarchy.
+> 
+>   3) A reader of the ECN will expect the corresponding code to be in the
+>   host bridge driver (pci_root.c) where we deal with other host bridge
+>   properties, not in per-PCI device code like this.
+> 
+>   4) The ECN is not explicit about this, but if both function 8 (which
+>   applies to a whole hierarchy) and function 9 (which applies to a single
+>   PCI device) are implemented for the same PCI device, I would expect
+>   function 9 to take precedence over function 8.  This patch does the
+>   reverse, since function 8 will overwrite any d3cold_delay that was set
+>   above by function 9.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Richard Henderson <rth@twiddle.net>
-CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-CC: Matt Turner <mattst88@gmail.com>
-CC: David Howells <dhowells@redhat.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Michal Simek <monstr@monstr.eu>
-CC: Ralf Baechle <ralf@linux-mips.org>
-CC: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
-CC: "David S. Miller" <davem@davemloft.net>
-CC: Chris Metcalf <cmetcalf@ezchip.com>
-CC: Chris Zankel <chris@zankel.net>
-CC: Max Filippov <jcmvbkbc@gmail.com>
-CC: Thomas Gleixner <tglx@linutronix.de>
-CC: linux-alpha@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-CC: linux-mips@linux-mips.org
-CC: linux-am33-list@redhat.com
-CC: linux-s390@vger.kernel.org
-CC: linux-sh@vger.kernel.org
-CC: sparclinux@vger.kernel.org
-CC: linux-xtensa@linux-xtensa.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+I tried to do this in drivers/acpi/pci_root.c, but didn't find a proper
+way to pass this information down during PCI device scan time. So
+instead, I did it in the pci root bus add time: acpi_pci_add_bus, which
+is used by both the x86 code and ia64 code. Suggestions are welcome and
+appreciated.
+
+
+>From 05b625d2444d90e37392dd835a97c0b582fd221f Mon Sep 17 00:00:00 2001
+From: Aaron Lu <aaron.lu@intel.com>
+Date: Fri, 14 Nov 2014 16:56:43 +0800
+Subject: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
+
+An ECN meant to specify possible delay optimizations is available on
+the PCI website:
+https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
+where it has defined two functions for an UUID specified _DSM:
+Function 8: If system firmware assumes the responsibility of post
+Conventional Reset delay (and informs the Operating System via this DSM
+function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
+S4 or S3 states), the Operating System may assume sufficient time has
+elapsed since the end of reset, and devices within the PCI subsystem are
+ready for Configuration Access.
+If the system firmware supports runtime power gating on any of the
+device within PCI subsystem covered by this DSM function, the system
+firmware is responsible for covering the necessary post power-on reset
+delay.
+
+Function 9: Specify various smaller delay values than required by the
+SPEC for individual PCI devices like shorter delay values after
+conventional reset, D3hot to D0 transition, functional level reset, etc.
+
+This patche adds support for function 8 and part of function 9. For
+function 8, the patch will check if the required _DSM function satisfies
+the requirement and then all the host bus' immediate children PCI device's
+d3cold_delay variable will be updated to zero. For function 9, the values
+affecting delays after conventional reset and D3hot->D0 are examined and
+the per PCI device's d3cold_delay and d3_delay are updated if the _DSM's
+return value is smaller than what the SPEC requires. Function 9's value
+takes precedence over function 8.
+
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- arch/alpha/kernel/pci.c          |    9 ++++++++-
- arch/frv/mb93090-mb00/pci-vdk.c  |    6 +++++-
- arch/ia64/sn/kernel/io_init.c    |    2 ++
- arch/microblaze/pci/pci-common.c |    3 +++
- arch/mips/pci/pci.c              |    1 +
- arch/mn10300/unit-asb2305/pci.c  |    7 ++++++-
- arch/s390/pci/pci.c              |    2 +-
- arch/sh/drivers/pci/pci.c        |    1 +
- arch/sparc/kernel/leon_pci.c     |    1 +
- arch/tile/kernel/pci.c           |    2 ++
- arch/tile/kernel/pci_gx.c        |    2 ++
- arch/x86/pci/common.c            |    1 +
- arch/xtensa/kernel/pci.c         |   11 +++++++++--
- drivers/pci/probe.c              |    1 -
- 14 files changed, 42 insertions(+), 7 deletions(-)
+ drivers/pci/pci-acpi.c   | 65 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  2 ++
+ include/linux/pci.h      |  1 +
+ 3 files changed, 68 insertions(+)
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 98a1525..5c845ad 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -312,7 +312,7 @@ common_init_pci(void)
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index e0afc94aca01..220371c2def4 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -537,11 +537,24 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+ 
+ void acpi_pci_add_bus(struct pci_bus *bus)
  {
- 	struct pci_controller *hose;
- 	struct list_head resources;
--	struct pci_bus *bus;
-+	struct pci_bus *bus, *root_bus;
- 	int next_busno;
- 	int need_domain_info = 0;
- 	u32 pci_mem_end;
-@@ -338,6 +338,8 @@ common_init_pci(void)
++	union acpi_object *obj;
++
+ 	if (acpi_pci_disabled || !bus->bridge)
+ 		return;
  
- 		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
- 					hose, &resources);
-+		if (!bus)
-+			continue;
- 		hose->bus = bus;
- 		hose->need_domain_info = need_domain_info;
- 		next_busno = bus->busn_res.end + 1;
-@@ -353,6 +355,11 @@ common_init_pci(void)
- 
- 	pci_assign_unassigned_resources();
- 	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
-+	for (hose = hose_head; hose; hose = hose->next) {
-+		root_bus = hose->bus;
-+		if (root_bus)
-+			pci_bus_add_devices(root_bus);
-+	}
- }
- 
- 
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index b073f4d..f211839 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -316,6 +316,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- 
- int __init pcibios_init(void)
- {
-+	struct pci_bus *bus;
- 	struct pci_ops *dir = NULL;
- 	LIST_HEAD(resources);
- 
-@@ -383,12 +384,15 @@ int __init pcibios_init(void)
- 	printk("PCI: Probing PCI hardware\n");
- 	pci_add_resource(&resources, &pci_ioport_resource);
- 	pci_add_resource(&resources, &pci_iomem_resource);
--	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
-+	bus = pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
- 
- 	pcibios_irq_init();
- 	pcibios_fixup_irqs();
- 	pcibios_resource_survey();
-+	if (!bus)
-+		return 0;
- 
-+	pci_bus_add_devices(bus);
- 	return 0;
- }
- 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 0b5ce82..1be65eb 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -271,7 +271,9 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
-  	if (bus == NULL) {
- 		kfree(res);
- 		kfree(controller);
+ 	acpi_pci_slot_enumerate(bus);
+ 	acpiphp_enumerate_slots(bus);
++
++	/*
++	 * For a host bridge, check its _DSM for function 8 and if
++	 * that is available, mark it in the corresponding pci_bus.
++	 */
++	if (bus->bridge->parent)
 +		return;
- 	}
-+	pci_bus_add_devices(bus);
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 3,
++				RESET_DELAY_DSM, NULL);
++	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
++		bus->ignore_reset_delay = 1;
  }
  
- /*
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 48528fb..6d8d173 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -1382,6 +1382,9 @@ static int __init pcibios_init(void)
- 
- 	/* Call common code to handle resource allocation */
- 	pcibios_resource_survey();
-+	list_for_each_entry_safe(hose, tmp, &hose_list, list_node)
-+		if (hose->bus)
-+			pci_bus_add_devices(hose->bus);
- 
- 	return 0;
- }
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 1bf60b1..9eb54b5 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -114,6 +114,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
- 			pci_bus_size_bridges(bus);
- 			pci_bus_assign_resources(bus);
- 		}
-+		pci_bus_add_devices(bus);
- 	}
+ void acpi_pci_remove_bus(struct pci_bus *bus)
+@@ -567,6 +580,55 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+ 				      check_children);
  }
  
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index 613ca1e..cde5e05 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -340,6 +340,7 @@ void pcibios_fixup_bus(struct pci_bus *bus)
-  */
- static int __init pcibios_init(void)
++/**
++ * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
++ * @pdev: the PCI device whose delay is to be updated
++ * @adev: the companion ACPI device of this PCI device
++ *
++ * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
++ * control method of either its own or its parent bridge.
++ *
++ * The UUID of the _DSM control method, together with other information like
++ * which delay values can be optimized, etc. is defined in a ECN available on
++ * PCIsig.com titled as: ACPI additions for FW latency optimizations.
++ * Function 9 of the ACPI _DSM control method, if available for a specific PCI
++ * device, provides various possible delay values that are less than what the
++ * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
++ * can be added later.
++ * Function 8 of the ACPI _DSM control method, if available for the PCI host
++ * bridge(reflected by the bus' ignore_reset_delay filed), means all its
++ * children devices do not need the reset delay when leaving from D3cold state.
++ */
++static void pci_acpi_delay_optimize(struct pci_dev *pdev,
++				    acpi_handle handle)
++{
++	int value;
++	union acpi_object *obj, *elements;
++
++	if (pdev->bus->ignore_reset_delay)
++		pdev->d3cold_delay = 0;
++
++	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
++				FUNCTION_DELAY_DSM, NULL);
++	if (!obj)
++		return;
++
++	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
++		elements = obj->package.elements;
++		if (elements[0].type == ACPI_TYPE_INTEGER) {
++			value = (int)elements[0].integer.value / 1000;
++			if (value < PCI_PM_D3COLD_WAIT)
++				pdev->d3cold_delay = value;
++		}
++		if (elements[3].type == ACPI_TYPE_INTEGER) {
++			value = (int)elements[3].integer.value / 1000;
++			if (value < PCI_PM_D3_WAIT)
++				pdev->d3_delay = value;
++		}
++	}
++	kfree(obj);
++}
++
+ static void pci_acpi_setup(struct device *dev)
  {
-+	struct pci_bus *bus;
- 	resource_size_t io_offset, mem_offset;
- 	LIST_HEAD(resources);
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -575,6 +637,9 @@ static void pci_acpi_setup(struct device *dev)
+ 	if (!adev)
+ 		return;
  
-@@ -371,11 +372,15 @@ static int __init pcibios_init(void)
- 
- 	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
- 	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
--	pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
-+	bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
- 
- 	pcibios_irq_init();
- 	pcibios_fixup_irqs();
- 	pcibios_resource_survey();
-+	if (!bus)
-+		return 0;
++	if (pci_dev->pm_cap)
++		pci_acpi_delay_optimize(pci_dev, adev->handle);
 +
-+	pci_bus_add_devices(bus);
- 	return 0;
- }
+ 	pci_acpi_add_pm_notifier(adev, pci_dev);
+ 	if (!adev->wakeup.flags.valid)
+ 		return;
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 3801c704a945..a965efa52152 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -79,6 +79,8 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
  
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 753a567..a2a7391 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -776,8 +776,8 @@ static int zpci_scan_bus(struct zpci_dev *zdev)
- 		zpci_cleanup_bus_resources(zdev);
- 		return -EIO;
- 	}
--
- 	zdev->bus->max_bus_speed = zdev->max_bus_speed;
-+	pci_bus_add_devices(zdev->bus);
- 	return 0;
- }
+ extern const u8 pci_acpi_dsm_uuid[];
+ #define DEVICE_LABEL_DSM	0x07
++#define RESET_DELAY_DSM		0x08
++#define FUNCTION_DELAY_DSM	0x09
  
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 1bc09ee..efc1051 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -69,6 +69,7 @@ static void pcibios_scanbus(struct pci_channel *hose)
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a379513bddef..1e56c464d058 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -471,6 +471,7 @@ struct pci_bus {
+ 	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
+ 	struct bin_attribute	*legacy_mem; /* legacy mem */
+ 	unsigned int		is_added:1;
++	unsigned int		ignore_reset_delay:1;
+ };
  
- 		pci_bus_size_bridges(bus);
- 		pci_bus_assign_resources(bus);
-+		pci_bus_add_devices(bus);
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index 899b720..2971076 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -40,6 +40,7 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- 
- 		/* Assign devices with resources */
- 		pci_assign_unassigned_resources();
-+		pci_bus_add_devices(root_bus);
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 325df47..9475a74 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -339,6 +339,8 @@ int __init pcibios_init(void)
- 			struct pci_bus *next_bus;
- 			struct pci_dev *dev;
- 
-+			pci_bus_add_devices(root_bus);
-+
- 			list_for_each_entry(dev, &root_bus->devices, bus_list) {
- 				/*
- 				 * Find the PCI host controller, ie. the 1st
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index 2c95f37..b1df847 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1030,6 +1030,8 @@ int __init pcibios_init(void)
- alloc_mem_map_failed:
- 			break;
- 		}
-+
-+		pci_bus_add_devices(root_bus);
- 	}
- 
- 	return 0;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 3d2612b..0cbc723 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -491,6 +491,7 @@ void pcibios_scan_root(int busnum)
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
- 	}
-+	pci_bus_add_devices(bus);
- }
- 
- void __init pcibios_set_cache_line_size(void)
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 5b34033..140e2fd 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -174,7 +174,7 @@ static int __init pcibios_init(void)
- 	struct pci_controller *pci_ctrl;
- 	struct list_head resources;
- 	struct pci_bus *bus;
--	int next_busno = 0;
-+	int ret, next_busno = 0;
- 
- 	printk("PCI: Probing PCI hardware\n");
- 
-@@ -185,14 +185,21 @@ static int __init pcibios_init(void)
- 		pci_controller_apertures(pci_ctrl, &resources);
- 		bus = pci_scan_root_bus(NULL, pci_ctrl->first_busno,
- 					pci_ctrl->ops, pci_ctrl, &resources);
-+		if (!bus)
-+			continue;
-+
- 		pci_ctrl->bus = bus;
- 		pci_ctrl->last_busno = bus->busn_res.end;
- 		if (next_busno <= pci_ctrl->last_busno)
- 			next_busno = pci_ctrl->last_busno+1;
- 	}
- 	pci_bus_count = next_busno;
-+	ret = platform_pcibios_fixup();
-+	for (pci_ctrl = pci_ctrl_head; pci_ctrl; pci_ctrl = pci_ctrl->next)
-+		if (pci_ctrl->bus)
-+			pci_bus_add_devices(pci_ctrl->bus);
- 
--	return platform_pcibios_fixup();
-+	return ret;
- }
- 
- subsys_initcall(pcibios_init);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 88604f2..8ef0375 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2087,7 +2087,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 	if (!found)
- 		pci_bus_update_busn_res_end(b, max);
- 
--	pci_bus_add_devices(b);
- 	return b;
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
 -- 
-1.7.1
+2.1.0
 
