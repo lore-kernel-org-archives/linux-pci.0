@@ -1,127 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:28553 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383AbbCFJgr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:47 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 26/29] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Fri, 6 Mar 2015 17:33:43 +0800
-Message-ID: <1425634426-437-27-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Received: from mga14.intel.com ([192.55.52.115]:46888 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752507AbbCXQMG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Mar 2015 12:12:06 -0400
+From: "Jiang, Dave" <dave.jiang@intel.com>
+To: "mst@redhat.com" <mst@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"yhlu.kernel.send@gmail.com" <yhlu.kernel.send@gmail.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jdmason@kudzu.us" <jdmason@kudzu.us>,
+	"famz@redhat.com" <famz@redhat.com>
+Subject: Re: [PATCH v3 07/10] ntb: drop pci_msi_off call on probe
+Date: Tue, 24 Mar 2015 16:12:03 +0000
+Message-ID: <1427213523.221225.30.camel@intel.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
+	 <1427211032-2270-8-git-send-email-mst@redhat.com>
+In-Reply-To: <1427211032-2270-8-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
-
-Signed-off-by: wangyijing@huawei.com
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   27 ++++++++-------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 8 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 63193b7..aae911a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1936,18 +1936,6 @@ err_out:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
--	if (!host)
--		return NULL;
--
--	return __pci_create_root_bus(host, ops);
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2025,7 +2013,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
- 		}
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2088,18 +2076,19 @@ struct pci_bus *pci_scan_bus(u32 db, struct pci_ops *ops,
- 					void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, db, ops, sysdata, &resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, db, sysdata, &resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 261b8de..5717b14 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -779,9 +779,6 @@ void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus(u32 dombus, struct pci_ops *ops, void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, u32 dombus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-1.7.1
-
+T24gVHVlLCAyMDE1LTAzLTI0IGF0IDE2OjQyICswMTAwLCBNaWNoYWVsIFMuIFRzaXJraW4gd3Jv
+dGU6DQo+IHBjaSBjb3JlIG5vdyBkaXNhYmxlcyBtc2kgb24gcHJvYmUgYXV0b21hdGljYWxseSwN
+Cj4gZHJvcCB0aGlzIGZyb20gZGV2aWNlLXNwZWNpZmljIGNvZGUuDQo+IA0KPiBDYzogQmpvcm4g
+SGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5l
+bC5vcmcNCj4gU2lnbmVkLW9mZi1ieTogTWljaGFlbCBTLiBUc2lya2luIDxtc3RAcmVkaGF0LmNv
+bT4NCg0KQWNrZWQtYnk6IERhdmUgSmlhbmcgPGRhdmUuamlhbmdAaW50ZWwuY29tPg0KDQo+IC0t
+LQ0KPiAgZHJpdmVycy9udGIvbnRiX2h3LmMgfCAyIC0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBk
+ZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL250Yi9udGJfaHcuYyBiL2Ry
+aXZlcnMvbnRiL250Yl9ody5jDQo+IGluZGV4IGNkMjliMTAuLjgyMjVjYmMgMTAwNjQ0DQo+IC0t
+LSBhL2RyaXZlcnMvbnRiL250Yl9ody5jDQo+ICsrKyBiL2RyaXZlcnMvbnRiL250Yl9ody5jDQo+
+IEBAIC0xMzEzLDggKzEzMTMsNiBAQCBzdGF0aWMgaW50IG50Yl9zZXR1cF9pbnR4KHN0cnVjdCBu
+dGJfZGV2aWNlICpuZGV2KQ0KPiAgCXN0cnVjdCBwY2lfZGV2ICpwZGV2ID0gbmRldi0+cGRldjsN
+Cj4gIAlpbnQgcmM7DQo+ICANCj4gLQlwY2lfbXNpX29mZihwZGV2KTsNCj4gLQ0KPiAgCS8qIFZl
+cmlmeSBpbnR4IGlzIGVuYWJsZWQgKi8NCj4gIAlwY2lfaW50eChwZGV2LCAxKTsNCj4gIA0K
