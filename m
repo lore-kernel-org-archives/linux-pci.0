@@ -1,73 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:11027 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbbCWBJM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Mar 2015 21:09:12 -0400
-Message-ID: <550F6799.1000301@huawei.com>
-Date: Mon, 23 Mar 2015 09:08:41 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46445 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753260AbbCXPm5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Mar 2015 11:42:57 -0400
+Date: Tue, 24 Mar 2015 16:42:53 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ashutosh Dixit <ashutosh.dixit@intel.com>,
+	Nikhil Rao <nikhil.rao@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Sudeep Dutt <sudeep.dutt@intel.com>,
+	Siva Yerramreddy <yshivakrishna@gmail.com>
+Subject: [PATCH v3 08/10] mic: drop pci_msi_off call on probe
+Message-ID: <1427211032-2270-9-git-send-email-mst@redhat.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 09/30] PCI: Separate pci_host_bridge creation out of
- pci_create_root_bus()
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-10-git-send-email-wangyijing@huawei.com> <550DFD13.9080505@amd.com>
-In-Reply-To: <550DFD13.9080505@amd.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> +struct pci_host_bridge *pci_create_host_bridge(
->> +        struct device *parent, u32 db, struct list_head *resources)
->> +{
->> +    int error;
->> +    int bus = PCI_BUSNUM(db);
->> +    int domain = PCI_DOMAIN(db);
->> +    struct pci_host_bridge *host;
->> +    struct resource_entry *window, *n;
->> +
->> +    host = kzalloc(sizeof(*host), GFP_KERNEL);
->> +    if (!host)
->> +        return NULL;
->> +
->> +    host->busnum = bus;
->> +    host->domain = domain;
->> +    /* If support CONFIG_PCI_DOMAINS_GENERIC, use
->> +     * pci_host_assign_domain_nr() to assign domain
->> +     * number instead PCI_DOMAIN(db).
->> +     */
->> +    pci_host_assign_domain_nr(host);
-> 
-> At this point, host->dev.parent has not been assigned. However, when calling pci_host_assign_domain_nr(host), it calls pci_assign_domain_nr(host->dev.parent), which uses parent->of_node directly w/o checking if parent is NULL. This ended up causing NULL pointer exception when I do the test.
-> 
-> I think we need to moveo host->dev.parent = parent before calling pci_host_assign_domain_nr(host).
+pci core now disables msi on probe automatically,
+drop this from device-specific code.
 
-Good catch! Hi Suravee, thanks for your test, I would assign host->dev.parent before pci_host_assign_domain_nr().
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/misc/mic/host/mic_intr.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks!
-Yijing.
-
-> 
-> .
-> 
-
-
+diff --git a/drivers/misc/mic/host/mic_intr.c b/drivers/misc/mic/host/mic_intr.c
+index d686f28..b4ca6c8 100644
+--- a/drivers/misc/mic/host/mic_intr.c
++++ b/drivers/misc/mic/host/mic_intr.c
+@@ -363,8 +363,6 @@ static int mic_setup_intx(struct mic_device *mdev, struct pci_dev *pdev)
+ {
+ 	int rc;
+ 
+-	pci_msi_off(pdev);
+-
+ 	/* Enable intx */
+ 	pci_intx(pdev, 1);
+ 	rc = mic_setup_callbacks(mdev);
 -- 
-Thanks!
-Yijing
+MST
 
