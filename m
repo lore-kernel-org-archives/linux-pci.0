@@ -1,276 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:22636 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753412AbbCICn0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:26 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 29/30] PCI: Remove platform specific pci_domain_nr()
-Date: Mon, 9 Mar 2015 10:34:26 +0800
-Message-ID: <1425868467-9667-30-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: rename dsm uuid for PCI
+Date: Tue, 24 Mar 2015 01:24:38 +0100
+Message-ID: <1641780.MlgGlmpUFR@vostro.rjw.lan>
+In-Reply-To: <550FD9DF.7050306@intel.com>
+References: <54FD4FB9.2060802@intel.com> <20150320210354.GK26935@google.com> <550FD9DF.7050306@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_host_bridge holds the domain number,
-so we could eliminate all platform specific
-pci_domain_nr().
+So _DSM is an ACPI-defined object and please spell its name like that.
+Also please spell UUID in capitals if that's not a problem.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/alpha/include/asm/pci.h     |    2 --
- arch/ia64/include/asm/pci.h      |    1 -
- arch/microblaze/pci/pci-common.c |   11 -----------
- arch/mips/include/asm/pci.h      |    2 --
- arch/powerpc/kernel/pci-common.c |   11 -----------
- arch/s390/pci/pci.c              |    6 ------
- arch/sh/include/asm/pci.h        |    2 --
- arch/sparc/kernel/pci.c          |   17 -----------------
- arch/tile/include/asm/pci.h      |    2 --
- arch/x86/include/asm/pci.h       |    6 ------
- drivers/pci/pci.c                |    8 ++++++++
- include/linux/pci.h              |    7 ++-----
- 12 files changed, 10 insertions(+), 65 deletions(-)
+On Monday, March 23, 2015 05:16:15 PM Aaron Lu wrote:
+> According to the PCI firmware spec, there is only one assigned UUID used
+> for PCI system so rename the device_label_dsm_uuid to something more
+> common as: pci_acpi_dsm_uuid and put it in drivers/pci/pci-acpi.c. Make
+> that uuid array extern in the pci.h so that other code can also make use
+> of it.
+> 
+> This patch shouldn't bring any functional change.
+> 
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/pci/pci-acpi.c  |  5 +++++
+>  drivers/pci/pci-label.c | 11 ++---------
+>  drivers/pci/pci.h       |  6 ++++++
+>  3 files changed, 13 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 489063987325..6ef2019073e2 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -18,6 +18,11 @@
+>  #include <linux/pm_qos.h>
+>  #include "pci.h"
+>  
 
-diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
-index f7f680f..63a9a1e 100644
---- a/arch/alpha/include/asm/pci.h
-+++ b/arch/alpha/include/asm/pci.h
-@@ -95,8 +95,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 	return channel ? 15 : 14;
- }
- 
--#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = bus->sysdata;
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed..1dcea49 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -99,7 +99,6 @@ struct pci_controller {
- 
- 
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
--#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
- extern struct pci_ops pci_root_ops;
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 34a32ec..8651089 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index 193b4c6..2e4d808 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -122,8 +122,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- #endif
- 
- #ifdef CONFIG_PCI_DOMAINS
--#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = bus->sysdata;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 74cbb5d..c0a3aa4 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -181,17 +181,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 20e662f..4823b0e 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -101,12 +101,6 @@ static struct zpci_dev *get_zdev_by_bus(struct pci_bus *bus)
- 	return (bus && bus->sysdata) ? (struct zpci_dev *) bus->sysdata : NULL;
- }
- 
--int pci_domain_nr(struct pci_bus *bus)
--{
--	return ((struct zpci_dev *) bus->sysdata)->domain;
--}
--EXPORT_SYMBOL_GPL(pci_domain_nr);
--
- int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
-index 5b45115..4dc3ad6 100644
---- a/arch/sh/include/asm/pci.h
-+++ b/arch/sh/include/asm/pci.h
-@@ -109,8 +109,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- /* Board-specific fixup routines. */
- int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
- 
--#define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_channel *hose = bus->sysdata;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 7e28f74..b847d0c 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -902,23 +902,6 @@ int pcibus_to_node(struct pci_bus *pbus)
- EXPORT_SYMBOL(pcibus_to_node);
- #endif
- 
--/* Return the domain number for this pci bus */
--
--int pci_domain_nr(struct pci_bus *pbus)
--{
--	struct pci_pbm_info *pbm = pbus->sysdata;
--	int ret;
--
--	if (!pbm) {
--		ret = -ENXIO;
--	} else {
--		ret = pbm->index;
--	}
--
--	return ret;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- #ifdef CONFIG_PCI_MSI
- int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- {
-diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
-index dfedd7a..23a726e 100644
---- a/arch/tile/include/asm/pci.h
-+++ b/arch/tile/include/asm/pci.h
-@@ -199,8 +199,6 @@ int __init pcibios_init(void);
- 
- void pcibios_fixup_bus(struct pci_bus *bus);
- 
--#define pci_domain_nr(bus) (((struct pci_controller *)(bus)->sysdata)->index)
--
- /*
-  * This decides whether to display the domain number in /proc.
-  */
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5..4fe0458 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -29,12 +29,6 @@ extern int noioapicreroute;
- #ifdef CONFIG_PCI
- 
- #ifdef CONFIG_PCI_DOMAINS
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_sysdata *sd = bus->sysdata;
--	return sd->domain;
--}
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0001896..2cf942b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4523,6 +4523,14 @@ int pci_get_new_domain_nr(void)
- 	return atomic_inc_return(&__domain_nr);
- }
- 
-+int pci_domain_nr(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-+
-+	return host->domain;
-+}
-+EXPORT_SYMBOL(pci_domain_nr);
-+
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- static int pci_assign_domain_nr(struct device *dev)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5717b14..dc1c710 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1318,6 +1318,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
- int pci_get_new_domain_nr(void);
-+int pci_domain_nr(struct pci_bus *bus);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
-@@ -1331,15 +1332,11 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-  * domains then this implementation will be used
-  */
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	return bus->domain_nr;
--}
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
- void pci_host_assign_domain_nr(struct pci_host_bridge *host);
- #else
- static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
-+		struct device *parent)
- {
- }
- static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+Please add a comment referring to the document defining the UUID here.
+
+> +const u8 pci_acpi_dsm_uuid[] = {
+> +	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
+> +	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+> +};
+> +
+>  phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+>  {
+>  	acpi_status status = AE_NOT_EXIST;
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index 2ab1b47c7651..024b5c179348 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -31,8 +31,6 @@
+>  #include <linux/pci-acpi.h>
+>  #include "pci.h"
+>  
+> -#define	DEVICE_LABEL_DSM	0x07
+> -
+>  #ifdef CONFIG_DMI
+>  enum smbios_attr_enum {
+>  	SMBIOS_ATTR_NONE = 0,
+> @@ -148,11 +146,6 @@ static inline void pci_remove_smbiosname_file(struct pci_dev *pdev)
+>  #endif
+>  
+>  #ifdef CONFIG_ACPI
+> -static const char device_label_dsm_uuid[] = {
+> -	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
+> -	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
+> -};
+> -
+>  enum acpi_attr_enum {
+>  	ACPI_ATTR_LABEL_SHOW,
+>  	ACPI_ATTR_INDEX_SHOW,
+> @@ -179,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+>  	if (!handle)
+>  		return -1;
+>  
+> -	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
+> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+>  				DEVICE_LABEL_DSM, NULL);
+>  	if (!obj)
+>  		return -1;
+> @@ -219,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
+>  	if (!handle)
+>  		return false;
+>  
+> -	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
+> +	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+>  				1 << DEVICE_LABEL_DSM);
+>  }
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4091f82239cd..c901ab84cf3b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -321,4 +321,10 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+>  }
+>  #endif
+>  
+> +#ifdef CONFIG_ACPI
+> +extern const u8 pci_acpi_dsm_uuid[];
+> +
+> +#define DEVICE_LABEL_DSM	0x07
+> +#endif
+
+We have pci-acpi.h.  Maybe define this stuff in there and make the user(s)
+include that?
+
+> +
+>  #endif /* DRIVERS_PCI_H */
+> 
+
 -- 
-1.7.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
