@@ -1,236 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:46874 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbbCLDXr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:23:47 -0400
-Received: by obcva2 with SMTP id va2so12970596obc.13
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:23:46 -0700 (PDT)
-Date: Wed, 11 Mar 2015 22:23:41 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 12/30] PCI: Introduce pci_host_bridge_ops to support
- host specific operations
-Message-ID: <20150312032341.GE10949@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-13-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Mar 2015 16:42:25 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v3 00/10] pci: fix unhandled interrupt on shutdown
+Message-ID: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-13-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:09AM +0800, Yijing Wang wrote:
-> Now we have weak functions like pcibios_root_bridge_prepare()
-> to setup pci host bridge, We could introduce pci_host_bridge_ops
-> which contain host bridge specific ops to setup pci_host_bridge.
-> Then host bridge driver could add pci_host_bridge_ops hooks
-> intead of weak function to setup pci_host_bridge.
-> This patch add following pci_host_bridge_ops hooks:
-> 
-> pci_host_bridge_ops {
-> 	/* set root bus speed, some platform need this like powerpc */
-> 	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-> 	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-> 	int (*prepare)(struct pci_host_bridge *host);
-> 	/* platform specific of scan hook to scan pci device */
-> 	void (*scan_bus)(struct pci_host_bridge *);
-> }
-> We could easily extend it to support different host bridge
-> specific operations.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/host-bridge.c |   12 ++++++++++--
->  drivers/pci/pci.h         |    4 ++--
->  drivers/pci/probe.c       |   17 +++++++++++------
->  include/linux/pci.h       |    8 ++++++++
->  4 files changed, 31 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 3c34c49..bc1de59 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
->  }
->  
->  struct pci_host_bridge *pci_create_host_bridge(
-> -		struct device *parent, u32 db,
-> -		struct list_head *resources, void *sysdata)
-> +		struct device *parent, u32 db, struct list_head *resources,
-> +		void *sysdata, struct pci_host_bridge_ops *ops)
->  {
->  	int error;
->  	int bus = PCI_BUSNUM(db);
-> @@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
->  		}
->  	mutex_unlock(&phb_mutex);
->  
-> +	host->ops = ops;
->  	host->dev.parent = parent;
->  	INIT_LIST_HEAD(&host->windows);
->  	host->dev.release = pci_release_host_bridge_dev;
-> @@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
->  	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
->  			host->busnum);
->  
-> +	if (host->ops && host->ops->prepare) {
-> +		error = host->ops->prepare(host);
-> +		if (error) {
-> +			kfree(host);
-> +			return NULL;
-> +		}
-> +	}
->  	error = device_register(&host->dev);
->  	if (error) {
->  		put_device(&host->dev);
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 79a8894..a1dc9f2 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -324,8 +324,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  #endif
->  
->  struct pci_host_bridge *pci_create_host_bridge(
-> -		struct device *parent, u32 dombus,
-> -		struct list_head *resources, void *sysdata);
-> +		struct device *parent, u32 dombus, struct list_head *resources,
-> +		void *sysdata, struct pci_host_bridge_ops *ops);
->  
->  void pci_free_host_bridge(struct pci_host_bridge *host);
->  #endif /* DRIVERS_PCI_H */
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c8e074d..59d9be3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1889,6 +1889,8 @@ static struct pci_bus *__pci_create_root_bus(
->  
->  	bridge->bus = b;
->  	b->bridge = get_device(&bridge->dev);
-> +	if (bridge->ops && bridge->ops->set_root_bus_speed)
-> +		bridge->ops->set_root_bus_speed(bridge);
+Fam Zheng noticed that pci shutdown disables msi and msix of a device while
+device is still active. This was intended to fix kexec with fusion devices but
+had the unintended effect of breaking even regular shutdown when using virtio.
 
-Before this patch, can you do this:
+As a result, people reported VMs being hung on shutdown,
+with traces that look like this:
 
-  - Rename the powerpc pcibios_root_bridge_prepare() to
-    pcibios_set_root_bus_speed() and add a call to it here
+...
 
-  - Move the pcibios_root_bridge_prepare() call to pci_create_host_bridge()
+  [<ffffffff815f367b>] ? _raw_spin_unlock_irqrestore+0x1b/0x40
+  [<ffffffff812e068f>] pci_bus_read_config_word+0x9f/0xb0
+  [<ffffffff812e205c>] pci_read_config_word+0x1c/0x20
+  [<ffffffff812e5ea3>] pci_intx+0x33/0xb0
+  [<ffffffff81304ddd>] pci_msix_shutdown+0x8d/0x90
+  [<ffffffff812ead26>] pci_device_shutdown+0x46/0x60
+  [<ffffffff813b4258>] device_shutdown+0xc8/0x180
+  [<ffffffff810761c5>] kernel_power_off+0x35/0x80
+  [<ffffffff81077ceb>] SYSC_reboot+0x18b/0x260
+  [<ffffffff811c5bb5>] ? d_free+0x55/0x60
+  [<ffffffff811cf414>] ? mntput+0x24/0x40
+  [<ffffffff811b1613>] ? __fput+0x183/0x270
+  [<ffffffff81077dee>] SyS_reboot+0xe/0x10
+  [<ffffffff815fc819>] system_call_fastpath+0x16/0x1b
 
-Then this patch will make a lot more sense because it will look like this,
-with the host bridge ops call right next to the matching pcibios call:
+...
 
-  +	if (host->ops && host->ops->prepare) {
-  +		error = host->ops->prepare(host);
-  +		...
-  +	}
-	pcibios_root_bridge_prepare(...);
+as well as the messages that look like this:
+BUG: soft lockup - CPU#2 stuck for 22s!  [poweroff:1964]
 
-  +	if (bridge->ops && bridge->ops->set_root_bus_speed)
-  +		bridge->ops->set_root_bus_speed(bridge);
-	pcibios_set_root_bus_speed(...);
+The same problem would affect any driver which doesn't register
+a level interrupt handler when using msix.
 
->  	error = pcibios_root_bridge_prepare(bridge);
->  	if (error)
->  		goto err_out;
-> @@ -1954,7 +1956,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
->  {
->  	struct pci_host_bridge *host;
->  
-> -	host = pci_create_host_bridge(parent, db, resources, sysdata);
-> +	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
->  	if (!host)
->  		return NULL;
->  
-> @@ -2051,10 +2053,13 @@ static struct pci_bus *__pci_scan_root_bus(
->  		pci_bus_insert_busn_res(b, b->number, 255);
->  	}
->  
-> -	max = pci_scan_child_bus(b);
-> -
-> -	if (!found)
-> -		pci_bus_update_busn_res_end(b, max);
-> +	if (host->ops && host->ops->scan_bus) {
-> +		host->ops->scan_bus(host);
-> +	} else {
-> +		max = pci_scan_child_bus(b);
-> +		if (!found)
-> +			pci_bus_update_busn_res_end(b, max);
-> +	}
+I think the fix is to avoid touching device on shutdown:
+we clear bus master anyway, so we won't get any more
+msi interrupts, and bus reset will clear the msi/msix
+state eventually.
 
-I think host->ops->scan_bus() should have the same prototype as
-pci_scan_child_bus(), and it should return max, and you should do the same
-busn update as when you call pci_scan_child_bus().  So the code would look
-like this:
+The patch that added the code in question is from
+	d52877c7b1afb8c37ebe17e2005040b79cb618b0:
+        "pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
+from 2008, but it turns out that in 2011 the following commit
+    commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
+        "PCI: msi: Disable msi interrupts when we initialize a pci device"
+fixed the issue in a more robust way.  The only thing left to do is to
+fix configurations with CONFIG_PCI_MSI disabled, and then
+d52877c7b1afb8c37ebe17e2005040b79cb618b0 can be reverted.
 
-    if (host->ops && host->ops->scan_bus)
-	max = host->ops->scan_bus(b);
-    else
-	max = pci_scan_child_bus(b);
+Status:
 
-    if (!found)
-	pci_bus_update_busn_res_end(b, max);
+Patches 1-6 work well for me.
+Given they affect all pci devices, and the bug has been there since 2.6 times,
+I think there's no rush: we can merge them for 4.1.
 
->  
->  	return b;
->  }
-> @@ -2064,7 +2069,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
->  {
->  	struct pci_host_bridge *host;
->  
-> -	host = pci_create_host_bridge(parent, db, resources, sysdata);
-> +	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
->  	if (!host)
->  		return NULL;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b621f5b..e9922b1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
->  	return (pdev->error_state != pci_channel_io_normal);
->  }
->  
-> +struct pci_host_bridge;
-> +struct pci_host_bridge_ops {
-> +	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-> +	int (*prepare)(struct pci_host_bridge *host);
-> +	void (*scan_bus)(struct pci_host_bridge *);
+At the same time, once merged, patches 1-4 will likely make a good stable
+candidate.
 
-Needs an argument name to match the style of the other ops.
+Patches 7-10 compiled only, will need maintainer ack.
 
-> +};
-> +
->  struct pci_host_bridge {
->  	u16	domain;
->  	u16 busnum;
-> @@ -407,6 +414,7 @@ struct pci_host_bridge {
->  	struct pci_bus *bus;		/* root bus */
->  	struct list_head windows;	/* resource_entry */
->  	struct list_head list;
-> +	struct pci_host_bridge_ops *ops;
->  	void (*release_fn)(struct pci_host_bridge *);
->  	void *release_data;
->  };
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Please review, and consider at least 1-6 for 4.1.
+
+Changes from v3:
+	move code from probe to device enumeration
+	add patches to unexport pci_msi_off
+
+Michael S. Tsirkin (10):
+  pci: export functions for msi/msix ctrl
+  pci: move pci_msi_init_pci_dev to pci.c
+  pci: drop some duplicate code
+  pci: don't disable msi/msix at shutdown
+  pci: make msi/msix shutdown functions static
+  virtio_pci: drop msi_off on probe
+  ntb: drop pci_msi_off call on probe
+  mic: drop pci_msi_off call on probe
+  pci: drop pci_msi_off calls from quirks
+  pci: unexport pci_msi_off
+
+ drivers/pci/pci.h                  | 25 +++++++++++++--
+ include/linux/pci.h                |  5 ---
+ drivers/misc/mic/host/mic_intr.c   |  2 --
+ drivers/ntb/ntb_hw.c               |  2 --
+ drivers/pci/msi.c                  | 62 ++++++++------------------------------
+ drivers/pci/pci-driver.c           |  2 --
+ drivers/pci/pci.c                  | 26 ++++------------
+ drivers/pci/probe.c                | 16 ++++++++++
+ drivers/pci/quirks.c               |  2 --
+ drivers/virtio/virtio_pci_common.c |  3 --
+ 10 files changed, 57 insertions(+), 88 deletions(-)
+
+-- 
+MST
+
