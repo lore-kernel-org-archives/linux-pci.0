@@ -1,129 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53172 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753425AbbCICn3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:29 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 30/30] PCI: Remove pci_bus_assign_domain_nr()
-Date: Mon, 9 Mar 2015 10:34:27 +0800
-Message-ID: <1425868467-9667-31-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 24 Mar 2015 18:02:11 +0100
+From: Greg KH <greg@kroah.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: Re: [PATCH v3 00/10] pci: fix unhandled interrupt on shutdown
+Message-ID: <20150324170211.GA1989@kroah.com>
+References: <1427211032-2270-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427211032-2270-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus.
+On Tue, Mar 24, 2015 at 04:42:25PM +0100, Michael S. Tsirkin wrote:
+> Fam Zheng noticed that pci shutdown disables msi and msix of a device while
+> device is still active. This was intended to fix kexec with fusion devices but
+> had the unintended effect of breaking even regular shutdown when using virtio.
+> 
+> As a result, people reported VMs being hung on shutdown,
+> with traces that look like this:
+> 
+> ...
+> 
+>   [<ffffffff815f367b>] ? _raw_spin_unlock_irqrestore+0x1b/0x40
+>   [<ffffffff812e068f>] pci_bus_read_config_word+0x9f/0xb0
+>   [<ffffffff812e205c>] pci_read_config_word+0x1c/0x20
+>   [<ffffffff812e5ea3>] pci_intx+0x33/0xb0
+>   [<ffffffff81304ddd>] pci_msix_shutdown+0x8d/0x90
+>   [<ffffffff812ead26>] pci_device_shutdown+0x46/0x60
+>   [<ffffffff813b4258>] device_shutdown+0xc8/0x180
+>   [<ffffffff810761c5>] kernel_power_off+0x35/0x80
+>   [<ffffffff81077ceb>] SYSC_reboot+0x18b/0x260
+>   [<ffffffff811c5bb5>] ? d_free+0x55/0x60
+>   [<ffffffff811cf414>] ? mntput+0x24/0x40
+>   [<ffffffff811b1613>] ? __fput+0x183/0x270
+>   [<ffffffff81077dee>] SyS_reboot+0xe/0x10
+>   [<ffffffff815fc819>] system_call_fastpath+0x16/0x1b
+> 
+> ...
+> 
+> as well as the messages that look like this:
+> BUG: soft lockup - CPU#2 stuck for 22s!  [poweroff:1964]
+> 
+> The same problem would affect any driver which doesn't register
+> a level interrupt handler when using msix.
+> 
+> I think the fix is to avoid touching device on shutdown:
+> we clear bus master anyway, so we won't get any more
+> msi interrupts, and bus reset will clear the msi/msix
+> state eventually.
+> 
+> The patch that added the code in question is from
+> 	d52877c7b1afb8c37ebe17e2005040b79cb618b0:
+>         "pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
+> from 2008, but it turns out that in 2011 the following commit
+>     commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
+>         "PCI: msi: Disable msi interrupts when we initialize a pci device"
+> fixed the issue in a more robust way.  The only thing left to do is to
+> fix configurations with CONFIG_PCI_MSI disabled, and then
+> d52877c7b1afb8c37ebe17e2005040b79cb618b0 can be reverted.
+> 
+> Status:
+> 
+> Patches 1-6 work well for me.
+> Given they affect all pci devices, and the bug has been there since 2.6 times,
+> I think there's no rush: we can merge them for 4.1.
+> 
+> At the same time, once merged, patches 1-4 will likely make a good stable
+> candidate.
+> 
+> Patches 7-10 compiled only, will need maintainer ack.
+> 
+> Please review, and consider at least 1-6 for 4.1.
+> 
+> Changes from v3:
+> 	move code from probe to device enumeration
+> 	add patches to unexport pci_msi_off
+> 
+> Michael S. Tsirkin (10):
+>   pci: export functions for msi/msix ctrl
+>   pci: move pci_msi_init_pci_dev to pci.c
+>   pci: drop some duplicate code
+>   pci: don't disable msi/msix at shutdown
+>   pci: make msi/msix shutdown functions static
+>   virtio_pci: drop msi_off on probe
+>   ntb: drop pci_msi_off call on probe
+>   mic: drop pci_msi_off call on probe
+>   pci: drop pci_msi_off calls from quirks
+>   pci: unexport pci_msi_off
+> 
+>  drivers/pci/pci.h                  | 25 +++++++++++++--
+>  include/linux/pci.h                |  5 ---
+>  drivers/misc/mic/host/mic_intr.c   |  2 --
+>  drivers/ntb/ntb_hw.c               |  2 --
+>  drivers/pci/msi.c                  | 62 ++++++++------------------------------
+>  drivers/pci/pci-driver.c           |  2 --
+>  drivers/pci/pci.c                  | 26 ++++------------
+>  drivers/pci/probe.c                | 16 ++++++++++
+>  drivers/pci/quirks.c               |  2 --
+>  drivers/virtio/virtio_pci_common.c |  3 --
+>  10 files changed, 57 insertions(+), 88 deletions(-)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c   |    5 -----
- drivers/pci/probe.c |   12 ++++--------
- include/linux/pci.h |    3 ---
- 3 files changed, 4 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2cf942b..4d8dfe4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4581,11 +4581,6 @@ void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- {
- 	host->domain = pci_assign_domain_nr(host->dev.parent);
- }
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
- #endif
- #endif
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 196f08a..9cd3ca2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -481,7 +481,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -496,10 +496,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
-+
- 	return b;
- }
- 
-@@ -646,7 +643,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1866,14 +1863,13 @@ static struct pci_bus *pci_create_root_bus(
- 	char *fmt;
- 
- 	parent = bridge->dev.parent;
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index dc1c710..ebc70bb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -467,9 +467,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
--- 
-1.7.1
+<formletter>
 
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+for how to do this properly.
+
+</formletter>
