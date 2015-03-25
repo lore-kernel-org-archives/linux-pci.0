@@ -1,105 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54580 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932242AbbCCRw7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 12:52:59 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v8 5/7] of/pci: Add of_pci_dma_configure() to update DMA configuration
-Date: Tue, 3 Mar 2015 12:52:12 -0500
-Message-ID: <1425405134-24707-6-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:37956 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865AbbCYIaN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:30:13 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:30:11 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id F3FE92BB004D
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:09 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8U1wV22806656
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:09 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8Ta4c026357
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:36 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 14/20] powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
+Date: Wed, 25 Mar 2015 16:23:55 +0800
+Message-Id: <1427271841-28749-15-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_pci_dma_configure() to allow updating the DMA configuration of the
-PCI device using the configuration from DT of the parent of the root bridge
-device.  Use the newly added APIs pci_get/put_host_bridge_device() for
-implementing this.
+On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
+M64 BAR is a type of hardware resource in PHB3, which could map a range of
+MMIO to PE numbers on powernv platform. And this range is divided equally
+by the number of total_pe with each divided range mapping to a PE number.
+Also, the M64 BAR must map a MMIO range with power-of-two size.
 
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Rob Herring <robh+dt@kernel.org>
-Acked-by: Will Deacon <will.deacon@arm.com>
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Arnd Bergmann <arnd@arndb.de>
+The total_pe number is usually different from total_VFs, which can lead to
+a conflict between MMIO space and the PE number.
+
+For example, if total_VFs is 128 and total_pe is 256, the second half of
+M64 BAR will be part of other PCI device, which may already belong to other
+PEs.
+
+This patch prevents the conflict by reserving additional space for the PF
+IOV BAR, which is total_pe number of VF's BAR size.
+
+[bhelgaas: make dev_printk() output more consistent, index resource[]
+conventionally]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/of/of_pci.c    |   18 ++++++++++++++++++
- include/linux/of_pci.h |    3 +++
- 2 files changed, 21 insertions(+)
+ arch/powerpc/include/asm/machdep.h        |    4 +++
+ arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+ arch/powerpc/kernel/pci-common.c          |    6 ++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   43 +++++++++++++++++++++++++++++
+ 4 files changed, 56 insertions(+)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 62426d8..86d3c38 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -2,6 +2,7 @@
- #include <linux/export.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
-+#include <linux/of_device.h>
- #include <linux/of_pci.h>
- #include <linux/slab.h>
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 098d51e..b303833 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -250,6 +250,10 @@ struct machdep_calls {
+ 	/* Reset the secondary bus of bridge */
+ 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
  
-@@ -116,6 +117,23 @@ int of_get_pci_domain_nr(struct device_node *node)
- }
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
-+/**
-+ * of_pci_dma_configure - Setup DMA configuration
-+ * @dev: ptr to pci_dev struct of the pci device
-+ *
-+ * Function to update PCI devices's DMA configuration using the same
-+ * info from the OF node of root host bridge's parent.
-+ */
-+void of_pci_dma_configure(struct pci_dev *pci_dev)
-+{
-+	struct device *dev = &pci_dev->dev;
-+	struct device *bridge = pci_get_host_bridge_device(pci_dev);
++#ifdef CONFIG_PCI_IOV
++	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
++#endif /* CONFIG_PCI_IOV */
 +
-+	of_dma_configure(dev, bridge->parent->of_node);
-+	pci_put_host_bridge_device(bridge);
-+}
-+EXPORT_SYMBOL_GPL(of_pci_dma_configure);
-+
- #if defined(CONFIG_OF_ADDRESS)
- /**
-  * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index ce0e5ab..29fd3fe 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,6 +16,7 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
-+void of_pci_dma_configure(struct pci_dev *pci_dev);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -50,6 +51,8 @@ of_get_pci_domain_nr(struct device_node *node)
- {
- 	return -1;
- }
-+
-+static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
+ 	/* Called to shutdown machine specific hardware not already controlled
+ 	 * by other drivers.
+ 	 */
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index ece30f5..7b8ebc5 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -178,6 +178,9 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++#ifdef CONFIG_PCI_IOV
++	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
++#endif /* CONFIG_PCI_IOV */
  #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 8203101..375bf70 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -990,6 +990,12 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	 */
+ 	if (dev->bus->is_added)
+ 		pcibios_setup_device(dev);
++
++#ifdef CONFIG_PCI_IOV
++	if (ppc_md.pcibios_fixup_sriov)
++		ppc_md.pcibios_fixup_sriov(dev);
++#endif /* CONFIG_PCI_IOV */
++
+ 	return 0;
+ }
  
- #if defined(CONFIG_OF_ADDRESS)
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 9447ee9..1da45aa 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1749,6 +1749,46 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+ #endif /* CONFIG_PCI_MSI */
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct resource *res;
++	int i;
++	resource_size_t size;
++	struct pci_dn *pdn;
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++
++	pdn = pci_get_pdn(pdev);
++	pdn->vfs_expanded = 0;
++
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++		res = &pdev->resource[i + PCI_IOV_RESOURCES];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
++				 i, res);
++			continue;
++		}
++
++		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
++		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++		res->end = res->start + size * phb->ioda.total_pe - 1;
++		dev_dbg(&pdev->dev, "                       %pR\n", res);
++		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
++				i, res, phb->ioda.total_pe);
++	}
++	pdn->vfs_expanded = phb->ioda.total_pe;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /*
+  * This function is supposed to be called on basis of PE from top
+  * to bottom style. So the the I/O or MMIO segment assigned to
+@@ -2122,6 +2162,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+ 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
++#ifdef CONFIG_PCI_IOV
++	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
++#endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
 -- 
 1.7.9.5
 
