@@ -1,209 +1,425 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <551128BA.7070508@intel.com>
-Date: Tue, 24 Mar 2015 17:04:58 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0117.outbound.protection.outlook.com ([65.55.169.117]:9088
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751118AbbCYHNv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Mar 2015 03:13:51 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 2/3] pci/designware: Add base driver for Designware PCIe
+Date: Wed, 25 Mar 2015 14:42:40 +0800
+Message-ID: <1427265761-31828-3-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1427265761-31828-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1427265761-31828-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
-References: <54FD4FB9.2060802@intel.com> <5222588.FaRe37n2T1@vostro.rjw.lan> <54FE93A4.9040908@intel.com> <20150320210354.GK26935@google.com> <550FDA38.2090505@intel.com> <20150323150955.GR26935@google.com>
-In-Reply-To: <20150323150955.GR26935@google.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/23/2015 11:09 PM, Bjorn Helgaas wrote:
-> The ECN says this function is in a host bridge scope and applies to the
-> PCI subsystem beneath the bridge.  This code does not map well to that
-> because:
-> 
->   1) It evaluates _DSM more times than necessary (we only need to do it
->   once per host bridge, and this does it once for every PCI device
->   immediately below a host brige).
-> 
->   2) The settings are only applied to immediate children of the host
->   bridge, not to devices deeper in the hierarchy.
-> 
->   3) A reader of the ECN will expect the corresponding code to be in the
->   host bridge driver (pci_root.c) where we deal with other host bridge
->   properties, not in per-PCI device code like this.
-> 
->   4) The ECN is not explicit about this, but if both function 8 (which
->   applies to a whole hierarchy) and function 9 (which applies to a single
->   PCI device) are implemented for the same PCI device, I would expect
->   function 9 to take precedence over function 8.  This patch does the
->   reverse, since function 8 will overwrite any d3cold_delay that was set
->   above by function 9.
+The Synopsys Designware IP is shared with couples of platforms
+under multiple architectures. The patch is to provide basic
+architecture-independent Designware PCIe host driver including
+ATU initialization and PCI OPS. Currently, which supports arm
+and arm64 simultaneously.
 
-I tried to do this in drivers/acpi/pci_root.c, but didn't find a proper
-way to pass this information down during PCI device scan time. So
-instead, I did it in the pci root bus add time: acpi_pci_add_bus, which
-is used by both the x86 code and ia64 code. Suggestions are welcome and
-appreciated.
-
-
->From 05b625d2444d90e37392dd835a97c0b582fd221f Mon Sep 17 00:00:00 2001
-From: Aaron Lu <aaron.lu@intel.com>
-Date: Fri, 14 Nov 2014 16:56:43 +0800
-Subject: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
-
-An ECN meant to specify possible delay optimizations is available on
-the PCI website:
-https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
-where it has defined two functions for an UUID specified _DSM:
-Function 8: If system firmware assumes the responsibility of post
-Conventional Reset delay (and informs the Operating System via this DSM
-function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
-S4 or S3 states), the Operating System may assume sufficient time has
-elapsed since the end of reset, and devices within the PCI subsystem are
-ready for Configuration Access.
-If the system firmware supports runtime power gating on any of the
-device within PCI subsystem covered by this DSM function, the system
-firmware is responsible for covering the necessary post power-on reset
-delay.
-
-Function 9: Specify various smaller delay values than required by the
-SPEC for individual PCI devices like shorter delay values after
-conventional reset, D3hot to D0 transition, functional level reset, etc.
-
-This patche adds support for function 8 and part of function 9. For
-function 8, the patch will check if the required _DSM function satisfies
-the requirement and then all the host bus' immediate children PCI device's
-d3cold_delay variable will be updated to zero. For function 9, the values
-affecting delays after conventional reset and D3hot->D0 are examined and
-the per PCI device's d3cold_delay and d3_delay are updated if the _DSM's
-return value is smaller than what the SPEC requires. Function 9's value
-takes precedence over function 8.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- drivers/pci/pci-acpi.c   | 65 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  2 ++
- include/linux/pci.h      |  1 +
- 3 files changed, 68 insertions(+)
+ drivers/pci/host/Kconfig                |   3 +
+ drivers/pci/host/Makefile               |   1 +
+ drivers/pci/host/pcie-designware-base.c | 282 ++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-designware-base.h |  62 +++++++
+ 4 files changed, 348 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-designware-base.c
+ create mode 100644 drivers/pci/host/pcie-designware-base.h
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index e0afc94aca01..220371c2def4 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -537,11 +537,24 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 7b892a9..f883d47 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -18,6 +18,9 @@ config PCI_MVEBU
+ config PCIE_DW
+ 	bool
  
- void acpi_pci_add_bus(struct pci_bus *bus)
- {
-+	union acpi_object *obj;
++config PCIE_DW_BASE
++	bool
 +
- 	if (acpi_pci_disabled || !bus->bridge)
- 		return;
- 
- 	acpi_pci_slot_enumerate(bus);
- 	acpiphp_enumerate_slots(bus);
-+
-+	/*
-+	 * For a host bridge, check its _DSM for function 8 and if
-+	 * that is available, mark it in the corresponding pci_bus.
-+	 */
-+	if (bus->bridge->parent)
-+		return;
-+	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 3,
-+				RESET_DELAY_DSM, NULL);
-+	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
-+		bus->ignore_reset_delay = 1;
- }
- 
- void acpi_pci_remove_bus(struct pci_bus *bus)
-@@ -567,6 +580,55 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
- 				      check_children);
- }
- 
-+/**
-+ * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
-+ * @pdev: the PCI device whose delay is to be updated
-+ * @adev: the companion ACPI device of this PCI device
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+ 	depends on SOC_EXYNOS5440
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index e61d91c..47e7fee 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -1,3 +1,4 @@
++obj-$(CONFIG_PCIE_DW_BASE) += pcie-designware-base.o
+ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+diff --git a/drivers/pci/host/pcie-designware-base.c b/drivers/pci/host/pcie-designware-base.c
+new file mode 100644
+index 0000000..f661151
+--- /dev/null
++++ b/drivers/pci/host/pcie-designware-base.c
+@@ -0,0 +1,282 @@
++/*
++ * Synopsys Designware PCIe host controller base driver
 + *
-+ * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
-+ * control method of either its own or its parent bridge.
-+ *
-+ * The UUID of the _DSM control method, together with other information like
-+ * which delay values can be optimized, etc. is defined in a ECN available on
-+ * PCIsig.com titled as: ACPI additions for FW latency optimizations.
-+ * Function 9 of the ACPI _DSM control method, if available for a specific PCI
-+ * device, provides various possible delay values that are less than what the
-+ * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
-+ * can be added later.
-+ * Function 8 of the ACPI _DSM control method, if available for the PCI host
-+ * bridge(reflected by the bus' ignore_reset_delay filed), means all its
-+ * children devices do not need the reset delay when leaving from D3cold state.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
 + */
-+static void pci_acpi_delay_optimize(struct pci_dev *pdev,
-+				    acpi_handle handle)
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/pci_regs.h>
++#include <linux/platform_device.h>
++
++#include "pcie-designware-base.h"
++
++void dw_pcie_dbi_write(struct dw_pcie_port *pp, u32 value, u32 offset)
 +{
-+	int value;
-+	union acpi_object *obj, *elements;
-+
-+	if (pdev->bus->ignore_reset_delay)
-+		pdev->d3cold_delay = 0;
-+
-+	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
-+				FUNCTION_DELAY_DSM, NULL);
-+	if (!obj)
-+		return;
-+
-+	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
-+		elements = obj->package.elements;
-+		if (elements[0].type == ACPI_TYPE_INTEGER) {
-+			value = (int)elements[0].integer.value / 1000;
-+			if (value < PCI_PM_D3COLD_WAIT)
-+				pdev->d3cold_delay = value;
-+		}
-+		if (elements[3].type == ACPI_TYPE_INTEGER) {
-+			value = (int)elements[3].integer.value / 1000;
-+			if (value < PCI_PM_D3_WAIT)
-+				pdev->d3_delay = value;
-+		}
-+	}
-+	kfree(obj);
++	iowrite32(value, pp->dbi + offset);
 +}
 +
- static void pci_acpi_setup(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-@@ -575,6 +637,9 @@ static void pci_acpi_setup(struct device *dev)
- 	if (!adev)
- 		return;
- 
-+	if (pci_dev->pm_cap)
-+		pci_acpi_delay_optimize(pci_dev, adev->handle);
++u32 dw_pcie_dbi_read(struct dw_pcie_port *pp, u32 offset)
++{
++	return ioread32(pp->dbi + offset);
++}
 +
- 	pci_acpi_add_pm_notifier(adev, pci_dev);
- 	if (!adev->wakeup.flags.valid)
- 		return;
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 3801c704a945..a965efa52152 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -79,6 +79,8 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
- 
- extern const u8 pci_acpi_dsm_uuid[];
- #define DEVICE_LABEL_DSM	0x07
-+#define RESET_DELAY_DSM		0x08
-+#define FUNCTION_DELAY_DSM	0x09
- 
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a379513bddef..1e56c464d058 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -471,6 +471,7 @@ struct pci_bus {
- 	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
- 	struct bin_attribute	*legacy_mem; /* legacy mem */
- 	unsigned int		is_added:1;
-+	unsigned int		ignore_reset_delay:1;
- };
- 
- #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
++int dw_pcie_host_link_up(struct dw_pcie_port *pp)
++{
++	if (pp->dw_ops->link_up)
++		return pp->dw_ops->link_up(pp);
++	else
++		return 0;
++}
++
++void dw_pcie_atu_outbound_set(struct dw_pcie_port *pp, int idx, int type,
++			      u64 cpu_addr, u64 pci_addr, u32 size)
++{
++	if (idx >= pp->atu_num)
++		return;
++
++	dw_pcie_dbi_write(pp, PCIE_ATU_REGION_OUTBOUND | idx,
++			  PCIE_ATU_VIEWPORT);
++	dw_pcie_dbi_write(pp, lower_32_bits(cpu_addr),
++			  PCIE_ATU_LOWER_BASE);
++	dw_pcie_dbi_write(pp, upper_32_bits(cpu_addr),
++			  PCIE_ATU_UPPER_BASE);
++	dw_pcie_dbi_write(pp, lower_32_bits(cpu_addr + size - 1),
++			  PCIE_ATU_LIMIT);
++	dw_pcie_dbi_write(pp, lower_32_bits(pci_addr),
++			  PCIE_ATU_LOWER_TARGET);
++	dw_pcie_dbi_write(pp, upper_32_bits(pci_addr),
++			  PCIE_ATU_UPPER_TARGET);
++	dw_pcie_dbi_write(pp, type, PCIE_ATU_CR1);
++	dw_pcie_dbi_write(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++}
++
++static void __iomem *
++dw_pcie_map_bus(struct pci_bus *bus, unsigned int devfn, int offset)
++{
++	struct dw_pcie_port *pp = bus->sysdata;
++	u32 type, busdev;
++
++	/* If there is no link, then there is no device */
++	if (!pci_is_root_bus(bus) && !dw_pcie_host_link_up(pp))
++		return NULL;
++
++	/* access only one slot on each root port */
++	if (pci_is_root_bus(bus) && devfn > 0)
++		return NULL;
++
++	if (pci_is_root_bus(bus))
++		return pp->dbi + offset;
++
++	busdev = PCIE_ATU_BUS(bus->number) |
++		 PCIE_ATU_DEV(PCI_SLOT(devfn)) |
++		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
++
++	if (pci_is_root_bus(bus->parent))
++		type = PCIE_ATU_TYPE_CFG0;
++	else
++		type = PCIE_ATU_TYPE_CFG1;
++
++	dw_pcie_atu_outbound_set(pp,
++				 PCIE_ATU_REGION_INDEX0,
++				 type,
++				 pp->cfg_addr,
++				 busdev,
++				 pp->cfg_size);
++
++	return pp->cfg + offset;
++}
++
++static int dw_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 *val)
++{
++	struct dw_pcie_port *pp = bus->sysdata;
++	int ret;
++
++	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++
++	if (pp->atu_num == 2 && !pci_is_root_bus(bus))
++		/* reassign ATU0 to map IO space */
++		dw_pcie_atu_outbound_set(pp,
++					 PCIE_ATU_REGION_INDEX0,
++					 PCIE_ATU_TYPE_IO,
++					 pp->io_cpu_addr,
++					 pp->io_pci_addr,
++					 pp->io_size);
++
++	return ret;
++}
++
++static int dw_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 val)
++{
++	struct dw_pcie_port *pp = bus->sysdata;
++	int ret;
++
++	ret = pci_generic_config_write32(bus, devfn, where, size, val);
++
++	if (pp->atu_num == 2 && !pci_is_root_bus(bus))
++		/* reassign ATU0 to map IO space */
++		dw_pcie_atu_outbound_set(pp,
++					 PCIE_ATU_REGION_INDEX0,
++					 PCIE_ATU_TYPE_IO,
++					 pp->io_cpu_addr,
++					 pp->io_pci_addr,
++					 pp->io_size);
++
++	return ret;
++}
++
++static struct pci_ops dw_pcie_ops = {
++	.map_bus = dw_pcie_map_bus,
++	.read = dw_pcie_config_read,
++	.write = dw_pcie_config_write,
++};
++
++static int dw_pcie_map_reg(struct dw_pcie_port *pp)
++{
++	struct platform_device *pdev = to_platform_device(pp->dev);
++	struct resource *res;
++
++	if (!pp->dbi) {
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						   "dbi");
++		if (!res) {
++			dev_err(pp->dev, "missing *dbi* reg space\n");
++			return -ENODEV;
++		}
++
++		pp->dbi = devm_ioremap_resource(pp->dev, res);
++		if (IS_ERR(pp->dbi))
++			return PTR_ERR(pp->dbi);
++	}
++
++	if (!pp->cfg) {
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						   "config");
++		if (!res) {
++			dev_err(pp->dev, "missing *config* reg space\n");
++			return -ENODEV;
++		}
++
++		pp->cfg = devm_ioremap_resource(pp->dev, res);
++		if (IS_ERR(pp->cfg))
++			return PTR_ERR(pp->cfg);
++
++		pp->cfg_addr = res->start;
++		pp->cfg_size = resource_size(res);
++	}
++
++	return 0;
++}
++
++/*
++ * If ATU number = 2, ATU0 is shared by transaction CFG and IO,
++ * ATU1 is used for transaction MEM
++ * If ATU number > 2, ATU0 is used for transaction CFG
++ * the other ATUs are used for MEM and IO separately.
++ */
++static int dw_pcie_atu_init(struct dw_pcie_port *pp,
++			    struct list_head *res,
++			    resource_size_t io_base)
++{
++	struct resource_entry *window;
++	struct device *dev = pp->dev;
++	int idx = 1, ret;
++
++	if (pp->atu_num < 2)
++		pp->atu_num = 2;
++
++	resource_list_for_each_entry(window, res) {
++		struct resource *res = window->res;
++		unsigned long restype = resource_type(res);
++
++		switch (restype) {
++		case IORESOURCE_IO:
++			if (pp->atu_num == 2)
++				idx = 0;
++
++			pp->io_cpu_addr = io_base;
++			pp->io_pci_addr = res->start - window->offset;
++			pp->io_size = resource_size(res);
++			dw_pcie_atu_outbound_set(pp,
++						 idx,
++						 PCIE_ATU_TYPE_IO,
++						 pp->io_cpu_addr,
++						 pp->io_pci_addr,
++						 pp->io_size);
++			ret = pci_remap_iospace(res, io_base);
++			if (ret < 0)
++				return ret;
++			idx++;
++			break;
++		case IORESOURCE_MEM:
++			if (pp->atu_num == 2)
++				idx = 1;
++
++			dw_pcie_atu_outbound_set(pp,
++						 idx,
++						 PCIE_ATU_TYPE_MEM,
++						 res->start,
++						 res->start - window->offset,
++						 resource_size(res));
++			idx++;
++			break;
++		case IORESOURCE_BUS:
++			break;
++		default:
++			dev_err(dev, "invalid resource %pR\n", res);
++			return -EINVAL;
++		}
++	}
++
++	return 0;
++}
++
++int dw_pcie_port_init(struct dw_pcie_port *pp)
++{
++	struct device_node *dn = pp->dev->of_node;
++	resource_size_t iobase = 0;
++	struct pci_bus *bus;
++	int ret;
++	LIST_HEAD(res);
++
++	ret = dw_pcie_map_reg(pp);
++	if (ret)
++		return ret;
++
++	ret = of_pci_get_host_bridge_resources(dn, 0, 0xff, &res, &iobase);
++	if (ret)
++		return ret;
++
++	ret = dw_pcie_atu_init(pp, &res, iobase);
++	if (ret)
++		return ret;
++
++	if (!pp->pci_ops)
++		pp->pci_ops = &dw_pcie_ops;
++
++	if (pp->dw_ops->host_init) {
++		if (pp->dw_ops->host_init(pp))
++			return ret;
++	}
++
++	bus = pci_create_root_bus(pp->dev, 0, pp->pci_ops,
++				  pp, &res);
++	if (!bus)
++		return -ENOMEM;
++
++	pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_add_devices(bus);
++
++	return 0;
++}
++
++MODULE_AUTHOR("Minghuan Lian <Minghuan.Lian@freescale.com>");
++MODULE_DESCRIPTION("Designware PCIe controller driver with Multiarch support");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/pci/host/pcie-designware-base.h b/drivers/pci/host/pcie-designware-base.h
+new file mode 100644
+index 0000000..dd7a3b3
+--- /dev/null
++++ b/drivers/pci/host/pcie-designware-base.h
+@@ -0,0 +1,62 @@
++/*
++ * Synopsys Designware PCIe host controller base driver
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _PCIE_DESIGNWARE_BASE_H
++#define _PCIE_DESIGNWARE_BASE_H
++
++/* Synopsis specific PCIE configuration registers */
++#define PCIE_ATU_VIEWPORT		0x900
++#define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
++#define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
++#define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
++#define PCIE_ATU_CR1			0x904
++#define PCIE_ATU_TYPE_MEM		(0x0 << 0)
++#define PCIE_ATU_TYPE_IO		(0x2 << 0)
++#define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
++#define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
++#define PCIE_ATU_CR2			0x908
++#define PCIE_ATU_ENABLE			(0x1 << 31)
++#define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
++#define PCIE_ATU_LOWER_BASE		0x90C
++#define PCIE_ATU_UPPER_BASE		0x910
++#define PCIE_ATU_LIMIT			0x914
++#define PCIE_ATU_LOWER_TARGET		0x918
++#define PCIE_ATU_BUS(x)			(((x) & 0xff) << 24)
++#define PCIE_ATU_DEV(x)			(((x) & 0x1f) << 19)
++#define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
++#define PCIE_ATU_UPPER_TARGET		0x91C
++
++struct dw_pcie_port;
++
++struct dw_host_ops {
++	int (*link_up)(struct dw_pcie_port *pp);
++	int (*host_init)(struct dw_pcie_port *pp);
++};
++
++struct dw_pcie_port {
++	struct device		*dev;
++	void __iomem		*dbi;
++	void __iomem		*cfg;
++	u64			cfg_addr;
++	u32			cfg_size;
++	u64			io_cpu_addr;
++	u64			io_pci_addr;
++	u32			io_size;
++	u32			atu_num;
++	struct dw_host_ops	*dw_ops;
++	struct pci_ops		*pci_ops;
++};
++
++void dw_pcie_dbi_write(struct dw_pcie_port *pp, u32 value, u32 offset);
++u32 dw_pcie_dbi_read(struct dw_pcie_port *pp, u32 offset);
++int dw_pcie_host_link_up(struct dw_pcie_port *pp);
++void dw_pcie_atu_outbound_set(struct dw_pcie_port *pp, int idx, int type,
++			      u64 cpu_addr, u64 pci_addr, u32 size);
++int dw_pcie_port_init(struct dw_pcie_port *pp);
++
++#endif /* _PCIE_DESIGNWARE_BASE_H */
 -- 
-2.1.0
+1.9.1
 
