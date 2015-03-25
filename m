@@ -1,165 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43569 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278AbbCFR6I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Mar 2015 12:58:08 -0500
-Message-ID: <54F9EAA8.30007@ti.com>
-Date: Fri, 6 Mar 2015 12:58:00 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Fengguang Wu <fengguang.wu@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, LKP <lkp@01.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PCI] BUG: unable to handle kernel
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net>
-In-Reply-To: <20150306165504.GA30094@roeck-us.net>
-Content-Type: multipart/mixed;
-	boundary="------------030700000309030004040609"
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:42757 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbbCYFxx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:53:53 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:53:51 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 5C7212CE8040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:53:50 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5rgq358327062
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:53:50 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5rGhY025012
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:53:16 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V15 08/21] PCI: Calculate maximum number of buses required for VFs
+Date: Wed, 25 Mar 2015 13:44:44 +0800
+Message-Id: <1427262297-5694-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---------------030700000309030004040609
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+An SR-IOV device can change its First VF Offset and VF Stride based on the
+values of ARI Capable Hierarchy and NumVFs.  The number of buses required
+for all VFs is determined by NumVFs, First VF Offset, and VF Stride (see
+SR-IOV spec r1.1, sec 2.1.2).
 
-On 03/06/2015 11:55 AM, Guenter Roeck wrote:
-> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
-> [ ... ]
->
->> > From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17 00:00:00 2001
->> From: Murali Karicheri<m-karicheri2@ti.com>
->> Date: Fri, 6 Mar 2015 10:23:08 -0500
->> Subject: [PATCH] pci: of : fix kernel crash
->>
->> This is a debug patch to root cause the kernel crash
->>
->> 	commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
->>
->> 	PCI: Update DMA configuration from DT
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->> ---
->>   drivers/of/of_pci.c       |    8 ++++++++
->>   drivers/pci/host-bridge.c |    5 +++++
->>   2 files changed, 13 insertions(+)
->>
->> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> index 86d3c38..5a59fb8 100644
->> --- a/drivers/of/of_pci.c
->> +++ b/drivers/of/of_pci.c
->> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
->>   	struct device *dev =&pci_dev->dev;
->>   	struct device *bridge = pci_get_host_bridge_device(pci_dev);
->>
->> +	if (!bridge || !bridge->parent) {
->> +		if (!bridge)
->> +			pr_err("PCI bridge not found\n");
->> +		if (!bridge->parent)
->> +			pr_err("PCI bridge parent not found\n");
->
-> You'll see a crash here if bridge is NULL. Maybe add an else before the second
-> if statement ? Also, dev_err might be a bit more useful and would be available.
->
-Fixed and attached.
+Previously pci_iov_bus_range() computed how many buses would be required by
+TotalVFs, but this was based on a single NumVFs value and may not have been
+the maximum for all NumVFs configurations.
 
-Murali
-> Thanks,
-> Guenter
->
->> +		return;
->> +	}
->> +
->>   	of_dma_configure(dev, bridge->parent->of_node);
->>   	pci_put_host_bridge_device(bridge);
->>   }
->> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> index 3e5bbf9..ef2ab51 100644
->> --- a/drivers/pci/host-bridge.c
->> +++ b/drivers/pci/host-bridge.c
->> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
->>   	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>   	struct device *bridge = root_bus->bridge;
->>
->> +	if (!bridge) {
->> +		pr_err("PCI: bridge not found\n");
->> +		return NULL;
->> +	}
->> +
->>   	kobject_get(&bridge->kobj);
->>   	return bridge;
->>   }
->> --
->> 1.7.9.5
->>
->
+Iterate over all valid NumVFs and calculate the maximum number of bus
+numbers that could ever be required for VFs of this device.
 
-
--- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
-
---------------030700000309030004040609
-Content-Type: text/x-diff; name="0001-pci-of-fix-kernel-crash.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="0001-pci-of-fix-kernel-crash.patch"
-
->From 4965a4580e0ffe13e7e6e9fd58d6e56b08c730c4 Mon Sep 17 00:00:00 2001
-From: Murali Karicheri <m-karicheri2@ti.com>
-Date: Fri, 6 Mar 2015 10:23:08 -0500
-Subject: [PATCH] pci: of : fix kernel crash
-
-This is a debug patch to root cause the kernel crash
-
-	commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
-
-	PCI: Update DMA configuration from DT
-
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+[bhelgaas: changelog, compute busnr of NumVFs, not TotalVFs, remove
+kerenl-doc comment marker]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/of/of_pci.c       |    9 +++++++++
- drivers/pci/host-bridge.c |    5 +++++
- 2 files changed, 14 insertions(+)
+ drivers/pci/iov.c |   31 +++++++++++++++++++++++++++----
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 86d3c38..6e1b111 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -129,6 +129,15 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
- 	struct device *dev = &pci_dev->dev;
- 	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index a8752c2..2ae921f 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -46,6 +46,30 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
+ }
  
-+	if (!bridge || !bridge->parent) {
-+		if (!bridge)
-+			dev_err(&pci_dev->dev, "PCI bridge not found\n");
-+		else if (!bridge->parent)
-+			dev_err(&pci_dev->dev,
-+				"PCI bridge parent not found\n");
-+		return;
++/*
++ * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
++ * determine how many additional bus numbers will be consumed by VFs.
++ *
++ * Iterate over all valid NumVFs and calculate the maximum number of bus
++ * numbers that could ever be required.
++ */
++static inline u8 virtfn_max_buses(struct pci_dev *dev)
++{
++	struct pci_sriov *iov = dev->sriov;
++	int nr_virtfn;
++	u8 max = 0;
++	u8 busnr;
++
++	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
++		pci_iov_set_numvfs(dev, nr_virtfn);
++		busnr = virtfn_bus(dev, nr_virtfn - 1);
++		if (busnr > max)
++			max = busnr;
 +	}
 +
- 	of_dma_configure(dev, bridge->parent->of_node);
- 	pci_put_host_bridge_device(bridge);
- }
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 3e5bbf9..ba642b8 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
- 	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
- 	struct device *bridge = root_bus->bridge;
- 
-+	if (!bridge) {
-+		dev_err(&dev->dev, "PCI: bridge not found\n");
-+		return NULL;
-+	}
++	return max;
++}
 +
- 	kobject_get(&bridge->kobj);
- 	return bridge;
- }
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -427,6 +451,7 @@ found:
+ 
+ 	dev->sriov = iov;
+ 	dev->is_physfn = 1;
++	iov->max_VF_buses = virtfn_max_buses(dev);
+ 
+ 	return 0;
+ 
+@@ -556,15 +581,13 @@ void pci_restore_iov_state(struct pci_dev *dev)
+ int pci_iov_bus_range(struct pci_bus *bus)
+ {
+ 	int max = 0;
+-	u8 busnr;
+ 	struct pci_dev *dev;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (!dev->is_physfn)
+ 			continue;
+-		busnr = virtfn_bus(dev, dev->sriov->total_VFs - 1);
+-		if (busnr > max)
+-			max = busnr;
++		if (dev->sriov->max_VF_buses > max)
++			max = dev->sriov->max_VF_buses;
+ 	}
+ 
+ 	return max ? max - bus->number : 0;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5732964..bae593c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -243,6 +243,7 @@ struct pci_sriov {
+ 	u16 stride;		/* following VF stride */
+ 	u32 pgsz;		/* page size for BAR alignment */
+ 	u8 link;		/* Function Dependency Link */
++	u8 max_VF_buses;	/* max buses consumed by VFs */
+ 	u16 driver_max_VFs;	/* max num VFs driver supports */
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
 -- 
 1.7.9.5
 
-
---------------030700000309030004040609--
