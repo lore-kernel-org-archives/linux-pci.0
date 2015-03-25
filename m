@@ -1,94 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:43229 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbbCKGOq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 02:14:46 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 11 Mar 2015 16:14:43 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id BF218357804C
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:14:41 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2B6EXxm17498186
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:14:41 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2B6E7lE024229
-	for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 17:14:08 +1100
-Date: Wed, 11 Mar 2015 14:13:51 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	benh@au1.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	gwshan@linux.vnet.ibm.com
-Subject: Re: [PATCH v12 14/21] powerpc/powernv: Allocate struct pnv_ioda_pe
- iommu_table dynamically
-Message-ID: <20150311061351.GB5826@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150224082939.32124.45744.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224083435.32124.65099.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150224084653.GI6220@google.com>
- <20150302075036.GH21571@richard>
- <20150311024737.GB10994@google.com>
+Received: from down.free-electrons.com ([37.187.137.238]:46060 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932304AbbCYQnc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 12:43:32 -0400
+Date: Wed, 25 Mar 2015 17:43:21 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v8 23/30] PCI/mvebu: Use pci_common_init_dev() to
+ simplify code
+Message-ID: <20150325174321.4a5bc25d@free-electrons.com>
+In-Reply-To: <551277E6.1010307@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+	<1427168064-8657-24-git-send-email-wangyijing@huawei.com>
+	<551277E6.1010307@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150311024737.GB10994@google.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 09:47:37PM -0500, Bjorn Helgaas wrote:
->On Mon, Mar 02, 2015 at 03:50:37PM +0800, Wei Yang wrote:
->> On Tue, Feb 24, 2015 at 02:46:53AM -0600, Bjorn Helgaas wrote:
->> >On Tue, Feb 24, 2015 at 02:34:35AM -0600, Bjorn Helgaas wrote:
->> >> From: Wei Yang <weiyang@linux.vnet.ibm.com>
->> >> 
->> >> Current iommu_table of a PE is a static field.  This will have a problem
->> >> when iommu_free_table() is called.
->> >> 
->> >> Allocate iommu_table dynamically.
->> >
->> >I'd like a little more explanation about why we're calling
->> >iommu_free_table() now when we didn't call it before.  Maybe this happens
->> >when we disable SR-IOV and the VFs go away?
->> 
->> Yes, it is called in disable path.
->> 
->> pcibios_sriov_disable
->>     pnv_pci_sriov_disable
->>         pnv_ioda_release_vf_PE
->> 	    pnv_pci_ioda2_release_dma_pe
->> 	        iommu_free_table            <--- here it is invoked
->> 
->> 
->> >
->> >Is there a hotplug remove path where we should also be calling
->> >iommu_free_table()?
->> 
->> When VF is not introduced, no one calls this on powernv platform.
->> 
->> Each PCI bus is a PE and it has its own iommu table, even a device is
->> hotpluged, the iommu table will not be released.
->
->None of this explanation made it into the v13 patch.  And I don't quite
->understand it anyway.
->
->Something like "Previously the iommu_table had the same lifetime as a
->struct pnv_ioda_pe and was embedded in it.  The pnv_ioda_pe was allocated
->when XXX and freed when YYY.  This no longer works: we can't allocate the
->iommu_table at the same time as the pnv_ioda_pe because XXX, so we allocate
->it when XXX and free it when YYY."
+Dear Yijing Wang,
 
-Got it, I have put the explanation in change log in next version.
+On Wed, 25 Mar 2015 16:55:02 +0800, Yijing Wang wrote:
 
->
->Bjorn
->_______________________________________________
->Linuxppc-dev mailing list
->Linuxppc-dev@lists.ozlabs.org
->https://lists.ozlabs.org/listinfo/linuxppc-dev
+>    Do you have any comment for this patch ? In this series, pci_bus_add_devices()
+> has been ripped out from pci_scan_root_bus(), so I think the pci_scan_root_bus() is
+> almost the same as pci_create_root_bus + pci_scan_child_bus(). And in this series,
+> we try to unexport pci_create_root_bus(). It's even better if you could help test this changes.
 
+I'm away this week for ELC, but I promise to test you patch series on
+mvebu hardware next week.
+
+Best regards,
+
+Thomas
 -- 
-Richard Yang
-Help you, Help me
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
