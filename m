@@ -1,124 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:38327 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbbCTX1F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 19:27:05 -0400
-Received: by igbqf9 with SMTP id qf9so746304igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 16:27:05 -0700 (PDT)
-Date: Fri, 20 Mar 2015 18:27:01 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: [PATCH] PCI: mvebu: add suspend/resume support
-Message-ID: <20150320232701.GQ26935@google.com>
-References: <1426604145-12335-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:48114 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694AbbCYTZB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 15:25:01 -0400
+Date: Wed, 25 Mar 2015 15:23:32 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@vger.kernel.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function
+ pci_scan_bus_parented()
+Message-ID: <20150325192331.GG25884@l.oracle.com>
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+ <1425868467-9667-5-git-send-email-wangyijing@huawei.com>
+ <20150311223211.GB1082@google.com>
+ <55017CA5.2010502@huawei.com>
+ <20150312193505.GB7346@google.com>
+ <55024D35.6050509@huawei.com>
+ <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com>
+ <20150313140132.GH5378@l.oracle.com>
+ <CAErSpo69ytCxBK5AD79Nz05wy=GwzcOGV7WkiKFxpLDH4wtJXw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426604145-12335-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <CAErSpo69ytCxBK5AD79Nz05wy=GwzcOGV7WkiKFxpLDH4wtJXw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 17, 2015 at 03:55:45PM +0100, Thomas Petazzoni wrote:
-> This commit implements suspend/resume support for the mvebu PCIe host
-> driver. Without this commit, the system will panic at resume time when
-> PCIe devices are connected.
+On Fri, Mar 13, 2015 at 09:26:08AM -0500, Bjorn Helgaas wrote:
+> On Fri, Mar 13, 2015 at 9:01 AM, Konrad Rzeszutek Wilk
+> <konrad.wilk@oracle.com> wrote:
+> > On Fri, Mar 13, 2015 at 08:24:58AM -0500, Bjorn Helgaas wrote:
+> >> On Thu, Mar 12, 2015 at 9:36 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> >> >>>>> +  pci_add_resource(&resources, &ioport_resource);
+> >> >>>>> +  pci_add_resource(&resources, &iomem_resource);
+> >> >>>>> +  pci_add_resource(&resources, &busn_resource);
+> >> >>>>
+> >> >>>> Since I don't want to export busn_resource, you might have to allocate your
+> >> >>>> own struct resource for it here.  And, of course, figure out the details of
+> >> >>>> which PCI domain you're in and whether you need to share one struct
+> >> >>>> resource across several host bridges in the same domain.
+> >> >>>
+> >> >>> Allocate its own resource here is ok for me, as I mentioned in previous reply,
+> >> >>> so do we still need to add additional info to figure out which domain own the bus resource ?
+> >> >>
+> >> >> That's up to the caller.  Only the platform knows which bridges it wants to
+> >> >> have in the same domain.  In principle, every host bridge could be in its
+> >> >> own domain, since each bridge is the root of a unique PCI hierarchy.  But
+> >> >> some platforms have firmware that assumes otherwise.  I have no idea what
+> >> >> xen assumes.
+> >> >
+> >> > I'm not xen guy, so I don't know much about it, but because it call pci_scan_bus_parented()
+> >> > before, and in which busn_resource is always shared for different host bridges(same domain or not),
+> >> > I think add a static bus resource(0,255) should be safe, at least, it would not introduce new risk.
+> >> >
+> >> > Something like:
+> >> >
+> >> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> >> > index b1ffebe..a69e529 100644
+> >> > --- a/drivers/pci/xen-pcifront.c
+> >> > +++ b/drivers/pci/xen-pcifront.c
+> >> > @@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+> >> >                                  unsigned int domain, unsigned int bus)
+> >> >  {
+> >> >         struct pci_bus *b;
+> >> > +       LIST_HEAD(resources);
+> >> >         struct pcifront_sd *sd = NULL;
+> >> >         struct pci_bus_entry *bus_entry = NULL;
+> >> >         int err = 0;
+> >> > +       static struct resource busn_res = {
+> >> > +               .start = 0,
+> >> > +               .end = 255,
+> >> > +               .flags = IORESOURCE_BUS,
+> >> > +       };
+> >> >
+> >> >  #ifndef CONFIG_PCI_DOMAINS
+> >> >         if (domain != 0) {
+> >> > @@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+> >> >                 err = -ENOMEM;
+> >> >                 goto err_out;
+> >> >         }
+> >> > +       pci_add_resource(&resources, &ioport_resource);
+> >> > +       pci_add_resource(&resources, &iomem_resource);
+> >> > +       pci_add_resource(&resources, &busn_res);
+> >> >         pcifront_init_sd(sd, domain, bus, pdev);
+> >> >
+> >> >         pci_lock_rescan_remove();
+> >> >
+> >> > -       b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> >> > -                                 &pcifront_bus_ops, sd);
+> >> > +       b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+> >> > +                                 &pcifront_bus_ops, sd, &resources);
+> >> >         if (!b) {
+> >> >
+> >> > Bjorn, what do you think about ?
+> >>
+> >> That seems OK to me.  Probably still wrong, but no worse than it was before.
+> >
+> > Interesting. The mechanism for PCI passthrough can either synthesize
+> > and PCI bus number starting at zero (so first device is always 0:0:0.0)
+> > or it can replicate the backend PCI topology. That means you
+> > could have segment values passed in, so: ab:ff:00.1). I've to admin
+> > I hadn't tried the 'physical' replication on an machine with
+> > domains (err, segments).
+> >
+> > Is there an git tree with this so I can just try it out?
 > 
-> Note that we have to use the ->suspend_noirq() and ->resume_noirq()
-> hooks, because at resume time, the PCI fixups are done at
-> ->resume_noirq() time, so the PCIe controller has to be ready at this
-> point.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+> pci/enumeration-yw6 has similar code (it exports the single
 
-Applied with Jason's ack to pci/host-mvebu for v4.1, thanks!
-
-> ---
->  drivers/pci/host/pci-mvebu.c | 38 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
+I presume now it is bjorn/pci/enumeration-yw8 ? Going to test this out
+this week.
+> busn_resource and makes xen use it).  That should be functionally
+> identical to what v4.0-rc1 does.
 > 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 1309cfb..1ab8635 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -129,6 +129,7 @@ struct mvebu_pcie_port {
->  	size_t memwin_size;
->  	phys_addr_t iowin_base;
->  	size_t iowin_size;
-> +	u32 saved_pcie_stat;
->  };
->  
->  static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val, u32 reg)
-> @@ -899,6 +900,35 @@ static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
->  		pcie->msi->dev = &pcie->pdev->dev;
->  }
->  
-> +static int mvebu_pcie_suspend(struct device *dev)
-> +{
-> +	struct mvebu_pcie *pcie;
-> +	int i;
-> +
-> +	pcie = dev_get_drvdata(dev);
-> +	for (i = 0; i < pcie->nports; i++) {
-> +		struct mvebu_pcie_port *port = pcie->ports + i;
-> +		port->saved_pcie_stat = mvebu_readl(port, PCIE_STAT_OFF);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int mvebu_pcie_resume(struct device *dev)
-> +{
-> +	struct mvebu_pcie *pcie;
-> +	int i;
-> +
-> +	pcie = dev_get_drvdata(dev);
-> +	for (i = 0; i < pcie->nports; i++) {
-> +		struct mvebu_pcie_port *port = pcie->ports + i;
-> +		mvebu_writel(port, port->saved_pcie_stat, PCIE_STAT_OFF);
-> +		mvebu_pcie_setup_hw(port);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int mvebu_pcie_probe(struct platform_device *pdev)
->  {
->  	struct mvebu_pcie *pcie;
-> @@ -1056,6 +1086,8 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
->  	mvebu_pcie_msi_enable(pcie);
->  	mvebu_pcie_enable(pcie);
->  
-> +	platform_set_drvdata(pdev, pcie);
-> +
->  	return 0;
->  }
->  
-> @@ -1068,12 +1100,18 @@ static const struct of_device_id mvebu_pcie_of_match_table[] = {
->  };
->  MODULE_DEVICE_TABLE(of, mvebu_pcie_of_match_table);
->  
-> +static struct dev_pm_ops mvebu_pcie_pm_ops = {
-> +	.suspend_noirq = mvebu_pcie_suspend,
-> +	.resume_noirq = mvebu_pcie_resume,
-> +};
-> +
->  static struct platform_driver mvebu_pcie_driver = {
->  	.driver = {
->  		.name = "mvebu-pcie",
->  		.of_match_table = mvebu_pcie_of_match_table,
->  		/* driver unloading/unbinding currently not supported */
->  		.suppress_bind_attrs = true,
-> +		.pm = &mvebu_pcie_pm_ops,
->  	},
->  	.probe = mvebu_pcie_probe,
->  };
-> -- 
-> 2.1.0
+> Yijing hasn't posted the static busn_res proposal above yet, so I
+> don't have a branch with that in it.
 > 
+> Bjorn
