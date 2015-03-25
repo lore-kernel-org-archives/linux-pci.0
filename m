@@ -1,104 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:63242 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbbCWMoC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 08:44:02 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: [PATCH v7 01/31] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-Date: Mon, 23 Mar 2015 20:40:27 +0800
-Message-ID: <1427114457-16687-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
-References: <1427114457-16687-1-git-send-email-wangyijing@huawei.com>
+Received: from relmlor4.renesas.com ([210.160.252.174]:44803 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751874AbbCYGNl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 02:13:41 -0400
+Message-ID: <5512520C.9030407@renesas.com>
+Date: Wed, 25 Mar 2015 15:13:32 +0900
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <phil.edworthy@renesas.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: rcar: Add PCIE_CONF_REGNO macro for PCIECAR register
+References: <1426047830-26410-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com> <20150320224446.GO26935@google.com>
+In-Reply-To: <20150320224446.GO26935@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
+Hi,
 
-Use pci_scan_root_bus() instead of deprecated function
-pci_scan_bus_parented().
+Thanks for your review.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: xen-devel@lists.xenproject.org
----
- drivers/pci/xen-pcifront.c |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
+(2015/03/21 7:44), Bjorn Helgaas wrote:
+> On Wed, Mar 11, 2015 at 01:23:50PM +0900, Nobuhiro Iwamatsu wrote:
+>> The reg variable used when setting PCIECAR register need to be masked by 0xFC
+>> by restriction of the corresponding register.
+>> This adds PCIE_CONF_REGNO are macros for masking changes that PCIE_CONF_REGNO
+>> is used when setting PCIECAR register.
+>>
+>> Signed-off-by: Nobuhiro Iwamatsu<nobuhiro.iwamatsu.yj@renesas.com>
+>> ---
+>>   drivers/pci/host/pcie-rcar.c | 4 +++-
+>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>> index c57bd0a..1f493ef 100644
+>> --- a/drivers/pci/host/pcie-rcar.c
+>> +++ b/drivers/pci/host/pcie-rcar.c
+>> @@ -104,6 +104,7 @@
+>>   #define  PCIE_CONF_BUS(b)	(((b)&  0xff)<<  24)
+>>   #define  PCIE_CONF_DEV(d)	(((d)&  0x1f)<<  19)
+>>   #define  PCIE_CONF_FUNC(f)	(((f)&  0x7)<<  16)
+>> +#define  PCIE_CONF_REGNO(r)	(r&  0xfc)
+>>
+>>   #define RCAR_PCI_MAX_RESOURCES 4
+>>   #define MAX_NR_INBOUND_MAPS 6
+>> @@ -227,7 +228,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>>
+>>   	/* Set the PIO address */
+>>   	rcar_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
+>> -		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, PCIECAR);
+>> +		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) |
+>> +		PCIE_CONF_REGNO(reg), PCIECAR);
+>
+> What about the other rcar_pci_read_reg()/rcar_pci_write_reg() calls (the
+> ones for "if (pci_is_root_bus())"?  Do those need to be limited to the
+> first 256 bytes also?
+>
+> It seems a little strange to mask "reg = where&  ~3" at the top (making it
+> 4-byte aligned), then mask "r&  0xfc" here (limiting to first 256 bytes and
+> also making it 4-byte aligned).
+>
+> Seems like those two operations should either be combined or completely
+> split.
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index b1ffebe..a69e529 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 				 unsigned int domain, unsigned int bus)
- {
- 	struct pci_bus *b;
-+	LIST_HEAD(resources);
- 	struct pcifront_sd *sd = NULL;
- 	struct pci_bus_entry *bus_entry = NULL;
- 	int err = 0;
-+	static struct resource busn_res = {
-+		.start = 0,
-+		.end = 255,
-+		.flags = IORESOURCE_BUS,
-+	};
- 
- #ifndef CONFIG_PCI_DOMAINS
- 	if (domain != 0) {
-@@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &busn_res);
- 	pcifront_init_sd(sd, domain, bus, pdev);
- 
- 	pci_lock_rescan_remove();
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
-+				  &pcifront_bus_ops, sd, &resources);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
- 		err = -ENOMEM;
- 		pci_unlock_rescan_remove();
-+		pci_free_resource_list(&resources);
- 		goto err_out;
- 	}
- 
-@@ -488,7 +498,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 
- 	list_add(&bus_entry->list, &pdev->root_buses);
- 
--	/* pci_scan_bus_parented skips devices which do not have a have
-+	/* pci_scan_root_bus skips devices which do not have a
- 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
--- 
-1.7.1
+This depends on the PCIECAR register of Rcar PCIE.
+2bit from 7bit is REGNO, and 8bit from 11bit is EREGNO (Extended Register No) field.
+If we do not want to mask, you might unnecessary data is written to the EREGNO.
+This depends on 'where' value, but more safely value is written by the mask.
 
+
+>
+>>   	/* Enable the configuration access */
+>>   	if (bus->parent->number == pcie->root_bus_nr)
+>> --
+>> 2.1.3
+>>
+
+Best regards,
+   Nobuhiro
