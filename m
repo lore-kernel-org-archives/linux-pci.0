@@ -1,80 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:44803 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751874AbbCYGNl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 02:13:41 -0400
-Message-ID: <5512520C.9030407@renesas.com>
-Date: Wed, 25 Mar 2015 15:13:32 +0900
-From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <phil.edworthy@renesas.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: rcar: Add PCIE_CONF_REGNO macro for PCIECAR register
-References: <1426047830-26410-1-git-send-email-nobuhiro.iwamatsu.yj@renesas.com> <20150320224446.GO26935@google.com>
-In-Reply-To: <20150320224446.GO26935@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33857 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531AbbCYWOQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 18:14:16 -0400
+Received: by pacwe9 with SMTP id we9so42437749pac.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 15:14:15 -0700 (PDT)
+Message-ID: <1427321631.2575.3.camel@axtens.net>
+Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
+ simplicity
+From: Daniel Axtens <dja@axtens.net>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Liviu Dudau <liviu@dudau.co.uk>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-ia64@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	linuxppc-dev@lists.ozlabs.org, linux-m68k@lists.linux-m68k.org,
+	Tony Luck <tony.luck@intel.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-alpha@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org
+Date: Thu, 26 Mar 2015 09:13:51 +1100
+In-Reply-To: <551266DE.3030609@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+		 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
+	 <1427241523.2685.18.camel@axtens.net> <551266DE.3030609@huawei.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-kGkB4ipJ9dr1gy57APLQ"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-Thanks for your review.
+--=-kGkB4ipJ9dr1gy57APLQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-(2015/03/21 7:44), Bjorn Helgaas wrote:
-> On Wed, Mar 11, 2015 at 01:23:50PM +0900, Nobuhiro Iwamatsu wrote:
->> The reg variable used when setting PCIECAR register need to be masked by 0xFC
->> by restriction of the corresponding register.
->> This adds PCIE_CONF_REGNO are macros for masking changes that PCIE_CONF_REGNO
->> is used when setting PCIECAR register.
->>
->> Signed-off-by: Nobuhiro Iwamatsu<nobuhiro.iwamatsu.yj@renesas.com>
->> ---
->>   drivers/pci/host/pcie-rcar.c | 4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->> index c57bd0a..1f493ef 100644
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
->> @@ -104,6 +104,7 @@
->>   #define  PCIE_CONF_BUS(b)	(((b)&  0xff)<<  24)
->>   #define  PCIE_CONF_DEV(d)	(((d)&  0x1f)<<  19)
->>   #define  PCIE_CONF_FUNC(f)	(((f)&  0x7)<<  16)
->> +#define  PCIE_CONF_REGNO(r)	(r&  0xfc)
->>
->>   #define RCAR_PCI_MAX_RESOURCES 4
->>   #define MAX_NR_INBOUND_MAPS 6
->> @@ -227,7 +228,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->>
->>   	/* Set the PIO address */
->>   	rcar_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
->> -		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, PCIECAR);
->> +		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) |
->> +		PCIE_CONF_REGNO(reg), PCIECAR);
->
-> What about the other rcar_pci_read_reg()/rcar_pci_write_reg() calls (the
-> ones for "if (pci_is_root_bus())"?  Do those need to be limited to the
-> first 256 bytes also?
->
-> It seems a little strange to mask "reg = where&  ~3" at the top (making it
-> 4-byte aligned), then mask "r&  0xfc" here (limiting to first 256 bytes and
-> also making it 4-byte aligned).
->
-> Seems like those two operations should either be combined or completely
-> split.
+Hi Yijing,
 
-This depends on the PCIECAR register of Rcar PCIE.
-2bit from 7bit is REGNO, and 8bit from 11bit is EREGNO (Extended Register No) field.
-If we do not want to mask, you might unnecessary data is written to the EREGNO.
-This depends on 'where' value, but more safely value is written by the mask.
+I wasn't quite sure I understood your comments, so I was trying to apply
+your patch series and test it, but patch 3 doesn't apply cleanly to
+4.0-rc5 or master. Can you respin the series?
+
+Thanks,
+Daniel
 
 
->
->>   	/* Enable the configuration access */
->>   	if (bus->parent->number == pcie->root_bus_nr)
->> --
->> 2.1.3
->>
+> Hi Daniel, thanks for your review and comments. We want to make a generic=
+ pci_host_bridge,
+> which would hold the common host information, for example, pci domain is =
+common info for
+> pci host bridge, this series saved domain in pci_host_bridge, then we no =
+need to
+> extract out domain by pci_bus->sysdata by platform specific pci_domain_nr=
+().
+> Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is th=
+e platform
+> interface, I think use the common interface would be better.
+>=20
+> >> +
+> >> +	/* Get probe mode and perform scan */
+> >> +	if (hose->dn && ppc_md.pci_probe_mode)
+> >> +		mode =3D ppc_md.pci_probe_mode(bus);
+> >> +
+> >> +	pr_debug("    probe mode: %d\n", mode);
+> >> +	if (mode =3D=3D PCI_PROBE_DEVTREE)
+> >> +		of_scan_bus(hose->dn, bus);
+> >> +
+> >> +	if (mode =3D=3D PCI_PROBE_NORMAL) {
+> >> +		pci_bus_update_busn_res_end(bus, 255);
+> >> +		hose->last_busno =3D pci_scan_child_bus(bus);
+> >> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
+> >> +	}
+> >> +
+> >> +	return pci_bus_child_max_busnr(bus);
+> >> +}
+> >> +
+> > I'm having trouble convincing myself that this patch covers every
+> > variation within our PCI implementations. In particular, there's a
+> > stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
+> > identical to this function. Does that implementation need to be cleaned
+> > up and replaced with this function too?
+> >=20
+>=20
+> This is a pci_host_bridge_ops hook function, which would be called in
+> PCI core, and after applied this series, we only need to call pci_scan_ho=
+st_bridge()
+> to scan pci devices, and this function is also extracted from the pcibios=
+_scan_phb(),
+> it's not the redundant code.
+>=20
+> >=20
+> >> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hos=
+e)
+> >>  		ppc_md.pcibios_fixup_phb(hose);
+> >> =20
+> >>  	/* Configure PCI Express settings */
+> >> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> >> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> >>  		struct pci_bus *child;
+> >> -		list_for_each_entry(child, &bus->children, node)
+> >> +		list_for_each_entry(child, &host->bus->children, node)
+> >>  			pcie_bus_configure_settings(child);
+> >>  	}
+> >>  }
+> > Two things: Firstly, the function uses hose throughout, not host.
+> > Secondly, you're not deleting the bus variable: what's the purpose of
+> > this change?
+>=20
+> host is the common pci_host_bridge which is created by PCI core for pci h=
+ost bridge driver,
+> the hose is the platform data used in powerpc. The purpose of the patch/s=
+eries is to simplify
+> pci enumeration interface, and try to reduce the weak functions which wer=
+e used to setup pci bus/devices
+> during PCI enumeration.
+>=20
+> >=20
+> > Regards,
+> > Daniel
+> >=20
+>=20
+>=20
 
-Best regards,
-   Nobuhiro
+
+--=-kGkB4ipJ9dr1gy57APLQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAABCAAGBQJVEzM2AAoJEPC3R3P2I92FQZwP/R5SRv7SsQeRdyiOrXCMLC7a
+JfCwcSHgDdhyWYCAYuSeOKjJjPiDz9QNm9KS8ntynhe6VJVBGcHpLslWxZTpI9Dl
+PHO/1b4i68YKxmjeXk19bQa38wDmuGxw8+ni1XX2ZzTIvm3fvOy9JZefde2lebi1
+dB/D0GSRQu7CcuKcyEYWEyvqwbfPqb8VbiKpEFUiImjMFjboP6Yl5dOcVye0NNnQ
+J36BOPHBj/FvIwK1ySUe5BE5mHjQUDijj9NkfqE5ED5Inf+/kjRYp9l0uBh3m8O1
+oGbpMp0b/7L0cXk4WuF0UFcaNkkI7+n24O2QJ8tBCIL8B+9U7nb41xqTcI2kbWGE
+9uKGGUDHQI1pERNtDKgLOsD+tFuyHo8oI99Oc8GFfWPnbvr576qEBBQaQI6Dwpdi
+dbejgs48MB8IRVdur3oWu8uibQhUddtk02CIfpTF3OT7rx9ay/CKC8NX/odUGtY6
+AYqqzNF6OxlfZXhrlS1nE1YWFacX+PKRiqulsgDE4peyq9cGse9ZYrOkkyL9VXdy
+ja3H43wace2qaa0JpzOu//uN/vULylpSh8QOfeqgLRCDlF29NbKn23gNbhzr+4yw
+xASO+O4SAR1IKM0hW2mqLE4/1TI8cDj5jX5emAhnCZi3uCnPkEAbq9C9ZqfJ2hEP
++2/0/9fEImcp/ma9tmc1
+=I0so
+-----END PGP SIGNATURE-----
+
+--=-kGkB4ipJ9dr1gy57APLQ--
+
