@@ -1,75 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50501 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755016AbbCLXVL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Mar 2015 19:21:11 -0400
-Date: Fri, 13 Mar 2015 07:21:04 +0800
-From: Fam Zheng <famz@redhat.com>
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Linux Virtualization <virtualization@lists.linux-foundation.org>,
-	mst@redhat.com
-Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
-Message-ID: <20150312232104.GA32054@ad.nay.redhat.com>
-References: <1426137682-12287-1-git-send-email-famz@redhat.com>
- <5501BCF7.9080004@redhat.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:28024 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbbCYIzf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:55:35 -0400
+Message-ID: <551277E6.1010307@huawei.com>
+Date: Wed, 25 Mar 2015 16:55:02 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5501BCF7.9080004@redhat.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v8 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
+ code
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com> <1427168064-8657-24-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1427168064-8657-24-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 03/12 17:21, Paolo Bonzini wrote:
-> On 12/03/2015 06:21, Fam Zheng wrote:
-> > If the device doesn't support shutdown, disabling interrupts may cause
-> > trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
-> > after we disable MSI-X, futher notifications from device will be
-> > delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
-> > may prevent us from making progress, by keep triggering interrupts.
-> > 
-> > Signed-off-by: Fam Zheng <famz@redhat.com>
-> > ---
-> >  drivers/pci/pci-driver.c | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > index 3cb2210..fb29c96 100644
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
-> >  
-> >  	pm_runtime_resume(dev);
-> >  
-> > -	if (drv && drv->shutdown)
-> > +	if (drv && drv->shutdown) {
-> >  		drv->shutdown(pci_dev);
-> > -	pci_msi_shutdown(pci_dev);
-> > -	pci_msix_shutdown(pci_dev);
-> > +		pci_msi_shutdown(pci_dev);
-> > +		pci_msix_shutdown(pci_dev);
-> > +	}
-> >  
-> >  #ifdef CONFIG_KEXEC
-> >  	/*
-> > 
+Hi Thomas and Jason,
+   Do you have any comment for this patch ? In this series, pci_bus_add_devices()
+has been ripped out from pci_scan_root_bus(), so I think the pci_scan_root_bus() is
+almost the same as pci_create_root_bus + pci_scan_child_bus(). And in this series,
+we try to unexport pci_create_root_bus(). It's even better if you could help test this changes.
+
+Thanks!
+Yijing.
+
+On 2015/3/24 11:34, Yijing Wang wrote:
+> Mvebu_pcie_scan_bus() is not necessary, we could use
+> pci_common_init_dev() instead of pci_common_init(),
+> and pass the device pointer as the parent. Then
+> pci_scan_root_bus() will be called to scan the pci busses.
 > 
-> The patch may be okay, but I think the bug here is also that virtio-pci
-> is not defining a .shutdown callback.  It should define one and call
-> free_irq (for INTX) and pci_disable_msix.
-
-It's not enough. The device has to know we disabled msix, otherwise it will
-send us IRQ, which is wrong.
-
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> CC: Jason Cooper <jason@lakedaemon.net>
+> ---
+>  drivers/pci/host/pci-mvebu.c |   18 +-----------------
+>  1 files changed, 1 insertions(+), 17 deletions(-)
 > 
-> How is this related to the virtio-scsi patch that you posted?  Do you
-> need both to fix the problem you reported?
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 0cfc494..d5a2b70 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  	return 1;
+>  }
+>  
+> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> -{
+> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+> -	struct pci_bus *bus;
+> -
+> -	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
+> -				  &mvebu_pcie_ops, sys, &sys->resources);
+> -	if (!bus)
+> -		return NULL;
+> -
+> -	pci_scan_child_bus(bus);
+> -
+> -	return bus;
+> -}
+> -
+>  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+>  						 const struct resource *res,
+>  						 resource_size_t start,
+> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>  	hw.nr_controllers = 1;
+>  	hw.private_data   = (void **)&pcie;
+>  	hw.setup          = mvebu_pcie_setup;
+> -	hw.scan           = mvebu_pcie_scan_bus;
+>  	hw.map_irq        = of_irq_parse_and_map_pci;
+>  	hw.ops            = &mvebu_pcie_ops;
+>  	hw.align_resource = mvebu_pcie_align_resource;
+>  
+> -	pci_common_init(&hw);
+> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
+>  }
+>  
+>  /*
 > 
 
-This one should be enough. I was wrong in saying virtio-scsi hanging the
-shutdown is because requests not being completed, it's more because of the
-unexpected IRQ as explained in [1].
 
-[1]: https://bugzilla.redhat.com/attachment.cgi?id=998391
+-- 
+Thanks!
+Yijing
 
-Fam
