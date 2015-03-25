@@ -1,95 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:40371 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752797AbbCFRuu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 6 Mar 2015 12:50:50 -0500
-Message-ID: <54F9E8F4.4070106@ti.com>
-Date: Fri, 6 Mar 2015 12:50:44 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 2/2] pci: iproc: change PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM
+Date: Wed, 25 Mar 2015 00:08:13 -0700
+Message-ID: <1427267293-29585-3-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
+References: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Fengguang Wu <fengguang.wu@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, LKP <lkp@01.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PCI] BUG: unable to handle kernel
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net>
-In-Reply-To: <20150306165504.GA30094@roeck-us.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/06/2015 11:55 AM, Guenter Roeck wrote:
-> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
-> [ ... ]
->
->> > From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17 00:00:00 2001
->> From: Murali Karicheri<m-karicheri2@ti.com>
->> Date: Fri, 6 Mar 2015 10:23:08 -0500
->> Subject: [PATCH] pci: of : fix kernel crash
->>
->> This is a debug patch to root cause the kernel crash
->>
->> 	commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
->>
->> 	PCI: Update DMA configuration from DT
->>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->> ---
->>   drivers/of/of_pci.c       |    8 ++++++++
->>   drivers/pci/host-bridge.c |    5 +++++
->>   2 files changed, 13 insertions(+)
->>
->> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> index 86d3c38..5a59fb8 100644
->> --- a/drivers/of/of_pci.c
->> +++ b/drivers/of/of_pci.c
->> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
->>   	struct device *dev =&pci_dev->dev;
->>   	struct device *bridge = pci_get_host_bridge_device(pci_dev);
->>
->> +	if (!bridge || !bridge->parent) {
->> +		if (!bridge)
->> +			pr_err("PCI bridge not found\n");
->> +		if (!bridge->parent)
->> +			pr_err("PCI bridge parent not found\n");
->
-> You'll see a crash here if bridge is NULL. Maybe add an else before the second
-> if statement ? Also, dev_err might be a bit more useful and would be available.
->
-Yes. Sorry, my bad. I will fix it and re-send
+Change the config name of the iProc PCIe platform bus driver from
+PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM. Also change the driver name
+from pcie-iproc-pltfm.c to pcie-iproc-platform.c to match the config
+name
 
-Murali
-> Thanks,
-> Guenter
->
->> +		return;
->> +	}
->> +
->>   	of_dma_configure(dev, bridge->parent->of_node);
->>   	pci_put_host_bridge_device(bridge);
->>   }
->> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->> index 3e5bbf9..ef2ab51 100644
->> --- a/drivers/pci/host-bridge.c
->> +++ b/drivers/pci/host-bridge.c
->> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
->>   	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>   	struct device *bridge = root_bus->bridge;
->>
->> +	if (!bridge) {
->> +		pr_err("PCI: bridge not found\n");
->> +		return NULL;
->> +	}
->> +
->>   	kobject_get(&bridge->kobj);
->>   	return bridge;
->>   }
->> --
->> 1.7.9.5
->>
->
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+---
+ drivers/pci/host/Kconfig                           |    2 +-
+ drivers/pci/host/Makefile                          |    2 +-
+ .../{pcie-iproc-pltfm.c => pcie-iproc-platform.c}  |    0
+ 3 files changed, 2 insertions(+), 2 deletions(-)
+ rename drivers/pci/host/{pcie-iproc-pltfm.c => pcie-iproc-platform.c} (100%)
 
-
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 963b507..1dfb567 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -115,7 +115,7 @@ config PCIE_IPROC
+ 	  iProc family of SoCs. An appropriate bus interface driver also needs
+ 	  to be enabled
+ 
+-config PCIE_IPROC_PLTFM
++config PCIE_IPROC_PLATFORM
+ 	tristate "Broadcom iProc PCIe platform bus driver"
+ 	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+ 	depends on OF
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 2e02d20..f733b4e 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -14,4 +14,4 @@ obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
+ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+-obj-$(CONFIG_PCIE_IPROC_PLTFM) += pcie-iproc-pltfm.o
++obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+diff --git a/drivers/pci/host/pcie-iproc-pltfm.c b/drivers/pci/host/pcie-iproc-platform.c
+similarity index 100%
+rename from drivers/pci/host/pcie-iproc-pltfm.c
+rename to drivers/pci/host/pcie-iproc-platform.c
 -- 
-Murali Karicheri
-Linux Kernel, Texas Instruments
+1.7.9.5
+
