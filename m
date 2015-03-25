@@ -1,99 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15272 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250AbbCXDhV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:21 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 13/30] PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
-Date: Tue, 24 Mar 2015 11:34:07 +0800
-Message-ID: <1427168064-8657-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mailout4.samsung.com ([203.254.224.34]:12708 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750833AbbCYFNU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:13:20 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NLR00BVL566YD80@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 25 Mar 2015 14:13:18 +0900 (KST)
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Liviu.Dudau@arm.com,
+	cpgs@samsung.com, Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH] pci: pci-exynos: fixed the sentence error
+Date: Wed, 25 Mar 2015 14:13:12 +0900
+Message-id: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move pcibios_root_bridge_prepare() to pci_create_host_bridge().
+There is the sentence error.
+Changed the semicolon instead of comma.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
 ---
- drivers/pci/host-bridge.c |   16 +++++++++++++---
- drivers/pci/probe.c       |    3 ---
- 2 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/pci/host/pci-exynos.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index b0ed8da..87c4fc5 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -92,9 +92,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 			pr_warn("pci host bridge pci%04x:%02x exist\n",
- 					host->domain, bus);
- 			mutex_unlock(&pci_host_mutex);
--			pci_free_resource_list(&host->windows);
--			kfree(host);
--			return NULL;
-+			goto free_res;
- 		}
- 	}
- 	list_add_tail(&host->list, &pci_host_bridge_list);
-@@ -105,6 +103,10 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index d202b37..c139237 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -396,7 +396,7 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
  
-+	error = pcibios_root_bridge_prepare(host);
-+	if (error)
-+		goto list_del;
-+
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-@@ -112,6 +114,14 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	}
- 
- 	return host;
-+list_del:
-+	mutex_lock(&pci_host_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&pci_host_mutex);
-+free_res:
-+	pci_free_resource_list(&host->windows);
-+	kfree(host);
-+	return NULL;
+ 	/* enable INTX interrupt */
+ 	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+-		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
++		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
+ 	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
  }
  
- void pci_free_host_bridge(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 418a426..ee17d9a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1893,9 +1893,6 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto put_dev;
- 
- 	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
 -- 
-1.7.1
+1.9.1
 
