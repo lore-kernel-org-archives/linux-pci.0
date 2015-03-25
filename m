@@ -1,174 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 23 Mar 2015 10:09:55 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI / ACPI: PCI delay optimization from ACPI
-Message-ID: <20150323150955.GR26935@google.com>
-References: <54FD4FB9.2060802@intel.com>
- <5222588.FaRe37n2T1@vostro.rjw.lan>
- <54FE93A4.9040908@intel.com>
- <20150320210354.GK26935@google.com>
- <550FDA38.2090505@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <550FDA38.2090505@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:40297 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752428AbbCYIbR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:31:17 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:31:16 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 1163D2CE8040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:14 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8V5bW24707162
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:14 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8UdfM028443
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:40 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 17/20] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
+Date: Wed, 25 Mar 2015 16:23:58 +0800
+Message-Id: <1427271841-28749-18-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 23, 2015 at 05:17:44PM +0800, Aaron Lu wrote:
-> An ECN meant to specify possible delay optimizations is available on
-> the PCI website:
-> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
-> where it has defined two functions for an UUID specified _DSM:
-> Function 8: If system firmware assumes the responsibility of post
-> Conventional Reset delay (and informs the Operating System via this DSM
-> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
-> S4 or S3 states), the Operating System may assume sufficient time has
-> elapsed since the end of reset, and devices within the PCI subsystem are
-> ready for Configuration Access.
-> If the system firmware supports runtime power gating on any of the
-> device within PCI subsystem covered by this DSM function, the system
-> firmware is responsible for covering the necessary post power-on reset
-> delay.
-> 
-> Function 9: Specify various smaller delay values than required by the
-> SPEC for individual PCI devices like shorter delay values after
-> conventional reset, D3hot to D0 transition, functional level reset, etc.
-> 
-> This patche adds support for function 8 and part of function 9. For
-> function 8, the patch will check if the required _DSM function satisfies
-> the requirement and then set the per PCI device's d3cold_delay variable
-> to zero. For function 9, the values affecting delays after conventional
-> reset and D3hot->D0 are examined and the per PCI device's d3cold_delay
-> and d3_delay are updated if the _DSM's return value is smaller than what
-> the SPEC requires.
-> 
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> ---
->  drivers/pci/pci-acpi.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pci.h      |  2 ++
->  2 files changed, 65 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 6ef2019073e2..2ebd02d814d7 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -563,6 +563,66 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
->  				      check_children);
->  }
->  
-> +/**
-> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
-> + * @pdev: the PCI device whose delay is to be updated
-> + * @adev: the companion ACPI device of this PCI device
-> + *
-> + * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
-> + * control method of either its own or its parent bridge.
-> + *
-> + * The UUID of the _DSM control method, together with other information like
-> + * which delay values can be optimized, etc. is defined in a ECN available on
-> + * PCIsig.com titled as: ACPI additions for FW latency optimizations.
-> + * Function 9 of the ACPI _DSM control method, if available for a specific PCI
-> + * device, provides various possible delay values that are less than what the
-> + * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
-> + * can be added later.
-> + * Function 8 of the ACPI _DSM control method, if available for the PCI host
-> + * bridge, means all its children devices do not need the reset delay when
-> + * leaving from D3cold state.
-> + */
-> +static void pci_acpi_delay_optimize(struct pci_dev *pdev,
-> +				    struct acpi_device *adev)
-> +{
-> +	acpi_handle handle = adev->handle;
-> +	int value;
-> +	union acpi_object *obj, *elements;
-> +
-> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
-> +				FUNCTION_DELAY_DSM, NULL);
-> +	if (obj) {
-> +		if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
-> +			elements = obj->package.elements;
-> +			if (elements[0].type == ACPI_TYPE_INTEGER) {
-> +				value = (int)elements[0].integer.value / 1000;
-> +				if (value < PCI_PM_D3COLD_WAIT)
-> +					pdev->d3cold_delay = value;
-> +			}
-> +			if (elements[3].type == ACPI_TYPE_INTEGER) {
-> +				value = (int)elements[3].integer.value / 1000;
-> +				if (value < PCI_PM_D3_WAIT)
-> +					pdev->d3_delay = value;
-> +			}
-> +		}
-> +		kfree(obj);
-> +	}
-> +
-> +	/* Function 8 is only applicable to host bridge */
-> +	if (pdev->bus->bridge->parent)
-> +		return;
-> +
-> +	handle = ACPI_HANDLE(pdev->bus->bridge);
-> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
-> +				RESET_DELAY_DSM, NULL);
+M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
+will exceed the limitation and failed to be assigned.
 
-The ECN says this function is in a host bridge scope and applies to the
-PCI subsystem beneath the bridge.  This code does not map well to that
-because:
+Introduce a different mechanism based on the IOV BAR size:
 
-  1) It evaluates _DSM more times than necessary (we only need to do it
-  once per host bridge, and this does it once for every PCI device
-  immediately below a host brige).
+  - if IOV BAR size is smaller than 64MB, expand to total_pe
+  - if IOV BAR size is bigger than 64MB, roundup power2
 
-  2) The settings are only applied to immediate children of the host
-  bridge, not to devices deeper in the hierarchy.
+[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
-  3) A reader of the ECN will expect the corresponding code to be in the
-  host bridge driver (pci_root.c) where we deal with other host bridge
-  properties, not in per-PCI device code like this.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 8716db4..415df85 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -182,6 +182,8 @@ struct pci_dn {
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
+ 	int     offset;			/* PE# for the first VF PE */
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 5187d16..b63925f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2250,6 +2250,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
+ 
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -2260,6 +2261,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->vfs_expanded = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
++
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++		res = &pdev->resource[i + PCI_IOV_RESOURCES];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
++				 i, res);
++			continue;
++		}
++
++		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
++				 i, res);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = roundup_pow_of_two(total_vfs);
++			break;
++		}
++	}
++
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+ 		if (!res->flags || res->parent)
+@@ -2272,12 +2299,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 
+ 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+ 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+-				i, res, phb->ioda.total_pe);
++			 i, res, mul);
+ 	}
+-	pdn->vfs_expanded = phb->ioda.total_pe;
++	pdn->vfs_expanded = mul;
+ }
+ #endif /* CONFIG_PCI_IOV */
+ 
+-- 
+1.7.9.5
 
-  4) The ECN is not explicit about this, but if both function 8 (which
-  applies to a whole hierarchy) and function 9 (which applies to a single
-  PCI device) are implemented for the same PCI device, I would expect
-  function 9 to take precedence over function 8.  This patch does the
-  reverse, since function 8 will overwrite any d3cold_delay that was set
-  above by function 9.
-
-> +	if (!obj)
-> +		return;
-> +
-> +	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
-> +		pdev->d3cold_delay = 0;
-> +	kfree(obj);
-> +}
-> +
->  static void pci_acpi_setup(struct device *dev)
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
-> @@ -571,6 +631,9 @@ static void pci_acpi_setup(struct device *dev)
->  	if (!adev)
->  		return;
->  
-> +	if (pci_dev->pm_cap)
-> +		pci_acpi_delay_optimize(pci_dev, adev);
-> +
->  	pci_acpi_add_pm_notifier(adev, pci_dev);
->  	if (!adev->wakeup.flags.valid)
->  		return;
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index c901ab84cf3b..3eaefac5acc5 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -325,6 +325,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  extern const u8 pci_acpi_dsm_uuid[];
->  
->  #define DEVICE_LABEL_DSM	0x07
-> +#define RESET_DELAY_DSM		0x08
-> +#define FUNCTION_DELAY_DSM	0x09
->  #endif
->  
->  #endif /* DRIVERS_PCI_H */
-> -- 
-> 2.1.0
-> 
