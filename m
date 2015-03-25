@@ -1,44 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54FEC2AF.9050306@linaro.org>
-Date: Tue, 10 Mar 2015 11:08:47 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: wangyijing@huawei.com, arnd@arndb.de, hanjun.guo@linaro.org,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, rjw@rjwysocki.net, al.stone@linaro.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH v2 0/9] PCI: MMCONFIG clean up
-References: <1425049244-19331-1-git-send-email-tomasz.nowicki@linaro.org> <20150306185302.GJ20077@google.com>
-In-Reply-To: <20150306185302.GJ20077@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:57203 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbbCYF5O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:57:14 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:57:12 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 5918F2CE8040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:57:11 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5v3m023330952
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:57:11 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5ubrY030396
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:56:38 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V15 18/21] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
+Date: Wed, 25 Mar 2015 13:44:54 +0800
+Message-Id: <1427262297-5694-19-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06.03.2015 19:53, Bjorn Helgaas wrote:
-> On Fri, Feb 27, 2015 at 04:00:35PM +0100, Tomasz Nowicki wrote:
->> MCFG ACPI table and PCI ECAM standard have no arch dependencies so it can be
->> used across all architectures. Currently MMCONFIG related code resides in
->> arch/x86 directories. This patch set is going to isolate non-architecure
->> specific code and make it accessible for all architectures.
->
-> Hi Tomasz,
->
-> This doesn't apply on v4.0-rc1:
->
->    $ stg import -M --sign m/tn
->    Checking for changes in the working directory ... done
->    Importing patch "x86-pci-clean-up-comment-about" ... done
->    Importing patch "x86-pci-abstract-pci-config" ... done
->    Importing patch "x86-pci-reorder-logic-of" ... done
->    Importing patch "x86-pci-acpi-move-arch" ... error: patch failed: arch/x86/pci/mmconfig-shared.c:657
->    error: arch/x86/pci/mmconfig-shared.c: patch does not apply
->    stg import: Diff does not apply cleanly
->
-> Can you refresh and repost, please?
+M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
+will exceed the limitation and failed to be assigned.
 
-Sure, sorry for inconvenience.
+Introduce a different mechanism based on the IOV BAR size:
 
-Tomasz
+  - if IOV BAR size is smaller than 64MB, expand to total_pe
+  - if IOV BAR size is bigger than 64MB, roundup power2
+
+[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h     |    2 ++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 3c95097..d6942c9 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -179,6 +179,8 @@ struct pci_dn {
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
+ 	int     offset;			/* PE# for the first VF PE */
++#define M64_PER_IOV 4
++	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 11262df..2c13a39 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2250,6 +2250,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	int i;
+ 	resource_size_t size;
+ 	struct pci_dn *pdn;
++	int mul, total_vfs;
+ 
+ 	if (!pdev->is_physfn || pdev->is_added)
+ 		return;
+@@ -2260,6 +2261,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 	pdn = pci_get_pdn(pdev);
+ 	pdn->vfs_expanded = 0;
+ 
++	total_vfs = pci_sriov_get_totalvfs(pdev);
++	pdn->m64_per_iov = 1;
++	mul = phb->ioda.total_pe;
++
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++		res = &pdev->resource[i + PCI_IOV_RESOURCES];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
++				 i, res);
++			continue;
++		}
++
++		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++
++		/* bigger than 64M */
++		if (size > (1 << 26)) {
++			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
++				 i, res);
++			pdn->m64_per_iov = M64_PER_IOV;
++			mul = roundup_pow_of_two(total_vfs);
++			break;
++		}
++	}
++
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
+ 		if (!res->flags || res->parent)
+@@ -2272,12 +2299,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ 
+ 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
+ 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
+-		res->end = res->start + size * phb->ioda.total_pe - 1;
++		res->end = res->start + size * mul - 1;
+ 		dev_dbg(&pdev->dev, "                       %pR\n", res);
+ 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
+-				i, res, phb->ioda.total_pe);
++			 i, res, mul);
+ 	}
+-	pdn->vfs_expanded = phb->ioda.total_pe;
++	pdn->vfs_expanded = mul;
+ }
+ #endif /* CONFIG_PCI_IOV */
+ 
+-- 
+1.7.9.5
+
