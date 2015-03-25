@@ -1,90 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:37969 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbbCYHnw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 03:43:52 -0400
+Message-ID: <551266DE.3030609@huawei.com>
+Date: Wed, 25 Mar 2015 15:42:22 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Date: Sat, 21 Mar 2015 01:32:22 +0100
-Message-ID: <CAJZ5v0jUbdNRvoYwW=LrC+fnyAB2=OEO6yidNNFnKhugZx_D1A@mail.gmail.com>
-Subject: [GIT PULL] Power management and ACPI fixes for 4.0-rc5
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: Daniel Axtens <dja@axtens.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-alpha@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
+ simplicity
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>	 <1427168064-8657-20-git-send-email-wangyijing@huawei.com> <1427241523.2685.18.camel@axtens.net>
+In-Reply-To: <1427241523.2685.18.camel@axtens.net>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 2015/3/25 7:58, Daniel Axtens wrote:
+> On Tue, 2015-03-24 at 11:34 +0800, Yijing Wang wrote:
+>> Now we could use pci_scan_host_bridge() to scan
+>> pci buses, provide powerpc specific pci_host_bridge_ops.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> CC: linuxppc-dev@lists.ozlabs.org
+>> ---
+>>  arch/powerpc/kernel/pci-common.c |   60 +++++++++++++++++++++++--------------
+>>  1 files changed, 37 insertions(+), 23 deletions(-)
+> 
+>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>> index 2c58200..e2b50a2 100644
+>> --- a/arch/powerpc/kernel/pci-common.c
+>> +++ b/arch/powerpc/kernel/pci-common.c
+>> @@ -773,6 +773,29 @@ void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+>>  		return ppc_md.pcibios_set_root_bus_speed(bridge);
+>>  }
+>>  
+>> +static int pci_host_scan_bus(struct pci_host_bridge *host)
+>> +{
+>> +	int mode = PCI_PROBE_NORMAL;
+>> +	struct pci_bus *bus = host->bus;
+>> +	struct pci_controller *hose = dev_get_drvdata(&host->dev);
+> Is there any reason this isn't *hose = pci_bus_to_host(bus)?
 
-Please pull from
+Hi Daniel, thanks for your review and comments. We want to make a generic pci_host_bridge,
+which would hold the common host information, for example, pci domain is common info for
+pci host bridge, this series saved domain in pci_host_bridge, then we no need to
+extract out domain by pci_bus->sysdata by platform specific pci_domain_nr().
+Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is the platform
+interface, I think use the common interface would be better.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm+acpi-4.0-rc5
+>> +
+>> +	/* Get probe mode and perform scan */
+>> +	if (hose->dn && ppc_md.pci_probe_mode)
+>> +		mode = ppc_md.pci_probe_mode(bus);
+>> +
+>> +	pr_debug("    probe mode: %d\n", mode);
+>> +	if (mode == PCI_PROBE_DEVTREE)
+>> +		of_scan_bus(hose->dn, bus);
+>> +
+>> +	if (mode == PCI_PROBE_NORMAL) {
+>> +		pci_bus_update_busn_res_end(bus, 255);
+>> +		hose->last_busno = pci_scan_child_bus(bus);
+>> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
+>> +	}
+>> +
+>> +	return pci_bus_child_max_busnr(bus);
+>> +}
+>> +
+> I'm having trouble convincing myself that this patch covers every
+> variation within our PCI implementations. In particular, there's a
+> stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
+> identical to this function. Does that implementation need to be cleaned
+> up and replaced with this function too?
+> 
 
-to receive power management and ACPI fixes for v4.0-rc5 with top-most
-commit 9c86286a60b28bd25cb1c70eb2aba34f182d1063
+This is a pci_host_bridge_ops hook function, which would be called in
+PCI core, and after applied this series, we only need to call pci_scan_host_bridge()
+to scan pci devices, and this function is also extracted from the pcibios_scan_phb(),
+it's not the redundant code.
 
- Merge branches 'pm-cpuidle', 'powercap', 'irq-pm' and 'acpi-resources'
+> 
+>> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+>>  		ppc_md.pcibios_fixup_phb(hose);
+>>  
+>>  	/* Configure PCI Express settings */
+>> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>  		struct pci_bus *child;
+>> -		list_for_each_entry(child, &bus->children, node)
+>> +		list_for_each_entry(child, &host->bus->children, node)
+>>  			pcie_bus_configure_settings(child);
+>>  	}
+>>  }
+> Two things: Firstly, the function uses hose throughout, not host.
+> Secondly, you're not deleting the bus variable: what's the purpose of
+> this change?
 
-on top of commit 06e5801b8cb3fc057d88cb4dc03c0b64b2744cda
+host is the common pci_host_bridge which is created by PCI core for pci host bridge driver,
+the hose is the platform data used in powerpc. The purpose of the patch/series is to simplify
+pci enumeration interface, and try to reduce the weak functions which were used to setup pci bus/devices
+during PCI enumeration.
 
- Linux 4.0-rc4
+> 
+> Regards,
+> Daniel
+> 
 
-These are fixes for recent regressions (PCI/ACPI resources and
-at91 RTC locking), a stable-candidate powercap RAPL driver fix
-and two ARM cpuidle fixes (one stable-candidate too).
 
-Specifics:
-
- - Revert a recent PCI commit related to IRQ resources management
-   that introduced a regression for drivers attempting to bind to
-   devices whose previous drivers did not balance pci_enable_device()
-   and pci_disable_device() as expected (Rafael J Wysocki).
-
- - Fix a deadlock in at91_rtc_interrupt() introduced by a typo in a
-   recent commit related to wakeup interrupt handling (Dan Carpenter).
-
- - Allow the power capping RAPL (Running-Average Power Limit) driver
-   to use different energy units for domains within one CPU package
-   which is necessary to handle Intel Haswell EP processors correctly
-   (Jacob Pan).
-
- - Improve the cpuidle mvebu driver's handling of Armada XP SoCs by
-   updating the target residency and exit latency numbers for those
-   chips (Sebastien Rannou).
-
- - Prevent the cpuidle mvebu driver from calling cpu_pm_enter() twice
-   in a row before cpu_pm_exit() is called on the same CPU which
-   breaks the core's assumptions regarding the usage of those
-   functions (Gregory Clement).
-
+-- 
 Thanks!
+Yijing
 
-
----------------
-
-Dan Carpenter (1):
-      rtc: at91rm9200: double locking bug in at91_rtc_interrupt()
-
-Gregory CLEMENT (1):
-      cpuidle: mvebu: Fix the CPU PM notifier usage
-
-Jacob Pan (1):
-      powercap / RAPL: handle domains with different energy units
-
-Rafael J. Wysocki (1):
-      Revert "x86/PCI: Refine the way to release PCI IRQ resources"
-
-Sebastien Rannou (1):
-      cpuidle: mvebu: Update cpuidle thresholds for Armada XP SOCs
-
----------------
-
- arch/x86/include/asm/pci_x86.h     |  2 ++
- arch/x86/pci/common.c              | 34 +++++-------------------
- arch/x86/pci/intel_mid_pci.c       |  4 +--
- arch/x86/pci/irq.c                 | 15 ++++++++++-
- drivers/acpi/pci_irq.c             |  9 ++++++-
- drivers/cpuidle/cpuidle-mvebu-v7.c | 12 ++++-----
- drivers/powercap/intel_rapl.c      | 54 +++++++++++++++++++++++++++-----------
- drivers/rtc/rtc-at91rm9200.c       |  2 +-
- 8 files changed, 78 insertions(+), 54 deletions(-)
