@@ -1,246 +1,257 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 24 Mar 2015 09:08:12 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
-Message-ID: <20150324140812.GB2495@google.com>
-References: <54FD4FB9.2060802@intel.com>
- <5222588.FaRe37n2T1@vostro.rjw.lan>
- <54FE93A4.9040908@intel.com>
- <20150320210354.GK26935@google.com>
- <550FDA38.2090505@intel.com>
- <20150323150955.GR26935@google.com>
- <551128BA.7070508@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <551128BA.7070508@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:54030 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbbCYI2x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:28:53 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:28:51 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 097043578053
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:28:49 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8Sems19333354
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:28:48 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8SFbu024859
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:28:15 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 10/20] PCI: Consider additional PF's IOV BAR alignment in sizing and assigning
+Date: Wed, 25 Mar 2015 16:23:51 +0800
+Message-Id: <1427271841-28749-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 24, 2015 at 05:04:58PM +0800, Aaron Lu wrote:
-> On 03/23/2015 11:09 PM, Bjorn Helgaas wrote:
-> > The ECN says this function is in a host bridge scope and applies to the
-> > PCI subsystem beneath the bridge.  This code does not map well to that
-> > because:
-> > 
-> >   1) It evaluates _DSM more times than necessary (we only need to do it
-> >   once per host bridge, and this does it once for every PCI device
-> >   immediately below a host brige).
-> > 
-> >   2) The settings are only applied to immediate children of the host
-> >   bridge, not to devices deeper in the hierarchy.
-> > 
-> >   3) A reader of the ECN will expect the corresponding code to be in the
-> >   host bridge driver (pci_root.c) where we deal with other host bridge
-> >   properties, not in per-PCI device code like this.
-> > 
-> >   4) The ECN is not explicit about this, but if both function 8 (which
-> >   applies to a whole hierarchy) and function 9 (which applies to a single
-> >   PCI device) are implemented for the same PCI device, I would expect
-> >   function 9 to take precedence over function 8.  This patch does the
-> >   reverse, since function 8 will overwrite any d3cold_delay that was set
-> >   above by function 9.
-> 
-> I tried to do this in drivers/acpi/pci_root.c, but didn't find a proper
-> way to pass this information down during PCI device scan time. So
-> instead, I did it in the pci root bus add time: acpi_pci_add_bus, which
-> is used by both the x86 code and ia64 code. Suggestions are welcome and
-> appreciated.
-> 
-> 
-> From 05b625d2444d90e37392dd835a97c0b582fd221f Mon Sep 17 00:00:00 2001
-> From: Aaron Lu <aaron.lu@intel.com>
-> Date: Fri, 14 Nov 2014 16:56:43 +0800
-> Subject: [PATCH v2 2/2] PCI / ACPI: PCI delay optimization from ACPI
-> 
-> An ECN meant to specify possible delay optimizations is available on
-> the PCI website:
-> https://www.pcisig.com/specifications/conventional/pci_firmware/ECN_fw_latency_optimization_final.pdf
-> where it has defined two functions for an UUID specified _DSM:
-> Function 8: If system firmware assumes the responsibility of post
-> Conventional Reset delay (and informs the Operating System via this DSM
-> function) on Sx Resume (such as boot from ACPI S5, or resume from ACPI
-> S4 or S3 states), the Operating System may assume sufficient time has
-> elapsed since the end of reset, and devices within the PCI subsystem are
-> ready for Configuration Access.
-> If the system firmware supports runtime power gating on any of the
-> device within PCI subsystem covered by this DSM function, the system
-> firmware is responsible for covering the necessary post power-on reset
-> delay.
-> 
-> Function 9: Specify various smaller delay values than required by the
-> SPEC for individual PCI devices like shorter delay values after
-> conventional reset, D3hot to D0 transition, functional level reset, etc.
-> 
-> This patche adds support for function 8 and part of function 9. For
-> function 8, the patch will check if the required _DSM function satisfies
-> the requirement and then all the host bus' immediate children PCI device's
-> d3cold_delay variable will be updated to zero. For function 9, the values
-> affecting delays after conventional reset and D3hot->D0 are examined and
-> the per PCI device's d3cold_delay and d3_delay are updated if the _DSM's
-> return value is smaller than what the SPEC requires. Function 9's value
-> takes precedence over function 8.
-> 
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> ---
->  drivers/pci/pci-acpi.c   | 65 ++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci-acpi.h |  2 ++
->  include/linux/pci.h      |  1 +
->  3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index e0afc94aca01..220371c2def4 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -537,11 +537,24 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
->  
->  void acpi_pci_add_bus(struct pci_bus *bus)
->  {
-> +	union acpi_object *obj;
-> +
->  	if (acpi_pci_disabled || !bus->bridge)
->  		return;
->  
->  	acpi_pci_slot_enumerate(bus);
->  	acpiphp_enumerate_slots(bus);
-> +
-> +	/*
-> +	 * For a host bridge, check its _DSM for function 8 and if
-> +	 * that is available, mark it in the corresponding pci_bus.
-> +	 */
-> +	if (bus->bridge->parent)
-> +		return;
+When sizing and assigning resources, we divide the resources into two
+lists: the requested list and the additional list.  We don't consider the
+alignment of additional VF(n) BAR space.
 
-This is not really an obvious way of testing for a host bridge.  I think
-pci_is_root_bus() would be a better way, but I'm still hoping for something
-in pci_root.c instead.  There is find_pci_host_bridge(), which might be
-useful (it's currently static but we might want to rename and export it for
-this and other reasons).
+This is because the alignment required for the VF(n) BAR space is the size
+of an individual VF BAR, not the size of the space for *all* VFs.  But we
+want additional alignment to support partitioning on PowerNV.
 
-> +	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 3,
-> +				RESET_DELAY_DSM, NULL);
-> +	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1)
-> +		bus->ignore_reset_delay = 1;
+Consider the additional IOV BAR alignment when sizing and assigning
+resources.  When there is not enough system MMIO space to accomodate both
+the requested list and the additional list, the PF's IOV BAR alignment will
+not contribute to the bridge. When there is enough system MMIO space for
+both lists, the additional alignment will contribute to the bridge.
 
-I think you need to free "obj" here.  Other acpi_evaluate_dsm() callers use
-ACPI_FREE().
+The additional alignment is stored in the min_align of pci_dev_resource,
+which is stored in the additional list by add_to_list() at the end of
+pbus_size_mem(). The additional alignment is calculated in
+pci_resource_alignment().  For an IOV BAR, we have arch dependent function
+to get the alignment for different arch.
 
->  }
->  
->  void acpi_pci_remove_bus(struct pci_bus *bus)
-> @@ -567,6 +580,55 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
->  				      check_children);
->  }
->  
-> +/**
-> + * pci_acpi_delay_optimize - optimize PCI D3 and D3cold delay from ACPI
-> + * @pdev: the PCI device whose delay is to be updated
-> + * @adev: the companion ACPI device of this PCI device
-> + *
-> + * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
-> + * control method of either its own or its parent bridge.
-> + *
-> + * The UUID of the _DSM control method, together with other information like
-> + * which delay values can be optimized, etc. is defined in a ECN available on
-> + * PCIsig.com titled as: ACPI additions for FW latency optimizations.
-> + * Function 9 of the ACPI _DSM control method, if available for a specific PCI
-> + * device, provides various possible delay values that are less than what the
-> + * SPEC requires. Here, we only deal with d3_delay and d3cold_delay. Others
-> + * can be added later.
-> + * Function 8 of the ACPI _DSM control method, if available for the PCI host
-> + * bridge(reflected by the bus' ignore_reset_delay filed), means all its
-> + * children devices do not need the reset delay when leaving from D3cold state.
-> + */
-> +static void pci_acpi_delay_optimize(struct pci_dev *pdev,
-> +				    acpi_handle handle)
-> +{
-> +	int value;
-> +	union acpi_object *obj, *elements;
-> +
-> +	if (pdev->bus->ignore_reset_delay)
-> +		pdev->d3cold_delay = 0;
+[bhelgaas: changelog, printk cast]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/setup-bus.c |   95 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 79 insertions(+), 16 deletions(-)
 
-I think this only propagates the function 8 result to the immediate
-children of the host bridge, i.e., devices on the root bus.  But the ECN
-says it affects the entire hierarchy.  Can you put the ignore_reset_delay
-bit in the struct pci_host_bridge instead?
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e3e17f3..6603d40 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -99,8 +99,8 @@ static void remove_from_list(struct list_head *head,
+ 	}
+ }
+ 
+-static resource_size_t get_res_add_size(struct list_head *head,
+-					struct resource *res)
++static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
++					       struct resource *res)
+ {
+ 	struct pci_dev_resource *dev_res;
+ 
+@@ -109,17 +109,37 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 			int idx = res - &dev_res->dev->resource[0];
+ 
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-				 "res[%d]=%pR get_res_add_size add_size %llx\n",
++				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+ 				 idx, dev_res->res,
+-				 (unsigned long long)dev_res->add_size);
++				 (unsigned long long)dev_res->add_size,
++				 (unsigned long long)dev_res->min_align);
+ 
+-			return dev_res->add_size;
++			return dev_res;
+ 		}
+ 	}
+ 
+-	return 0;
++	return NULL;
+ }
+ 
++static resource_size_t get_res_add_size(struct list_head *head,
++					struct resource *res)
++{
++	struct pci_dev_resource *dev_res;
++
++	dev_res = res_to_dev_res(head, res);
++	return dev_res ? dev_res->add_size : 0;
++}
++
++static resource_size_t get_res_add_align(struct list_head *head,
++					 struct resource *res)
++{
++	struct pci_dev_resource *dev_res;
++
++	dev_res = res_to_dev_res(head, res);
++	return dev_res ? dev_res->min_align : 0;
++}
++
++
+ /* Sort resources by alignment */
+ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ {
+@@ -215,7 +235,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 	struct resource *res;
+ 	struct pci_dev_resource *add_res, *tmp;
+ 	struct pci_dev_resource *dev_res;
+-	resource_size_t add_size;
++	resource_size_t add_size, align;
+ 	int idx;
+ 
+ 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
+@@ -238,13 +258,13 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 
+ 		idx = res - &add_res->dev->resource[0];
+ 		add_size = add_res->add_size;
++		align = add_res->min_align;
+ 		if (!resource_size(res)) {
+-			res->start = add_res->start;
++			res->start = align;
+ 			res->end = res->start + add_size - 1;
+ 			if (pci_assign_resource(add_res->dev, idx))
+ 				reset_resource(res);
+ 		} else {
+-			resource_size_t align = add_res->min_align;
+ 			res->flags |= add_res->flags &
+ 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
+ 			if (pci_reassign_resource(add_res->dev, idx,
+@@ -368,8 +388,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res;
++	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+ 	unsigned long fail_type;
++	resource_size_t add_align, align;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -384,10 +405,44 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry(dev_res, head, list)
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
++		/*
++		 * There are two kinds of additional resources in the list:
++		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
++		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
++		 * Here just fix the additional alignment for bridge
++		 */
++		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++			continue;
++
++		add_align = get_res_add_align(realloc_head, dev_res->res);
++
++		/*
++		 * The "head" list is sorted by the alignment to make sure
++		 * resources with bigger alignment will be assigned first.
++		 * After we change the alignment of a dev_res in "head" list,
++		 * we need to reorder the list by alignment to make it
++		 * consistent.
++		 */
++		if (add_align > dev_res->res->start) {
++			dev_res->res->start = add_align;
++			dev_res->res->end = add_align +
++				            resource_size(dev_res->res);
++
++			list_for_each_entry(dev_res2, head, list) {
++				align = pci_resource_alignment(dev_res2->dev,
++							       dev_res2->res);
++				if (add_align > align)
++					list_move_tail(&dev_res->list,
++						       &dev_res2->list);
++			}
++               }
++
++	}
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -962,6 +1017,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	resource_size_t children_add_size = 0;
++	resource_size_t children_add_align = 0;
++	resource_size_t add_align = 0;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -986,6 +1043,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
++				add_align = max(pci_resource_alignment(dev, r), add_align);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+ 				children_add_size += r_size;
+@@ -1016,19 +1074,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (order > max_order)
+ 				max_order = order;
+ 
+-			if (realloc_head)
++			if (realloc_head) {
+ 				children_add_size += get_res_add_size(realloc_head, r);
++				children_add_align = get_res_add_align(realloc_head, r);
++				add_align = max(add_align, children_add_align);
++			}
+ 		}
+ 	}
+ 
+ 	min_align = calculate_mem_align(aligns, max_order);
+ 	min_align = max(min_align, window_alignment(bus, b_res->flags));
+ 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
++	add_align = max(min_align, add_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+ 	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+ 		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), min_align);
++				resource_size(b_res), add_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1040,10 +1102,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, min_align);
+-		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
++		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+-			   (unsigned long long)size1-size0);
++			   (unsigned long long) (size1 - size0),
++			   (unsigned long long) add_align);
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.9.5
 
-> +
-> +	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
-> +				FUNCTION_DELAY_DSM, NULL);
-> +	if (!obj)
-> +		return;
-> +
-> +	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
-> +		elements = obj->package.elements;
-> +		if (elements[0].type == ACPI_TYPE_INTEGER) {
-> +			value = (int)elements[0].integer.value / 1000;
-> +			if (value < PCI_PM_D3COLD_WAIT)
-> +				pdev->d3cold_delay = value;
-> +		}
-> +		if (elements[3].type == ACPI_TYPE_INTEGER) {
-> +			value = (int)elements[3].integer.value / 1000;
-> +			if (value < PCI_PM_D3_WAIT)
-> +				pdev->d3_delay = value;
-> +		}
-> +	}
-> +	kfree(obj);
-> +}
-> +
->  static void pci_acpi_setup(struct device *dev)
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
-> @@ -575,6 +637,9 @@ static void pci_acpi_setup(struct device *dev)
->  	if (!adev)
->  		return;
->  
-> +	if (pci_dev->pm_cap)
-> +		pci_acpi_delay_optimize(pci_dev, adev->handle);
-
-Is the "pm_cap" test really necessary?  If we do it this way, we then have
-to convince ourselves that pdev->d3cold_delay and pdev->d3_delay are only
-needed when pdev has a pm_cap.
-
-If we *always* fill in the delay values, it's possible they won't be used,
-but we don't have to prove any connection between them and a pm_cap, so
-the code is easier to analyze.
-
-> +
->  	pci_acpi_add_pm_notifier(adev, pci_dev);
->  	if (!adev->wakeup.flags.valid)
->  		return;
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 3801c704a945..a965efa52152 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -79,6 +79,8 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
->  
->  extern const u8 pci_acpi_dsm_uuid[];
->  #define DEVICE_LABEL_DSM	0x07
-> +#define RESET_DELAY_DSM		0x08
-> +#define FUNCTION_DELAY_DSM	0x09
->  
->  #else	/* CONFIG_ACPI */
->  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a379513bddef..1e56c464d058 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -471,6 +471,7 @@ struct pci_bus {
->  	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
->  	struct bin_attribute	*legacy_mem; /* legacy mem */
->  	unsigned int		is_added:1;
-> +	unsigned int		ignore_reset_delay:1;
->  };
->  
->  #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
