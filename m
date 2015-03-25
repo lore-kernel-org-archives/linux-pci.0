@@ -1,243 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42605 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935870AbbCDIBe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:34 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Kees Cook <keescook@chromium.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Junjie Mao <eternal.n08@gmail.com>
-Subject: [PATCH v2 01/15] x86, kaslr: Use init_size instead of run_size
-Date: Wed,  4 Mar 2015 00:00:34 -0800
-Message-Id: <1425456048-16236-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:56888 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898AbbCYFyg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:54:36 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:54:35 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9D2C33578047
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:32 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5sO9T44236806
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:32 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5rw8m026370
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:53:59 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V15 10/21] PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
+Date: Wed, 25 Mar 2015 13:44:46 +0800
+Message-Id: <1427262297-5694-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+VFs are dynamically created when a driver enables them.  On some platforms,
+like PowerNV, special resources are necessary to enable VFs.
 
-introduced one run_size for kaslr.
+Add platform hooks for enabling and disabling VFs.
 
-We do not need to have home grown run_size.
-
-We should use real runtime size (include copy/decompress) aka init_size
-
-Please check arch/x86/boot/header.S about init_size for detail.
-
-Fixes: e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Josh Triplett <josh@joshtriplett.org>
-Cc: Matt Fleming <matt.fleming@intel.com>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Junjie Mao <eternal.n08@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/boot/compressed/Makefile  |  4 +---
- arch/x86/boot/compressed/head_32.S |  5 ++---
- arch/x86/boot/compressed/head_64.S |  5 +----
- arch/x86/boot/compressed/misc.c    | 15 +++++++-------
- arch/x86/boot/compressed/mkpiggy.c |  9 ++------
- arch/x86/tools/calc_run_size.sh    | 42 --------------------------------------
- 6 files changed, 13 insertions(+), 67 deletions(-)
- delete mode 100644 arch/x86/tools/calc_run_size.sh
+ drivers/pci/iov.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/arch/x86/boot/compressed/Makefile b/arch/x86/boot/compressed/Makefile
-index 0a291cd..70cc92c 100644
---- a/arch/x86/boot/compressed/Makefile
-+++ b/arch/x86/boot/compressed/Makefile
-@@ -92,10 +92,8 @@ suffix-$(CONFIG_KERNEL_XZ)	:= xz
- suffix-$(CONFIG_KERNEL_LZO) 	:= lzo
- suffix-$(CONFIG_KERNEL_LZ4) 	:= lz4
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5643a10..64c4692 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 	pci_dev_put(dev);
+ }
  
--RUN_SIZE = $(shell $(OBJDUMP) -h vmlinux | \
--	     $(CONFIG_SHELL) $(srctree)/arch/x86/tools/calc_run_size.sh)
- quiet_cmd_mkpiggy = MKPIGGY $@
--      cmd_mkpiggy = $(obj)/mkpiggy $< $(RUN_SIZE) > $@ || ( rm -f $@ ; false )
-+      cmd_mkpiggy = $(obj)/mkpiggy $< > $@ || ( rm -f $@ ; false )
- 
- targets += piggy.S
- $(obj)/piggy.S: $(obj)/vmlinux.bin.$(suffix-y) $(obj)/mkpiggy FORCE
-diff --git a/arch/x86/boot/compressed/head_32.S b/arch/x86/boot/compressed/head_32.S
-index 1d7fbbc..cbed140 100644
---- a/arch/x86/boot/compressed/head_32.S
-+++ b/arch/x86/boot/compressed/head_32.S
-@@ -207,8 +207,7 @@ relocated:
-  * Do the decompression, and jump to the new kernel..
-  */
- 				/* push arguments for decompress_kernel: */
--	pushl	$z_run_size	/* size of kernel with .bss and .brk */
--	pushl	$z_output_len	/* decompressed length, end of relocs */
-+	pushl	$z_output_len	/* decompressed length */
- 	leal	z_extract_offset_negative(%ebx), %ebp
- 	pushl	%ebp		/* output address */
- 	pushl	$z_input_len	/* input_len */
-@@ -218,7 +217,7 @@ relocated:
- 	pushl	%eax		/* heap area */
- 	pushl	%esi		/* real mode pointer */
- 	call	decompress_kernel /* returns kernel location in %eax */
--	addl	$28, %esp
-+	addl	$24, %esp
- 
- /*
-  * Jump to the decompressed kernel.
-diff --git a/arch/x86/boot/compressed/head_64.S b/arch/x86/boot/compressed/head_64.S
-index 6b1766c..2884e0c 100644
---- a/arch/x86/boot/compressed/head_64.S
-+++ b/arch/x86/boot/compressed/head_64.S
-@@ -402,16 +402,13 @@ relocated:
-  * Do the decompression, and jump to the new kernel..
-  */
- 	pushq	%rsi			/* Save the real mode argument */
--	movq	$z_run_size, %r9	/* size of kernel with .bss and .brk */
--	pushq	%r9
- 	movq	%rsi, %rdi		/* real mode address */
- 	leaq	boot_heap(%rip), %rsi	/* malloc area for uncompression */
- 	leaq	input_data(%rip), %rdx  /* input_data */
- 	movl	$z_input_len, %ecx	/* input_len */
- 	movq	%rbp, %r8		/* output target address */
--	movq	$z_output_len, %r9	/* decompressed length, end of relocs */
-+	movq	$z_output_len, %r9	/* decompressed length */
- 	call	decompress_kernel	/* returns kernel location in %rax */
--	popq	%r9
- 	popq	%rsi
- 
- /*
-diff --git a/arch/x86/boot/compressed/misc.c b/arch/x86/boot/compressed/misc.c
-index 5903089..51e9e54 100644
---- a/arch/x86/boot/compressed/misc.c
-+++ b/arch/x86/boot/compressed/misc.c
-@@ -370,10 +370,10 @@ asmlinkage __visible void *decompress_kernel(void *rmode, memptr heap,
- 				  unsigned char *input_data,
- 				  unsigned long input_len,
- 				  unsigned char *output,
--				  unsigned long output_len,
--				  unsigned long run_size)
-+				  unsigned long output_len)
- {
- 	unsigned char *output_orig = output;
-+	unsigned long init_size;
- 
- 	real_mode = rmode;
- 
-@@ -396,15 +396,14 @@ asmlinkage __visible void *decompress_kernel(void *rmode, memptr heap,
- 	free_mem_ptr     = heap;	/* Heap */
- 	free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
- 
-+	init_size = real_mode->hdr.init_size;
++int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++       return 0;
++}
 +
- 	/*
--	 * The memory hole needed for the kernel is the larger of either
--	 * the entire decompressed kernel plus relocation table, or the
--	 * entire decompressed kernel plus .bss and .brk sections.
-+	 * The memory hole needed for the kernel is init_size for running
-+	 * and init_size is bigger than output_len always.
- 	 */
- 	output = choose_kernel_location(real_mode, input_data, input_len,
--					output,
--					output_len > run_size ? output_len
--							      : run_size);
-+					output, init_size);
+ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ {
+ 	int rc;
+@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
+ 	int bus;
++	int retval;
  
- 	/* Validate memory location choices. */
- 	if ((unsigned long)output & (MIN_KERNEL_ALIGN - 1))
-diff --git a/arch/x86/boot/compressed/mkpiggy.c b/arch/x86/boot/compressed/mkpiggy.c
-index d8222f2..b669ab6 100644
---- a/arch/x86/boot/compressed/mkpiggy.c
-+++ b/arch/x86/boot/compressed/mkpiggy.c
-@@ -36,13 +36,11 @@ int main(int argc, char *argv[])
- 	uint32_t olen;
- 	long ilen;
- 	unsigned long offs;
--	unsigned long run_size;
- 	FILE *f = NULL;
- 	int retval = 1;
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	if (nr_virtfn < initial)
+ 		initial = nr_virtfn;
  
--	if (argc < 3) {
--		fprintf(stderr, "Usage: %s compressed_file run_size\n",
--				argv[0]);
-+	if (argc < 2) {
-+		fprintf(stderr, "Usage: %s compressed_file\n", argv[0]);
- 		goto bail;
- 	}
++	if ((retval = pcibios_sriov_enable(dev, initial))) {
++		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
++			retval);
++		return retval;
++	}
++
+ 	for (i = 0; i < initial; i++) {
+ 		rc = virtfn_add(dev, i, 0);
+ 		if (rc)
+@@ -335,6 +347,11 @@ failed:
+ 	return rc;
+ }
  
-@@ -76,7 +74,6 @@ int main(int argc, char *argv[])
- 	offs += olen >> 12;	/* Add 8 bytes for each 32K block */
- 	offs += 64*1024 + 128;	/* Add 64K + 128 bytes slack */
- 	offs = (offs+4095) & ~4095; /* Round to a 4K boundary */
--	run_size = atoi(argv[2]);
++int __weak pcibios_sriov_disable(struct pci_dev *pdev)
++{
++       return 0;
++}
++
+ static void sriov_disable(struct pci_dev *dev)
+ {
+ 	int i;
+@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
+ 	for (i = 0; i < iov->num_VFs; i++)
+ 		virtfn_remove(dev, i, 0);
  
- 	printf(".section \".rodata..compressed\",\"a\",@progbits\n");
- 	printf(".globl z_input_len\n");
-@@ -88,8 +85,6 @@ int main(int argc, char *argv[])
- 	/* z_extract_offset_negative allows simplification of head_32.S */
- 	printf(".globl z_extract_offset_negative\n");
- 	printf("z_extract_offset_negative = -0x%lx\n", offs);
--	printf(".globl z_run_size\n");
--	printf("z_run_size = %lu\n", run_size);
- 
- 	printf(".globl input_data, input_data_end\n");
- 	printf("input_data:\n");
-diff --git a/arch/x86/tools/calc_run_size.sh b/arch/x86/tools/calc_run_size.sh
-deleted file mode 100644
-index 1a4c17b..0000000
---- a/arch/x86/tools/calc_run_size.sh
-+++ /dev/null
-@@ -1,42 +0,0 @@
--#!/bin/sh
--#
--# Calculate the amount of space needed to run the kernel, including room for
--# the .bss and .brk sections.
--#
--# Usage:
--# objdump -h a.out | sh calc_run_size.sh
--
--NUM='\([0-9a-fA-F]*[ \t]*\)'
--OUT=$(sed -n 's/^[ \t0-9]*.b[sr][sk][ \t]*'"$NUM$NUM$NUM$NUM"'.*/\1\4/p')
--if [ -z "$OUT" ] ; then
--	echo "Never found .bss or .brk file offset" >&2
--	exit 1
--fi
--
--OUT=$(echo ${OUT# })
--sizeA=$(printf "%d" 0x${OUT%% *})
--OUT=${OUT#* }
--offsetA=$(printf "%d" 0x${OUT%% *})
--OUT=${OUT#* }
--sizeB=$(printf "%d" 0x${OUT%% *})
--OUT=${OUT#* }
--offsetB=$(printf "%d" 0x${OUT%% *})
--
--run_size=$(( $offsetA + $sizeA + $sizeB ))
--
--# BFD linker shows the same file offset in ELF.
--if [ "$offsetA" -ne "$offsetB" ] ; then
--	# Gold linker shows them as consecutive.
--	endB=$(( $offsetB + $sizeB ))
--	if [ "$endB" != "$run_size" ] ; then
--		printf "sizeA: 0x%x\n" $sizeA >&2
--		printf "offsetA: 0x%x\n" $offsetA >&2
--		printf "sizeB: 0x%x\n" $sizeB >&2
--		printf "offsetB: 0x%x\n" $offsetB >&2
--		echo ".bss and .brk are non-contiguous" >&2
--		exit 1
--	fi
--fi
--
--printf "%d\n" $run_size
--exit 0
++	pcibios_sriov_disable(dev);
++
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
 -- 
-1.8.4.5
+1.7.9.5
 
