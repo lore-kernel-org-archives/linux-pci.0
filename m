@@ -1,105 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36911 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbbCLDZT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:25:19 -0400
-Received: by oigi138 with SMTP id i138so11400437oig.4
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:25:19 -0700 (PDT)
-Date: Wed, 11 Mar 2015 22:25:15 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v6 13/30] PCI: Introduce new scan function
- pci_scan_host_bridge()
-Message-ID: <20150312032515.GF10949@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-14-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-14-git-send-email-wangyijing@huawei.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:42843 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263AbbCYFy4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:54:56 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:54:55 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 722FE3578057
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:52 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5sij217891578
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:52 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5sI5E026720
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:19 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V15 11/21] PCI: Add pcibios_iov_resource_alignment() interface
+Date: Wed, 25 Mar 2015 13:44:47 +0800
+Message-Id: <1427262297-5694-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:10AM +0800, Yijing Wang wrote:
-> Introduce new scan function pci_scan_host_bridge() to
-> support host bridge drivers that need to provide platform
-> own pci_host_bridge_ops.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/probe.c |   22 ++++++++++++++++++++++
->  include/linux/pci.h |    4 ++++
->  2 files changed, 26 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 59d9be3..99f17e3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2064,6 +2064,28 @@ static struct pci_bus *__pci_scan_root_bus(
->  	return b;
->  }
->  
-> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-> +		u32 db, struct pci_ops *ops, void *sysdata,
-> +		struct list_head *resources,
-> +		struct pci_host_bridge_ops *phb_ops)
+Per the SR-IOV spec r1.1, sec 3.3.14, the required alignment of a PF's IOV
+BAR is the size of an individual VF BAR, and the size consumed is the
+individual VF BAR size times NumVFs.
 
-Drop the "phb_" prefix.
+The PowerNV platform has additional alignment requirements to help support
+its Partitionable Endpoint device isolation feature (see
+Documentation/powerpc/pci_iov_resource_on_powernv.txt).
 
-> +{
-> +	struct pci_host_bridge *host;
-> +	struct pci_bus *bus;
-> +
-> +	host = pci_create_host_bridge(parent, db, resources,
-> +			sysdata, phb_ops);
-> +	if (!host)
-> +		return NULL;
-> +
-> +	bus = __pci_scan_root_bus(host, ops);
-> +	if (!bus)
-> +		pci_free_host_bridge(host);
-> +
-> +	return host;
-> +}
-> +EXPORT_SYMBOL(pci_scan_host_bridge);
-> +
-> +
->  struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
->  		struct pci_ops *ops, void *sysdata, struct list_head *resources)
->  {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e9922b1..28eafb5 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -790,6 +790,10 @@ void pci_bus_release_busn_res(struct pci_bus *b);
->  struct pci_bus *pci_scan_root_bus(struct device *parent, u32 dombus,
->  					     struct pci_ops *ops, void *sysdata,
->  					     struct list_head *resources);
-> +struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
-> +		u32 dombus, struct pci_ops *ops, void *sysdata,
-> +		struct list_head *resources,
-> +		struct pci_host_bridge_ops *phb_ops);
->  struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
->  				int busnr);
->  void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Add a pcibios_iov_resource_alignment() interface to allow platforms to
+request additional alignment.
+
+[bhelgaas: changelog, adapt to reworked pci_sriov_resource_alignment(),
+drop "align" parameter]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c   |    8 +++++++-
+ include/linux/pci.h |    1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 64c4692..ee0ebff 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -569,6 +569,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+ 		4 * (resno - PCI_IOV_RESOURCES);
+ }
+ 
++resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
++						      int resno)
++{
++	return pci_iov_resource_size(dev, resno);
++}
++
+ /**
+  * pci_sriov_resource_alignment - get resource alignment for VF BAR
+  * @dev: the PCI device
+@@ -581,7 +587,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+  */
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+-	return pci_iov_resource_size(dev, resno);
++	return pcibios_iov_resource_alignment(dev, resno);
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 99ea948..4e1f17d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1174,6 +1174,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+ 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+-- 
+1.7.9.5
+
