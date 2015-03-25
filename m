@@ -1,155 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:29776 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932566AbbCFJgX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 04:36:23 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 10/29] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Fri, 6 Mar 2015 17:33:27 +0800
-Message-ID: <1425634426-437-11-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bn1on0111.outbound.protection.outlook.com ([157.56.110.111]:19271
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751916AbbCYHOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Mar 2015 03:14:52 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH] arm/dts/ls1021a: Add PCIe dts node
+Date: Wed, 25 Mar 2015 14:42:38 +0800
+Message-ID: <1427265761-31828-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save platform specific sysdata in pci_host_bridge
-drvdata, host bridge specific operation need to
-access it before the pci bus creation.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- drivers/pci/host-bridge.c |    4 +++-
- drivers/pci/pci.h         |    4 +++-
- drivers/pci/probe.c       |   18 ++++++++----------
- 3 files changed, 14 insertions(+), 12 deletions(-)
+ arch/arm/boot/dts/ls1021a.dtsi | 48 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 0bb08ef..3c34c49 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -23,7 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
- }
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 db, struct list_head *resources)
-+		struct device *parent, u32 db,
-+		struct list_head *resources, void *sysdata)
- {
- 	int error;
- 	int bus = PCI_BUSNUM(db);
-@@ -58,6 +59,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
- 			host->busnum);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 8dcd3bd..8783a1d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -322,6 +322,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- #endif
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 dombus, struct list_head *resources);
-+		struct device *parent, u32 dombus,
-+		struct list_head *resources, void *sysdata);
+diff --git a/arch/arm/boot/dts/ls1021a.dtsi b/arch/arm/boot/dts/ls1021a.dtsi
+index c70bb27..2f9556e 100644
+--- a/arch/arm/boot/dts/ls1021a.dtsi
++++ b/arch/arm/boot/dts/ls1021a.dtsi
+@@ -405,5 +405,53 @@
+ 			interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>;
+ 			dr_mode = "host";
+ 		};
 +
- void pci_free_host_bridge(struct pci_host_bridge *host);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index fdb808c..2985281 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- static struct pci_bus *__pci_create_root_bus(
--		struct pci_host_bridge *bridge, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
- 	struct pci_bus *b;
-@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
-+	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
-@@ -1954,11 +1953,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata);
- 	if (!host)
- 		return NULL;
- 
--	return __pci_create_root_bus(host, ops, sysdata);
-+	return __pci_create_root_bus(host, ops);
- }
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-@@ -2025,8 +2024,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- }
- 
- static struct pci_bus *__pci_scan_root_bus(
--		struct pci_host_bridge *host, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *host, struct pci_ops *ops)
- {
- 	struct resource_entry *window;
- 	bool found = false;
-@@ -2039,7 +2037,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
- 		}
- 
--	b = __pci_create_root_bus(host, ops, sysdata);
-+	b = __pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2065,11 +2063,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata);
- 	if (!host)
- 		return NULL;
- 
--	return __pci_scan_root_bus(host, ops, sysdata);
-+	return __pci_scan_root_bus(host, ops);
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
++		pcie@3400000 {
++			compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
++			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
++			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
++			reg-names = "regs", "config";
++			interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
++				     <GIC_SPI 181 IRQ_TYPE_LEVEL_HIGH>; /* PME interrupt */
++			interrupt-names = "intr", "pme";
++			fsl,pcie-scfg = <&scfg 0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			num-lanes = <4>;
++			bus-range = <0x0 0xff>;
++			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
++				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
++		};
++
++		pcie@3500000 {
++			compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
++			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
++			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
++			reg-names = "regs", "config";
++			interrupts = <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 182 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "intr", "pme";
++			fsl,pcie-scfg = <&scfg 1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			num-lanes = <2>;
++			bus-range = <0x0 0xff>;
++			ranges = <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   /* downstream I/O */
++				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0000 0 0 1 &gic GIC_SPI 92  IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 2 &gic GIC_SPI 189 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 3 &gic GIC_SPI 191 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 4 &gic GIC_SPI 193 IRQ_TYPE_LEVEL_HIGH>;
++		};
+ 	};
+ };
 -- 
-1.7.1
+1.9.1
 
