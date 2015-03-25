@@ -1,112 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15377 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbbCXDhX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:23 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:21603 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbbCYGjv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 02:39:51 -0400
+From: Ray Jui <rjui@broadcom.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 17/30] x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Tue, 24 Mar 2015 11:34:11 +0800
-Message-ID: <1427168064-8657-18-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+	<bcm-kernel-feedback-list@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 0/2] iProc PCIe driver Kconfig changes
+Date: Tue, 24 Mar 2015 23:42:22 -0700
+Message-ID: <1427265744-27590-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Gleixner <tglx@linutronix.de>
-CC: x86@kernel.org
----
- arch/x86/pci/acpi.c |   37 +++++++++++++++++++++----------------
- 1 files changed, 21 insertions(+), 16 deletions(-)
+This patch series contains two patches to address iProc PCIe Kconfig related
+issues. The first patch adds more protection to PCIE_IPROC so it cannot be
+accidentally enabled for non-ARM based platforms. The second patch changes the
+config name of the iProc PCIe platform driver from PCIE_IPROC_PLTFM to
+PCIE_IPROC_PLATFORM 
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index d2655d5..877acaf 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -349,6 +349,19 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			entry->res->name = info->name;
- }
- 
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
-+
-+	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops pci_host_ops = {
-+	.pci_ops = &pci_root_ops,
-+	.prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -359,6 +372,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	LIST_HEAD(crs_res);
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *host = NULL;
- 	struct pci_sysdata *sd;
- 	int node;
- 
-@@ -425,14 +439,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
- 				    (u8)root->secondary.end, root->mcfg_addr))
--			bus = pci_create_root_bus(NULL, domain, busnum,
--					&pci_root_ops, sd, &resources);
--
--		if (bus) {
--			pci_scan_child_bus(bus);
--			pci_set_host_bridge_release(
--				to_pci_host_bridge(bus->bridge),
--				release_pci_root_info, info);
-+			host = pci_scan_host_bridge(NULL, domain, busnum, sd,
-+					&resources, &pci_host_ops);
-+
-+		if (host) {
-+			bus = host->bus;
-+			pci_set_host_bridge_release(host,
-+					release_pci_root_info, info);
- 		} else {
- 			resource_list_free(&resources);
- 			teardown_mcfg_map(info);
-@@ -455,14 +468,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	return bus;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	struct pci_sysdata *sd = bridge->bus->sysdata;
--
--	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
--	return 0;
--}
--
- int __init pci_acpi_init(void)
- {
- 	struct pci_dev *dev = NULL;
+Ray Jui (2):
+  pci: iproc: fix PCIE_IPROC in Kconfig
+  pci: iproc: change PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM
+
+ drivers/pci/host/Kconfig  |    4 +++-
+ drivers/pci/host/Makefile |    2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
 -- 
-1.7.1
+1.7.9.5
 
