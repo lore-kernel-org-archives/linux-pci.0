@@ -1,69 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15171 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753187AbbCXDhT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:19 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>
-Subject: [PATCH v8 08/30] PCI: Update pci_host_bridge bus resource
-Date: Tue, 24 Mar 2015 11:34:02 +0800
-Message-ID: <1427168064-8657-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50715 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbbCYFwl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:52:41 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:52:39 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 2397D2CE8050
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:38 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5qT3x40632566
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:38 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5q4lr023622
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:04 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V15 07/21] PCI: Refresh First VF Offset and VF Stride when updating NumVFs
+Date: Wed, 25 Mar 2015 13:44:43 +0800
+Message-Id: <1427262297-5694-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+The First VF Offset and VF Stride fields depend on the NumVFs setting, so
+refresh the cached fields in struct pci_sriov when updating NumVFs.  See
+the SR-IOV spec r1.1, sec 3.3.9 and 3.3.10.
 
-Sometimes, the bus resource start number is not equal to
-root bus number. For example, in pci_scan_bus(), we always
-add the default bus resource which start bus number is 0,
-but the root bus number callers given may != 0, so
-we need to update pci_host_bridge bus resource, because we
-would check whether host bridge bus resoruce is confict
-in later patch.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+[bhelgaas: changelog, remove kernel-doc comment marker]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host-bridge.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/pci/iov.c |   23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index ecc1a7c..1a9834b 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -26,8 +26,11 @@ static void pci_host_update_busn_res(
- 	struct resource_entry *window;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 27b98c3..a8752c2 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 		dev->sriov->stride * id) & 0xff;
+ }
  
- 	resource_list_for_each_entry(window, resources)
--		if (window->res->flags & IORESOURCE_BUS)
-+		if (window->res->flags & IORESOURCE_BUS) {
-+			if (bus > window->res->start)
-+				window->res->start = bus;
- 			return;
-+		}
++/*
++ * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
++ * change when NumVFs changes.
++ *
++ * Update iov->offset and iov->stride when NumVFs is written.
++ */
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
++}
++
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -253,7 +268,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
  
- 	pr_info(
- 	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -282,7 +297,7 @@ failed:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
+ 
+@@ -313,7 +328,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+ 	iov->num_VFs = 0;
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ }
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+@@ -452,7 +467,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+ 		pci_update_resource(dev, i);
+ 
+ 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
++	pci_iov_set_numvfs(dev, iov->num_VFs);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
+ 		msleep(100);
 -- 
-1.7.1
+1.7.9.5
 
