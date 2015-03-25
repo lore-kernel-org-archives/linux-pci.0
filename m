@@ -1,74 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54579 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757851AbbCCRw7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 12:52:59 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v8 6/7] PCI: Update DMA configuration from DT
-Date: Tue, 3 Mar 2015 12:52:13 -0500
-Message-ID: <1425405134-24707-7-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:21837 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbbCYHFp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 03:05:45 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 1/2] pci: iproc: fix PCIE_IPROC in Kconfig
+Date: Wed, 25 Mar 2015 00:08:12 -0700
+Message-ID: <1427267293-29585-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
+References: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If there is a DT node available for the root bridge's parent device, use
-the DMA configuration from that device node.  For example, Keystone PCI
-devices would require dma_pfn_offset to be set correctly in the device
-structure of the PCI device in order to have the correct DMA mask.  The DT
-node will have dma-ranges defined for this.  Also support using the DT
-property dma-coherent to allow coherent DMA operation by the PCI device.
+Make PCIE_IPROC depending on both OF and ARM and default to be disabled,
+so it cannot be accidentally enabled by other platforms
 
-Use the new helper function of_pci_dma_configure() to update the device DMA
-configuration.  This fixes DMA on systems where DMA addresses are a
-constant offset from CPU physical addresses.
+PCIE_IPROC is meant to be enabled by a front-end bus driver. Curenntly
+it's enabled by PCIE_IPROC_PLTFM driver
 
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
 ---
- drivers/pci/probe.c |    2 ++
+ drivers/pci/host/Kconfig |    2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..413c1dd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -6,6 +6,7 @@
- #include <linux/delay.h>
- #include <linux/init.h>
- #include <linux/pci.h>
-+#include <linux/of_pci.h>
- #include <linux/pci_hotplug.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-@@ -1520,6 +1521,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
-+	of_pci_dma_configure(dev);
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index feccd0d..963b507 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -108,6 +108,8 @@ config PCI_VERSATILE
  
- 	pci_set_dma_max_seg_size(dev, 65536);
- 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+ config PCIE_IPROC
+ 	tristate "Broadcom iProc PCIe controller"
++	depends on OF && ARM
++	default n
+ 	help
+ 	  This enables the iProc PCIe core controller support for Broadcom's
+ 	  iProc family of SoCs. An appropriate bus interface driver also needs
 -- 
 1.7.9.5
 
