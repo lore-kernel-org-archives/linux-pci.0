@@ -1,113 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:47903 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbbCCIfe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 03:35:34 -0500
-Message-ID: <54F57243.8040905@huawei.com>
-Date: Tue, 3 Mar 2015 16:35:15 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Fenghua Yu" <fenghua.yu@intel.com>
-Subject: Re: [PATCH v4 16/30] PCI/IA64: Fix the build warning about pci_domain_nr()
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-17-git-send-email-wangyijing@huawei.com> <20150303025622.GH11978@google.com>
-In-Reply-To: <20150303025622.GH11978@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:53357 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbbCYI05 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:26:57 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:26:55 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6F4F42BB0040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:53 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8QjXo38797556
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:53 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8QJ3H022697
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:20 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 05/20] PCI: Refresh First VF Offset and VF Stride when updating NumVFs
+Date: Wed, 25 Mar 2015 16:23:46 +0800
+Message-Id: <1427271841-28749-6-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/3 10:56, Bjorn Helgaas wrote:
-> On Thu, Feb 26, 2015 at 04:12:10PM +0800, Yijing Wang wrote:
->> Should pass pci_bus * instead of pci_dev * to pci_domain_nr().
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Tony Luck <tony.luck@intel.com>
->> CC: Fenghua Yu <fenghua.yu@intel.com>
->> CC: linux-ia64@vger.kernel.org
->> ---
->>  arch/ia64/sn/kernel/io_acpi_init.c |    6 +++---
->>  arch/ia64/sn/kernel/io_init.c      |    2 +-
->>  2 files changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
->> index 0640739..2fd7414 100644
->> --- a/arch/ia64/sn/kernel/io_acpi_init.c
->> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
->> @@ -364,12 +364,12 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
->>          status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
->>                                         &segment);
->>          if (ACPI_SUCCESS(status)) {
->> -		if (segment != pci_domain_nr(dev)) {
->> +		if (segment != pci_domain_nr(dev->bus)) {
-> 
-> This is completely unrelated to the series, isn't it?  It looks like this
-> is a bug fix that should be handled separately and marked for stable.
+The First VF Offset and VF Stride fields depend on the NumVFs setting, so
+refresh the cached fields in struct pci_sriov when updating NumVFs.  See
+the SR-IOV spec r1.1, sec 3.3.9 and 3.3.10.
 
-Yes, it's a separate patch, I would move it out of this series, and post it out separately.
+[bhelgaas: changelog, remove kernel-doc comment marker]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c |   23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-Thanks!
-Yijing.
-
-> 
->>  			acpi_get_name(rootbus_handle, ACPI_FULL_PATHNAME,
->>  				&name_buffer);
->>  			printk(KERN_ERR
->>  			       "%s: Segment number mismatch, 0x%llx vs 0x%x for: %s\n",
->> -			       __func__, segment, pci_domain_nr(dev),
->> +			       __func__, segment, pci_domain_nr(dev->bus),
->>  			       (char *)name_buffer.pointer);
->>  			kfree(name_buffer.pointer);
->>  			return 1;
->> @@ -407,7 +407,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
->>  	/* Build up the pcidev_info.pdi_slot_host_handle */
->>  	host_devfn = get_host_devfn(pcidev_match.handle, rootbus_handle);
->>  	(*pcidev_info)->pdi_slot_host_handle =
->> -			((unsigned long) pci_domain_nr(dev) << 40) |
->> +			((unsigned long) pci_domain_nr(dev->bus) << 40) |
->>  					/* bus == 0 */
->>  					host_devfn;
->>  	return 0;
->> diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
->> index bcdc5b8..a97fad4 100644
->> --- a/arch/ia64/sn/kernel/io_init.c
->> +++ b/arch/ia64/sn/kernel/io_init.c
->> @@ -164,7 +164,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
->>  		panic("%s: Unable to alloc memory for sn_irq_info", __func__);
->>  
->>  	/* Call to retrieve pci device information needed by kernel. */
->> -	status = sal_get_pcidev_info((u64) pci_domain_nr(dev),
->> +	status = sal_get_pcidev_info((u64) pci_domain_nr(dev->bus),
->>  		(u64) dev->bus->number,
->>  		dev->devfn,
->>  		(u64) __pa(pcidev_info),
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 27b98c3..a8752c2 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -31,6 +31,21 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 		dev->sriov->stride * id) & 0xff;
+ }
+ 
++/*
++ * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
++ * change when NumVFs changes.
++ *
++ * Update iov->offset and iov->stride when NumVFs is written.
++ */
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++{
++	struct pci_sriov *iov = dev->sriov;
++
++	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
++	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
++}
++
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+ 	struct pci_bus *child;
+@@ -253,7 +268,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 			return rc;
+ 	}
+ 
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, nr_virtfn);
++	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+@@ -282,7 +297,7 @@ failed:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
+ 
+@@ -313,7 +328,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+ 
+ 	iov->num_VFs = 0;
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, 0);
++	pci_iov_set_numvfs(dev, 0);
+ }
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+@@ -452,7 +467,7 @@ static void sriov_restore_state(struct pci_dev *dev)
+ 		pci_update_resource(dev, i);
+ 
+ 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
+-	pci_write_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, iov->num_VFs);
++	pci_iov_set_numvfs(dev, iov->num_VFs);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	if (iov->ctrl & PCI_SRIOV_CTRL_VFE)
+ 		msleep(100);
 -- 
-Thanks!
-Yijing
+1.7.9.5
 
