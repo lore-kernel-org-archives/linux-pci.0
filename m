@@ -1,62 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:46972 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbCDFVN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:21:13 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:21:11 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 959832BB0051
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:21:08 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245L04i32964674
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:21:08 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245KYHl025394
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:20:35 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 02/21] PCI: Print PF SR-IOV resource that contains all VF(n) BAR space
-Date: Wed,  4 Mar 2015 13:18:54 +0800
-Message-Id: <1425446353-30513-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from eu-smtp-delivery-143.mimecast.com ([207.82.80.143]:7506 "EHLO
+	eu-smtp-delivery-143.mimecast.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752140AbbCYJvG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Mar 2015 05:51:06 -0400
+Date: Wed, 25 Mar 2015 09:44:40 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"cpgs@samsung.com" <cpgs@samsung.com>
+Subject: Re: [PATCH] pci: pci-exynos: fixed the sentence error
+Message-ID: <20150325094440.GJ14917@e106497-lin.cambridge.arm.com>
+References: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
+MIME-Version: 1.0
+In-Reply-To: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we size VF BAR0, VF BAR1, etc., from the SR-IOV Capability of a PF, we
-learn the alignment requirement and amount of space consumed by a single
-VF.  But when VFs are enabled, *each* of the NumVFs consumes that amount of
-space, so the total size of the PF resource is "VF BAR size * NumVFs".
+On Wed, Mar 25, 2015 at 05:13:12AM +0000, Jaehoon Chung wrote:
+> There is the sentence error.
+> Changed the semicolon instead of comma.
+> 
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+> ---
+>  drivers/pci/host/pci-exynos.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index d202b37..c139237 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -396,7 +396,7 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+>  
+>  	/* enable INTX interrupt */
+>  	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+> -		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
+> +		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
+>  	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
+>  }
 
-Add a printk of the total space consumed by the VFs corresponding to what
-we already do for normal non-IOV BARs.
+Well spotted. The original change dates from July 2013, I'm guessing no one uses
+PCIe on Exynos?
 
-No functional change; new message only.
+Best regards,
+Liviu
 
-[bhelgaas: split out into its own patch]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c |    2 ++
- 1 file changed, 2 insertions(+)
+>  
+> -- 
+> 1.9.1
+> 
+> 
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index c4c33ea..05f9d97 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -372,6 +372,8 @@ found:
- 			goto failed;
- 		}
- 		res->end = res->start + resource_size(res) * total - 1;
-+		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
-+			 i, res, i, total);
- 		nres++;
- 	}
- 
 -- 
-1.7.9.5
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
