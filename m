@@ -1,41 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:34337 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbbC0Wvt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 18:51:49 -0400
+Received: from szxga01-in.huawei.com ([58.251.152.64]:22428 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbbCYBWk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Mar 2015 21:22:40 -0400
+Message-ID: <55120DBA.7080105@huawei.com>
+Date: Wed, 25 Mar 2015 09:22:02 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150327.145016.86183910134380870.davem@davemloft.net>
-References: <CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
-	<551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<20150327.145016.86183910134380870.davem@davemloft.net>
-Date: Fri, 27 Mar 2015 15:51:48 -0700
-Message-ID: <CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com>
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: David Miller <davem@davemloft.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH v8 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com> <1427168064-8657-25-git-send-email-wangyijing@huawei.com> <20150324123139.GA11625@ulmo.nvidia.com>
+In-Reply-To: <20150324123139.GA11625@ulmo.nvidia.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 27, 2015 at 2:50 PM, David Miller <davem@davemloft.net> wrote:
+On 2015/3/24 20:31, Thierry Reding wrote:
+> On Tue, Mar 24, 2015 at 11:34:18AM +0800, Yijing Wang wrote:
+>> Now pci_scan_root_bus() is almost similar to
+>> pci_create_root_bus() + pci_scan_child_bus().
+>> So we could use common pci_scan_root_bus() in
+>> pci_common_init_dev() to scan pci busses.
+>> tegra_pcie_scan_bus() is redundant, remove it.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Thierry Reding <thierry.reding@gmail.com>
+>> CC: linux-tegra@vger.kernel.org
+>> ---
+>>  drivers/pci/host/pci-tegra.c |   16 ----------------
+>>  1 files changed, 0 insertions(+), 16 deletions(-)
+> 
+> Jetson TK1 still boots over NFS root via the onboard PCIe network card
+> with this series applied, so:
+> 
+> Tested-by: Thierry Reding <treding@nvidia.com>
+> Acked-by: Thierry Reding <treding@nvidia.com>
 
-> All DMA occurs behind an IOMMU and these IOMMUs only
-> support 32-bit addressing, therefore dma_addr_t is
-> 32-bit on sparc64.
->
-> If you want to represent PCI address in some way, you
-> absolutely cannot use dma_addr_t as your data type.
+Thanks!
 
-Oh no, we missed that for a while.
+> 
 
-Hi Bjorn,
 
-I would suggest that we introduce pci_bus_addr_t or pci_addr_t.
+-- 
+Thanks!
+Yijing
 
-    Yinghai
