@@ -1,137 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16224 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753551AbbCXDho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:44 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v8 30/30] PCI: Clean up CONFIG_PCI_DOMAINS_GENERIC
-Date: Tue, 24 Mar 2015 11:34:24 +0800
-Message-ID: <1427168064-8657-31-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:50108 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbbCYIac (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:30:32 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:30:30 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 00B63357804C
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:28 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8UJlv53346422
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:30:27 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8TrU0026738
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:29:54 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 15/20] powerpc/powernv: Implement pcibios_iov_resource_alignment() on powernv
+Date: Wed, 25 Mar 2015 16:23:56 +0800
+Message-Id: <1427271841-28749-16-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could clean up CONFIG_PCI_DOMAINS_GENERIC.
+Implement pcibios_iov_resource_alignment() on powernv platform.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On PowerNV platform, there are 3 cases for the IOV BAR:
+1. initial state, the IOV BAR size is multiple times of VF BAR size
+2. after expanded, the IOV BAR size is expanded to meet the M64 segment size
+3. sizing stage, the IOV BAR is truncated to 0
+
+pnv_pci_iov_resource_alignment() handle these three cases respectively.
+
+[bhelgaas: adjust to drop "align" parameter, return pci_iov_resource_size()
+if no ppc_md machdep_call version]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/arm/Kconfig          |    3 ---
- arch/arm64/Kconfig        |    3 ---
- drivers/pci/host-bridge.c |   11 ++++++-----
- drivers/pci/pci.c         |    2 --
- 4 files changed, 6 insertions(+), 13 deletions(-)
+ arch/powerpc/include/asm/machdep.h        |    1 +
+ arch/powerpc/kernel/pci-common.c          |   10 ++++++++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   20 ++++++++++++++++++++
+ 3 files changed, 31 insertions(+)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 9f1f09a..b5dab6c 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1283,9 +1283,6 @@ config PCI_DOMAINS
- 	bool
- 	depends on PCI
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index b303833..1b26804 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -252,6 +252,7 @@ struct machdep_calls {
  
--config PCI_DOMAINS_GENERIC
--	def_bool PCI_DOMAINS
--
- config PCI_NANOENGINE
- 	bool "BSE nanoEngine PCI support"
- 	depends on SA1100_NANOENGINE
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 1b8e973..4b1cc27 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -242,9 +242,6 @@ config PCI
- config PCI_DOMAINS
- 	def_bool PCI
+ #ifdef CONFIG_PCI_IOV
+ 	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
++	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
+ #endif /* CONFIG_PCI_IOV */
  
--config PCI_DOMAINS_GENERIC
--	def_bool PCI
--
- config PCI_SYSCALL
- 	def_bool PCI
- 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index c78f4d0..18a0f6c 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -4,6 +4,8 @@
- 
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/of_pci.h>
-+#include <linux/of.h>
- #include <linux/module.h>
- 
- #include "pci.h"
-@@ -82,12 +84,13 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	resource_list_for_each_entry_safe(window, n, resources)
- 		list_move_tail(&window->node, &host->windows);
- 	/*
--	 * If support CONFIG_PCI_DOMAINS_GENERIC, use
-+	 * If domain == -1, we need to use
- 	 * pci_host_assign_domain_nr() to update domain
- 	 * number.
- 	 */
- 	host->domain = domain;
--	pci_host_assign_domain_nr(host);
-+	if (host->domain == -1)
-+		pci_host_assign_domain_nr(host);
- 	mutex_lock(&pci_host_mutex);
- 	list_for_each_entry(tmp, &pci_host_bridge_list, list) {
- 		if (tmp->domain != host->domain
-@@ -169,7 +172,6 @@ int pci_get_new_domain_nr(void)
- 	return atomic_inc_return(&__domain_nr);
+ 	/* Called to shutdown machine specific hardware not already controlled
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 375bf70..9a306ff 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -130,6 +130,16 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ 	pci_reset_secondary_bus(dev);
  }
  
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
- static int pci_assign_domain_nr(struct device *dev)
++#ifdef CONFIG_PCI_IOV
++resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
++{
++	if (ppc_md.pcibios_iov_resource_alignment)
++		return ppc_md.pcibios_iov_resource_alignment(pdev, resno);
++
++	return pci_iov_resource_size(pdev, resno);
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static resource_size_t pcibios_io_size(const struct pci_controller *hose)
  {
- 	static int use_dt_domains = -1;
-@@ -215,11 +217,10 @@ static int pci_assign_domain_nr(struct device *dev)
- 	return domain;
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 1da45aa..217eaad 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1965,6 +1965,25 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+ 	return phb->ioda.io_segsize;
  }
- #endif
--#endif
  
- void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- {
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+#ifdef CONFIG_PCI_DOMAINS
- 	host->domain = pci_assign_domain_nr(host->dev.parent);
- #endif
- }
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 044801c..5b18429 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -10,8 +10,6 @@
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/init.h>
--#include <linux/of.h>
--#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/pm.h>
- #include <linux/slab.h>
++#ifdef CONFIG_PCI_IOV
++static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
++						      int resno)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	resource_size_t align, iov_align;
++
++	iov_align = resource_size(&pdev->resource[resno]);
++	if (iov_align)
++		return iov_align;
++
++	align = pci_iov_resource_size(pdev, resno);
++	if (pdn->vfs_expanded)
++		return pdn->vfs_expanded * align;
++
++	return align;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /* Prevent enabling devices for which we couldn't properly
+  * assign a PE
+  */
+@@ -2164,6 +2183,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
+ #ifdef CONFIG_PCI_IOV
+ 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
++	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
+ #endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
 -- 
-1.7.1
+1.7.9.5
 
