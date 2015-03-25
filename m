@@ -1,113 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12243 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755647AbbCMAql (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 20:46:41 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rob Herring" <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-CC: Florian Fainelli <f.fainelli@gmail.com>,
-	Dmitry Torokhov <dtor@google.com>,
-	Anatol Pomazau <anatol@google.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<devicetree@vger.kernel.org>, "Ray Jui" <rjui@broadcom.com>
-Subject: [PATCH v7 1/4] PCI: Export symbols of PCI functions
-Date: Thu, 12 Mar 2015 17:48:49 -0700
-Message-ID: <1426207732-31625-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
-References: <1426207732-31625-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55125679.1080201@intel.com>
+Date: Wed, 25 Mar 2015 14:32:25 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH v3 2/3] PCI: rename find_pci_host_bridge and export it
+References: <54FD4FB9.2060802@intel.com> <55125611.8040507@intel.com>
+In-Reply-To: <55125611.8040507@intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export symbols of the following PCI functions so they can be referenced
-by a PCI driver compiled as a kernel loadable module:
+The find_pci_host_bridge function can be useful to other PCI code so
+export it. In the meantime, change its name to more like other interfaces
+as pci_find_host_bridge.
 
-pci_common_swizzle
-pci_create_root_bus
-pci_stop_root_bus
-pci_remove_root_bus
-pci_assign_unassigned_bus_resources
-pci_fixup_irqs
-
-Signed-off-by: Ray Jui <rjui@broadcom.com>
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- drivers/pci/pci.c       |    1 +
- drivers/pci/probe.c     |    1 +
- drivers/pci/remove.c    |    2 ++
- drivers/pci/setup-bus.c |    1 +
- drivers/pci/setup-irq.c |    1 +
- 5 files changed, 6 insertions(+)
+ drivers/pci/host-bridge.c | 6 +++---
+ drivers/pci/pci.h         | 2 ++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..14e7f3c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
- 	*pinp = pin;
- 	return PCI_SLOT(dev->devfn);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 3e5bbf9e8889..5f4a2e04c8d7 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -16,7 +16,7 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ 	return bus;
  }
-+EXPORT_SYMBOL_GPL(pci_common_swizzle);
  
- /**
-  *	pci_release_region - Release a PCI bar
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..f13a78a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1993,6 +1993,7 @@ err_out:
- 	kfree(b);
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(pci_create_root_bus);
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
++struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
  {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8bd76c9..8a280e9 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
- 	/* stop the host bridge */
- 	device_release_driver(&host_bridge->dev);
- }
-+EXPORT_SYMBOL_GPL(pci_stop_root_bus);
+ 	struct pci_bus *root_bus = find_pci_root_bus(bus);
  
- void pci_remove_root_bus(struct pci_bus *bus)
+@@ -48,7 +48,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res)
  {
-@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	/* remove the host bridge */
- 	device_unregister(&host_bridge->dev);
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+ 	struct resource_entry *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -73,7 +73,7 @@ static bool region_contains(struct pci_bus_region *region1,
+ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
++	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+ 	struct resource_entry *window;
+ 	resource_size_t offset = 0;
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82239cd..d72f849174a4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -321,4 +321,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
  }
-+EXPORT_SYMBOL_GPL(pci_remove_root_bus);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e3e17f3..8169597 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
- }
-+EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 4e2d595..95c225b 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	for_each_pci_dev(dev)
- 		pdev_fixup_irq(dev, swizzle, map_irq);
- }
-+EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+ #endif
+ 
++struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
++
+ #endif /* DRIVERS_PCI_H */
 -- 
-1.7.9.5
+2.1.0
 
