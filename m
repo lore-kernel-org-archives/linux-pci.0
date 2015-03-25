@@ -1,134 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54762 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753249AbbCWTWo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Mar 2015 15:22:44 -0400
-Date: Mon, 23 Mar 2015 20:22:39 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH v2 1/4] pci: disable msi/msix at probe time
-Message-ID: <20150323201237-mutt-send-email-mst@redhat.com>
-References: <1426786724-22241-1-git-send-email-mst@redhat.com>
- <1426786724-22241-2-git-send-email-mst@redhat.com>
- <20150323185006.GT26935@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150323185006.GT26935@google.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:53704 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbbCYI0N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:26:13 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:26:11 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 804A1357804C
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:09 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8Q1ON46202916
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:09 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8PZ4W021489
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:25:36 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 03/20] PCI: Keep individual VF BAR size in struct pci_sriov
+Date: Wed, 25 Mar 2015 16:23:44 +0800
+Message-Id: <1427271841-28749-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 23, 2015 at 01:50:06PM -0500, Bjorn Helgaas wrote:
-> Hi Michael,
-> 
-> On Thu, Mar 19, 2015 at 07:57:52PM +0100, Michael S. Tsirkin wrote:
-> > commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-> >     pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
-> > 
-> > attempted to address the problem of kexec getting
-> > started after linux enabled msi/msix for a device,
-> > and drivers being confused by msi being enabled,
-> > by disabling msi at shutdown.
-> > 
-> > But arguably, it's better to disable msi/msix when kexec
-> > starts - for example, kexec might run after a crash (kdump)
-> > and shutdown callbacks are not always invoked in that case.
-> > 
-> > Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> > Cc: Ulrich Obergfell <uobergfe@redhat.com>
-> > Cc: Fam Zheng <famz@redhat.com>
-> > Cc: Rusty Russell <rusty@rustcorp.com.au>
-> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > ---
-> >  drivers/pci/pci-driver.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > index 3cb2210..2ebd2a8 100644
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
-> >  	 */
-> >  	pm_runtime_get_sync(dev);
-> >  	pci_dev->driver = pci_drv;
-> > +	/*
-> > +	 * When using kexec, msi might be left enabled by the previous kernel,
-> > +	 * this breaks things as some drivers assume msi/msi-x is off at boot.
-> > +	 * Fix this by forcing msi off at startup.
-> > +	 */
-> > +	pci_msi_off(pci_dev);
-> 
-> I think this makes sense, but I have a few questions.  This is a device
-> initialization thing, so it seems like a better fit for the enumeration
-> path, e.g,. pci_msi_init_pci_dev(), than for the driver binding path.
-> 
-> But when CONFIG_PCI_MSI=y, pci_msi_init_pci_dev() already does basically
-> the same thing, so we shouldn't need this change unless CONFIG_PCI_MSI is
-> not set in the kdump kernel.
-> 
-> If this is a problem just with kexeced kernels that don't have
-> CONFIG_PCI_MSI=y, I think I would prefer to fix this by moving
-> pci_msi_init_pci_dev() outside the #ifdef so it works regardless of
-> CONFIG_PCI_MSI.  That would also be nice because we could clean up the
-> duplication between pci_msi_off() and pci_msi_init_pci_dev().  It would
-> also make the starting machine state less dependent on the new kernel,
-> which seems like a good thing.
+Currently we don't store the individual VF BAR size.  We calculate it when
+needed by dividing the PF's IOV resource size (which contains space for
+*all* the VFs) by total_VFs or by reading the BAR in the SR-IOV capability
+again.
 
-What you say above makes sense.
-OK so the simplest fix is something like below then.
-Fixes the duplication and kexec for CONFIG_PCI_MSI=n.
-Acceptable? Pls let me know, if yes I'll test and
-resubmit properly.
+Keep the individual VF BAR size in struct pci_sriov.barsz[], add
+pci_iov_resource_size() to retrieve it, and use that instead of doing the
+division or reading the SR-IOV capability BAR.
 
-> Are there any bugzillas we could reference here?
+[bhelgaas: rename to "barsz[]", simplify barsz[] index computation, remove
+SR-IOV capability BAR sizing]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c   |   39 ++++++++++++++++++++-------------------
+ drivers/pci/pci.h   |    1 +
+ include/linux/pci.h |    3 +++
+ 3 files changed, 24 insertions(+), 19 deletions(-)
 
-I'll check this point. Maybe not - the real bugfix is
-patch 2/4, this was just found by reading code,
-but it's a dependency to make sure 2/4 does not
-introduce regressions.
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0e037af..2ab59d4 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1062,18 +1062,8 @@ EXPORT_SYMBOL(pci_msi_enabled);
- void pci_msi_init_pci_dev(struct pci_dev *dev)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 05f9d97..5bca0e1 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -57,6 +57,14 @@ static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ 		pci_remove_bus(virtbus);
+ }
+ 
++resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
++{
++	if (!dev->is_physfn)
++		return 0;
++
++	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
++}
++
+ static int virtfn_add(struct pci_dev *dev, int id, int reset)
  {
- 	INIT_LIST_HEAD(&dev->msi_list);
+ 	int i;
+@@ -92,8 +100,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+ 		virtfn->resource[i].flags = res->flags;
+-		size = resource_size(res);
+-		do_div(size, iov->total_VFs);
++		size = pci_iov_resource_size(dev, i + PCI_IOV_RESOURCES);
+ 		virtfn->resource[i].start = res->start + size * id;
+ 		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+ 		rc = request_resource(res, &virtfn->resource[i]);
+@@ -311,7 +318,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 
+ static int sriov_init(struct pci_dev *dev, int pos)
+ {
+-	int i;
++	int i, bar64;
+ 	int rc;
+ 	int nres;
+ 	u32 pgsz;
+@@ -360,29 +367,29 @@ found:
+ 	pgsz &= ~(pgsz - 1);
+ 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
++	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
++	if (!iov)
++		return -ENOMEM;
++
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = dev->resource + PCI_IOV_RESOURCES + i;
+-		i += __pci_read_base(dev, pci_bar_unknown, res,
+-				     pos + PCI_SRIOV_BAR + i * 4);
++		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
++					pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+ 			continue;
+ 		if (resource_size(res) & (PAGE_SIZE - 1)) {
+ 			rc = -EIO;
+ 			goto failed;
+ 		}
++		iov->barsz[i] = resource_size(res);
+ 		res->end = res->start + resource_size(res) * total - 1;
+ 		dev_info(&dev->dev, "VF(n) BAR%d space: %pR (contains BAR%d for %d VFs)\n",
+ 			 i, res, i, total);
++		i += bar64;
+ 		nres++;
+ 	}
+ 
+-	iov = kzalloc(sizeof(*iov), GFP_KERNEL);
+-	if (!iov) {
+-		rc = -ENOMEM;
+-		goto failed;
+-	}
 -
--	/* Disable the msi hardware to avoid screaming interrupts
--	 * during boot.  This is the power on reset default so
--	 * usually this should be a noop.
--	 */
- 	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (dev->msi_cap)
--		msi_set_enable(dev, 0);
+ 	iov->pos = pos;
+ 	iov->nres = nres;
+ 	iov->ctrl = ctrl;
+@@ -414,6 +421,7 @@ failed:
+ 		res->flags = 0;
+ 	}
+ 
++	kfree(iov);
+ 	return rc;
+ }
+ 
+@@ -510,14 +518,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
+  */
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
+ {
+-	struct resource tmp;
+-	int reg = pci_iov_resource_bar(dev, resno);
 -
- 	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--	if (dev->msix_cap)
--		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+-	if (!reg)
+-		return 0;
+-
+-	 __pci_read_base(dev, pci_bar_unknown, &tmp, reg);
+-	return resource_alignment(&tmp);
++	return pci_iov_resource_size(dev, resno);
  }
  
  /**
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..c455501 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1485,6 +1485,12 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82..5732964 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -247,6 +247,7 @@ struct pci_sriov {
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for VF bus */
++	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+ };
  
- static void pci_init_capabilities(struct pci_dev *dev)
- {
-+	/* Disable the msi hardware to avoid screaming interrupts
-+	 * during boot.  This is the power on reset default so
-+	 * usually this should be a noop.
-+	 */
-+	pci_msi_off(dev);
-+
- 	/* MSI/MSI-X list */
- 	pci_msi_init_pci_dev(dev);
+ #ifdef CONFIG_PCI_ATS
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 211e9da..1559658 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1675,6 +1675,7 @@ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+@@ -1686,6 +1687,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
++{ return 0; }
+ #endif
  
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+-- 
+1.7.9.5
 
