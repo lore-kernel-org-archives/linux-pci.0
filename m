@@ -1,63 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59907 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756570AbbCLX4X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Mar 2015 19:56:23 -0400
-From: Bandan Das <bsd@redhat.com>
-To: Fam Zheng <famz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH] PCI: Disable MSI/MSI-X only if device is shutdown
-References: <1426137682-12287-1-git-send-email-famz@redhat.com>
-Date: Thu, 12 Mar 2015 19:56:21 -0400
-In-Reply-To: <1426137682-12287-1-git-send-email-famz@redhat.com> (Fam Zheng's
-	message of "Thu, 12 Mar 2015 13:21:22 +0800")
-Message-ID: <jpgk2ylzs62.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:47796 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752298AbbCYF4M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:56:12 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:56:10 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 329403578048
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:56:07 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5twVs53018668
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:56:07 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5tWBC028766
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:55:33 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V15 15/21] powerpc/powernv: Reserve additional space for IOV BAR according to the number of total_pe
+Date: Wed, 25 Mar 2015 13:44:51 +0800
+Message-Id: <1427262297-5694-16-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fam,
+On PHB3, PF IOV BAR will be covered by M64 BAR to have better PE isolation.
+M64 BAR is a type of hardware resource in PHB3, which could map a range of
+MMIO to PE numbers on powernv platform. And this range is divided equally
+by the number of total_pe with each divided range mapping to a PE number.
+Also, the M64 BAR must map a MMIO range with power-of-two size.
 
-Fam Zheng <famz@redhat.com> writes:
+The total_pe number is usually different from total_VFs, which can lead to
+a conflict between MMIO space and the PE number.
 
-> If the device doesn't support shutdown, disabling interrupts may cause
-> trouble. For example, virtio-scsi-pci doesn't implement shutdown, and
-> after we disable MSI-X, futher notifications from device will be
-> delivered to IRQ, which is unexpected. This IRQ will not be cleared, and
-> may prevent us from making progress, by keep triggering interrupts.
->
-> Signed-off-by: Fam Zheng <famz@redhat.com>
-> ---
->  drivers/pci/pci-driver.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3cb2210..fb29c96 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -448,10 +448,11 @@ static void pci_device_shutdown(struct device *dev)
->  
->  	pm_runtime_resume(dev);
->  
-> -	if (drv && drv->shutdown)
-> +	if (drv && drv->shutdown) {
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
-> +		pci_msi_shutdown(pci_dev);
-> +		pci_msix_shutdown(pci_dev);
-> +	}
+For example, if total_VFs is 128 and total_pe is 256, the second half of
+M64 BAR will be part of other PCI device, which may already belong to other
+PEs.
 
-If the driver doesn't provide a shutdown method and doesn't itself
-disable MSI/MSI-X, then pci_msi(x)_shutdown won't be called anymore,
-no ?
+This patch prevents the conflict by reserving additional space for the PF
+IOV BAR, which is total_pe number of VF's BAR size.
 
-This is probably ok (but unclean) for a system shutdown, but could
-cause problems for something like kexec ?
+[bhelgaas: make dev_printk() output more consistent, index resource[]
+conventionally]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h        |    4 +++
+ arch/powerpc/include/asm/pci-bridge.h     |    3 ++
+ arch/powerpc/kernel/pci-common.c          |    6 ++++
+ arch/powerpc/platforms/powernv/pci-ioda.c |   43 +++++++++++++++++++++++++++++
+ 4 files changed, 56 insertions(+)
 
-Bandan
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index c8175a3..1d72fda 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -250,6 +250,10 @@ struct machdep_calls {
+ 	/* Reset the secondary bus of bridge */
+ 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
+ 
++#ifdef CONFIG_PCI_IOV
++	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
++#endif /* CONFIG_PCI_IOV */
++
+ 	/* Called to shutdown machine specific hardware not already controlled
+ 	 * by other drivers.
+ 	 */
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 513f8f2..d0d1718 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -175,6 +175,9 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++#ifdef CONFIG_PCI_IOV
++	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
++#endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 8203101..375bf70 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -990,6 +990,12 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	 */
+ 	if (dev->bus->is_added)
+ 		pcibios_setup_device(dev);
++
++#ifdef CONFIG_PCI_IOV
++	if (ppc_md.pcibios_fixup_sriov)
++		ppc_md.pcibios_fixup_sriov(dev);
++#endif /* CONFIG_PCI_IOV */
++
+ 	return 0;
+ }
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 1b37066..cadd3fb 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1749,6 +1749,46 @@ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb)
+ static void pnv_pci_init_ioda_msis(struct pnv_phb *phb) { }
+ #endif /* CONFIG_PCI_MSI */
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct resource *res;
++	int i;
++	resource_size_t size;
++	struct pci_dn *pdn;
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++
++	pdn = pci_get_pdn(pdev);
++	pdn->vfs_expanded = 0;
++
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++		res = &pdev->resource[i + PCI_IOV_RESOURCES];
++		if (!res->flags || res->parent)
++			continue;
++		if (!pnv_pci_is_mem_pref_64(res->flags)) {
++			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
++				 i, res);
++			continue;
++		}
++
++		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
++		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
++		res->end = res->start + size * phb->ioda.total_pe - 1;
++		dev_dbg(&pdev->dev, "                       %pR\n", res);
++		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
++				i, res, phb->ioda.total_pe);
++	}
++	pdn->vfs_expanded = phb->ioda.total_pe;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ /*
+  * This function is supposed to be called on basis of PE from top
+  * to bottom style. So the the I/O or MMIO segment assigned to
+@@ -2125,6 +2165,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
+ 	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+ 	ppc_md.pcibios_reset_secondary_bus = pnv_pci_reset_secondary_bus;
++#ifdef CONFIG_PCI_IOV
++	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
++#endif /* CONFIG_PCI_IOV */
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
+-- 
+1.7.9.5
 
->  #ifdef CONFIG_KEXEC
->  	/*
