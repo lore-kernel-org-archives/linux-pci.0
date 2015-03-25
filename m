@@ -1,168 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:33576 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752437AbbC3M2N convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 08:28:13 -0400
-Received: by oifl3 with SMTP id l3so126894037oif.0
-        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2015 05:28:12 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5512564D.7050204@intel.com>
+Date: Wed, 25 Mar 2015 14:31:41 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150317114213.GH27081@e106497-lin.cambridge.arm.com>
-References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1426515635-9466-3-git-send-email-gabriel.fernandez@linaro.org>
-	<20150317114213.GH27081@e106497-lin.cambridge.arm.com>
-Date: Mon, 30 Mar 2015 14:28:12 +0200
-Message-ID: <CAG374jCm6CREcqKsXYnXHTNCOuaokNA11Sv6_JSW13Vdeo-tHw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/5] PCI: st: Add Device Tree bindings for sti pcie
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH v3 1/3] PCI: rename _DSM UUID array
+References: <54FD4FB9.2060802@intel.com> <55125611.8040507@intel.com>
+In-Reply-To: <55125611.8040507@intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Liviu,
+According to the PCI firmware spec, there is only one assigned UUID used
+for PCI system so rename the device_label_dsm_uuid to something more
+common as: pci_acpi_dsm_uuid and put it in drivers/pci/pci-acpi.c. Make
+that UUID array extern in the pci-acpi.h so that other code can also
+make use of it.
 
-You're right, i removed configuration space from the ranges.
+This patch shouldn't bring any functional change.
 
-Thanks for reviewing.
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-acpi.c   |  9 +++++++++
+ drivers/pci/pci-label.c  | 11 ++---------
+ include/linux/pci-acpi.h |  3 +++
+ 3 files changed, 14 insertions(+), 9 deletions(-)
 
-Gabriel
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 489063987325..e0afc94aca01 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -18,6 +18,15 @@
+ #include <linux/pm_qos.h>
+ #include "pci.h"
+ 
++/*
++ * The UUID is defined in the PCI firmware specification available here:
++ * https://www.pcisig.com/members/downloads/pcifw_r3_1_13Dec10.pdf
++ */
++const u8 pci_acpi_dsm_uuid[] = {
++	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
++	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
++};
++
+ phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
+ {
+ 	acpi_status status = AE_NOT_EXIST;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 2ab1b47c7651..024b5c179348 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -31,8 +31,6 @@
+ #include <linux/pci-acpi.h>
+ #include "pci.h"
+ 
+-#define	DEVICE_LABEL_DSM	0x07
+-
+ #ifdef CONFIG_DMI
+ enum smbios_attr_enum {
+ 	SMBIOS_ATTR_NONE = 0,
+@@ -148,11 +146,6 @@ static inline void pci_remove_smbiosname_file(struct pci_dev *pdev)
+ #endif
+ 
+ #ifdef CONFIG_ACPI
+-static const char device_label_dsm_uuid[] = {
+-	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
+-	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
+-};
+-
+ enum acpi_attr_enum {
+ 	ACPI_ATTR_LABEL_SHOW,
+ 	ACPI_ATTR_INDEX_SHOW,
+@@ -179,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 	if (!handle)
+ 		return -1;
+ 
+-	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
++	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+ 				DEVICE_LABEL_DSM, NULL);
+ 	if (!obj)
+ 		return -1;
+@@ -219,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
+ 	if (!handle)
+ 		return false;
+ 
+-	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
++	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
+ 				1 << DEVICE_LABEL_DSM);
+ }
+ 
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 24c7728ca681..3801c704a945 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -77,6 +77,9 @@ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+ #endif
+ 
++extern const u8 pci_acpi_dsm_uuid[];
++#define DEVICE_LABEL_DSM	0x07
++
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+ static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+-- 
+2.1.0
 
-On 17 March 2015 at 12:42, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Hi Gabriel,
->
-> On Mon, Mar 16, 2015 at 02:20:32PM +0000, Gabriel FERNANDEZ wrote:
->> sti pcie is built around a Synopsis Designware PCIe IP.
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->> ---
->>  Documentation/devicetree/bindings/pci/st-pcie.txt | 54 +++++++++++++++++++++++
->>  1 file changed, 54 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
->> new file mode 100644
->> index 0000000..94aae2d
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
->> @@ -0,0 +1,54 @@
->> +STMicroelectronics STi PCIe controller
->> +
->> +This PCIe host controller is based on the Synopsis Designware PCIe IP
->> +and thus inherits all the common properties defined in designware-pcie.txt.
->> +
->> +Required properties:
->> + - compatible: "st,stih407-pcie"
->> + - reg: base address and length of the pcie controller, mem-window address
->> +   and length available to the controller.
->> + - interrupts: A list of interrupt outputs of the controller. Must contain an
->> +   entry for each entry in the interrupt-names property.
->> + - interrupt-names: Should be "msi". STi interrupt that is asserted when an
->> +   MSI is received.
->> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
->> +   offset for IP configuration.
->> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
->> +   Associated names must be "powerdown" and "softreset".
->> + - phys, phy-names: the phandle for the PHY device.
->> +   Associated name must be "pcie"
->> +
->> +Optional properties:
->> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
->> +
->> +Example:
->> +
->> +pcie0: pcie@9b00000 {
->> +     compatible = "st,stih407-pcie", "snps,dw-pcie";
->> +     device_type = "pci";
->> +     reg = <0x09b00000 0x4000>,      /* dbi cntrl registers */
->> +           <0x2fff0000 0x00010000>,  /* configuration space */
->> +           <0x40000000 0x80000000>;  /* lmi mem window */
->> +     reg-names = "dbi", "config", "mem-window";
->> +     st,syscfg = <&syscfg_core 0xd8 0xe0>;
->> +     #address-cells = <3>;
->> +     #size-cells = <2>;
->> +     ranges = <0x00000800 0 0x2fff0000 0x2fff0000 0 0x00010000   /* configuration space */
->
-> Unless you are trying to support some legacy code please remove the configuration space from the ranges.
-> There is no resource type associated with config space and the generic parser will give you back an
-> invalid resource type. The other reason for that is that if you really claim to be ECAM compliant by
-> adding the config space here you need way more than 64K of space.
->
-> Best regards,
-> Liviu
->
->> +               0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
->> +     num-lanes = <1>;
->> +     interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
->> +     interrupt-names = "msi";
->> +     #interrupt-cells = <1>;
->> +     interrupt-map-mask = <0 0 0 7>;
->> +     interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
->> +                     <0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
->> +                     <0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
->> +                     <0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
->> +
->> +     resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
->> +              <&softreset STIH407_PCIE0_SOFTRESET>;
->> +     reset-names = "powerdown",
->> +                   "softreset";
->> +     phys = <&phy_port0 PHY_TYPE_PCIE>;
->> +     phy-names = "pcie";
->> +};
->> --
->> 1.9.1
->>
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->>
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
