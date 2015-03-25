@@ -1,49 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53978 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751663AbbCSS6i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Mar 2015 14:58:38 -0400
-Date: Thu, 19 Mar 2015 19:58:23 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	virtualization@lists.linux-foundation.org
-Subject: [PATCH v2 4/4] virtio_pci: drop msi_off on probe
-Message-ID: <1426786724-22241-5-git-send-email-mst@redhat.com>
-References: <1426786724-22241-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426786724-22241-1-git-send-email-mst@redhat.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:33488 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbbCYIby (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:31:54 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:31:53 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id E9FCC2CE8050
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:49 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8VfsH42533074
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:49 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8VGoQ029511
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:31:16 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V16 19/20] powerpc/pci: Remove unused struct pci_dn.pcidev field
+Date: Wed, 25 Mar 2015 16:24:00 +0800
+Message-Id: <1427271841-28749-20-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci core now disables msi on probe automatically,
-drop this from device-specific code.
+In struct pci_dn, the pcidev field is assigned but not used, so remove it.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/virtio/virtio_pci_common.c | 3 ---
- 1 file changed, 3 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h     |    1 -
+ arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-index e894eb2..806bb2c 100644
---- a/drivers/virtio/virtio_pci_common.c
-+++ b/drivers/virtio/virtio_pci_common.c
-@@ -501,9 +501,6 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
- 	INIT_LIST_HEAD(&vp_dev->virtqueues);
- 	spin_lock_init(&vp_dev->lock);
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 560c739..a39270e 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -171,7 +171,6 @@ struct pci_dn {
  
--	/* Disable MSI/MSIX to bring device to a known good state. */
--	pci_msi_off(pci_dev);
--
- 	/* enable the device */
- 	rc = pci_enable_device(pci_dev);
- 	if (rc)
+ 	int	pci_ext_config_space;	/* for pci devices */
+ 
+-	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
+ #ifdef CONFIG_EEH
+ 	struct eeh_dev *edev;		/* eeh device */
+ #endif
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 33088f6..b1387ea 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1028,7 +1028,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ 				pci_name(dev));
+ 			continue;
+ 		}
+-		pdn->pcidev = dev;
+ 		pdn->pe_number = pe->pe_number;
+ 		pe->dma_weight += pnv_ioda_dma_weight(dev);
+ 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
 -- 
-MST
+1.7.9.5
 
