@@ -1,29 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34959 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750815AbbCYGcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Mar 2015 02:32:16 -0400
-Message-ID: <55125611.8040507@intel.com>
-Date: Wed, 25 Mar 2015 14:30:41 +0800
-From: Aaron Lu <aaron.lu@intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH v3 0/3] PCI / ACPI: PCI delay optimization from ACPI
-References: <54FD4FB9.2060802@intel.com>
-In-Reply-To: <54FD4FB9.2060802@intel.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:43273 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbbCYFwW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:52:22 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 15:52:20 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D68AC2CE8040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:17 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5q9V838535376
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:52:17 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5pho3023220
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:51:44 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH V15 06/21] PCI: Index IOV resources in the conventional style
+Date: Wed, 25 Mar 2015 13:44:42 +0800
+Message-Id: <1427262297-5694-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here is v3, changes from v2 are:
-- Patch 1/3: add Rafael's acked-by tag;
-- Patch 2/3: newly introduced, to rename find_pci_host_bridge and export it
-- Patch 3/3: address Bjorn's comments for v2
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks a lot for your suggestions and review!
+Most of PCI uses "res = &dev->resource[i]", not "res = dev->resource + i".
+Use that style in iov.c also.
 
-Regards,
-Aaron
+No functional change.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5bca0e1..27b98c3 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -95,7 +95,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->multifunction = 0;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		if (!res->parent)
+ 			continue;
+ 		virtfn->resource[i].name = pci_name(virtfn);
+@@ -212,7 +212,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		bars |= (1 << (i + PCI_IOV_RESOURCES));
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		if (res->parent)
+ 			nres++;
+ 	}
+@@ -373,7 +373,7 @@ found:
+ 
+ 	nres = 0;
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
+ 					pos + PCI_SRIOV_BAR + i * 4);
+ 		if (!res->flags)
+@@ -417,7 +417,7 @@ found:
+ 
+ failed:
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++		res = &dev->resource[i + PCI_IOV_RESOURCES];
+ 		res->flags = 0;
+ 	}
+ 
+-- 
+1.7.9.5
+
