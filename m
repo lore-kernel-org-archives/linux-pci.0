@@ -1,63 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53818 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:65317 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750932AbbCSS6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Mar 2015 14:58:07 -0400
-Date: Thu, 19 Mar 2015 19:57:52 +0100
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH v2 1/4] pci: disable msi/msix at probe time
-Message-ID: <1426786724-22241-2-git-send-email-mst@redhat.com>
-References: <1426786724-22241-1-git-send-email-mst@redhat.com>
+	id S1752198AbbCYHZs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Mar 2015 03:25:48 -0400
+Message-ID: <551262F9.7080809@linux.intel.com>
+Date: Wed, 25 Mar 2015 15:25:45 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426786724-22241-1-git-send-email-mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+References: <1427095334-7430-1-git-send-email-jiang.liu@linux.intel.com> <20150323164809.GS26935@google.com>
+In-Reply-To: <20150323164809.GS26935@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit d52877c7b1afb8c37ebe17e2005040b79cb618b0
-    pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2
 
-attempted to address the problem of kexec getting
-started after linux enabled msi/msix for a device,
-and drivers being confused by msi being enabled,
-by disabling msi at shutdown.
 
-But arguably, it's better to disable msi/msix when kexec
-starts - for example, kexec might run after a crash (kdump)
-and shutdown callbacks are not always invoked in that case.
-
-Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
-Cc: Ulrich Obergfell <uobergfe@redhat.com>
-Cc: Fam Zheng <famz@redhat.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/pci/pci-driver.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3cb2210..2ebd2a8 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -305,6 +305,12 @@ static long local_pci_probe(void *_ddi)
- 	 */
- 	pm_runtime_get_sync(dev);
- 	pci_dev->driver = pci_drv;
-+	/*
-+	 * When using kexec, msi might be left enabled by the previous kernel,
-+	 * this breaks things as some drivers assume msi/msi-x is off at boot.
-+	 * Fix this by forcing msi off at startup.
-+	 */
-+	pci_msi_off(pci_dev);
- 	rc = pci_drv->probe(pci_dev, ddi->id);
- 	if (!rc)
- 		return rc;
--- 
-MST
-
+On 2015/3/24 0:48, Bjorn Helgaas wrote:
+> On Mon, Mar 23, 2015 at 03:22:14PM +0800, Jiang Liu wrote:
+<snit>
+>> ---
+>>  arch/x86/pci/acpi.c     |    5 ++---
+>>  drivers/acpi/resource.c |    3 +++
+>>  2 files changed, 5 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index e4695985f9de..8c4b1201f340 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>>  	info->bridge = device;
+>>  	ret = acpi_dev_get_resources(device, list,
+>>  				     acpi_dev_filter_resource_type_cb,
+>> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
+>> +				     (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
+> 
+> Tangent: I'm disappointed that ia64 didn't get reworked to track the x86
+> code here.  Is that coming soon?
+Hi Bjorn,
+	Recall the memory now, IA64 may have mutiple 64K IO space, which
+also support SPARSE attribute. Currently ACPI resource parsing interface
+have no support of these two requirements yet. Will try to improve it.
+Thanks!
+Gerry
