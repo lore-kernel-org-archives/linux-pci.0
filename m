@@ -1,137 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org>
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org> <1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 11 Mar 2015 10:37:29 -0500
-Message-ID: <CAL_JsqJfvOcQ9sSuKfq3YCWubL9QctEDU0CR2mjBze2ZyB+nVg@mail.gmail.com>
-Subject: Re: [PATCH v4 7/9] x86, pci, ecam: mmconfig_64.c becomes default
- implementation for ECAM driver.
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Al Stone <al.stone@linaro.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:39642 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbbCYIZR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:25:17 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 25 Mar 2015 18:25:16 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 971482BB0040
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:25:13 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8P5LQ9371648
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:25:13 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8Odxs020243
+	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:24:40 +1100
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH V16 01/20] PCI: Print more info in sriov_enable() error message
+Date: Wed, 25 Mar 2015 16:23:42 +0800
+Message-Id: <1427271841-28749-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 9:12 AM, Tomasz Nowicki
-<tomasz.nowicki@linaro.org> wrote:
-> Architectures which want to take advantage of ECAM generic goodness
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-This is not necessarily an architecture decision. It is likely per host.
+If we don't have space for all the bus numbers required to enable VFs,
+print the largest bus number required and the range available.
 
-> should select CONFIG_PCI_ECAM_GENERIC. Otherwise, like x86 32bits machines,
-> are obligated to provide own low-level ECAM calls.
->
-> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> ---
+No functional change; improved error message only.
 
-[...]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index c588234..796b6e7 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -23,6 +23,119 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
->
->  LIST_HEAD(pci_mmcfg_list);
->
-> +#ifdef CONFIG_GENERIC_PCI_ECAM
-> +static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
-> +                                 unsigned int devfn)
-> +{
-> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-> +
-> +       if (cfg && cfg->virt)
-> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-> +       return NULL;
-> +}
-> +
-> +int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-> +                         unsigned int devfn, int reg, int len, u32 *value)
-> +{
-> +       char __iomem *addr;
-> +
-> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
-> +err:           *value = -1;
-> +               return -EINVAL;
-> +       }
-> +
-> +       rcu_read_lock();
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 4b3a4ea..c4c33ea 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -180,6 +180,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_dev *pdev;
+ 	struct pci_sriov *iov = dev->sriov;
+ 	int bars = 0;
++	u8 bus;
+ 
+ 	if (!nr_virtfn)
+ 		return 0;
+@@ -216,8 +217,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	iov->offset = offset;
+ 	iov->stride = stride;
+ 
+-	if (virtfn_bus(dev, nr_virtfn - 1) > dev->bus->busn_res.end) {
+-		dev_err(&dev->dev, "SR-IOV: bus number out of range\n");
++	bus = virtfn_bus(dev, nr_virtfn - 1);
++	if (bus > dev->bus->busn_res.end) {
++		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
++			nr_virtfn, bus, &dev->bus->busn_res);
+ 		return -ENOMEM;
+ 	}
+ 
+-- 
+1.7.9.5
 
-What is the purpose of the rcu lock other than the old implementation had it?
-
-> +       addr = pci_dev_base(seg, bus, devfn);
-
-The .map_bus op provides the same function if you restructure to use
-the generic accessors.
-
-> +       if (!addr) {
-> +               rcu_read_unlock();
-> +               goto err;
-> +       }
-> +
-> +       *value = pci_mmio_read(len, addr + reg);
-> +       rcu_read_unlock();
-> +
-> +       return 0;
-> +}
-> +
-> +int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-> +                          unsigned int devfn, int reg, int len, u32 value)
-> +{
-> +       char __iomem *addr;
-> +
-> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
-> +               return -EINVAL;
-> +
-> +       rcu_read_lock();
-> +       addr = pci_dev_base(seg, bus, devfn);
-> +       if (!addr) {
-> +               rcu_read_unlock();
-> +               return -EINVAL;
-> +       }
-> +
-> +       pci_mmio_write(len, addr + reg, value);
-> +       rcu_read_unlock();
-> +
-> +       return 0;
-> +}
-> +
-> +static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
-> +{
-> +       void __iomem *addr;
-> +       u64 start, size;
-> +       int num_buses;
-> +
-> +       start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-> +       num_buses = cfg->end_bus - cfg->start_bus + 1;
-> +       size = PCI_MMCFG_BUS_OFFSET(num_buses);
-> +       addr = ioremap_nocache(start, size);
-> +       if (addr)
-> +               addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-> +       return addr;
-> +}
-> +
-> +int __init pci_mmcfg_arch_init(void)
-
-Where would this be called for the case of the generic host and using DT?
-
-Rob
