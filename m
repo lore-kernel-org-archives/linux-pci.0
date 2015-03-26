@@ -1,123 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36411 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191AbbCLDa6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 23:30:58 -0400
-Received: by iegc3 with SMTP id c3so13888885ieg.3
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 20:30:57 -0700 (PDT)
-Date: Wed, 11 Mar 2015 22:30:50 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	sparclinux@vger.kernel.org
-Subject: Re: [PATCH v6 20/30] sparc/PCI: Use pci_scan_host_bridge() for
- simplicity
-Message-ID: <20150312033050.GG10949@google.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
- <1425868467-9667-21-git-send-email-wangyijing@huawei.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:52974 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbbCZMgm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 08:36:42 -0400
+Message-ID: <5513FD48.3080502@huawei.com>
+Date: Thu, 26 Mar 2015 20:36:24 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425868467-9667-21-git-send-email-wangyijing@huawei.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>,
+	<linux-kernel@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	"Fam Zheng" <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: Re: [PATCH v4 03/10] pci: drop some duplicate code
+References: <1427369811-11721-1-git-send-email-mst@redhat.com> <1427369811-11721-4-git-send-email-mst@redhat.com>
+In-Reply-To: <1427369811-11721-4-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 09, 2015 at 10:34:17AM +0800, Yijing Wang wrote:
-> Now we could use pci_scan_host_bridge() to scan
-> pci buses, provide sparc specific pci_host_bridge_ops.
+On 2015/3/26 19:37, Michael S. Tsirkin wrote:
+> pci_msi_init_pci_dev and pci_msi_off share a lot of code.
+> This used to be justified since pci_msi_init_pci_dev
+> wasn't compiled in when CONFIG_PCI_MSI is off.
+> Now that it is, let's reuse code.
+
+It's not correct, pci_msi_off() would be used in quirk when the msi_cap is not initialized.
+
+For example:
+
+/*
+ * It's possible for the MSI to get corrupted if shpc and acpi
+ * are used together on certain PXH-based systems.
+ */
+static void quirk_pcie_pxh(struct pci_dev *dev)
+{
+	pci_msi_off(dev);
+	dev->no_msi = 1;
+	dev_warn(&dev->dev, "PXH quirk detected; SHPC device MSI disabled\n");
+}
+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_PXHD_0,	quirk_pcie_pxh);
+
+
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: "David S. Miller" <davem@davemloft.net>
-> CC: sparclinux@vger.kernel.org
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 > ---
->  arch/sparc/kernel/pci.c |   32 ++++++++++++++++++++++----------
->  1 files changed, 22 insertions(+), 10 deletions(-)
+>  drivers/pci/pci.c   | 23 ++++-------------------
+>  drivers/pci/probe.c | 11 ++++-------
+>  2 files changed, 8 insertions(+), 26 deletions(-)
 > 
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index 21f804a..7e28f74 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -650,12 +650,25 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
->  		pci_claim_bus_resources(child_bus);
->  }
->  
-> +static void pci_host_bridge_of_scan_bus(
-> +		struct pci_host_bridge *host)
-> +{
-> +	struct pci_pbm_info *pbm = dev_get_drvdata(&host->dev);
-> +	struct device_node *node = pbm->op->dev.of_node;
-> +
-> +	pci_of_scan_bus(pbm, node, host->bus);
-> +}
-> +
-> +static struct pci_host_bridge_ops phb_ops = {
-> +	.scan_bus = pci_host_bridge_of_scan_bus,
-> +};
-> +
->  struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->  				 struct device *parent)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 81f06e8..fcee8ea 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3106,26 +3106,11 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
+>   */
+>  void pci_msi_off(struct pci_dev *dev)
 >  {
->  	LIST_HEAD(resources);
->  	struct device_node *node = pbm->op->dev.of_node;
-> -	struct pci_bus *bus;
-> +	struct pci_host_bridge *host;
+> -	int pos;
+> -	u16 control;
+> +	if (dev->msi_cap)
+> +		pci_msi_set_enable(dev, 0);
 >  
->  	printk("PCI: Scanning PBM %s\n", node->full_name);
+> -	/*
+> -	 * This looks like it could go in msi.c, but we need it even when
+> -	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
+> -	 * dev->msi_cap or dev->msix_cap here.
+> -	 */
+> -	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> -	if (pos) {
+> -		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
+> -		control &= ~PCI_MSI_FLAGS_ENABLE;
+> -		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
+> -	}
+> -	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> -	if (pos) {
+> -		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
+> -		control &= ~PCI_MSIX_FLAGS_ENABLE;
+> -		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
+> -	}
+> +	if (dev->msix_cap)
+> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_msi_off);
 >  
-> @@ -667,22 +680,21 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->  	pbm->busn.end	= pbm->pci_last_busno;
->  	pbm->busn.flags	= IORESOURCE_BUS;
->  	pci_add_resource(&resources, &pbm->busn);
-> -	bus = pci_create_root_bus(parent,
-> +	host = pci_scan_host_bridge(parent,
->  			PCI_DOMBUS(pbm->index, pbm->pci_first_busno),
-> -			pbm->pci_ops, pbm, &resources);
-> -	if (!bus) {
-> -		printk(KERN_ERR "Failed to create bus for %s\n",
-> +			pbm->pci_ops, pbm, &resources, &phb_ops);
-> +	if (!host) {
-> +		printk(KERN_ERR "Failed to create host bridge for %s\n",
->  		       node->full_name);
->  		pci_free_resource_list(&resources);
->  		return NULL;
->  	}
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 45d6d5c..baf8ddd 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1489,17 +1489,14 @@ static void pci_msi_init_pci_dev(struct pci_dev *dev)
+>  	INIT_LIST_HEAD(&dev->msi_list);
+>  #endif
 >  
-
-I would keep "bus" and set it here:
-
-	bus = host->bus;
-
-That would remove some lines from your patch that really didn't change,
-which makes it easier to see what actually *is* changing, namely, you're
-removing the pci_of_scan_bus() call because it is now done inside
-pci_scan_host_bridge().
-
-> -	pci_of_scan_bus(pbm, node, bus);
-> -	pci_bus_register_of_sysfs(bus);
-> +	pci_bus_register_of_sysfs(host->bus);
->  
-> -	pci_claim_bus_resources(bus);
-> -	pci_bus_add_devices(bus);
-> -	return bus;
-> +	pci_claim_bus_resources(host->bus);
-> +	pci_bus_add_devices(host->bus);
-> +	return host->bus;
+> +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> +
+>  	/* Disable the msi hardware to avoid screaming interrupts
+>  	 * during boot.  This is the power on reset default so
+>  	 * usually this should be a noop.
+>  	 */
+> -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> -	if (dev->msi_cap)
+> -		pci_msi_set_enable(dev, 0);
+> -
+> -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> -	if (dev->msix_cap)
+> -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+> +	pci_msi_off(dev);
 >  }
 >  
->  void pcibios_fixup_bus(struct pci_bus *pbus)
-> -- 
-> 1.7.1
+>  static void pci_init_capabilities(struct pci_dev *dev)
 > 
+
+
+-- 
+Thanks!
+Yijing
+
