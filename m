@@ -1,101 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42676 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933881AbbCDIBo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 03:01:44 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	linux-kernel@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 14/15] x86, boot: copy rom to kernel space
-Date: Wed,  4 Mar 2015 00:00:47 -0800
-Message-Id: <1425456048-16236-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:35505 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752427AbbCZLiB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Mar 2015 07:38:01 -0400
+Date: Thu, 26 Mar 2015 12:37:56 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v4 09/10] pci: drop pci_msi_off calls from quirks
+Message-ID: <1427369811-11721-10-git-send-email-mst@redhat.com>
+References: <1427369811-11721-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427369811-11721-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As EFI stub code could put them high when on 32bit or with exactmap=
-on 64bit conf.
+pci core now disables msi on probe automatically,
+drop this from device-specific quirks.
 
-Check is the range is mapped, otherwise allocate new one and have
-the rom data copied. So we could really avoid ioremap.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- arch/x86/pci/common.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 45 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 93577fb..a5de331 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -694,6 +694,48 @@ struct firmware_setup_pci_entry {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 85f247e..df3e718 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1600,7 +1600,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_a
  
- static LIST_HEAD(setup_pci_entries);
- 
-+static phys_addr_t check_copy(phys_addr_t start, unsigned long size)
-+{
-+	unsigned long start_pfn = PFN_DOWN(start);
-+	unsigned long end_pfn = PFN_UP(start + size);
-+	unsigned char *p, *q;
-+	phys_addr_t pa_p, pa_q;
-+	long sz = size;
-+
-+	if (pfn_range_is_mapped(start_pfn, end_pfn))
-+		return start;
-+
-+	/* allocate and copy */
-+	pa_p = memblock_alloc(size, PAGE_SIZE);
-+	if (!pa_p)
-+		return start;
-+
-+	p = phys_to_virt(pa_p);
-+
-+	pa_q = start;
-+	while (sz > 0) {
-+		long chunk_size = 64<<10;
-+
-+		if (chunk_size > sz)
-+			chunk_size = sz;
-+
-+		q = early_memremap(pa_q, chunk_size);
-+		if (!q) {
-+			memblock_free(pa_p, size);
-+			return start;
-+		}
-+		memcpy(p, q, chunk_size);
-+		early_memunmap(q, chunk_size);
-+		p += chunk_size;
-+		pa_q += chunk_size;
-+		sz -= chunk_size;
-+	}
-+
-+	early_memunmap(start, size);
-+
-+	return pa_p;
-+}
-+
- int __init fill_setup_pci_entries(void)
+ static void quirk_pcie_mch(struct pci_dev *pdev)
  {
- 	struct setup_data *data;
-@@ -723,8 +765,9 @@ int __init fill_setup_pci_entries(void)
- 		entry->vendor = rom->vendor;
- 		entry->devid = rom->devid;
- 		entry->pcilen = rom->pcilen;
--		entry->romdata = pa_data +
--				 offsetof(struct pci_setup_rom, romdata);
-+		entry->romdata = check_copy(pa_data +
-+				      offsetof(struct pci_setup_rom, romdata),
-+				      rom->pcilen);
- 
- 		list_add(&entry->list, &setup_pci_entries);
- 
+-	pci_msi_off(pdev);
+ 	pdev->no_msi = 1;
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
+@@ -1614,7 +1613,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quir
+  */
+ static void quirk_pcie_pxh(struct pci_dev *dev)
+ {
+-	pci_msi_off(dev);
+ 	dev->no_msi = 1;
+ 	dev_warn(&dev->dev, "PXH quirk detected; SHPC device MSI disabled\n");
+ }
 -- 
-1.8.4.5
+MST
 
