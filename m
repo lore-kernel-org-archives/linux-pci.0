@@ -1,58 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:13387 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238AbbCZBT1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 21:19:27 -0400
+Message-ID: <55135E83.3040804@huawei.com>
+Date: Thu, 26 Mar 2015 09:18:59 +0800
 From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+MIME-Version: 1.0
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
 	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
+	<linux-m68k@vger.kernel.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v6 19/30] sparc/PCI: Claim bus resources before pci_bus_add_devices()
-Date: Mon, 9 Mar 2015 10:34:16 +0800
-Message-ID: <1425868467-9667-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com> <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com> <55024D35.6050509@huawei.com> <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com> <20150313140132.GH5378@l.oracle.com> <CAErSpo69ytCxBK5AD79Nz05wy=GwzcOGV7WkiKFxpLDH4wtJXw@mail.gmail.com> <20150325192331.GG25884@l.oracle.com>
+In-Reply-To: <20150325192331.GG25884@l.oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_claim_bus_resources() should be called before
-pci_bus_add_devices(), or driver may failed to
-load, because the resources had not claimed.
+>>>> That seems OK to me.  Probably still wrong, but no worse than it was before.
+>>>
+>>> Interesting. The mechanism for PCI passthrough can either synthesize
+>>> and PCI bus number starting at zero (so first device is always 0:0:0.0)
+>>> or it can replicate the backend PCI topology. That means you
+>>> could have segment values passed in, so: ab:ff:00.1). I've to admin
+>>> I hadn't tried the 'physical' replication on an machine with
+>>> domains (err, segments).
+>>>
+>>> Is there an git tree with this so I can just try it out?
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>> pci/enumeration-yw6 has similar code (it exports the single
+> 
+> I presume now it is bjorn/pci/enumeration-yw8 ? Going to test this out
+> this week.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/sparc/kernel/pci.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Yes, it's the latest version. thanks!
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 838fe1e..21f804a 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -678,11 +678,10 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	}
- 
- 	pci_of_scan_bus(pbm, node, bus);
--	pci_bus_add_devices(bus);
- 	pci_bus_register_of_sysfs(bus);
- 
- 	pci_claim_bus_resources(bus);
--
-+	pci_bus_add_devices(bus);
- 	return bus;
- }
- 
+>> busn_resource and makes xen use it).  That should be functionally
+>> identical to what v4.0-rc1 does.
+>>
+>> Yijing hasn't posted the static busn_res proposal above yet, so I
+>> don't have a branch with that in it.
+>>
+>> Bjorn
+> 
+> .
+> 
+
+
 -- 
-1.7.1
+Thanks!
+Yijing
 
