@@ -1,166 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:47241 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbbCDFXZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:23:25 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:23:24 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9646F3578053
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:23:21 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245NDqA33685708
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:23:21 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245MlLI028827
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:22:48 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 07/21] PCI: Export pci_iov_virtfn_bus() and pci_iov_virtfn_devfn()
-Date: Wed,  4 Mar 2015 13:18:59 +0800
-Message-Id: <1425446353-30513-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53102 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751498AbbCZLhd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Mar 2015 07:37:33 -0400
+Date: Thu, 26 Mar 2015 12:37:27 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v4 01/10] pci: export functions for msi/msix ctrl
+Message-ID: <1427369811-11721-2-git-send-email-mst@redhat.com>
+References: <1427369811-11721-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427369811-11721-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On PowerNV, some resource reservation is needed for SR-IOV VFs that don't
-exist at the bootup stage.  To do the match between resources and VFs, the
-code need to get the VF's BDF in advance.
+move pci_msi_set_enable and pci_msix_clear_and_set_ctrl out of msi.c, so
+we can use them will be used which MSI isn't configured in kernel.
 
-Rename virtfn_bus() and virtfn_devfn() to pci_iov_virtfn_bus() and
-pci_iov_virtfn_devfn() and export them.
-
-[bhelgaas: changelog, make "busnr" int]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/pci/iov.c   |   28 ++++++++++++++++------------
- include/linux/pci.h |   11 +++++++++++
- 2 files changed, 27 insertions(+), 12 deletions(-)
+ drivers/pci/pci.h | 21 +++++++++++++++++++++
+ drivers/pci/msi.c | 45 ++++++++++++---------------------------------
+ 2 files changed, 33 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2ae921f..5643a10 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -19,16 +19,20 @@
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82..17f213d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -146,6 +146,27 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
  
- #define VIRTFN_ID_LEN	16
- 
--static inline u8 virtfn_bus(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
--				    dev->sriov->stride * id) >> 8);
-+				    dev->sriov->stride * vf_id) >> 8);
- }
- 
--static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
- {
-+	if (!dev->is_physfn)
-+		return -EINVAL;
- 	return (dev->devfn + dev->sriov->offset +
--		dev->sriov->stride * id) & 0xff;
-+		dev->sriov->stride * vf_id) & 0xff;
- }
- 
- /*
-@@ -58,11 +62,11 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
- 	struct pci_sriov *iov = dev->sriov;
- 	int nr_virtfn;
- 	u8 max = 0;
--	u8 busnr;
-+	int busnr;
- 
- 	for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
- 		pci_iov_set_numvfs(dev, nr_virtfn);
--		busnr = virtfn_bus(dev, nr_virtfn - 1);
-+		busnr = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 		if (busnr > max)
- 			max = busnr;
- 	}
-@@ -116,7 +120,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct pci_bus *bus;
- 
- 	mutex_lock(&iov->dev->sriov->lock);
--	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-+	bus = virtfn_add_bus(dev->bus, pci_iov_virtfn_bus(dev, id));
- 	if (!bus)
- 		goto failed;
- 
-@@ -124,7 +128,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (!virtfn)
- 		goto failed0;
- 
--	virtfn->devfn = virtfn_devfn(dev, id);
-+	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
- 	pci_setup_device(virtfn);
-@@ -186,8 +190,8 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	struct pci_sriov *iov = dev->sriov;
- 
- 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
--					     virtfn_bus(dev, id),
--					     virtfn_devfn(dev, id));
-+					     pci_iov_virtfn_bus(dev, id),
-+					     pci_iov_virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
-@@ -226,7 +230,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_dev *pdev;
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
--	u8 bus;
-+	int bus;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -263,7 +267,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	iov->offset = offset;
- 	iov->stride = stride;
- 
--	bus = virtfn_bus(dev, nr_virtfn - 1);
-+	bus = pci_iov_virtfn_bus(dev, nr_virtfn - 1);
- 	if (bus > dev->bus->busn_res.end) {
- 		dev_err(&dev->dev, "can't enable %d VFs (bus %02x out of range of %pR)\n",
- 			nr_virtfn, bus, &dev->bus->busn_res);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1559658..99ea948 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1669,6 +1669,9 @@ int pci_ext_cfg_avail(void);
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
-+int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
-+int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
++static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
++{
++	u16 control;
 +
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
- int pci_num_vf(struct pci_dev *dev);
-@@ -1677,6 +1680,14 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
-+static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-+{
-+	return -ENOSYS;
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
++	control &= ~PCI_MSI_FLAGS_ENABLE;
++	if (enable)
++		control |= PCI_MSI_FLAGS_ENABLE;
++	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
 +}
-+static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
++
++static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
 +{
-+	return -ENOSYS;
++	u16 ctrl;
++
++	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
++	ctrl &= ~clear;
++	ctrl |= set;
++	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
 +}
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
++
+ void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c3e7dfc..9942f68 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -185,27 +185,6 @@ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+ 	return default_restore_msi_irqs(dev);
+ }
+ 
+-static void msi_set_enable(struct pci_dev *dev, int enable)
+-{
+-	u16 control;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	control &= ~PCI_MSI_FLAGS_ENABLE;
+-	if (enable)
+-		control |= PCI_MSI_FLAGS_ENABLE;
+-	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+-}
+-
+-static void msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
+-{
+-	u16 ctrl;
+-
+-	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
+-	ctrl &= ~clear;
+-	ctrl |= set;
+-	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
+-}
+-
+ static inline __attribute_const__ u32 msi_mask(unsigned x)
+ {
+ 	/* Don't shift by >= width of type */
+@@ -452,7 +431,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 	entry = irq_get_msi_desc(dev->irq);
+ 
+ 	pci_intx_for_msi(dev, 0);
+-	msi_set_enable(dev, 0);
++	pci_msi_set_enable(dev, 0);
+ 	arch_restore_msi_irqs(dev);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+@@ -473,14 +452,14 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	/* route the table */
+ 	pci_intx_for_msi(dev, 0);
+-	msix_clear_and_set_ctrl(dev, 0,
++	pci_msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+ 
+ 	arch_restore_msi_irqs(dev);
+ 	list_for_each_entry(entry, &dev->msi_list, list)
+ 		msix_mask_irq(entry, entry->masked);
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ }
+ 
+ void pci_restore_msi_state(struct pci_dev *dev)
+@@ -647,7 +626,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	int ret;
+ 	unsigned mask;
+ 
+-	msi_set_enable(dev, 0);	/* Disable MSI during set up */
++	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
+ 
+ 	entry = msi_setup_entry(dev, nvec);
+ 	if (!entry)
+@@ -683,7 +662,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 
+ 	/* Set MSI enabled bits	 */
+ 	pci_intx_for_msi(dev, 0);
+-	msi_set_enable(dev, 1);
++	pci_msi_set_enable(dev, 1);
+ 	dev->msi_enabled = 1;
+ 
+ 	dev->irq = entry->irq;
+@@ -775,7 +754,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	void __iomem *base;
+ 
+ 	/* Ensure MSI-X is disabled while it is set up */
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 
+ 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
+ 	/* Request & Map MSI-X table region */
+@@ -801,7 +780,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	 * MSI-X registers.  We need to mask all the vectors to prevent
+ 	 * interrupts coming in before they're fully set up.
+ 	 */
+-	msix_clear_and_set_ctrl(dev, 0,
++	pci_msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
+ 
+ 	msix_program_entries(dev, entries);
+@@ -814,7 +793,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ 
+ 	return 0;
+ 
+@@ -919,7 +898,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 	BUG_ON(list_empty(&dev->msi_list));
+ 	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
+ 
+-	msi_set_enable(dev, 0);
++	pci_msi_set_enable(dev, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msi_enabled = 0;
+ 
+@@ -1027,7 +1006,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 		__pci_msix_desc_mask_irq(entry, 1);
+ 	}
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msix_enabled = 0;
+ }
+@@ -1069,11 +1048,11 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+ 	 */
+ 	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+ 	if (dev->msi_cap)
+-		msi_set_enable(dev, 0);
++		pci_msi_set_enable(dev, 0);
+ 
+ 	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+ 	if (dev->msix_cap)
+-		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ }
+ 
+ /**
 -- 
-1.7.9.5
+MST
 
