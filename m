@@ -1,200 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:34235 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbbCIReT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 13:34:19 -0400
-Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
-	(envelope-from <linux@roeck-us.net>)
-	id 1YV1ZK-0033vF-MA
-	for linux-pci@vger.kernel.org; Mon, 09 Mar 2015 17:34:18 +0000
-Message-ID: <54FDD995.1080000@roeck-us.net>
-Date: Mon, 09 Mar 2015 10:34:13 -0700
-From: Guenter Roeck <linux@roeck-us.net>
+Received: from mx1.redhat.com ([209.132.183.28]:49801 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752432AbbCZLh7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Mar 2015 07:37:59 -0400
+Date: Thu, 26 Mar 2015 12:37:53 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Siva Yerramreddy <yshivakrishna@gmail.com>,
+	Ashutosh Dixit <ashutosh.dixit@intel.com>,
+	Nikhil Rao <nikhil.rao@intel.com>,
+	Sudeep Dutt <sudeep.dutt@intel.com>
+Subject: [PATCH v4 08/10] mic: drop pci_msi_off call on probe
+Message-ID: <1427369811-11721-9-git-send-email-mst@redhat.com>
+References: <1427369811-11721-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Murali Karicheri <m-karicheri2@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Fengguang Wu <fengguang.wu@intel.com>, LKP <lkp@01.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PCI] BUG: unable to handle kernel
-References: <20150306060631.GD28187@wfg-t540p.sh.intel.com> <54F9C407.5020602@ti.com> <54F9CC6B.5070803@ti.com> <20150306165504.GA30094@roeck-us.net> <54F9EAA8.30007@ti.com> <54FDAB8B.3010404@ti.com> <CAErSpo52A+S-SSp2TG=W3oskyg_pgg9LYZzrissvfTogTSazPg@mail.gmail.com> <54FDC1FC.2030807@ti.com> <54FDC52B.1070602@roeck-us.net> <54FDD277.2060406@ti.com>
-In-Reply-To: <54FDD277.2060406@ti.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427369811-11721-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/09/2015 10:03 AM, Murali Karicheri wrote:
-> On 03/09/2015 12:07 PM, Guenter Roeck wrote:
->> On 03/09/2015 08:53 AM, Murali Karicheri wrote:
->>> On 03/09/2015 10:44 AM, Bjorn Helgaas wrote:
->>>> On Mon, Mar 9, 2015 at 9:17 AM, Murali Karicheri<m-karicheri2@ti.com>
->>>> wrote:
->>>>> On 03/06/2015 12:58 PM, Murali Karicheri wrote:
->>>>>>
->>>>>> On 03/06/2015 11:55 AM, Guenter Roeck wrote:
->>>>>>>
->>>>>>> On Fri, Mar 06, 2015 at 10:48:59AM -0500, Murali Karicheri wrote:
->>>>>>> [ ... ]
->>>>>>>
->>>>>>>>> From 098b4f5e4ab9407fbdbfcca3a91785c17e25cf03 Mon Sep 17
->>>>>>>>> 00:00:00 2001
->>>>>>>> From: Murali Karicheri<m-karicheri2@ti.com>
->>>>>>>> Date: Fri, 6 Mar 2015 10:23:08 -0500
->>>>>>>> Subject: [PATCH] pci: of : fix kernel crash
->>>>>>>>
->>>>>>>> This is a debug patch to root cause the kernel crash
->>>>>>>>
->>>>>>>> commit 0b2af171520e5d5e7d5b5f479b90a6a5014d9df6
->>>>>>>>
->>>>>>>> PCI: Update DMA configuration from DT
->>>>>>>>
->>>>>>>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
->>>>>>>> ---
->>>>>>>> drivers/of/of_pci.c | 8 ++++++++
->>>>>>>> drivers/pci/host-bridge.c | 5 +++++
->>>>>>>> 2 files changed, 13 insertions(+)
->>>>>>>>
->>>>>>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>>>>>>> index 86d3c38..5a59fb8 100644
->>>>>>>> --- a/drivers/of/of_pci.c
->>>>>>>> +++ b/drivers/of/of_pci.c
->>>>>>>> @@ -129,6 +129,14 @@ void of_pci_dma_configure(struct pci_dev
->>>>>>>> *pci_dev)
->>>>>>>> struct device *dev =&pci_dev->dev;
->>>>>>>> struct device *bridge = pci_get_host_bridge_device(pci_dev);
->>>>>>>>
->>>>>>>> + if (!bridge || !bridge->parent) {
->>>>>>>> + if (!bridge)
->>>>>>>> + pr_err("PCI bridge not found\n");
->>>>>>>> + if (!bridge->parent)
->>>>>>>> + pr_err("PCI bridge parent not found\n");
->>>>>>>
->>>>>>>
->>>>>>> You'll see a crash here if bridge is NULL. Maybe add an else before
->>>>>>> the second
->>>>>>> if statement ? Also, dev_err might be a bit more useful and would be
->>>>>>> available.
->>>>>>>
->>>>>> Fixed and attached.
->>>>>>
->>>>>> Murali
->>>>>>>
->>>>>>> Thanks,
->>>>>>> Guenter
->>>>>>>
->>>>>>>> + return;
->>>>>>>> + }
->>>>>>>> +
->>>>>>>> of_dma_configure(dev, bridge->parent->of_node);
->>>>>>>> pci_put_host_bridge_device(bridge);
->>>>>>>> }
->>>>>>>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
->>>>>>>> index 3e5bbf9..ef2ab51 100644
->>>>>>>> --- a/drivers/pci/host-bridge.c
->>>>>>>> +++ b/drivers/pci/host-bridge.c
->>>>>>>> @@ -28,6 +28,11 @@ struct device *pci_get_host_bridge_device(struct
->>>>>>>> pci_dev *dev)
->>>>>>>> struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
->>>>>>>> struct device *bridge = root_bus->bridge;
->>>>>>>>
->>>>>>>> + if (!bridge) {
->>>>>>>> + pr_err("PCI: bridge not found\n");
->>>>>>>> + return NULL;
->>>>>>>> + }
->>>>>>>> +
->>>>>>>> kobject_get(&bridge->kobj);
->>>>>>>> return bridge;
->>>>>>>> }
->>>>>>>> --
->>>>>>>> 1.7.9.5
->>>>>>>>
->>>>>>>
->>>>>>
->>>>> BJorn,
->>>>>
->>>>> Any chance of applying the attached debug patch to see if this fixes
->>>>> and
->>>>> provide some additional information on this BUG? Not sure who will
->>>>> pick this
->>>>> one and apply.
->>>>
->>>> The change that caused the oops (0b2af171520e ("PCI: Update DMA
->>>> configuration from DT")) only exists on my pci/iommu branch, so I'm
->>>> the one to apply it.
->>>>
->>>> It's much easier for me to deal with plain text patches (not
->>>> attachments).
->>>>
->>>> I'm hesitating because I don't want to encourage use of the 0-day
->>>> testing robot as a tool at which we can just throw debug patches. The
->>>> robot is a service that costs somebody real money, and I want to be a
->>>> good neighbor when using it.
->>>
->>> Thanks for the clarification as I don't have much information on the
->>> testing robot. At the same time the question is how similar incidence
->>> in the past have been handled. I am a newbie w.r.t to this. This is
->>> first time I have introduced a patch that impacts multiple arch/machines.
->>>
->>>>
->>>> Was the information in the robot's report enough to reproduce the
->>>> oops? If not, is there additional information we could add to the
->>>> report that would enable you to reproduce it? Even if we can't
->>>> reproduce the oops, the report seems detailed enough that we should be
->>>> able to deduce the problem and produce a fix in which we have high
->>>> confidence.
->>>
->>> The BUG report essentially indicates the crash happened in
->>> of_pci_dma_configure(). The machine specific log make sense to a
->>> person familiar with this arch and I am not familiar with the same. So
->>> anyone can help narrow down the root cause of this?
->>>
->>> Looking at the code, there are two ptr variables that are accessed
->>> without checking for NULL as initial thinking was that these can never
->>> be NULL. So the debug patch is just adding addition check before
->>> accessing the ptr. I can send this patch without debug prints if that
->>> make sense. I was thinking to get confirmation that this is indeed the
->>> case before adding the check. What do you think the right approach
->>> here? Send a patch for this to the ML for adding the check as a
->>> potential fix? Or someone can help me investigate the crash dump and
->>> root cause it? or if we can use test robot to confirm this, I can
->>> re-send the patch ASIS to the list. Please clarify.
->>>
->> If the assumption is that the pointers can never be NULL,
->> wouldn't it be important to see a call trace and to find out
->> if the NULL pointers can actually be seen by design,
->> or if there is some other bug ?
->
-> Call trace shows
->
->   [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
-> [    0.576666]  [<7976c1ac>] pci_device_add+0xbc/0x820
->
->
-> And BUG seems to be in of_pci_dma_configure() as shown in the BUG report.
->
-> of_pci_dma_configure() calls newly added API call to pci_get_host_bridge_device(). Seems like this has succeeded which means bridge is non NULL IMO. However in this function it passes bridge->parent->of_node to of_dma_configure(). So I suspect bridge->parent is NULL for some reason. Is there a chance for parent being NULL in this or any other platform?
->
+pci core now disables msi on probe automatically,
+drop this from device-specific code.
 
-Can bridge be the root bridge ?
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/misc/mic/host/mic_intr.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Guenter
-
->>
->> I am a bit concerned that adding those NULL pointer checks
->> might end up hiding some other bug, ie that they just hide
->> the real bug without fixing it.
->>
->
-> I agree with you as well. That is the reason I had added the debug prints in the attached patch to check what is NULL here and that can help us dig into this more.
->
-> If BJorn can accept this debug patch for finding this, that will help. I can re-send it to the list as a debug patch if everyone agrees. Otherwise I don't know how to proceed from here.
->
-> Thanks and regards,
->
-> Murali
->> Thanks,
->> Guenter
->>
->
->
+diff --git a/drivers/misc/mic/host/mic_intr.c b/drivers/misc/mic/host/mic_intr.c
+index d686f28..b4ca6c8 100644
+--- a/drivers/misc/mic/host/mic_intr.c
++++ b/drivers/misc/mic/host/mic_intr.c
+@@ -363,8 +363,6 @@ static int mic_setup_intx(struct mic_device *mdev, struct pci_dev *pdev)
+ {
+ 	int rc;
+ 
+-	pci_msi_off(pdev);
+-
+ 	/* Enable intx */
+ 	pci_intx(pdev, 1);
+ 	rc = mic_setup_callbacks(mdev);
+-- 
+MST
 
