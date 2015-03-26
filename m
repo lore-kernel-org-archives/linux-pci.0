@@ -1,46 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:44684 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773AbbCJEpG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Mar 2015 00:45:06 -0400
-Date: Tue, 10 Mar 2015 05:45:01 +0100
-From: Ingo Molnar <mingo@kernel.org>
-To: Nicholas Krause <xerofoify@gmail.com>
-Cc: bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RESEND] x86:pci: Change  sta2x11_dma_ops stucture to use
- switolb_dma_supported as it's dma_supported function in sta2x11-fixup.c
-Message-ID: <20150310044500.GA9015@gmail.com>
-References: <1425959625-14551-1-git-send-email-xerofoify@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35475 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752427AbbCZLhr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Mar 2015 07:37:47 -0400
+Date: Thu, 26 Mar 2015 12:37:37 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH v4 04/10] pci: don't disable msi/msix at shutdown
+Message-ID: <1427369811-11721-5-git-send-email-mst@redhat.com>
+References: <1427369811-11721-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425959625-14551-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1427369811-11721-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This partially reverts commit d52877c7b1afb8c37ebe17e2005040b79cb618b0:
+	"pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
 
-* Nicholas Krause <xerofoify@gmail.com> wrote:
+It's un-necessary now that we disable msi at start, and it actually
+turns out to cause problems: some device drivers don't register a level
+interrupt handler when they detect msi/msix capability, switching off
+msi while device is going causes device to assert a level interrupt
+which is never de-asserted, causing a kernel hang.
 
-> This changes the structure sta2x11_dma_ops stucture to use switolb_dma_supported as it's 
-> function for dma_supported hardware verus setting this value to NULL as this should be set 
-> correctly for when dma_supported function needs to be called for hardware needing this 
-> function to be supported. Otherwise hardware needing this function to be supported will 
-> either cause a kernel panic or oops due to a NULL pointer being dereferenced in the 
-> structure, sta1x11_dma_ops for the dma_supported function. Further more in  order to 
-> prevent a kernel panic or oops here due to a NULL pointer being deferred here we add the 
-> function, swiotlb_dma_supported as the dma_supported function for the structure,
-> sta2x11_dma_ops.
+In particular, this was observed with virtio.
 
-Pleasedontresendtotallyunstructuredandunreadablechangelogs.
+Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+Cc: Ulrich Obergfell <uobergfe@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Reported-by: Fam Zheng <famz@redhat.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/pci-driver.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-You also (still) don't explain where and how this supposed crash might 
-happen in practice. Please don't resend unless you've addressed those 
-deficiencies.
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..38a602c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+ 
+ 	if (drv && drv->shutdown)
+ 		drv->shutdown(pci_dev);
+-	pci_msi_shutdown(pci_dev);
+-	pci_msix_shutdown(pci_dev);
+ 
+ #ifdef CONFIG_KEXEC
+ 	/*
+-- 
+MST
 
-I.e. I'm not convinced you know what you are modifying there and what 
-effects your modifications will have.
-
-Thanks,
-
-	Ingo
