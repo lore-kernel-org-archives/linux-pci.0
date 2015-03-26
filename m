@@ -1,55 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:44278 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbbCFWMf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 17:12:35 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:40665 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752258AbbCZLhe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Mar 2015 07:37:34 -0400
+Date: Thu, 26 Mar 2015 12:37:30 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: [PATCH v4 02/10] pci: move pci_msi_init_pci_dev to pci.c
+Message-ID: <1427369811-11721-3-git-send-email-mst@redhat.com>
+References: <1427369811-11721-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20150306184920.GI20077@google.com>
-References: <20150224200603.14443.68971.stgit@gimli.home>
-	<CADnq5_PDjww+TkPWVV7HLLA50az2n20SfD5ShVp+OpT8Cy4Dew@mail.gmail.com>
-	<20150306184920.GI20077@google.com>
-Date: Fri, 6 Mar 2015 17:12:34 -0500
-Message-ID: <CADnq5_Nvz+GGABYWRzzAJJP01cX0e62y-hdxXO=XRqszuHLj-A@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI: pci_unignore_hotplug()
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@linux.ie>,
-	"Deucher, Alexander" <alexander.deucher@amd.com>,
-	Maling list - DRI developers
-	<dri-devel@lists.freedesktop.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427369811-11721-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 6, 2015 at 1:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Feb 24, 2015 at 03:23:27PM -0500, Alex Deucher wrote:
->> On Tue, Feb 24, 2015 at 3:12 PM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > I'd kinda like to use pci_ignore_hotplug() for devices in use by a
->> > user via vfio-pci, but the interface seems only partially implemented
->> > since we can only set ignore_hotplug and not clear it.  This adds the
->> > capability to clear the flag and applies it as seems to be appropriate
->> > to the existing users.  I don't have a system with power control for
->> > a radeon or nouveau device, so I'd certainly appreciate testing.  It
->> > seems though that once the device is in D0, we've passed the critical
->> > point where the device could be accidentally unplugged.  Thanks,
->>
->> Something re-broke this recently.  See:
->> https://bugzilla.kernel.org/show_bug.cgi?id=61891
->> https://bugzilla.kernel.org/show_bug.cgi?id=89731
->
-> I'm not opposed to adding pci_unignore_hotplug() when we have users for it.
-> I don't really want to throw in the nouveau and radeon changes while there
-> are open issues in the same area, though.
->
-> I haven't looked at the bugzillas above.  Let me know if I should.
+commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
+    "PCI: msi: Disable msi interrupts when we initialize a pci device"
+fixes kexec when the booting kernel does not enable msi interupts.
 
-Please do.  My comments were not targeted at this patch set, but
-rather at the fact that pci hotplug (acpiphp in this case) is again
-trying to remove the driver even though it's flagged to ignore hotplug
-in the hybrid laptop case.
+Unfortunately the relevant functionality is in msi.c so it isn't
+compiled in when CONFIG_PCI_MSI is off, which means such configurations
+would still get interrupt storms.
 
-Alex
+Fix by moving the function to pci.c, and compiling it unconditionally.
+
+Cc: Eric W. Biederman <ebiederm@xmission.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/pci.h   |  2 --
+ drivers/pci/msi.c   | 17 -----------------
+ drivers/pci/probe.c | 19 +++++++++++++++++++
+ 3 files changed, 19 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 17f213d..a964569 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -140,10 +140,8 @@ extern unsigned int pci_pm_d3_delay;
+ 
+ #ifdef CONFIG_PCI_MSI
+ void pci_no_msi(void);
+-void pci_msi_init_pci_dev(struct pci_dev *dev);
+ #else
+ static inline void pci_no_msi(void) { }
+-static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
+ static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9942f68..ae3f7cc 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1038,23 +1038,6 @@ int pci_msi_enabled(void)
+ }
+ EXPORT_SYMBOL(pci_msi_enabled);
+ 
+-void pci_msi_init_pci_dev(struct pci_dev *dev)
+-{
+-	INIT_LIST_HEAD(&dev->msi_list);
+-
+-	/* Disable the msi hardware to avoid screaming interrupts
+-	 * during boot.  This is the power on reset default so
+-	 * usually this should be a noop.
+-	 */
+-	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+-	if (dev->msi_cap)
+-		pci_msi_set_enable(dev, 0);
+-
+-	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-	if (dev->msix_cap)
+-		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+-}
+-
+ /**
+  * pci_enable_msi_range - configure device's MSI capability structure
+  * @dev: device to configure
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..45d6d5c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1483,6 +1483,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
+ }
+ 
++static void pci_msi_init_pci_dev(struct pci_dev *dev)
++{
++#ifdef CONFIG_PCI_MSI
++	INIT_LIST_HEAD(&dev->msi_list);
++#endif
++
++	/* Disable the msi hardware to avoid screaming interrupts
++	 * during boot.  This is the power on reset default so
++	 * usually this should be a noop.
++	 */
++	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
++	if (dev->msi_cap)
++		pci_msi_set_enable(dev, 0);
++
++	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
++	if (dev->msix_cap)
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++}
++
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
+ 	/* MSI/MSI-X list */
+-- 
+MST
+
