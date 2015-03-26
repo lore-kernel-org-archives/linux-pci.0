@@ -1,81 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:40188 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753761AbbCFSob (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Mar 2015 13:44:31 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55135E16.6060909@huawei.com>
+Date: Thu, 26 Mar 2015 09:17:10 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150306135534.GD4259@pd.tnic>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-	<1425456048-16236-2-git-send-email-yinghai@kernel.org>
-	<20150306135534.GD4259@pd.tnic>
-Date: Fri, 6 Mar 2015 10:44:29 -0800
-Message-ID: <CAE9FiQXzv7TPMRA+RqSdV0ERiW3KYA-2KOyDKBrZDn3Zd5RcrQ@mail.gmail.com>
-Subject: Re: [PATCH v2 01/15] x86, kaslr: Use init_size instead of run_size
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Daniel Axtens <dja@axtens.net>
+CC: Liviu Dudau <liviu@dudau.co.uk>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linux-ia64@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-pci@vger.kernel.org>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-m68k@lists.linux-m68k.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	<linux-alpha@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Russell King" <linux@arm.linux.org.uk>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Kees Cook <keescook@chromium.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Junjie Mao <eternal.n08@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
+ simplicity
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>		 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>	 <1427241523.2685.18.camel@axtens.net> <551266DE.3030609@huawei.com> <1427321631.2575.3.camel@axtens.net>
+In-Reply-To: <1427321631.2575.3.camel@axtens.net>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 6, 2015 at 5:55 AM, Borislav Petkov <bp@alien8.de> wrote:
-> On Wed, Mar 04, 2015 at 12:00:34AM -0800, Yinghai Lu wrote:
->> commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
+On 2015/3/26 6:13, Daniel Axtens wrote:
+> Hi Yijing,
+> 
+> I wasn't quite sure I understood your comments, so I was trying to apply
+> your patch series and test it, but patch 3 doesn't apply cleanly to
+> 4.0-rc5 or master. Can you respin the series?
+
+Hi Daniel,
+   Could you pull the series from Bjorn's git tree ? The URL is
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enumeration-yw8
+
+Thanks!
+Yijing.
+
+> 
+> Thanks,
+> Daniel
+> 
+> 
+>> Hi Daniel, thanks for your review and comments. We want to make a generic pci_host_bridge,
+>> which would hold the common host information, for example, pci domain is common info for
+>> pci host bridge, this series saved domain in pci_host_bridge, then we no need to
+>> extract out domain by pci_bus->sysdata by platform specific pci_domain_nr().
+>> Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is the platform
+>> interface, I think use the common interface would be better.
 >>
->> introduced one run_size for kaslr.
+>>>> +
+>>>> +	/* Get probe mode and perform scan */
+>>>> +	if (hose->dn && ppc_md.pci_probe_mode)
+>>>> +		mode = ppc_md.pci_probe_mode(bus);
+>>>> +
+>>>> +	pr_debug("    probe mode: %d\n", mode);
+>>>> +	if (mode == PCI_PROBE_DEVTREE)
+>>>> +		of_scan_bus(hose->dn, bus);
+>>>> +
+>>>> +	if (mode == PCI_PROBE_NORMAL) {
+>>>> +		pci_bus_update_busn_res_end(bus, 255);
+>>>> +		hose->last_busno = pci_scan_child_bus(bus);
+>>>> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
+>>>> +	}
+>>>> +
+>>>> +	return pci_bus_child_max_busnr(bus);
+>>>> +}
+>>>> +
+>>> I'm having trouble convincing myself that this patch covers every
+>>> variation within our PCI implementations. In particular, there's a
+>>> stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
+>>> identical to this function. Does that implementation need to be cleaned
+>>> up and replaced with this function too?
+>>>
 >>
->> We do not need to have home grown run_size.
+>> This is a pci_host_bridge_ops hook function, which would be called in
+>> PCI core, and after applied this series, we only need to call pci_scan_host_bridge()
+>> to scan pci devices, and this function is also extracted from the pcibios_scan_phb(),
+>> it's not the redundant code.
 >>
->> We should use real runtime size (include copy/decompress) aka init_size
->
-> Why?
+>>>
+>>>> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+>>>>  		ppc_md.pcibios_fixup_phb(hose);
+>>>>  
+>>>>  	/* Configure PCI Express settings */
+>>>> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>>> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>>>  		struct pci_bus *child;
+>>>> -		list_for_each_entry(child, &bus->children, node)
+>>>> +		list_for_each_entry(child, &host->bus->children, node)
+>>>>  			pcie_bus_configure_settings(child);
+>>>>  	}
+>>>>  }
+>>> Two things: Firstly, the function uses hose throughout, not host.
+>>> Secondly, you're not deleting the bus variable: what's the purpose of
+>>> this change?
+>>
+>> host is the common pci_host_bridge which is created by PCI core for pci host bridge driver,
+>> the hose is the platform data used in powerpc. The purpose of the patch/series is to simplify
+>> pci enumeration interface, and try to reduce the weak functions which were used to setup pci bus/devices
+>> during PCI enumeration.
+>>
+>>>
+>>> Regards,
+>>> Daniel
+>>>
+>>
+>>
+> 
 
-New change log:
 
-Subject: [PATCH] x86, kaslr: Use init_size instead of run_size
+-- 
+Thanks!
+Yijing
 
-commit e6023367d779 ("x86, kaslr: Prevent .bss from overlaping initrd")
-introduced one run_size for kaslr.
-We should use real runtime size (include copy/decompress) aka init_size.
-
-run_size is size of VO (vmlinux).
-init_size is the size needed for decompress and it is bigger than run_size
-when decompress need more buff.
-
-According to arch/x86/boot/header.S:
-| #define ZO_INIT_SIZE    (ZO__end - ZO_startup_32 + ZO_z_extract_offset)
-| #define VO_INIT_SIZE    (VO__end - VO__text)
-| #if ZO_INIT_SIZE > VO_INIT_SIZE
-| #define INIT_SIZE ZO_INIT_SIZE
-| #else
-| #define INIT_SIZE VO_INIT_SIZE
-| #endif
-| init_size:              .long INIT_SIZE         # kernel initialization size
-
-Bootloader allocate buffer according to init_size in hdr, and load the
-ZO (arch/x86/boot/compressed/vmlinux) from start of that buffer.
-During running of ZO, ZO move itself to the middle of buffer at
-z_extract_offset to make sure that decompressor would not have output
-overwrite input data before input data get consumed.
-But z_extract_offset calculating is based on size of VO (vmlinux) and size
-of compressed VO only at first.
-So need to make [z_extra_offset, init_size) will fit ZO, that means
-init_size need to be adjusted according to ZO size.
-That make init_size is always >= run_size.
-
-During aslr buffer searching, we need to make sure the buffer is bigger
-enough for decompress at first. So use init_size instead, and kill not
-needed run_size related code.
