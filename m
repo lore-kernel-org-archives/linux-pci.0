@@ -1,104 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:35864 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756320AbbCCDaM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Mar 2015 22:30:12 -0500
-Received: by mail-oi0-f44.google.com with SMTP id a3so30911497oib.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Mar 2015 19:30:12 -0800 (PST)
-Date: Mon, 2 Mar 2015 21:30:08 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:22763 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843AbbCZHbc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 03:31:32 -0400
+Message-ID: <5513B5A4.1070209@huawei.com>
+Date: Thu, 26 Mar 2015 15:30:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"x86@kernel.org" <x86@kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@vger.kernel.org>, Liviu Dudau <liviu@dudau.co.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v4 23/30] PCI/mvebu: Use pci_common_init_dev() to
- simplify code
-Message-ID: <20150303033008.GL11978@google.com>
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com>
- <1424938344-4017-24-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424938344-4017-24-git-send-email-wangyijing@huawei.com>
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Subject: Re: [PATCH v6 04/30] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com> <1425868467-9667-5-git-send-email-wangyijing@huawei.com> <20150311223211.GB1082@google.com> <55017CA5.2010502@huawei.com> <20150312193505.GB7346@google.com> <55024D35.6050509@huawei.com> <CAErSpo4T7f9PNVMLrQbCvW2a=HnRauQR2eBz6H69B7Q2=ELNWw@mail.gmail.com> <20150313140132.GH5378@l.oracle.com> <CAErSpo69ytCxBK5AD79Nz05wy=GwzcOGV7WkiKFxpLDH4wtJXw@mail.gmail.com> <20150325192331.GG25884@l.oracle.com>
+In-Reply-To: <20150325192331.GG25884@l.oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:12:17PM +0800, Yijing Wang wrote:
-> Mvebu_pcie_scan_bus() is not necessary, we could use
-> pci_common_init_dev() instead of pci_common_init(),
-> and pass the device pointer as the parent. Then
-> pci_scan_root_bus() will be called to scan the pci busses.
+>>> Is there an git tree with this so I can just try it out?
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>> pci/enumeration-yw6 has similar code (it exports the single
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> CC: Jason Cooper <jason@lakedaemon.net>
-> ---
->  drivers/pci/host/pci-mvebu.c |   18 +-----------------
->  1 files changed, 1 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 1309cfb..d5a2b70 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->  	return 1;
->  }
->  
-> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> -{
-> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
-> -	struct pci_bus *bus;
-> -
-> -	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
-> -				  &mvebu_pcie_ops, sys, &sys->resources);
-> -	if (!bus)
-> -		return NULL;
-> -
-> -	pci_scan_child_bus(bus);
-> -
-> -	return bus;
-> -}
-> -
->  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
->  						 const struct resource *res,
->  						 resource_size_t start,
-> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
->  	hw.nr_controllers = 1;
->  	hw.private_data   = (void **)&pcie;
->  	hw.setup          = mvebu_pcie_setup;
-> -	hw.scan           = mvebu_pcie_scan_bus;
->  	hw.map_irq        = of_irq_parse_and_map_pci;
->  	hw.ops            = &mvebu_pcie_ops;
->  	hw.align_resource = mvebu_pcie_align_resource;
->  
-> -	pci_common_init(&hw);
-> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
+> I presume now it is bjorn/pci/enumeration-yw8 ? Going to test this out
+> this week.
 
-I'm not necessarily opposed to this, but it seems unrelated to the rest of
-the series.  And I think it changes the behavior slightly (now we call
-pci_common_init_dev() with &pcie->pdev->dev instead of NULL).  So I'll wait
-for an ack from Thomas and/or Jason.
+Hi Konrad, I fixed two issues found by Tomasz and Daniel for the current v8 version.
+I posted out the latest v9 in my github tree. Could you pull this series from my
+github tree ?
+The URL is: https://github.com/YijingWang/linux-pci.git enumer9
 
->  }
->  
->  /*
-> -- 
-> 1.7.1
+Thanks!
+Yijing.
+
+>> busn_resource and makes xen use it).  That should be functionally
+>> identical to what v4.0-rc1 does.
+>>
+>> Yijing hasn't posted the static busn_res proposal above yet, so I
+>> don't have a branch with that in it.
+>>
+>> Bjorn
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
