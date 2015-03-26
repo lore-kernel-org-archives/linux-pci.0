@@ -1,155 +1,226 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23392 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752242AbbCICnI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33932 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179AbbCZFTl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 01:19:41 -0400
+Received: by pacwe9 with SMTP id we9so52130415pac.1
+        for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 22:19:41 -0700 (PDT)
+Message-ID: <1427347180.2575.91.camel@axtens.net>
+Subject: Re: [PATCH v8 19/30] powerpc/pci: Use pci_scan_host_bridge() for
+ simplicity
+From: Daniel Axtens <dja@axtens.net>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Liviu Dudau <liviu@dudau.co.uk>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	linux-ia64@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
+	linuxppc-dev@lists.ozlabs.org, linux-m68k@lists.linux-m68k.org,
+	Tony Luck <tony.luck@intel.com>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 11/30] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Mon, 9 Mar 2015 10:34:08 +0800
-Message-ID: <1425868467-9667-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	linux-alpha@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-arm-kernel@lists.infradead.org
+Date: Thu, 26 Mar 2015 16:19:40 +1100
+In-Reply-To: <55135E16.6060909@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+			 <1427168064-8657-20-git-send-email-wangyijing@huawei.com>
+		 <1427241523.2685.18.camel@axtens.net> <551266DE.3030609@huawei.com>
+	 <1427321631.2575.3.camel@axtens.net> <55135E16.6060909@huawei.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-EtOc/hYhLJzchjc4+T9t"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save platform specific sysdata in pci_host_bridge
-drvdata, host bridge specific operation need to
-access it before the pci bus creation.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host-bridge.c |    4 +++-
- drivers/pci/pci.h         |    4 +++-
- drivers/pci/probe.c       |   18 ++++++++----------
- 3 files changed, 14 insertions(+), 12 deletions(-)
+--=-EtOc/hYhLJzchjc4+T9t
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 0bb08ef..3c34c49 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -23,7 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
- }
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 db, struct list_head *resources)
-+		struct device *parent, u32 db,
-+		struct list_head *resources, void *sysdata)
- {
- 	int error;
- 	int bus = PCI_BUSNUM(db);
-@@ -58,6 +59,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
- 			host->busnum);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3de5e51..79a8894 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -324,6 +324,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- #endif
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 dombus, struct list_head *resources);
-+		struct device *parent, u32 dombus,
-+		struct list_head *resources, void *sysdata);
-+
- void pci_free_host_bridge(struct pci_host_bridge *host);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7238fa3..c8e074d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1866,8 +1866,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- static struct pci_bus *__pci_create_root_bus(
--		struct pci_host_bridge *bridge, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
- 	struct pci_bus *b;
-@@ -1883,7 +1882,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
-+	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bridge->busnum;
- 	pci_bus_assign_domain_nr(b, parent);
-@@ -1955,11 +1954,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata);
- 	if (!host)
- 		return NULL;
- 
--	return __pci_create_root_bus(host, ops, sysdata);
-+	return __pci_create_root_bus(host, ops);
- }
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-@@ -2026,8 +2025,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- }
- 
- static struct pci_bus *__pci_scan_root_bus(
--		struct pci_host_bridge *host, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *host, struct pci_ops *ops)
- {
- 	struct resource_entry *window;
- 	bool found = false;
-@@ -2040,7 +2038,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 			break;
- 		}
- 
--	b = __pci_create_root_bus(host, ops, sysdata);
-+	b = __pci_create_root_bus(host, ops);
- 	if (!b) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2066,11 +2064,11 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata);
- 	if (!host)
- 		return NULL;
- 
--	return __pci_scan_root_bus(host, ops, sysdata);
-+	return __pci_scan_root_bus(host, ops);
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--- 
-1.7.1
+Hi Yijing,
+
+Pulled.
+
+I'm now getting build errors:
+
+/scratch/dja/linux-patches/arch/powerpc/kernel/pci-common.c: In function 'p=
+cibios_scan_phb':
+/scratch/dja/linux-patches/arch/powerpc/kernel/pci-common.c:1638:14: error:=
+ 'bus' undeclared (first use in this function)
+/scratch/dja/linux-patches/arch/powerpc/kernel/pci-common.c:1638:14: note: =
+each undeclared identifier is reported only once for each function it appea=
+rs in
+
+That relates to your changes to pcibios_scan_phb:
+-       struct pci_bus *bus;
++       struct pci_host_bridge *host;
+clashing with line 1638:
+	hose->bus =3D bus;
+which occurs later in the same unction.
+
+If I fix that, I'll get more errors with lines in that function that
+still reference hose instead of host.
+
+As well as line 1638, there's still big chunks of the function that
+reference hose, for example:
+
+	/* Get some IO space for the new PHB */
+	pcibios_setup_phb_io_space(hose);
+
+	/* Wire up PHB bus resources */
+	pcibios_setup_phb_resources(hose, &resources);
+
+	hose->busn.start =3D hose->first_busno;
+	hose->busn.end	 =3D hose->last_busno;
+	hose->busn.flags =3D IORESOURCE_BUS;
+	pci_add_resource(&resources, &hose->busn);
+
+	pci_host_ops.pci_ops =3D hose->ops;
+
+
+Basically, the changes in PowerPC need to be quite a bit more through
+just to get the changes to build.
+
+I'm keen to work on simplifying PCI code in PowerPC, but at this point,
+it will need a lot more work before it's ready to go in.
+
+Regards,
+Daniel
+
+
+On Thu, 2015-03-26 at 09:17 +0800, Yijing Wang wrote:
+> On 2015/3/26 6:13, Daniel Axtens wrote:
+> > Hi Yijing,
+> >=20
+> > I wasn't quite sure I understood your comments, so I was trying to appl=
+y
+> > your patch series and test it, but patch 3 doesn't apply cleanly to
+> > 4.0-rc5 or master. Can you respin the series?
+>=20
+> Hi Daniel,
+>    Could you pull the series from Bjorn's git tree ? The URL is
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enume=
+ration-yw8
+>=20
+> Thanks!
+> Yijing.
+>=20
+> >=20
+> > Thanks,
+> > Daniel
+> >=20
+> >=20
+> >> Hi Daniel, thanks for your review and comments. We want to make a gene=
+ric pci_host_bridge,
+> >> which would hold the common host information, for example, pci domain =
+is common info for
+> >> pci host bridge, this series saved domain in pci_host_bridge, then we =
+no need to
+> >> extract out domain by pci_bus->sysdata by platform specific pci_domain=
+_nr().
+> >> Also we store the sysdata in pci_host_bridge, and pci_bus_to_host() is=
+ the platform
+> >> interface, I think use the common interface would be better.
+> >>
+> >>>> +
+> >>>> +	/* Get probe mode and perform scan */
+> >>>> +	if (hose->dn && ppc_md.pci_probe_mode)
+> >>>> +		mode =3D ppc_md.pci_probe_mode(bus);
+> >>>> +
+> >>>> +	pr_debug("    probe mode: %d\n", mode);
+> >>>> +	if (mode =3D=3D PCI_PROBE_DEVTREE)
+> >>>> +		of_scan_bus(hose->dn, bus);
+> >>>> +
+> >>>> +	if (mode =3D=3D PCI_PROBE_NORMAL) {
+> >>>> +		pci_bus_update_busn_res_end(bus, 255);
+> >>>> +		hose->last_busno =3D pci_scan_child_bus(bus);
+> >>>> +		pci_bus_update_busn_res_end(bus, hose->last_busno);
+> >>>> +	}
+> >>>> +
+> >>>> +	return pci_bus_child_max_busnr(bus);
+> >>>> +}
+> >>>> +
+> >>> I'm having trouble convincing myself that this patch covers every
+> >>> variation within our PCI implementations. In particular, there's a
+> >>> stanza in of_scan_pci_bridge in kernel/pci_of_scan.c that's almost
+> >>> identical to this function. Does that implementation need to be clean=
+ed
+> >>> up and replaced with this function too?
+> >>>
+> >>
+> >> This is a pci_host_bridge_ops hook function, which would be called in
+> >> PCI core, and after applied this series, we only need to call pci_scan=
+_host_bridge()
+> >> to scan pci devices, and this function is also extracted from the pcib=
+ios_scan_phb(),
+> >> it's not the redundant code.
+> >>
+> >>>
+> >>>> @@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *h=
+ose)
+> >>>>  		ppc_md.pcibios_fixup_phb(hose);
+> >>>> =20
+> >>>>  	/* Configure PCI Express settings */
+> >>>> -	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> >>>> +	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> >>>>  		struct pci_bus *child;
+> >>>> -		list_for_each_entry(child, &bus->children, node)
+> >>>> +		list_for_each_entry(child, &host->bus->children, node)
+> >>>>  			pcie_bus_configure_settings(child);
+> >>>>  	}
+> >>>>  }
+> >>> Two things: Firstly, the function uses hose throughout, not host.
+> >>> Secondly, you're not deleting the bus variable: what's the purpose of
+> >>> this change?
+> >>
+> >> host is the common pci_host_bridge which is created by PCI core for pc=
+i host bridge driver,
+> >> the hose is the platform data used in powerpc. The purpose of the patc=
+h/series is to simplify
+> >> pci enumeration interface, and try to reduce the weak functions which =
+were used to setup pci bus/devices
+> >> during PCI enumeration.
+> >>
+> >>>
+> >>> Regards,
+> >>> Daniel
+> >>>
+> >>
+> >>
+> >=20
+>=20
+>=20
+
+
+--=-EtOc/hYhLJzchjc4+T9t
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAABCAAGBQJVE5bsAAoJEPC3R3P2I92FXz8QAM6EZdJbrxsM2bQA9Mazwkin
+ZryfB+DSfP/TcFyOx7Hhw2Zz0OrxH6iUa+1/RdwWIzGOXMjhwMxA2CJIbU5YeEGu
+9P4JquQto1g3aZcZLPku5eKiJlCooPBcwS7Zoir/PBAWyQg0EHjOw3yq2pWJl5nx
+JLNCHZgEzdSFmTb1u0C+sAds5RoKwcijZZJJxWI6gtaj1gmOaLyDpX8GA1SlSd5C
+wnthFTqOLmcac2iN1C172BiCsHTbc4MWUIBLTcrzqPz+/6z0XwsGDihYLAfwJdzn
+XjRxtv9VLgfNZfwteTCcaF4b8eTCBfiPKyl5vPVosZOTgfZLzgKINemc5179zhHG
+rS8qp1iOHOC+FTWYACnfLxD34CuytWQoBQLnGECuxJJgPFygjBg/AGX0Kh3HfWt4
+CEo43dzVTcXlZ4vVr86cUnW9NFWKl7MVfzSGBkunvHHRkfLEBFV6ch1e5Hje7x/P
+8UO60Stnq2HAJdarwGCzOZ0Ut4+a2K/7Yf6sx5TQeKzTGj5hDKSgSdDXb9gjaQpH
+Tgl5FJnegZXsLLSHXcuo5dhlD1bVyhwaPWSGsPxdUKLGqnpuQYM/G5aBBcaXg5+2
+C1+nJldjCsPWMImzJp0GG3UCxLAr+N3R41qnWzaanW67daQXebKsQzGUpny74IvD
+Dr3JxwEt612+WPwsTEp2
+=OlY6
+-----END PGP SIGNATURE-----
+
+--=-EtOc/hYhLJzchjc4+T9t--
 
