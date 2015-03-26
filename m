@@ -1,913 +1,174 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <54FEE216.7040307@linaro.org>
-Date: Tue, 10 Mar 2015 13:22:46 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:33020 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412AbbCZQcD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Mar 2015 12:32:03 -0400
 MIME-Version: 1.0
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-CC: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH v3 9/9] pci, ecam: Improve naming for ecam.c content and
- areas where it is used.
-References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org> <1425987320-15020-10-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1425987320-15020-10-git-send-email-tomasz.nowicki@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1427168064-8657-11-git-send-email-wangyijing@huawei.com>
+References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+	<1427168064-8657-11-git-send-email-wangyijing@huawei.com>
+Date: Thu, 26 Mar 2015 09:31:58 -0700
+Message-ID: <CAE9FiQVgXfViM22qhB-sKDSTtnhvLDMk0NTiK_G88UogVMuM_w@mail.gmail.com>
+Subject: Re: [PATCH v8 10/30] PCI: Introduce pci_host_bridge_list to manage
+ host bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Content-Type: multipart/mixed; boundary=001a1141bd0003d5b10512338ecf
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I forgot to rename pci_mmcfg_for_each_region() content. Will send fixed 
-patch.
+--001a1141bd0003d5b10512338ecf
+Content-Type: text/plain; charset=UTF-8
 
-Tomasz
+On Mon, Mar 23, 2015 at 8:34 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Introduce pci_host_bridge_list to manage pci host
+> bridges in system, this make us have the ability
+> to check whether the new host would conflict with
+> existing one. Then we could remove bus alreay exist
+> check in __pci_create_root_bus().
 
-On 10.03.2015 12:35, Tomasz Nowicki wrote:
-> This commit is consequence of making x86 MMCONFIG code available for all
-> architectures. Current code has old name fashion so for the sake of
-> making it more understandable and express where it comes from,
-> we are changing functions/variables/macros etc. name *mmconfig* -> *ecam*
->
-> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> ---
->   arch/x86/pci/acpi.c            |   2 +-
->   arch/x86/pci/mmconfig-shared.c |  64 ++++++++--------
->   arch/x86/pci/mmconfig_32.c     |  16 ++--
->   arch/x86/pci/numachip.c        |   2 +-
->   drivers/acpi/mcfg.c            |  22 +++---
->   drivers/pci/ecam.c             | 162 ++++++++++++++++++++---------------------
->   drivers/xen/pci.c              |   6 +-
->   include/linux/ecam.h           |  42 +++++------
->   8 files changed, 158 insertions(+), 158 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 5dfccef..fa3ef35 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -199,7 +199,7 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
->   static void teardown_mcfg_map(struct pci_root_info *info)
->   {
->   	if (info->mcfg_added) {
-> -		pci_mmconfig_delete(info->segment, info->start_bus,
-> +		pci_ecam_delete(info->segment, info->start_bus,
->   				    info->end_bus);
->   		info->mcfg_added = false;
->   	}
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index 6dfe614..719dccf 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -30,8 +30,8 @@ static bool pci_mmcfg_running_state;
->   static bool pci_mmcfg_arch_init_failed;
->
->   const struct pci_raw_ops pci_mmcfg = {
-> -	.read =		pci_mmcfg_read,
-> -	.write =	pci_mmcfg_write,
-> +	.read =		pci_ecam_read,
-> +	.write =	pci_ecam_write,
->   };
->
->   static u32
-> @@ -70,7 +70,7 @@ pci_mmconfig_amd_write(int len, void __iomem *addr, u32 value)
->   	}
->   }
->
-> -static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
-> +static struct pci_ecam_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
->   	.read = pci_mmconfig_amd_read,
->   	.write = pci_mmconfig_amd_write,
->   };
-> @@ -84,7 +84,7 @@ static const char *__init pci_mmcfg_e7520(void)
->   	if (win == 0x0000 || win == 0xf000)
->   		return NULL;
->
-> -	if (pci_mmconfig_add(0, 0, 255, win << 16) == NULL)
-> +	if (pci_ecam_add(0, 0, 255, win << 16) == NULL)
->   		return NULL;
->
->   	return "Intel Corporation E7520 Memory Controller Hub";
-> @@ -128,7 +128,7 @@ static const char *__init pci_mmcfg_intel_945(void)
->   	if ((pciexbar & mask) >= 0xf0000000U)
->   		return NULL;
->
-> -	if (pci_mmconfig_add(0, 0, (len >> 20) - 1, pciexbar & mask) == NULL)
-> +	if (pci_ecam_add(0, 0, (len >> 20) - 1, pciexbar & mask) == NULL)
->   		return NULL;
->
->   	return "Intel Corporation 945G/GZ/P/PL Express Memory Controller Hub";
-> @@ -175,13 +175,13 @@ static const char *__init pci_mmcfg_amd_fam10h(void)
->
->   	end_bus = (1 << busnbits) - 1;
->   	for (i = 0; i < (1 << segnbits); i++)
-> -		if (pci_mmconfig_add(i, 0, end_bus,
-> +		if (pci_ecam_add(i, 0, end_bus,
->   				     base + (1<<28) * i) == NULL) {
-> -			free_all_mmcfg();
-> +			pci_ecam_free_all();
->   			return NULL;
->   		}
->
-> -	pci_mmconfig_register_mmio(&pci_mmcfg_mmio_amd_fam10h);
-> +	pci_ecam_register_mmio(&pci_mmcfg_mmio_amd_fam10h);
->
->   	return "AMD Family 10h NB";
->   }
-> @@ -210,7 +210,7 @@ static const char *__init pci_mmcfg_nvidia_mcp55(void)
->   	/*
->   	 * do check if amd fam10h already took over
->   	 */
-> -	if (!acpi_disabled || !list_empty(&pci_mmcfg_list) || mcp55_checked)
-> +	if (!acpi_disabled || !list_empty(&pci_ecam_list) || mcp55_checked)
->   		return NULL;
->
->   	mcp55_checked = true;
-> @@ -239,7 +239,7 @@ static const char *__init pci_mmcfg_nvidia_mcp55(void)
->   		base <<= extcfg_base_lshift;
->   		start = (extcfg & extcfg_start_mask) >> extcfg_start_shift;
->   		end = start + extcfg_sizebus[size_index] - 1;
-> -		if (pci_mmconfig_add(0, start, end, base) == NULL)
-> +		if (pci_ecam_add(0, start, end, base) == NULL)
->   			continue;
->   		mcp55_mmconf_found++;
->   	}
-> @@ -273,15 +273,15 @@ static const struct pci_mmcfg_hostbridge_probe pci_mmcfg_probes[] __initconst =
->
->   static void __init pci_mmcfg_check_end_bus_number(void)
->   {
-> -	struct pci_mmcfg_region *cfg, *cfgx;
-> +	struct pci_ecam_region *cfg, *cfgx;
->
->   	/* Fixup overlaps */
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> +	list_for_each_entry(cfg, &pci_ecam_list, list) {
->   		if (cfg->end_bus < cfg->start_bus)
->   			cfg->end_bus = 255;
->
->   		/* Don't access the list head ! */
-> -		if (cfg->list.next == &pci_mmcfg_list)
-> +		if (cfg->list.next == &pci_ecam_list)
->   			break;
->
->   		cfgx = list_entry(cfg->list.next, typeof(*cfg), list);
-> @@ -301,7 +301,7 @@ static int __init pci_mmcfg_check_hostbridge(void)
->   	if (!raw_pci_ops)
->   		return 0;
->
-> -	free_all_mmcfg();
-> +	pci_ecam_free_all();
->
->   	for (i = 0; i < ARRAY_SIZE(pci_mmcfg_probes); i++) {
->   		bus =  pci_mmcfg_probes[i].bus;
-> @@ -322,7 +322,7 @@ static int __init pci_mmcfg_check_hostbridge(void)
->   	/* some end_bus_number is crazy, fix it */
->   	pci_mmcfg_check_end_bus_number();
->
-> -	return !list_empty(&pci_mmcfg_list);
-> +	return !list_empty(&pci_ecam_list);
->   }
->
->   static acpi_status check_mcfg_resource(struct acpi_resource *res, void *data)
-> @@ -395,7 +395,7 @@ static int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
->   typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
->
->   static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
-> -				    struct pci_mmcfg_region *cfg,
-> +				    struct pci_ecam_region *cfg,
->   				    struct device *dev, int with_e820)
->   {
->   	u64 addr = cfg->res.start;
-> @@ -425,8 +425,8 @@ static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
->   		cfg->end_bus = cfg->start_bus + ((size>>20) - 1);
->   		num_buses = cfg->end_bus - cfg->start_bus + 1;
->   		cfg->res.end = cfg->res.start +
-> -		    PCI_MMCFG_BUS_OFFSET(num_buses) - 1;
-> -		snprintf(cfg->name, PCI_MMCFG_RESOURCE_NAME_LEN,
-> +		    PCI_ECAM_BUS_OFFSET(num_buses) - 1;
-> +		snprintf(cfg->name, PCI_ECAM_RESOURCE_NAME_LEN,
->   			 "PCI MMCONFIG %04x [bus %02x-%02x]",
->   			 cfg->segment, cfg->start_bus, cfg->end_bus);
->
-> @@ -447,7 +447,7 @@ static int __ref is_mmconf_reserved(check_reserved_t is_reserved,
->   }
->
->   static int __ref pci_mmcfg_check_reserved(struct device *dev,
-> -		  struct pci_mmcfg_region *cfg, int early)
-> +		  struct pci_ecam_region *cfg, int early)
->   {
->   	if (!early && !acpi_disabled) {
->   		if (is_mmconf_reserved(is_acpi_reserved, cfg, dev, 0))
-> @@ -484,12 +484,12 @@ static int __ref pci_mmcfg_check_reserved(struct device *dev,
->
->   static void __init pci_mmcfg_reject_broken(int early)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> +	list_for_each_entry(cfg, &pci_ecam_list, list) {
->   		if (pci_mmcfg_check_reserved(NULL, cfg, early) == 0) {
->   			pr_info(PREFIX "not using MMCONFIG\n");
-> -			free_all_mmcfg();
-> +			pci_ecam_free_all();
->   			return;
->   		}
->   	}
-> @@ -524,24 +524,24 @@ static int pci_mmcfg_for_each_region(int (*func)(__u64 start, __u64 size,
->   static void __init __pci_mmcfg_init(int early)
->   {
->   	pci_mmcfg_reject_broken(early);
-> -	if (list_empty(&pci_mmcfg_list))
-> +	if (list_empty(&pci_ecam_list))
->   		return;
->
->   	if (pcibios_last_bus < 0) {
-> -		const struct pci_mmcfg_region *cfg;
-> +		const struct pci_ecam_region *cfg;
->
-> -		list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> +		list_for_each_entry(cfg, &pci_ecam_list, list) {
->   			if (cfg->segment)
->   				break;
->   			pcibios_last_bus = cfg->end_bus;
->   		}
->   	}
->
-> -	if (pci_mmcfg_arch_init()) {
-> +	if (pci_ecam_arch_init()) {
->   		raw_pci_ext_ops = &pci_mmcfg;
->   		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
->   	} else {
-> -		free_all_mmcfg();
-> +		pci_ecam_free_all();
->   		pci_mmcfg_arch_init_failed = true;
->   	}
->   }
-> @@ -579,7 +579,7 @@ void __init pci_mmcfg_late_init(void)
->
->   static int __init pci_mmcfg_late_insert_resources(void)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
->   	pci_mmcfg_running_state = true;
->
-> @@ -592,7 +592,7 @@ static int __init pci_mmcfg_late_insert_resources(void)
->   	 * marked so it won't cause request errors when __request_region is
->   	 * called.
->   	 */
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-> +	list_for_each_entry(cfg, &pci_ecam_list, list)
->   		if (!cfg->res.parent)
->   			insert_resource(&iomem_resource, &cfg->res);
->
-> @@ -612,7 +612,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->   {
->   	int rc;
->   	struct resource *tmp = NULL;
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
->   	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
->   		return -ENODEV;
-> @@ -621,7 +621,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->   		return -EINVAL;
->
->   	rc = -EBUSY;
-> -	cfg = pci_mmconfig_alloc(seg, start, end, addr);
-> +	cfg = pci_ecam_alloc(seg, start, end, addr);
->   	if (cfg == NULL) {
->   		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
->   		return -ENOMEM;
-> @@ -642,7 +642,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->   		goto error;
->   	}
->
-> -	rc = pci_mmconfig_inject(cfg);
-> +	rc = pci_ecam_inject(cfg);
->   	if (rc)
->   		goto error;
->
-> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-> index 7a050cb..27e707d 100644
-> --- a/arch/x86/pci/mmconfig_32.c
-> +++ b/arch/x86/pci/mmconfig_32.c
-> @@ -28,7 +28,7 @@ static int mmcfg_last_accessed_cpu;
->    */
->   static u32 get_base_addr(unsigned int seg, int bus, unsigned devfn)
->   {
-> -	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-> +	struct pci_ecam_region *cfg = pci_ecam_lookup(seg, bus);
->
->   	if (cfg)
->   		return cfg->address;
-> @@ -40,7 +40,7 @@ static u32 get_base_addr(unsigned int seg, int bus, unsigned devfn)
->    */
->   static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
->   {
-> -	u32 dev_base = base | PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12);
-> +	u32 dev_base = base | PCI_ECAM_BUS_OFFSET(bus) | (devfn << 12);
->   	int cpu = smp_processor_id();
->   	if (dev_base != mmcfg_last_accessed_device ||
->   	    cpu != mmcfg_last_accessed_cpu) {
-> @@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
->   	}
->   }
->
-> -int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-> +int pci_ecam_read(unsigned int seg, unsigned int bus,
->   			  unsigned int devfn, int reg, int len, u32 *value)
->   {
->   	unsigned long flags;
-> @@ -79,7 +79,7 @@ err:		*value = -1;
->   	return 0;
->   }
->
-> -int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-> +int pci_ecam_write(unsigned int seg, unsigned int bus,
->   			   unsigned int devfn, int reg, int len, u32 value)
->   {
->   	unsigned long flags;
-> @@ -106,22 +106,22 @@ int pci_mmcfg_write(unsigned int seg, unsigned int bus,
->   	return 0;
->   }
->
-> -int __init pci_mmcfg_arch_init(void)
-> +int __init pci_ecam_arch_init(void)
->   {
->   	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
->   	return 1;
->   }
->
-> -void __init pci_mmcfg_arch_free(void)
-> +void __init pci_ecam_arch_free(void)
->   {
->   }
->
-> -int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-> +int pci_ecam_arch_map(struct pci_ecam_region *cfg)
->   {
->   	return 0;
->   }
->
-> -void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-> +void pci_ecam_arch_unmap(struct pci_ecam_region *cfg)
->   {
->   	unsigned long flags;
->
-> diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-> index 01868b6..f60d403 100644
-> --- a/arch/x86/pci/numachip.c
-> +++ b/arch/x86/pci/numachip.c
-> @@ -21,7 +21,7 @@ static u8 limit __read_mostly;
->
->   static inline char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
->   {
-> -	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-> +	struct pci_ecam_region *cfg = pci_ecam_lookup(seg, bus);
->
->   	if (cfg && cfg->virt)
->   		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-> diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-> index e285f62..40926a3 100644
-> --- a/drivers/acpi/mcfg.c
-> +++ b/drivers/acpi/mcfg.c
-> @@ -24,13 +24,13 @@
->   int __weak raw_pci_read(unsigned int domain, unsigned int bus,
->   			unsigned int devfn, int reg, int len, u32 *val)
->   {
-> -	return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
-> +	return pci_ecam_read(domain, bus, devfn, reg, len, val);
->   }
->
->   int __weak raw_pci_write(unsigned int domain, unsigned int bus,
->   			 unsigned int devfn, int reg, int len, u32 val)
->   {
-> -	return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
-> +	return pci_ecam_write(domain, bus, devfn, reg, len, val);
->   }
->
->   static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-> @@ -69,7 +69,7 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
->   	mcfg = (struct acpi_table_mcfg *)header;
->
->   	/* how many config structures do we have */
-> -	free_all_mmcfg();
-> +	pci_ecam_free_all();
->   	entries = 0;
->   	i = header->length - sizeof(struct acpi_table_mcfg);
->   	while (i >= sizeof(struct acpi_mcfg_allocation)) {
-> @@ -85,14 +85,14 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
->   	for (i = 0; i < entries; i++) {
->   		cfg = &cfg_table[i];
->   		if (acpi_mcfg_check_entry(mcfg, cfg)) {
-> -			free_all_mmcfg();
-> +			pci_ecam_free_all();
->   			return -ENODEV;
->   		}
->
-> -		if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
-> +		if (pci_ecam_add(cfg->pci_segment, cfg->start_bus_number,
->   				   cfg->end_bus_number, cfg->address) == NULL) {
->   			pr_warn(PREFIX "no memory for MCFG entries\n");
-> -			free_all_mmcfg();
-> +			pci_ecam_free_all();
->   			return -ENOMEM;
->   		}
->   	}
-> @@ -107,15 +107,15 @@ void __init __weak pci_mmcfg_early_init(void)
->
->   void __init __weak pci_mmcfg_late_init(void)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
->   	acpi_table_parse(ACPI_SIG_MCFG, acpi_parse_mcfg);
->
-> -	if (list_empty(&pci_mmcfg_list))
-> +	if (list_empty(&pci_ecam_list))
->   		return;
-> -	if (!pci_mmcfg_arch_init())
-> -		free_all_mmcfg();
-> +	if (!pci_ecam_arch_init())
-> +		pci_ecam_free_all();
->
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-> +	list_for_each_entry(cfg, &pci_ecam_list, list)
->   		insert_resource(&iomem_resource, &cfg->res);
->   }
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index f886796..6396944 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -15,24 +15,24 @@
->   #include <linux/rculist.h>
->   #include <linux/ecam.h>
->
-> -#define PREFIX "PCI: "
-> +#define PREFIX "PCI ECAM: "
->
-> -static DEFINE_MUTEX(pci_mmcfg_lock);
-> +static DEFINE_MUTEX(pci_ecam_lock);
->
-> -LIST_HEAD(pci_mmcfg_list);
-> +LIST_HEAD(pci_ecam_list);
->
->   #ifdef CONFIG_PCI_ECAM_GENERIC
->   static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
->   				  unsigned int devfn)
->   {
-> -	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-> +	struct pci_ecam_region *cfg = pci_ecam_lookup(seg, bus);
->
->   	if (cfg && cfg->virt)
-> -		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-> +		return cfg->virt + (PCI_ECAM_BUS_OFFSET(bus) | (devfn << 12));
->   	return NULL;
->   }
->
-> -int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-> +int pci_ecam_read(unsigned int seg, unsigned int bus,
->   			  unsigned int devfn, int reg, int len, u32 *value)
->   {
->   	char __iomem *addr;
-> @@ -56,7 +56,7 @@ err:		*value = -1;
->   	return 0;
->   }
->
-> -int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-> +int pci_ecam_write(unsigned int seg, unsigned int bus,
->   			   unsigned int devfn, int reg, int len, u32 value)
->   {
->   	char __iomem *addr;
-> @@ -78,64 +78,64 @@ int pci_mmcfg_write(unsigned int seg, unsigned int bus,
->   	return 0;
->   }
->
-> -static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
-> +static void __iomem *pci_ecam_ioremap(struct pci_ecam_region *cfg)
->   {
->   	void __iomem *addr;
->   	u64 start, size;
->   	int num_buses;
->
-> -	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-> +	start = cfg->address + PCI_ECAM_BUS_OFFSET(cfg->start_bus);
->   	num_buses = cfg->end_bus - cfg->start_bus + 1;
-> -	size = PCI_MMCFG_BUS_OFFSET(num_buses);
-> +	size = PCI_ECAM_BUS_OFFSET(num_buses);
->   	addr = ioremap_nocache(start, size);
->   	if (addr)
-> -		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-> +		addr -= PCI_ECAM_BUS_OFFSET(cfg->start_bus);
->   	return addr;
->   }
->
-> -int __init pci_mmcfg_arch_init(void)
-> +int __init pci_ecam_arch_init(void)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-> -		if (pci_mmcfg_arch_map(cfg)) {
-> -			pci_mmcfg_arch_free();
-> +	list_for_each_entry(cfg, &pci_ecam_list, list)
-> +		if (pci_ecam_arch_map(cfg)) {
-> +			pci_ecam_arch_free();
->   			return 0;
->   		}
->
->   	return 1;
->   }
->
-> -void __init pci_mmcfg_arch_free(void)
-> +void __init pci_ecam_arch_free(void)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-> -		pci_mmcfg_arch_unmap(cfg);
-> +	list_for_each_entry(cfg, &pci_ecam_list, list)
-> +		pci_ecam_arch_unmap(cfg);
->   }
->
-> -int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-> +int pci_ecam_arch_map(struct pci_ecam_region *cfg)
->   {
-> -	cfg->virt = mcfg_ioremap(cfg);
-> +	cfg->virt = pci_ecam_ioremap(cfg);
->   	if (!cfg->virt) {
-> -		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
-> +		pr_err(PREFIX "can't map ECAM at %pR\n", &cfg->res);
->   		return -ENOMEM;
->   	}
->
->   	return 0;
->   }
->
-> -void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-> +void pci_ecam_arch_unmap(struct pci_ecam_region *cfg)
->   {
->   	if (cfg && cfg->virt) {
-> -		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
-> +		iounmap(cfg->virt + PCI_ECAM_BUS_OFFSET(cfg->start_bus));
->   		cfg->virt = NULL;
->   	}
->   }
->   #endif
->
->   static u32
-> -pci_mmconfig_generic_read(int len, void __iomem *addr)
-> +pci_ecam_generic_read(int len, void __iomem *addr)
->   {
->   	u32 data = 0;
->
-> @@ -155,7 +155,7 @@ pci_mmconfig_generic_read(int len, void __iomem *addr)
->   }
->
->   static void
-> -pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
-> +pci_ecam_generic_write(int len, void __iomem *addr, u32 value)
->   {
->   	switch (len) {
->   	case 1:
-> @@ -170,42 +170,42 @@ pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
->   	}
->   }
->
-> -static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
-> -	.read = pci_mmconfig_generic_read,
-> -	.write = pci_mmconfig_generic_write,
-> +static struct pci_ecam_mmio_ops pci_ecam_mmio_default = {
-> +	.read = pci_ecam_generic_read,
-> +	.write = pci_ecam_generic_write,
->   };
->
-> -static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
-> +static struct pci_ecam_mmio_ops *pci_ecam_mmio = &pci_ecam_mmio_default;
->
->   void
-> -pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
-> +pci_ecam_register_mmio(struct pci_ecam_mmio_ops *ops)
->   {
-> -	pci_mmcfg_mmio = ops;
-> +	pci_ecam_mmio = ops;
->   }
->
->   u32
->   pci_mmio_read(int len, void __iomem *addr)
->   {
-> -	if (!pci_mmcfg_mmio) {
-> +	if (!pci_ecam_mmio) {
->   		pr_err("PCI config space has no accessors !");
->   		return 0;
->   	}
->
-> -	return pci_mmcfg_mmio->read(len, addr);
-> +	return pci_ecam_mmio->read(len, addr);
->   }
->
->   void
->   pci_mmio_write(int len, void __iomem *addr, u32 value)
->   {
-> -	if (!pci_mmcfg_mmio) {
-> +	if (!pci_ecam_mmio) {
->   		pr_err("PCI config space has no accessors !");
->   		return;
->   	}
->
-> -	pci_mmcfg_mmio->write(len, addr, value);
-> +	pci_ecam_mmio->write(len, addr, value);
->   }
->
-> -static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-> +static void __init pci_ecam_remove(struct pci_ecam_region *cfg)
->   {
->   	if (cfg->res.parent)
->   		release_resource(&cfg->res);
-> @@ -213,21 +213,21 @@ static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
->   	kfree(cfg);
->   }
->
-> -void __init free_all_mmcfg(void)
-> +void __init pci_ecam_free_all(void)
->   {
-> -	struct pci_mmcfg_region *cfg, *tmp;
-> +	struct pci_ecam_region *cfg, *tmp;
->
-> -	pci_mmcfg_arch_free();
-> -	list_for_each_entry_safe(cfg, tmp, &pci_mmcfg_list, list)
-> -		pci_mmconfig_remove(cfg);
-> +	pci_ecam_arch_free();
-> +	list_for_each_entry_safe(cfg, tmp, &pci_ecam_list, list)
-> +		pci_ecam_remove(cfg);
->   }
->
-> -void list_add_sorted(struct pci_mmcfg_region *new)
-> +void pci_ecam_list_add_sorted(struct pci_ecam_region *new)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
->   	/* keep list sorted by segment and starting bus number */
-> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
-> +	list_for_each_entry_rcu(cfg, &pci_ecam_list, list) {
->   		if (cfg->segment > new->segment ||
->   		    (cfg->segment == new->segment &&
->   		     cfg->start_bus >= new->start_bus)) {
-> @@ -235,13 +235,13 @@ void list_add_sorted(struct pci_mmcfg_region *new)
->   			return;
->   		}
->   	}
-> -	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
-> +	list_add_tail_rcu(&new->list, &pci_ecam_list);
->   }
->
-> -struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
-> +struct pci_ecam_region *pci_ecam_alloc(int segment, int start,
->   					    int end, u64 addr)
->   {
-> -	struct pci_mmcfg_region *new;
-> +	struct pci_ecam_region *new;
->   	struct resource *res;
->
->   	if (addr == 0)
-> @@ -257,29 +257,29 @@ struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
->   	new->end_bus = end;
->
->   	res = &new->res;
-> -	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-> -	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
-> +	res->start = addr + PCI_ECAM_BUS_OFFSET(start);
-> +	res->end = addr + PCI_ECAM_BUS_OFFSET(end + 1) - 1;
->   	res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-> -	snprintf(new->name, PCI_MMCFG_RESOURCE_NAME_LEN,
-> -		 "PCI MMCONFIG %04x [bus %02x-%02x]", segment, start, end);
-> +	snprintf(new->name, PCI_ECAM_RESOURCE_NAME_LEN,
-> +		 "PCI ECAM %04x [bus %02x-%02x]", segment, start, end);
->   	res->name = new->name;
->
->   	return new;
->   }
->
-> -struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> +struct pci_ecam_region *pci_ecam_add(int segment, int start,
->   					  int end, u64 addr)
->   {
-> -	struct pci_mmcfg_region *new;
-> +	struct pci_ecam_region *new;
->
-> -	new = pci_mmconfig_alloc(segment, start, end, addr);
-> +	new = pci_ecam_alloc(segment, start, end, addr);
->   	if (new) {
-> -		mutex_lock(&pci_mmcfg_lock);
-> -		list_add_sorted(new);
-> -		mutex_unlock(&pci_mmcfg_lock);
-> +		mutex_lock(&pci_ecam_lock);
-> +		pci_ecam_list_add_sorted(new);
-> +		mutex_unlock(&pci_ecam_lock);
->
->   		pr_info(PREFIX
-> -		       "MMCONFIG for domain %04x [bus %02x-%02x] at %pR "
-> +		       "ECAM for domain %04x [bus %02x-%02x] at %pR "
->   		       "(base %#lx)\n",
->   		       segment, start, end, &new->res, (unsigned long)addr);
->   	}
-> @@ -287,11 +287,11 @@ struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
->   	return new;
->   }
->
-> -struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
-> +struct pci_ecam_region *pci_ecam_lookup(int segment, int bus)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
-> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-> +	list_for_each_entry_rcu(cfg, &pci_ecam_list, list)
->   		if (cfg->segment == segment &&
->   		    cfg->start_bus <= bus && bus <= cfg->end_bus)
->   			return cfg;
-> @@ -299,39 +299,39 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
->   	return NULL;
->   }
->
-> -/* Delete MMCFG information for host bridges */
-> -int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
-> +/* Delete ECAM information for host bridges */
-> +int pci_ecam_delete(u16 seg, u8 start, u8 end)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->
-> -	mutex_lock(&pci_mmcfg_lock);
-> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-> +	mutex_lock(&pci_ecam_lock);
-> +	list_for_each_entry_rcu(cfg, &pci_ecam_list, list)
->   		if (cfg->segment == seg && cfg->start_bus == start &&
->   		    cfg->end_bus == end) {
->   			list_del_rcu(&cfg->list);
->   			synchronize_rcu();
-> -			pci_mmcfg_arch_unmap(cfg);
-> +			pci_ecam_arch_unmap(cfg);
->   			if (cfg->res.parent)
->   				release_resource(&cfg->res);
-> -			mutex_unlock(&pci_mmcfg_lock);
-> +			mutex_unlock(&pci_ecam_lock);
->   			kfree(cfg);
->   			return 0;
->   		}
-> -	mutex_unlock(&pci_mmcfg_lock);
-> +	mutex_unlock(&pci_ecam_lock);
->
->   	return -ENOENT;
->   }
->
-> -int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-> +int pci_ecam_inject(struct pci_ecam_region *cfg)
->   {
-> -	struct pci_mmcfg_region *cfg_conflict;
-> +	struct pci_ecam_region *cfg_conflict;
->   	int err = 0;
->
-> -	mutex_lock(&pci_mmcfg_lock);
-> -	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-> +	mutex_lock(&pci_ecam_lock);
-> +	cfg_conflict = pci_ecam_lookup(cfg->segment, cfg->start_bus);
->   	if (cfg_conflict) {
->   		if (cfg_conflict->end_bus < cfg->end_bus)
-> -			pr_info(FW_INFO "MMCONFIG for "
-> +			pr_info(FW_INFO "ECAM for "
->   				"domain %04x [bus %02x-%02x] "
->   				"only partially covers this bridge\n",
->   				cfg_conflict->segment, cfg_conflict->start_bus,
-> @@ -340,17 +340,17 @@ int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
->   		goto out;
->   	}
->
-> -	if (pci_mmcfg_arch_map(cfg)) {
-> -		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-> +	if (pci_ecam_arch_map(cfg)) {
-> +		pr_warn("fail to map ECAM %pR.\n", &cfg->res);
->   		err = -ENOMEM;
->   		goto out;
->   	} else {
-> -		list_add_sorted(cfg);
-> -		pr_info("MMCONFIG at %pR (base %#lx)\n",
-> +		pci_ecam_list_add_sorted(cfg);
-> +		pr_info("ECAM at %pR (base %#lx)\n",
->   			&cfg->res, (unsigned long)cfg->address);
->
->   	}
->   out:
-> -	mutex_unlock(&pci_mmcfg_lock);
-> +	mutex_unlock(&pci_ecam_lock);
->   	return err;
->   }
-> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
-> index 95ee430..eff4035 100644
-> --- a/drivers/xen/pci.c
-> +++ b/drivers/xen/pci.c
-> @@ -204,7 +204,7 @@ arch_initcall(register_xen_pci_notifier);
->   #ifdef CONFIG_PCI_MMCONFIG
->   static int __init xen_mcfg_late(void)
->   {
-> -	struct pci_mmcfg_region *cfg;
-> +	struct pci_ecam_region *cfg;
->   	int rc;
->
->   	if (!xen_initial_domain())
-> @@ -213,11 +213,11 @@ static int __init xen_mcfg_late(void)
->   	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
->   		return 0;
->
-> -	if (list_empty(&pci_mmcfg_list))
-> +	if (list_empty(&pci_ecam_list))
->   		return 0;
->
->   	/* Check whether they are in the right area. */
-> -	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> +	list_for_each_entry(cfg, &pci_ecam_list, list) {
->   		struct physdev_pci_mmcfg_reserved r;
->
->   		r.address = cfg->address;
-> diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-> index fba5d6b..363691b 100644
-> --- a/include/linux/ecam.h
-> +++ b/include/linux/ecam.h
-> @@ -5,10 +5,10 @@
->   #include <linux/types.h>
->   #include <linux/acpi.h>
->
-> -/* "PCI MMCONFIG %04x [bus %02x-%02x]" */
-> -#define PCI_MMCFG_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
-> +/* "PCI ECAM %04x [bus %02x-%02x]" */
-> +#define PCI_ECAM_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
->
-> -struct pci_mmcfg_region {
-> +struct pci_ecam_region {
->   	struct list_head list;
->   	struct resource res;
->   	u64 address;
-> @@ -16,40 +16,40 @@ struct pci_mmcfg_region {
->   	u16 segment;
->   	u8 start_bus;
->   	u8 end_bus;
-> -	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-> +	char name[PCI_ECAM_RESOURCE_NAME_LEN];
->   };
->
-> -struct pci_mmcfg_mmio_ops {
-> +struct pci_ecam_mmio_ops {
->   	u32 (*read)(int len, void __iomem *addr);
->   	void (*write)(int len, void __iomem *addr, u32 value);
->   };
->
-> -struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-> -struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
-> +struct pci_ecam_region *pci_ecam_lookup(int segment, int bus);
-> +struct pci_ecam_region *pci_ecam_alloc(int segment, int start,
->   						   int end, u64 addr);
-> -int pci_mmconfig_inject(struct pci_mmcfg_region *cfg);
-> -struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> +int pci_ecam_inject(struct pci_ecam_region *cfg);
-> +struct pci_ecam_region *pci_ecam_add(int segment, int start,
->   						 int end, u64 addr);
-> -void list_add_sorted(struct pci_mmcfg_region *new);
-> -void free_all_mmcfg(void);
-> -int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
-> +void pci_ecam_list_add_sorted(struct pci_ecam_region *new);
-> +void pci_ecam_free_all(void);
-> +int pci_ecam_delete(u16 seg, u8 start, u8 end);
->
->   /* Arch specific calls */
-> -int pci_mmcfg_arch_init(void);
-> -void pci_mmcfg_arch_free(void);
-> -int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-> -void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
-> +int pci_ecam_arch_init(void);
-> +void pci_ecam_arch_free(void);
-> +int pci_ecam_arch_map(struct pci_ecam_region *cfg);
-> +void pci_ecam_arch_unmap(struct pci_ecam_region *cfg);
->   extern u32 pci_mmio_read(int len, void __iomem *addr);
->   extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
-> -extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
-> +extern void pci_ecam_register_mmio(struct pci_ecam_mmio_ops *ops);
->
-> -extern struct list_head pci_mmcfg_list;
-> +extern struct list_head pci_ecam_list;
->
-> -#define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
-> +#define PCI_ECAM_BUS_OFFSET(bus)      ((bus) << 20)
->
-> -int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-> +int pci_ecam_read(unsigned int seg, unsigned int bus,
->   		   unsigned int devfn, int reg, int len, u32 *value);
-> -int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-> +int pci_ecam_write(unsigned int seg, unsigned int bus,
->   		    unsigned int devfn, int reg, int len, u32 value);
->
->   #endif  /* __KERNEL__ */
->
+Can we use bus_type instead?
+Then we can use bus_find_device for the host_bridge enumeration.
+
+Please refer the patches that I sent out couple years ago.
+
+Thanks
+
+Yinghai
+
+--001a1141bd0003d5b10512338ecf
+Content-Type: text/x-patch; charset=US-ASCII; name="pci_host_bridge_bus_type_1.patch"
+Content-Disposition: attachment; filename="pci_host_bridge_bus_type_1.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7qdkrxn0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IEFkZCBkdW1teSBidXNfdHlwZSBmb3IgcGNpX2hvc3RfYnJp
+ZGdlCgpOZWVkIHRvIHVzZSBpdCBmb3IgbG9vcGluZyByZWdpc3RlcmVkIGhvc3RfYnJpZGdlcywg
+YW5kIGtpbGwKcGNpX3Jvb3RfYnVzZXMgbGlzdCBsYXRlci4KClNpZ25lZC1vZmYtYnk6IFlpbmdo
+YWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvcGNpLWRyaXZlci5j
+IHwgICAxMCArKysrKysrKysrCiBkcml2ZXJzL3BjaS9wcm9iZS5jICAgICAgfCAgICAxICsKIGlu
+Y2x1ZGUvbGludXgvcGNpLmggICAgICB8ICAgIDIgKysKIDMgZmlsZXMgY2hhbmdlZCwgMTMgaW5z
+ZXJ0aW9ucygrKQoKSW5kZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9p
+bmNsdWRlL2xpbnV4L3BjaS5oCkBAIC03MzUsNiArNzM1LDcgQEAgZW51bSBwY2llX2J1c19jb25m
+aWdfdHlwZXMgewogCiBleHRlcm4gZW51bSBwY2llX2J1c19jb25maWdfdHlwZXMgcGNpZV9idXNf
+Y29uZmlnOwogCitleHRlcm4gc3RydWN0IGJ1c190eXBlIHBjaV9ob3N0X2JyaWRnZV9idXNfdHlw
+ZTsKIGV4dGVybiBzdHJ1Y3QgYnVzX3R5cGUgcGNpX2J1c190eXBlOwogCiAvKiBEbyBOT1QgZGly
+ZWN0bHkgYWNjZXNzIHRoZXNlIHR3byB2YXJpYWJsZXMsIHVubGVzcyB5b3UgYXJlIGFyY2gtc3Bl
+Y2lmaWMgUENJCkBAIC04MDgsNiArODA5LDcgQEAgdm9pZCBwY2lfc3RvcF9yb290X2J1cyhzdHJ1
+Y3QgcGNpX2J1cyAqYgogdm9pZCBwY2lfcmVtb3ZlX3Jvb3RfYnVzKHN0cnVjdCBwY2lfYnVzICpi
+dXMpOwogdm9pZCBwY2lfc2V0dXBfY2FyZGJ1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzKTsKIHZvaWQg
+cGNpX3NvcnRfYnJlYWR0aGZpcnN0KHZvaWQpOworI2RlZmluZSBkZXZfaXNfcGNpX2hvc3RfYnJp
+ZGdlKGQpICgoZCktPmJ1cyA9PSAmcGNpX2hvc3RfYnJpZGdlX2J1c190eXBlKQogI2RlZmluZSBk
+ZXZfaXNfcGNpKGQpICgoZCktPmJ1cyA9PSAmcGNpX2J1c190eXBlKQogI2RlZmluZSBkZXZfaXNf
+cGYoZCkgKChkZXZfaXNfcGNpKGQpID8gdG9fcGNpX2RldihkKS0+aXNfcGh5c2ZuIDogZmFsc2Up
+KQogI2RlZmluZSBkZXZfbnVtX3ZmKGQpICgoZGV2X2lzX3BjaShkKSA/IHBjaV9udW1fdmYodG9f
+cGNpX2RldihkKSkgOiAwKSkKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2ktZHJpdmVy
+LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvcGNpLWRyaXZlci5j
+CisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLWRyaXZlci5jCkBAIC0xNDA4LDYgKzE0MDgs
+MTYgQEAgc3RydWN0IGJ1c190eXBlIHBjaV9idXNfdHlwZSA9IHsKIH07CiBFWFBPUlRfU1lNQk9M
+KHBjaV9idXNfdHlwZSk7CiAKK3N0cnVjdCBidXNfdHlwZSBwY2lfaG9zdF9icmlkZ2VfYnVzX3R5
+cGUgPSB7CisJLm5hbWUgICAgICAgICAgID0gInBjaV9ob3N0X2JyaWRnZSIsCit9OworCitzdGF0
+aWMgaW50IF9faW5pdCBwY2lfaG9zdF9icmlkZ2VfZHJpdmVyX2luaXQodm9pZCkKK3sKKwlyZXR1
+cm4gYnVzX3JlZ2lzdGVyKCZwY2lfaG9zdF9icmlkZ2VfYnVzX3R5cGUpOworfQorcG9zdGNvcmVf
+aW5pdGNhbGwocGNpX2hvc3RfYnJpZGdlX2RyaXZlcl9pbml0KTsKKwogc3RhdGljIGludCBfX2lu
+aXQgcGNpX2RyaXZlcl9pbml0KHZvaWQpCiB7CiAJcmV0dXJuIGJ1c19yZWdpc3RlcigmcGNpX2J1
+c190eXBlKTsKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9iZS5jCj09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
+LS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysrIGxpbnV4LTIuNi9kcml2
+ZXJzL3BjaS9wcm9iZS5jCkBAIC0xOTQ5LDYgKzE5NDksNyBAQCBzdHJ1Y3QgcGNpX2J1cyAqcGNp
+X2NyZWF0ZV9yb290X2J1cyhzdHJ1CiAJCWdvdG8gZXJyX291dDsKIAogCWJyaWRnZS0+ZGV2LnBh
+cmVudCA9IHBhcmVudDsKKwlicmlkZ2UtPmRldi5idXMgPSAmcGNpX2hvc3RfYnJpZGdlX2J1c190
+eXBlOwogCWJyaWRnZS0+ZGV2LnJlbGVhc2UgPSBwY2lfcmVsZWFzZV9ob3N0X2JyaWRnZV9kZXY7
+CiAJZGV2X3NldF9uYW1lKCZicmlkZ2UtPmRldiwgInBjaSUwNHg6JTAyeCIsIHBjaV9kb21haW5f
+bnIoYiksIGJ1cyk7CiAJZXJyb3IgPSBwY2liaW9zX3Jvb3RfYnJpZGdlX3ByZXBhcmUoYnJpZGdl
+KTsK
+--001a1141bd0003d5b10512338ecf
+Content-Type: text/x-patch; charset=US-ASCII; name="for_each_pci_host_bridge.patch"
+Content-Disposition: attachment; filename="for_each_pci_host_bridge.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7qdl5001
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IEFkZCBmb3JfZWFjaF9wY2lfaG9zdF9icmlkZ2UoKSBhbmQg
+cGNpX2dldF9uZXh0X2hvc3RfYnJpZGdlCgpOb3cgd2UgaGF2ZSBwY2lfcm9vdF9idXNlcyBsaXN0
+LCBhbmQgdGhlcmUgaXMgbG90cyBvZiBpdGVyYXRpb24gd2l0aApsaXN0X29mX2VhY2ggb2YgaXQs
+IHRoYXQgaXMgbm90IHNhZmUgYWZ0ZXIgd2UgYWRkIHBjaSByb290IGJ1cyBob3RwbHVnCnN1cHBv
+cnQgYWZ0ZXIgYm9vdGluZyBzdGFnZS4KCkFsc28gcGNpX2ZpbmRfbmV4dF9idXMgaXMgcHJldHR5
+IG1pc2xlYWRpbmcgbmFtZSwgYW5kIGl0IGlzIG9ubHkgZmluZGluZwpuZXh0IHJvb3QgYnVzIGlu
+c3RlYWQgb2YgcmVndWxhciBwY2kgYnVzLgoKQWRkIHBjaV9nZXRfbmV4dF9ob3N0X2JyaWRnZSBh
+bmQgdXNlIGJ1c19maW5kX2RldmljZSBpbiBkcml2ZXIgY29yZSB0bwppdGVyYXRlIGhvc3QgYnJp
+ZGdlIGFuZCB0aGUgc2FtZSB0aW1lIGdldCByb290IGJ1cy4KCkluIGZvbGxsb3dpbmcgcGF0Y2hl
+cyB3aWxsIHJlcGxhY2Ugc2VhcmNoaW5nIHJvb3QgYnVzIHdpdGggc2VhcmNoaW5nIGhvc3RfYnJp
+ZGdlLgphZnRlciB1c2luZyB3aXRoIHRoYXQgaG9zdC1icmlkZ2UsIHdpbGwgbmVlZCB0byBjYWxs
+IHB1dCBkZXZpY2UgdG8gcmVsZWFzZQpyZWZlcmVuY2UgaWYgYnJlYWsgZWFybHkgZnJvbSB0aGUg
+bG9vcC4KCkFmdGVyIHRob3NlIHJlcGxhY2luZywgd2UgZXZlbiBjb3VsZCBraWxsIHBjaV9yb290
+X2J1c2VzIGxpc3QuCgotdjI6IGZpeGVzIGNvbXBpbGluZyBlcnJvciB3aGVuIENPTkZJR19QQ0kg
+aXMgbm90IGRlZmluZWQgdGhhdCBGZW5nZ3VhbmcgZm91bmQuCgpTaWduZWQtb2ZmLWJ5OiBZaW5n
+aGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL3NlYXJjaC5jIHwg
+ICAyNCArKysrKysrKysrKysrKysrKysrKysrKysKIGluY2x1ZGUvbGludXgvcGNpLmggIHwgICAg
+OSArKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgMzMgaW5zZXJ0aW9ucygrKQoKSW5kZXg6IGxp
+bnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
+L2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCkBA
+IC00MDksNiArNDA5LDggQEAgc3RydWN0IHBjaV9ob3N0X2JyaWRnZSB7CiB9OwogCiAjZGVmaW5l
+CXRvX3BjaV9ob3N0X2JyaWRnZShuKSBjb250YWluZXJfb2Yobiwgc3RydWN0IHBjaV9ob3N0X2Jy
+aWRnZSwgZGV2KQorI2RlZmluZSBmb3JfZWFjaF9wY2lfaG9zdF9icmlkZ2UoZCkgd2hpbGUgKChk
+ID0gcGNpX2dldF9uZXh0X2hvc3RfYnJpZGdlKGQpKSAhPSBOVUxMKQorCiB2b2lkIHBjaV9zZXRf
+aG9zdF9icmlkZ2VfcmVsZWFzZShzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UsCiAJCSAg
+ICAgdm9pZCAoKnJlbGVhc2VfZm4pKHN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKiksCiAJCSAgICAg
+dm9pZCAqcmVsZWFzZV9kYXRhKTsKQEAgLTgzMSw2ICs4MzMsNyBAQCBpbnQgcGNpX2ZpbmRfaHRf
+Y2FwYWJpbGl0eShzdHJ1Y3QgcGNpX2RlCiBpbnQgcGNpX2ZpbmRfbmV4dF9odF9jYXBhYmlsaXR5
+KHN0cnVjdCBwY2lfZGV2ICpkZXYsIGludCBwb3MsIGludCBodF9jYXApOwogc3RydWN0IHBjaV9i
+dXMgKnBjaV9maW5kX25leHRfYnVzKGNvbnN0IHN0cnVjdCBwY2lfYnVzICpmcm9tKTsKIAorc3Ry
+dWN0IHBjaV9ob3N0X2JyaWRnZSAqcGNpX2dldF9uZXh0X2hvc3RfYnJpZGdlKHN0cnVjdCBwY2lf
+aG9zdF9icmlkZ2UgKmZyb20pOwogc3RydWN0IHBjaV9kZXYgKnBjaV9nZXRfZGV2aWNlKHVuc2ln
+bmVkIGludCB2ZW5kb3IsIHVuc2lnbmVkIGludCBkZXZpY2UsCiAJCQkJc3RydWN0IHBjaV9kZXYg
+KmZyb20pOwogc3RydWN0IHBjaV9kZXYgKnBjaV9nZXRfc3Vic3lzKHVuc2lnbmVkIGludCB2ZW5k
+b3IsIHVuc2lnbmVkIGludCBkZXZpY2UsCkBAIC0xNDQ3LDYgKzE0NTAsMTIgQEAgc3RhdGljIGlu
+bGluZSBpbnQgcGNpX2RvbWFpbl9ucihzdHJ1Y3QgcAogc3RhdGljIGlubGluZSBzdHJ1Y3QgcGNp
+X2RldiAqcGNpX2Rldl9nZXQoc3RydWN0IHBjaV9kZXYgKmRldikgeyByZXR1cm4gTlVMTDsgfQog
+c3RhdGljIGlubGluZSBpbnQgcGNpX2dldF9uZXdfZG9tYWluX25yKHZvaWQpIHsgcmV0dXJuIC1F
+Tk9TWVM7IH0KIAorc3RhdGljIGlubGluZSBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpwY2lfZ2V0
+X25leHRfaG9zdF9icmlkZ2UoCisJCQlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpob3N0X2JyaWRn
+ZSkKK3sKKwlyZXR1cm4gTlVMTDsKK30KKwogI2RlZmluZSBkZXZfaXNfcGNpKGQpIChmYWxzZSkK
+ICNkZWZpbmUgZGV2X2lzX3BmKGQpIChmYWxzZSkKICNkZWZpbmUgZGV2X251bV92ZihkKSAoMCkK
+SW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZWFyY2guYwo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
+eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9zZWFyY2guYworKysgbGludXgtMi42L2RyaXZlcnMvcGNp
+L3NlYXJjaC5jCkBAIC0yMzEsNiArMjMxLDMwIEBAIHN0cnVjdCBwY2lfZGV2ICpwY2lfZ2V0X2Rv
+bWFpbl9idXNfYW5kX3MKIH0KIEVYUE9SVF9TWU1CT0wocGNpX2dldF9kb21haW5fYnVzX2FuZF9z
+bG90KTsKIAorc3RhdGljIGludCBtYXRjaF9wY2lfaG9zdF9icmlkZ2Uoc3RydWN0IGRldmljZSAq
+ZGV2LCB2b2lkICpkYXRhKQoreworCXJldHVybiAxOworfQorCitzdHJ1Y3QgcGNpX2hvc3RfYnJp
+ZGdlICpwY2lfZ2V0X25leHRfaG9zdF9icmlkZ2Uoc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqZnJv
+bSkKK3sKKwlzdHJ1Y3QgZGV2aWNlICpkZXY7CisJc3RydWN0IGRldmljZSAqZGV2X3N0YXJ0ID0g
+TlVMTDsKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UgPSBOVUxMOworCisJV0FSTl9P
+Tihpbl9pbnRlcnJ1cHQoKSk7CisJaWYgKGZyb20pCisJCWRldl9zdGFydCA9ICZmcm9tLT5kZXY7
+CisJZGV2ID0gYnVzX2ZpbmRfZGV2aWNlKCZwY2lfaG9zdF9icmlkZ2VfYnVzX3R5cGUsIGRldl9z
+dGFydCwgTlVMTCwKKwkJCSAgICAgIG1hdGNoX3BjaV9ob3N0X2JyaWRnZSk7CisJaWYgKGRldikK
+KwkJYnJpZGdlID0gdG9fcGNpX2hvc3RfYnJpZGdlKGRldik7CisJaWYgKGZyb20pCisJCXB1dF9k
+ZXZpY2UoJmZyb20tPmRldik7CisJcmV0dXJuIGJyaWRnZTsKK30KK0VYUE9SVF9TWU1CT0xfR1BM
+KHBjaV9nZXRfbmV4dF9ob3N0X2JyaWRnZSk7CisKIHN0YXRpYyBpbnQgbWF0Y2hfcGNpX2Rldl9i
+eV9pZChzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpCiB7CiAJc3RydWN0IHBjaV9kZXYg
+KnBkZXYgPSB0b19wY2lfZGV2KGRldik7Cg==
+--001a1141bd0003d5b10512338ecf--
