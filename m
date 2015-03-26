@@ -1,66 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:60968 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbbCTDQ3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 23:16:29 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 20 Mar 2015 13:16:27 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 756362CE8040
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:24 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2K3GGLo48496818
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:16:24 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2K3FnDj014764
-	for <linux-pci@vger.kernel.org>; Fri, 20 Mar 2015 14:15:50 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V14 20/21] powerpc/pci: Remove unused struct pci_dn.pcidev field
-Date: Fri, 20 Mar 2015 11:06:36 +0800
-Message-Id: <1426820797-6267-21-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57290 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750790AbbCZLh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Mar 2015 07:37:27 -0400
+Date: Thu, 26 Mar 2015 12:37:24 +0100
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>
+Subject: [PATCH v4 00/10] pci: fix unhandled interrupt on shutdown
+Message-ID: <1427369811-11721-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In struct pci_dn, the pcidev field is assigned but not used, so remove it.
+Fam Zheng noticed that pci shutdown disables msi and msix of a device while
+device is still active. This was intended to fix kexec with fusion devices but
+had the unintended effect of breaking even regular shutdown when using virtio.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h     |    1 -
- arch/powerpc/platforms/powernv/pci-ioda.c |    1 -
- 2 files changed, 2 deletions(-)
+The same problem would affect any driver which doesn't register
+a level interrupt handler when using msix.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index ec83b51..680ae56 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -168,7 +168,6 @@ struct pci_dn {
- 
- 	int	pci_ext_config_space;	/* for pci devices */
- 
--	struct	pci_dev *pcidev;	/* back-pointer to the pci device */
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;		/* eeh device */
- #endif
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 8e8399f..3a79dfa 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1028,7 +1028,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 				pci_name(dev));
- 			continue;
- 		}
--		pdn->pcidev = dev;
- 		pdn->pe_number = pe->pe_number;
- 		pe->dma_weight += pnv_ioda_dma_weight(dev);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+I think the fix is to avoid touching device on shutdown:
+we clear bus master anyway, so we won't get any more
+msi interrupts, and bus reset will clear the msi/msix
+state eventually anyway.
+
+Patches 1-6 work well for me.
+Given they affect all pci devices, and the bug has been there since 2.6 times,
+I think there's no rush: we can merge them for 4.1.
+
+At the same time, once merged, patches 1-4 will likely make a good stable
+candidate.
+
+Patches 7-10 compiled only, will need maintainer ack.
+
+Please review, and consider at least 1-6 for 4.1.
+
+Changes from v3:
+	fix a copy-and-paste error in
+	  pci: drop some duplicate code
+	other patches are unchanged
+	drop Cc stable for now
+Changes from v2:
+	move code from probe to device enumeration
+	add patches to unexport pci_msi_off
+
+Michael S. Tsirkin (11):
+  pci: export functions for msi/msix ctrl
+  pci: move pci_msi_init_pci_dev to pci.c
+  pci: drop some duplicate code
+  pci: don't disable msi/msix at shutdown
+  pci: make msi/msix shutdown functions static
+  virtio_pci: drop msi_off on probe
+  ntb: drop pci_msi_off call on probe
+  mic: drop pci_msi_off call on probe
+  pci: drop pci_msi_off calls from quirks
+  pci: unexport pci_msi_off
+
+ drivers/pci/pci.h                  | 25 +++++++++++++--
+ include/linux/pci.h                |  5 ---
+ drivers/misc/mic/host/mic_intr.c   |  2 --
+ drivers/ntb/ntb_hw.c               |  2 --
+ drivers/pci/msi.c                  | 62 ++++++++------------------------------
+ drivers/pci/pci-driver.c           |  2 --
+ drivers/pci/pci.c                  | 24 +++------------
+ drivers/pci/probe.c                | 16 ++++++++++
+ drivers/pci/quirks.c               |  2 --
+ drivers/virtio/virtio_pci_common.c |  3 --
+ 10 files changed, 56 insertions(+), 88 deletions(-)
+
 -- 
-1.7.9.5
+MST
 
