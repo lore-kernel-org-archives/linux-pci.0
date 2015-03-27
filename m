@@ -1,66 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:1613 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753785AbbCBJtG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Mar 2015 04:49:06 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Voegtle <tv@lio96.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Lv Zheng <lv.zheng@intel.com>
-Subject: [Debug 2/2] x86/PCI/ACPI: Gather debug info
-Date: Mon,  2 Mar 2015 17:51:38 +0800
-Message-Id: <1425289898-22377-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1425289898-22377-1-git-send-email-jiang.liu@linux.intel.com>
-References: <alpine.LSU.2.11.1503020932210.29400@er-systems.de>
- <1425289898-22377-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:34496 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046AbbC0VBz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 17:01:55 -0400
+MIME-Version: 1.0
+In-Reply-To: <551495EE.20201@oracle.com>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+Date: Fri, 27 Mar 2015 14:01:54 -0700
+Message-ID: <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Ahern <david.ahern@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Mar 26, 2015 at 4:27 PM, David Ahern <david.ahern@oracle.com> wrote:
+> On 3/26/15 2:43 PM, Yinghai Lu wrote:
+>>
+>> Can you send out boot log with "debug ignore_loglevel"?
+>
+>
+> attached
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/acpi/resource.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+So the kernel config is sparc32 or sparc64 ?
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 4752b9939987..43de252a75b4 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -46,10 +46,10 @@ static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
- 	if (len && reslen && reslen == len && start <= end)
- 		return true;
- 
--	pr_info("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
-+	pr_warn("ACPI: invalid or unassigned resource %s [%016llx - %016llx] length [%016llx]\n",
- 		io ? "io" : "mem", start, end, len);
- 
--	return false;
-+	return reslen != 0;
- }
- 
- static void acpi_dev_memresource_flags(struct resource *res, u64 len,
-@@ -193,13 +193,14 @@ static bool acpi_decode_space(struct resource_win *win,
- 	u64 len = attr->address_length;
- 	struct resource *res = &win->res;
- 
-+	pr_warn("acpi: address space [%llx-%llx] len %llx\n", attr->minimum, attr->maximum, attr->address_length);
- 	/*
- 	 * Filter out invalid descriptor according to ACPI Spec 5.0, section
- 	 * 6.4.3.5 Address Space Resource Descriptors.
- 	 */
- 	if ((addr->min_address_fixed != addr->max_address_fixed && len) ||
- 	    (addr->min_address_fixed && addr->max_address_fixed && !len))
--		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
-+		pr_warn("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
- 			 addr->min_address_fixed, addr->max_address_fixed, len);
- 
- 	res->start = attr->minimum;
--- 
-1.7.10.4
+pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
+0x110204000)
 
+
+only could happen when dma_addr_t is 32bit.
+
+in drivers/pci/probe.c::__pcie_read_base()
+                if ((sizeof(dma_addr_t) < 8) && l) {
+                        /* Above 32-bit boundary; try to reallocate */
+                        res->flags |= IORESOURCE_UNSET;
+                        res->start = 0;
+                        res->end = sz64;
+                        dev_info(&dev->dev, "reg 0x%x: can't handle
+BAR above 4GB (bus address %#010llx)\n",
+                                 pos, (unsigned long long)l64);
+                        goto out;
+                }
+
+also root bus has
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff]
+(bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff]
+(bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
+
+and children device have
+pci 0000:05:00.0: can't claim BAR 0 [mem
+0x800100000000-0x800100001fff]: no compatible bridge window
+pci 0000:06:00.0: can't claim BAR 0 [mem 0x800110000000-0x8001101fffff
+pref]: no compatible bridge window
+pci 0000:06:00.0: can't claim BAR 4 [mem 0x800110200000-0x800110203fff
+pref]: no compatible bridge window
+pci 0000:06:00.1: can't claim BAR 0 [mem 0x800110600000-0x8001107fffff
+pref]: no compatible bridge window
+pci 0000:06:00.1: can't claim BAR 4 [mem 0x800110404000-0x800110407fff
+pref]: no compatible bridge window
+pci 0000:07:00.0: can't claim BAR 1 [mem
+0x800120000000-0x80012000ffff]: no compatible bridge window
+pci 0000:07:00.0: can't claim BAR 3 [mem
+0x800120040000-0x80012007ffff]: no compatible bridge window
+
+
+looks like some root bus resource get dumped because it is out of range.
+
+Also please make sure your config have
+
+CONFIG_PCI_DEBUG=y
+
+and capture serial console with "debug ignore_loglevel", so we check if
+pci 0000:00:01.0 really have resource assigned.
+
+Thanks
+
+Yinghai
