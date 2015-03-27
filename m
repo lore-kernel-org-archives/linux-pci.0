@@ -1,965 +1,242 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34256 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751491AbbCMQgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Mar 2015 12:36:04 -0400
-Message-ID: <1426264500.20110.22.camel@deneb.redhat.com>
-Subject: Re: [PATCH v3 4/9] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-From: Mark Salter <msalter@redhat.com>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Date: Fri, 13 Mar 2015 12:35:00 -0400
-In-Reply-To: <1425987320-15020-5-git-send-email-tomasz.nowicki@linaro.org>
-References: <1425987320-15020-1-git-send-email-tomasz.nowicki@linaro.org>
-	 <1425987320-15020-5-git-send-email-tomasz.nowicki@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37716 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397AbbC0X5Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 19:57:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+Date: Fri, 27 Mar 2015 16:57:23 -0700
+Message-ID: <CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Ahern <david.ahern@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=047d7bdca44ccbe16605124de48c
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-03-10 at 12:35 +0100, Tomasz Nowicki wrote:
-> ECAM standard and MCFG table are architecture independent and it makes
-> sense to share common code across all architectures. Both are going to
-> corresponding files - ecam.c and mcfg.c
-> 
-> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
-> We already have acpi_parse_mcfg prototype which is used nowhere.
-> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
-> can be used perfectly here.
-> 
-> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> ---
->  arch/x86/Kconfig               |   2 +
->  arch/x86/include/asm/pci_x86.h |  33 -----
->  arch/x86/pci/acpi.c            |   1 +
->  arch/x86/pci/mmconfig-shared.c | 296 +----------------------------------------
->  arch/x86/pci/mmconfig_32.c     |   1 +
->  arch/x86/pci/mmconfig_64.c     |   1 +
->  arch/x86/pci/numachip.c        |   1 +
->  drivers/acpi/Makefile          |   1 +
->  drivers/acpi/mcfg.c            |  81 +++++++++++
->  drivers/pci/Kconfig            |   4 +
->  drivers/pci/Makefile           |   5 +
->  drivers/pci/ecam.c             | 243 +++++++++++++++++++++++++++++++++
->  include/linux/ecam.h           |  51 +++++++
->  13 files changed, 394 insertions(+), 326 deletions(-)
->  create mode 100644 drivers/acpi/mcfg.c
->  create mode 100644 drivers/pci/ecam.c
->  create mode 100644 include/linux/ecam.h
-> 
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index c2fb8a8..dd926f4 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -2276,6 +2276,7 @@ config PCI_DIRECT
->  
->  config PCI_MMCONFIG
->  	def_bool y
-> +	select PCI_ECAM
->  	depends on X86_32 && PCI && (ACPI || SFI) && (PCI_GOMMCONFIG || PCI_GOANY)
->  
->  config PCI_OLPC
-> @@ -2293,6 +2294,7 @@ config PCI_DOMAINS
->  
->  config PCI_MMCONFIG
->  	bool "Support mmconfig PCI config space access"
-> +	select PCI_ECAM
->  	depends on X86_64 && PCI && ACPI
->  
->  config PCI_CNB20LE_QUIRK
-> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-> index c57c225..e8a237f 100644
-> --- a/arch/x86/include/asm/pci_x86.h
-> +++ b/arch/x86/include/asm/pci_x86.h
-> @@ -122,41 +122,8 @@ extern int pci_legacy_init(void);
->  extern void pcibios_fixup_irqs(void);
->  
->  /* pci-mmconfig.c */
-> -
-> -/* "PCI MMCONFIG %04x [bus %02x-%02x]" */
-> -#define PCI_MMCFG_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
-> -
-> -struct pci_mmcfg_region {
-> -	struct list_head list;
-> -	struct resource res;
-> -	u64 address;
-> -	char __iomem *virt;
-> -	u16 segment;
-> -	u8 start_bus;
-> -	u8 end_bus;
-> -	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-> -};
-> -
-> -struct pci_mmcfg_mmio_ops {
-> -	u32 (*read)(int len, void __iomem *addr);
-> -	void (*write)(int len, void __iomem *addr, u32 value);
-> -};
-> -
-> -extern int __init pci_mmcfg_arch_init(void);
-> -extern void __init pci_mmcfg_arch_free(void);
-> -extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-> -extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
->  extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->  			       phys_addr_t addr);
-> -extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
-> -extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-> -extern u32 pci_mmio_read(int len, void __iomem *addr);
-> -extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
-> -extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
-> -
-> -extern struct list_head pci_mmcfg_list;
-> -
-> -#define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
->  
->  /*
->   * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 6ac2738..5dfccef 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -4,6 +4,7 @@
->  #include <linux/irq.h>
->  #include <linux/dmi.h>
->  #include <linux/slab.h>
-> +#include <linux/ecam.h>
->  #include <asm/numa.h>
->  #include <asm/pci_x86.h>
->  
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index 685cd4c..5064302 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -18,6 +18,7 @@
->  #include <linux/slab.h>
->  #include <linux/mutex.h>
->  #include <linux/rculist.h>
-> +#include <linux/ecam.h>
->  #include <asm/e820.h>
->  #include <asm/pci_x86.h>
->  #include <asm/acpi.h>
-> @@ -27,52 +28,6 @@
->  /* Indicate if the mmcfg resources have been placed into the resource table. */
->  static bool pci_mmcfg_running_state;
->  static bool pci_mmcfg_arch_init_failed;
-> -static DEFINE_MUTEX(pci_mmcfg_lock);
-> -
-> -LIST_HEAD(pci_mmcfg_list);
-> -
-> -static u32
-> -pci_mmconfig_generic_read(int len, void __iomem *addr)
-> -{
-> -	u32 data = 0;
-> -
-> -	switch (len) {
-> -	case 1:
-> -		data = readb(addr);
-> -		break;
-> -	case 2:
-> -		data = readw(addr);
-> -		break;
-> -	case 4:
-> -		data = readl(addr);
-> -		break;
-> -	}
-> -
-> -	return data;
-> -}
-> -
-> -static void
-> -pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
-> -{
-> -	switch (len) {
-> -	case 1:
-> -		writeb(value, addr);
-> -		break;
-> -	case 2:
-> -		writew(value, addr);
-> -		break;
-> -	case 4:
-> -		writel(value, addr);
-> -		break;
-> -	}
-> -}
-> -
-> -static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
-> -	.read = pci_mmconfig_generic_read,
-> -	.write = pci_mmconfig_generic_write,
-> -};
-> -
-> -static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
->  
->  static u32
->  pci_mmconfig_amd_read(int len, void __iomem *addr)
-> @@ -115,128 +70,6 @@ static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_amd_fam10h = {
->  	.write = pci_mmconfig_amd_write,
->  };
->  
-> -void
-> -pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
-> -{
-> -	pci_mmcfg_mmio = ops;
-> -}
-> -
-> -u32
-> -pci_mmio_read(int len, void __iomem *addr)
-> -{
-> -	if (!pci_mmcfg_mmio) {
-> -		pr_err("PCI config space has no accessors !");
-> -		return 0;
-> -	}
-> -
-> -	return pci_mmcfg_mmio->read(len, addr);
-> -}
-> -
-> -void
-> -pci_mmio_write(int len, void __iomem *addr, u32 value)
-> -{
-> -	if (!pci_mmcfg_mmio) {
-> -		pr_err("PCI config space has no accessors !");
-> -		return;
-> -	}
-> -
-> -	pci_mmcfg_mmio->write(len, addr, value);
-> -}
-> -
-> -static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-> -{
-> -	if (cfg->res.parent)
-> -		release_resource(&cfg->res);
-> -	list_del(&cfg->list);
-> -	kfree(cfg);
-> -}
-> -
-> -static void __init free_all_mmcfg(void)
-> -{
-> -	struct pci_mmcfg_region *cfg, *tmp;
-> -
-> -	pci_mmcfg_arch_free();
-> -	list_for_each_entry_safe(cfg, tmp, &pci_mmcfg_list, list)
-> -		pci_mmconfig_remove(cfg);
-> -}
-> -
-> -static void list_add_sorted(struct pci_mmcfg_region *new)
-> -{
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	/* keep list sorted by segment and starting bus number */
-> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
-> -		if (cfg->segment > new->segment ||
-> -		    (cfg->segment == new->segment &&
-> -		     cfg->start_bus >= new->start_bus)) {
-> -			list_add_tail_rcu(&new->list, &cfg->list);
-> -			return;
-> -		}
-> -	}
-> -	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
-> -}
-> -
-> -static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
-> -						   int end, u64 addr)
-> -{
-> -	struct pci_mmcfg_region *new;
-> -	struct resource *res;
-> -
-> -	if (addr == 0)
-> -		return NULL;
-> -
-> -	new = kzalloc(sizeof(*new), GFP_KERNEL);
-> -	if (!new)
-> -		return NULL;
-> -
-> -	new->address = addr;
-> -	new->segment = segment;
-> -	new->start_bus = start;
-> -	new->end_bus = end;
-> -
-> -	res = &new->res;
-> -	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-> -	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
-> -	res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-> -	snprintf(new->name, PCI_MMCFG_RESOURCE_NAME_LEN,
-> -		 "PCI MMCONFIG %04x [bus %02x-%02x]", segment, start, end);
-> -	res->name = new->name;
-> -
-> -	return new;
-> -}
-> -
-> -static struct pci_mmcfg_region *__init pci_mmconfig_add(int segment, int start,
-> -							int end, u64 addr)
-> -{
-> -	struct pci_mmcfg_region *new;
-> -
-> -	new = pci_mmconfig_alloc(segment, start, end, addr);
-> -	if (new) {
-> -		mutex_lock(&pci_mmcfg_lock);
-> -		list_add_sorted(new);
-> -		mutex_unlock(&pci_mmcfg_lock);
-> -
-> -		pr_info(PREFIX
-> -		       "MMCONFIG for domain %04x [bus %02x-%02x] at %pR "
-> -		       "(base %#lx)\n",
-> -		       segment, start, end, &new->res, (unsigned long)addr);
-> -	}
-> -
-> -	return new;
-> -}
-> -
-> -struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
-> -{
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-> -		if (cfg->segment == segment &&
-> -		    cfg->start_bus <= bus && bus <= cfg->end_bus)
-> -			return cfg;
-> -
-> -	return NULL;
-> -}
-> -
->  static const char *__init pci_mmcfg_e7520(void)
->  {
->  	u32 win;
-> @@ -657,73 +490,6 @@ static void __init pci_mmcfg_reject_broken(int early)
->  	}
->  }
->  
-> -static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-> -					struct acpi_mcfg_allocation *cfg)
-> -{
-> -	int year;
-> -
-> -	if (cfg->address < 0xFFFFFFFF)
-> -		return 0;
-> -
-> -	if (!strncmp(mcfg->header.oem_id, "SGI", 3))
-> -		return 0;
-> -
-> -	if (mcfg->header.revision >= 1) {
-> -		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
-> -		    year >= 2010)
-> -			return 0;
-> -	}
-> -
-> -	pr_err(PREFIX "MCFG region for %04x [bus %02x-%02x] at %#llx "
-> -	       "is above 4GB, ignored\n", cfg->pci_segment,
-> -	       cfg->start_bus_number, cfg->end_bus_number, cfg->address);
-> -	return -EINVAL;
-> -}
+--047d7bdca44ccbe16605124de48c
+Content-Type: text/plain; charset=UTF-8
 
-This looks very arch-specific. Shouldn't this be only generic checks
-with some hook for architectures to add arch-specific checks?
+On Fri, Mar 27, 2015 at 2:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Mar 26, 2015 at 4:27 PM, David Ahern <david.ahern@oracle.com> wrote:
 
-> -
-> -static int __init pci_parse_mcfg(struct acpi_table_header *header)
-> -{
-> -	struct acpi_table_mcfg *mcfg;
-> -	struct acpi_mcfg_allocation *cfg_table, *cfg;
-> -	unsigned long i;
-> -	int entries;
-> -
-> -	if (!header)
-> -		return -EINVAL;
-> -
-> -	mcfg = (struct acpi_table_mcfg *)header;
-> -
-> -	/* how many config structures do we have */
-> -	free_all_mmcfg();
-> -	entries = 0;
-> -	i = header->length - sizeof(struct acpi_table_mcfg);
-> -	while (i >= sizeof(struct acpi_mcfg_allocation)) {
-> -		entries++;
-> -		i -= sizeof(struct acpi_mcfg_allocation);
-> -	}
-> -	if (entries == 0) {
-> -		pr_err(PREFIX "MMCONFIG has no entries\n");
-> -		return -ENODEV;
-> -	}
-> -
-> -	cfg_table = (struct acpi_mcfg_allocation *) &mcfg[1];
-> -	for (i = 0; i < entries; i++) {
-> -		cfg = &cfg_table[i];
-> -		if (acpi_mcfg_check_entry(mcfg, cfg)) {
-> -			free_all_mmcfg();
-> -			return -ENODEV;
-> -		}
-> -
-> -		if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
-> -				   cfg->end_bus_number, cfg->address) == NULL) {
-> -			pr_warn(PREFIX "no memory for MCFG entries\n");
-> -			free_all_mmcfg();
-> -			return -ENOMEM;
-> -		}
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  #ifdef CONFIG_ACPI_APEI
->  extern int (*arch_apei_filter_addr)(int (*func)(__u64 start, __u64 size,
->  				     void *data), void *data);
-> @@ -782,7 +548,7 @@ void __init pci_mmcfg_early_init(void)
->  		if (pci_mmcfg_check_hostbridge())
->  			known_bridge = 1;
->  		else
-> -			acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-> +			acpi_sfi_table_parse(ACPI_SIG_MCFG, acpi_parse_mcfg);
->  		__pci_mmcfg_init(1);
->  
->  		set_apei_filter();
-> @@ -800,7 +566,7 @@ void __init pci_mmcfg_late_init(void)
->  
->  	/* MMCONFIG hasn't been enabled yet, try again */
->  	if (pci_probe & PCI_PROBE_MASK & ~PCI_PROBE_MMCONF) {
-> -		acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
-> +		acpi_sfi_table_parse(ACPI_SIG_MCFG, acpi_parse_mcfg);
->  		__pci_mmcfg_init(0);
->  	}
->  }
-> @@ -834,39 +600,6 @@ static int __init pci_mmcfg_late_insert_resources(void)
->   */
->  late_initcall(pci_mmcfg_late_insert_resources);
->  
-> -static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-> -{
-> -	struct pci_mmcfg_region *cfg_conflict;
-> -	int err = 0;
-> -
-> -	mutex_lock(&pci_mmcfg_lock);
-> -	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-> -	if (cfg_conflict) {
-> -		if (cfg_conflict->end_bus < cfg->end_bus)
-> -			pr_info(FW_INFO "MMCONFIG for "
-> -				"domain %04x [bus %02x-%02x] "
-> -				"only partially covers this bridge\n",
-> -				cfg_conflict->segment, cfg_conflict->start_bus,
-> -				cfg_conflict->end_bus);
-> -		err = -EEXIST;
-> -		goto out;
-> -	}
-> -
-> -	if (pci_mmcfg_arch_map(cfg)) {
-> -		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-> -		err = -ENOMEM;
-> -		goto out;
-> -	} else {
-> -		list_add_sorted(cfg);
-> -		pr_info("MMCONFIG at %pR (base %#lx)\n",
-> -			&cfg->res, (unsigned long)cfg->address);
-> -
-> -	}
-> -out:
-> -	mutex_unlock(&pci_mmcfg_lock);
-> -	return err;
-> -}
-> -
->  /* Add MMCFG information for host bridges */
->  int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->  			phys_addr_t addr)
-> @@ -915,26 +648,3 @@ error:
->  	kfree(cfg);
->  	return rc;
->  }
-> -
-> -/* Delete MMCFG information for host bridges */
-> -int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
-> -{
-> -	struct pci_mmcfg_region *cfg;
-> -
-> -	mutex_lock(&pci_mmcfg_lock);
-> -	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-> -		if (cfg->segment == seg && cfg->start_bus == start &&
-> -		    cfg->end_bus == end) {
-> -			list_del_rcu(&cfg->list);
-> -			synchronize_rcu();
-> -			pci_mmcfg_arch_unmap(cfg);
-> -			if (cfg->res.parent)
-> -				release_resource(&cfg->res);
-> -			mutex_unlock(&pci_mmcfg_lock);
-> -			kfree(cfg);
-> -			return 0;
-> -		}
-> -	mutex_unlock(&pci_mmcfg_lock);
-> -
-> -	return -ENOENT;
-> -}
-> diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-> index 4b3d025..5cf6291 100644
-> --- a/arch/x86/pci/mmconfig_32.c
-> +++ b/arch/x86/pci/mmconfig_32.c
-> @@ -12,6 +12,7 @@
->  #include <linux/pci.h>
->  #include <linux/init.h>
->  #include <linux/rcupdate.h>
-> +#include <linux/ecam.h>
->  #include <asm/e820.h>
->  #include <asm/pci_x86.h>
->  
-> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-> index 032593d..b62ff18 100644
-> --- a/arch/x86/pci/mmconfig_64.c
-> +++ b/arch/x86/pci/mmconfig_64.c
-> @@ -10,6 +10,7 @@
->  #include <linux/acpi.h>
->  #include <linux/bitmap.h>
->  #include <linux/rcupdate.h>
-> +#include <linux/ecam.h>
->  #include <asm/e820.h>
->  #include <asm/pci_x86.h>
->  
-> diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-> index 5047e9b..01868b6 100644
-> --- a/arch/x86/pci/numachip.c
-> +++ b/arch/x86/pci/numachip.c
-> @@ -13,6 +13,7 @@
->   *
->   */
->  
-> +#include <linux/ecam.h>
->  #include <linux/pci.h>
->  #include <asm/pci_x86.h>
->  
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index 623b117..39498a1 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -67,6 +67,7 @@ obj-$(CONFIG_ACPI_BUTTON)	+= button.o
->  obj-$(CONFIG_ACPI_FAN)		+= fan.o
->  obj-$(CONFIG_ACPI_VIDEO)	+= video.o
->  obj-$(CONFIG_ACPI_PCI_SLOT)	+= pci_slot.o
-> +obj-$(CONFIG_PCI_MMCONFIG)	+= mcfg.o
->  obj-$(CONFIG_ACPI_PROCESSOR)	+= processor.o
->  obj-y				+= container.o
->  obj-$(CONFIG_ACPI_THERMAL)	+= thermal.o
-> diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-> new file mode 100644
-> index 0000000..a2e2326
-> --- /dev/null
-> +++ b/drivers/acpi/mcfg.c
-> @@ -0,0 +1,81 @@
-> +/*
-> + * MCFG ACPI table parser.
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + */
-> +
-> +#include <linux/acpi.h>
-> +#include <linux/dmi.h>
-> +#include <linux/ecam.h>
-> +
-> +#define	PREFIX	"MCFG: "
-> +
-> +static int __init acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-> +					struct acpi_mcfg_allocation *cfg)
-> +{
-> +	int year;
-> +
-> +	if (cfg->address < 0xFFFFFFFF)
-> +		return 0;
-> +
-> +	if (!strncmp(mcfg->header.oem_id, "SGI", 3))
-> +		return 0;
-> +
-> +	if (mcfg->header.revision >= 1) {
-> +		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
-> +		    year >= 2010)
-> +			return 0;
-> +	}
-> +
-> +	pr_err(PREFIX "MCFG region for %04x [bus %02x-%02x] at %#llx "
-> +	       "is above 4GB, ignored\n", cfg->pci_segment,
-> +	       cfg->start_bus_number, cfg->end_bus_number, cfg->address);
-> +	return -EINVAL;
-> +}
-> +
-> +int __init acpi_parse_mcfg(struct acpi_table_header *header)
-> +{
-> +	struct acpi_table_mcfg *mcfg;
-> +	struct acpi_mcfg_allocation *cfg_table, *cfg;
-> +	unsigned long i;
-> +	int entries;
-> +
-> +	if (!header)
-> +		return -EINVAL;
-> +
-> +	mcfg = (struct acpi_table_mcfg *)header;
-> +
-> +	/* how many config structures do we have */
-> +	free_all_mmcfg();
-> +	entries = 0;
-> +	i = header->length - sizeof(struct acpi_table_mcfg);
-> +	while (i >= sizeof(struct acpi_mcfg_allocation)) {
-> +		entries++;
-> +		i -= sizeof(struct acpi_mcfg_allocation);
-> +	}
-> +	if (entries == 0) {
-> +		pr_err(PREFIX "MCFG table has no entries\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	cfg_table = (struct acpi_mcfg_allocation *) &mcfg[1];
-> +	for (i = 0; i < entries; i++) {
-> +		cfg = &cfg_table[i];
-> +		if (acpi_mcfg_check_entry(mcfg, cfg)) {
-> +			free_all_mmcfg();
-> +			return -ENODEV;
-> +		}
-> +
-> +		if (pci_mmconfig_add(cfg->pci_segment, cfg->start_bus_number,
-> +				   cfg->end_bus_number, cfg->address) == NULL) {
-> +			pr_warn(PREFIX "no memory for MCFG entries\n");
-> +			free_all_mmcfg();
-> +			return -ENOMEM;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 7a8f1c5..e2eb982 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -22,6 +22,10 @@ config PCI_MSI_IRQ_DOMAIN
->  	depends on PCI_MSI
->  	select GENERIC_MSI_IRQ_DOMAIN
->  
-> +config PCI_ECAM
-> +	bool "Enhanced Configuration Access Mechanism (ECAM)"
-> +	depends on PCI
-> +
->  config PCI_DEBUG
->  	bool "PCI Debugging"
->  	depends on PCI && DEBUG_KERNEL
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 73e4af4..ce7b630 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -41,6 +41,11 @@ obj-$(CONFIG_SPARC_LEON) += setup-irq.o
->  obj-$(CONFIG_M68K) += setup-irq.o
->  
->  #
-> +# Enhanced Configuration Access Mechanism (ECAM)
-> +#
-> +obj-$(CONFIG_PCI_ECAM)	+= ecam.o
-> +
-> +#
->  # ACPI Related PCI FW Functions
->  # ACPI _DSM provided firmware instance and string name
->  #
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> new file mode 100644
-> index 0000000..f540184
-> --- /dev/null
-> +++ b/drivers/pci/ecam.c
-> @@ -0,0 +1,243 @@
-> +/*
-> + * Arch agnostic direct PCI config space access via
-> + * ECAM (Enhanced Configuration Access Mechanism)
-> + *
-> + * Per-architecture code takes care of the mappings, region validation and
-> + * accesses themselves.
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + */
-> +
-> +#include <linux/mutex.h>
-> +#include <linux/rculist.h>
-> +#include <linux/ecam.h>
-> +
-> +#define PREFIX "PCI: "
-> +
-> +static DEFINE_MUTEX(pci_mmcfg_lock);
-> +
-> +LIST_HEAD(pci_mmcfg_list);
-> +
-> +static u32
-> +pci_mmconfig_generic_read(int len, void __iomem *addr)
-> +{
-> +	u32 data = 0;
-> +
-> +	switch (len) {
-> +	case 1:
-> +		data = readb(addr);
-> +		break;
-> +	case 2:
-> +		data = readw(addr);
-> +		break;
-> +	case 4:
-> +		data = readl(addr);
-> +		break;
-> +	}
-> +
-> +	return data;
-> +}
-> +
-> +static void
-> +pci_mmconfig_generic_write(int len, void __iomem *addr, u32 value)
-> +{
-> +	switch (len) {
-> +	case 1:
-> +		writeb(value, addr);
-> +		break;
-> +	case 2:
-> +		writew(value, addr);
-> +		break;
-> +	case 4:
-> +		writel(value, addr);
-> +		break;
-> +	}
-> +}
-> +
-> +static struct pci_mmcfg_mmio_ops pci_mmcfg_mmio_default = {
-> +	.read = pci_mmconfig_generic_read,
-> +	.write = pci_mmconfig_generic_write,
-> +};
-> +
-> +static struct pci_mmcfg_mmio_ops *pci_mmcfg_mmio = &pci_mmcfg_mmio_default;
-> +
-> +void
-> +pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops)
-> +{
-> +	pci_mmcfg_mmio = ops;
-> +}
-> +
-> +u32
-> +pci_mmio_read(int len, void __iomem *addr)
-> +{
-> +	if (!pci_mmcfg_mmio) {
-> +		pr_err("PCI config space has no accessors !");
-> +		return 0;
-> +	}
-> +
-> +	return pci_mmcfg_mmio->read(len, addr);
-> +}
-> +
-> +void
-> +pci_mmio_write(int len, void __iomem *addr, u32 value)
-> +{
-> +	if (!pci_mmcfg_mmio) {
-> +		pr_err("PCI config space has no accessors !");
-> +		return;
-> +	}
-> +
-> +	pci_mmcfg_mmio->write(len, addr, value);
-> +}
-> +
-> +static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
-> +{
-> +	if (cfg->res.parent)
-> +		release_resource(&cfg->res);
-> +	list_del(&cfg->list);
-> +	kfree(cfg);
-> +}
-> +
-> +void __init free_all_mmcfg(void)
-> +{
-> +	struct pci_mmcfg_region *cfg, *tmp;
-> +
-> +	pci_mmcfg_arch_free();
-> +	list_for_each_entry_safe(cfg, tmp, &pci_mmcfg_list, list)
-> +		pci_mmconfig_remove(cfg);
-> +}
-> +
-> +void list_add_sorted(struct pci_mmcfg_region *new)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	/* keep list sorted by segment and starting bus number */
-> +	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
-> +		if (cfg->segment > new->segment ||
-> +		    (cfg->segment == new->segment &&
-> +		     cfg->start_bus >= new->start_bus)) {
-> +			list_add_tail_rcu(&new->list, &cfg->list);
-> +			return;
-> +		}
-> +	}
-> +	list_add_tail_rcu(&new->list, &pci_mmcfg_list);
-> +}
-> +
-> +struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
-> +					    int end, u64 addr)
-> +{
-> +	struct pci_mmcfg_region *new;
-> +	struct resource *res;
-> +
-> +	if (addr == 0)
-> +		return NULL;
-> +
-> +	new = kzalloc(sizeof(*new), GFP_KERNEL);
-> +	if (!new)
-> +		return NULL;
-> +
-> +	new->address = addr;
-> +	new->segment = segment;
-> +	new->start_bus = start;
-> +	new->end_bus = end;
-> +
-> +	res = &new->res;
-> +	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-> +	res->end = addr + PCI_MMCFG_BUS_OFFSET(end + 1) - 1;
-> +	res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-> +	snprintf(new->name, PCI_MMCFG_RESOURCE_NAME_LEN,
-> +		 "PCI MMCONFIG %04x [bus %02x-%02x]", segment, start, end);
-> +	res->name = new->name;
-> +
-> +	return new;
-> +}
-> +
-> +struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> +					  int end, u64 addr)
-> +{
-> +	struct pci_mmcfg_region *new;
-> +
-> +	new = pci_mmconfig_alloc(segment, start, end, addr);
-> +	if (new) {
-> +		mutex_lock(&pci_mmcfg_lock);
-> +		list_add_sorted(new);
-> +		mutex_unlock(&pci_mmcfg_lock);
-> +
-> +		pr_info(PREFIX
-> +		       "MMCONFIG for domain %04x [bus %02x-%02x] at %pR "
-> +		       "(base %#lx)\n",
-> +		       segment, start, end, &new->res, (unsigned long)addr);
-> +	}
-> +
-> +	return new;
-> +}
-> +
-> +struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-> +		if (cfg->segment == segment &&
-> +		    cfg->start_bus <= bus && bus <= cfg->end_bus)
-> +			return cfg;
-> +
-> +	return NULL;
-> +}
-> +
-> +/* Delete MMCFG information for host bridges */
-> +int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
-> +{
-> +	struct pci_mmcfg_region *cfg;
-> +
-> +	mutex_lock(&pci_mmcfg_lock);
-> +	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-> +		if (cfg->segment == seg && cfg->start_bus == start &&
-> +		    cfg->end_bus == end) {
-> +			list_del_rcu(&cfg->list);
-> +			synchronize_rcu();
-> +			pci_mmcfg_arch_unmap(cfg);
-> +			if (cfg->res.parent)
-> +				release_resource(&cfg->res);
-> +			mutex_unlock(&pci_mmcfg_lock);
-> +			kfree(cfg);
-> +			return 0;
-> +		}
-> +	mutex_unlock(&pci_mmcfg_lock);
-> +
-> +	return -ENOENT;
-> +}
-> +
-> +int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-> +{
-> +	struct pci_mmcfg_region *cfg_conflict;
-> +	int err = 0;
-> +
-> +	mutex_lock(&pci_mmcfg_lock);
-> +	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-> +	if (cfg_conflict) {
-> +		if (cfg_conflict->end_bus < cfg->end_bus)
-> +			pr_info(FW_INFO "MMCONFIG for "
-> +				"domain %04x [bus %02x-%02x] "
-> +				"only partially covers this bridge\n",
-> +				cfg_conflict->segment, cfg_conflict->start_bus,
-> +				cfg_conflict->end_bus);
-> +		err = -EEXIST;
-> +		goto out;
-> +	}
-> +
-> +	if (pci_mmcfg_arch_map(cfg)) {
-> +		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-> +		err = -ENOMEM;
-> +		goto out;
-> +	} else {
-> +		list_add_sorted(cfg);
-> +		pr_info("MMCONFIG at %pR (base %#lx)\n",
-> +			&cfg->res, (unsigned long)cfg->address);
-> +
-> +	}
-> +out:
-> +	mutex_unlock(&pci_mmcfg_lock);
-> +	return err;
-> +}
-> diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-> new file mode 100644
-> index 0000000..2387df5
-> --- /dev/null
-> +++ b/include/linux/ecam.h
-> @@ -0,0 +1,51 @@
-> +#ifndef __ECAM_H
-> +#define __ECAM_H
-> +#ifdef __KERNEL__
-> +
-> +#include <linux/types.h>
-> +#include <linux/acpi.h>
-> +
-> +/* "PCI MMCONFIG %04x [bus %02x-%02x]" */
-> +#define PCI_MMCFG_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
-> +
-> +struct pci_mmcfg_region {
-> +	struct list_head list;
-> +	struct resource res;
-> +	u64 address;
-> +	char __iomem *virt;
-> +	u16 segment;
-> +	u8 start_bus;
-> +	u8 end_bus;
-> +	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-> +};
-> +
-> +struct pci_mmcfg_mmio_ops {
-> +	u32 (*read)(int len, void __iomem *addr);
-> +	void (*write)(int len, void __iomem *addr, u32 value);
-> +};
-> +
-> +struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
-> +struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
-> +						   int end, u64 addr);
-> +int pci_mmconfig_inject(struct pci_mmcfg_region *cfg);
-> +struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
-> +						 int end, u64 addr);
-> +void list_add_sorted(struct pci_mmcfg_region *new);
-> +void free_all_mmcfg(void);
-> +int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
-> +
-> +/* Arch specific calls */
-> +int pci_mmcfg_arch_init(void);
-> +void pci_mmcfg_arch_free(void);
-> +int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-> +void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
-> +extern u32 pci_mmio_read(int len, void __iomem *addr);
-> +extern void pci_mmio_write(int len, void __iomem *addr, u32 value);
-> +extern void pci_mmconfig_register_mmio(struct pci_mmcfg_mmio_ops *ops);
-> +
-> +extern struct list_head pci_mmcfg_list;
-> +
-> +#define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
-> +
-> +#endif  /* __KERNEL__ */
-> +#endif  /* __ECAM_H */
+> Also please make sure your config have
+>
+> CONFIG_PCI_DEBUG=y
+>
+> and capture serial console with "debug ignore_loglevel", so we check if
+> pci 0000:00:01.0 really have resource assigned.
 
+Please check attached patch and send out boot log with above config.
 
+Thanks
+
+Yinghai
+
+--047d7bdca44ccbe16605124de48c
+Content-Type: text/x-patch; charset=US-ASCII; name="pci_bus_addr_t.patch"
+Content-Disposition: attachment; filename="pci_bus_addr_t.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7s90u610
+
+U3ViamVjdDogW1JGQyBQQVRDSF0gUENJOiBJbnRyb2R1Y2UgcGNpX2J1c19hZGRyX3QKCkRhdmlk
+IEFoZXJuIGZvdW5kIGNvbW1pdCBkNjNlMmUxZjNkZjkgKCJzcGFyYy9QQ0k6IENsaXAgYnJpZGdl
+IHdpbmRvd3MKdG8gZml0IGluIHVwc3RyZWFtIHdpbmRvd3MiKSBicm9rZSBzcGFyYy9UNS04LgoK
+SW4gdGhlIGJvb3QgbG9nLCB0aGVyZSBpcwogIHBjaSAwMDAwOjA2OjAwLjA6IHJlZyAweDE4NDog
+Y2FuJ3QgaGFuZGxlIEJBUiBhYm92ZSA0R0IgKGJ1cyBhZGRyZXNzCiAgMHgxMTAyMDQwMDApCmJ1
+dCB0aGF0IG9ubHkgY291bGQgaGFwcGVuIHdoZW4gZG1hX2FkZHJfdCBpcyAzMi1iaXQuCgpBY2Nv
+cmRpbmcgdG8gRGF2aWQgTWlsbGVyLCBhbGwgRE1BIG9jY3VycyBiZWhpbmQgYW4gSU9NTVUgYW5k
+IHRoZXNlCklPTU1VcyBvbmx5IHN1cHBvcnQgMzItYml0IGFkZHJlc3NpbmcsIHRoZXJlZm9yZSBk
+bWFfYWRkcl90IGlzCjMyLWJpdCBvbiBzcGFyYzY0LgoKTGV0J3MgaW50cm9kdWNlIHBjaV9idXNf
+YWRkciBpbnN0ZWFkIG9mIHVzaW5nIGRtYV9hZGRyX3QuCgpGaXhlczogY29tbWl0IGQ2M2UyZTFm
+M2RmOSAoInNwYXJjL1BDSTogQ2xpcCBicmlkZ2Ugd2luZG93cyB0byBmaXQgaW4gdXBzdHJlYW0g
+d2luZG93cyIpCkZpeGVzOiBjb21taXQgMjNiMTNiYzc2ZjM1ICgiUENJOiBGYWlsIHNhZmVseSBp
+ZiB3ZSBjYW4ndCBoYW5kbGUgQkFScyBsYXJnZXIgdGhhbiA0R0IiKQpMaW5rOiBodHRwOi8vbGtt
+bC5rZXJuZWwub3JnL3IvQ0FFOUZpUVUxZ0pZMUxZcnhzK21hNUxDVEVFZTR4bXRqUkcwYVhKOUtf
+VHN1K205V3V3QG1haWwuZ21haWwuY29tClJlcG9ydGVkLWJ5OiBEYXZpZCBBaGVybiA8ZGF2aWQu
+YWhlcm5Ab3JhY2xlLmNvbT4KU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJu
+ZWwub3JnPgoKLS0tCiBhcmNoL2FscGhhL0tjb25maWcgICAgICAgICAgICAgfCAgICAzICsrKwog
+YXJjaC9hcm0vS2NvbmZpZyAgICAgICAgICAgICAgIHwgICAgMSArCiBhcmNoL2FybS9tYWNoLWF4
+eGlhL0tjb25maWcgICAgfCAgICAxICsKIGFyY2gvYXJtL21hY2gtZXh5bm9zL0tjb25maWcgICB8
+ICAgIDEgKwogYXJjaC9hcm0vbWFjaC1oaWdoYmFuay9LY29uZmlnIHwgICAgMSArCiBhcmNoL2Fy
+bS9tYWNoLXNobW9iaWxlL0tjb25maWcgfCAgICAxICsKIGFyY2gvYXJtL21tL0tjb25maWcgICAg
+ICAgICAgICB8ICAgIDMgKysrCiBhcmNoL2FybTY0L0tjb25maWcgICAgICAgICAgICAgfCAgICAz
+ICsrKwogYXJjaC9pYTY0L0tjb25maWcgICAgICAgICAgICAgIHwgICAgMyArKysKIGFyY2gvbWlw
+cy9LY29uZmlnICAgICAgICAgICAgICB8ICAgIDMgKysrCiBhcmNoL3Bvd2VycGMvS2NvbmZpZyAg
+ICAgICAgICAgfCAgICAzICsrKwogYXJjaC9zcGFyYy9LY29uZmlnICAgICAgICAgICAgIHwgICAg
+MyArKysKIGFyY2gvdGlsZS9LY29uZmlnICAgICAgICAgICAgICB8ICAgIDMgKysrCiBhcmNoL3g4
+Ni9LY29uZmlnICAgICAgICAgICAgICAgfCAgICA0ICsrKysKIGRyaXZlcnMvcGNpL2J1cy5jICAg
+ICAgICAgICAgICB8ICAgIDggKysrKy0tLS0KIGRyaXZlcnMvcGNpL3Byb2JlLmMgICAgICAgICAg
+ICB8ICAgMTIgKysrKysrLS0tLS0tCiBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICAgICAgfCAg
+ICA2ICsrKy0tLQogaW5jbHVkZS9saW51eC90eXBlcy5oICAgICAgICAgIHwgICAgNyArKysrKysr
+CiAxOCBmaWxlcyBjaGFuZ2VkLCA1MyBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKCklu
+ZGV4OiBsaW51eC0yLjYvYXJjaC9hbHBoYS9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
+Ni5vcmlnL2FyY2gvYWxwaGEvS2NvbmZpZworKysgbGludXgtMi42L2FyY2gvYWxwaGEvS2NvbmZp
+ZwpAQCAtNjYsNiArNjYsOSBAQCBjb25maWcgWk9ORV9ETUEKIGNvbmZpZyBBUkNIX0RNQV9BRERS
+X1RfNjRCSVQKIAlkZWZfYm9vbCB5CiAKK2NvbmZpZyBBUkNIX1BDSV9CVVNfQUREUl9UXzY0QklU
+CisJZGVmX2Jvb2wgeQorCiBjb25maWcgTkVFRF9ETUFfTUFQX1NUQVRFCiAgICAgICAgZGVmX2Jv
+b2wgeQogCkluZGV4OiBsaW51eC0yLjYvYXJjaC9hcm0vS2NvbmZpZwo9PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBs
+aW51eC0yLjYub3JpZy9hcmNoL2FybS9LY29uZmlnCisrKyBsaW51eC0yLjYvYXJjaC9hcm0vS2Nv
+bmZpZwpAQCAtMTc3OSw2ICsxNzc5LDcgQEAgY29uZmlnIFhFTgogCWRlcGVuZHMgb24gIUdFTkVS
+SUNfQVRPTUlDNjQKIAlkZXBlbmRzIG9uIE1NVQogCXNlbGVjdCBBUkNIX0RNQV9BRERSX1RfNjRC
+SVQKKwlzZWxlY3QgQVJDSF9QQ0lfQlVTX0FERFJfVF82NEJJVAogCXNlbGVjdCBBUk1fUFNDSQog
+CXNlbGVjdCBTV0lPVExCX1hFTgogCWhlbHAKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL2FybS9tYWNo
+LWF4eGlhL0tjb25maWcKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC9hcm0vbWFj
+aC1heHhpYS9LY29uZmlnCisrKyBsaW51eC0yLjYvYXJjaC9hcm0vbWFjaC1heHhpYS9LY29uZmln
+CkBAIC0xLDYgKzEsNyBAQAogY29uZmlnIEFSQ0hfQVhYSUEKIAlib29sICJMU0kgQXh4aWEgcGxh
+dGZvcm1zIiBpZiAoQVJDSF9NVUxUSV9WNyAmJiBBUk1fTFBBRSkKIAlzZWxlY3QgQVJDSF9ETUFf
+QUREUl9UXzY0QklUCisJc2VsZWN0IEFSQ0hfUENJX0JVU19BRERSX1RfNjRCSVQKIAlzZWxlY3Qg
+QVJNX0FNQkEKIAlzZWxlY3QgQVJNX0dJQwogCXNlbGVjdCBBUk1fVElNRVJfU1A4MDQKSW5kZXg6
+IGxpbnV4LTIuNi9hcmNoL2FybS9tYWNoLWV4eW5vcy9LY29uZmlnCj09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxp
+bnV4LTIuNi5vcmlnL2FyY2gvYXJtL21hY2gtZXh5bm9zL0tjb25maWcKKysrIGxpbnV4LTIuNi9h
+cmNoL2FybS9tYWNoLWV4eW5vcy9LY29uZmlnCkBAIC0xMDYsNiArMTA2LDcgQEAgY29uZmlnIFNP
+Q19FWFlOT1M1NDQwCiAJZGVmYXVsdCB5CiAJZGVwZW5kcyBvbiBBUkNIX0VYWU5PUzUKIAlzZWxl
+Y3QgQVJDSF9ETUFfQUREUl9UXzY0QklUIGlmIEFSTV9MUEFFCisJc2VsZWN0IEFSQ0hfUENJX0JV
+U19BRERSX1RfNjRCSVQgaWYgQVJNX0xQQUUKIAlzZWxlY3QgSEFWRV9BUk1fQVJDSF9USU1FUgog
+CXNlbGVjdCBBVVRPX1pSRUxBRERSCiAJc2VsZWN0IE1JR0hUX0hBVkVfUENJCkluZGV4OiBsaW51
+eC0yLjYvYXJjaC9hcm0vbWFjaC1oaWdoYmFuay9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4
+LTIuNi5vcmlnL2FyY2gvYXJtL21hY2gtaGlnaGJhbmsvS2NvbmZpZworKysgbGludXgtMi42L2Fy
+Y2gvYXJtL21hY2gtaGlnaGJhbmsvS2NvbmZpZwpAQCAtMSw2ICsxLDcgQEAKIGNvbmZpZyBBUkNI
+X0hJR0hCQU5LCiAJYm9vbCAiQ2FseGVkYSBFQ1gtMTAwMC8yMDAwIChIaWdoYmFuay9NaWR3YXkp
+IiBpZiBBUkNIX01VTFRJX1Y3CiAJc2VsZWN0IEFSQ0hfRE1BX0FERFJfVF82NEJJVCBpZiBBUk1f
+TFBBRQorCXNlbGVjdCBBUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUIGlmIEFSTV9MUEFFCiAJc2Vs
+ZWN0IEFSQ0hfSEFTX0hPTEVTX01FTU9SWU1PREVMCiAJc2VsZWN0IEFSQ0hfU1VQUE9SVFNfQklH
+X0VORElBTgogCXNlbGVjdCBBUk1fQU1CQQpJbmRleDogbGludXgtMi42L2FyY2gvYXJtL21hY2gt
+c2htb2JpbGUvS2NvbmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL2FybS9t
+YWNoLXNobW9iaWxlL0tjb25maWcKKysrIGxpbnV4LTIuNi9hcmNoL2FybS9tYWNoLXNobW9iaWxl
+L0tjb25maWcKQEAgLTM2LDYgKzM2LDcgQEAgbWVudWNvbmZpZyBBUkNIX1NITU9CSUxFX01VTFRJ
+CiAJc2VsZWN0IEhBVkVfQVJNX1RXRCBpZiBTTVAKIAlzZWxlY3QgQVJNX0dJQwogCXNlbGVjdCBB
+UkNIX0RNQV9BRERSX1RfNjRCSVQgaWYgQVJNX0xQQUUKKwlzZWxlY3QgQVJDSF9QQ0lfQlVTX0FE
+RFJfVF82NEJJVCBpZiBBUk1fTFBBRQogCXNlbGVjdCBOT19JT1BPUlRfTUFQCiAJc2VsZWN0IFBJ
+TkNUUkwKIAlzZWxlY3QgQVJDSF9SRVFVSVJFX0dQSU9MSUIKSW5kZXg6IGxpbnV4LTIuNi9hcmNo
+L2FybS9tbS9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gvYXJtL21t
+L0tjb25maWcKKysrIGxpbnV4LTIuNi9hcmNoL2FybS9tbS9LY29uZmlnCkBAIC02MzAsNiArNjMw
+LDkgQEAgY29uZmlnIEFSQ0hfUEhZU19BRERSX1RfNjRCSVQKIGNvbmZpZyBBUkNIX0RNQV9BRERS
+X1RfNjRCSVQKIAlib29sCiAKK2NvbmZpZyBBUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUCisJYm9v
+bAorCiBjb25maWcgQVJNX1RIVU1CCiAJYm9vbCAiU3VwcG9ydCBUaHVtYiB1c2VyIGJpbmFyaWVz
+IiBpZiAhQ1BVX1RIVU1CT05MWQogCWRlcGVuZHMgb24gQ1BVX0FSTTcyMFQgfHwgQ1BVX0FSTTc0
+MFQgfHwgQ1BVX0FSTTkyMFQgfHwgQ1BVX0FSTTkyMlQgfHwgXApJbmRleDogbGludXgtMi42L2Fy
+Y2gvYXJtNjQvS2NvbmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL2FybTY0
+L0tjb25maWcKKysrIGxpbnV4LTIuNi9hcmNoL2FybTY0L0tjb25maWcKQEAgLTEyNSw2ICsxMjUs
+OSBAQCBjb25maWcgSEFWRV9HRU5FUklDX1JDVV9HVVAKIGNvbmZpZyBBUkNIX0RNQV9BRERSX1Rf
+NjRCSVQKIAlkZWZfYm9vbCB5CiAKK2NvbmZpZyBBUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUCisJ
+ZGVmX2Jvb2wgeQorCiBjb25maWcgTkVFRF9ETUFfTUFQX1NUQVRFCiAJZGVmX2Jvb2wgeQogCklu
+ZGV4OiBsaW51eC0yLjYvYXJjaC9pYTY0L0tjb25maWcKPT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42
+Lm9yaWcvYXJjaC9pYTY0L0tjb25maWcKKysrIGxpbnV4LTIuNi9hcmNoL2lhNjQvS2NvbmZpZwpA
+QCAtNzQsNiArNzQsOSBAQCBjb25maWcgTU1VCiBjb25maWcgQVJDSF9ETUFfQUREUl9UXzY0QklU
+CiAJZGVmX2Jvb2wgeQogCitjb25maWcgQVJDSF9QQ0lfQlVTX0FERFJfVF82NEJJVAorCWRlZl9i
+b29sIHkKKwogY29uZmlnIE5FRURfRE1BX01BUF9TVEFURQogCWRlZl9ib29sIHkKIApJbmRleDog
+bGludXgtMi42L2FyY2gvbWlwcy9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
+L2FyY2gvbWlwcy9LY29uZmlnCisrKyBsaW51eC0yLjYvYXJjaC9taXBzL0tjb25maWcKQEAgLTk4
+NCw2ICs5ODQsOSBAQCBjb25maWcgRldfQ0ZFCiBjb25maWcgQVJDSF9ETUFfQUREUl9UXzY0QklU
+CiAJZGVmX2Jvb2wgKEhJR0hNRU0gJiYgQVJDSF9QSFlTX0FERFJfVF82NEJJVCkgfHwgNjRCSVQK
+IAorY29uZmlnIEFSQ0hfUENJX0JVU19BRERSX1RfNjRCSVQKKwlkZWZfYm9vbCAoSElHSE1FTSAm
+JiBBUkNIX1BIWVNfQUREUl9UXzY0QklUKSB8fCA2NEJJVAorCiBjb25maWcgRE1BX01BWUJFX0NP
+SEVSRU5UCiAJc2VsZWN0IERNQV9OT05DT0hFUkVOVAogCWJvb2wKSW5kZXg6IGxpbnV4LTIuNi9h
+cmNoL3Bvd2VycGMvS2NvbmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3Bv
+d2VycGMvS2NvbmZpZworKysgbGludXgtMi42L2FyY2gvcG93ZXJwYy9LY29uZmlnCkBAIC0yMyw2
+ICsyMyw5IEBAIGNvbmZpZyBBUkNIX1BIWVNfQUREUl9UXzY0QklUCiBjb25maWcgQVJDSF9ETUFf
+QUREUl9UXzY0QklUCiAJZGVmX2Jvb2wgQVJDSF9QSFlTX0FERFJfVF82NEJJVAogCitjb25maWcg
+QVJDSF9QQ0lfQUREUl9UXzY0QklUCisJZGVmX2Jvb2wgQVJDSF9QSFlTX0FERFJfVF82NEJJVAor
+CiBjb25maWcgTU1VCiAJYm9vbAogCWRlZmF1bHQgeQpJbmRleDogbGludXgtMi42L2FyY2gvc3Bh
+cmMvS2NvbmZpZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3NwYXJjL0tjb25m
+aWcKKysrIGxpbnV4LTIuNi9hcmNoL3NwYXJjL0tjb25maWcKQEAgLTE0Myw2ICsxNDMsOSBAQCBj
+b25maWcgR0VORVJJQ19JU0FfRE1BCiAJYm9vbAogCWRlZmF1bHQgeSBpZiBTUEFSQzMyCiAKK2Nv
+bmZpZyBBUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUCisJZGVmX2Jvb2wgeSBpZiBTUEFSQzY0CisK
+IGNvbmZpZyBBUkNIX1NVUFBPUlRTX0RFQlVHX1BBR0VBTExPQwogCWRlZl9ib29sIHkgaWYgU1BB
+UkM2NAogCkluZGV4OiBsaW51eC0yLjYvYXJjaC90aWxlL0tjb25maWcKPT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0g
+bGludXgtMi42Lm9yaWcvYXJjaC90aWxlL0tjb25maWcKKysrIGxpbnV4LTIuNi9hcmNoL3RpbGUv
+S2NvbmZpZwpAQCAtODYsNiArODYsOSBAQCBjb25maWcgQVJDSF9QSFlTX0FERFJfVF82NEJJVAog
+Y29uZmlnIEFSQ0hfRE1BX0FERFJfVF82NEJJVAogCWRlZl9ib29sIHkKIAorY29uZmlnIEFSQ0hf
+UENJX0JVU19BRERSX1RfNjRCSVQKKwlkZWZfYm9vbCB5CisKIGNvbmZpZyBORUVEX0RNQV9NQVBf
+U1RBVEUKIAlkZWZfYm9vbCB5CiAKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9LY29uZmlnCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gveDg2L0tjb25maWcKKysrIGxpbnV4LTIu
+Ni9hcmNoL3g4Ni9LY29uZmlnCkBAIC0xMjk1LDYgKzEyOTUsMTAgQEAgY29uZmlnIEFSQ0hfRE1B
+X0FERFJfVF82NEJJVAogCWRlZl9ib29sIHkKIAlkZXBlbmRzIG9uIFg4Nl82NCB8fCBISUdITUVN
+NjRHCiAKK2NvbmZpZyBBUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUCisJZGVmX2Jvb2wgeQorCWRl
+cGVuZHMgb24gWDg2XzY0IHx8IEhJR0hNRU02NEcKKwogY29uZmlnIFg4Nl9ESVJFQ1RfR0JQQUdF
+UwogCWRlZl9ib29sIHkKIAlkZXBlbmRzIG9uIFg4Nl82NCAmJiAhREVCVUdfUEFHRUFMTE9DICYm
+ICFLTUVNQ0hFQ0sKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwo9PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9idXMuYworKysgbGludXgtMi42L2RyaXZl
+cnMvcGNpL2J1cy5jCkBAIC05MiwxMSArOTIsMTEgQEAgdm9pZCBwY2lfYnVzX3JlbW92ZV9yZXNv
+dXJjZXMoc3RydWN0IHBjaQogfQogCiBzdGF0aWMgc3RydWN0IHBjaV9idXNfcmVnaW9uIHBjaV8z
+Ml9iaXQgPSB7MCwgMHhmZmZmZmZmZlVMTH07Ci0jaWZkZWYgQ09ORklHX0FSQ0hfRE1BX0FERFJf
+VF82NEJJVAorI2lmZGVmIENPTkZJR19BUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUCiBzdGF0aWMg
+c3RydWN0IHBjaV9idXNfcmVnaW9uIHBjaV82NF9iaXQgPSB7MCwKLQkJCQkoZG1hX2FkZHJfdCkg
+MHhmZmZmZmZmZmZmZmZmZmZmVUxMfTsKLXN0YXRpYyBzdHJ1Y3QgcGNpX2J1c19yZWdpb24gcGNp
+X2hpZ2ggPSB7KGRtYV9hZGRyX3QpIDB4MTAwMDAwMDAwVUxMLAotCQkJCShkbWFfYWRkcl90KSAw
+eGZmZmZmZmZmZmZmZmZmZmZVTEx9OworCQkJCShwY2lfYnVzX2FkZHJfdCkgMHhmZmZmZmZmZmZm
+ZmZmZmZmVUxMfTsKK3N0YXRpYyBzdHJ1Y3QgcGNpX2J1c19yZWdpb24gcGNpX2hpZ2ggPSB7KHBj
+aV9idXNfYWRkcl90KSAweDEwMDAwMDAwMFVMTCwKKwkJCQkocGNpX2J1c19hZGRyX3QpIDB4ZmZm
+ZmZmZmZmZmZmZmZmZlVMTH07CiAjZW5kaWYKIAogLyoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJz
+L3BjaS9wcm9iZS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3By
+b2JlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9iZS5jCkBAIC0yNTQsOCArMjU0LDgg
+QEAgaW50IF9fcGNpX3JlYWRfYmFzZShzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCX0KIAogCWlmIChy
+ZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQpIHsKLQkJaWYgKChzaXplb2YoZG1hX2FkZHJf
+dCkgPCA4IHx8IHNpemVvZihyZXNvdXJjZV9zaXplX3QpIDwgOCkgJiYKLQkJICAgIHN6NjQgPiAw
+eDEwMDAwMDAwMFVMTCkgeworCQlpZiAoKHNpemVvZihwY2lfYnVzX2FkZHJfdCkgPCA4IHx8IHNp
+emVvZihyZXNvdXJjZV9zaXplX3QpIDwgOCkKKwkJICAgICYmIHN6NjQgPiAweDEwMDAwMDAwMFVM
+TCkgewogCQkJcmVzLT5mbGFncyB8PSBJT1JFU09VUkNFX1VOU0VUIHwgSU9SRVNPVVJDRV9ESVNB
+QkxFRDsKIAkJCXJlcy0+c3RhcnQgPSAwOwogCQkJcmVzLT5lbmQgPSAwOwpAQCAtMjY0LDcgKzI2
+NCw3IEBAIGludCBfX3BjaV9yZWFkX2Jhc2Uoc3RydWN0IHBjaV9kZXYgKmRldiwKIAkJCWdvdG8g
+b3V0OwogCQl9CiAKLQkJaWYgKChzaXplb2YoZG1hX2FkZHJfdCkgPCA4KSAmJiBsKSB7CisJCWlm
+ICgoc2l6ZW9mKHBjaV9idXNfYWRkcl90KSA8IDgpICYmIGwpIHsKIAkJCS8qIEFib3ZlIDMyLWJp
+dCBib3VuZGFyeTsgdHJ5IHRvIHJlYWxsb2NhdGUgKi8KIAkJCXJlcy0+ZmxhZ3MgfD0gSU9SRVNP
+VVJDRV9VTlNFVDsKIAkJCXJlcy0+c3RhcnQgPSAwOwpAQCAtMzk5LDcgKzM5OSw3IEBAIHN0YXRp
+YyB2b2lkIHBjaV9yZWFkX2JyaWRnZV9tbWlvX3ByZWYoc3QKIAlzdHJ1Y3QgcGNpX2RldiAqZGV2
+ID0gY2hpbGQtPnNlbGY7CiAJdTE2IG1lbV9iYXNlX2xvLCBtZW1fbGltaXRfbG87CiAJdTY0IGJh
+c2U2NCwgbGltaXQ2NDsKLQlkbWFfYWRkcl90IGJhc2UsIGxpbWl0OworCXBjaV9idXNfYWRkcl90
+IGJhc2UsIGxpbWl0OwogCXN0cnVjdCBwY2lfYnVzX3JlZ2lvbiByZWdpb247CiAJc3RydWN0IHJl
+c291cmNlICpyZXM7CiAKQEAgLTQyNiw4ICs0MjYsOCBAQCBzdGF0aWMgdm9pZCBwY2lfcmVhZF9i
+cmlkZ2VfbW1pb19wcmVmKHN0CiAJCX0KIAl9CiAKLQliYXNlID0gKGRtYV9hZGRyX3QpIGJhc2U2
+NDsKLQlsaW1pdCA9IChkbWFfYWRkcl90KSBsaW1pdDY0OworCWJhc2UgPSAocGNpX2J1c19hZGRy
+X3QpIGJhc2U2NDsKKwlsaW1pdCA9IChwY2lfYnVzX2FkZHJfdCkgbGltaXQ2NDsKIAogCWlmIChi
+YXNlICE9IGJhc2U2NCkgewogCQlkZXZfZXJyKCZkZXYtPmRldiwgImNhbid0IGhhbmRsZSBicmlk
+Z2Ugd2luZG93IGFib3ZlIDRHQiAoYnVzIGFkZHJlc3MgJSMwMTBsbHgpXG4iLApJbmRleDogbGlu
+dXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcv
+aW5jbHVkZS9saW51eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKQEAg
+LTU3Nyw4ICs1NzcsOCBAQCBpbnQgcmF3X3BjaV93cml0ZSh1bnNpZ25lZCBpbnQgZG9tYWluLCB1
+CiAJCSAgaW50IHJlZywgaW50IGxlbiwgdTMyIHZhbCk7CiAKIHN0cnVjdCBwY2lfYnVzX3JlZ2lv
+biB7Ci0JZG1hX2FkZHJfdCBzdGFydDsKLQlkbWFfYWRkcl90IGVuZDsKKwlwY2lfYnVzX2FkZHJf
+dCBzdGFydDsKKwlwY2lfYnVzX2FkZHJfdCBlbmQ7CiB9OwogCiBzdHJ1Y3QgcGNpX2R5bmlkcyB7
+CkBAIC0xMTI3LDcgKzExMjcsNyBAQCBpbnQgX19tdXN0X2NoZWNrIHBjaV9idXNfYWxsb2NfcmVz
+b3VyY2UoCiAKIGludCBwY2lfcmVtYXBfaW9zcGFjZShjb25zdCBzdHJ1Y3QgcmVzb3VyY2UgKnJl
+cywgcGh5c19hZGRyX3QgcGh5c19hZGRyKTsKIAotc3RhdGljIGlubGluZSBkbWFfYWRkcl90IHBj
+aV9idXNfYWRkcmVzcyhzdHJ1Y3QgcGNpX2RldiAqcGRldiwgaW50IGJhcikKK3N0YXRpYyBpbmxp
+bmUgcGNpX2J1c19hZGRyX3QgcGNpX2J1c19hZGRyZXNzKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCBp
+bnQgYmFyKQogewogCXN0cnVjdCBwY2lfYnVzX3JlZ2lvbiByZWdpb247CiAKSW5kZXg6IGxpbnV4
+LTIuNi9pbmNsdWRlL2xpbnV4L3R5cGVzLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcv
+aW5jbHVkZS9saW51eC90eXBlcy5oCisrKyBsaW51eC0yLjYvaW5jbHVkZS9saW51eC90eXBlcy5o
+CkBAIC0xNDYsNiArMTQ2LDEzIEBAIHR5cGVkZWYgdTY0IGRtYV9hZGRyX3Q7CiB0eXBlZGVmIHUz
+MiBkbWFfYWRkcl90OwogI2VuZGlmIC8qIGRtYV9hZGRyX3QgKi8KIAorLyogQSBwY2lfYnVzX2Fk
+ZHJfdCBjYW4gaG9sZCBwY2kgYnVzIGFkZHJlc3MgZm9yIHRoZSBwbGF0Zm9ybSAqLworI2lmZGVm
+IENPTkZJR19BUkNIX1BDSV9CVVNfQUREUl9UXzY0QklUCit0eXBlZGVmIHU2NCBwY2lfYnVzX2Fk
+ZHJfdDsKKyNlbHNlCit0eXBlZGVmIHUzMiBwY2lfYnVzX2FkZHJfdDsKKyNlbmRpZiAvKiBwY2lf
+YnVzX2FkZHJfdCAqLworCiAjaWZkZWYgX19DSEVDS0VSX18KICNlbHNlCiAjZW5kaWYK
+--047d7bdca44ccbe16605124de48c--
