@@ -1,122 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:42751 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853AbbCDF1A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 00:27:00 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 4 Mar 2015 15:26:58 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 244902CE8052
-	for <linux-pci@vger.kernel.org>; Wed,  4 Mar 2015 16:26:57 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t245QnNP39846132
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:26:57 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t245QNsl002395
-	for <linux-pci@vger.kernel.org>; Wed, 4 Mar 2015 16:26:23 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V13 18/21] powerpc/powernv: Reserve additional space for IOV BAR, with m64_per_iov supported
-Date: Wed,  4 Mar 2015 13:19:10 +0800
-Message-Id: <1425446353-30513-19-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1425446353-30513-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23628 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753092AbbC0QYH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 12:24:07 -0400
+Message-ID: <55158425.3020608@broadcom.com>
+Date: Fri, 27 Mar 2015 09:24:05 -0700
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [PATCH v2 0/2] iProc PCIe driver Kconfig changes
+References: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1427267293-29585-1-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-M64 aperture size is limited on PHB3.  When the IOV BAR is too big, this
-will exceed the limitation and failed to be assigned.
+Hi Bjorn,
 
-Introduce a different mechanism based on the IOV BAR size:
+Do you think the following changes are okay? If so, could you pull them in?
 
-  - if IOV BAR size is smaller than 64MB, expand to total_pe
-  - if IOV BAR size is bigger than 64MB, roundup power2
+Thanks!
 
-[bhelgaas: make dev_printk() output more consistent, use PCI_SRIOV_NUM_BARS]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h     |    2 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |   33 ++++++++++++++++++++++++++---
- 2 files changed, 32 insertions(+), 3 deletions(-)
+Ray
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 011340d..d824bb1 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -179,6 +179,8 @@ struct pci_dn {
- 	u16     max_vfs;		/* number of VFs IOV BAR expended */
- 	u16     vf_pes;			/* VF PE# under this PF */
- 	int     offset;			/* PE# for the first VF PE */
-+#define M64_PER_IOV 4
-+	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS];
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 6f4ae91..b1e936e 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2242,6 +2242,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	int i;
- 	resource_size_t size;
- 	struct pci_dn *pdn;
-+	int mul, total_vfs;
- 
- 	if (!pdev->is_physfn || pdev->is_added)
- 		return;
-@@ -2252,6 +2253,32 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	pdn = pci_get_pdn(pdev);
- 	pdn->max_vfs = 0;
- 
-+	total_vfs = pci_sriov_get_totalvfs(pdev);
-+	pdn->m64_per_iov = 1;
-+	mul = phb->ioda.total_pe;
-+
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		res = &pdev->resource[i + PCI_IOV_RESOURCES];
-+		if (!res->flags || res->parent)
-+			continue;
-+		if (!pnv_pci_is_mem_pref_64(res->flags)) {
-+			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
-+				 i, res);
-+			continue;
-+		}
-+
-+		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
-+
-+		/* bigger than 64M */
-+		if (size > (1 << 26)) {
-+			dev_info(&pdev->dev, "PowerNV: VF BAR%d: %pR IOV size is bigger than 64M, roundup power2\n",
-+				 i, res);
-+			pdn->m64_per_iov = M64_PER_IOV;
-+			mul = roundup_pow_of_two(total_vfs);
-+			break;
-+		}
-+	}
-+
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->flags || res->parent)
-@@ -2264,12 +2291,12 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 
- 		dev_dbg(&pdev->dev, " Fixing VF BAR%d: %pR to\n", i, res);
- 		size = pci_iov_resource_size(pdev, i + PCI_IOV_RESOURCES);
--		res->end = res->start + size * phb->ioda.total_pe - 1;
-+		res->end = res->start + size * mul - 1;
- 		dev_dbg(&pdev->dev, "                       %pR\n", res);
- 		dev_info(&pdev->dev, "VF BAR%d: %pR (expanded to %d VFs for PE alignment)",
--				i, res, phb->ioda.total_pe);
-+			 i, res, mul);
- 	}
--	pdn->max_vfs = phb->ioda.total_pe;
-+	pdn->max_vfs = mul;
- }
- 
- static void pnv_pci_ioda_fixup_sriov(struct pci_bus *bus)
--- 
-1.7.9.5
-
+On 3/25/2015 12:08 AM, Ray Jui wrote:
+> This patch series contains two patches to address iProc PCIe Kconfig related
+> issues. The first patch adds more protection to PCIE_IPROC so it cannot be
+> accidentally enabled for non-ARM based platforms. The second patch changes the
+> config name of the iProc PCIe platform driver from PCIE_IPROC_PLTFM to
+> PCIE_IPROC_PLATFORM. The driver name is also changed from pcie-iproc-pltfm.c
+> to pcie-iproc-platform.c so it's consistent with the config name change.
+> 
+> Changes from v1:
+>  - Changes the driver name from pcie-iproc-pltfm.c to pcie-iproc-platform.c
+> 
+> Ray Jui (2):
+>   pci: iproc: fix PCIE_IPROC in Kconfig
+>   pci: iproc: change PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM
+> 
+>  drivers/pci/host/Kconfig                           |    4 +++-
+>  drivers/pci/host/Makefile                          |    2 +-
+>  .../{pcie-iproc-pltfm.c => pcie-iproc-platform.c}  |    0
+>  3 files changed, 4 insertions(+), 2 deletions(-)
+>  rename drivers/pci/host/{pcie-iproc-pltfm.c => pcie-iproc-platform.c} (100%)
+> 
