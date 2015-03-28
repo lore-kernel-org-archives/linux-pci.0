@@ -1,66 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:34836 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbbC1UT3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 16:19:29 -0400
 MIME-Version: 1.0
-In-Reply-To: <1425634426-437-17-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com> <1425634426-437-17-git-send-email-wangyijing@huawei.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Fri, 6 Mar 2015 08:19:51 -0600
-Message-ID: <CAL_JsqJqpbTThfm2yctHr-gyySyxsJT3HS8rxm6oY+ZYVT5vvQ@mail.gmail.com>
-Subject: Re: [PATCH v5 16/29] powerpc/pci: Use pci_scan_host_bridge() for simplicity
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-ia64@vger.kernel.org,
+In-Reply-To: <20150328.111621.1041514784349808716.davem@davemloft.net>
+References: <551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+	<20150328.111621.1041514784349808716.davem@davemloft.net>
+Date: Sat, 28 Mar 2015 13:19:28 -0700
+Message-ID: <CAE9FiQVoDVZOsjZ827NDnTeQ6WiAWDvPays7RqYB4Q2Jy1nmMw@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Miller <davem@davemloft.net>
+Cc: David Ahern <david.ahern@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Russell King <linux@arm.linux.org.uk>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linux-m68k@lists.linux-m68k.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-alpha@vger.kernel.org,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"David S. Miller" <davem@davemloft.net>
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 6, 2015 at 3:33 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Now we could use pci_scan_host_bridge() to scan
-> pci buses, provide powerpc specific pci_host_bridge_ops.
->
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> CC: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/powerpc/include/asm/machdep.h       |    2 +-
->  arch/powerpc/kernel/pci-common.c         |   63 ++++++++++++++++++------------
->  arch/powerpc/platforms/pseries/pci.c     |    8 ++--
->  arch/powerpc/platforms/pseries/pseries.h |    2 +-
->  4 files changed, 44 insertions(+), 31 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-> index 8e7f2a8..b811d12 100644
-> --- a/arch/powerpc/include/asm/machdep.h
-> +++ b/arch/powerpc/include/asm/machdep.h
-> @@ -129,7 +129,7 @@ struct machdep_calls {
->         void            (*pcibios_fixup)(void);
->         int             (*pci_probe_mode)(struct pci_bus *);
->         void            (*pci_irq_fixup)(struct pci_dev *dev);
-> -       int             (*pcibios_set_root_bus_speed)(struct pci_host_bridge
-> +       void            (*pcibios_set_root_bus_speed)(struct pci_host_bridge
->                                 *bridge);
+On Sat, Mar 28, 2015 at 11:16 AM, David Miller <davem@davemloft.net> wrote:
+> PCI addresses being 64-bit or not is an attribute of the PCI
+> controller and the geography of the bridges behind it, not the
+> cpu architecture.
 
-Shouldn't this be part of patch 15?
+Good point. We should add one choice in pci subsystem Kconfig.
 
-Rob
+Thanks
+
+Yinghai
