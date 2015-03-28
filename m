@@ -1,70 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48584 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757686AbbCDUCw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Mar 2015 15:02:52 -0500
-Subject: [PATCH 2/5] vfio-pci: Add module option to disable VGA region access
-From: Alex Williamson <alex.williamson@redhat.com>
-To: alex.williamson@redhat.com, kvm@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 04 Mar 2015 13:02:49 -0700
-Message-ID: <20150304200249.26766.14344.stgit@gimli.home>
-In-Reply-To: <20150304194711.26766.75450.stgit@gimli.home>
-References: <20150304194711.26766.75450.stgit@gimli.home>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:32769 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284AbbC1D11 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 23:27:27 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <55161E5E.4040609@oracle.com>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+	<5515F6B8.8020606@oracle.com>
+	<5515F782.7060301@oracle.com>
+	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
+	<55161E5E.4040609@oracle.com>
+Date: Fri, 27 Mar 2015 20:27:26 -0700
+Message-ID: <CAE9FiQXOWZLwfSbk-1y=8hCUSjGxWZSyPMxPMtF3_he5uT575g@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Ahern <david.ahern@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a module option so that we don't require a CONFIG change and
-kernel rebuild to disable VGA support.  Not only can VGA support be
-troublesome in itself, but by disabling it we can reduce the impact
-to host devices by doing a VGA arbitration opt-out.
+On Fri, Mar 27, 2015 at 8:22 PM, David Ahern <david.ahern@oracle.com> wrote:
+> On 3/27/15 9:19 PM, Yinghai Lu wrote:
+>>
+>> Good. But we still have annoying warning about "no compatible window".
+>>
+>> Please try attached patch that support 64bit pci mem space for sparc.
+>
+>
+> in place of or on top of the previous patch?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/vfio/pci/vfio_pci.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+on top of the previous patch.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b3bae4c..9c854b0 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -41,8 +41,24 @@ module_param_named(nointxmask, nointxmask, bool, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(nointxmask,
- 		  "Disable support for PCI 2.3 style INTx masking.  If this resolves problems for specific devices, report lspci -vvvxxx to linux-pci@vger.kernel.org so the device can be fixed automatically via the broken_intx_masking flag.");
- 
-+#ifdef CONFIG_VFIO_PCI_VGA
-+static bool disable_vga;
-+module_param_named(disable_vga, disable_vga, bool, S_IRUGO);
-+MODULE_PARM_DESC(disable_vga,
-+		 "Disable VGA resource access for VGA-capable devices");
-+#endif
-+
- static DEFINE_MUTEX(driver_lock);
- 
-+static inline bool vfio_vga_disabled(void)
-+{
-+#ifdef CONFIG_VFIO_PCI_VGA
-+	return disable_vga;
-+#else
-+	return true;
-+#endif
-+}
-+
- static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
- 
- static int vfio_pci_enable(struct vfio_pci_device *vdev)
-@@ -97,10 +113,8 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 	} else
- 		vdev->msix_bar = 0xFF;
- 
--#ifdef CONFIG_VFIO_PCI_VGA
--	if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
-+	if (!vfio_vga_disabled() && (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
- 		vdev->has_vga = true;
--#endif
- 
- 	return 0;
- }
+Thanks
 
+Yinghai
