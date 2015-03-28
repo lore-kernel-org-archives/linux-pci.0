@@ -1,181 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3427.houston.hp.com ([15.201.208.55]:50836 "EHLO
-	g4t3427.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752187AbbCSFhj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 01:37:39 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v9 06/10] iommu/vt-d: datatypes and functions used for kdump
-Date: Thu, 19 Mar 2015 13:36:24 +0800
-Message-Id: <1426743388-26908-7-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:34916 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbbC1F0y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 01:26:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <551623C1.2040300@oracle.com>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+	<5515F6B8.8020606@oracle.com>
+	<5515F782.7060301@oracle.com>
+	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
+	<551623C1.2040300@oracle.com>
+Date: Fri, 27 Mar 2015 22:26:53 -0700
+Message-ID: <CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Ahern <david.ahern@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a113fb98e285fbb0512527f30
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Populate it with support functions to copy iommu translation tables from
-from the panicked kernel into the kdump kernel in the event of a crash.
+--001a113fb98e285fbb0512527f30
+Content-Type: text/plain; charset=UTF-8
 
-Functions:
-    Use old root entry table, and load the old data to root_entry as cache.
-    Malloc new context table and copy old context table to the new one.
+On Fri, Mar 27, 2015 at 8:45 PM, David Ahern <david.ahern@oracle.com> wrote:
+> On 3/27/15 9:19 PM, Yinghai Lu wrote:
+>>
+>> Good. But we still have annoying warning about "no compatible window".
+>>
+>> Please try attached patch that support 64bit pci mem space for sparc.
+>>
+>> BTW, looks like you still do not have   CONFIG_PCI_DEBUG=y in your
+>> .config.
+>> otherwise we should more verbose print out.
+>> Or did you have DYNAMIC_DEBUG enabled ?
+>> If it is that case, can you remove that?
+>>
+>
+> done. attached.
+>
 
-Bill Sumner:
-    Original version, the creation of the data types and functions.
+ok, we are almost there.
 
-Li, Zhenhua:
-    Update the caller of context_get_* and context_put*, use context_*
-    and context_set_* for replacement.
-    Update the name of the function that loads root entry table.
-    Use new function to copy old context entry tables and page tables.
-    Use "unsigned long" for physical address.
-    Remove the functions to copy page table in Bill's version.
-    Remove usage of dve and ppap in Bill's version.
+[99510.956337] pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+[99511.025812] pci_bus 0000:00: root bus resource [io
+0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+[99511.151039] pci_bus 0000:00: root bus resource [mem
+0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+[99511.282693] pci_bus 0000:00: root bus resource [mem
+0x800100000000-0x8007ffffffff] (bus address [0x00000000-0x6ffffffff])
+[99511.414878] pci_bus 0000:00: root bus resource [bus 00-77]
 
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel-iommu.c | 113 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 113 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 1cb9780..44f3369 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -388,6 +388,18 @@ struct iommu_remapped_entry {
- static LIST_HEAD(__iommu_remapped_mem);
- static DEFINE_MUTEX(__iommu_mem_list_lock);
- 
-+/* ========================================================================
-+ * Copy iommu translation tables from old kernel into new  kernel.
-+ * Entry to this set of functions is: intel_iommu_load_translation_tables()
-+ * ------------------------------------------------------------------------
-+ */
-+
-+static int copy_root_entry_table(struct intel_iommu *iommu);
-+
-+static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd);
-+
-+static void unmap_device_dma(struct dmar_domain *domain, struct device *dev);
-+
- #endif /* CONFIG_CRASH_DUMP */
- 
- /*
-@@ -4976,4 +4988,105 @@ static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
- 	__iommu_flush_cache(iommu, to + start, size);
- }
- 
-+/*
-+ * Load root entry tables from old kernel.
-+ */
-+static int copy_root_entry_table(struct intel_iommu *iommu)
-+{
-+	u32 bus;				/* Index: root-entry-table */
-+	struct root_entry  *re;			/* Virt(iterator: new table) */
-+	unsigned long context_old_phys;		/* Phys(context table entry) */
-+	struct context_entry *context_new_virt;	/* Virt(new context_entry) */
-+
-+	/*
-+	 * A new root entry table has been allocated ,
-+	 * we need copy re from old kernel to the new allocated one.
-+	 */
-+
-+	if (!iommu->root_entry_old_phys)
-+		return -ENOMEM;
-+
-+	for (bus = 0, re = iommu->root_entry; bus < 256; bus += 1, re += 1) {
-+		if (!root_present(re))
-+			continue;
-+
-+		context_old_phys = get_context_phys_from_root(re);
-+
-+		if (!context_old_phys)
-+			continue;
-+
-+		context_new_virt =
-+			(struct context_entry *)alloc_pgtable_page(iommu->node);
-+
-+		if (!context_new_virt)
-+			return -ENOMEM;
-+
-+		__iommu_load_from_oldmem(context_new_virt,
-+					context_old_phys,
-+					VTD_PAGE_SIZE);
-+
-+		__iommu_flush_cache(iommu, context_new_virt, VTD_PAGE_SIZE);
-+
-+		set_root_value(re, virt_to_phys(context_new_virt));
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Interface to the "load translation tables" set of functions
-+ * from mainline code.
-+ */
-+static int intel_iommu_load_translation_tables(struct dmar_drhd_unit *drhd)
-+{
-+	struct intel_iommu *iommu;	/* Virt(iommu hardware registers) */
-+	unsigned long long q;		/* quadword scratch */
-+	int ret = 0;			/* Integer return code */
-+	unsigned long flags;
-+
-+	iommu = drhd->iommu;
-+	q = dmar_readq(iommu->reg + DMAR_RTADDR_REG);
-+	if (!q)
-+		return -1;
-+
-+	spin_lock_irqsave(&iommu->lock, flags);
-+
-+	/* Load the root-entry table from the old kernel
-+	 * foreach context_entry_table in root_entry
-+	 *   Copy each entry table from old kernel
-+	 */
-+	if (!iommu->root_entry) {
-+		iommu->root_entry =
-+			(struct root_entry *)alloc_pgtable_page(iommu->node);
-+		if (!iommu->root_entry) {
-+			spin_unlock_irqrestore(&iommu->lock, flags);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	iommu->root_entry_old_phys = q & VTD_PAGE_MASK;
-+	if (!iommu->root_entry_old_phys) {
-+		pr_err("Could not read old root entry address.");
-+		return -1;
-+	}
-+
-+	iommu->root_entry_old_virt = ioremap_cache(iommu->root_entry_old_phys,
-+						VTD_PAGE_SIZE);
-+	if (!iommu->root_entry_old_virt) {
-+		pr_err("Could not map the old root entry.");
-+		return -ENOMEM;
-+	}
-+
-+	__iommu_load_old_root_entry(iommu);
-+	ret = copy_root_entry_table(iommu);
-+	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
-+	__iommu_update_old_root_entry(iommu, -1);
-+
-+	spin_unlock_irqrestore(&iommu->lock, flags);
-+
-+	__iommu_free_mapped_mem();
-+
-+	return ret;
-+}
-+
- #endif /* CONFIG_CRASH_DUMP */
--- 
-2.0.0-rc0
+looks like the offset for mem64 is not right.
 
+Please try attached v2.
+
+Thanks
+
+Yinghai
+
+--001a113fb98e285fbb0512527f30
+Content-Type: text/x-patch; charset=US-ASCII; name="sparc_sun4v_mem64_v2.patch"
+Content-Disposition: attachment; filename="sparc_sun4v_mem64_v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7skofxn1
+
+U3ViamVjdDogW1JGQyBQQVRDSCB2Ml0gc3BhcmMvUENJOiBBZGQgbWVtNjQgcmVzb3VyY2UgcGFy
+c2luZyBmb3Igcm9vdCBidXMKCkZvdW5kIG5vIGNvbXBhdGlibGUgYnJpZGdlIHdpbmRvdyB3YXJu
+aW5nIGluIGJvb3QgbG9nIGZyb20gVDUtOC4KCnBjaSAwMDAwOjAwOjAxLjA6IGNhbid0IGNsYWlt
+IEJBUiAxNSBbbWVtIDB4MTAwMDAwMDAwLTB4NGFmZmZmZmZmIHByZWZdOiBubyBjb21wYXRpYmxl
+IGJyaWRnZSB3aW5kb3cKCmFuZCByb290IGJ1cyBvbmx5IHJlcG9ydCBpbyBhbmQgbWVtMzIuCgpw
+Y2lfc3VuNHYgZjAyZGJjZmM6IFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMDowMApwY2lfYnVz
+IDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFtpbyAgMHg4MDQwMDAwMDAwMDAtMHg4MDQwMGZm
+ZmZmZmZdIChidXMgYWRkcmVzcyBbMHgwMDAwLTB4ZmZmZmZmZl0pCnBjaV9idXMgMDAwMDowMDog
+cm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDgwMDAwMDAwMDAwMC0weDgwMDA3ZWZmZmZmZl0gKGJ1
+cyBhZGRyZXNzIFsweDAwMDAwMDAwLTB4N2VmZmZmZmZdKQpwY2lfYnVzIDAwMDA6MDA6IHJvb3Qg
+YnVzIHJlc291cmNlIFtidXMgMDAtNzddCgpBZGQgbWVtNjQgaGFuZGxpbmcgaW4gcGNpX2NvbW1v
+biBmb3Igc3BhcmMsIHNvIHdlIGNhbiBoYXZlIDY0Yml0IHJlc291cmNlCnJlZ2lzdGVyZWQgZm9y
+IGJ1cyBhdCBmaXJzdC4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVs
+Lm9yZz4KCi0tLQotdjI6IG1lbTY0X3NwYWNlIHNob3VsZCB1c2UgbWVtX3NwYWNlLnN0YXJ0IGFz
+IG9mZnNldC4KLS0tCiBhcmNoL3NwYXJjL2tlcm5lbC9wY2kuYyAgICAgICAgfCAgICAzICsrKwog
+YXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jIHwgICAxNSArKysrKysrKysrKysrLS0KIGFy
+Y2gvc3BhcmMva2VybmVsL3BjaV9pbXBsLmggICB8ICAgIDEgKwogMyBmaWxlcyBjaGFuZ2VkLCAx
+NyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3Nw
+YXJjL2tlcm5lbC9wY2kuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3NwYXJj
+L2tlcm5lbC9wY2kuYworKysgbGludXgtMi42L2FyY2gvc3BhcmMva2VybmVsL3BjaS5jCkBAIC02
+NjMsNiArNjYzLDkgQEAgc3RydWN0IHBjaV9idXMgKnBjaV9zY2FuX29uZV9wYm0oc3RydWN0CiAJ
+CQkJcGJtLT5pb19zcGFjZS5zdGFydCk7CiAJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQoJnJlc291
+cmNlcywgJnBibS0+bWVtX3NwYWNlLAogCQkJCXBibS0+bWVtX3NwYWNlLnN0YXJ0KTsKKwlpZiAo
+cGJtLT5tZW02NF9zcGFjZS5mbGFncykKKwkJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQoJnJlc291
+cmNlcywgJnBibS0+bWVtNjRfc3BhY2UsCisJCQkJCXBibS0+bWVtX3NwYWNlLnN0YXJ0KTsKIAlw
+Ym0tPmJ1c24uc3RhcnQgPSBwYm0tPnBjaV9maXJzdF9idXNubzsKIAlwYm0tPmJ1c24uZW5kCT0g
+cGJtLT5wY2lfbGFzdF9idXNubzsKIAlwYm0tPmJ1c24uZmxhZ3MJPSBJT1JFU09VUkNFX0JVUzsK
+SW5kZXg6IGxpbnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfY29tbW9uLmMKPT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jCisrKyBs
+aW51eC0yLjYvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2NvbW1vbi5jCkBAIC00MDYsNiArNDA2LDcg
+QEAgdm9pZCBwY2lfZGV0ZXJtaW5lX21lbV9pb19zcGFjZShzdHJ1Y3QgcAogCX0KIAogCW51bV9w
+Ym1fcmFuZ2VzID0gaSAvIHNpemVvZigqcGJtX3Jhbmdlcyk7CisJbWVtc2V0KCZwYm0tPm1lbTY0
+X3NwYWNlLCAwLCBzaXplb2Yoc3RydWN0IHJlc291cmNlKSk7CiAKIAlmb3IgKGkgPSAwOyBpIDwg
+bnVtX3BibV9yYW5nZXM7IGkrKykgewogCQljb25zdCBzdHJ1Y3QgbGludXhfcHJvbV9wY2lfcmFu
+Z2VzICpwciA9ICZwYm1fcmFuZ2VzW2ldOwpAQCAtNDUxLDcgKzQ1MiwxMSBAQCB2b2lkIHBjaV9k
+ZXRlcm1pbmVfbWVtX2lvX3NwYWNlKHN0cnVjdCBwCiAJCQlicmVhazsKIAogCQljYXNlIDM6Ci0J
+CQkvKiBYWFggNjQtYml0IE1FTSBoYW5kbGluZyBYWFggKi8KKwkJCS8qIDY0LWJpdCBNRU0gaGFu
+ZGxpbmcgKi8KKwkJCXBibS0+bWVtNjRfc3BhY2Uuc3RhcnQgPSBhOworCQkJcGJtLT5tZW02NF9z
+cGFjZS5lbmQgPSBhICsgc2l6ZSAtIDFVTDsKKwkJCXBibS0+bWVtNjRfc3BhY2UuZmxhZ3MgPSBJ
+T1JFU09VUkNFX01FTTsKKwkJCWJyZWFrOwogCiAJCWRlZmF1bHQ6CiAJCQlicmVhazsKQEAgLTQ2
+NSwxNSArNDcwLDIxIEBAIHZvaWQgcGNpX2RldGVybWluZV9tZW1faW9fc3BhY2Uoc3RydWN0IHAK
+IAkJcHJvbV9oYWx0KCk7CiAJfQogCi0JcHJpbnRrKCIlczogUENJIElPWyVsbHhdIE1FTVslbGx4
+XVxuIiwKKwlwcmludGsoIiVzOiBQQ0kgSU9bJWxseF0gTUVNWyVsbHhdIiwKIAkgICAgICAgcGJt
+LT5uYW1lLAogCSAgICAgICBwYm0tPmlvX3NwYWNlLnN0YXJ0LAogCSAgICAgICBwYm0tPm1lbV9z
+cGFjZS5zdGFydCk7CisJaWYgKHBibS0+bWVtNjRfc3BhY2UuZmxhZ3MpCisJCXByaW50aygiIE1F
+TTY0WyVsbHhdIiwKKwkJICAgICAgIHBibS0+bWVtNjRfc3BhY2Uuc3RhcnQpOworCXByaW50aygi
+XG4iKTsKIAogCXBibS0+aW9fc3BhY2UubmFtZSA9IHBibS0+bWVtX3NwYWNlLm5hbWUgPSBwYm0t
+Pm5hbWU7CiAKIAlyZXF1ZXN0X3Jlc291cmNlKCZpb3BvcnRfcmVzb3VyY2UsICZwYm0tPmlvX3Nw
+YWNlKTsKIAlyZXF1ZXN0X3Jlc291cmNlKCZpb21lbV9yZXNvdXJjZSwgJnBibS0+bWVtX3NwYWNl
+KTsKKwlpZiAocGJtLT5tZW02NF9zcGFjZS5mbGFncykKKwkJcmVxdWVzdF9yZXNvdXJjZSgmaW9t
+ZW1fcmVzb3VyY2UsICZwYm0tPm1lbTY0X3NwYWNlKTsKIAogCXBjaV9yZWdpc3Rlcl9sZWdhY3lf
+cmVnaW9ucygmcGJtLT5pb19zcGFjZSwKIAkJCQkgICAgJnBibS0+bWVtX3NwYWNlKTsKSW5kZXg6
+IGxpbnV4LTIuNi9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfaW1wbC5oCj09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxp
+bnV4LTIuNi5vcmlnL2FyY2gvc3BhcmMva2VybmVsL3BjaV9pbXBsLmgKKysrIGxpbnV4LTIuNi9h
+cmNoL3NwYXJjL2tlcm5lbC9wY2lfaW1wbC5oCkBAIC05Nyw2ICs5Nyw3IEBAIHN0cnVjdCBwY2lf
+cGJtX2luZm8gewogCS8qIFBCTSBJL08gYW5kIE1lbW9yeSBzcGFjZSByZXNvdXJjZXMuICovCiAJ
+c3RydWN0IHJlc291cmNlCQkJaW9fc3BhY2U7CiAJc3RydWN0IHJlc291cmNlCQkJbWVtX3NwYWNl
+OworCXN0cnVjdCByZXNvdXJjZQkJCW1lbTY0X3NwYWNlOwogCXN0cnVjdCByZXNvdXJjZQkJCWJ1
+c247CiAKIAkvKiBCYXNlIG9mIFBDSSBDb25maWcgc3BhY2UsIGNhbiBiZSBwZXItUEJNIG9yIHNo
+YXJlZC4gKi8K
+--001a113fb98e285fbb0512527f30--
