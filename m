@@ -1,87 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:59129 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545AbbCTVGL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Mar 2015 17:06:11 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Sat, 21 Mar 2015 07:06:09 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6D5B42BB0047
-	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:06:05 +1100 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2KL5vsH35848232
-	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:06:05 +1100
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2KL5Vpx013355
-	for <linux-pci@vger.kernel.org>; Sat, 21 Mar 2015 08:05:31 +1100
-Message-ID: <1426885502.4770.159.camel@au1.ibm.com>
-Subject: Re: [PATCH V14 00/21] Enable SRIOV on Power8
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
+Received: from asavdk4.altibox.net ([109.247.116.15]:57326 "EHLO
+	asavdk4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbbC1ITJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 04:19:09 -0400
+Date: Sat, 28 Mar 2015 09:18:43 +0100
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Ahern <david.ahern@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Date: Sat, 21 Mar 2015 08:05:02 +1100
-In-Reply-To: <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
-References: <1426820797-6267-1-git-send-email-weiyang@linux.vnet.ibm.com>
-	 <20150320054327.GA8119@shangw>
-	 <CAErSpo6zTLyDK+aaHK6+uwfs579Qq1vbXDx4rb9L4uNq=24dVA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+Message-ID: <20150328081843.GA27114@ravnborg.org>
+References: <5514391F.2030300@oracle.com>
+ <CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+ <551495EE.20201@oracle.com>
+ <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+ <CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+ <20150328010532.GA15897@ravnborg.org>
+ <CAE9FiQVHwR7ge-hFXq=xqOTZEzHdm5AqiwFC3HEcrTKxeDcePg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVHwR7ge-hFXq=xqOTZEzHdm5AqiwFC3HEcrTKxeDcePg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-03-20 at 09:34 -0500, Bjorn Helgaas wrote:
-> On Fri, Mar 20, 2015 at 12:43 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> > On Fri, Mar 20, 2015 at 11:06:16AM +0800, Wei Yang wrote:
-> >
-> > [snip]
-> >
-> >>---
-> >>v14:
-> >>   * call ppc_md.pcibios_fixup_sriov() in pcibios_add_device
-> >>   * add more explanation in change log
-> >>   * Following patches have been reordered to the beginning.
-> >>     "EEH refactor to use pci_dn":
-> >>     8ec20d6 powerpc/powernv: Use pci_dn, not device_node, in PCI config accessor
-> >>     a3460fc powerpc/pci: Refactor pci_dn
-> >>     These two patches will be modified to merge with other patches which are
-> >>     under discussion/review in ppc mail list. Some changes may also be made in
-> >>     other patches, which I didn't include them in this series, so that the
-> >>     auto build robot could work on this.
-> >
-> > The comment here isn't precise enough and not the things I suggested before.
-> > Those 2 patches have been split into 3 patches (A/B/C). Some other EEH
-> > cleanup/refactor patches depends on A/B and those patches would be merged
-> > before your SRIOV patches to PowerPC tree. C, which I already sent to you,
-> > need to be integrated to your patchset right after the following one:
-> >
-> > powerpc/pci: Don't unset PCI resources for VFs
-> >
-> > I guess you can move the patches around after checking if Bjorn has further
-> > concerns/comments.
+> >>  config ARM_THUMB
+> >>       bool "Support Thumb user binaries" if !CPU_THUMBONLY
+> >>       depends on CPU_ARM720T || CPU_ARM740T || CPU_ARM920T || CPU_ARM922T || \
+> >> Index: linux-2.6/arch/arm64/Kconfig
+> >> ===================================================================
+> >> --- linux-2.6.orig/arch/arm64/Kconfig
+> >> +++ linux-2.6/arch/arm64/Kconfig
+> >> @@ -125,6 +125,9 @@ config HAVE_GENERIC_RCU_GUP
+> >>  config ARCH_DMA_ADDR_T_64BIT
+> >>       def_bool y
+> >>
+> >> +config ARCH_PCI_BUS_ADDR_T_64BIT
+> >> +     def_bool y
+> >> +
+> > Use select
+> ...
 > 
-> I think we need to move forward on this soon so it has at least a
-> little time in -next.  And it sounds like I cannot merge this v14
-> as-is because it doesn't include these additional EEH cleanup/refactor
-> patches?  (If they are only cleanup and refactoring, I don't
-> understand why they would be required, but I haven't seen them, so I'm
-> taking your word for it.)
+> I was trying to keep the style to be consistent with old one in each Kconfig.
 > 
-> So I guess I'm waiting for v15.  Don't wait for my comments on v14.
-> Ideally I'd also like an ack from a powerpc maintainer.  This has so
-> much powerpc impact that I'm not comfortable stuffing this in without
-> their OK.
+> So do we just need to make sure new added lines to use new style?
 
-The other option is you put the generic changes in a topic branch which
-both of us merge and I take care of the rest.
+Use new style select everywhere.
+That could maybe in the future trigger someone to update the different arch
+configs to use select for the remaining bits.
 
-Cheers,
-Ben.
+> >> Index: linux-2.6/include/linux/types.h
+> >> ===================================================================
+> >> --- linux-2.6.orig/include/linux/types.h
+> >> +++ linux-2.6/include/linux/types.h
+> >> @@ -146,6 +146,13 @@ typedef u64 dma_addr_t;
+> >>  typedef u32 dma_addr_t;
+> >>  #endif /* dma_addr_t */
+> >>
+> >> +/* A pci_bus_addr_t can hold pci bus address for the platform */
+> >> +#ifdef CONFIG_ARCH_PCI_BUS_ADDR_T_64BIT
+> >> +typedef u64 pci_bus_addr_t;
+> >> +#else
+> >> +typedef u32 pci_bus_addr_t;
+> >> +#endif /* pci_bus_addr_t */
+> >> +
+> > Looking att all the Kconfig logic I get the impression that
+> > the type of pci_bus_addr_t equals unsigned long.
+> > If this is correct then you can skip that and things
+> > gets much simpler.
+> 
+> For x86 32bit with PAE support, we could use 64bit for bus address.
+> but unsigned long is 32bit.
 
-> Bjorn
+Missed that part - OK.
 
-
+	Sam
