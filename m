@@ -1,116 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:38175 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbbC3LRU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 07:17:20 -0400
-Message-ID: <1427714234.3370.8.camel@pengutronix.de>
-Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
-	kernel@pengutronix.de, linux-pci@vger.kernel.org
-Date: Mon, 30 Mar 2015 13:17:14 +0200
-In-Reply-To: <20150320220753.GN26935@google.com>
-References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
-	 <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
-	 <20150320220753.GN26935@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:38579 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284AbbC1CHd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Mar 2015 22:07:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150328010532.GA15897@ravnborg.org>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+	<20150328010532.GA15897@ravnborg.org>
+Date: Fri, 27 Mar 2015 19:07:32 -0700
+Message-ID: <CAE9FiQVHwR7ge-hFXq=xqOTZEzHdm5AqiwFC3HEcrTKxeDcePg@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: David Ahern <david.ahern@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 20.03.2015, 17:07 -0500 schrieb Bjorn Helgaas:
-> On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
-> > Allows to properly set up multiple MSI irqs per device.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> > The ifdef is needed to avoid a compile error on
-> > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
-> > when the kernel is compiled with MSI support.
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 46 insertions(+)
-> > 
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 1f4ea6f2d910..8a15ea2e8eab 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> >  	}
-> >  
-> >  	*pos = pos0;
-> > +	desc->nvec_used = no_irqs;
-> > +	desc->msi_attrib.multiple = order_base_2(no_irqs);
-> > +
-> >  	return irq;
-> >  
-> >  no_valid_irq:
-> > @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-> >  
-> >  	return 0;
-> >  }
-> > +#ifdef CONFIG_PCI_MSI
-> > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-> > +			     int nvec, int type)
-> > +{
-> > +	int irq, pos;
-> > +	struct msi_desc *desc;
-> > +	struct msi_msg msg;
-> > +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> > +
-> > +	/* MSI-X interrupts are not supported */
-> > +	if (type == PCI_CAP_ID_MSIX)
-> > +		return -EINVAL;
-> > +
-> > +	WARN_ON(!list_is_singular(&pdev->msi_list));
-> > +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
-> > +
-> > +	irq = assign_irq(nvec, desc, &pos);
-> > +	if (irq < 0)
-> > +		return irq;
-> > +
-> > +	if (pp->ops->get_msi_addr)
-> > +		msg.address_lo = pp->ops->get_msi_addr(pp);
-> > +	else
-> > +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> > +	msg.address_hi = 0x0;
-> > +
-> > +	if (pp->ops->get_msi_data)
-> > +		msg.data = pp->ops->get_msi_data(pp, pos);
-> > +	else
-> > +		msg.data = pos;
-> > +
-> > +	pci_write_msi_msg(irq, &msg);
-> > +
-> > +	return 0;
-> > +}
-> > +#else
-> > +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
-> > +			     int nvec, int type)
-> > +{
-> > +	return -ENOSYS;
-> > +}
-> 
-> Seems strange that we need even this stub function when we don't have
-> CONFIG_PCI_MSI.  Is there some way we can fix this so dw_pcie_msi_chip is
-> only defined when we have CONFIG_PCI_MSI?
-> 
-I would rather not do this. We try to keep as much code as possible to
-at least see some compile coverage, even if the options are not set by
-using the IS_ENABLED() macro instead of ifdefs. All other MSI related
-code compiles even without CONFIG_PCI_MSI being set.
+On Fri, Mar 27, 2015 at 6:05 PM, Sam Ravnborg <sam@ravnborg.org> wrote:
+>>
+>> Index: linux-2.6/arch/alpha/Kconfig
+>> ===================================================================
+>> --- linux-2.6.orig/arch/alpha/Kconfig
+>> +++ linux-2.6/arch/alpha/Kconfig
+>> @@ -66,6 +66,9 @@ config ZONE_DMA
+>>  config ARCH_DMA_ADDR_T_64BIT
+>>       def_bool y
+>>
+>> +config ARCH_PCI_BUS_ADDR_T_64BIT
+>> +     def_bool y
+>> +
+> For alpha you define a new symbol with a default value.
+>
+>>  config NEED_DMA_MAP_STATE
+>>         def_bool y
+>>
+>> Index: linux-2.6/arch/arm/Kconfig
+>> ===================================================================
+>> --- linux-2.6.orig/arch/arm/Kconfig
+>> +++ linux-2.6/arch/arm/Kconfig
+>> @@ -1779,6 +1779,7 @@ config XEN
+>>       depends on !GENERIC_ATOMIC64
+>>       depends on MMU
+>>       select ARCH_DMA_ADDR_T_64BIT
+>> +     select ARCH_PCI_BUS_ADDR_T_64BIT
+>>       select ARM_PSCI
+>>       select SWIOTLB_XEN
+>>       help
+> For arm you use select ...
+>
+> As the actual definition of the Kconfig symbol is already
+> present in mm/Kconfig please use select in all cases.
+>
+>> Index: linux-2.6/arch/arm/mm/Kconfig
+>> ===================================================================
+>> --- linux-2.6.orig/arch/arm/mm/Kconfig
+>> +++ linux-2.6/arch/arm/mm/Kconfig
+>> @@ -630,6 +630,9 @@ config ARCH_PHYS_ADDR_T_64BIT
+>>  config ARCH_DMA_ADDR_T_64BIT
+>>       bool
+>>
+>> +config ARCH_PCI_BUS_ADDR_T_64BIT
+>> +     bool
+>> +
+> Here it would have been nice with a comment that explains the use of ths symbol.
 
-The problem with the above function is that the msi_list member of
-struct pci_device is only declared if CONFIG_PCI_MSI is set. So of you
-really want to get rid of the above stub, my preferred solution would be
-to remove the ifdef in struct pci_device, so we can compile the code
-regardless of the config options.
+just duplicate the ARCH_DMA_ADDR_T_64BIT above
 
-Regards,
-Lucas
+>
+>>  config ARM_THUMB
+>>       bool "Support Thumb user binaries" if !CPU_THUMBONLY
+>>       depends on CPU_ARM720T || CPU_ARM740T || CPU_ARM920T || CPU_ARM922T || \
+>> Index: linux-2.6/arch/arm64/Kconfig
+>> ===================================================================
+>> --- linux-2.6.orig/arch/arm64/Kconfig
+>> +++ linux-2.6/arch/arm64/Kconfig
+>> @@ -125,6 +125,9 @@ config HAVE_GENERIC_RCU_GUP
+>>  config ARCH_DMA_ADDR_T_64BIT
+>>       def_bool y
+>>
+>> +config ARCH_PCI_BUS_ADDR_T_64BIT
+>> +     def_bool y
+>> +
+> Use select
+...
 
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+I was trying to keep the style to be consistent with old one in each Kconfig.
 
+So do we just need to make sure new added lines to use new style?
+
+
+>
+>> Index: linux-2.6/include/linux/types.h
+>> ===================================================================
+>> --- linux-2.6.orig/include/linux/types.h
+>> +++ linux-2.6/include/linux/types.h
+>> @@ -146,6 +146,13 @@ typedef u64 dma_addr_t;
+>>  typedef u32 dma_addr_t;
+>>  #endif /* dma_addr_t */
+>>
+>> +/* A pci_bus_addr_t can hold pci bus address for the platform */
+>> +#ifdef CONFIG_ARCH_PCI_BUS_ADDR_T_64BIT
+>> +typedef u64 pci_bus_addr_t;
+>> +#else
+>> +typedef u32 pci_bus_addr_t;
+>> +#endif /* pci_bus_addr_t */
+>> +
+> Looking att all the Kconfig logic I get the impression that
+> the type of pci_bus_addr_t equals unsigned long.
+> If this is correct then you can skip that and things
+> gets much simpler.
+
+For x86 32bit with PAE support, we could use 64bit for bus address.
+but unsigned long is 32bit.
+
+Thanks
+
+Yinghai
