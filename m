@@ -1,37 +1,37 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Voegtle <tv@lio96.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Dave Airlie <airlied@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Lv Zheng <lv.zheng@intel.com>
-Subject: [Debug 0/2] Debug PCI root resource parsing failure
-Date: Mon,  2 Mar 2015 12:33:19 +0800
-Message-Id: <1425270801-20270-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <alpine.LSU.2.11.1502281100540.15780@er-systems.de>
-References: <alpine.LSU.2.11.1502281100540.15780@er-systems.de>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54703 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753442AbbC2NnK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Mar 2015 09:43:10 -0400
+Date: Sun, 29 Mar 2015 15:43:06 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 78/86] linux/pci: drop include/linux/pci_ids.h
+Message-ID: <1427635734-24786-79-git-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
-	I still can't figure out why the last resource entry "pci_bus
-0000:00: root bus resource [mem 0x80000000-0xd0716ffe]" gets ignored
-by new code. Could you please help to apply these two patches and send
-me back dmesg?
-Thanks!
-Gerry
+Now that everyone uses uapi/linux/pci_ids.h
+directly, drop the wrapper from include/linux/.
 
-Jiang Liu (2):
-  x86/PCI/ACPI: Ignore resources consumed by host bridge itself
-  x86/PCI/ACPI: Gather debug info
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ include/linux/pci_ids.h | 1 -
+ 1 file changed, 1 deletion(-)
+ delete mode 100644 include/linux/pci_ids.h
 
- arch/x86/pci/acpi.c     |   13 ++++++++++---
- drivers/acpi/resource.c |    2 ++
- 2 files changed, 12 insertions(+), 3 deletions(-)
-
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+deleted file mode 100644
+index fd13521..0000000
+--- a/include/linux/pci_ids.h
++++ /dev/null
+@@ -1 +0,0 @@
+-#include <uapi/linux/pci_ids.h>
 -- 
-1.7.10.4
+MST
 
