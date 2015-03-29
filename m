@@ -1,57 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:33206 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbbCYA2l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Mar 2015 20:28:41 -0400
-Received: by qgfa8 with SMTP id a8so16996384qgf.0
-        for <linux-pci@vger.kernel.org>; Tue, 24 Mar 2015 17:28:40 -0700 (PDT)
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:33909 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752621AbbC2UHo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Mar 2015 16:07:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <1427175230-22325-1-git-send-email-rjui@broadcom.com>
-References: <1427175230-22325-1-git-send-email-rjui@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Mar 2015 19:28:20 -0500
-Message-ID: <CAErSpo6MPw7m-zJbCAxGAaRm7jptpaJ-937A6qNXELNTggf9ZA@mail.gmail.com>
-Subject: Re: [PATCH] pci: iproc: fix PCIE_IPROC in Kconfig
-To: Ray Jui <rjui@broadcom.com>
-Cc: Scott Branden <sbranden@broadcom.com>,
+In-Reply-To: <55181065.8090807@oracle.com>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+	<5515F6B8.8020606@oracle.com>
+	<5515F782.7060301@oracle.com>
+	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
+	<551623C1.2040300@oracle.com>
+	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>
+	<5516BF4B.9030901@oracle.com>
+	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>
+	<55181065.8090807@oracle.com>
+Date: Sun, 29 Mar 2015 13:07:44 -0700
+Message-ID: <CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Ahern <david.ahern@oracle.com>,
+	David Miller <davem@davemloft.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	bcm-kernel-feedback-list@broadcom.com
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 24, 2015 at 12:33 AM, Ray Jui <rjui@broadcom.com> wrote:
-> Make PCIE_IPROC depending on both OF and ARM and default to be disabled,
-> so it cannot be accidentally enabled by other platforms
+On Sun, Mar 29, 2015 at 7:47 AM, David Ahern <david.ahern@oracle.com> wrote:
+> On 3/28/15 2:24 PM, Yinghai Lu wrote:
+>>
+>> Can you append "ofpci_debug=1" in boot command line?
 >
-> PCIE_IPROC is meant to be enabled by a front-end bus driver. Curenntly
-> it's enabled by PCIE_IPROC_PLTFM driver
 >
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> ---
->  drivers/pci/host/Kconfig |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index feccd0d..963b507 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -108,6 +108,8 @@ config PCI_VERSATILE
->
->  config PCIE_IPROC
->         tristate "Broadcom iProc PCIe controller"
-> +       depends on OF && ARM
-> +       default n
->         help
->           This enables the iProc PCIe core controller support for Broadcom's
->           iProc family of SoCs. An appropriate bus interface driver also needs
+> here you go.
 
-What pattern are you following?  There must be other drivers with
-similar front-end bus driver schemes, and I'd rather copy their
-Kconfig descriptions than invent something new.
 
-With CONFIG_PCIE_IPROC_PLTFM, can we spell out "PLATFORM"?  Doesn't
-seem like there's anything to gain by abbreviating it.
+[  286.647560] PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+[  286.921232] PCI: Claiming 0000:00:01.0: Resource 15:
+0000800100000000..00008004afffffff [220c]
+[  287.229190] PCI: Claiming 0000:01:00.0: Resource 15:
+0000800100000000..00008004afffffff [220c]
+[  287.533428] PCI: Claiming 0000:02:04.0: Resource 15:
+0000800100000000..000080012fffffff [220c]
+[  288.149831] PCI: Claiming 0000:03:00.0: Resource 15:
+0000800100000000..000080012fffffff [220c]
+[  288.252466] PCI: Claiming 0000:04:06.0: Resource 14:
+0000800100000000..000080010fffffff [220c]
+[  288.867196] PCI: Claiming 0000:05:00.0: Resource 0:
+0000800100000000..0000800100001fff [204]
+[  288.968221] pci 0000:05:00.0: can't claim BAR 0 [mem
+0x800100000000-0x800100001fff]: no compatible bridge window
 
-Bjorn
+the bridge resource has IORESOURCE_PREFETCH, but the device doesn't have that.
+
+So pci_claim_resource can not find parent resource for device
+resource: we can not
+put non pref mem under pref mem.
+
+Can you send out result from ?
+lspci -vvxxx -s 0000:05:00.0
+
+If it does have pref, could be of device layer does not pass the pref
+flag properly
+via pci_parse_of_addrs/of_get_property(node, "assigned-addresses".
+
+or the addr0 from "ranges" and "assigned-address" has different definition.
+
+Thanks
+
+Yinghai
