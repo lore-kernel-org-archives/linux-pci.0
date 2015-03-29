@@ -1,141 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48780 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759942AbbCDUDJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Mar 2015 15:03:09 -0500
-Subject: [PATCH 5/5] vfio-pci: Add VGA arbiter client
-From: Alex Williamson <alex.williamson@redhat.com>
-To: alex.williamson@redhat.com, kvm@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 04 Mar 2015 13:03:06 -0700
-Message-ID: <20150304200306.26766.98019.stgit@gimli.home>
-In-Reply-To: <20150304194711.26766.75450.stgit@gimli.home>
-References: <20150304194711.26766.75450.stgit@gimli.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 29 Mar 2015 15:38:32 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 12/86] x86/pci/sta2x11: use uapi/linux/pci_ids.h directly
+Message-ID: <1427635734-24786-13-git-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If VFIO VGA access is disabled for the user, either by CONFIG option
-or module parameter, we can often opt-out of VGA arbitration.  We can
-do this when PCI bridge control of VGA routing is possible.  This
-means that we must have a parent bridge and there must only be a
-single VGA device below that bridge.  Fortunately this is the typical
-case for discrete GPUs.
+Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
+use the new header directly so we can drop
+the wrapper in include/linux/pci_ids.h.
 
-Doing this allows us to minimize the impact of additional GPUs, in
-terms of VGA arbitration, when they are only used via vfio-pci for
-non-VGA applications.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/vfio/pci/vfio_pci.c |   67 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 63 insertions(+), 4 deletions(-)
+ arch/x86/pci/sta2x11-fixup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 2133b74..2522d7c 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -25,6 +25,7 @@
- #include <linux/types.h>
- #include <linux/uaccess.h>
- #include <linux/vfio.h>
-+#include <linux/vgaarb.h>
+diff --git a/arch/x86/pci/sta2x11-fixup.c b/arch/x86/pci/sta2x11-fixup.c
+index 5ceda85..96e5e10 100644
+--- a/arch/x86/pci/sta2x11-fixup.c
++++ b/arch/x86/pci/sta2x11-fixup.c
+@@ -23,7 +23,7 @@
+  */
  
- #include "vfio_pci_private.h"
+ #include <linux/pci.h>
+-#include <linux/pci_ids.h>
++#include <uapi/linux/pci_ids.h>
+ #include <linux/export.h>
+ #include <linux/list.h>
  
-@@ -64,6 +65,50 @@ static inline bool vfio_vga_disabled(void)
- #endif
- }
- 
-+/*
-+ * Our VGA arbiter participation is limited since we don't know anything
-+ * about the device itself.  However, if the device is the only VGA device
-+ * downstream of a bridge and VFIO VGA support is disabled, then we can
-+ * safely return legacy VGA IO and memory as not decoded since the user
-+ * has no way to get to it and routing can be disabled externally at the
-+ * bridge.
-+ */
-+static unsigned int vfio_pci_set_vga_decode(void *opaque, bool single_vga)
-+{
-+	struct vfio_pci_device *vdev = opaque;
-+	struct pci_dev *tmp = NULL, *pdev = vdev->pdev;
-+	unsigned char max_busnr;
-+	unsigned int decodes;
-+
-+	if (single_vga || !vfio_vga_disabled() || pci_is_root_bus(pdev->bus))
-+		return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
-+		       VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
-+
-+	max_busnr = pci_bus_max_busnr(pdev->bus);
-+	decodes = VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
-+
-+	while ((tmp = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, tmp)) != NULL) {
-+		if (tmp == pdev ||
-+		    pci_domain_nr(tmp->bus) != pci_domain_nr(pdev->bus) ||
-+		    pci_is_root_bus(tmp->bus))
-+			continue;
-+
-+		if (tmp->bus->number >= pdev->bus->number &&
-+		    tmp->bus->number <= max_busnr) {
-+			pci_dev_put(tmp);
-+			decodes |= VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
-+			break;
-+		}
-+	}
-+
-+	return decodes;
-+}
-+
-+static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
-+{
-+	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
-+}
-+
- static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
- 
- static int vfio_pci_enable(struct vfio_pci_device *vdev)
-@@ -120,7 +165,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 	} else
- 		vdev->msix_bar = 0xFF;
- 
--	if (!vfio_vga_disabled() && (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
-+	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
- 		vdev->has_vga = true;
- 
- 	return 0;
-@@ -909,6 +954,12 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		kfree(vdev);
- 	}
- 
-+	if (vfio_pci_is_vga(pdev)) {
-+		vga_client_register(pdev, vdev, NULL, vfio_pci_set_vga_decode);
-+		vga_set_legacy_decoding(pdev,
-+					vfio_pci_set_vga_decode(vdev, false));
-+	}
-+
- 	if (!disable_idle_pm) {
- 		/*
- 		 * pci-core sets the device power state to an unknown value at
-@@ -928,9 +979,17 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- 	struct vfio_pci_device *vdev;
- 
- 	vdev = vfio_del_group_dev(&pdev->dev);
--	if (vdev) {
--		iommu_group_put(pdev->dev.iommu_group);
--		kfree(vdev);
-+	if (!vdev)
-+		return;
-+
-+	iommu_group_put(pdev->dev.iommu_group);
-+	kfree(vdev);
-+
-+	if (vfio_pci_is_vga(pdev)) {
-+		vga_client_register(pdev, NULL, NULL, NULL);
-+		vga_set_legacy_decoding(pdev,
-+				VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM |
-+				VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM);
- 	}
- 
- 	if (!disable_idle_pm)
+-- 
+MST
 
