@@ -1,95 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:36530 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003AbbCQHlE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Mar 2015 03:41:04 -0400
-Received: by igbue6 with SMTP id ue6so63882912igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 17 Mar 2015 00:41:04 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:56268 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752897AbbC2PEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Mar 2015 11:04:22 -0400
+Date: Sun, 29 Mar 2015 17:04:18 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	virtualization@lists.linux-foundation.org
+Subject: [PATCH v5 06/10] virtio_pci: drop msi_off on probe
+Message-ID: <1427641227-7574-7-git-send-email-mst@redhat.com>
+References: <1427641227-7574-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <3714853.Vuc23EfWdL@wuerfel>
-References: <1426515635-9466-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1426515635-9466-5-git-send-email-gabriel.fernandez@linaro.org>
-	<582D947C-1229-4DD9-BC82-812D1560C49E@codeaurora.org>
-	<3714853.Vuc23EfWdL@wuerfel>
-Date: Tue, 17 Mar 2015 08:41:03 +0100
-Message-ID: <CAG374jBqtw8sW-ZpMJFQUR0skdh+oX_F120hc90ssAYHzrF15g@mail.gmail.com>
-Subject: Re: [PATCH v2 4/5] PCI: designware: Add disable IO support
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kumar Gala <galak@codeaurora.org>,
-	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+pci core now disables msi on probe automatically,
+drop this from device-specific code.
 
-Ok i will try the same way that pci-versatile.c
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/virtio/virtio_pci_common.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Thanks.
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index e894eb2..806bb2c 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -501,9 +501,6 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
+ 	INIT_LIST_HEAD(&vp_dev->virtqueues);
+ 	spin_lock_init(&vp_dev->lock);
+ 
+-	/* Disable MSI/MSIX to bring device to a known good state. */
+-	pci_msi_off(pci_dev);
+-
+ 	/* enable the device */
+ 	rc = pci_enable_device(pci_dev);
+ 	if (rc)
+-- 
+MST
 
-Gabriel
-
-On 16 March 2015 at 21:00, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 16 March 2015 13:00:51 Kumar Gala wrote:
->> On Mar 16, 2015, at 9:20 AM, Gabriel FERNANDEZ <gabriel.fernandez@st.com> wrote:
->>
->> > ST sti SoCs PCIe IPs are built around DesignWare IP Core.
->> > But in these SoCs PCIe IP doesn't support IO.
->> >
->> > This patch adds the possibility to disable it through
->> > a DT property, by creating an empty IO window and by
->> > removing PCI_COMMAND_IO from the setup register.
->> >
->> > Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> > Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->> > ---
->> > .../devicetree/bindings/pci/designware-pcie.txt    |  2 ++
->> > drivers/pci/host/pcie-designware.c                 | 24 ++++++++++++++++++++--
->> > drivers/pci/host/pcie-designware.h                 |  1 +
->> > 3 files changed, 25 insertions(+), 2 deletions(-)
->>
->> Why not just update the code such that if the ranges doesn’t have an IO
->> space rather than introducing a new DT property?
->
-> I suspect we can simplify this now by changing over the designware PCI
-> code from pci_common_init_dev to calling pci_scan_root_bus() in the
-> same way that pci-versatile.c does. This would also clean up some
-> other areas of the driver and let you do proper error handling
-> in the probe.
->
->         Arnd
