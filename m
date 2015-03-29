@@ -1,52 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:54754 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935AbbCXBPe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 21:15:34 -0400
-Message-ID: <5510BAAD.3080607@huawei.com>
-Date: Tue, 24 Mar 2015 09:15:25 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56247 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752596AbbC2PEI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Mar 2015 11:04:08 -0400
+Date: Sun, 29 Mar 2015 17:04:04 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: [PATCH v5 02/10] pci: move pci_msi_init_pci_dev to probe.c
+Message-ID: <1427641227-7574-3-git-send-email-mst@redhat.com>
+References: <1427641227-7574-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	kbuild test robot <fengguang.wu@intel.com>
-CC: "kbuild-all@01.org" <kbuild-all@01.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [pci:pci/enumeration-yw7 32/35] drivers/pci/host-bridge.c:147:24:
- sparse: symbol 'pci_find_host_bridge' was not declared. Should it be static?
-References: <201503240247.Lu2Ttzhc%fengguang.wu@intel.com> <CAErSpo6zfA7t-CeYx1_aBYEcV=LFueWYE_bndH-s-ktjL_goPg@mail.gmail.com>
-In-Reply-To: <CAErSpo6zfA7t-CeYx1_aBYEcV=LFueWYE_bndH-s-ktjL_goPg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> sparse warnings: (new ones prefixed by >>)
->>
->>>> drivers/pci/host-bridge.c:147:24: sparse: symbol 'pci_find_host_bridge' was not declared. Should it be static?
->>
->> Please review and possibly fold the followup patch.
-> 
-> It does look like pci_find_host_bridge() is only used inside
-> drivers/pci/host-bridge.c and could be static.  Given that it's only
-> used there, it doesn't even need to be renamed, so maybe you could
-> even just drop the rename patch, too.
+commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
+    "PCI: msi: Disable msi interrupts when we initialize a pci device"
+fixes kexec when the booting kernel does not enable msi interupts.
 
-OK.
+Unfortunately the relevant functionality is in msi.c so it isn't
+compiled in when CONFIG_PCI_MSI is off, which means such configurations
+would still get interrupt storms.
 
-Hi Bjorn, because this series involved lots platforms and host bridge chips, and this version takes a lot of changes.
-So I didn't take lot of time to cross build this series in all the platforms in my local. I hope you could see the changes
-first, and I will refresh and fix the details soon.
+Fix by moving part of the functionality probe.c, and compiling it
+unconditionally.
 
-Thanks!
-Yijing.
+Cc: Eric W. Biederman <ebiederm@xmission.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/msi.c   | 12 ------------
+ drivers/pci/probe.c | 16 ++++++++++++++++
+ 2 files changed, 16 insertions(+), 12 deletions(-)
 
-> 
-> Bjorn
-> 
-> 
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9942f68..f66be86 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1041,18 +1041,6 @@ EXPORT_SYMBOL(pci_msi_enabled);
+ void pci_msi_init_pci_dev(struct pci_dev *dev)
+ {
+ 	INIT_LIST_HEAD(&dev->msi_list);
+-
+-	/* Disable the msi hardware to avoid screaming interrupts
+-	 * during boot.  This is the power on reset default so
+-	 * usually this should be a noop.
+-	 */
+-	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+-	if (dev->msi_cap)
+-		pci_msi_set_enable(dev, 0);
+-
+-	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-	if (dev->msix_cap)
+-		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ }
+ 
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..50dd934 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1483,10 +1483,26 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
+ }
+ 
++static void pci_msi_setup_pci_dev(struct pci_dev *dev)
++{
++	/* Disable the msi hardware to avoid screaming interrupts
++	 * during boot.  This is the power on reset default so
++	 * usually this should be a noop.
++	 */
++	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
++	if (dev->msi_cap)
++		pci_msi_set_enable(dev, 0);
++
++	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
++	if (dev->msix_cap)
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++}
++
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
++	pci_msi_setup_pci_dev(dev);
+ 
+ 	/* Buffers for saving PCIe and PCI-X capabilities */
+ 	pci_allocate_cap_save_buffers(dev);
 -- 
-Thanks!
-Yijing
+MST
 
