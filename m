@@ -1,40 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49298 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbbC1SHo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Mar 2015 14:07:44 -0400
-Date: Sat, 28 Mar 2015 11:16:21 -0700 (PDT)
-Message-Id: <20150328.111621.1041514784349808716.davem@davemloft.net>
-To: yinghai@kernel.org
-Cc: david.ahern@oracle.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
-References: <551495EE.20201@oracle.com>
-	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
-	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:46103 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753010AbbC2PEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Mar 2015 11:04:41 -0400
+Date: Sun, 29 Mar 2015 17:04:11 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH v5 04/10] pci: don't disable msi/msix at shutdown
+Message-ID: <1427641227-7574-5-git-send-email-mst@redhat.com>
+References: <1427641227-7574-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 27 Mar 2015 16:57:23 -0700
+This partially reverts commit d52877c7b1afb8c37ebe17e2005040b79cb618b0:
+	"pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
 
-> On Fri, Mar 27, 2015 at 2:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Thu, Mar 26, 2015 at 4:27 PM, David Ahern <david.ahern@oracle.com> wrote:
-> 
->> Also please make sure your config have
->>
->> CONFIG_PCI_DEBUG=y
->>
->> and capture serial console with "debug ignore_loglevel", so we check if
->> pci 0000:00:01.0 really have resource assigned.
-> 
-> Please check attached patch and send out boot log with above config.
+It's un-necessary now that we disable msi at start, and it actually
+turns out to cause problems: some device drivers don't register a level
+interrupt handler when they detect msi/msix capability, switching off
+msi while device is going causes device to assert a level interrupt
+which is never de-asserted, causing a kernel hang.
 
-PCI addresses being 64-bit or not is an attribute of the PCI
-controller and the geography of the bridges behind it, not the
-cpu architecture.
+In particular, this was observed with virtio.
+
+Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+Cc: Ulrich Obergfell <uobergfe@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Reported-by: Fam Zheng <famz@redhat.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/pci-driver.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..38a602c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+ 
+ 	if (drv && drv->shutdown)
+ 		drv->shutdown(pci_dev);
+-	pci_msi_shutdown(pci_dev);
+-	pci_msix_shutdown(pci_dev);
+ 
+ #ifdef CONFIG_KEXEC
+ 	/*
+-- 
+MST
+
