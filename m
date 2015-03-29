@@ -1,126 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59970 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752362AbbCXTbo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Mar 2015 15:31:44 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [Bugfix] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Tue, 24 Mar 2015 20:55:47 +0100
-Message-ID: <4432037.c8LZLCjoUX@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6uBK2FWK838BUob+54T1NHoak9HiO34TstPwGPazp72A@mail.gmail.com>
-References: <1427095334-7430-1-git-send-email-jiang.liu@linux.intel.com> <5510D327.5060400@linux.intel.com> <CAErSpo6uBK2FWK838BUob+54T1NHoak9HiO34TstPwGPazp72A@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45057 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752804AbbC2PEL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Mar 2015 11:04:11 -0400
+Date: Sun, 29 Mar 2015 17:04:07 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 03/10] pci: drop some duplicate code
+Message-ID: <1427641227-7574-4-git-send-email-mst@redhat.com>
+References: <1427641227-7574-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, March 24, 2015 08:18:35 AM Bjorn Helgaas wrote:
-> On Mon, Mar 23, 2015 at 9:59 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> > On 2015/3/24 10:42, Bjorn Helgaas wrote:
-> >> On Mon, Mar 23, 2015 at 9:22 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> >>> On 2015/3/24 0:48, Bjorn Helgaas wrote:
-> >>>> On Mon, Mar 23, 2015 at 03:22:14PM +0800, Jiang Liu wrote:
-> >>>>> Commit 63f1789ec716("Ignore resources consumed by host bridge itself")
-> >>>>> tries to ignore resources consumed by PCI host bridge itself by
-> >>>>> checking IORESOURCE_WINDOW flag, which causes regression on some
-> >>>>> platforms.
-> >>>>
-> >>>> "Do.  Or do not.  There is no try."
-> >>>> [http://www.starwars.com/video/do-or-do-not]
-> >>>>
-> >>>> That commit doesn't *try* to do something.  It *does* something.  Just
-> >>>> explain what it does and what's wrong with what it does.
-> >>>>
-> >>>>> For example, PC Engines APU.1C platform defines PCI MMIO resources with
-> >>>>> ACPI Memory32Fixed operator as below:
-> >>>>> Name (CRES, ResourceTemplate ()
-> >>>>> {
-> >>>>>     ...
-> >>>>>     WordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode,
-> >>>>>         0x0000,             // Granularity
-> >>>>>         0x0D00,             // Range Minimum
-> >>>>>         0xFFFF,             // Range Maximum
-> >>>>>         0x0000,             // Translation Offset
-> >>>>>         0xF300,             // Length
-> >>>>>         ,, , TypeStatic)
-> >>>>>     Memory32Fixed (ReadOnly,
-> >>>>>         0x000A0000,         // Address Base
-> >>>>>         0x00020000,         // Address Length
-> >>>>>         )
-> >>>>>     Memory32Fixed (ReadOnly,
-> >>>>>         0x00000000,         // Address Base
-> >>>>>         0x00000000,         // Address Length
-> >>>>>         _Y00)
-> >>>>> })
-> >>>>>
-> >>>>> Memory32Fixed operator doesn't support concept of "producer/consumer"
-> >>>>> and it will be treated as "consumer" by the ACPI resource parsing
-> >>>>> interface, thus cause regression. So the fix is only to check
-> >>>>> "producer/consumer" flag for resources having "producer/consumer" flag.
-> >>>>
-> >>>> Apparently the problem is with the Memory32Fixed resources above; it sounds
-> >>>> like we ignore them after 63f1789ec716?  I don't quite understand how this
-> >>>> fix works.  acpi_dev_filter_resource_type() has cases for both
-> >>>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 and ACPI_RESOURCE_TYPE_ADDRESSxx, but
-> >>>> this patch only touches the latter, not the
-> >>>> ACPI_RESOURCE_TYPE_FIXED_MEMORY32 case.
-> >>> The idea is:
-> >>> 1) caller specifies IORESOURCE_WINDOW to query resources provided
-> >>>    by the device, otherwise it's querying resources consumed by
-> >>>    the device.
-> >>> 2) For resource descriptors having producer/consumer flag, such as
-> >>>     ACPI_RESOURCE_TYPE_ADDRESSxx, we check the producer/consumer flag.
-> >>> 3) For resource descriptors not having producer/consumer flag, such
-> >>>    as ACPI_RESOURCE_TYPE_FIXED_MEMORY32, we skip checking the
-> >>>    producer/consumer flag.
-> >>
-> >> I figured out that much by reading the code.  But I think the code is
-> >> very hard to read, and I still don't really understand how it works.
-> >>
-> >> Before this fix, we ignore Memory32Fixed resources.  After this fix,
-> >> we use Memory32Fixed as a window.  I think that's an incorrect
-> >> interpretation of Memory32Fixed.
-> > Hi Bjorn,
-> >         I think it's illegal to use Memory32Fixed for PCI host
-> > bridge resource window too. The fix is to solve the regression
-> > by relaxing constraints, but that may not be the right solution.
-> 
-> Relaxing the constraint for all platforms is only a solution if we're
-> confident that it works for all platforms.  I'm not confident because
-> I don't know what effect this patch has on systems that use
-> Memory32Fixed correctly.
-> 
-> It's possible that you can analyze the behavior and explain that if
-> you relax the constraint, the Memory32Fixed handling (both for bridge
-> and non-bridge devices) will be the same as it was before
-> 63f1789ec716.  If you can do that, I think it would be reasonable
-> because you'd be preserving the previous, known-working behavior.
-> 
-> If you go that route, I'd like to see a patch that explicitly touches
-> the Memory32Fixed handling.  The current patch claims to change the
-> way we handle Memory32Fixed, but nothing in the code change is
-> directly related to Memory32Fixed, so it's very confusing.
-> 
-> >         How about waiting for a while to see whether there are more
-> > bug reports related to this. If only limited platform affected,
-> > we could treat it as BIOS bugs and use quirk to handle it.
-> > Otherwise we may need to relax the constraint.
-> 
-> I don't think waiting is a good strategy.  We know we have a
-> regression, and I think we need to fix that ASAP without waiting for
-> more failure reports.
+pci_msi_setup_pci_dev and pci_msi_off share a lot of code.
+This used to be justified since pci_msi_setup_pci_dev
+wasn't compiled in when CONFIG_PCI_MSI is off.
+Now that it is, let's reuse code.
 
-Agreed on all points.
+Since pci_msi_off is used by early quirks, doing this requires calling
+pci_msi_setup_pci_dev early after device allocation, so move the call to
+pci_setup_device.
 
-Rafael
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/pci/pci.c   | 23 ++++-------------------
+ drivers/pci/probe.c | 31 +++++++++++++++----------------
+ 2 files changed, 19 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 81f06e8..fcee8ea 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3106,26 +3106,11 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
+  */
+ void pci_msi_off(struct pci_dev *dev)
+ {
+-	int pos;
+-	u16 control;
++	if (dev->msi_cap)
++		pci_msi_set_enable(dev, 0);
+ 
+-	/*
+-	 * This looks like it could go in msi.c, but we need it even when
+-	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
+-	 * dev->msi_cap or dev->msix_cap here.
+-	 */
+-	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
+-	if (pos) {
+-		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
+-		control &= ~PCI_MSI_FLAGS_ENABLE;
+-		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
+-	}
+-	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-	if (pos) {
+-		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
+-		control &= ~PCI_MSIX_FLAGS_ENABLE;
+-		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
+-	}
++	if (dev->msix_cap)
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ }
+ EXPORT_SYMBOL_GPL(pci_msi_off);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 50dd934..120772c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1084,6 +1084,18 @@ int pci_cfg_space_size(struct pci_dev *dev)
+ 
+ #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
+ 
++static void pci_msi_setup_pci_dev(struct pci_dev *dev)
++{
++	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
++	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
++
++	/* Disable the msi hardware to avoid screaming interrupts
++	 * during boot.  This is the power on reset default so
++	 * usually this should be a noop.
++	 */
++	pci_msi_off(dev);
++}
++
+ /**
+  * pci_setup_device - fill in class and map information of a device
+  * @dev: the device structure to fill
+@@ -1139,6 +1151,9 @@ int pci_setup_device(struct pci_dev *dev)
+ 	/* "Unknown power state" */
+ 	dev->current_state = PCI_UNKNOWN;
+ 
++	/* MSI/MSI-X setup has to be done early since it's used by quirks. */
++	pci_msi_setup_pci_dev(dev);
++
+ 	/* Early fixups, before probing the BARs */
+ 	pci_fixup_device(pci_fixup_early, dev);
+ 	/* device class may be changed after fixup */
+@@ -1483,26 +1498,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
+ }
+ 
+-static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+-{
+-	/* Disable the msi hardware to avoid screaming interrupts
+-	 * during boot.  This is the power on reset default so
+-	 * usually this should be a noop.
+-	 */
+-	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+-	if (dev->msi_cap)
+-		pci_msi_set_enable(dev, 0);
+-
+-	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-	if (dev->msix_cap)
+-		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+-}
+-
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
+-	pci_msi_setup_pci_dev(dev);
+ 
+ 	/* Buffers for saving PCIe and PCI-X capabilities */
+ 	pci_allocate_cap_save_buffers(dev);
+-- 
+MST
 
