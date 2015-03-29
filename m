@@ -1,76 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:23286 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751667AbbCICnG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Mar 2015 22:43:06 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v6 03/30] PCI: Export busn_resource to drivers/pci
-Date: Mon, 9 Mar 2015 10:34:00 +0800
-Message-ID: <1425868467-9667-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
-References: <1425868467-9667-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49438 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752724AbbC2PEf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Mar 2015 11:04:35 -0400
+Date: Sun, 29 Mar 2015 17:04:31 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 09/10] pci: drop pci_msi_off calls from quirks
+Message-ID: <1427641227-7574-10-git-send-email-mst@redhat.com>
+References: <1427641227-7574-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export out busn_resource. Xen pcifront module need it.
+pci core now disables msi on probe automatically,
+drop this from device-specific quirks.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/pci/pci.h   |    2 ++
- drivers/pci/probe.c |    3 ++-
- 2 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/pci/quirks.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4091f82..eeacab9 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -10,6 +10,8 @@ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 85f247e..df3e718 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1600,7 +1600,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_a
  
- /* Functions internal to the PCI core code */
- 
-+extern struct resource busn_resource;
-+
- int pci_create_sysfs_dev_files(struct pci_dev *pdev);
- void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
- #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8ef0375..b97ea81 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -17,12 +17,13 @@
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
- #define CARDBUS_RESERVE_BUSNR	3
- 
--static struct resource busn_resource = {
-+struct resource busn_resource = {
- 	.name	= "PCI busn",
- 	.start	= 0,
- 	.end	= 255,
- 	.flags	= IORESOURCE_BUS,
- };
-+EXPORT_SYMBOL(busn_resource);
- 
- /* Ugh.  Need to stop exporting this to modules. */
- LIST_HEAD(pci_root_buses);
+ static void quirk_pcie_mch(struct pci_dev *pdev)
+ {
+-	pci_msi_off(pdev);
+ 	pdev->no_msi = 1;
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
+@@ -1614,7 +1613,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quir
+  */
+ static void quirk_pcie_pxh(struct pci_dev *dev)
+ {
+-	pci_msi_off(dev);
+ 	dev->no_msi = 1;
+ 	dev_warn(&dev->dev, "PXH quirk detected; SHPC device MSI disabled\n");
+ }
 -- 
-1.7.1
+MST
 
