@@ -1,354 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0119.outbound.protection.outlook.com ([65.55.169.119]:7424
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752055AbbCWJcd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 05:32:33 -0400
-From: "Chunhe.Lan@freescale.com" <Chunhe.Lan@freescale.com>
-To: "Chunhe.Lan@freescale.com" <Chunhe.Lan@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] powerpc/pci: Fix the initial value of hose->first_busno
-Date: Mon, 23 Mar 2015 09:17:33 +0000
-Message-ID: <1427102805437.22979@freescale.com>
-References: <1422611302-309-1-git-send-email-Chunhe.Lan@freescale.com>
- <1422611372.6200.4.camel@kernel.crashing.org>
- <CAErSpo5_5uML3=OU=CitZbiLt1SuC7kjWVvCc-EOhsrUbObmeQ@mail.gmail.com>,<54D04390.3030300@freescale.com>
-In-Reply-To: <54D04390.3030300@freescale.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41081 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbbC3KHt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 06:07:49 -0400
+Date: Mon, 30 Mar 2015 12:07:44 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Stephane Eranian <eranian@google.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Peter Neubauer <pneubauer@bluerwhite.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 01/86] pci: export pci_ids.h
+Message-ID: <20150330100744.GA16291@kroah.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+ <1427635734-24786-2-git-send-email-mst@redhat.com>
+ <20150329204047.GA5902@kroah.com>
+ <20150330083707-mutt-send-email-mst@redhat.com>
+ <20150330065522.GA10105@kroah.com>
+ <20150330085617-mutt-send-email-mst@redhat.com>
+ <20150330075331.GA17823@kroah.com>
+ <20150330101830-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150330101830-mutt-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello everyone,
+On Mon, Mar 30, 2015 at 10:31:54AM +0200, Michael S. Tsirkin wrote:
+> On Mon, Mar 30, 2015 at 09:53:31AM +0200, Greg KH wrote:
+> > On Mon, Mar 30, 2015 at 09:15:26AM +0200, Michael S. Tsirkin wrote:
+> > > On Mon, Mar 30, 2015 at 08:55:22AM +0200, Greg KH wrote:
+> > > > On Mon, Mar 30, 2015 at 08:48:44AM +0200, Michael S. Tsirkin wrote:
+> > > > > On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
+> > > > > > On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
+> > > > > > > The macros in pci_ids.h are pretty useful for userspace
+> > > > > > > using the pci sysfs interface.
+> > > > > > > At the moment userspace is forced to duplicate these macros
+> > > > > > > (e.g. QEMU does this), it is better to expose them in
+> > > > > > > /usr/include/linux/pci_ids.h so everyone can just include
+> > > > > > > this header.
+> > > > > > > 
+> > > > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > > > > > > ---
+> > > > > > >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
+> > > > > > >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
+> > > > > > 
+> > > > > > No, please use the pci ids file from the upstream pci id database
+> > > > > > instead.
+> > > > > 
+> > > > > 
+> > > > > >  We shouldn't be putting these all in one file,
+> > > > > 
+> > > > > pci.txt says:
+> > > > > 	Please add PCI_VENDOR_ID_xxx for vendors
+> > > > > You want to change this policy, and get rid of
+> > > > > vendor ids in pci_ids.h completely?
+> > > > 
+> > > > Please read the top of pci_ids.h.  It hasn't had new ids added to it in
+> > > > a long time.
+> > > 
+> > > OK, looks like pci.txt should be fixed then.
+> > 
+> > Please send a patch.  As the original PCI kernel maintainer, I don't
+> > think I ever noticed pci.txt.  It was last "updated" in 2006...
+> > 
+> > > > Why would userspace need the pci id of anything?
+> > > 
+> > > Look at how they are used e.g. by QEMU, seabios, gpxe.
+> > > People want to say e.g. "find all network class devices".
+> > 
+> > Then use libpci.
+> > 
+> > > >  Again, just use
+> > > > libpci, isn't it fast enough?  Don't duplicate existing logic.
+> > > 
+> > > This really depends on whether you want something else that
+> > > libpci provides. But if I just want e.g. standard class IDs,
+> > > I don't want to depend on libpci.
+> > 
+> > Why not?  Don't duplicate things that already are there just for this
+> > very use.
+> > 
+> > Don't make us do kernel changes just because you don't want to depend on
+> > either of the two different userspace packages that provide this
+> > information in a standard way for userspace.  Your system will have one
+> > of those two packages in it, depending on it isn't a "burden" at all.
+> > 
+> > > > Or use the hw database that libudev exports, which is already on your
+> > > > machine and exports all of the pci ids from libpci directly.
+> > > 
+> > > Same argument really.
+> > 
+> > Because you don't want to depend on existing packages, doesn't mean we
+> > have to accept kernel changes and maintain them for forever, as you are
+> > now creating a new api that we will have to keep up to date and correct
+> > for all time.
+> > 
+> > Again, depend on the packages that are already doing this work please.
+> > 
+> 
+> Maintaining correct class IDs is more or less a requirement
+> for kernel to work properly, isn't it?
 
-   I record kernel boot message with/without this patch on 32-bit system.
+Yes, but maintaining them internally, not externally.
 
-   Kernel boot part message without this patch ( fail ):
-=====================================
-  e500 family performance monitor hardware support registered
-  Brought up 2 CPUs
-  devtmpfs: initialized
-  NET: Registered protocol family 16
-  Found FSL PCI host bridge at 0x0000000ffe240000. Firmware bus number: 0->0
-  PCI host bridge /pcie@ffe240000  ranges:
-   MEM 0x0000000c00000000..0x0000000c0fffffff -> 0x00000000e0000000
-    IO 0x0000000ff8000000..0x0000000ff800ffff -> 0x0000000000000000
-  /pcie@ffe240000: PCICSRBAR @ 0xff000000
-  /pcie@ffe240000: Setup 64-bit PCI DMA window
-  /pcie@ffe240000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce
-  /pcie@ffe240000: DMA window size is 0xe0000000
-  Found FSL PCI host bridge at 0x0000000ffe250000. Firmware bus number: 0->4
-  PCI host bridge /pcie@ffe250000  ranges:
-   MEM 0x0000000c10000000..0x0000000c1fffffff -> 0x00000000e0000000
-    IO 0x0000000ff8010000..0x0000000ff801ffff -> 0x0000000000000000 
-  /pcie@ffe250000: PCICSRBAR @ 0xff000000
-  /pcie@ffe250000: Setup 64-bit PCI DMA window
-  /pcie@ffe250000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce 
-  /pcie@ffe250000: DMA window size is 0xe0000000
-  Found FSL PCI host bridge at 0x0000000ffe260000. Firmware bus number: 0->0
-  PCI host bridge /pcie@ffe260000  ranges:
-   MEM 0x0000000c20000000..0x0000000c2fffffff -> 0x00000000e0000000 
-    IO 0x0000000ff8020000..0x0000000ff802ffff -> 0x0000000000000000
-  /pcie@ffe260000: PCICSRBAR @ 0xff000000
-  /pcie@ffe260000: Setup 64-bit PCI DMA window
-  /pcie@ffe260000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce
-  /pcie@ffe260000: DMA window size is 0xe0000000
-  Found FSL PCI host bridge at 0x0000000ffe270000. Firmware bus number: 0->0
-  PCI host bridge /pcie@ffe270000  ranges:
-   MEM 0x0000000c30000000..0x0000000c3fffffff -> 0x00000000e0000000
-    IO 0x0000000ff8030000..0x0000000ff803ffff -> 0x0000000000000000
-  /pcie@ffe270000: PCICSRBAR @ 0xff000000
-  /pcie@ffe270000: Setup 64-bit PCI DMA window
-  /pcie@ffe270000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce
-  /pcie@ffe270000: DMA window size is 0xe0000000
-  software IO TLB [mem 0x03ff7000-0x07ff7000] (64MB) mapped at [c3ff7000-c7ff6fff]
-  PCI: Probing PCI hardware
-  fsl-pci ffe240000.pcie: PCI host bridge to bus 0000:00
-  pci_bus 0000:00: root bus resource [io  0xf1040000-0xf104ffff] (bus address [0x0000-0xffff])
-  pci_bus 0000:00: root bus resource [mem 0xc00000000-0xc0fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0000:00: root bus resource [bus 00-ff]
-  pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-  fsl-pci ffe250000.pcie: PCI host bridge to bus 0001:02
-  pci_bus 0001:02: root bus resource [io  0xf10a0000-0xf10affff] (bus address [0x0000-0xffff])
-  pci_bus 0001:02: root bus resource [mem 0xc10000000-0xc1fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0001:02: root bus resource [bus 02-ff]
-  pci 0001:02:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0001:02:00.0: Primary bus is hard wired to 0
-  pci 0001:02:00.0: bridge configuration invalid ([bus 01-04]), reconfiguring
-  pci 0001:02:00.0: PCI bridge to [bus 03-ff]
-  pci 0001:03:00.0: bridge configuration invalid ([bus 02-04]), reconfiguring
-  pci 0001:03:00.0: PCI bridge to [bus 04-ff]
-  fsl-pci ffe260000.pcie: PCI host bridge to bus 0002:05
-  pci_bus 0002:05: root bus resource [io  0xf1100000-0xf110ffff] (bus address [0x0000-0xffff])
-  pci_bus 0002:05: root bus resource [mem 0xc20000000-0xc2fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0002:05: root bus resource [bus 05-ff]
-  pci 0002:05:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0002:05:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0002:05:00.0: PCI bridge to [bus 06-ff]
-  fsl-pci ffe270000.pcie: PCI host bridge to bus 0003:07
-  pci_bus 0003:07: root bus resource [io  0xf1160000-0xf116ffff] (bus address [0x0000-0xffff])
-  pci_bus 0003:07: root bus resource [mem 0xc30000000-0xc3fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0003:07: root bus resource [bus 07-ff]
-  pci 0003:07:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0003:07:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0003:07:00.0: PCI bridge to [bus 08-ff]
-  pci 0000:00:00.0: PCI bridge to [bus 01]
-  pci 0000:00:00.0:   bridge window [io  0xf1040000-0xf104ffff]
-  pci 0000:00:00.0:   bridge window [mem 0xc00000000-0xc0fffffff]
-  pci 0001:03:00.0: PCI bridge to [bus 04]
-  pci 0001:03:00.0:   bridge window [io  0xf10a1000-0xf10a2fff]
-  pci 0001:03:00.0:   bridge window [mem 0xc10000000-0xc101fffff]
-  pci 0001:02:00.0: PCI bridge to [bus 03-04]
-  pci 0001:02:00.0:   bridge window [io  0xf10a0000-0xf10affff]
-  pci 0001:02:00.0:   bridge window [mem 0xc10000000-0xc1fffffff]
-  pci 0002:05:00.0: PCI bridge to [bus 06]
-  pci 0002:05:00.0:   bridge window [io  0xf1100000-0xf110ffff]
-  pci 0002:05:00.0:   bridge window [mem 0xc20000000-0xc2fffffff]
-  pci 0003:07:00.0: PCI bridge to [bus 08]
-  pci 0003:07:00.0:   bridge window [io  0xf1160000-0xf116ffff]
-  pci 0003:07:00.0:   bridge window [mem 0xc30000000-0xc3fffffff]
-  bio: create slab <bio-0> at 0
-  vgaarb: loaded
-  SCSI subsystem initialized
-  usbcore: registered new interface driver usbfs
-  usbcore: registered new interface driver hub
-  usbcore: registered new device driver usb
-=====================================
+> Wouldn't the same thing apply to pci_regs.h?
+> Why does it make sense to export PCI_CLASS_REVISION
+> so I know where to read the class value from
+> configuration, but not what the values are?
 
-   Kernel boot part message with this patch ( success ):
-=====================================
-  e500 family performance monitor hardware support registered
-  Brought up 2 CPUs
-  devtmpfs: initialized
-  NET: Registered protocol family 16            
-  Found FSL PCI host bridge at 0x0000000ffe240000. Firmware bus number: 0->0
-  PCI host bridge /pcie@ffe240000  ranges:
-   MEM 0x0000000c00000000..0x0000000c0fffffff -> 0x00000000e0000000 
-    IO 0x0000000ff8000000..0x0000000ff800ffff -> 0x0000000000000000
-  /pcie@ffe240000: PCICSRBAR @ 0xff000000
-  /pcie@ffe240000: Setup 64-bit PCI DMA window
-  /pcie@ffe240000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce unnecessary bounce buffering.
-  /pcie@ffe240000: DMA window size is 0xe0000000
-  Found FSL PCI host bridge at 0x0000000ffe250000. Firmware bus number: 0->4
-  PCI host bridge /pcie@ffe250000  ranges:
-   MEM 0x0000000c10000000..0x0000000c1fffffff -> 0x00000000e0000000 
-    IO 0x0000000ff8010000..0x0000000ff801ffff -> 0x0000000000000000
-  /pcie@ffe250000: PCICSRBAR @ 0xff000000
-  /pcie@ffe250000: Setup 64-bit PCI DMA window
-  /pcie@ffe250000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce unnecessary bounce buffering.
-  /pcie@ffe250000: DMA window size is 0xe0000000
-  Found FSL PCI host bridge at 0x0000000ffe260000. Firmware bus number: 0->0
-   PCI host bridge /pcie@ffe260000  ranges:
-   MEM 0x0000000c20000000..0x0000000c2fffffff -> 0x00000000e0000000
-    IO 0x0000000ff8020000..0x0000000ff802ffff -> 0x0000000000000000
-  /pcie@ffe260000: PCICSRBAR @ 0xff000000
-  /pcie@ffe260000: Setup 64-bit PCI DMA window
-  /pcie@ffe260000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce unnecessary bounce buffering.
-  /pcie@ffe260000: DMA window size is 0xe0000000
-  Found FSL PCI host bridge at 0x0000000ffe270000. Firmware bus number: 0->0
-  PCI host bridge /pcie@ffe270000  ranges:
-   MEM 0x0000000c30000000..0x0000000c3fffffff -> 0x00000000e0000000
-    IO 0x0000000ff8030000..0x0000000ff803ffff -> 0x0000000000000000
-  /pcie@ffe270000: PCICSRBAR @ 0xff000000
-  /pcie@ffe270000: Setup 64-bit PCI DMA window
-  /pcie@ffe270000: WARNING: Outbound window cfg leaves gaps in memory map. Adjusting the memory map could reduce unnecessary bounce buffering.
-  /pcie@ffe270000: DMA window size is 0xe0000000
-   software IO TLB [mem 0x03ff7000-0x07ff7000] (64MB) mapped at [c3ff7000-c7ff6fff]
-  PCI: Probing PCI hardware
-  fsl-pci ffe240000.pcie: PCI host bridge to bus 0000:00
-  pci_bus 0000:00: root bus resource [io  0xf1040000-0xf104ffff] (bus address [0x0000-0xffff])
-  pci_bus 0000:00: root bus resource [mem 0xc00000000-0xc0fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0000:00: root bus resource [bus 00-ff]
-  pci 0000:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-  fsl-pci ffe250000.pcie: PCI host bridge to bus 0001:00
-  pci_bus 0001:00: root bus resource [io  0xf1080000-0xf108ffff] (bus address [0x0000-0xffff])
-  pci_bus 0001:00: root bus resource [mem 0xc10000000-0xc1fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0001:00: root bus resource [bus 00-ff]
-  pci 0001:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0001:00:00.0: PCI bridge to [bus 01-ff]
-  pci 0001:01:00.0: PCI bridge to [bus 02-ff]
-  pci 0001:02:02.0: PCI bridge to [bus 03-ff]
-  pci 0001:02:04.0: PCI bridge to [bus 04-ff]
-  fsl-pci ffe260000.pcie: PCI host bridge to bus 0002:00
-  pci_bus 0002:00: root bus resource [io  0xf10c0000-0xf10cffff] (bus address [0x0000-0xffff])
-  pci_bus 0002:00: root bus resource [mem 0xc20000000-0xc2fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0002:00: root bus resource [bus 00-ff]
-  pci 0002:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0002:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0002:00:00.0: PCI bridge to [bus 01-ff]
-  fsl-pci ffe270000.pcie: PCI host bridge to bus 0003:00
-  pci_bus 0003:00: root bus resource [io  0xf1100000-0xf110ffff] (bus address [0x0000-0xffff])
-  pci_bus 0003:00: root bus resource [mem 0xc30000000-0xc3fffffff] (bus address [0xe0000000-0xefffffff])
-  pci_bus 0003:00: root bus resource [bus 00-ff]
-  pci 0003:00:00.0: ignoring class 0x0b2000 (doesn't match header type 01)
-  pci 0003:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0003:00:00.0: PCI bridge to [bus 01-ff]
-  pci 0000:00:00.0: PCI bridge to [bus 01]
-  pci 0000:00:00.0:   bridge window [io  0xf1040000-0xf104ffff]
-  pci 0000:00:00.0:   bridge window [mem 0xc00000000-0xc0fffffff]
-  pci 0001:00:00.0: BAR 9: can't assign mem pref (size 0x200000)
-  pci 0001:01:00.0: BAR 9: assigned [mem 0xc10200000-0xc103fffff pref]
-  pci 0001:02:02.0: BAR 9: assigned [mem 0xc10200000-0xc102fffff pref]
-  pci 0001:02:04.0: BAR 9: assigned [mem 0xc10300000-0xc103fffff pref]
-  pci 0001:03:00.0: BAR 6: assigned [mem 0xc10200000-0xc1021ffff pref]
-  pci 0001:03:00.1: BAR 6: assigned [mem 0xc10220000-0xc1023ffff pref]
-  pci 0001:02:02.0: PCI bridge to [bus 03]
-  pci 0001:02:02.0:   bridge window [io  0xf1081000-0xf1081fff]
-  pci 0001:02:02.0:   bridge window [mem 0xc10000000-0xc100fffff]
-  pci 0001:02:02.0:   bridge window [mem 0xc10200000-0xc102fffff pref]
-  pci 0001:04:00.0: BAR 6: assigned [mem 0xc10300000-0xc1031ffff pref]
-  pci 0001:04:00.1: BAR 6: assigned [mem 0xc10320000-0xc1033ffff pref]
-  pci 0001:02:04.0: PCI bridge to [bus 04]
-  pci 0001:02:04.0:   bridge window [io  0xf1082000-0xf1082fff]
-  pci 0001:02:04.0:   bridge window [mem 0xc10100000-0xc101fffff]
-  pci 0001:02:04.0:   bridge window [mem 0xc10300000-0xc103fffff pref]
-  pci 0001:01:00.0: PCI bridge to [bus 02-04]
-  pci 0001:01:00.0:   bridge window [io  0xf1081000-0xf1082fff]
-  pci 0001:01:00.0:   bridge window [mem 0xc10000000-0xc101fffff]
-  pci 0001:01:00.0:   bridge window [mem 0xc10200000-0xc103fffff pref]
-  pci 0001:00:00.0: PCI bridge to [bus 01-04]
-  pci 0001:00:00.0:   bridge window [io  0xf1080000-0xf108ffff]
-  pci 0001:00:00.0:   bridge window [mem 0xc10000000-0xc1fffffff]
-  pci_bus 0001:00: Some PCI device resources are unassigned, try booting with pci=realloc
-  pci 0002:00:00.0: PCI bridge to [bus 01]
-  pci 0002:00:00.0:   bridge window [io  0xf10c0000-0xf10cffff]
-  pci 0002:00:00.0:   bridge window [mem 0xc20000000-0xc2fffffff]
-  pci 0003:00:00.0: PCI bridge to [bus 01]
-  pci 0003:00:00.0:   bridge window [io  0xf1100000-0xf110ffff]
-  pci 0003:00:00.0:   bridge window [mem 0xc30000000-0xc3fffffff]
-  bio: create slab <bio-0> at 0
-  vgaarb: loaded
-  SCSI subsystem initialized
-  usbcore: registered new interface driver usbfs
-  usbcore: registered new interface driver hub
-  usbcore: registered new device driver usb
-=====================================
+That's just due to history, we made the mistake to export those a long
+time ago, I wouldn't recommend doing any more, and again, instead rely
+on the programs that properly maintain that for you.
 
-Anybody are welcome to leave any comments or ideas about this patch.
+> What's the work you refer to?  This is just hardware description it
+> can't change and doesn't need to be maintained.
 
-Thanks,
--Chunhe
-_______________________________________
-From: Chunhe Lan <b25806@freescale.com>
-Sent: Tuesday, February 03, 2015 11:42 AM
-To: Bjorn Helgaas
-Cc: Benjamin Herrenschmidt; Lan Chunhe-B25806; linux-pci@vger.kernel.org
-Subject: Re: [PATCH] powerpc/pci: Fix the initial value of hose->first_busno
+Hardware descriptions always change over time and need to be
+maintained...
 
-On 02/02/2015 11:54 PM, Bjorn Helgaas wrote:
-> On Fri, Jan 30, 2015 at 3:49 AM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
->> On Fri, 2015-01-30 at 17:48 +0800, Chunhe Lan wrote:
->>> When use "Intel PRO/1000 PT Quad Port Low Profile Server Adapter"
->>> card on P5040DS and T1040RDB, 32-bit kernel does not identify this
->>> card. This card has the four RJ-45 ports.
->>>
->>> The bus range of every pci is "bus-range = <0 0xff>" in dts file.
->>> So the first bus number of every pci should start from 0, and it
->>> does not start from next_busno. The next_busno is used to count
->>> the bus sum of all pci devices. So the value of next_busno is
->>> accumulated.
->>>
->>> This patch fixes this issue, and "Intel PRO/1000 PT Quad Port Low
->>> Profile Server Adapter" card can work rightly.
->> So the logic here was meant the way it is, which is to avoid bus number
->> overlap between domains due to some old cruft in userspace that didn't
->> deal with them properly.
->>
->> It *might* be OK to deprecate that (this is *very* old cruft I'm talking
->> about such as 2001-era X server) however this isn't clear in your patch
->> description and it isn't clear either why that breaks your stuff.
-> Since this has the potential to break something, i.e., the old
-> userspace stuff,  we should have more details about what it fixes and
-> how.  Can you collect a complete dmesg log and "lspci -vv" output
-> before this patch, and another dmesg log *with* this patch, and attach
-> it all to a kernel.org bugzilla?
->
-> If you have a theory about exactly what the problem is, put that in
-> there, too.  Are we running out of bus number space or something?
-     When use 64-bit kernel,  64-bit kernel can identify this card.
+thanks,
 
-     The following content is the pcibios_init(void) function of 64-bit
-kernel in arch/powerpc/kernel/pci_64.c:
-
-static int __init pcibios_init(void)
-{
-         struct pci_controller *hose, *tmp;
-
-         printk(KERN_INFO "PCI: Probing PCI hardware\n");
-
-         /* For now, override phys_mem_access_prot. If we need it,g
-          * later, we may move that initialization to each ppc_md
-          */
-         ppc_md.phys_mem_access_prot = pci_phys_mem_access_prot;
-
-         /* On ppc64, we always enable PCI domains and we keep domain 0
-          * backward compatible in /proc for video cards
-          */
-         pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
-
-         /* Scan all of the recorded PCI controllers.  */
-         list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
-                 pcibios_scan_phb(hose);
-               ^^^^^^^^^^^^^^^^
-                 pci_bus_add_devices(hose->bus);
-         }
-
-         /* Call common code to handle resource allocation */
-         pcibios_resource_survey();
-
-         printk(KERN_DEBUG "PCI: Probing PCI hardware done\n");
-
-         return 0;
-}
-
-    In pcibios_scan_phb(hose) call, hose->first_busno = 0 . So 32-bit
-kernel should
-    use hose->first_busno = 0. I think that multi-ports of PCIe device
-should allocate
-    resource to start from bus number 0.
-
-Thanks,
--Chunhe
->
-> Bjorn
->
->>> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
->>> ---
->>>   arch/powerpc/kernel/pci_32.c |    6 +++---
->>>   1 files changed, 3 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
->>> index 432459c..a194685 100644
->>> --- a/arch/powerpc/kernel/pci_32.c
->>> +++ b/arch/powerpc/kernel/pci_32.c
->>> @@ -236,13 +236,13 @@ static int __init pcibios_init(void)
->>>
->>>        /* Scan all of the recorded PCI controllers.  */
->>>        list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
->>> -             if (pci_assign_all_buses)
->>> -                     hose->first_busno = next_busno;
->>> +             hose->first_busno = 0;
->>>                hose->last_busno = 0xff;
->>>                pcibios_scan_phb(hose);
->>>                pci_bus_add_devices(hose->bus);
->>>                if (pci_assign_all_buses || next_busno <= hose->last_busno)
->>> -                     next_busno = hose->last_busno + pcibios_assign_bus_offset;
->>> +                     next_busno += hose->last_busno +
->>> +                                     pcibios_assign_bus_offset;
->>>        }
->>>        pci_bus_count = next_busno;
->>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+greg k-h
