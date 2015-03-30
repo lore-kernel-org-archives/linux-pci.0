@@ -1,160 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15420 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753310AbbCXDhY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Mar 2015 23:37:24 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:53517 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751659AbbC3LmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Mar 2015 07:42:01 -0400
+Date: Mon, 30 Mar 2015 13:41:28 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH v8 16/30] PCI: Introduce pci_bus_child_max_busnr()
-Date: Tue, 24 Mar 2015 11:34:10 +0800
-Message-ID: <1427168064-8657-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
-References: <1427168064-8657-1-git-send-email-wangyijing@huawei.com>
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Stephane Eranian <eranian@google.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Peter Neubauer <pneubauer@bluerwhite.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 01/86] pci: export pci_ids.h
+Message-ID: <20150330134002-mutt-send-email-mst@redhat.com>
+References: <20150330083707-mutt-send-email-mst@redhat.com>
+ <20150330065522.GA10105@kroah.com>
+ <20150330085617-mutt-send-email-mst@redhat.com>
+ <20150330075331.GA17823@kroah.com>
+ <20150330101830-mutt-send-email-mst@redhat.com>
+ <20150330100744.GA16291@kroah.com>
+ <20150330123051-mutt-send-email-mst@redhat.com>
+ <20150330105707.GA17979@kroah.com>
+ <20150330130020-mutt-send-email-mst@redhat.com>
+ <20150330113516.GA19501@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150330113516.GA19501@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes, we want to know the highest reserved
-busnr for children bus. Because parent's bus->busn_res
-may have padding in it. For example, some host drivers
-don't know the bus end, so they supply the bus
-resource (root_bus, 255), they want to update the
-max bus number after pci scan complete. But pci scan
-functions won't return the actual max bus number.
-So we could use pci_bus_child_max_busnr() to find
-that.
+On Mon, Mar 30, 2015 at 01:35:16PM +0200, Greg KH wrote:
+> On Mon, Mar 30, 2015 at 01:19:14PM +0200, Michael S. Tsirkin wrote:
+> > Why there much more that two packages, I can find
+> > at least 5 copies in the wild. Why? I think it's because it's part of
+> > linux ABI that doesn't have matching headers. People are asked to build
+> > their own, so of course they copy each other.
+> > 
+> > Once linux exports these headers everyone can stop
+> > duplicating each other and others, and just use linux headers too.
+> 
+> As I'm not the PCI maintainer anymore, I'll let Bjorn decide about this.
+> 
+> But, your original patch series isn't ok, we don't want to export the
+> pci vendor/device ids to userspace, that isn't the job of the kernel to
+> do so.  If we should be exporting the pci class and config structures or
+> not is Bjorn's decision.
+> 
+> greg k-h
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
- drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
- include/linux/pci.h                |    2 +-
- 3 files changed, 27 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index bcb90e4..84f2584 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 	acpi_unlock_hp_context();
- }
- 
--/**
-- * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
-- * @bus: bus to start search with
-- */
--static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
--{
--	struct pci_bus *tmp;
--	unsigned char max, n;
--
--	/*
--	 * pci_bus_max_busnr will return the highest
--	 * reserved busnr for all these children.
--	 * that is equivalent to the bus->subordinate
--	 * value.  We don't want to use the parent's
--	 * bus->subordinate value because it could have
--	 * padding in it.
--	 */
--	max = bus->busn_res.start;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		n = pci_bus_max_busnr(tmp);
--		if (n > max)
--			max = n;
--	}
--	return max;
--}
--
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
-@@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	LIST_HEAD(add_list);
- 
- 	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
-+	max = pci_bus_child_max_busnr(bus);
- 	for (pass = 0; pass < 2; pass++) {
- 		list_for_each_entry(dev, &bus->devices, bus_list) {
- 			if (PCI_SLOT(dev->devfn) != slot->device)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6677fac..8a2f12c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
-  * Given a PCI bus, returns the highest PCI bus number present in the set
-  * including the given PCI bus and its list of child PCI buses.
-  */
--unsigned char pci_bus_max_busnr(struct pci_bus *bus)
-+static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- {
- 	struct pci_bus *tmp;
- 	unsigned char max, n;
-@@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- 	}
- 	return max;
- }
--EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
-+
-+unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
-+{
-+	struct pci_bus *tmp;
-+	unsigned char max, n;
-+
-+	/*
-+	 * pci_bus_max_busnr will return the highest
-+	 * reserved busnr for all these children.
-+	 * that is equivalent to the bus->subordinate
-+	 * value.  We don't want to use the parent's
-+	 * bus->subordinate value because it could have
-+	 * padding in it.
-+	 */
-+	max = bus->busn_res.start;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		n = pci_bus_max_busnr(tmp);
-+		if (n > max)
-+			max = n;
-+	}
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
- 
- #ifdef CONFIG_HAS_IOMEM
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7f4f182..0b921d6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1185,7 +1185,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
- int pci_cfg_space_size(struct pci_dev *dev);
--unsigned char pci_bus_max_busnr(struct pci_bus *bus);
-+unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
+I sent v2 doing exactly that.
+Thanks a lot for the review.
+
 -- 
-1.7.1
-
+MST
