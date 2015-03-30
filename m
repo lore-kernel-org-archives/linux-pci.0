@@ -1,85 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:47932 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbbCYI0k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:26:40 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:26:38 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 38B0F2CE8052
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:35 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8QQOi46071916
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:35 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8Q0St022102
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:26:01 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH V16 04/20] PCI: Index IOV resources in the conventional style
-Date: Wed, 25 Mar 2015 16:23:45 +0800
-Message-Id: <1427271841-28749-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:2580 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbbC3EGt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 00:06:49 -0400
+Message-ID: <5518CBA2.2020606@huawei.com>
+Date: Mon, 30 Mar 2015 12:05:54 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	PCI <linux-pci@vger.kernel.org>,
+	"Herui (Ray)" <Ray.herui@huawei.com>
+Subject: Re: Assign mem resource fail after remove and rescan
+References: <55167C1C.6010001@huawei.com> <CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
+In-Reply-To: <CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 2015/3/29 14:18, Yinghai Lu wrote:
+> On Sat, Mar 28, 2015 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> ...
+>>
+>> I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
+>> and when system boot up, it requested only 0x4800000.
+>>
+>> In hotplug(remove and rescan) path, we would call calculate_mem_align() function which would align the resource at 0x2000000.
+> 
+> Looks like we align the size too early. Please check if attach patch
+> could fix the problem.
 
-Most of PCI uses "res = &dev->resource[i]", not "res = dev->resource + i".
-Use that style in iov.c also.
+OK, I will test it today, thanks!
 
-No functional change.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> Thanks
+> 
+> Yinghai
+> 
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5bca0e1..27b98c3 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -95,7 +95,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	virtfn->multifunction = 0;
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (!res->parent)
- 			continue;
- 		virtfn->resource[i].name = pci_name(virtfn);
-@@ -212,7 +212,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		bars |= (1 << (i + PCI_IOV_RESOURCES));
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		if (res->parent)
- 			nres++;
- 	}
-@@ -373,7 +373,7 @@ found:
- 
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
- 					pos + PCI_SRIOV_BAR + i * 4);
- 		if (!res->flags)
-@@ -417,7 +417,7 @@ found:
- 
- failed:
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		res->flags = 0;
- 	}
- 
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
