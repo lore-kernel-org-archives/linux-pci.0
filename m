@@ -1,62 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:36274 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755158AbbCSPBh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Mar 2015 11:01:37 -0400
-Received: by oigv203 with SMTP id v203so66987305oig.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Mar 2015 08:01:37 -0700 (PDT)
-Date: Thu, 19 Mar 2015 10:01:34 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: grant.likely@linaro.org, robh+dt@kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, arnd@arndb.de,
-	Suravee.Suthikulpanit@amd.com, will.deacon@arm.com,
-	joro@8bytes.org, linux@arm.linux.org.uk
-Subject: Re: [PATCH v1] of/pci : fix of_pci_dma_configure parent ptr NULL
-Message-ID: <20150319150134.GA26935@google.com>
-References: <1426092003-16925-1-git-send-email-m-karicheri2@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:32862 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbbC3GtM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Mar 2015 02:49:12 -0400
+Date: Mon, 30 Mar 2015 08:48:44 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Stephane Eranian <eranian@google.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Peter Neubauer <pneubauer@bluerwhite.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 01/86] pci: export pci_ids.h
+Message-ID: <20150330083707-mutt-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+ <1427635734-24786-2-git-send-email-mst@redhat.com>
+ <20150329204047.GA5902@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426092003-16925-1-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <20150329204047.GA5902@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 12:40:03PM -0400, Murali Karicheri wrote:
-> On some platforms such as that based on x86, ia64 etc, root bus is
-> created with parent node passed in as NULL to pci_create_root_bus().
-> On these platforms, the patch series "PCI: get DMA configuration from
-> parent device" when applied causes kernel crash. So add a check for this
-> in of_pci_dma_configure()
+On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
+> On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
+> > The macros in pci_ids.h are pretty useful for userspace
+> > using the pci sysfs interface.
+> > At the moment userspace is forced to duplicate these macros
+> > (e.g. QEMU does this), it is better to expose them in
+> > /usr/include/linux/pci_ids.h so everyone can just include
+> > this header.
+> > 
+> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > ---
+> >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
+> >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
 > 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Acked-by: Rob Herring<robh@kernel.org>
+> No, please use the pci ids file from the upstream pci id database
+> instead.
 
-Since I hadn't merged the original patch yet, I just folded this fix into
-it.  The series is on pci/iommu, and I merged it for "next".  Thanks for
-your patience. 
 
-Bjorn
+>  We shouldn't be putting these all in one file,
 
-> ---
->  drivers/of/of_pci.c |    4 ++++
->  1 file changed, 4 insertions(+)
+pci.txt says:
+	Please add PCI_VENDOR_ID_xxx for vendors
+You want to change this policy, and get rid of
+vendor ids in pci_ids.h completely?
+Bjorn, what do you think of this?
+
+>  and pulling
+> them out of drivers isn't ok.
+
+This patchset is not pulling any files out of drivers fwiw.
+
+> Userspace shouldn't need to know any of these, use libpci.
+
+Unless I'm mistaken, libpci does not export a header with defines. It
+has a text file pci.ids, but parsing that when all I want is e.g. locate
+all intel devices is just too much overhead. No one wants that, so
+people just duplicate headers.
+
+Standard class IDs are even sillier to duplicate.
+
+
+> thanks,
 > 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 86d3c38..a8e485c 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -129,6 +129,10 @@ void of_pci_dma_configure(struct pci_dev *pci_dev)
->  	struct device *dev = &pci_dev->dev;
->  	struct device *bridge = pci_get_host_bridge_device(pci_dev);
->  
-> +	/* Some platforms can have bridge->parent set to NULL */
-> +	if (!bridge->parent)
-> +		return;
-> +
->  	of_dma_configure(dev, bridge->parent->of_node);
->  	pci_put_host_bridge_device(bridge);
->  }
-> -- 
-> 1.7.9.5
-> 
+> greg k-h
