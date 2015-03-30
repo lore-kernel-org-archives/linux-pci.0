@@ -1,47 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46595 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:42889 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751166AbbCATuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:50:13 -0500
-Date: Sun, 1 Mar 2015 20:49:04 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>, Jiri Kosina <jkosina@suse.cz>,
-	Kees Cook <keescook@chromium.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/8] x86, kaslr: get kaslr_enabled back correctly
-Message-ID: <20150301194904.GC7748@pd.tnic>
-References: <1425176259-30087-1-git-send-email-yinghai@kernel.org>
- <1425176259-30087-2-git-send-email-yinghai@kernel.org>
- <CAE9FiQXE5YnSQAkkAxob38Qe+aHZ=niAXL6uLF5650KQPfjPPw@mail.gmail.com>
- <20150301094557.GA7748@pd.tnic>
- <20150301152351.GA17391@gmail.com>
- <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+	id S1752739AbbC3K7p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Mar 2015 06:59:45 -0400
+Date: Mon, 30 Mar 2015 12:59:35 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH v2 4/6] brcm80211: drop pci dependency
+Message-ID: <1427712964-16155-5-git-send-email-mst@redhat.com>
+References: <1427712964-16155-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAE9FiQV7DouV+76mzH0jFjFJOFBm-ZmgKpYVjTGAmKao0y3HbA@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427712964-16155-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 01, 2015 at 11:27:48AM -0800, Yinghai Lu wrote:
-> other 7 should also address the problem in
->    http://lkml.kernel.org/r/1424929021.10337.24.camel@intel.com
+This file does not use any pci APIs, drop
+pci header includes.
 
-No, they don't:
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-[    0.000000] parse_setup_data: data: 0x2206e50 (va: ffffffffff200e50) { next: 0x0, type: 0x0, len: 16, data[0]: 0x0 }
-[    0.000000] Unknown setup_data type: 0 ignored!
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 7944224..9331486 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -17,8 +17,6 @@
+ 
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+-#include <linux/pci.h>
+-#include <linux/pci_ids.h>
+ #include <linux/sched.h>
+ #include <linux/completion.h>
+ #include <linux/scatterlist.h>
 -- 
-Regards/Gruss,
-    Boris.
+MST
 
-ECO tip #101: Trim your mails when you reply.
---
