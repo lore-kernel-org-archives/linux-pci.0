@@ -1,54 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53263 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702AbbCIRdQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Mar 2015 13:33:16 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de
-Subject: [PATCH 1/2] PCI: allow MSI chip providers to implement their own multiple MSI setup
-Date: Mon,  9 Mar 2015 18:33:07 +0100
-Message-Id: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56905 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752647AbbC3Ici (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:32:38 -0400
+Date: Mon, 30 Mar 2015 10:32:34 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Subject: [PATCH] pci.txt: clarify vendor ID policy
+Message-ID: <1427704341-14125-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/msi.c   | 3 +++
- include/linux/msi.h | 2 ++
- 2 files changed, 5 insertions(+)
+Top of include/linux/pci_ids.h says:
+	Do not add new entries to this file unless the definitions
+	are shared between multiple drivers.
+on the other hand, Documentation/PCI/pci.txt seems to imply that all
+vendor IDs should be added in include/linux/pci_ids.h.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfcf9ff5..9feb618d8881 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -121,9 +121,12 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+Clarify text pci.txt to avoid the apparent contradiction.
+
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ Documentation/PCI/pci.txt | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
+index 53da450..47b0e28 100644
+--- a/Documentation/PCI/pci.txt
++++ b/Documentation/PCI/pci.txt
+@@ -564,12 +564,15 @@ to be handled by platform and generic code, not individual drivers.
+ 8. Vendor and device identifications
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
-+	struct msi_controller *chip = pci_msi_controller(dev);
- 	struct msi_desc *entry;
- 	int ret;
+-One is not required to add new device ids to include/linux/pci_ids.h.
+-Please add PCI_VENDOR_ID_xxx for vendors and a hex constant for device ids.
++One is not required to add new device or vendor ids to include/linux/pci_ids.h.
++Please define PCI_VENDOR_ID_xxx for vendor ids and use a hex constant for
++device ids in your driver.
  
-+	if (chip && chip->setup_irqs)
-+		return chip->setup_irqs(chip, dev, nvec, type);
- 	/*
- 	 * If an architecture wants to support multiple MSI, it needs to
- 	 * override arch_setup_msi_irqs()
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8ac4a68ffae2..50fefeb30236 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -114,6 +114,8 @@ struct msi_controller {
+-PCI_VENDOR_ID_xxx constants are re-used. The device ids are arbitrary
+-hex numbers (vendor controlled) and normally used only in a single
+-location, the pci_device_id table.
++Only PCI_VENDOR_ID_xxx constant definitions that are re-used between multiple
++drivers should be added to include/linux/pci_ids.h.
++
++The device ids are arbitrary hex numbers (vendor controlled) and normally used
++only in a single location, the pci_device_id table.
  
- 	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
-+	int (*setup_irqs)(struct msi_controller *chip, struct pci_dev *dev,
-+			  int nvec, int type);
- 	void (*teardown_irq)(struct msi_controller *chip, unsigned int irq);
- };
+ Please DO submit new vendor/device ids to pciids.sourceforge.net project.
  
 -- 
-2.1.4
-
+MST
