@@ -1,187 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:58699 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128AbbC3KzU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 06:55:20 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 11/29] PCI: Introduce pci_host_bridge_ops to support host specific operations
-Date: Fri, 6 Mar 2015 17:33:28 +0800
-Message-ID: <1425634426-437-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-References: <1425634426-437-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v4 2/2] PCI: tegra: apply relaxed ordering fixup only on Tegra
+Date: Mon, 30 Mar 2015 12:55:13 +0200
+Message-Id: <1427712913-13678-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1427712913-13678-1-git-send-email-l.stach@pengutronix.de>
+References: <1427712913-13678-1-git-send-email-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have weak functions like pcibios_root_bridge_prepare()
-to setup pci host bridge, We could introduce pci_host_bridge_ops
-which contain host bridge specific ops to setup pci_host_bridge.
-Then host bridge driver could add pci_host_bridge_ops hooks
-intead of weak function to setup pci_host_bridge.
-This patch add following pci_host_bridge_ops hooks:
+The fixup to enable relaxed ordering on all PCI devices was
+executed unconditionally if the Tegra PCI host driver was
+built into the kernel. This doesn't play nice with a
+multiplatform kernel executed on other platforms which
+may not need this fixup.
 
-pci_host_bridge_ops {
-	/* set root bus speed, some platform need this like powerpc */
-	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-	int (*prepare)(struct pci_host_bridge *host);
-	/* platform specific of scan hook to scan pci device */
-	void (*scan_bus)(struct pci_host_bridge *);
-}
-We could easily extend it to support different host bridge
-specific operations.
+Make sure to only apply the fixup if the root port is
+a Tegra.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/host-bridge.c |   12 ++++++++++--
- drivers/pci/pci.h         |    4 ++--
- drivers/pci/probe.c       |   17 +++++++++++------
- include/linux/pci.h       |    8 ++++++++
- 4 files changed, 31 insertions(+), 10 deletions(-)
+v2:
+- split out PCI hierarchy walk
+- separate code from data by moving PCI IDs into own structure
+v3:
+- fixup for helper rename
+- applied Thierry's ACK
+v4:
+- fixup for yet another helper rename
+---
+ drivers/pci/host/pci-tegra.c | 34 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 3c34c49..bc1de59 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -23,8 +23,8 @@ static void pci_release_host_bridge_dev(struct device *dev)
- }
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 00e92720d7f7..cc3b1ed77754 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -586,10 +586,42 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
  
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 db,
--		struct list_head *resources, void *sysdata)
-+		struct device *parent, u32 db, struct list_head *resources,
-+		void *sysdata, struct pci_host_bridge_ops *ops)
- {
- 	int error;
- 	int bus = PCI_BUSNUM(db);
-@@ -56,6 +56,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 		}
- 	mutex_unlock(&phb_mutex);
- 
-+	host->ops = ops;
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
- 	host->dev.release = pci_release_host_bridge_dev;
-@@ -63,6 +64,13 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x", host->domain,
- 			host->busnum);
- 
-+	if (host->ops && host->ops->prepare) {
-+		error = host->ops->prepare(host);
-+		if (error) {
-+			kfree(host);
-+			return NULL;
-+		}
++static const struct pci_device_id tegra_rootport_ids[] = {
++	{
++		/* Tegra20 4 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0bf0,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra20 2 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0bf1,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra30 4 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e1c,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra30 2 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e1d,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra124 4 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e12,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* Tegra124 1 lane root port */
++		.vendor = PCI_VENDOR_ID_NVIDIA, .device = 0x0e13,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
++	}, {
++		/* sentinel */
 +	}
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 8783a1d..8bf5be7 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -322,8 +322,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- #endif
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, u32 dombus,
--		struct list_head *resources, void *sysdata);
-+		struct device *parent, u32 dombus, struct list_head *resources,
-+		void *sysdata, struct pci_host_bridge_ops *ops);
- 
- void pci_free_host_bridge(struct pci_host_bridge *host);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2985281..b76fca6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1888,6 +1888,8 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-+	if (bridge->ops && bridge->ops->set_root_bus_speed)
-+		bridge->ops->set_root_bus_speed(bridge);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error)
- 		goto err_out;
-@@ -1953,7 +1955,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources, sysdata);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
- 	if (!host)
- 		return NULL;
- 
-@@ -2050,10 +2052,13 @@ static struct pci_bus *__pci_scan_root_bus(
- 		pci_bus_insert_busn_res(b, b->number, 255);
- 	}
- 
--	max = pci_scan_child_bus(b);
--
--	if (!found)
--		pci_bus_update_busn_res_end(b, max);
-+	if (host->ops && host->ops->scan_bus) {
-+		host->ops->scan_bus(host);
-+	} else {
-+		max = pci_scan_child_bus(b);
-+		if (!found)
-+			pci_bus_update_busn_res_end(b, max);
-+	}
- 
- 	return b;
- }
-@@ -2063,7 +2068,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, u32 db,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, db, resources, sysdata);
-+	host = pci_create_host_bridge(parent, db, resources, sysdata, NULL);
- 	if (!host)
- 		return NULL;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b621f5b..e9922b1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -400,6 +400,13 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
-+struct pci_host_bridge;
-+struct pci_host_bridge_ops {
-+	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-+	int (*prepare)(struct pci_host_bridge *host);
-+	void (*scan_bus)(struct pci_host_bridge *);
 +};
 +
- struct pci_host_bridge {
- 	u16	domain;
- 	u16 busnum;
-@@ -407,6 +414,7 @@ struct pci_host_bridge {
- 	struct pci_bus *bus;		/* root bus */
- 	struct list_head windows;	/* resource_entry */
- 	struct list_head list;
-+	struct pci_host_bridge_ops *ops;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
+ /* Tegra PCIE requires relaxed ordering */
+ static void tegra_pcie_relax_enable(struct pci_dev *dev)
+ {
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
++	if (pci_match_id(tegra_rootport_ids, pcie_find_root_port(dev)))
++		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
++					 PCI_EXP_DEVCTL_RELAX_EN);
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
+ 
 -- 
-1.7.1
+2.1.4
 
