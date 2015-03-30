@@ -1,102 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:56888 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbbCYFyg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:54:36 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 15:54:35 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9D2C33578047
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:32 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5sO9T44236806
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:32 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5rw8m026370
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:53:59 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V15 10/21] PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
-Date: Wed, 25 Mar 2015 13:44:46 +0800
-Message-Id: <1427262297-5694-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39256 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750938AbbC3KrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Mar 2015 06:47:13 -0400
+Date: Mon, 30 Mar 2015 12:46:36 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Stephane Eranian <eranian@google.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Peter Neubauer <pneubauer@bluerwhite.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 01/86] pci: export pci_ids.h
+Message-ID: <20150330123051-mutt-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+ <1427635734-24786-2-git-send-email-mst@redhat.com>
+ <20150329204047.GA5902@kroah.com>
+ <20150330083707-mutt-send-email-mst@redhat.com>
+ <20150330065522.GA10105@kroah.com>
+ <20150330085617-mutt-send-email-mst@redhat.com>
+ <20150330075331.GA17823@kroah.com>
+ <20150330101830-mutt-send-email-mst@redhat.com>
+ <20150330100744.GA16291@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150330100744.GA16291@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFs are dynamically created when a driver enables them.  On some platforms,
-like PowerNV, special resources are necessary to enable VFs.
+On Mon, Mar 30, 2015 at 12:07:44PM +0200, Greg KH wrote:
+> On Mon, Mar 30, 2015 at 10:31:54AM +0200, Michael S. Tsirkin wrote:
+> > On Mon, Mar 30, 2015 at 09:53:31AM +0200, Greg KH wrote:
+> > > On Mon, Mar 30, 2015 at 09:15:26AM +0200, Michael S. Tsirkin wrote:
+> > > > On Mon, Mar 30, 2015 at 08:55:22AM +0200, Greg KH wrote:
+> > > > > On Mon, Mar 30, 2015 at 08:48:44AM +0200, Michael S. Tsirkin wrote:
+> > > > > > On Sun, Mar 29, 2015 at 10:40:47PM +0200, Greg KH wrote:
+> > > > > > > On Sun, Mar 29, 2015 at 03:37:01PM +0200, Michael S. Tsirkin wrote:
+> > > > > > > > The macros in pci_ids.h are pretty useful for userspace
+> > > > > > > > using the pci sysfs interface.
+> > > > > > > > At the moment userspace is forced to duplicate these macros
+> > > > > > > > (e.g. QEMU does this), it is better to expose them in
+> > > > > > > > /usr/include/linux/pci_ids.h so everyone can just include
+> > > > > > > > this header.
+> > > > > > > > 
+> > > > > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > > > > > > > ---
+> > > > > > > >  include/linux/pci_ids.h      | 2998 +-----------------------------------------
+> > > > > > > >  include/uapi/linux/pci_ids.h | 2997 +++++++++++++++++++++++++++++++++++++++++
+> > > > > > > 
+> > > > > > > No, please use the pci ids file from the upstream pci id database
+> > > > > > > instead.
+> > > > > > 
+> > > > > > 
+> > > > > > >  We shouldn't be putting these all in one file,
+> > > > > > 
+> > > > > > pci.txt says:
+> > > > > > 	Please add PCI_VENDOR_ID_xxx for vendors
+> > > > > > You want to change this policy, and get rid of
+> > > > > > vendor ids in pci_ids.h completely?
+> > > > > 
+> > > > > Please read the top of pci_ids.h.  It hasn't had new ids added to it in
+> > > > > a long time.
+> > > > 
+> > > > OK, looks like pci.txt should be fixed then.
+> > > 
+> > > Please send a patch.  As the original PCI kernel maintainer, I don't
+> > > think I ever noticed pci.txt.  It was last "updated" in 2006...
+> > > 
+> > > > > Why would userspace need the pci id of anything?
+> > > > 
+> > > > Look at how they are used e.g. by QEMU, seabios, gpxe.
+> > > > People want to say e.g. "find all network class devices".
+> > > 
+> > > Then use libpci.
+> > > 
+> > > > >  Again, just use
+> > > > > libpci, isn't it fast enough?  Don't duplicate existing logic.
+> > > > 
+> > > > This really depends on whether you want something else that
+> > > > libpci provides. But if I just want e.g. standard class IDs,
+> > > > I don't want to depend on libpci.
+> > > 
+> > > Why not?  Don't duplicate things that already are there just for this
+> > > very use.
+> > > 
+> > > Don't make us do kernel changes just because you don't want to depend on
+> > > either of the two different userspace packages that provide this
+> > > information in a standard way for userspace.  Your system will have one
+> > > of those two packages in it, depending on it isn't a "burden" at all.
+> > > 
+> > > > > Or use the hw database that libudev exports, which is already on your
+> > > > > machine and exports all of the pci ids from libpci directly.
+> > > > 
+> > > > Same argument really.
+> > > 
+> > > Because you don't want to depend on existing packages, doesn't mean we
+> > > have to accept kernel changes and maintain them for forever, as you are
+> > > now creating a new api that we will have to keep up to date and correct
+> > > for all time.
+> > > 
+> > > Again, depend on the packages that are already doing this work please.
+> > > 
+> > 
+> > Maintaining correct class IDs is more or less a requirement
+> > for kernel to work properly, isn't it?
+> 
+> Yes, but maintaining them internally, not externally.
 
-Add platform hooks for enabling and disabling VFs.
+Sorry about keeping this thread alive, I'm just trying
+to wrap my head around what you consider a sane API.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Linux used not to export headers automatically, generally.
+It used to be "just use libc". Why is this header different?
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5643a10..64c4692 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	pci_dev_put(dev);
- }
- 
-+int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-+{
-+       return 0;
-+}
-+
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- {
- 	int rc;
-@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
- 	int bus;
-+	int retval;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
- 
-+	if ((retval = pcibios_sriov_enable(dev, initial))) {
-+		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
-+			retval);
-+		return retval;
-+	}
-+
- 	for (i = 0; i < initial; i++) {
- 		rc = virtfn_add(dev, i, 0);
- 		if (rc)
-@@ -335,6 +347,11 @@ failed:
- 	return rc;
- }
- 
-+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+       return 0;
-+}
-+
- static void sriov_disable(struct pci_dev *dev)
- {
- 	int i;
-@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
- 	for (i = 0; i < iov->num_VFs; i++)
- 		virtfn_remove(dev, i, 0);
- 
-+	pcibios_sriov_disable(dev);
-+
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+These constants are required to use the interfaces
+linux does export to userspace, including VFIO and sysfs.
+No one maintains them really, though libpci has a copy
+of these.
+
+Some people believe headers are copyrighteable, for them, licensing is
+also problematic: libpci is under plain GPL, Linux needs the exception
+for user programs.  Does not this mean that we can't depend on libpci to
+provide parts of linux/userspace interface?
+
+
+> > Wouldn't the same thing apply to pci_regs.h?
+> > Why does it make sense to export PCI_CLASS_REVISION
+> > so I know where to read the class value from
+> > configuration, but not what the values are?
+> 
+> That's just due to history, we made the mistake to export those a long
+> time ago, I wouldn't recommend doing any more, and again, instead rely
+> on the programs that properly maintain that for you.
+
+So add libpci dependency just for the headers?  No one wants to do this.
+Case in point, Linux doesn't want to depend on libpci headers either, right?
+Why not? why not make it a build dependency? I don't really propose this,
+but exactly the same logic applies to gpxe or seabios.
+People that don't link with libpci don't want to make it
+a build dependency.
+
+> > What's the work you refer to?  This is just hardware description it
+> > can't change and doesn't need to be maintained.
+> 
+> Hardware descriptions always change over time and need to be
+> maintained...
+> 
+> thanks,
+> 
+> greg k-h
+
+I don't think class IDs or vendor IDs ever did or can change.
+New stuff is added, we add it as we add Linux support.
+Isn't this a good reason to include this? Will push
+vendors to work with the community instead of
+around it using userspace drivers.
+
 -- 
-1.7.9.5
-
+MST
