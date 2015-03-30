@@ -1,57 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:38168 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124AbbCKOMf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:35 -0400
-Received: by labhs14 with SMTP id hs14so8564261lab.5
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:34 -0700 (PDT)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v4 1/9] x86, pci: Clean up comment about buggy MMIO config space access for AMD Fam10h CPUs.
-Date: Wed, 11 Mar 2015 15:12:41 +0100
-Message-Id: <1426083169-8698-2-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:38175 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752256AbbC3LRU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 07:17:20 -0400
+Message-ID: <1427714234.3370.8.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
+	kernel@pengutronix.de, linux-pci@vger.kernel.org
+Date: Mon, 30 Mar 2015 13:17:14 +0200
+In-Reply-To: <20150320220753.GN26935@google.com>
+References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
+	 <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
+	 <20150320220753.GN26935@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- fix typo
-- improve explanation
-- add reference to the related document
+Am Freitag, den 20.03.2015, 17:07 -0500 schrieb Bjorn Helgaas:
+> On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
+> > Allows to properly set up multiple MSI irqs per device.
+> > 
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> > The ifdef is needed to avoid a compile error on
+> > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> > when the kernel is compiled with MSI support.
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 46 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 1f4ea6f2d910..8a15ea2e8eab 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> >  	}
+> >  
+> >  	*pos = pos0;
+> > +	desc->nvec_used = no_irqs;
+> > +	desc->msi_attrib.multiple = order_base_2(no_irqs);
+> > +
+> >  	return irq;
+> >  
+> >  no_valid_irq:
+> > @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+> >  
+> >  	return 0;
+> >  }
+> > +#ifdef CONFIG_PCI_MSI
+> > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> > +			     int nvec, int type)
+> > +{
+> > +	int irq, pos;
+> > +	struct msi_desc *desc;
+> > +	struct msi_msg msg;
+> > +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> > +
+> > +	/* MSI-X interrupts are not supported */
+> > +	if (type == PCI_CAP_ID_MSIX)
+> > +		return -EINVAL;
+> > +
+> > +	WARN_ON(!list_is_singular(&pdev->msi_list));
+> > +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> > +
+> > +	irq = assign_irq(nvec, desc, &pos);
+> > +	if (irq < 0)
+> > +		return irq;
+> > +
+> > +	if (pp->ops->get_msi_addr)
+> > +		msg.address_lo = pp->ops->get_msi_addr(pp);
+> > +	else
+> > +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> > +	msg.address_hi = 0x0;
+> > +
+> > +	if (pp->ops->get_msi_data)
+> > +		msg.data = pp->ops->get_msi_data(pp, pos);
+> > +	else
+> > +		msg.data = pos;
+> > +
+> > +	pci_write_msi_msg(irq, &msg);
+> > +
+> > +	return 0;
+> > +}
+> > +#else
+> > +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
+> > +			     int nvec, int type)
+> > +{
+> > +	return -ENOSYS;
+> > +}
+> 
+> Seems strange that we need even this stub function when we don't have
+> CONFIG_PCI_MSI.  Is there some way we can fix this so dw_pcie_msi_chip is
+> only defined when we have CONFIG_PCI_MSI?
+> 
+I would rather not do this. We try to keep as much code as possible to
+at least see some compile coverage, even if the options are not set by
+using the IS_ENABLED() macro instead of ifdefs. All other MSI related
+code compiles even without CONFIG_PCI_MSI being set.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
----
- arch/x86/include/asm/pci_x86.h | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+The problem with the above function is that the msi_list member of
+struct pci_device is only declared if CONFIG_PCI_MSI is set. So of you
+really want to get rid of the above stub, my preferred solution would be
+to remove the ifdef in struct pci_device, so we can compile the code
+regardless of the config options.
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index fa1195d..d024f4d 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -152,10 +152,13 @@ extern struct list_head pci_mmcfg_list;
- 
- /*
-  * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
-- * on their northbrige except through the * %eax register. As such, you MUST
-- * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
-+ * on their northbridge except through the * %eax register. As such, you MUST
-+ * NOT use normal IOMEM accesses, you need to only use the magic mmio_config_*
-  * accessor functions.
-- * In fact just use pci_config_*, nothing else please.
-+ *
-+ * Please refer to the following doc:
-+ * "BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h Processors",
-+ * rev. 3.48, sec 2.11.1, "MMIO Configuration Coding Requirements".
-  */
- static inline unsigned char mmio_config_readb(void __iomem *pos)
- {
+Regards,
+Lucas
+
 -- 
-1.9.1
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
