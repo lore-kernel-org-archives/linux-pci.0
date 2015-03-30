@@ -1,63 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:34121 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755440AbbCDS4D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Mar 2015 13:56:03 -0500
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:35449 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132AbbC3LDO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 07:03:14 -0400
+Received: by wicne17 with SMTP id ne17so26430388wic.0
+        for <linux-pci@vger.kernel.org>; Mon, 30 Mar 2015 04:03:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
-References: <1425456048-16236-1-git-send-email-yinghai@kernel.org>
-	<1425456048-16236-5-git-send-email-yinghai@kernel.org>
-	<20150304101649.GA3663@pd.tnic>
-	<CAE9FiQWKNDgzJtDVV34e7vWTu7LtqdDKB4KiN1RZwcZrX70zSA@mail.gmail.com>
-Date: Wed, 4 Mar 2015 10:56:02 -0800
-Message-ID: <CAE9FiQUsCc-Lfo2Tnj4rLspD2sNSLfB53wA_MyxaGDKB3gFf0A@mail.gmail.com>
-Subject: Re: [PATCH v2 04/15] x86, kaslr: get kaslr_enabled back correctly
-From: Yinghai Lu <yinghai@kernel.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Matt Fleming <matt.fleming@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Jiri Kosina <jkosina@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kees Cook <keescook@chromium.org>
+Date: Mon, 30 Mar 2015 13:03:13 +0200
+Message-ID: <CAJN_i4_Qqsh16MfAV1UYyFp1DkNoQ=5nftQzNXLfJV9ted1Wjg@mail.gmail.com>
+Subject: Detecting thunderbolt ports
+From: Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
+To: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 4, 2015 at 10:06 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Mar 4, 2015 at 2:16 AM, Borislav Petkov <bp@alien8.de> wrote:
->> On Wed, Mar 04, 2015 at 12:00:37AM -0800, Yinghai Lu wrote:
->>> commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
->>> is using address as value for kaslr_enabled.
->>>
->>> That will random kaslr_enabled get that set or cleared.
->>> Will have problem for system really have kaslr enabled.
->>>
->>> -v2: update changelog.
->>
->> This is still not good enough. Please do this:
->>
->> In commit f47233c2d34f we did A. The problem with that is B. Change the
->> code to do C.
->>
->> Now you only have to fill out the A,B and C variables with the
->> respective text which is understandable even for people who don't know
->> this code.
+Hi.
 
-Please check if it is ok:
+I'm interested in detecting if thunderbolt is present on a running
+system. I need this as a part of certification testing so that the
+test operator can be asked to do some thunderbolt-specific tasks.
 
-Subject: [PATCH v3] x86, kaslr: get kaslr_enabled back correctly
+I talked to some of the maintainers and from what I've learned there
+are two thunderbolt drivers, one for apple and one for everything
+else. The one for apple has the nice property of being able to
+statically detect that the hardware is present. The one for everything
+else, which I'm more interested in as I'm not certifying apple
+hardware, apparently does not and there is no way to detect that a
+machine has a thunderbolt port unless something is physically plugged
+into that port.
 
-commit f47233c2d34f ("x86/mm/ASLR: Propagate base load address calculation")
-is using address as value for kaslr_enabled.
+So I'd like to ask more broadly, is the statement above accurate? Can
+the presence of a thunderbolt port be detected from a running system
+reliably?
 
-That will get wrong value for kaslr_enabled, so have problem for system really
-have kaslr enabled.
-
-This patch change to using early map and accessing the value.
-
--v3: add checking about early_memmap according to bp.
+Best regards
+ZK
