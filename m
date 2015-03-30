@@ -1,91 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:42843 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263AbbCYFy4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 01:54:56 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 15:54:55 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 722FE3578057
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:52 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P5sij217891578
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:52 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P5sI5E026720
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 16:54:19 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V15 11/21] PCI: Add pcibios_iov_resource_alignment() interface
-Date: Wed, 25 Mar 2015 13:44:47 +0800
-Message-Id: <1427262297-5694-12-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427262297-5694-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 30 Mar 2015 12:57:07 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Stephane Eranian <eranian@google.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Peter Neubauer <pneubauer@bluerwhite.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 01/86] pci: export pci_ids.h
+Message-ID: <20150330105707.GA17979@kroah.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+ <1427635734-24786-2-git-send-email-mst@redhat.com>
+ <20150329204047.GA5902@kroah.com>
+ <20150330083707-mutt-send-email-mst@redhat.com>
+ <20150330065522.GA10105@kroah.com>
+ <20150330085617-mutt-send-email-mst@redhat.com>
+ <20150330075331.GA17823@kroah.com>
+ <20150330101830-mutt-send-email-mst@redhat.com>
+ <20150330100744.GA16291@kroah.com>
+ <20150330123051-mutt-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150330123051-mutt-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per the SR-IOV spec r1.1, sec 3.3.14, the required alignment of a PF's IOV
-BAR is the size of an individual VF BAR, and the size consumed is the
-individual VF BAR size times NumVFs.
+On Mon, Mar 30, 2015 at 12:46:36PM +0200, Michael S. Tsirkin wrote:
+> Sorry about keeping this thread alive, I'm just trying
+> to wrap my head around what you consider a sane API.
+> 
+> Linux used not to export headers automatically, generally.
+> It used to be "just use libc". Why is this header different?
 
-The PowerNV platform has additional alignment requirements to help support
-its Partitionable Endpoint device isolation feature (see
-Documentation/powerpc/pci_iov_resource_on_powernv.txt).
+You are now exporting things from the kernel that were not being
+exported in the past.  When you do that, you are now guaranteeing that
+this api will be present for forever in the future.
 
-Add a pcibios_iov_resource_alignment() interface to allow platforms to
-request additional alignment.
+> These constants are required to use the interfaces
+> linux does export to userspace, including VFIO and sysfs.
+> No one maintains them really, though libpci has a copy
+> of these.
 
-[bhelgaas: changelog, adapt to reworked pci_sriov_resource_alignment(),
-drop "align" parameter]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c   |    8 +++++++-
- include/linux/pci.h |    1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+Also libudev, which takes them from the "master" copy that libpci pulls
+from.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 64c4692..ee0ebff 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -569,6 +569,12 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
- 		4 * (resno - PCI_IOV_RESOURCES);
- }
- 
-+resource_size_t __weak pcibios_iov_resource_alignment(struct pci_dev *dev,
-+						      int resno)
-+{
-+	return pci_iov_resource_size(dev, resno);
-+}
-+
- /**
-  * pci_sriov_resource_alignment - get resource alignment for VF BAR
-  * @dev: the PCI device
-@@ -581,7 +587,7 @@ int pci_iov_resource_bar(struct pci_dev *dev, int resno)
-  */
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno)
- {
--	return pci_iov_resource_size(dev, resno);
-+	return pcibios_iov_resource_alignment(dev, resno);
- }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 99ea948..4e1f17d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1174,6 +1174,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
-+resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
- 
- #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
- #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
--- 
-1.7.9.5
+> Some people believe headers are copyrighteable, for them, licensing is
+> also problematic: libpci is under plain GPL, Linux needs the exception
+> for user programs.  Does not this mean that we can't depend on libpci to
+> provide parts of linux/userspace interface?
 
+This makes no sense at all.  If you have legal questions, ask a lawyer,
+not a programmer.  Would you ask me medical questions as well?
+
+> > > Wouldn't the same thing apply to pci_regs.h?
+> > > Why does it make sense to export PCI_CLASS_REVISION
+> > > so I know where to read the class value from
+> > > configuration, but not what the values are?
+> > 
+> > That's just due to history, we made the mistake to export those a long
+> > time ago, I wouldn't recommend doing any more, and again, instead rely
+> > on the programs that properly maintain that for you.
+> 
+> So add libpci dependency just for the headers?  No one wants to do this.
+> Case in point, Linux doesn't want to depend on libpci headers either, right?
+
+The kernel is self-contained, and has to be, don't be foolish.
+
+> I don't think class IDs or vendor IDs ever did or can change.
+
+Then you haven't tracked what has happened over time.  They do change,
+they are sometimes incorrect, they are extended, and stuff is modified.
+
+> New stuff is added, we add it as we add Linux support.
+> Isn't this a good reason to include this? Will push
+> vendors to work with the community instead of
+> around it using userspace drivers.
+
+This has nothing to do with "pushing vendors" to do anything.
+
+Again, if you have a userspace program that needs these headers, then
+use one of the _two_ different packages that userspace already provides
+that has them, don't make the kernel become the third provider of the
+same header information, that's major duplication of effort for no
+reason at all.
+
+thanks,
+
+greg k-h
