@@ -1,40 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 30 Mar 2015 12:59:32 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	=?us-ascii?B?PT9VVEYtOD9xP0RhdmlkPTIwSD1DMz1BNHJkZW1hbj89?=
-	<david@hardeman.nu>, linux-media@vger.kernel.org
-Subject: [PATCH v2 3/6] media/fintek: drop pci_ids dependency
-Message-ID: <1427712964-16155-4-git-send-email-mst@redhat.com>
-References: <1427712964-16155-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427712964-16155-1-git-send-email-mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:49262 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752025AbbCaSTN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 14:19:13 -0400
+Date: Tue, 31 Mar 2015 14:19:11 -0400 (EDT)
+Message-Id: <20150331.141911.1147249607585406404.davem@davemloft.net>
+To: yinghai@kernel.org
+Cc: david.ahern@oracle.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
+References: <CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
+	<20150331.110636.1386273674508393491.davem@davemloft.net>
+	<CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver does not use any PCI IDs, don't include
-the pci_ids.h header.
-
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/media/rc/fintek-cir.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/media/rc/fintek-cir.c b/drivers/media/rc/fintek-cir.c
-index b516757..9ca168a 100644
---- a/drivers/media/rc/fintek-cir.c
-+++ b/drivers/media/rc/fintek-cir.c
-@@ -33,7 +33,6 @@
- #include <linux/sched.h>
- #include <linux/slab.h>
- #include <media/rc-core.h>
--#include <linux/pci_ids.h>
- 
- #include "fintek-cir.h"
- 
--- 
-MST
-
+RnJvbTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPg0KRGF0ZTogVHVlLCAzMSBNYXIg
+MjAxNSAxMToxNjoxMSAtMDcwMA0KDQo+IE9uIFR1ZSwgTWFyIDMxLCAyMDE1IGF0IDg6MDYgQU0s
+IERhdmlkIE1pbGxlciA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldD4gd3JvdGU6DQo+PiBZb3VyIHBhdGNo
+IG9ubHkgYWxsb3dzIHRoZSBjb25kaXRpb24gYmVoaW5kIHJlc291cmNlcyB0aGF0IGhhdmUgNjQt
+Yml0cw0KPj4gb2Ygc2lnbmlmaWNhbmNlLCBidXQgdGhhdCBpcyBub3Qgd2hhdCB0aGUgZG9jdW1l
+bnQgYWJvdmUgc2F5cyBhYm91dA0KPj4gd2hlbiB0aGlzIHNpdHVhdGlvbiBpcyBhbGxvd2VkLg0K
+Pj4NCj4+IFBsZWFzZSBpbXBsZW1lbnQgdGhlIGNoZWNrIGVpdGhlciBleGFjdGx5IGFzIHN0YXRl
+ZCBpbiB0aGUgZXJyYXRhDQo+PiBkb2N1bWVudCwgb3IgbW9yZSBsb29zZWx5IGlmIHRoYXQgaXMg
+bm90IHBvc3NpYmxlLCByYXRoZXIgdGhhbiBtb3JlDQo+PiBzdHJpY3RseSB0aGFuIGFsbG93ZWQu
+DQo+Pg0KPj4gWW91ciBvdmVybHkgc3RyaWN0IGFuZCByZXN0cmljdGl2ZSBjaGVja3MgYXJlIHdo
+YXQgZ290IHVzIGludG8gdGhpcw0KPj4gcHJlZGljYW1lbnQgaW4gdGhlIGZpcnN0IHBsYWNlLiA6
+LSgNCj4gDQo+IEZyb20gdGhhdCBlcnJhdGE6DQo+IC0tLQ0KPiBIZXJlIGFyZSBjcml0ZXJpYSB0
+aGF0IGFyZSBzdWZmaWNpZW50IHRvIGd1YXJhbnRlZSBjb3JyZWN0bmVzcyBmb3IgYQ0KPiBnaXZl
+biBjYW5kaWRhdGUgQkFSOg0KPiDCiQ0KPiBUaGUgZW50aXJlIHBhdGggZnJvbSB0aGUgaG9zdCB0
+byB0aGUgYWRhcHRlciBpcyBvdmVyIFBDSSBFeHByZXNzLg0KPiDCiQ0KPiBObyBjb252ZW50aW9u
+YWwgUENJIG9yIFBDSS1YIGRldmljZXMgZG8gcGVlci10IG8tcGVlciByZWFkcyB0byB0aGUNCj4g
+cmFuZ2UgbWFwcGVkIGJ5IHRoZSBCQVIuDQo+IMKJDQo+IFRoZSBQQ0kgRXhwcmVzcyBIb3N0IEJy
+aWRnZSBkb2VzIG5vIGJ5dGUgbWVyZ2luZy4gKFRoaXMgaXMgYmVsaWV2ZWQgdG8NCj4gYmUgdHJ1
+ZSBvbiBtb3N0DQo+IHBsYXRmb3Jtcy4pDQo+IMKJDQo+IEFueSBsb2NhdGlvbnMgd2l0aCByZWFk
+IHNpZGUtZWZmZWN0cyBhcmUgbmV2ZXIgdGhlIHRhcmdldCBvZiBNZW1vcnkNCj4gUmVhZHMgd2l0
+aCB0aGUgVEggYml0IFNldC4NCj4gU2VlIFNlY3Rpb24gMi4yLjUNCj4gLS0tDQo+IA0KPiBXZSBj
+YW4gdmVyaWZ5IGZpcnN0IG9uZSB0aGF0IHdlIGhhdmUgYWxsIHBjaWUgZGV2aWNlIGFsbCB0aGUg
+d2F5IHRvDQo+IHRoZSBob3N0YnJpZGdlLg0KPiANCj4gQnV0IHdlIGNhbiBub3QgdmVyaWZ5IG9y
+IGd1YXJhbnRlZSBvdGhlciB0aHJlZS4NCg0KTGFjayBvZiBwZWVyLXRvLXBlZXIgcmVhZHMgd2Ug
+Y2FuIGFzc3VtZSwgdGhlIGJ5dGUgbWVyZ2luZyB3ZSBjYW4NCmFkZCBhcyBhIHBlci1jb250cm9s
+bGVyIGF0dHJpYnV0ZSBpbiB0aGUgZnV0dXJlIGlmIGl0IHR1cm5zIG91dCB0aGVyZQ0KYXJlIHNv
+bWUgdGhhdCBkbyBhbmQgaXQgbWF0dGVycyAoSSBkb3VidCB0aGlzIHdpbGwgZXZlciBiZSBuZWNl
+c3NhcnkpDQphbmQgdGhlIHNpZGUtZWZmZWN0IGlzc3VlIGlzIG91dHNpZGUgdGhlIHNjb3BlIG9m
+IHRoZSBQQ0kgbGF5ZXIuDQoNCj4gU3lzdGVtIHNob3VsZCBnZXQgYmV0dGVyIGFib3V0IHRoZSBj
+b25zdHJhaW50cyB3aXRoIHN5c3RlbSBkZXNpZ24uDQo+IFNvIGlmIGl0IHdvdWxkIGFzc2lnbiA2
+NGJpdCAoYW5kIGFib3ZlIDRHKSBtbWlvIHRvIHRob3NlIG5vbi1wcmVmIDY0Yml0IEJBUiwNCj4g
+dGhhdCBtZWFucyBpdCBhbHJlYWR5IG1ha2Ugc3VyZSBzeXN0ZW0gZGVzaWduIHdpbGwgZm9sbG93
+IHRob3NlIGNyaXRlcmlhLg0KPiBhbmQgdGhlbiB3ZSBjYW4gc2FmZWx5IHNldCBwcmVmIGJpdCBp
+biByZXNvdXJjZSBmbGFncy4NCg0KSSB0b3RhbGx5IGRpc2FncmVlLCBJIHRoaW5rIHlvdXIgdGVz
+dCBpcyB0b28gc3RyaW5nZW50IGFuZCBzaG91bGQgYmUNCnNpZ25pZmljYW50bHkgcmVsYXhlZCBp
+ZiBub3QgcmVtb3ZlZCBlbnRpcmVseS4NCg==
