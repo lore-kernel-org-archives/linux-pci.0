@@ -1,60 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:34482 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932457AbbCLNnB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Mar 2015 09:43:01 -0400
-Received: by lbvn10 with SMTP id n10so16070092lbv.1
-        for <linux-pci@vger.kernel.org>; Thu, 12 Mar 2015 06:43:00 -0700 (PDT)
-Message-ID: <550197DB.7030900@linaro.org>
-Date: Thu, 12 Mar 2015 14:42:51 +0100
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37450 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbbCaSQM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 14:16:12 -0400
 MIME-Version: 1.0
-To: Brian Gerst <brgerst@gmail.com>
-CC: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, rjw@rjwysocki.net,
-	al.stone@linaro.org, linux-arm-kernel@lists.infradead.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	the arch/x86 maintainers <x86@kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH v4 7/9] x86, pci, ecam: mmconfig_64.c becomes default
- implementation for ECAM driver.
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>	<1426083169-8698-8-git-send-email-tomasz.nowicki@linaro.org> <CAMzpN2gLjuddMYKJY9z=e=oG0P-NjV-mfjtvYRAY6HXCWn5-UQ@mail.gmail.com>
-In-Reply-To: <CAMzpN2gLjuddMYKJY9z=e=oG0P-NjV-mfjtvYRAY6HXCWn5-UQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20150331.110636.1386273674508393491.davem@davemloft.net>
+References: <CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
+	<5519D40D.20903@oracle.com>
+	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
+	<20150331.110636.1386273674508393491.davem@davemloft.net>
+Date: Tue, 31 Mar 2015 11:16:11 -0700
+Message-ID: <CAE9FiQUbKu-UWRBMJwn-fTH+LnEpODnOW+kGHg1FCtTZ3oDepQ@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Miller <davem@davemloft.net>
+Cc: David Ahern <david.ahern@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11.03.2015 17:30, Brian Gerst wrote:
-> On Wed, Mar 11, 2015 at 10:12 AM, Tomasz Nowicki
-> <tomasz.nowicki@linaro.org> wrote:
+On Tue, Mar 31, 2015 at 8:06 AM, David Miller <davem@davemloft.net> wrote:
+> Your patch only allows the condition behind resources that have 64-bits
+> of significance, but that is not what the document above says about
+> when this situation is allowed.
 >
->> diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
->> index 5c6fc35..35c765b 100644
->> --- a/arch/x86/pci/Makefile
->> +++ b/arch/x86/pci/Makefile
->> @@ -1,7 +1,10 @@
->>   obj-y                          := i386.o init.o
->>
->>   obj-$(CONFIG_PCI_BIOS)         += pcbios.o
->> -obj-$(CONFIG_PCI_MMCONFIG)     += mmconfig_$(BITS).o direct.o mmconfig-shared.o
->> +obj-$(CONFIG_PCI_MMCONFIG)     += direct.o mmconfig-shared.o
->> +ifeq ($(BITS),32)
->> +obj-$(CONFIG_PCI_MMCONFIG)     += mmconfig_32.o
->> +endif
->>   obj-$(CONFIG_PCI_DIRECT)       += direct.o
->>   obj-$(CONFIG_PCI_OLPC)         += olpc.o
->>   obj-$(CONFIG_PCI_XEN)          += xen.o
+> Please implement the check either exactly as stated in the errata
+> document, or more loosely if that is not possible, rather than more
+> strictly than allowed.
 >
-> This would be better written as:
->
-> mmconfig-y := direct.o mmconfig-shared.o
-> mmconfig-$(CONFIG_X86_32) += mmconfig_32.o
-> obj-$(CONFIG_PCI_MMCONFIG) += $(mmconfig-y)
+> Your overly strict and restrictive checks are what got us into this
+> predicament in the first place. :-(
 
-Nice! Will update my patch.
+>From that errata:
+---
+Here are criteria that are sufficient to guarantee correctness for a
+given candidate BAR:
+
+The entire path from the host to the adapter is over PCI Express.
+
+No conventional PCI or PCI-X devices do peer-t o-peer reads to the
+range mapped by the BAR.
+
+The PCI Express Host Bridge does no byte merging. (This is believed to
+be true on most
+platforms.)
+
+Any locations with read side-effects are never the target of Memory
+Reads with the TH bit Set.
+See Section 2.2.5
+---
 
-Tomasz
+We can verify first one that we have all pcie device all the way to
+the hostbridge.
+
+But we can not verify or guarantee other three.
+
+System should get better about the constraints with system design.
+So if it would assign 64bit (and above 4G) mmio to those non-pref 64bit BAR,
+that means it already make sure system design will follow those criteria.
+and then we can safely set pref bit in resource flags.
+
+Thanks
+
+Yinghai
