@@ -1,194 +1,321 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54243 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751916AbbCYHOx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Mar 2015 03:14:53 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:34073 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824AbbCaBGD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Mar 2015 21:06:03 -0400
+MIME-Version: 1.0
+In-Reply-To: <5519D40D.20903@oracle.com>
+References: <5514391F.2030300@oracle.com>
+	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>
+	<551495EE.20201@oracle.com>
+	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>
+	<5515F6B8.8020606@oracle.com>
+	<5515F782.7060301@oracle.com>
+	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>
+	<551623C1.2040300@oracle.com>
+	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>
+	<5516BF4B.9030901@oracle.com>
+	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>
+	<55181065.8090807@oracle.com>
+	<CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>
+	<5519D40D.20903@oracle.com>
+Date: Mon, 30 Mar 2015 18:06:02 -0700
+Message-ID: <CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: David Ahern <david.ahern@oracle.com>
+Cc: David Miller <davem@davemloft.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Bugfix v2] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Wed, 25 Mar 2015 15:17:23 +0800
-Message-Id: <1427267843-18710-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a113fb98ecc9fe505128b3377
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
-interfaces to simplify implementation"), arch/x86/pci/acpi.c applies
-following rules when parsing ACPI resources for PCI host bridge:
-1) Ignore IO port resources defined by acpi_resource_io and
-   acpi_resource_fixed_io, which should be used to define resource
-   for PCI device instead of PCI bridge.
-2) Accept IOMEM resource defined by acpi_resource_memory24,
-   acpi_resource_memory32 and acpi_resource_fixed_memory32.
-   These IOMEM resources are accepted to workaround some BIOS issue,
-   though they should be ignored. For example, PC Engines APU.1C
-   platform defines PCI host bridge IOMEM resources as:
-                Memory32Fixed (ReadOnly,
-                    0x000A0000,         // Address Base
-                    0x00020000,         // Address Length
-                    )
-                Memory32Fixed (ReadOnly,
-                    0x00000000,         // Address Base
-                    0x00000000,         // Address Length
-                    _Y00)
-3) Accept all IO port and IOMEM resources defined by
-   acpi_resource_address{16,32,64,extended64}, no matter it's marked as
-   ACPI_CONSUMER or ACPI_PRODUCER.
+--001a113fb98ecc9fe505128b3377
+Content-Type: text/plain; charset=UTF-8
 
-Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
-to simplify implementation") accept all IO port and IOMEM resources
-defined by acpi_resource_io, acpi_resource_fixed_io,
-acpi_resource_memory24, acpi_resource_memory32,
-acpi_resource_fixed_memory32 and
-acpi_resource_address{16,32,64,extended64}, which causes IO port
-resources consumed by host bridge itself are listed in host bridge
-resource list.
+On Mon, Mar 30, 2015 at 3:54 PM, David Ahern <david.ahern@oracle.com> wrote:
+> On 3/29/15 2:07 PM, Yinghai Lu wrote:
+>>
+>> [  286.647560] PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+>> [  286.921232] PCI: Claiming 0000:00:01.0: Resource 15:
+>> 0000800100000000..00008004afffffff [220c]
+>> [  287.229190] PCI: Claiming 0000:01:00.0: Resource 15:
+>> 0000800100000000..00008004afffffff [220c]
+>> [  287.533428] PCI: Claiming 0000:02:04.0: Resource 15:
+>> 0000800100000000..000080012fffffff [220c]
+>> [  288.149831] PCI: Claiming 0000:03:00.0: Resource 15:
+>> 0000800100000000..000080012fffffff [220c]
+>> [  288.252466] PCI: Claiming 0000:04:06.0: Resource 14:
+>> 0000800100000000..000080010fffffff [220c]
+>> [  288.867196] PCI: Claiming 0000:05:00.0: Resource 0:
+>> 0000800100000000..0000800100001fff [204]
+>> [  288.968221] pci 0000:05:00.0: can't claim BAR 0 [mem
+>> 0x800100000000-0x800100001fff]: no compatible bridge window
+>>
+>> the bridge resource has IORESOURCE_PREFETCH, but the device doesn't have
+>> that.
+>
+> # lspci -vvxxx -s 0000:05:00.0
+> 0000:05:00.0 USB controller: Renesas Technology Corp. uPD720201 USB 3.0 Host
+> Controller (rev 03) (prog-if 30 [XHCI])
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 00000004
+>         Region 0: Memory at 100000000 (64-bit, non-prefetchable) [size=8K]
 
-Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
-host bridge itself") ignores resources consumed by host bridge itself
-by checking IORESOURCE_WINDOW flag, which accidently removed the
-workaround for BIOS bug in 2) listed above.
+ok, that is really non-pref mmio 64bit.
+We can workaround the problem by honoring firmware setting, according
+to https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13
 
-It's really costed us much time to figure out this whole picture.
-So we will refine interface acpi_dev_filter_resource_type as below,
-which should be much easier for maintence:
-1) Caller specifies IORESOURCE_WINDOW flag to explicitly query resource
-   for bridge(PRODUCER), otherwise it's querying resource for
-   device(CONSUMER).
-2) Ignore IO port resources defined by acpi_resource_io and
-   acpi_resource_fixed_io if IORESOURCE_WINDOW is specified.
-3) Accpet IOMEM resource defined by acpi_resource_memory24,
-   acpi_resource_memory32 and acpi_resource_fixed_memory32 to work
-   around BIOS bugs, with comment to state it's workaround for BIOS bug.
-4) Accept IO port and IOMEM defined by acpi_resource_addressxx if
-   a) IORESOURCE_WINDOW is specified and ACPI_PRODUCER is true
-   b) IORESOURCE_WINDOW is not specified and ACPI_PRODUCER is false
+Please check attached updated patches that should fix the regression
+and kill those "no compatible window" warnings.
 
-Currently acpi_dev_filter_resource_type() is only used by ACPI pci
-host bridge and IOAPIC driver, so it shouldn't affect other drivers.
+Thanks
 
-Sample ACPI table needing the workaround are archived at:
-https://bugzilla.kernel.org/show_bug.cgi?id=94221
+Yinghai
 
-Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
-Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Hi Bjorn and Rafael,
-	Great thanks to you two:) Now I think I have fully understand
-the whole picture and the final code should be much easier for
-understanding and maintenance.
-Regards!
-Gerry
----
- arch/x86/pci/acpi.c     |    5 ++---
- drivers/acpi/resource.c |   38 ++++++++++++++++++++++++++++++++++----
- 2 files changed, 36 insertions(+), 7 deletions(-)
+--001a113fb98ecc9fe505128b3377
+Content-Type: text/x-patch; charset=US-ASCII; name="pci_bus_addr_t_v2.patch"
+Content-Disposition: attachment; filename="pci_bus_addr_t_v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7wlou4f0
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index e4695985f9de..8c4b1201f340 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 	info->bridge = device;
- 	ret = acpi_dev_get_resources(device, list,
- 				     acpi_dev_filter_resource_type_cb,
--				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
-+				     (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
- 	if (ret < 0)
- 		dev_warn(&device->dev,
- 			 "failed to parse _CRS method, error code %d\n", ret);
-@@ -346,8 +346,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			"no IO and memory resources present in _CRS\n");
- 	else
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
--			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
--			    (entry->res->flags & IORESOURCE_DISABLED))
-+			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
- 			else
- 				entry->res->name = info->name;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5589a6e2a023..68b44eef67eb 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -567,6 +567,17 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- }
- EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
- 
-+static inline bool acpi_dev_match_producer_consumer(unsigned long types,
-+						    int producer)
-+{
-+	if ((types & IORESOURCE_WINDOW) && producer == ACPI_PRODUCER)
-+		return true;
-+	else if ((types & IORESOURCE_WINDOW) == 0 && producer == ACPI_CONSUMER)
-+		return true;
-+	else
-+		return false;
-+}
-+
- /**
-  * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
-  *				   types
-@@ -585,27 +596,46 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
- 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-+		/*
-+		 * These types of resource descriptor should be used to
-+		 * describe resource consumption instead of resource provision.
-+		 * But some platforms, such as PC Engines APU.1C, reports
-+		 * resource provision by Memory32Fixed(). Please refer to:
-+		 * https://bugzilla.kernel.org/show_bug.cgi?id=94221
-+		 * So accept it no matter IORESOURCE_WINDOW is specified or not.
-+		 */
- 		type = IORESOURCE_MEM;
- 		break;
- 	case ACPI_RESOURCE_TYPE_IO:
- 	case ACPI_RESOURCE_TYPE_FIXED_IO:
--		type = IORESOURCE_IO;
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_IO;
- 		break;
- 	case ACPI_RESOURCE_TYPE_IRQ:
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_IRQ;
-+		break;
- 	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
--		type = IORESOURCE_IRQ;
-+		if (acpi_dev_match_producer_consumer(types,
-+				ares->data.extended_irq.producer_consumer))
-+			type = IORESOURCE_IRQ;
- 		break;
- 	case ACPI_RESOURCE_TYPE_DMA:
- 	case ACPI_RESOURCE_TYPE_FIXED_DMA:
--		type = IORESOURCE_DMA;
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_DMA;
- 		break;
- 	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
--		type = IORESOURCE_REG;
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_REG;
- 		break;
- 	case ACPI_RESOURCE_TYPE_ADDRESS16:
- 	case ACPI_RESOURCE_TYPE_ADDRESS32:
- 	case ACPI_RESOURCE_TYPE_ADDRESS64:
- 	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-+		if (!acpi_dev_match_producer_consumer(types,
-+				ares->data.address.producer_consumer))
-+			break;
- 		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
- 			type = IORESOURCE_MEM;
- 		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
--- 
-1.7.10.4
+U3ViamVjdDogW1JGQyBQQVRDSCB2Ml0gUENJOiBJbnRyb2R1Y2UgcGNpX2J1c19hZGRyX3QKCkRh
+dmlkIEFoZXJuIGZvdW5kIGNvbW1pdCBkNjNlMmUxZjNkZjkgKCJzcGFyYy9QQ0k6IENsaXAgYnJp
+ZGdlIHdpbmRvd3MKdG8gZml0IGluIHVwc3RyZWFtIHdpbmRvd3MiKSBicm9rZSBzcGFyYy9UNS04
+LgoKSW4gdGhlIGJvb3QgbG9nLCB0aGVyZSBpcwogIHBjaSAwMDAwOjA2OjAwLjA6IHJlZyAweDE4
+NDogY2FuJ3QgaGFuZGxlIEJBUiBhYm92ZSA0R0IgKGJ1cyBhZGRyZXNzCiAgMHgxMTAyMDQwMDAp
+CmJ1dCB0aGF0IG9ubHkgY291bGQgaGFwcGVuIHdoZW4gZG1hX2FkZHJfdCBpcyAzMi1iaXQuCgpB
+Y2NvcmRpbmcgdG8gRGF2aWQgTWlsbGVyLCBhbGwgRE1BIG9jY3VycyBiZWhpbmQgYW4gSU9NTVUg
+YW5kIHRoZXNlCklPTU1VcyBvbmx5IHN1cHBvcnQgMzItYml0IGFkZHJlc3NpbmcsIHRoZXJlZm9y
+ZSBkbWFfYWRkcl90IGlzCjMyLWJpdCBvbiBzcGFyYzY0LgoKTGV0J3MgaW50cm9kdWNlIHBjaV9i
+dXNfYWRkcl90IGluc3RlYWQgb2YgdXNpbmcgZG1hX2FkZHJfdCwKYW5kIHBjaV9idXNfYWRkcl90
+IHdpbGwgYmUgNjQtYml0IG9uIDY0LWJpdCBwbGF0Zm9ybSBvciBYODYgUEFFIGtlcm5lbC4KCkZp
+eGVzOiBjb21taXQgZDYzZTJlMWYzZGY5ICgic3BhcmMvUENJOiBDbGlwIGJyaWRnZSB3aW5kb3dz
+IHRvIGZpdCBpbiB1cHN0cmVhbSB3aW5kb3dzIikKRml4ZXM6IGNvbW1pdCAyM2IxM2JjNzZmMzUg
+KCJQQ0k6IEZhaWwgc2FmZWx5IGlmIHdlIGNhbid0IGhhbmRsZSBCQVJzIGxhcmdlciB0aGFuIDRH
+QiIpCkxpbms6IGh0dHA6Ly9sa21sLmtlcm5lbC5vcmcvci9DQUU5RmlRVTFnSlkxTFlyeHMrbWE1
+TENURUVlNHhtdGpSRzBhWEo5S19Uc3UrbTlXdXdAbWFpbC5nbWFpbC5jb20KUmVwb3J0ZWQtYnk6
+IERhdmlkIEFoZXJuIDxkYXZpZC5haGVybkBvcmFjbGUuY29tPgpTaWduZWQtb2ZmLWJ5OiBZaW5n
+aGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KLXYyOiB1c2UgUENJX0JVU19BRERSIGlu
+IGRyaXZlcnMvcGNpL2J1cy5jCiAgICAgcHV0IGNvbmZpZyBvcHRpb24gaW4gcGNpL0tjb25maWc6
+IGFzIERhdmlkIE1pbGxlciBzYWlkOgogICAgICAgUENJIGFkZHJlc3NlcyBiZWluZyA2NC1iaXQg
+b3Igbm90IGlzIGFuIGF0dHJpYnV0ZSBvZiB0aGUgUENJCiAgICAgICBjb250cm9sbGVyIGFuZCB0
+aGUgZ2VvZ3JhcGh5IG9mIHRoZSBicmlkZ2VzIGJlaGluZCBpdCwgbm90IHRoZQogICAgICAgY3B1
+IGFyY2hpdGVjdHVyZS4KLS0tCiBkcml2ZXJzL3BjaS9LY29uZmlnIHwgICAgNCArKysrCiBkcml2
+ZXJzL3BjaS9idXMuYyAgIHwgICAxMCArKysrKy0tLS0tCiBkcml2ZXJzL3BjaS9wcm9iZS5jIHwg
+ICAxMiArKysrKystLS0tLS0KIGluY2x1ZGUvbGludXgvcGNpLmggfCAgIDEyICsrKysrKysrKy0t
+LQogNCBmaWxlcyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlvbnMoLSkKCklu
+ZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42
+Lm9yaWcvZHJpdmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpA
+QCAtOTIsMTEgKzkyLDExIEBAIHZvaWQgcGNpX2J1c19yZW1vdmVfcmVzb3VyY2VzKHN0cnVjdCBw
+Y2kKIH0KIAogc3RhdGljIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiBwY2lfMzJfYml0ID0gezAsIDB4
+ZmZmZmZmZmZVTEx9OwotI2lmZGVmIENPTkZJR19BUkNIX0RNQV9BRERSX1RfNjRCSVQKKyNpZmRl
+ZiBDT05GSUdfUENJX0JVU19BRERSX1RfNjRCSVQKIHN0YXRpYyBzdHJ1Y3QgcGNpX2J1c19yZWdp
+b24gcGNpXzY0X2JpdCA9IHswLAotCQkJCShkbWFfYWRkcl90KSAweGZmZmZmZmZmZmZmZmZmZmZV
+TEx9Owotc3RhdGljIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiBwY2lfaGlnaCA9IHsoZG1hX2FkZHJf
+dCkgMHgxMDAwMDAwMDBVTEwsCi0JCQkJKGRtYV9hZGRyX3QpIDB4ZmZmZmZmZmZmZmZmZmZmZlVM
+TH07CisJCQkJKHBjaV9idXNfYWRkcl90KSAweGZmZmZmZmZmZmZmZmZmZmZVTEx9Oworc3RhdGlj
+IHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiBwY2lfaGlnaCA9IHsocGNpX2J1c19hZGRyX3QpIDB4MTAw
+MDAwMDAwVUxMLAorCQkJCShwY2lfYnVzX2FkZHJfdCkgMHhmZmZmZmZmZmZmZmZmZmZmVUxMfTsK
+ICNlbmRpZgogCiAvKgpAQCAtMjAwLDcgKzIwMCw3IEBAIGludCBwY2lfYnVzX2FsbG9jX3Jlc291
+cmNlKHN0cnVjdCBwY2lfYnUKIAkJCQkJICByZXNvdXJjZV9zaXplX3QpLAogCQl2b2lkICphbGln
+bmZfZGF0YSkKIHsKLSNpZmRlZiBDT05GSUdfQVJDSF9ETUFfQUREUl9UXzY0QklUCisjaWZkZWYg
+Q09ORklHX1BDSV9CVVNfQUREUl9UXzY0QklUCiAJaW50IHJjOwogCiAJaWYgKHJlcy0+ZmxhZ3Mg
+JiBJT1JFU09VUkNFX01FTV82NCkgewpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2Jl
+LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvcHJvYmUuYworKysg
+bGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKQEAgLTI1NCw4ICsyNTQsOCBAQCBpbnQgX19w
+Y2lfcmVhZF9iYXNlKHN0cnVjdCBwY2lfZGV2ICpkZXYsCiAJfQogCiAJaWYgKHJlcy0+ZmxhZ3Mg
+JiBJT1JFU09VUkNFX01FTV82NCkgewotCQlpZiAoKHNpemVvZihkbWFfYWRkcl90KSA8IDggfHwg
+c2l6ZW9mKHJlc291cmNlX3NpemVfdCkgPCA4KSAmJgotCQkgICAgc3o2NCA+IDB4MTAwMDAwMDAw
+VUxMKSB7CisJCWlmICgoc2l6ZW9mKHBjaV9idXNfYWRkcl90KSA8IDggfHwgc2l6ZW9mKHJlc291
+cmNlX3NpemVfdCkgPCA4KQorCQkgICAgJiYgc3o2NCA+IDB4MTAwMDAwMDAwVUxMKSB7CiAJCQly
+ZXMtPmZsYWdzIHw9IElPUkVTT1VSQ0VfVU5TRVQgfCBJT1JFU09VUkNFX0RJU0FCTEVEOwogCQkJ
+cmVzLT5zdGFydCA9IDA7CiAJCQlyZXMtPmVuZCA9IDA7CkBAIC0yNjQsNyArMjY0LDcgQEAgaW50
+IF9fcGNpX3JlYWRfYmFzZShzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCQkJZ290byBvdXQ7CiAJCX0K
+IAotCQlpZiAoKHNpemVvZihkbWFfYWRkcl90KSA8IDgpICYmIGwpIHsKKwkJaWYgKChzaXplb2Yo
+cGNpX2J1c19hZGRyX3QpIDwgOCkgJiYgbCkgewogCQkJLyogQWJvdmUgMzItYml0IGJvdW5kYXJ5
+OyB0cnkgdG8gcmVhbGxvY2F0ZSAqLwogCQkJcmVzLT5mbGFncyB8PSBJT1JFU09VUkNFX1VOU0VU
+OwogCQkJcmVzLT5zdGFydCA9IDA7CkBAIC0zOTksNyArMzk5LDcgQEAgc3RhdGljIHZvaWQgcGNp
+X3JlYWRfYnJpZGdlX21taW9fcHJlZihzdAogCXN0cnVjdCBwY2lfZGV2ICpkZXYgPSBjaGlsZC0+
+c2VsZjsKIAl1MTYgbWVtX2Jhc2VfbG8sIG1lbV9saW1pdF9sbzsKIAl1NjQgYmFzZTY0LCBsaW1p
+dDY0OwotCWRtYV9hZGRyX3QgYmFzZSwgbGltaXQ7CisJcGNpX2J1c19hZGRyX3QgYmFzZSwgbGlt
+aXQ7CiAJc3RydWN0IHBjaV9idXNfcmVnaW9uIHJlZ2lvbjsKIAlzdHJ1Y3QgcmVzb3VyY2UgKnJl
+czsKIApAQCAtNDI2LDggKzQyNiw4IEBAIHN0YXRpYyB2b2lkIHBjaV9yZWFkX2JyaWRnZV9tbWlv
+X3ByZWYoc3QKIAkJfQogCX0KIAotCWJhc2UgPSAoZG1hX2FkZHJfdCkgYmFzZTY0OwotCWxpbWl0
+ID0gKGRtYV9hZGRyX3QpIGxpbWl0NjQ7CisJYmFzZSA9IChwY2lfYnVzX2FkZHJfdCkgYmFzZTY0
+OworCWxpbWl0ID0gKHBjaV9idXNfYWRkcl90KSBsaW1pdDY0OwogCiAJaWYgKGJhc2UgIT0gYmFz
+ZTY0KSB7CiAJCWRldl9lcnIoJmRldi0+ZGV2LCAiY2FuJ3QgaGFuZGxlIGJyaWRnZSB3aW5kb3cg
+YWJvdmUgNEdCIChidXMgYWRkcmVzcyAlIzAxMGxseClcbiIsCkluZGV4OiBsaW51eC0yLjYvaW5j
+bHVkZS9saW51eC9wY2kuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9pbmNsdWRlL2xp
+bnV4L3BjaS5oCisrKyBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9wY2kuaApAQCAtNTc2LDkgKzU3
+NiwxNSBAQCBpbnQgcmF3X3BjaV9yZWFkKHVuc2lnbmVkIGludCBkb21haW4sIHVuCiBpbnQgcmF3
+X3BjaV93cml0ZSh1bnNpZ25lZCBpbnQgZG9tYWluLCB1bnNpZ25lZCBpbnQgYnVzLCB1bnNpZ25l
+ZCBpbnQgZGV2Zm4sCiAJCSAgaW50IHJlZywgaW50IGxlbiwgdTMyIHZhbCk7CiAKKyNpZmRlZiBD
+T05GSUdfUENJX0JVU19BRERSX1RfNjRCSVQKK3R5cGVkZWYgdTY0IHBjaV9idXNfYWRkcl90Owor
+I2Vsc2UKK3R5cGVkZWYgdTMyIHBjaV9idXNfYWRkcl90OworI2VuZGlmCisKIHN0cnVjdCBwY2lf
+YnVzX3JlZ2lvbiB7Ci0JZG1hX2FkZHJfdCBzdGFydDsKLQlkbWFfYWRkcl90IGVuZDsKKwlwY2lf
+YnVzX2FkZHJfdCBzdGFydDsKKwlwY2lfYnVzX2FkZHJfdCBlbmQ7CiB9OwogCiBzdHJ1Y3QgcGNp
+X2R5bmlkcyB7CkBAIC0xMTI3LDcgKzExMzMsNyBAQCBpbnQgX19tdXN0X2NoZWNrIHBjaV9idXNf
+YWxsb2NfcmVzb3VyY2UoCiAKIGludCBwY2lfcmVtYXBfaW9zcGFjZShjb25zdCBzdHJ1Y3QgcmVz
+b3VyY2UgKnJlcywgcGh5c19hZGRyX3QgcGh5c19hZGRyKTsKIAotc3RhdGljIGlubGluZSBkbWFf
+YWRkcl90IHBjaV9idXNfYWRkcmVzcyhzdHJ1Y3QgcGNpX2RldiAqcGRldiwgaW50IGJhcikKK3N0
+YXRpYyBpbmxpbmUgcGNpX2J1c19hZGRyX3QgcGNpX2J1c19hZGRyZXNzKHN0cnVjdCBwY2lfZGV2
+ICpwZGV2LCBpbnQgYmFyKQogewogCXN0cnVjdCBwY2lfYnVzX3JlZ2lvbiByZWdpb247CiAKSW5k
+ZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9LY29uZmlnCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
+Ni5vcmlnL2RyaXZlcnMvcGNpL0tjb25maWcKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9LY29u
+ZmlnCkBAIC0xLDYgKzEsMTAgQEAKICMKICMgUENJIGNvbmZpZ3VyYXRpb24KICMKK2NvbmZpZyBQ
+Q0lfQlVTX0FERFJfVF82NEJJVAorCWRlZl9ib29sIHkgaWYgKDY0QklUIHx8IFg4Nl9QQUUpCisJ
+ZGVwZW5kcyBvbiBQQ0kKKwogY29uZmlnIFBDSV9NU0kKIAlib29sICJNZXNzYWdlIFNpZ25hbGVk
+IEludGVycnVwdHMgKE1TSSBhbmQgTVNJLVgpIgogCWRlcGVuZHMgb24gUENJCg==
+--001a113fb98ecc9fe505128b3377
+Content-Type: text/x-patch; charset=US-ASCII; name="sparc_sun4v_mem64_v3.patch"
+Content-Disposition: attachment; filename="sparc_sun4v_mem64_v3.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7wlp4xj1
 
+U3ViamVjdDogW1JGQyBQQVRDSCB2M10gc3BhcmMvUENJOiBBZGQgbWVtNjQgcmVzb3VyY2UgcGFy
+c2luZyBmb3Igcm9vdCBidXMKCkZvdW5kIG5vIGNvbXBhdGlibGUgYnJpZGdlIHdpbmRvdyB3YXJu
+aW5nIGluIGJvb3QgbG9nIGZyb20gVDUtOC4KCnBjaSAwMDAwOjAwOjAxLjA6IGNhbid0IGNsYWlt
+IEJBUiAxNSBbbWVtIDB4MTAwMDAwMDAwLTB4NGFmZmZmZmZmIHByZWZdOiBubyBjb21wYXRpYmxl
+IGJyaWRnZSB3aW5kb3cKCmFuZCByb290IGJ1cyBvbmx5IHJlcG9ydCBpbyBhbmQgbWVtMzIuCgpw
+Y2lfc3VuNHYgZjAyZGJjZmM6IFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMDowMApwY2lfYnVz
+IDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFtpbyAgMHg4MDQwMDAwMDAwMDAtMHg4MDQwMGZm
+ZmZmZmZdIChidXMgYWRkcmVzcyBbMHgwMDAwLTB4ZmZmZmZmZl0pCnBjaV9idXMgMDAwMDowMDog
+cm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDgwMDAwMDAwMDAwMC0weDgwMDA3ZWZmZmZmZl0gKGJ1
+cyBhZGRyZXNzIFsweDAwMDAwMDAwLTB4N2VmZmZmZmZdKQpwY2lfYnVzIDAwMDA6MDA6IHJvb3Qg
+YnVzIHJlc291cmNlIFtidXMgMDAtNzddCgpBZGQgbWVtNjQgaGFuZGxpbmcgaW4gcGNpX2NvbW1v
+biBmb3Igc3BhcmMsIHNvIHdlIGNhbiBoYXZlIDY0Yml0IHJlc291cmNlCnJlZ2lzdGVyZWQgZm9y
+IHJvb3QgYnVzIGF0IGZpcnN0LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBr
+ZXJuZWwub3JnPgoKLS0tCi12MjogbWVtNjRfc3BhY2Ugc2hvdWxkIHVzZSBtZW1fc3BhY2Uuc3Rh
+cnQgYXMgb2Zmc2V0LgotdjM6IGFkZCBJT1JFU09VUkNFX01FTV82NCBmbGFnCi0tLQogYXJjaC9z
+cGFyYy9rZXJuZWwvcGNpLmMgICAgICAgIHwgICAgNyArKysrKystCiBhcmNoL3NwYXJjL2tlcm5l
+bC9wY2lfY29tbW9uLmMgfCAgIDE1ICsrKysrKysrKysrKystLQogYXJjaC9zcGFyYy9rZXJuZWwv
+cGNpX2ltcGwuaCAgIHwgICAgMSArCiAzIGZpbGVzIGNoYW5nZWQsIDIwIGluc2VydGlvbnMoKyks
+IDMgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2FyY2gvc3BhcmMva2VybmVsL3BjaS5j
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gvc3BhcmMva2VybmVsL3BjaS5jCisr
+KyBsaW51eC0yLjYvYXJjaC9zcGFyYy9rZXJuZWwvcGNpLmMKQEAgLTE4NSw4ICsxODUsMTAgQEAg
+c3RhdGljIHVuc2lnbmVkIGxvbmcgcGNpX3BhcnNlX29mX2ZsYWdzKAogCiAJaWYgKGFkZHIwICYg
+MHgwMjAwMDAwMCkgewogCQlmbGFncyA9IElPUkVTT1VSQ0VfTUVNIHwgUENJX0JBU0VfQUREUkVT
+U19TUEFDRV9NRU1PUlk7Ci0JCWZsYWdzIHw9IChhZGRyMCA+PiAyMikgJiBQQ0lfQkFTRV9BRERS
+RVNTX01FTV9UWVBFXzY0OwogCQlmbGFncyB8PSAoYWRkcjAgPj4gMjgpICYgUENJX0JBU0VfQURE
+UkVTU19NRU1fVFlQRV8xTTsKKwkJaWYgKGFkZHIwICYgMHgwMTAwMDAwMCkKKwkJCWZsYWdzIHw9
+IElPUkVTT1VSQ0VfTUVNXzY0CisJCQkJIHwgUENJX0JBU0VfQUREUkVTU19NRU1fVFlQRV82NDsK
+IAkJaWYgKGFkZHIwICYgMHg0MDAwMDAwMCkKIAkJCWZsYWdzIHw9IElPUkVTT1VSQ0VfUFJFRkVU
+Q0gKIAkJCQkgfCBQQ0lfQkFTRV9BRERSRVNTX01FTV9QUkVGRVRDSDsKQEAgLTY2Myw2ICs2NjUs
+OSBAQCBzdHJ1Y3QgcGNpX2J1cyAqcGNpX3NjYW5fb25lX3BibShzdHJ1Y3QKIAkJCQlwYm0tPmlv
+X3NwYWNlLnN0YXJ0KTsKIAlwY2lfYWRkX3Jlc291cmNlX29mZnNldCgmcmVzb3VyY2VzLCAmcGJt
+LT5tZW1fc3BhY2UsCiAJCQkJcGJtLT5tZW1fc3BhY2Uuc3RhcnQpOworCWlmIChwYm0tPm1lbTY0
+X3NwYWNlLmZsYWdzKQorCQlwY2lfYWRkX3Jlc291cmNlX29mZnNldCgmcmVzb3VyY2VzLCAmcGJt
+LT5tZW02NF9zcGFjZSwKKwkJCQkJcGJtLT5tZW1fc3BhY2Uuc3RhcnQpOwogCXBibS0+YnVzbi5z
+dGFydCA9IHBibS0+cGNpX2ZpcnN0X2J1c25vOwogCXBibS0+YnVzbi5lbmQJPSBwYm0tPnBjaV9s
+YXN0X2J1c25vOwogCXBibS0+YnVzbi5mbGFncwk9IElPUkVTT1VSQ0VfQlVTOwpJbmRleDogbGlu
+dXgtMi42L2FyY2gvc3BhcmMva2VybmVsL3BjaV9jb21tb24uYwo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
+eC0yLjYub3JpZy9hcmNoL3NwYXJjL2tlcm5lbC9wY2lfY29tbW9uLmMKKysrIGxpbnV4LTIuNi9h
+cmNoL3NwYXJjL2tlcm5lbC9wY2lfY29tbW9uLmMKQEAgLTQwNiw2ICs0MDYsNyBAQCB2b2lkIHBj
+aV9kZXRlcm1pbmVfbWVtX2lvX3NwYWNlKHN0cnVjdCBwCiAJfQogCiAJbnVtX3BibV9yYW5nZXMg
+PSBpIC8gc2l6ZW9mKCpwYm1fcmFuZ2VzKTsKKwltZW1zZXQoJnBibS0+bWVtNjRfc3BhY2UsIDAs
+IHNpemVvZihzdHJ1Y3QgcmVzb3VyY2UpKTsKIAogCWZvciAoaSA9IDA7IGkgPCBudW1fcGJtX3Jh
+bmdlczsgaSsrKSB7CiAJCWNvbnN0IHN0cnVjdCBsaW51eF9wcm9tX3BjaV9yYW5nZXMgKnByID0g
+JnBibV9yYW5nZXNbaV07CkBAIC00NTEsNyArNDUyLDExIEBAIHZvaWQgcGNpX2RldGVybWluZV9t
+ZW1faW9fc3BhY2Uoc3RydWN0IHAKIAkJCWJyZWFrOwogCiAJCWNhc2UgMzoKLQkJCS8qIFhYWCA2
+NC1iaXQgTUVNIGhhbmRsaW5nIFhYWCAqLworCQkJLyogNjQtYml0IE1FTSBoYW5kbGluZyAqLwor
+CQkJcGJtLT5tZW02NF9zcGFjZS5zdGFydCA9IGE7CisJCQlwYm0tPm1lbTY0X3NwYWNlLmVuZCA9
+IGEgKyBzaXplIC0gMVVMOworCQkJcGJtLT5tZW02NF9zcGFjZS5mbGFncyA9IElPUkVTT1VSQ0Vf
+TUVNOworCQkJYnJlYWs7CiAKIAkJZGVmYXVsdDoKIAkJCWJyZWFrOwpAQCAtNDY1LDE1ICs0NzAs
+MjEgQEAgdm9pZCBwY2lfZGV0ZXJtaW5lX21lbV9pb19zcGFjZShzdHJ1Y3QgcAogCQlwcm9tX2hh
+bHQoKTsKIAl9CiAKLQlwcmludGsoIiVzOiBQQ0kgSU9bJWxseF0gTUVNWyVsbHhdXG4iLAorCXBy
+aW50aygiJXM6IFBDSSBJT1slbGx4XSBNRU1bJWxseF0iLAogCSAgICAgICBwYm0tPm5hbWUsCiAJ
+ICAgICAgIHBibS0+aW9fc3BhY2Uuc3RhcnQsCiAJICAgICAgIHBibS0+bWVtX3NwYWNlLnN0YXJ0
+KTsKKwlpZiAocGJtLT5tZW02NF9zcGFjZS5mbGFncykKKwkJcHJpbnRrKCIgTUVNNjRbJWxseF0i
+LAorCQkgICAgICAgcGJtLT5tZW02NF9zcGFjZS5zdGFydCk7CisJcHJpbnRrKCJcbiIpOwogCiAJ
+cGJtLT5pb19zcGFjZS5uYW1lID0gcGJtLT5tZW1fc3BhY2UubmFtZSA9IHBibS0+bmFtZTsKIAog
+CXJlcXVlc3RfcmVzb3VyY2UoJmlvcG9ydF9yZXNvdXJjZSwgJnBibS0+aW9fc3BhY2UpOwogCXJl
+cXVlc3RfcmVzb3VyY2UoJmlvbWVtX3Jlc291cmNlLCAmcGJtLT5tZW1fc3BhY2UpOworCWlmIChw
+Ym0tPm1lbTY0X3NwYWNlLmZsYWdzKQorCQlyZXF1ZXN0X3Jlc291cmNlKCZpb21lbV9yZXNvdXJj
+ZSwgJnBibS0+bWVtNjRfc3BhY2UpOwogCiAJcGNpX3JlZ2lzdGVyX2xlZ2FjeV9yZWdpb25zKCZw
+Ym0tPmlvX3NwYWNlLAogCQkJCSAgICAmcGJtLT5tZW1fc3BhY2UpOwpJbmRleDogbGludXgtMi42
+L2FyY2gvc3BhcmMva2VybmVsL3BjaV9pbXBsLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9y
+aWcvYXJjaC9zcGFyYy9rZXJuZWwvcGNpX2ltcGwuaAorKysgbGludXgtMi42L2FyY2gvc3BhcmMv
+a2VybmVsL3BjaV9pbXBsLmgKQEAgLTk3LDYgKzk3LDcgQEAgc3RydWN0IHBjaV9wYm1faW5mbyB7
+CiAJLyogUEJNIEkvTyBhbmQgTWVtb3J5IHNwYWNlIHJlc291cmNlcy4gKi8KIAlzdHJ1Y3QgcmVz
+b3VyY2UJCQlpb19zcGFjZTsKIAlzdHJ1Y3QgcmVzb3VyY2UJCQltZW1fc3BhY2U7CisJc3RydWN0
+IHJlc291cmNlCQkJbWVtNjRfc3BhY2U7CiAJc3RydWN0IHJlc291cmNlCQkJYnVzbjsKIAogCS8q
+IEJhc2Ugb2YgUENJIENvbmZpZyBzcGFjZSwgY2FuIGJlIHBlci1QQk0gb3Igc2hhcmVkLiAqLwo=
+--001a113fb98ecc9fe505128b3377
+Content-Type: text/x-patch; charset=US-ASCII; name="pcie_pref_64bit_mem.patch"
+Content-Disposition: attachment; filename="pcie_pref_64bit_mem.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7wlpd2j2
+
+U3ViamVjdDogW1JGQyBQQVRDSF0gUENJOiBTZXQgcHJlZiBmb3IgbWVtNjQgcmVzb3VyY2Ugb2Yg
+cGNpZSBkZXZpY2UKCldlIHN0aWxsIGdldCAibm8gY29tcGF0aWJsZSBicmlkZ2Ugd2luZG93IiB3
+YXJuaW5nIG9uIHNwYXJjIFQ1LTgKYWZ0ZXIgd2UgYWRkIHN1cHBvcnQgZm9yIDY0Yml0IHJlc291
+cmNlIGZvciByb290IGJ1cy4KClsgIDI4Ni42NDc1NjBdIFBDSTogc2Nhbl9idXNbL3BjaUAzMDAv
+cGNpQDEvcGNpQDAvcGNpQDZdIGJ1cyBubyA4ClsgIDI4Ni45MjEyMzJdIFBDSTogQ2xhaW1pbmcg
+MDAwMDowMDowMS4wOiBSZXNvdXJjZSAxNTogMDAwMDgwMDEwMDAwMDAwMC4uMDAwMDgwMDRhZmZm
+ZmZmZiBbMjIwY10KWyAgMjg3LjIyOTE5MF0gUENJOiBDbGFpbWluZyAwMDAwOjAxOjAwLjA6IFJl
+c291cmNlIDE1OiAwMDAwODAwMTAwMDAwMDAwLi4wMDAwODAwNGFmZmZmZmZmIFsyMjBjXQpbICAy
+ODcuNTMzNDI4XSBQQ0k6IENsYWltaW5nIDAwMDA6MDI6MDQuMDogUmVzb3VyY2UgMTU6IDAwMDA4
+MDAxMDAwMDAwMDAuLjAwMDA4MDAxMmZmZmZmZmYgWzIyMGNdClsgIDI4OC4xNDk4MzFdIFBDSTog
+Q2xhaW1pbmcgMDAwMDowMzowMC4wOiBSZXNvdXJjZSAxNTogMDAwMDgwMDEwMDAwMDAwMC4uMDAw
+MDgwMDEyZmZmZmZmZiBbMjIwY10KWyAgMjg4LjI1MjQ2Nl0gUENJOiBDbGFpbWluZyAwMDAwOjA0
+OjA2LjA6IFJlc291cmNlIDE0OiAwMDAwODAwMTAwMDAwMDAwLi4wMDAwODAwMTBmZmZmZmZmIFsy
+MjBjXQpbICAyODguODY3MTk2XSBQQ0k6IENsYWltaW5nIDAwMDA6MDU6MDAuMDogUmVzb3VyY2Ug
+MDogMDAwMDgwMDEwMDAwMDAwMC4uMDAwMDgwMDEwMDAwMWZmZiBbMjA0XQpbICAyODguOTY4MjIx
+XSBwY2kgMDAwMDowNTowMC4wOiBjYW4ndCBjbGFpbSBCQVIgMCBbbWVtIDB4ODAwMTAwMDAwMDAw
+LTB4ODAwMTAwMDAxZmZmXTogbm8gY29tcGF0aWJsZSBicmlkZ2Ugd2luZG93CgpBbGwgdGhlIGJy
+aWRnZXMgaGF2ZSBwcmVmIG1lbSA2NC1iaXQgcmVzb3VyY2UsIGJ1dCB0aGUgZGV2aWNlIHJlc291
+cmNlIGRvZXMgbm90CmhhdmUgcHJlZiBzZXQsIHRoZW4gd2UgY2FuIG5vdCBmaW5kIHBhcmVudCBm
+b3IgdGhlIGRldmljZSByZXNvdXJjZSwKYXMgd2UgY2FuIG5vdCBwdXQgbm9uLXByZWYgbWVtIHVu
+ZGVyIHByZWYgbWVtLgoKQWNjb3JkaW5nIHRvIHBjaWUgc3BlYyBlcnJ0YQpodHRwczovL3d3dy5w
+Y2lzaWcuY29tL3NwZWNpZmljYXRpb25zL3BjaWV4cHJlc3MvYmFzZTIvUENJZV9CYXNlX3IyLjFf
+RXJyYXRhXzA4SnVuMTAucGRmCnBhZ2UgMTMsIGluIHNvbWUgY2FzZSBpdCBpcyBvayB0byBtYXJr
+IHNvbWUgYXMgcHJlZi4KCm9ubHkgc2V0IHRoZSBiaXQgd2hlbiB0aGUgbW1pbyBpcyBhYm92ZSA0
+RyBieSBCSU9TLgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3Jn
+PgoKLS0tCiBkcml2ZXJzL3BjaS9wcm9iZS5jIHwgICA0MCArKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdlZCwgNDAgaW5zZXJ0aW9ucygrKQoKSW5k
+ZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9iZS5jCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
+Ni5vcmlnL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9i
+ZS5jCkBAIC0xNTA4LDYgKzE1MDgsNDMgQEAgc3RhdGljIHZvaWQgcGNpX2luaXRfY2FwYWJpbGl0
+aWVzKHN0cnVjdAogCXBjaV9lbmFibGVfYWNzKGRldik7CiB9CiAKKy8qCisgKiBBY2NvcmRpbmcg
+dG8KKyAqIGh0dHBzOi8vd3d3LnBjaXNpZy5jb20vc3BlY2lmaWNhdGlvbnMvcGNpZXhwcmVzcy9i
+YXNlMi9QQ0llX0Jhc2VfcjIuMV9FcnJhdGFfMDhKdW4xMC5wZGYKKyAqIHBhZ2UgMTMsIHN5c3Rl
+bSBmaXJtd2FyZSBjb3VsZCBwdXQgc29tZSA2NGJpdCBub24tcHJlZiB1bmRlciA2NGJpdCBwcmVm
+LAorICogb24gc29tZSBjYXNlcy4KKyAqIExldCdzIHNldCBwcmVmIGJpdCB3aGVuIHBjaSBidXMg
+YWRkcmVzcyBpcyBhYm92ZSA0Ry4KKyAqLworc3RhdGljIHZvaWQgc2V0X3BjaWVfNjRiaXRfcHJl
+ZihzdHJ1Y3QgcGNpX2RldiAqZGV2KQoreworCWludCBpOworCisJaWYgKCFwY2lfaXNfcGNpZShk
+ZXYpKQorCQlyZXR1cm47CisKKwlmb3IgKGkgPSAwOyBpIDwgUENJX0JSSURHRV9SRVNPVVJDRVM7
+IGkrKykgeworCQlzdHJ1Y3QgcmVzb3VyY2UgKnJlcyA9ICZkZXYtPnJlc291cmNlW2ldOworCQlz
+dHJ1Y3QgcGNpX2J1c19yZWdpb24gcjsKKwkJZW51bSBwY2lfYmFyX3R5cGUgdHlwZTsKKwkJaW50
+IHJlZzsKKworCQlpZiAoIShyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQpKQorCQkJY29u
+dGludWU7CisKKwkJaWYgKHJlcy0+ZmxhZ3MgJiBJT1JFU09VUkNFX1BSRUZFVENIKQorCQkJY29u
+dGludWU7CisKKwkJcGNpYmlvc19yZXNvdXJjZV90b19idXMoZGV2LT5idXMsICZyLCByZXMpOwor
+CQlpZiAoci5zdGFydCA8IDB4ZmZmZmZmZmYpCisJCQljb250aW51ZTsKKworCQlyZWcgPSBwY2lf
+cmVzb3VyY2VfYmFyKGRldiwgaSwgJnR5cGUpOworCQlkZXZfcHJpbnRrKEtFUk5fREVCVUcsICZk
+ZXYtPmRldiwgInJlZyAlZCAlcFIgKyBwcmVmXG4iLAorCQkJICAgcmVnLCByZXMpOworCQlyZXMt
+PmZsYWdzIHw9IElPUkVTT1VSQ0VfUFJFRkVUQ0g7CisJfQorfQorCiB2b2lkIHBjaV9kZXZpY2Vf
+YWRkKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHN0cnVjdCBwY2lfYnVzICpidXMpCiB7CiAJaW50IHJl
+dDsKQEAgLTE1MzgsNiArMTU3NSw5IEBAIHZvaWQgcGNpX2RldmljZV9hZGQoc3RydWN0IHBjaV9k
+ZXYgKmRldiwKIAkvKiBJbml0aWFsaXplIHZhcmlvdXMgY2FwYWJpbGl0aWVzICovCiAJcGNpX2lu
+aXRfY2FwYWJpbGl0aWVzKGRldik7CiAKKwkvKiBBZnRlciBwY2llX2NhcCBpcyBhc3NpZ25lZCBh
+bmQgc3Jpb3YgYmFyIGlzIHByb2JlZCAqLworCXNldF9wY2llXzY0Yml0X3ByZWYoZGV2KTsKKwog
+CS8qCiAJICogQWRkIHRoZSBkZXZpY2UgdG8gb3VyIGxpc3Qgb2YgZGlzY292ZXJlZCBkZXZpY2Vz
+CiAJICogYW5kIHRoZSBidXMgbGlzdCBmb3IgZml4dXAgZnVuY3Rpb25zLCBldGMuCg==
+--001a113fb98ecc9fe505128b3377--
