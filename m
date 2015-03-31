@@ -1,102 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:41024 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbbCYI1x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Mar 2015 04:27:53 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 25 Mar 2015 18:27:51 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 88D722BB004D
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:50 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t2P8RgPP50331800
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:50 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t2P8RG4P023965
-	for <linux-pci@vger.kernel.org>; Wed, 25 Mar 2015 19:27:17 +1100
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@au1.ibm.com, gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V16 08/20] PCI: Add pcibios_sriov_enable() and pcibios_sriov_disable()
-Date: Wed, 25 Mar 2015 16:23:49 +0800
-Message-Id: <1427271841-28749-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1427271841-28749-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26478 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593AbbCaWmq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 18:42:46 -0400
+Message-ID: <551B22E0.6040600@oracle.com>
+Date: Tue, 31 Mar 2015 16:42:40 -0600
+From: David Ahern <david.ahern@oracle.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: David Miller <davem@davemloft.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+References: <5514391F.2030300@oracle.com>	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>	<5515F6B8.8020606@oracle.com>	<5515F782.7060301@oracle.com>	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>	<551623C1.2040300@oracle.com>	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>	<5516BF4B.9030901@oracle.com>	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>	<55181065.8090807@oracle.com>	<CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>	<5519D40D.20903@oracle.com>	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>	<551A1E32.1010309@oracle.com>	<CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>	<551AD384.50000@oracle.com>	<CAE9FiQU=9_NBiPNgaEBa3nOPBnCwGyj0ppOyVnf7RduKRe8K=A@mail.gmail.com>	<551B1FB2.3020203@oracle.com> <CAE9FiQVTBWQnH_UcVtg3Z38=+qwJXvx8aLoTFF_2JaTY3zi8pw@mail.gm!
+ ail.com>
+In-Reply-To: <CAE9FiQVTBWQnH_UcVtg3Z38=+qwJXvx8aLoTFF_2JaTY3zi8pw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFs are dynamically created when a driver enables them.  On some platforms,
-like PowerNV, special resources are necessary to enable VFs.
+On 3/31/15 4:38 PM, Yinghai Lu wrote:
+> On Tue, Mar 31, 2015 at 3:29 PM, David Ahern <david.ahern@oracle.com> wrote:
+>>>
+>>> Please check attached three patches on top of current linus tree.
+>>>
+>>
+>> new log. Same as before -- PCI_DEBUG, ignore_loglevel ofpci_debug=1
+>>
+>
+> Good, it is clean now.
 
-Add platform hooks for enabling and disabling VFs.
+Yes. You can add a Tested-by to all 3. These are all 4.0 material I hope 
+with a mark for 3.19 stable?
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/iov.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Thanks, Yinghai.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 5643a10..64c4692 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -220,6 +220,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 	pci_dev_put(dev);
- }
- 
-+int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-+{
-+       return 0;
-+}
-+
- static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- {
- 	int rc;
-@@ -231,6 +236,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	struct pci_sriov *iov = dev->sriov;
- 	int bars = 0;
- 	int bus;
-+	int retval;
- 
- 	if (!nr_virtfn)
- 		return 0;
-@@ -307,6 +313,12 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
- 
-+	if ((retval = pcibios_sriov_enable(dev, initial))) {
-+		dev_err(&dev->dev, "failure %d from pcibios_sriov_enable()\n",
-+			retval);
-+		return retval;
-+	}
-+
- 	for (i = 0; i < initial; i++) {
- 		rc = virtfn_add(dev, i, 0);
- 		if (rc)
-@@ -335,6 +347,11 @@ failed:
- 	return rc;
- }
- 
-+int __weak pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+       return 0;
-+}
-+
- static void sriov_disable(struct pci_dev *dev)
- {
- 	int i;
-@@ -346,6 +363,8 @@ static void sriov_disable(struct pci_dev *dev)
- 	for (i = 0; i < iov->num_VFs; i++)
- 		virtfn_remove(dev, i, 0);
- 
-+	pcibios_sriov_disable(dev);
-+
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--- 
-1.7.9.5
+David
 
