@@ -1,66 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54581 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932499AbbCCRw7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 12:52:59 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v8 7/7] arm: dma-mapping: limit IOMMU mapping size
-Date: Tue, 3 Mar 2015 12:52:14 -0500
-Message-ID: <1425405134-24707-8-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
-References: <1425405134-24707-1-git-send-email-m-karicheri2@ti.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:26671 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519AbbCaREL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 13:04:11 -0400
+Message-ID: <551AD384.50000@oracle.com>
+Date: Tue, 31 Mar 2015 11:04:04 -0600
+From: David Ahern <david.ahern@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Yinghai Lu <yinghai@kernel.org>
+CC: David Miller <davem@davemloft.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+References: <5514391F.2030300@oracle.com>	<CAE9FiQXw3QUCNNZj2SVhn-AYWWnggT=7JXPkGNpYFzq-qAB1aQ@mail.gmail.com>	<551495EE.20201@oracle.com>	<CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>	<CAE9FiQWwU4gsq4y0+BTMtisBGQDxF1m_pxAT62PmP-Ct+O1c5A@mail.gmail.com>	<5515F6B8.8020606@oracle.com>	<5515F782.7060301@oracle.com>	<CAE9FiQXpNKrX9BuC5-sgb8XEdFPN1a-wBRR2XqY5Mh1cnhXSPQ@mail.gmail.com>	<551623C1.2040300@oracle.com>	<CAE9FiQUNLaNYAk6DoTDCAfbS=B1uks_=381KJDUk46+yg5cVwg@mail.gmail.com>	<5516BF4B.9030901@oracle.com>	<CAE9FiQV_BOKQu8+mCqQRx_RJYucwuGAfJog7qoUW0J_i=9u=Tg@mail.gmail.com>	<55181065.8090807@oracle.com>	<CAE9FiQXu8qvCo9Dx6vUBXEO029n8K=c=CGtsfvWMGYdVgqtgOw@mail.gmail.com>	<5519D40D.20903@oracle.com>	<CAE9FiQUVSRkKNRzh99JA7V8dqsY78z_GtnMnwTrpSFXkJV9CKA@mail.gmail.com>	<551A1E32.1010309@oracle.com> <CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>
+In-Reply-To: <CAE9FiQWEZRYtk3sFU3U8ptZ5SvGtam65M-_wXXVEzcvuCWT3wA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-arm_iommu_create_mapping() has size parameter of size_t and
-arm_setup_iommu_dma_ops() can take a value higher than that
-when this is called from the OF code.  So limit the size to
-SIZE_MAX.
+On 3/31/15 10:53 AM, Yinghai Lu wrote:
+> On Mon, Mar 30, 2015 at 9:10 PM, David Ahern <david.ahern@oracle.com> wrote:
+>> On 3/30/15 7:06 PM, Yinghai Lu wrote:
+>> To make sure I am on the same page: these are a new round of patches? clear
+>> out the old, apply these?
+>
+> Clear out the old and apply these new ones.
 
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com> (AMD Seattle)
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Catalin Marinas <catalin.marinas@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Grant Likely <grant.likely@linaro.org>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Arnd Bergmann <arnd@arndb.de>
----
- arch/arm/mm/dma-mapping.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+I take DaveM's response to mean the patches (3rd one?) needs another 
+version.
 
-diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-index 170a116..fc81a38 100644
---- a/arch/arm/mm/dma-mapping.c
-+++ b/arch/arm/mm/dma-mapping.c
-@@ -2027,6 +2027,13 @@ static bool arm_setup_iommu_dma_ops(struct device *dev, u64 dma_base, u64 size,
- 	if (!iommu)
- 		return false;
- 
-+	/*
-+	 * currently arm_iommu_create_mapping() takes a max of size_t
-+	 * for size param. So check this limit for now.
-+	 */
-+	if (size > SIZE_MAX)
-+		return false;
-+
- 	mapping = arm_iommu_create_mapping(dev->bus, dma_base, size);
- 	if (IS_ERR(mapping)) {
- 		pr_warn("Failed to create %llu-byte IOMMU mapping for device %s\n",
--- 
-1.7.9.5
+I will be on PTO Wed-Fri with limited access through Sunday. If you have 
+something to try out later today I can do that; else it needs to wait 
+until next week. Given the likelihood that Linus will release 4.0 this 
+weekend that means both 3.19 and 4.0 will be broken for these systems.
+
+David
 
