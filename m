@@ -1,83 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:46123 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbbCKOMd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Mar 2015 10:12:33 -0400
-Received: by labgm9 with SMTP id gm9so9003745lab.13
-        for <linux-pci@vger.kernel.org>; Wed, 11 Mar 2015 07:12:32 -0700 (PDT)
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
-	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
-	al.stone@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH v4 0/9] PCI: MMCONFIG clean up
-Date: Wed, 11 Mar 2015 15:12:40 +0100
-Message-Id: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37356 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbbDAC6A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Mar 2015 22:58:00 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>
+Cc: David Ahern <david.ahern@oracle.com>, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
+Date: Tue, 31 Mar 2015 19:57:46 -0700
+Message-Id: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MCFG ACPI table and PCI ECAM standard have no arch dependencies so it can be
-used across all architectures. Currently MMCONFIG related code resides in
-arch/x86 directories. This patch set is going to isolate non-architecture
-specific code and make it accessible for all architectures.
+Fix regression by commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to
+fit in upstream windows").
 
-v3 -> v4 changes:
-- bug fixes after kbuild test robot report
-    - add asm/io.h header for ecam.c
-    - rename mmcfg -> ecam for drivers/xen/pci.c and arch/x86/pci/numachip.c
-- rework Kconfig logic
+That cause bridge bar get clipped wrongly.
 
-v2 -> v3 changes:
-- rebase patch set v2 to v4.0-rc1
+The sparc64 dma_addr_t is 32-bit, we can not use it to check if we can
+use 64bit bar, introduce pci_bus_addr_t.
 
-v1 -> v2 changes:
-- use generic readb/readw etc. accessors instead of AMD Fam10h workaround
-- separate ACPI and ECAM code
-- improve ECAM code naming
+sparc ofpci does not parse 64bit mem for root bus, add code to
+make sure that we get correct resource for root.
 
-Tomasz Nowicki (9):
-  x86, pci: Clean up comment about buggy MMIO config space access for
-    AMD Fam10h CPUs.
-  x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
-    exclusively.
-  x86, pci: Reorder logic of pci_mmconfig_insert() function
-  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
-    out of arch/x86/ directory
-  pci, acpi, mcfg: Provide generic implementation of MCFG code
-    initialization.
-  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
-    duplication.
-  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
-    driver.
-  pci, acpi, mcfg: Share ACPI PCI config space accessors.
-  pci, ecam: Improve naming for ecam.c content and areas where it is
-    used.
+Also there are device 64-bit res does not have pref bit flag, but bridges
+do have pref bit set, that cause extra "no compatible window".
+Set pref bit for them according to the errata.
 
- arch/x86/Kconfig               |   4 +
- arch/x86/include/asm/pci_x86.h |  34 +---
- arch/x86/pci/Makefile          |   5 +-
- arch/x86/pci/acpi.c            |   3 +-
- arch/x86/pci/mmconfig-shared.c | 346 +++++++++++----------------------------
- arch/x86/pci/mmconfig_32.c     |  47 ++----
- arch/x86/pci/mmconfig_64.c     | 153 ------------------
- arch/x86/pci/numachip.c        |  29 +---
- drivers/acpi/Makefile          |   1 +
- drivers/acpi/mcfg.c            | 121 ++++++++++++++
- drivers/pci/Kconfig            |  10 ++
- drivers/pci/Makefile           |   5 +
- drivers/pci/ecam.c             | 358 +++++++++++++++++++++++++++++++++++++++++
- drivers/xen/pci.c              |   7 +-
- include/linux/ecam.h           |  56 +++++++
- 15 files changed, 679 insertions(+), 500 deletions(-)
- delete mode 100644 arch/x86/pci/mmconfig_64.c
- create mode 100644 drivers/acpi/mcfg.c
- create mode 100644 drivers/pci/ecam.c
- create mode 100644 include/linux/ecam.h
+Thanks
+
+Yinghai
+
+Yinghai Lu (3):
+  PCI: Introduce pci_bus_addr_t
+  sparc/PCI: Add mem64 resource parsing for root bus
+  PCI: Set pref for mem64 resource of pcie device
+
+ arch/sparc/kernel/pci.c        |  7 ++++-
+ arch/sparc/kernel/pci_common.c | 15 ++++++++--
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ drivers/pci/Kconfig            |  4 +++
+ drivers/pci/bus.c              | 10 +++----
+ drivers/pci/probe.c            | 62 ++++++++++++++++++++++++++++++++++++++----
+ include/linux/pci.h            | 12 ++++++--
+ 7 files changed, 94 insertions(+), 17 deletions(-)
 
 -- 
-1.9.1
+1.8.4.5
 
