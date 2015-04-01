@@ -1,51 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:41079 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932110AbbDKHaf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2015 03:30:35 -0400
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
-	by mailout.nyi.internal (Postfix) with ESMTP id 78C3F20808
-	for <linux-pci@vger.kernel.org>; Sat, 11 Apr 2015 03:30:30 -0400 (EDT)
-Date: Sat, 11 Apr 2015 09:30:31 +0200
-From: Greg KH <greg@kroah.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Fam Zheng <famz@redhat.com>,
-	linux-pci@vger.kernel.org, stable@vger.kernel.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 01/10] PCI/MSI: Rename msi_set_enable(),
- msix_clear_and_set_ctrl()
-Message-ID: <20150411073031.GA10481@kroah.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225426.20848.45696.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:35850 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459AbbDAWVj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Apr 2015 18:21:39 -0400
+Received: by igbud6 with SMTP id ud6so61531185igb.1
+        for <linux-pci@vger.kernel.org>; Wed, 01 Apr 2015 15:21:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150410225426.20848.45696.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <551A40E8.4080708@huawei.com>
+References: <55167C1C.6010001@huawei.com>
+	<CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
+	<551A40E8.4080708@huawei.com>
+Date: Wed, 1 Apr 2015 15:21:38 -0700
+Message-ID: <CAE9FiQUQ_Kz8sNzu9RmOfoe4xEwfZ3atGcfQ39UAp4dRz2rRFA@mail.gmail.com>
+Subject: Re: Assign mem resource fail after remove and rescan
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	PCI <linux-pci@vger.kernel.org>,
+	"Herui (Ray)" <Ray.herui@huawei.com>
+Content-Type: multipart/mixed; boundary=001a113e94b289c70d0512b123bb
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 10, 2015 at 05:54:26PM -0500, Bjorn Helgaas wrote:
-> From: Michael S. Tsirkin <mst@redhat.com>
-> 
-> Rename msi_set_enable() to pci_msi_set_enable() and
-> msix_clear_and_set_ctrl() to pci_msix_clear_and_set_ctrl().
-> 
-> No functional change.
-> 
-> [bhelgaas: changelog, split into separate patch]
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Fam Zheng <famz@redhat.com>
-> CC: stable@vger.kernel.org
-> ---
->  drivers/pci/msi.c |   28 ++++++++++++++--------------
->  1 file changed, 14 insertions(+), 14 deletions(-)
+--001a113e94b289c70d0512b123bb
+Content-Type: text/plain; charset=UTF-8
 
-How does this, and the other patch you marked for stable, relate to the
-stable_kernel_rules.txt file that dictates what we can take for stable
-patches?
+On Mon, Mar 30, 2015 at 11:38 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2015/3/29 14:18, Yinghai Lu wrote:
+>> On Sat, Mar 28, 2015 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> ...
+>>>
+>>> I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
+>>> and when system boot up, it requested only 0x4800000.
+>>>
+>    I tested it, remove and rescan 05:19.0 device is ok now, but
+> if do the operations for the parent device of 05:19.0, the result is
+> still fail.
 
-confused,
+Found the problem, attached patch should fix the problem.
 
-greg k-h
+Thanks
+
+Yinghai
+
+--001a113e94b289c70d0512b123bb
+Content-Type: text/x-patch; charset=US-ASCII; name="pci_new_align_size_rule.patch"
+Content-Disposition: attachment; filename="pci_new_align_size_rule.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i7zashqg0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IE9wdGltaXplIGJ1cyBtZW0gc2l6aW5nIHRvIHNtYWxsIHNp
+emUKCkN1cnJlbnQgY29kZSB0cnkgdG8gZ2V0IG1pbl9hbGlnbiBhcyBwb3NzaWJsZSBhbmQgdXNl
+IHRoYXQgdG8KYWxpZ24gZmluYWwgc2l6ZS4KClRoYXQgY291bGQgY2F1c2UgZ2VuZXJhdGUgd3Jv
+bmcgYWxpZ24vc2l6ZSBvciB0b28gYmlnIHNpemUgaW4gc29tZSBjYXNlLgoKIHdoZW4gd2UgaGF2
+ZSBhbGlnbi9zaXplOiAxNk0vNjRNCiBtaW5fYWxpZ24vc2l6ZTAgd2lsbCBiZSA4TS82NE0sIHRo
+YXQgaXMgd3JvbmcsIGFsaWduIG11c3QgYmUgMTZNLgoKIHdoZW4gd2UgaGF2ZSBhbGlnbi9zaXpl
+OiAxTS8xTSwgNjRNLzY0TSwKIG1pbl9hbGlnbi9zaXplMCB3aWxsIGJlIDMyTS85Nk0sIHRoYXQg
+aXMgd2F5IHRvbyBiaWcgZm9yIHN1bSBzaXplIDY1TS4KClRoYXQgd2lsbCBjdWFzZSBhbGxvY2F0
+aW9uIGZhaWxzLgoKVGhlIHBhdGNoIGludHJvZHVjZSBtYXhfYWxpZ24vc2l6ZTBfbWF4LCBhbmQg
+c2l6ZTBfbWF4IGlzIGp1c3QKc3VtIG9mIGFsbCBjaGlsZHJlbiByZXNvdXJjZS4KClByZWZlciBz
+bWFsbCBzaXplIGluc3RlYWQgb2Ygc21hbGwgYWxpZ24uIE9ubHkgdXNlIG1pbl9hbGlnbiB3aGVu
+CnR3byBzaXplIGlzIHRoZSBzYW1lLgoKVGhlIG5ldyBzaXplIHdpbGwgb25seSBuZWVkIHRvIGJl
+IGFsaWduZWQgdG8gYnVzIHdpbmRvdyBhbGlnbm1lbnQuCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFp
+IEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL3NldHVwLWJ1cy5jIHwg
+ICA1MCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0KIDEg
+ZmlsZSBjaGFuZ2VkLCA0NyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKSW5kZXg6IGxp
+bnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYu
+b3JpZy9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Nl
+dHVwLWJ1cy5jCkBAIC04ODIsMTIgKzg4MiwxNCBAQCBzdGF0aWMgdm9pZCBwYnVzX3NpemVfaW8o
+c3RydWN0IHBjaV9idXMKIAl9CiAKIAlzaXplMCA9IGNhbGN1bGF0ZV9pb3NpemUoc2l6ZSwgbWlu
+X3NpemUsIHNpemUxLAotCQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGlnbik7CisJCQkJ
+IHJlc291cmNlX3NpemUoYl9yZXMpLAorCQkJCSB3aW5kb3dfYWxpZ25tZW50KGJ1cywgSU9SRVNP
+VVJDRV9JTykpOwogCWlmIChjaGlsZHJlbl9hZGRfc2l6ZSA+IGFkZF9zaXplKQogCQlhZGRfc2l6
+ZSA9IGNoaWxkcmVuX2FkZF9zaXplOwogCXNpemUxID0gKCFyZWFsbG9jX2hlYWQgfHwgKHJlYWxs
+b2NfaGVhZCAmJiAhYWRkX3NpemUpKSA/IHNpemUwIDoKIAkJY2FsY3VsYXRlX2lvc2l6ZShzaXpl
+LCBtaW5fc2l6ZSwgYWRkX3NpemUgKyBzaXplMSwKLQkJCXJlc291cmNlX3NpemUoYl9yZXMpLCBt
+aW5fYWxpZ24pOworCQkJCSByZXNvdXJjZV9zaXplKGJfcmVzKSwKKwkJCQkgd2luZG93X2FsaWdu
+bWVudChidXMsIElPUkVTT1VSQ0VfSU8pKTsKIAlpZiAoIXNpemUwICYmICFzaXplMSkgewogCQlp
+ZiAoYl9yZXMtPnN0YXJ0IHx8IGJfcmVzLT5lbmQpCiAJCQlkZXZfaW5mbygmYnVzLT5zZWxmLT5k
+ZXYsICJkaXNhYmxpbmcgYnJpZGdlIHdpbmRvdyAlcFIgdG8gJXBSICh1bnVzZWQpXG4iLApAQCAt
+OTYyLDYgKzk2NCw4IEBAIHN0YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1Y3QgcGNpX2J1cwog
+CXN0cnVjdCByZXNvdXJjZSAqYl9yZXMgPSBmaW5kX2ZyZWVfYnVzX3Jlc291cmNlKGJ1cywKIAkJ
+CQkJbWFzayB8IElPUkVTT1VSQ0VfUFJFRkVUQ0gsIHR5cGUpOwogCXJlc291cmNlX3NpemVfdCBj
+aGlsZHJlbl9hZGRfc2l6ZSA9IDA7CisJcmVzb3VyY2Vfc2l6ZV90IG1heF9hbGlnbiA9IDAsIHNp
+emUwX21heDsKKwlpbnQgY291bnQgPSAwOwogCiAJaWYgKCFiX3JlcykKIAkJcmV0dXJuIC1FTk9T
+UEM7CkBAIC0xMDE2LDE5ICsxMDIwLDU5IEBAIHN0YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1
+Y3QgcGNpX2J1cwogCQkJaWYgKG9yZGVyID4gbWF4X29yZGVyKQogCQkJCW1heF9vcmRlciA9IG9y
+ZGVyOwogCisJCQljb3VudCsrOworCQkJaWYgKGFsaWduID4gbWF4X2FsaWduKQorCQkJCW1heF9h
+bGlnbiA9IGFsaWduOworCiAJCQlpZiAocmVhbGxvY19oZWFkKQogCQkJCWNoaWxkcmVuX2FkZF9z
+aXplICs9IGdldF9yZXNfYWRkX3NpemUocmVhbGxvY19oZWFkLCByKTsKIAkJfQogCX0KIAorCS8q
+CisJICogTmV3IHJ1bGU6IFByZWZlciB0byBzbWFsbCBzaXplIGluc3RlYWQgb2Ygc21hbGwgYWxp
+Z24sCisJICogd2hlbiB3ZSBoYXZlIGFsaWduL3NpemU6IDFNLzFNLCAyTS8yTSwKKwkgKiAgbWlu
+X2FsaWduL3NpemUwOiAxTS8zTSwgbWF4X2FsaWduL3NpemUwX21heDogMk0vM00KKwkgKiAgcGlj
+ayAxTS8zTS4KKwkgKiB3aGVuIHdlIGhhdmUgYWxpZ24vc2l6ZTogMU0vMU0sIDY0TS82NE0sCisJ
+ICogIG1pbl9hbGlnbi9zaXplMDogMzJNLzk2TSwgbWF4X2FsaWduL3NpemUwX21heDogNjRNLzY1
+TQorCSAqICBwaWNrIDY0TS82NU0uCisJICogd2hlbiB3ZSBoYXZlIGFsaWduL3NpemU6IDFNLzFN
+LCAxNk0vNjRNLAorCSAqICBtaW5fYWxpZ24vc2l6ZTA6IDhNLzcyTSwgbWF4X2FsaWduL3NpemUw
+X21heDogMTZNLzY1TQorCSAqICBwaWNrIDE2TS82NU0uCisJICogd2hlbiB3ZSBoYXZlIGFsaWdu
+L3NpemU6IDMyTS82NE0sIDEyOE0vNTEyTQorCSAqICBtaW5fYWxpZ24vc2l6ZTA6IDY0TS81NzZN
+LCBtYXhfYWxpZ24vc2l6ZTBfbWF4OiAxMjhNLzU3Nk0KKwkgKiAgcGljayA2NE0vNTc2TS4KKwkg
+KiB3aGVuIHdlIGhhdmUgYWxpZ24vc2l6ZTogMTZNLzMyTSwgMTI4TS81MTJNCisJICogIG1pbl9h
+bGlnbi9zaXplMDogNjRNLzU3Nk0sIG1heF9hbGlnbi9zaXplMF9tYXg6IDEyOE0vNTU0TQorCSAq
+ICBwaWNrIDEyOE0vNTU0TS4KKwkgKiB3aGVuIHdlIGhhdmUgYWxpZ24vc2l6ZTogMTZNLzY0TQor
+CSAqICBtaW5fYWxpZ24vc2l6ZTA6IDhNLzY0TSwgbWF4X2FsaWduL3NpemUwX21heDogMTZNLzY0
+TQorCSAqICBoYXZlIHRvIHVzZSAxNk0vNjRNLgorCSAqLwogCW1pbl9hbGlnbiA9IGNhbGN1bGF0
+ZV9tZW1fYWxpZ24oYWxpZ25zLCBtYXhfb3JkZXIpOwogCW1pbl9hbGlnbiA9IG1heChtaW5fYWxp
+Z24sIHdpbmRvd19hbGlnbm1lbnQoYnVzLCBiX3Jlcy0+ZmxhZ3MpKTsKKwltYXhfYWxpZ24gPSBt
+YXgobWF4X2FsaWduLCB3aW5kb3dfYWxpZ25tZW50KGJ1cywgYl9yZXMtPmZsYWdzKSk7CisJaWYg
+KGNvdW50ID09IDEpCisJCW1pbl9hbGlnbiA9IG1heF9hbGlnbjsKKwogCXNpemUwID0gY2FsY3Vs
+YXRlX21lbXNpemUoc2l6ZSwgbWluX3NpemUsIDAsIHJlc291cmNlX3NpemUoYl9yZXMpLCBtaW5f
+YWxpZ24pOworCXNpemUwX21heCA9IGNhbGN1bGF0ZV9tZW1zaXplKHNpemUsIG1pbl9zaXplLCAw
+LCByZXNvdXJjZV9zaXplKGJfcmVzKSwKKwkJCQkJd2luZG93X2FsaWdubWVudChidXMsIGJfcmVz
+LT5mbGFncykpOworCisJaWYgKHNpemUwX21heCA8IHNpemUwKSB7CisJCXNpemUwID0gc2l6ZTBf
+bWF4OworCQltaW5fYWxpZ24gPSBtYXhfYWxpZ247CisJCW1heF9hbGlnbi0tOyAvKiB0byB1c2Ug
+c21hbGwgYWxpZ24gZm9yIHNpemUxIGNhbGN1bGF0aW9uICovCisJfQorCiAJaWYgKGNoaWxkcmVu
+X2FkZF9zaXplID4gYWRkX3NpemUpCiAJCWFkZF9zaXplID0gY2hpbGRyZW5fYWRkX3NpemU7CiAJ
+c2l6ZTEgPSAoIXJlYWxsb2NfaGVhZCB8fCAocmVhbGxvY19oZWFkICYmICFhZGRfc2l6ZSkpID8g
+c2l6ZTAgOgogCQljYWxjdWxhdGVfbWVtc2l6ZShzaXplLCBtaW5fc2l6ZSwgYWRkX3NpemUsCi0J
+CQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGlnbik7CisJCQkJcmVzb3VyY2Vfc2l6ZShi
+X3JlcyksCisJCQkJbWluX2FsaWduIDw9IG1heF9hbGlnbiA/IG1pbl9hbGlnbiA6CisJCQkJCXdp
+bmRvd19hbGlnbm1lbnQoYnVzLCBiX3Jlcy0+ZmxhZ3MpKTsKIAlpZiAoIXNpemUwICYmICFzaXpl
+MSkgewogCQlpZiAoYl9yZXMtPnN0YXJ0IHx8IGJfcmVzLT5lbmQpCiAJCQlkZXZfaW5mbygmYnVz
+LT5zZWxmLT5kZXYsICJkaXNhYmxpbmcgYnJpZGdlIHdpbmRvdyAlcFIgdG8gJXBSICh1bnVzZWQp
+XG4iLAo=
+--001a113e94b289c70d0512b123bb--
