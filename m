@@ -1,108 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:50306 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbbCCJcH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Mar 2015 04:32:07 -0500
-Message-ID: <54F57F80.6050205@huawei.com>
-Date: Tue, 3 Mar 2015 17:31:44 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing0307@gmail.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	<linux-parisc@vger.kernel.org>
-Subject: Re: [PATCH v4 22/30] PCI/Parisc: Use pci_scan_root_bus() for simplicity
-References: <1424938344-4017-1-git-send-email-wangyijing@huawei.com> <1424938344-4017-23-git-send-email-wangyijing@huawei.com> <20150303032412.GK11978@google.com>
-In-Reply-To: <20150303032412.GK11978@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>
+Cc: David Ahern <david.ahern@oracle.com>, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
+Subject: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+Date: Tue, 31 Mar 2015 19:57:49 -0700
+Message-Id: <1427857069-6789-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/3/3 11:24, Bjorn Helgaas wrote:
-> On Thu, Feb 26, 2015 at 04:12:16PM +0800, Yijing Wang wrote:
->> From: Yijing Wang <wangyijing0307@gmail.com>
-> 
-> When you write subject lines, I think it's friendly to run
-> "git log --oneline" on the file you're changing, and make yours
-> match the previous ones.
-> 
->   $ git log --oneline drivers/parisc/dino.c
->   3f05536d226d PCI/Parisc: Use pci_scan_root_bus() for simplicity
->   3335f75a8877 parisc: dino: fix %d confusingly prefixed with 0x in format string
->   3fad9b8d597f drivers/parisc: Use printf extension %pR for struct resource
->   0fe763c570ad Drivers: misc: remove __dev* attributes.
->   0b79ca2a800d parisc/PCI: Use list_for_each_entry() for bus->devices traversal
->   30aa80da43a5 parisc/PCI: register busn_res for root buses
->   ...
-> 
-> Yours doesn't match any of them, but "parisc/PCI" seems the best match.
+We still get "no compatible bridge window" warning on sparc T5-8
+after we add support for 64bit resource parsing for root bus.
 
-OK, I will refresh the title, sorry.
+ PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+ PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
+ PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
+ pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
-> 
->> Now pci_bus_add_devices() has been ripped out
->> from pci_scan_root_bus(), we could use pci_scan_root_bus()
->> instead of pci_create_root_bus() + pci_scan_child_bus()
->> for simplicity. We could also remove the pci bus
->> resource(dino_current_bus,255) and pci_bus_update_busn_res_end(),
->> because pci_scan_root_bus() would do the same thing.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
->> CC: linux-parisc@vger.kernel.org
->> ---
->>  drivers/parisc/dino.c    |   11 ++---------
->>  drivers/parisc/lba_pci.c |    7 ++-----
->>  2 files changed, 4 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
->> index a0580af..e5ee339 100644
->> --- a/drivers/parisc/dino.c
->> +++ b/drivers/parisc/dino.c
->> @@ -977,15 +977,11 @@ static int __init dino_probe(struct parisc_device *dev)
->>  	if (dino_dev->hba.gmmio_space.flags)
->>  		pci_add_resource(&resources, &dino_dev->hba.gmmio_space);
->>  
->> -	dino_dev->hba.bus_num.start = dino_current_bus;
->> -	dino_dev->hba.bus_num.end = 255;
->> -	dino_dev->hba.bus_num.flags = IORESOURCE_BUS;
->> -	pci_add_resource(&resources, &dino_dev->hba.bus_num);
-> 
-> I know pci_scan_root_bus() does default to bus 0-255, but I don't really
-> like that behavior, and I think it's a bug for drivers like this to rely on
-> that.  The PCI core has no way to discover the actual bus number range, and
-> the only reason it supplies a default is because it was inconvenient to
-> change all the callers.  The host bridge driver is the only code that has
-> any chance of discovering and/or configuring the correct range.
-> 
-> So I think it's more correct to leave the existing code here, even though
-> this code is is likely incorrect.  At least then if we trip over an issue
-> with the bus range being incorrect, it will be clear that the fix should
-> be in dino.c rather than the PCI core.
+All the bridges 64-bit resource have pref bit, but the device resource does not
+have pref set, then we can not find parent for the device resource,
+as we can not put non-pref mem under pref mem.
 
-OK, I would keep this code here, thanks!
+According to pcie spec errta
+https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13, in some case it is ok to mark some as pref.
 
-> 
-> .
-> 
+Only set pref for 64bit mmio when the entire path from the host to the adapter is
+over PCI Express.
 
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: <stable@vger.kernel.org> #3.19
+---
+ drivers/pci/probe.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f71cb7c..4e0cd46 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1507,6 +1507,53 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++static bool pci_up_path_over_pcie(struct pci_bus *bus)
++{
++	if (!bus)
++		return true;
++
++	if (bus->self && !pci_is_pcie(bus->self))
++		return false;
++
++	return pci_up_path_over_pcie(bus->parent);
++}
++
++/*
++ * According to
++ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
++ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
++ * on some cases.
++ * Let's set pref bit for 64bit mmio when entire path from the host to
++ * the adapter is over PCI Express.
++ */
++static void set_pcie_64bit_pref(struct pci_dev *dev)
++{
++	int i;
++
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (!pci_up_path_over_pcie(dev->bus))
++		return;
++
++	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++		struct resource *res = &dev->resource[i];
++		enum pci_bar_type type;
++		int reg;
++
++		if (!(res->flags & IORESOURCE_MEM_64))
++			continue;
++
++		if (res->flags & IORESOURCE_PREFETCH)
++			continue;
++
++		reg = pci_resource_bar(dev, i, &type);
++		dev_printk(KERN_DEBUG, &dev->dev, "reg 0x%x %pR + pref\n",
++			   reg, res);
++		res->flags |= IORESOURCE_PREFETCH;
++	}
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1536,6 +1583,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
+ 
++	/* After pcie_cap is assigned and sriov bar is probed */
++	set_pcie_64bit_pref(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
 -- 
-Thanks!
-Yijing
+1.8.4.5
 
