@@ -1,141 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62389 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50926 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751386AbbDTDGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Apr 2015 23:06:47 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	id S1753118AbbDBMFn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Apr 2015 08:05:43 -0400
+Date: Thu, 2 Apr 2015 14:05:06 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Mon, 20 Apr 2015 11:08:58 +0800
-Message-Id: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com>
+	Dave Jones <davej@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 00/86] pci: export pci_ids.h and related cleanups
+Message-ID: <20150402131850-mutt-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+ <20150402094424.0de6c990@endymion.delvare>
+ <20150402094608-mutt-send-email-mst@redhat.com>
+ <20150402082306.GA24610@infradead.org>
+ <1427965456.4063.1272.camel@chaos.site>
+ <20150402120711-mutt-send-email-mst@redhat.com>
+ <1427973330.4063.1410.camel@chaos.site>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1427973330.4063.1410.camel@chaos.site>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An IO port or MMIO resource assigned to a PCI host bridge may be
-consumed by the host bridge itself or available to its child
-bus/devices. On x86 and IA64 platforms, all IO port and MMIO
-resources are assumed to be available to child bus/devices
-except one special case:
-    IO port [0xCF8-0xCFF] is consumed by the host bridge itself
-    to access PCI configuration space.
+On Thu, Apr 02, 2015 at 01:15:30PM +0200, Jean Delvare wrote:
+> Le Thursday 02 April 2015 à 12:09 +0200, Michael S. Tsirkin a écrit :
+> > On Thu, Apr 02, 2015 at 11:04:16AM +0200, Jean Delvare wrote:
+> > > Le Thursday 02 April 2015 à 01:23 -0700, Christoph Hellwig a écrit :
+> > > > The class ids are a hardware defintion, not a kernel API.  Just use the
+> > > > definitions from libpci, or copy over the kernel header if you prefer
+> > > > it over the libpci definutions.
+> > > 
+> > > I agree with Christoph, such defines would better come from
+> > > pciutils-devel, not the kernel.
+> > 
+> > This just leads to code duplication.  Projects that don't link with
+> > pciutils don't want to depend on it.
+> 
+> Well, they don't have to depend on anything then, they can keep defining
+> their own named IDs.
+> 
+> Please realize that 1* code duplication is impossible to avoid
+> completely and 2* this hardly qualifies as code duplication in the first
+> place (giving symbolic names to constants is not actual programming.)
 
-But the ACPI and PCI Firmware specifications haven't provided a method
-to tell whether a resource is consumed by the host bridge itself.
-So before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
-interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
-all IO port resources defined by acpi_resource_io and
-acpi_resource_fixed_io to filter out IO ports consumed by the host
-bridge itself.
+If it's not actual programming, why keep arguing about it?  What's the
+problem with exporting class IDs?  Zero maintainance overhead and makes
+life a bit easier to userspace.
 
-Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
-to simplify implementation")started accepting all IO port and MMIO
-resources, which caused a regression that IO port resources consumed
-by the host bridge itself became available to its child devices.
 
-Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
-host bridge itself") ignored resources consumed by the host bridge
-itself by checking the IORESOURCE_WINDOW flag, which accidently removed
-MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
-and acpi_resource_fixed_memory32.
-
-So revert to the behavior before v3.19 to fix the regression.
-
-There is also a discussion about ignoring the Producer/Consumer flag on
-IA64 platforms at:
-http://patchwork.ozlabs.org/patch/461633/
-
-Related ACPI table are archived at:
-https://bugzilla.kernel.org/show_bug.cgi?id=94221
-
-Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
-Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
- drivers/acpi/resource.c |    6 +++++-
- 2 files changed, 27 insertions(+), 4 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index e4695985f9de..fc2da98985c3 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
- {
- 	int ret;
- 	struct resource_entry *entry, *tmp;
-+	unsigned long res_flags;
- 
- 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
-+
-+	/*
-+	 * An IO or MMIO resource assigned to PCI host bridge may be consumed
-+	 * by the host bridge itself or available to its child bus/devices.
-+	 * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
-+	 * be available to child bus/devices except one special case:
-+	 *	IO port [0xCF8-0xCFF] is consumed by host bridge itself to
-+	 *	access PCI configuration space.
-+	 *
-+	 * Due to lack of specification to define resources consumed by host
-+	 * bridge itself, all IO port resources defined by acpi_resource_io
-+	 * and acpi_resource_fixed_io are ignored to filter out IO
-+	 * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
-+	 * it's not perfect.
-+	 *
-+	 * Another possible solution is to explicitly filter out IO
-+	 * port[0xCF8-0xCFF].
-+	 */
-+	res_flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_IO_FIXED;
- 	ret = acpi_dev_get_resources(device, list,
- 				     acpi_dev_filter_resource_type_cb,
--				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
-+				     (void *)res_flags);
- 	if (ret < 0)
- 		dev_warn(&device->dev,
- 			 "failed to parse _CRS method, error code %d\n", ret);
-@@ -346,8 +366,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			"no IO and memory resources present in _CRS\n");
- 	else
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
--			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
--			    (entry->res->flags & IORESOURCE_DISABLED))
-+			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
- 			else
- 				entry->res->name = info->name;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5589a6e2a023..79b6d3b5ffd2 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -575,6 +575,9 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
-  *
-  * This is a hepler function to support acpi_dev_get_resources(), which filters
-  * ACPI resource objects according to resource types.
-+ *
-+ * Flag IORESOURCE_IO_FIXED is used to opt out io and fixed_io resource
-+ * descriptors for ACPI host bridges on x86 and IA64 platforms.
-  */
- int acpi_dev_filter_resource_type(struct acpi_resource *ares,
- 				  unsigned long types)
-@@ -589,7 +592,8 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
- 		break;
- 	case ACPI_RESOURCE_TYPE_IO:
- 	case ACPI_RESOURCE_TYPE_FIXED_IO:
--		type = IORESOURCE_IO;
-+		if ((types & IORESOURCE_IO_FIXED) == 0)
-+			type = IORESOURCE_IO;
- 		break;
- 	case ACPI_RESOURCE_TYPE_IRQ:
- 	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
--- 
-1.7.10.4
-
+> 
+> -- 
+> Jean Delvare
+> SUSE L3 Support
