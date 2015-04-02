@@ -1,78 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45987 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753356AbbDBNR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Apr 2015 09:17:28 -0400
-Subject: Re: [PATCH 00/86] pci: export pci_ids.h and related cleanups
-From: Jean Delvare <jdelvare@suse.de>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Jones <davej@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-In-Reply-To: <20150402131850-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
-	 <20150402094424.0de6c990@endymion.delvare>
-	 <20150402094608-mutt-send-email-mst@redhat.com>
-	 <20150402082306.GA24610@infradead.org>
-	 <1427965456.4063.1272.camel@chaos.site>
-	 <20150402120711-mutt-send-email-mst@redhat.com>
-	 <1427973330.4063.1410.camel@chaos.site>
-	 <20150402131850-mutt-send-email-mst@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Apr 2015 15:17:25 +0200
-Message-ID: <1427980645.4281.78.camel@chaos.site>
+Received: from shards.monkeyblade.net ([149.20.54.216]:41304 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540AbbDBUhR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2015 16:37:17 -0400
+Date: Thu, 02 Apr 2015 16:37:15 -0400 (EDT)
+Message-Id: <20150402.163715.643586069492103151.davem@davemloft.net>
+To: yinghai@kernel.org
+Cc: bhelgaas@google.com, david.ahern@oracle.com,
+	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Le Thursday 02 April 2015 à 14:05 +0200, Michael S. Tsirkin a écrit :
-> On Thu, Apr 02, 2015 at 01:15:30PM +0200, Jean Delvare wrote:
-> > Le Thursday 02 April 2015 à 12:09 +0200, Michael S. Tsirkin a écrit :
-> > > On Thu, Apr 02, 2015 at 11:04:16AM +0200, Jean Delvare wrote:
-> > > > Le Thursday 02 April 2015 à 01:23 -0700, Christoph Hellwig a écrit :
-> > > > > The class ids are a hardware defintion, not a kernel API.  Just use the
-> > > > > definitions from libpci, or copy over the kernel header if you prefer
-> > > > > it over the libpci definutions.
-> > > > 
-> > > > I agree with Christoph, such defines would better come from
-> > > > pciutils-devel, not the kernel.
-> > > 
-> > > This just leads to code duplication.  Projects that don't link with
-> > > pciutils don't want to depend on it.
-> > 
-> > Well, they don't have to depend on anything then, they can keep defining
-> > their own named IDs.
-> > 
-> > Please realize that 1* code duplication is impossible to avoid
-> > completely and 2* this hardly qualifies as code duplication in the first
-> > place (giving symbolic names to constants is not actual programming.)
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 31 Mar 2015 19:57:46 -0700
+
+> Fix regression by commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to
+> fit in upstream windows").
 > 
-> If it's not actual programming, why keep arguing about it?
+> That cause bridge bar get clipped wrongly.
+> 
+> The sparc64 dma_addr_t is 32-bit, we can not use it to check if we can
+> use 64bit bar, introduce pci_bus_addr_t.
+> 
+> sparc ofpci does not parse 64bit mem for root bus, add code to
+> make sure that we get correct resource for root.
+> 
+> Also there are device 64-bit res does not have pref bit flag, but bridges
+> do have pref bit set, that cause extra "no compatible window".
+> Set pref bit for them according to the errata.
 
-Clam down, please. You brought it on the table, not me. I'm only trying
-to help.
-
->  What's the problem with exporting class IDs?  Zero maintainance overhead and makes
-> life a bit easier to userspace.
-
-Anything that belongs to uapi implies maintenance overhead: greater care
-to what is being added, and impossibility to rename or remove anything.
-Plus, as explained before, this is conceptually wrong, these values are
-defined externally and are not a kernel API.
-
-You still have not explained how user-space would actually benefit from
-the change anyway, as previous kernels did not export that file,
-projects can't rely on it unless they stop supporting all kernels before
-v4.1.
-
-And again, just because exporting this file (or even part of it) looks
-convenient, doesn't mean it's right. I am under the impression that you
-did not read my previous explanations very carefully. That's sad because
-they took me a long time to write.
-
--- 
-Jean Delvare
-SUSE L3 Support
+Just to be clear, who is going to merge this? :-)
 
