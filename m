@@ -1,105 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40208 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:37482 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752323AbbDNJr5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Apr 2015 05:47:57 -0400
-Date: Tue, 14 Apr 2015 11:47:39 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fam Zheng <famz@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
-Message-ID: <20150414114433-mutt-send-email-mst@redhat.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150413093708.GE17059@ad.nay.redhat.com>
- <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
+	id S1751239AbbDBLPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Apr 2015 07:15:33 -0400
+Subject: Re: [PATCH 00/86] pci: export pci_ids.h and related cleanups
+From: Jean Delvare <jdelvare@suse.de>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Jones <davej@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+In-Reply-To: <20150402120711-mutt-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+	 <20150402094424.0de6c990@endymion.delvare>
+	 <20150402094608-mutt-send-email-mst@redhat.com>
+	 <20150402082306.GA24610@infradead.org>
+	 <1427965456.4063.1272.camel@chaos.site>
+	 <20150402120711-mutt-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Apr 2015 13:15:30 +0200
+Message-ID: <1427973330.4063.1410.camel@chaos.site>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 13, 2015 at 10:41:22AM -0500, Bjorn Helgaas wrote:
-> On Mon, Apr 13, 2015 at 4:37 AM, Fam Zheng <famz@redhat.com> wrote:
-> > Hi Bjorn,
-> >
-> > On Fri, 04/10 17:54, Bjorn Helgaas wrote:
-> >> From: Michael S. Tsirkin <mst@redhat.com>
-> >>
-> >> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
-> >> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
-> >>
-> >> The problem is that after we disable MSI, the device may assert INTx, and
-> >> if the driver hasn't registered an interrupt handler for it, the interrupt
-> >> is never deasserted and causes a kernel hang.  In particular, this was
-> >> observed with virtio.
-> >>
-> >> We now disable MSI/MSI-X for all devices during enumeration regardless of
-> >> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
-> >> old one.
-> >>
-> >> Stop disabling MSIs at shutdown to avoid the kernel hang.
-> >>
-> >> XXX bugzilla reference, details about how the hang happens?
-> >
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=96571
-> >
-> > Please let me know if you need any further information in the bug.
+Le Thursday 02 April 2015 à 12:09 +0200, Michael S. Tsirkin a écrit :
+> On Thu, Apr 02, 2015 at 11:04:16AM +0200, Jean Delvare wrote:
+> > Le Thursday 02 April 2015 à 01:23 -0700, Christoph Hellwig a écrit :
+> > > The class ids are a hardware defintion, not a kernel API.  Just use the
+> > > definitions from libpci, or copy over the kernel header if you prefer
+> > > it over the libpci definutions.
+> > 
+> > I agree with Christoph, such defines would better come from
+> > pciutils-devel, not the kernel.
 > 
-> Please attach a complete dmesg log.  The bugzilla doesn't really have
-> any new information other than that you see a soft lockup.  I'm trying
-> to connect more of the dots between a spurious interrupt and a hang or
-> soft lockup.
-> 
-> It doesn't seem right that a spurious interrupt could cause a hang or
-> soft lockup.  I would think Linux would emit a message about the
-> unexpected interrupt, but would otherwise be relatively unconcerned.
-> So I'm trying to figure out why my assumption is wrong.  Probably this
-> is just because I don't know much about Linux IRQ handling.
-> 
-> Having more details, e.g., a stacktrace fragment from a soft lockup,
-> can also help people connect a problem they're seeing with the
-> solution.  It's pretty hard to google for "kernel hang," but if you
-> can google for a soft lockup in a specific function, that can be much
-> more useful.
+> This just leads to code duplication.  Projects that don't link with
+> pciutils don't want to depend on it.
 
-I have investigated this, and I at this point I think the hang is basically
-a non issue. So the commit log should say
+Well, they don't have to depend on anything then, they can keep defining
+their own named IDs.
 
-	if the driver hasn't registered an interrupt handler for it, the interrupt
-	is never deasserted and causes spurious interrupts, typically
-	followed by kernel disabling the irq.
+Please realize that 1* code duplication is impossible to avoid
+completely and 2* this hardly qualifies as code duplication in the first
+place (giving symbolic names to constants is not actual programming.)
 
+-- 
+Jean Delvare
+SUSE L3 Support
 
-> >> [bhelgaas: changelog]
-> >> Reported-by: Fam Zheng <famz@redhat.com>
-> >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> >> CC: Ulrich Obergfell <uobergfe@redhat.com>
-> >> CC: Rusty Russell <rusty@rustcorp.com.au>
-> >> ---
-> >>  drivers/pci/pci-driver.c |    2 --
-> >>  1 file changed, 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> index 3cb2210de553..38a602cb9fb7 100644
-> >> --- a/drivers/pci/pci-driver.c
-> >> +++ b/drivers/pci/pci-driver.c
-> >> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
-> >>
-> >>       if (drv && drv->shutdown)
-> >>               drv->shutdown(pci_dev);
-> >> -     pci_msi_shutdown(pci_dev);
-> >> -     pci_msix_shutdown(pci_dev);
-> >>
-> >>  #ifdef CONFIG_KEXEC
-> >>       /*
-> >>
