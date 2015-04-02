@@ -1,132 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0141.outbound.protection.outlook.com ([207.46.100.141]:45037
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933330AbbDQPv2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 11:51:28 -0400
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Varun Sethi <Varun.Sethi@freescale.com>
-CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	"Roy Zang" <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Fri, 17 Apr 2015 14:19:08 +0000
-Message-ID: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
- <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
- <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <20150416104008.GB25640@arm.com>
-In-Reply-To: <20150416104008.GB25640@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 2 Apr 2015 23:28:19 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2] pci: export class IDs from pci_ids.h
+Message-ID: <20150402232804-mutt-send-email-mst@redhat.com>
+References: <1427714755-16873-1-git-send-email-mst@redhat.com>
+ <20150402205347.GA10892@google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150402205347.GA10892@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Will Deacon [mailto:will.deacon@arm.com]
-> Sent: Thursday, April 16, 2015 5:40 AM
-> To: Sethi Varun-B16395
-> Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Yoder
-> Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+On Thu, Apr 02, 2015 at 03:53:47PM -0500, Bjorn Helgaas wrote:
+> On Mon, Mar 30, 2015 at 01:33:28PM +0200, Michael S. Tsirkin wrote:
+> > The basic class ID macros in pci_ids.h are pretty useful for userspace
+> > using the pci sysfs interface, and they aren't fundamentally different
+> > from the constants in pci_regs.h - both are defined in the
+> > pci spec.
+> > 
+> > At the moment userspace is forced to duplicate these macros
+> > (e.g. QEMU does this, so do seabios, gpxe, and others), it is better to
+> > expose them in /usr/include/linux/pci_ids.h so everyone can just include
+> > this header.
 > 
-> Hi Varun,
+> I agree that it would be nice for applications to get these definitions
+> from a single place, but I'm not sure that include/uapi/linux/pci_ids.h
+> needs to be that place.
 > 
-> Thanks for adding me to Cc.
+> These constants are just copies of what's in the spec, and I don't think
+> you're suggesting that the constants are necessary to use a kernel API.
 > 
-> On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
-> > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if TBU ID
-> > would also be forwarded as a part of stream id to GIC. My understanding is
-> > that TBU ID is forwarded (as a part of the stream ID) to the TCU in case
-> > of a TBU translation miss. In case of the LS2085 PCIe controller you would
-> > have to setup the PCIe device ID to stream ID translation table. We may
-> > have to restrict the number of entries based on the available number of
-> > contexts.
+> I know the kernel does provide access to values via sysfs "class" files,
+> but the kernel is just passing the values through from the hardware.
+> That's analogous to reading the class with setpci, and I don't think it
+> leads to a requirement that the kernel export all the information about how
+> to interpret the class values.
 > 
-> Unfortunately, I'm having a really hard time parsing this thread (some parts
-> of it simply don't make sense; others use non-architectural terms and
-> overall I don't get a feeling for the problem).
+> I haven't looked at libpci or libudev, but it sounds like you think those
+> are not good solutions.  Is that because they don't currently have this
+> information?  People don't want to add dependencies on them?
 > 
-> Please could you explain your system design step by step so that I can
-> understand (a) what you've built and (b) why the current design of Linux is
-> causing you problems?
-> 
-> Sorry if I'm just being thick, but it's important that we get this right.
+> Bjorn
 
-I'll try to summarize some key points about the system...
+People don't want to add dependencies on them.
 
-System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.  There are
-PCI, fsl-mc, and platform devices that do DMA.  Devices on the PCI and
-fsl-mc bus generate message interrupts.
-
-The flow a message interrupt would take is this:
-
-    --------------
-      PCI device
-    --------------
-          |
-          | pcidevid + MSI msg
-          |
-          V
-    --------------
-    PCI controller
-      pcidevid ->
-      streamID
-      mapping
-    --------------
-          |
-          | streamID + MSI msg
-          |
-          V
-    --------------
-        SMMU
-    --------------
-          |
-          | streamID + MSI msg
-          |
-          V
-    --------------
-       CCN-504 (Dickens)
-    --------------
-          |
-          | streamID + MSI msg
-          |
-          V
-    --------------
-      GICv3 ITS    streamID == ITS deviceID
-    --------------
-
-So, the way things work (at least initially) is that each PCI device maps
-to a single streamID, and thus each device has a separate ITT in 
-the ITS.  So, things should be cool.
-
-However, there is an improvement we envision as possible due to 
-the limited number of SMMU contexts (i.e. 64).  If there are
-64 SMMU context registers it means that there is a max of
-64 software contexts where things can be isolated.  But, say I have
-an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
-to a KVM VM.  Those 8 PCI devices could share the same
-streamID/ITS-device-ID since they all share the same isolation
-context.
-
-What would be nice is at the time the 8 VFS are being added
-to the IOMMU domain is for the pcidevid -> streamID mapping
-table to be updated dynamically.  It simply lets us make
-more efficient use of the limited streamIDs we have.
-
-I think it is this improvement that Minghuan had in mind
-in this patch.
-
-Thanks,
-Stuart
+-- 
+MST
