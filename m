@@ -1,62 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59351 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752860AbbDCNUX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 09:20:23 -0400
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <robh@kernel.org>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH] PCI: versatile: don't check resource with devm_ioremap_resource
-Date: Fri, 3 Apr 2015 21:17:05 +0800
-Message-ID: <1428067025-543-1-git-send-email-jszhang@marvell.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:34832 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752285AbbDBUxw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2015 16:53:52 -0400
+Received: by igcau2 with SMTP id au2so86832967igc.0
+        for <linux-pci@vger.kernel.org>; Thu, 02 Apr 2015 13:53:51 -0700 (PDT)
+Date: Thu, 2 Apr 2015 15:53:47 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2] pci: export class IDs from pci_ids.h
+Message-ID: <20150402205347.GA10892@google.com>
+References: <1427714755-16873-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427714755-16873-1-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-devm_ioremap_resource does sanity checks on the given resource. No need
-to duplicate this in the driver. And we should check whether
-devm_ioremap_resource() succeeds or not.
+On Mon, Mar 30, 2015 at 01:33:28PM +0200, Michael S. Tsirkin wrote:
+> The basic class ID macros in pci_ids.h are pretty useful for userspace
+> using the pci sysfs interface, and they aren't fundamentally different
+> from the constants in pci_regs.h - both are defined in the
+> pci spec.
+> 
+> At the moment userspace is forced to duplicate these macros
+> (e.g. QEMU does this, so do seabios, gpxe, and others), it is better to
+> expose them in /usr/include/linux/pci_ids.h so everyone can just include
+> this header.
 
-This patch fixes all of these two trival issues.
+I agree that it would be nice for applications to get these definitions
+from a single place, but I'm not sure that include/uapi/linux/pci_ids.h
+needs to be that place.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
----
- drivers/pci/host/pci-versatile.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+These constants are just copies of what's in the spec, and I don't think
+you're suggesting that the constants are necessary to use a kernel API.
 
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index 464bf49..ba5eab1 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -138,19 +138,19 @@ static int versatile_pci_probe(struct platform_device *pdev)
- 	LIST_HEAD(pci_res);
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
--		return -ENODEV;
- 	versatile_pci_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(versatile_pci_base))
-+		return PTR_ERR(versatile_pci_base);
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	if (!res)
--		return -ENODEV;
- 	versatile_cfg_base[0] = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(versatile_cfg_base[0]))
-+		return PTR_ERR(versatile_cfg_base[0]);
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
--	if (!res)
--		return -ENODEV;
- 	versatile_cfg_base[1] = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(versatile_cfg_base[1]))
-+		return PTR_ERR(versatile_cfg_base[1]);
- 
- 	ret = versatile_pci_parse_request_of_pci_ranges(&pdev->dev, &pci_res);
- 	if (ret)
--- 
-2.1.4
+I know the kernel does provide access to values via sysfs "class" files,
+but the kernel is just passing the values through from the hardware.
+That's analogous to reading the class with setpci, and I don't think it
+leads to a requirement that the kernel export all the information about how
+to interpret the class values.
 
+I haven't looked at libpci or libudev, but it sounds like you think those
+are not good solutions.  Is that because they don't currently have this
+information?  People don't want to add dependencies on them?
+
+Bjorn
