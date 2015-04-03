@@ -1,55 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:35225 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932205AbbDJWzX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:55:23 -0400
-Received: by iejt8 with SMTP id t8so28806484iej.2
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:55:22 -0700 (PDT)
-Subject: [PATCH v6 09/10] PCI/MSI: Drop pci_msi_off() calls from quirks
-To: "Michael S. Tsirkin" <mst@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Date: Fri, 10 Apr 2015 17:55:21 -0500
-Message-ID: <20150410225520.20848.10739.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:21591 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650AbbDCJ3O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:14 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-tegra@vger.kernel.org>
+Subject: [PATCH v9 24/30] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+Date: Fri, 3 Apr 2015 17:25:58 +0800
+Message-ID: <1428053164-28277-26-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Michael S. Tsirkin <mst@redhat.com>
+Now pci_scan_root_bus() is almost similar to
+pci_create_root_bus() + pci_scan_child_bus().
+So we could use common pci_scan_root_bus() in
+pci_common_init_dev() to scan pci busses.
+tegra_pcie_scan_bus() is redundant, remove it.
 
-The PCI core now disables MSI and MSI-X for all devices during enumeration
-regardless of CONFIG_PCI_MSI.  Remove device-specific code to disable
-MSI/MSI-X.
-
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: linux-tegra@vger.kernel.org
 ---
- drivers/pci/quirks.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/pci/host/pci-tegra.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85f247e28a80..df3e71855316 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1600,7 +1600,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_a
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 94e9362..10c0571 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -630,21 +630,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	return irq;
+ }
  
- static void quirk_pcie_mch(struct pci_dev *pdev)
+-static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct tegra_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(pcie->dev, -1, sys->busnr, &tegra_pcie_ops,
+-			sys, &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
  {
--	pci_msi_off(pdev);
- 	pdev->no_msi = 1;
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
-@@ -1614,7 +1613,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quir
-  */
- static void quirk_pcie_pxh(struct pci_dev *dev)
- {
--	pci_msi_off(dev);
- 	dev->no_msi = 1;
- 	dev_warn(&dev->dev, "PXH quirk detected; SHPC device MSI disabled\n");
- }
+ 	const char *err_msg[] = {
+@@ -1831,7 +1816,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ 	hw.private_data = (void **)&pcie;
+ 	hw.setup = tegra_pcie_setup;
+ 	hw.map_irq = tegra_pcie_map_irq;
+-	hw.scan = tegra_pcie_scan_bus;
+ 	hw.ops = &tegra_pcie_ops;
+ 
+ 	pci_common_init_dev(pcie->dev, &hw);
+-- 
+1.7.1
 
