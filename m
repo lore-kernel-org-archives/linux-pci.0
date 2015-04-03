@@ -1,49 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:25100 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934430AbbDXI7z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Apr 2015 04:59:55 -0400
-From: Zhichang Yuan <yuanzhichang@hisilicon.com>
-To: <bhelgaas@google.com>, <grant.likely@linaro.org>
-CC: <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
-	<gabriele.paoloni@huawei.com>, <Liviu.Dudau@arm.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>
-Subject: [PATCH v2] of/pci: fix a bug in function pci_pio_to_address
-Date: Fri, 24 Apr 2015 17:05:09 +0800
-Message-ID: <1429866309-202444-1-git-send-email-yuanzhichang@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shards.monkeyblade.net ([149.20.54.216]:42752 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752826AbbDCAmt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2015 20:42:49 -0400
+Date: Thu, 02 Apr 2015 20:42:47 -0400 (EDT)
+Message-Id: <20150402.204247.2017774907897750993.davem@davemloft.net>
+To: yinghai@kernel.org
+Cc: bhelgaas@google.com, david.ahern@oracle.com,
+	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAE9FiQV8=tGiPJ0qEJvMBAzk-i2aubmQhkNoa-Gei9y7SXiubw@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	<20150402.163715.643586069492103151.davem@davemloft.net>
+	<CAE9FiQV8=tGiPJ0qEJvMBAzk-i2aubmQhkNoa-Gei9y7SXiubw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
-was modified to retieve the corresponding I/O port by CPU physical address.
-But the convertion processing is not correct. It will return a wrong I/O port.
-This patch will fix it.
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 2 Apr 2015 15:07:57 -0700
 
-Fixes: 41f8bba7f555 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
-CC: stable@vger.kernel.org
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
----
-changes since V1:
-Improved commit message.
+> On Thu, Apr 2, 2015 at 1:37 PM, David Miller <davem@davemloft.net> wrote:
+>> From: Yinghai Lu <yinghai@kernel.org>
+>> Date: Tue, 31 Mar 2015 19:57:46 -0700
+>>
+>>> Fix regression by commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to
+>>> fit in upstream windows").
+>>>
+>>> That cause bridge bar get clipped wrongly.
+>>>
+>>> The sparc64 dma_addr_t is 32-bit, we can not use it to check if we can
+>>> use 64bit bar, introduce pci_bus_addr_t.
+>>>
+>>> sparc ofpci does not parse 64bit mem for root bus, add code to
+>>> make sure that we get correct resource for root.
+>>>
+>>> Also there are device 64-bit res does not have pref bit flag, but bridges
+>>> do have pref bit set, that cause extra "no compatible window".
+>>> Set pref bit for them according to the errata.
+>>
+>> Just to be clear, who is going to merge this? :-)
+>>
+> 
+> Should be you or Bjorn, but one should get ack from another.
 
- drivers/of/address.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 78a7dcb..6906a3f 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
- 	spin_lock(&io_range_lock);
- 	list_for_each_entry(res, &io_range_list, list) {
- 		if (address >= res->start && address < res->start + res->size) {
--			addr = res->start - address + offset;
-+			addr = address - res->start + offset;
- 			break;
- 		}
- 		offset += res->size;
--- 
-1.9.1
-
+Acked-by: David S. Miller <davem@davemloft.net>
