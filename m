@@ -1,193 +1,133 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 03/33] x86/irq: Kill x86_io_apic_ops.print_entries and related interfaces
-Date: Tue, 14 Apr 2015 10:29:40 +0800
-Message-Id: <1428978610-28986-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v9 30/30] PCI: Clean up CONFIG_PCI_DOMAINS_GENERIC
+Date: Fri, 3 Apr 2015 17:26:04 +0800
+Message-ID: <1428053164-28277-32-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of x86_io_apic_ops.print_entries anymore, so kill
-it.
+Now we could clean up CONFIG_PCI_DOMAINS_GENERIC.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-13-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/io_apic.h      |    3 --
- arch/x86/include/asm/x86_init.h     |    1 -
- arch/x86/kernel/apic/io_apic.c      |   55 -----------------------------------
- arch/x86/kernel/x86_init.c          |    1 -
- drivers/iommu/intel_irq_remapping.c |    7 -----
- 5 files changed, 67 deletions(-)
+ arch/arm/Kconfig          |    3 ---
+ arch/arm64/Kconfig        |    3 ---
+ drivers/pci/host-bridge.c |   11 ++++++-----
+ drivers/pci/pci.c         |    2 --
+ 4 files changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 705c425c9c3d..47af5a7af358 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -225,8 +225,6 @@ extern unsigned int native_io_apic_read(unsigned int apic, unsigned int reg);
- extern void native_io_apic_write(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_io_apic_modify(unsigned int apic, unsigned int reg, unsigned int val);
- extern void native_disable_io_apic(void);
--extern void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
--extern void intel_ir_io_apic_print_entries(unsigned int apic, unsigned int nr_entries);
- extern int native_ioapic_set_affinity(struct irq_data *,
- 				      const struct cpumask *,
- 				      bool);
-@@ -290,7 +288,6 @@ static inline void disable_ioapic_support(void) { }
- #define native_io_apic_write		NULL
- #define native_io_apic_modify		NULL
- #define native_disable_io_apic		NULL
--#define native_io_apic_print_entries	NULL
- #define native_ioapic_set_affinity	NULL
- #define native_setup_ioapic_entry	NULL
- #define native_eoi_ioapic_pin		NULL
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index 1649bb9ca27c..2924bc88034a 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -191,7 +191,6 @@ struct x86_io_apic_ops {
- 	void		(*write)  (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*modify) (unsigned int apic, unsigned int reg, unsigned int value);
- 	void		(*disable)(void);
--	void		(*print_entries)(unsigned int apic, unsigned int nr_entries);
- 	int		(*set_affinity)(struct irq_data *data,
- 					const struct cpumask *mask,
- 					bool force);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3506e8aeba91..acb91c19f318 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1339,61 +1339,6 @@ static void __init setup_IO_APIC_irqs(void)
- 	}
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 9f1f09a..b5dab6c 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1283,9 +1283,6 @@ config PCI_DOMAINS
+ 	bool
+ 	depends on PCI
+ 
+-config PCI_DOMAINS_GENERIC
+-	def_bool PCI_DOMAINS
+-
+ config PCI_NANOENGINE
+ 	bool "BSE nanoEngine PCI support"
+ 	depends on SA1100_NANOENGINE
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 1b8e973..4b1cc27 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -242,9 +242,6 @@ config PCI
+ config PCI_DOMAINS
+ 	def_bool PCI
+ 
+-config PCI_DOMAINS_GENERIC
+-	def_bool PCI
+-
+ config PCI_SYSCALL
+ 	def_bool PCI
+ 
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index f193136..eb901b2 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -4,6 +4,8 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/of_pci.h>
++#include <linux/of.h>
+ #include <linux/module.h>
+ 
+ #include "pci.h"
+@@ -82,12 +84,13 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	resource_list_for_each_entry_safe(window, n, resources)
+ 		list_move_tail(&window->node, &host->windows);
+ 	/*
+-	 * If support CONFIG_PCI_DOMAINS_GENERIC, use
++	 * If domain == -1, we need to use
+ 	 * pci_host_assign_domain_nr() to update domain
+ 	 * number.
+ 	 */
+ 	host->domain = domain;
+-	pci_host_assign_domain_nr(host);
++	if (host->domain == -1)
++		pci_host_assign_domain_nr(host);
+ 	mutex_lock(&pci_host_mutex);
+ 	list_for_each_entry(tmp, &pci_host_bridge_list, list) {
+ 		if (tmp->domain == host->domain
+@@ -169,7 +172,6 @@ int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
  }
  
--void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
--{
--	int i;
--
--	pr_debug(" NR Dst Mask Trig IRR Pol Stat Dmod Deli Vect:\n");
--
--	for (i = 0; i <= nr_entries; i++) {
--		struct IO_APIC_route_entry entry;
--
--		entry = ioapic_read_entry(apic, i);
--
--		pr_debug(" %02x %02X  ", i, entry.dest);
--		pr_cont("%1d    %1d    %1d   %1d   %1d    "
--			"%1d    %1d    %02X\n",
--			entry.mask,
--			entry.trigger,
--			entry.irr,
--			entry.polarity,
--			entry.delivery_status,
--			entry.dest_mode,
--			entry.delivery_mode,
--			entry.vector);
--	}
--}
--
--void intel_ir_io_apic_print_entries(unsigned int apic,
--				    unsigned int nr_entries)
--{
--	int i;
--
--	pr_debug(" NR Indx Fmt Mask Trig IRR Pol Stat Indx2 Zero Vect:\n");
--
--	for (i = 0; i <= nr_entries; i++) {
--		struct IR_IO_APIC_route_entry *ir_entry;
--		struct IO_APIC_route_entry entry;
--
--		entry = ioapic_read_entry(apic, i);
--
--		ir_entry = (struct IR_IO_APIC_route_entry *)&entry;
--
--		pr_debug(" %02x %04X ", i, ir_entry->index);
--		pr_cont("%1d   %1d    %1d    %1d   %1d   "
--			"%1d    %1d     %X    %02X\n",
--			ir_entry->format,
--			ir_entry->mask,
--			ir_entry->trigger,
--			ir_entry->irr,
--			ir_entry->polarity,
--			ir_entry->delivery_status,
--			ir_entry->index2,
--			ir_entry->zero,
--			ir_entry->vector);
--	}
--}
--
- void ioapic_zap_locks(void)
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static int pci_assign_domain_nr(struct device *dev)
  {
- 	raw_spin_lock_init(&ioapic_lock);
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index b094d691f2fe..d6f36c7594d7 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -144,7 +144,6 @@ struct x86_io_apic_ops x86_io_apic_ops = {
- 	.write			= native_io_apic_write,
- 	.modify			= native_io_apic_modify,
- 	.disable		= native_disable_io_apic,
--	.print_entries		= native_io_apic_print_entries,
- 	.set_affinity		= native_ioapic_set_affinity,
- 	.setup_entry		= native_setup_ioapic_entry,
- 	.eoi_ioapic_pin		= native_eoi_ioapic_pin,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 91c0fc65713d..05941118a179 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -696,13 +696,6 @@ static int __init intel_enable_irq_remapping(void)
+ 	static int use_dt_domains = -1;
+@@ -215,11 +217,10 @@ static int pci_assign_domain_nr(struct device *dev)
+ 	return domain;
+ }
+ #endif
+-#endif
  
- 	irq_remapping_enabled = 1;
- 
--	/*
--	 * VT-d has a different layout for IO-APIC entries when
--	 * interrupt remapping is enabled. So it needs a special routine
--	 * to print IO-APIC entries for debugging purposes too.
--	 */
--	x86_io_apic_ops.print_entries = intel_ir_io_apic_print_entries;
--
- 	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
- 
- 	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
+ static void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ {
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
++#ifdef CONFIG_PCI_DOMAINS
+ 	host->domain = pci_assign_domain_nr(host->dev.parent);
+ #endif
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 044801c..5b18429 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -10,8 +10,6 @@
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+-#include <linux/of.h>
+-#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pm.h>
+ #include <linux/slab.h>
 -- 
-1.7.10.4
+1.7.1
 
