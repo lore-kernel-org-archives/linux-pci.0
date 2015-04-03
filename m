@@ -1,96 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53517 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755536AbbDXQSX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Apr 2015 12:18:23 -0400
-Date: Fri, 24 Apr 2015 17:18:18 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Stuart Yoder <stuart.yoder@freescale.com>
-Cc: Varun Sethi <Varun.Sethi@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, marc.zyngier@arm.com
-Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Message-ID: <20150424161818.GC7313@arm.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
- <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
- <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <20150416104008.GB25640@arm.com>
- <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150422170718.GG13019@arm.com>
- <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:32112 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbbDCJ3A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:00 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: [PATCH v9 08/30] PCI: Update pci_host_bridge bus resource
+Date: Fri, 3 Apr 2015 17:25:42 +0800
+Message-ID: <1428053164-28277-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 22, 2015 at 08:41:02PM +0100, Stuart Yoder wrote:
-> > > However, there is an improvement we envision as possible due to
-> > > the limited number of SMMU contexts (i.e. 64).  If there are
-> > > 64 SMMU context registers it means that there is a max of
-> > > 64 software contexts where things can be isolated.  But, say I have
-> > > an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
-> > > to a KVM VM.  Those 8 PCI devices could share the same
-> > > streamID/ITS-device-ID since they all share the same isolation
-> > > context.
-> > >
-> > > What would be nice is at the time the 8 VFS are being added
-> > > to the IOMMU domain is for the pcidevid -> streamID mapping
-> > > table to be updated dynamically.  It simply lets us make
-> > > more efficient use of the limited streamIDs we have.
-> > >
-> > > I think it is this improvement that Minghuan had in mind
-> > > in this patch.
-> > 
-> > Ok, but in this case it should be possible to use a single context bank for
-> > all of the VF streamIDs by configuring the appropriate SMR, no?
-> 
-> Yes, but there are limited SMRs.  In our case there are only
-> 128 SMRs in SMMU-500 and we have potentially way more masters than
-> that.
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-Right, but you still only have 64 context banks at the end of the day, so do
-you really anticipate having more than 128 masters concurrently using the
-SMMU? If so, then we have devices sharing context banks so we could consider
-reusing SMRs across masters, but historically that's not been something that
-we've managed to solve.
+Sometimes, the bus resource start number is not equal to
+root bus number. For example, in pci_scan_bus(), we always
+add the default bus resource which start bus number is 0,
+but the root bus number callers given may != 0, so
+we need to update pci_host_bridge bus resource, because we
+would check whether host bridge bus resoruce is confict
+in later patch.
 
-> > Wouldn't
-> > that sort of thing be preferable to dynamic StreamID assignment? It would
-> > certainly make life easier for the MSIs.
-> 
-> It would be preferable, but given only 128 total stream IDS and
-> 64 context registers it's potentially an issue.  On our LS2085 SoC it is
-> PCI and the fsl-mc bus (see description here:
-> https://lkml.org/lkml/2015/3/5/795) that potentially have way
-> more masters than streamIDS. So, for those busses we would essentially
-> view a streamID as a "context ID"-- each SMR is associated with
-> 1 context bank register.
-> 
-> For PCI we have a programmable "PCI req ID"-to-"stream ID"
-> mapping table in the PCI controller that is dynamically
-> programmable.
-> 
-> Looking at it like that means that we could have
-> any number of masters but only 64 "contexts"
-> and since the masters all all programmable it's
-> seems feasbile to envision doing some bus/vendor
-> specific set up when a device is added to an
-> IOMMU domain.   One thing that would need to be conveyed
-> to the SMMU driver if doing dynamic streamID setup
-> is what streamIDs are available to be used.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Ok, but this is going to make life difficult for the MSI people, I suspect.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index ecc1a7c..1a9834b 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -26,8 +26,11 @@ static void pci_host_update_busn_res(
+ 	struct resource_entry *window;
+ 
+ 	resource_list_for_each_entry(window, resources)
+-		if (window->res->flags & IORESOURCE_BUS)
++		if (window->res->flags & IORESOURCE_BUS) {
++			if (bus > window->res->start)
++				window->res->start = bus;
+ 			return;
++		}
+ 
+ 	pr_info(
+ 	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
+-- 
+1.7.1
 
-Marc...?
-
-Will
