@@ -1,120 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Fri, 10 Apr 2015 00:37:17 +0200
-Message-ID: <2169521.1seaK7G9oX@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5aMwv5thgx+6195Cg+AM7FEeNJ_KDJj-pVCWGQp70XMg@mail.gmail.com>
-References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com> <3369608.UAniFEi9kX@vostro.rjw.lan> <CAErSpo5aMwv5thgx+6195Cg+AM7FEeNJ_KDJj-pVCWGQp70XMg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:35916 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbbDCUqN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 16:46:13 -0400
+Received: by iebrs15 with SMTP id rs15so12728911ieb.3
+        for <linux-pci@vger.kernel.org>; Fri, 03 Apr 2015 13:46:12 -0700 (PDT)
+Date: Fri, 3 Apr 2015 15:46:08 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH 2/3] sparc/PCI: Add mem64 resource parsing for root bus
+Message-ID: <20150403204608.GE10892@google.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+ <1427857069-6789-3-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427857069-6789-3-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, April 09, 2015 05:00:08 PM Bjorn Helgaas wrote:
-> On Thu, Apr 9, 2015 at 4:37 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Thursday, April 09, 2015 10:50:02 AM Jiang Liu wrote:
-> >> On 2015/4/9 7:44, Rafael J. Wysocki wrote:
-> >> > On Wednesday, April 08, 2015 01:48:46 PM Jiang Liu wrote:
-> >> >> On 2015/4/7 8:28, Rafael J. Wysocki wrote:
-> >> >>> On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
-> >> >>>> Hi Jiang,
-> >> >> <snip>
-> >> >>>>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
-> >> >>>>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
-> >> >>>>
-> >> >>>> We should assume it will eventually be used for all ACPI devices,
-> >> >>>> shouldn't we?
-> >> >>>
-> >> >>> I'm not sure about that, really.  In fact, I'd restrict its use to devices
-> >> >>> types that actually can "produce" resources (ie. do not require the resources
-> >> >>> to be provided by their ancestors or to be available from a global pool).
-> >> >>>
-> >> >>> Otherwise we're pretty much guaranteed to get into trouble.
-> >> >>>
-> >> >>> And all of the above rules need to be documented in the kernel source tree
-> >> >>> or people will get confused.
-> >> >> Hi Rafael,
-> >> >>     How about following comments for acpi_dev_filter_resource_type()?
-> >> >> Thanks!
-> >> >> Gerry
-> >> >> --------------------------------------------------------------------
-> >> >> /**
-> >> >>  * According to ACPI specifications, Consumer/Producer flag in ACPI resource
-> >> >>  * descriptor means:
-> >> >>  *      1(CONSUMER): This device consumes this resource
-> >> >>  *      0(PRODUCER): This device produces and consumes this resource
-> >> >>  * But for ACPI PCI host bridge, it is interpreted in another way:
-> >> >
-> >> > So first of all, this leads to a question: Why is it interpreted for ACPI PCI
-> >> > host bridges differently?
-> >> >
-> >> > Is it something we've figured out from experience, or is there a standard
-> >> > mandating that?
-> >> Hi Rafael,
-> >>       I think we got this knowledge by experiences. PCI FW spec only
-> >> states _CRS reports resources assigned to the host bridge by firmware.
-> >> There's no statement about whether the resource is consumed by host
-> >> bridge itself or provided to it's child bus/devices. On x86/IA64 side,
-> >> the main resource consumed by PCI host bridge is IOPORT 0xCF8-0xCFF,
-> >> but not sure about ARM64 side. So how about:
-> >
-> > This:
-> >
-> >> PCI Firmware specification states that _CRS reports resources
-> >> assigned to the host bridge, but there's no way to tell whether
-> >> the resource is consumed by host bridge itself or provided to
-> >> its child bus/devices.
-> >
-> > looks OK to me, but I'd replace the below with something like:
-> >
-> > "However, experience shows, that in the PCI host bridge case firmware writers
-> >  expect the resource to be provided to devices on the bus (below the bridge) for
-> >  consumption entirely if its Consumer/Producer flag is clear.  That expectation
-> >  is reflected by the code in this routine as follows:".
+[+cc Ben, linuxppc-dev, Grant, Rob, devicetree]
+
+On Tue, Mar 31, 2015 at 07:57:48PM -0700, Yinghai Lu wrote:
+> Found "no compatible bridge window" warning in boot log from T5-8.
 > 
-> What a mess.  The spec is regrettably lacking in Consumer/Producer
-> specifics.  But I don't see what's confusing about the descriptors
-> that have Consumer/Producer bits.
+> pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
 > 
-> QWord, DWord, and Word descriptors don't seem to have a
-> Consumer/Producer bit, but they do contain _TRA, so they must be
-> intended for bridge windows.  Can they also be used for device
-> registers?  I don't know.
+> That resource is above 4G, but does not get offset correctly as
+> root bus only report io and mem32.
 > 
-> The Extended Address descriptor has a Consumer/Producer bit, and I
-> would interpret the spec to mean that if the flag is clear (the device
-> produces and consumes this resource), the resource is available on the
-> bus below the bridge, i.e., the bridge consumes the resource on its
-> upstream side and produces it on its downstream side.
+> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [bus 00-77]
+> 
+> Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+> registered for root bus at first.
+> 
+> After patch, will have:
+> pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+> pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+> pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+> pci_bus 0000:00: root bus resource [bus 00-77]
+> 
+> Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+> Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+> Reported-by: David Ahern <david.ahern@oracle.com>
+> Tested-by: David Ahern <david.ahern@oracle.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: <stable@vger.kernel.org> #3.19
+> ---
+>  arch/sparc/kernel/pci.c        |  7 ++++++-
+>  arch/sparc/kernel/pci_common.c | 15 +++++++++++++--
+>  arch/sparc/kernel/pci_impl.h   |  1 +
+>  3 files changed, 20 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index 9ce5afe..04ce3ac 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
+>  
+>  	if (addr0 & 0x02000000) {
+>  		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+> -		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+>  		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
+> +		if (addr0 & 0x01000000)
+> +			flags |= IORESOURCE_MEM_64
+> +				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+>  		if (addr0 & 0x40000000)
+>  			flags |= IORESOURCE_PREFETCH
+>  				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
 
-OK, that makes sense for bridges.
+This function is very similar to these:
 
-> If the bit were
-> set (the device only consumes the resource), I would expect that to
-> mean the descriptor is for bridge registers like 0xcf8/0xcfc that
-> never appear on the downstream side.
+  drivers/of/address.c			of_bus_pci_get_flags()
+  arch/powerpc/kernel/pci_of_scan.c	pci_parse_of_flags()
+  arch/sparc/kernel/of_device_32.c	of_bus_pci_get_flags()
+  arch/sparc/kernel/of_device_64.c	of_bus_pci_get_flags()
 
-That part is clear.  What is not clear is whether or not we can *always*
-expect the resources with Consumer/Producer *clear* to be produced on the
-downstram side.  That appears to be the case for host bridges if my
-understanding of things is correct, but is it the case in general?
+Should they get a similar change?  They're all so similar that it would be
+nice to consolidate them, but I think that would be out of scope for this
+patch.
 
-> Maybe I'm reading the spec too naively, but this doesn't seem a matter
-> of experience.
-
-Well, the specification is not clear enough in that respect, at least as
-far as I can say, or maybe it is, but then does firmware always follow that
-interpretation?
-
-Rafael
-
+> @@ -663,6 +665,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+>  				pbm->io_space.start);
+>  	pci_add_resource_offset(&resources, &pbm->mem_space,
+>  				pbm->mem_space.start);
+> +	if (pbm->mem64_space.flags)
+> +		pci_add_resource_offset(&resources, &pbm->mem64_space,
+> +					pbm->mem_space.start);
+>  	pbm->busn.start = pbm->pci_first_busno;
+>  	pbm->busn.end	= pbm->pci_last_busno;
+>  	pbm->busn.flags	= IORESOURCE_BUS;
+> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+> index 944a065..a859a86 100644
+> --- a/arch/sparc/kernel/pci_common.c
+> +++ b/arch/sparc/kernel/pci_common.c
+> @@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  	}
+>  
+>  	num_pbm_ranges = i / sizeof(*pbm_ranges);
+> +	memset(&pbm->mem64_space, 0, sizeof(struct resource));
+>  
+>  	for (i = 0; i < num_pbm_ranges; i++) {
+>  		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+> @@ -451,7 +452,11 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  			break;
+>  
+>  		case 3:
+> -			/* XXX 64-bit MEM handling XXX */
+> +			/* 64-bit MEM handling */
+> +			pbm->mem64_space.start = a;
+> +			pbm->mem64_space.end = a + size - 1UL;
+> +			pbm->mem64_space.flags = IORESOURCE_MEM;
+> +			break;
+>  
+>  		default:
+>  			break;
+> @@ -465,15 +470,21 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+>  		prom_halt();
+>  	}
+>  
+> -	printk("%s: PCI IO[%llx] MEM[%llx]\n",
+> +	printk("%s: PCI IO[%llx] MEM[%llx]",
+>  	       pbm->name,
+>  	       pbm->io_space.start,
+>  	       pbm->mem_space.start);
+> +	if (pbm->mem64_space.flags)
+> +		printk(" MEM64[%llx]",
+> +		       pbm->mem64_space.start);
+> +	printk("\n");
+>  
+>  	pbm->io_space.name = pbm->mem_space.name = pbm->name;
+>  
+>  	request_resource(&ioport_resource, &pbm->io_space);
+>  	request_resource(&iomem_resource, &pbm->mem_space);
+> +	if (pbm->mem64_space.flags)
+> +		request_resource(&iomem_resource, &pbm->mem64_space);
+>  
+>  	pci_register_legacy_regions(&pbm->io_space,
+>  				    &pbm->mem_space);
+> diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+> index 75803c7..37222ca 100644
+> --- a/arch/sparc/kernel/pci_impl.h
+> +++ b/arch/sparc/kernel/pci_impl.h
+> @@ -97,6 +97,7 @@ struct pci_pbm_info {
+>  	/* PBM I/O and Memory space resources. */
+>  	struct resource			io_space;
+>  	struct resource			mem_space;
+> +	struct resource			mem64_space;
+>  	struct resource			busn;
+>  
+>  	/* Base of PCI Config space, can be per-PBM or shared. */
+> -- 
+> 1.8.4.5
+> 
