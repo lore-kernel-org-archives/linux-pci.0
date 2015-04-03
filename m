@@ -1,36 +1,24 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:34751 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134AbbDDDEV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 23:04:21 -0400
-Received: by igcau2 with SMTP id au2so73461227igc.1
-        for <linux-pci@vger.kernel.org>; Fri, 03 Apr 2015 20:04:20 -0700 (PDT)
-Date: Fri, 3 Apr 2015 22:04:11 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
 	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit
- 63f1789ec716
-Message-ID: <20150404030411.GG10892@google.com>
+Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Fri, 03 Apr 2015 13:49:08 +0200
+Message-ID: <4145674.lfzCOg9C9H@vostro.rjw.lan>
+In-Reply-To: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
-
-Sorry for my delayed response.  I've been on vacation for a week and am
-still trying to catch up.
-
-On Mon, Mar 30, 2015 at 10:40:43AM +0800, Jiang Liu wrote:
+On Monday, March 30, 2015 10:40:43 AM Jiang Liu wrote:
 > Before commit 593669c2ac0f("Use common ACPI resource interfaces to
 > simplify implementation"), arch/x86/pci/acpi.c applies following
 > rules when parsing ACPI resources for PCI host bridge:
@@ -67,63 +55,25 @@ On Mon, Mar 30, 2015 at 10:40:43AM +0800, Jiang Liu wrote:
 > itself") ignores resources consumed by host bridge itself by checking
 > IORESOURCE_WINDOW flag, which accidently removed the workaround in 2)
 > above for BIOS bug .
-
-This is probably partly my fault.
-
-I think the ACPI spec intention is that every _CRS resource descriptor
-should be interpreted as "Consumer," i.e., as resources consumed by the
-device itself, unless it's marked otherwise.  Only the following types can
-be marked as "Producer":
-
-  - Word/DWord/QWord/Extended address space descriptors, 
-  - Extended interrupt descriptors,
-  - GPIO interrupt and I/O connections,
-  - I2C/SPI/UART serial bus resource descriptors
-
-With 66528fdd45b0 ("x86/PCI: parse additional host bridge window resource
-types"), I made Linux treat Memory24, Memory32, and Memory32Fixed
-descriptors in PCI host bridge _CRS as Producers.  I did it because Windows
-apparently does that (there are details in
-https://bugzilla.kernel.org/show_bug.cgi?id=15817), but I wasn't aware of
-any machines that required it.  That was probably a mistake because it
-didn't fix anything and it covered up ASL usage errors like what PC Engines
-did.
-
+> 
 > It's really costed us much time to figure out this whole picture.
 > So we refine interface acpi_dev_filter_resource_type as below,
 > which should be easier for maintence:
 > 1) Caller specifies IORESOURCE_WINDOW flag to explicitly query resource
 >    for bridge(PRODUCER), otherwise it's querying resource for
 >    device(CONSUMER).
-
-Sounds good to me.
-
 > 2) Ignore IO port resources defined by acpi_resource_io and
 >    acpi_resource_fixed_io if IORESOURCE_WINDOW is specified.
-
-Sounds good to me.
-
 > 3) Accpet IOMEM resource defined by acpi_resource_memory24,
 >    acpi_resource_memory32 and acpi_resource_fixed_memory32 for BIOS
 >    bugs, with comment to state it's workaround for BIOS bug.
-
-I don't like the fact that this is the behavior for all ACPI devices.
-Prior to 593669c2ac0f, we had this behavior for PCI host bridges only.
-I don't think this is what the spec envisioned, so I don't really like
-doing it for all devices.
-
 > 4) Accept IO port and IOMEM defined by acpi_resource_addressxx if
 >    a) IORESOURCE_WINDOW is specified and ACPI_PRODUCER is true
 >    b) IORESOURCE_WINDOW is not specified and ACPI_PRODUCER is false
-
-Sounds good to me.
-
+> 
 > Currently acpi_dev_filter_resource_type() is only used by ACPI pci
 > host bridge and IOAPIC driver, so it shouldn't affect other drivers.
-
-We should assume it will eventually be used for all ACPI devices,
-shouldn't we?
-
+> 
 > Another possible fix is to only ignore IO resource consumed by host
 > bridge and keep IOMEM resource consumed by host bridge, please refer to:
 > http://www.spinics.net/lists/linux-pci/msg39706.html
@@ -137,6 +87,9 @@ shouldn't we?
 > Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
 > Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
 > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+
+Bjorn, any comments here?  We still have this regression in 4.0-rc ...
+
 > ---
 >  arch/x86/pci/acpi.c     |    5 ++---
 >  drivers/acpi/resource.c |   33 +++++++++++++++++++++++++++++----
@@ -195,15 +148,6 @@ shouldn't we?
 > +		 * So accept it no matter IORESOURCE_WINDOW is specified or not.
 > +		 */
 >  		type = IORESOURCE_MEM;
-
-I think this means these resources will be accepted regardless of whether
-the caller is looking for Consumer or Producer resources.  To preserve the
-behavior I added with 66528fdd45b0, we might be forced to do that for PCI
-host bridges (or maybe we could just add a quirk for the PC Engines BIOS).
-
-But I don't think it matches the ACPI spec intent, so I'm not sure it's
-right to do it for all devices.
-
 >  		break;
 >  	case ACPI_RESOURCE_TYPE_IO:
 >  	case ACPI_RESOURCE_TYPE_FIXED_IO:
@@ -242,6 +186,8 @@ right to do it for all devices.
 >  		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
 >  			type = IORESOURCE_MEM;
 >  		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
-> -- 
-> 1.7.10.4
 > 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
