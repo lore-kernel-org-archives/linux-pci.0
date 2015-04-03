@@ -1,62 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [119.145.14.66] ([119.145.14.66]:28380 "EHLO
-	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S932189AbbDWHqC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 03:46:02 -0400
+Received: from szxga03-in.huawei.com ([119.145.14.66]:24058 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753667AbbDCJck (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:32:40 -0400
+Message-ID: <551E5E1E.6050209@huawei.com>
+Date: Fri, 3 Apr 2015 17:32:14 +0800
 From: Yijing Wang <wangyijing@huawei.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
-	<rwhite@pobox.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI: Fix NULL pointer when find parent pcie_link_state
-Date: Thu, 23 Apr 2015 15:41:56 +0800
-Message-ID: <1429774916-24920-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] PCI: Save sysdata in pci_host_bridge drvdata
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-2-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
-NULL Pointer in pcie_aspm_init_link_state(), Some platform
-like ATCA may has strange PCIe topology:
-E.g.
----root port---downstream port---upstream port
-                              |--downstream port
-                              |--downstream port
+Please ignore this one, it is the same as [PATCH v9 11/30] PCI: Save sysdata in pci_host_bridge drvdata.
 
-When we try to alloc pcie_link_state, we assumed downstream port
-always has a upstream port, in this case, NULL pointer would
-be triggered when try to find the parent pci_link_state,
-because downstream port connects to root port directly.
+Thanks!
+Yijing.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/aspm.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+On 2015/4/3 17:25, Yijing Wang wrote:
+> Save platform specific sysdata in pci_host_bridge
+> drvdata, host bridge specific operation need to
+> access it before the pci bus creation.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/host-bridge.c |    3 ++-
+>  drivers/pci/pci.h         |    2 +-
+>  drivers/pci/probe.c       |   20 ++++++++++----------
+>  3 files changed, 13 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index dffb345..98047c6 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -63,7 +63,7 @@ static bool pci_host_busn_res_overlap(
+>  
+>  struct pci_host_bridge *pci_create_host_bridge(
+>  		struct device *parent, int domain, int bus,
+> -		struct list_head *resources)
+> +		void *sysdata, struct list_head *resources)
+>  {
+>  	int error;
+>  	struct pci_host_bridge *host, *tmp;
+> @@ -101,6 +101,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+>  	mutex_unlock(&pci_host_mutex);
+>  
+>  	host->dev.release = pci_release_host_bridge_dev;
+> +	dev_set_drvdata(&host->dev, sysdata);
+>  	dev_set_name(&host->dev, "pci%04x:%02x",
+>  			host->domain, bus);
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 886d72f..aa8dff6 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -335,7 +335,7 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+>  #endif
+>  
+>  struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+> -		int domain, int bus, struct list_head *resources);
+> +		int domain, int bus, void *sysdata, struct list_head *resources);
+>  void pci_free_host_bridge(struct pci_host_bridge *host);
+>  
+>  static inline int pci_host_first_busnr(struct pci_host_bridge *host)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8517d1b..0ac2bf6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+>  }
+>  
+>  static struct pci_bus *__pci_create_root_bus(
+> -		struct pci_host_bridge *bridge, struct pci_ops *ops,
+> -		void *sysdata)
+> +		struct pci_host_bridge *bridge, struct pci_ops *ops)
+>  {
+>  	int error;
+>  	struct pci_bus *b;
+> @@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
+>  	if (!b)
+>  		return NULL;
+>  
+> -	b->sysdata = sysdata;
+> +	b->sysdata = dev_get_drvdata(&bridge->dev);
+>  	b->ops = ops;
+>  	b->number = b->busn_res.start =
+>  		pci_host_first_busnr(bridge);
+> @@ -1956,11 +1955,12 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+>  {
+>  	struct pci_host_bridge *host;
+>  
+> -	host = pci_create_host_bridge(parent, domain, bus, resources);
+> +	host = pci_create_host_bridge(parent, domain, bus,
+> +			sysdata, resources);
+>  	if (!host)
+>  		return NULL;
+>  
+> -	host->bus = __pci_create_root_bus(host, ops, sysdata);
+> +	host->bus = __pci_create_root_bus(host, ops);
+>  	if (!host->bus)
+>  		pci_free_host_bridge(host);
+>  
+> @@ -2037,13 +2037,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+>  }
+>  
+>  static struct pci_bus *__pci_scan_root_bus(
+> -		struct pci_host_bridge *host, struct pci_ops *ops,
+> -		void *sysdata)
+> +		struct pci_host_bridge *host, struct pci_ops *ops)
+>  {
+>  	struct pci_bus *b;
+>  	int max;
+>  
+> -	b = __pci_create_root_bus(host, ops, sysdata);
+> +	b = __pci_create_root_bus(host, ops);
+>  	if (!b)
+>  		return NULL;
+>  
+> @@ -2064,11 +2063,12 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+>  {
+>  	struct pci_host_bridge *host;
+>  
+> -	host = pci_create_host_bridge(parent, domain, bus, resources);
+> +	host = pci_create_host_bridge(parent, domain, bus,
+> +			sysdata, resources);
+>  	if (!host)
+>  		return NULL;
+>  
+> -	host->bus = __pci_scan_root_bus(host, ops, sysdata);
+> +	host->bus = __pci_scan_root_bus(host, ops);
+>  	if (!host->bus)
+>  		pci_free_host_bridge(host);
+>  
+> 
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 7d4fcdc..f295824 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -526,8 +526,17 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	INIT_LIST_HEAD(&link->link);
- 	link->pdev = pdev;
- 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
--		struct pcie_link_state *parent;
--		parent = pdev->bus->parent->self->link_state;
-+		struct pci_bus *pbus = pdev->bus;
-+		struct pcie_link_state *parent = NULL;
-+
-+		while (pbus) {
-+			if (pbus->self) {
-+				parent = pbus->self->link_state;
-+				if (parent)
-+					break;
-+			}
-+			pbus = pbus->parent;
-+		}
- 		if (!parent) {
- 			kfree(link);
- 			return NULL;
+
 -- 
-1.7.1
+Thanks!
+Yijing
 
