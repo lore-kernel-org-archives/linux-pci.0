@@ -1,107 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53562 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932218AbbDXQoI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Apr 2015 12:44:08 -0400
-Message-ID: <553A72D4.7000801@arm.com>
-Date: Fri, 24 Apr 2015 17:44:04 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:44955 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbbDCHyu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 03:54:50 -0400
+Message-ID: <551E471F.7090504@hp.com>
+Date: Fri, 03 Apr 2015 15:54:07 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>
-CC: Varun Sethi <Varun.Sethi@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com> <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com> <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com> <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com> <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com> <20150416104008.GB25640@arm.com> <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com> <20150422170718.GG13019@arm.com> <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com> <20150424161818.GC7313@arm.com>
-In-Reply-To: <20150424161818.GC7313@arm.com>
-Content-Type: text/plain; charset=windows-1252
+To: Joerg Roedel <joro@8bytes.org>
+CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com> <20150402111133.GM4441@8bytes.org>
+In-Reply-To: <20150402111133.GM4441@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/04/15 17:18, Will Deacon wrote:
-> On Wed, Apr 22, 2015 at 08:41:02PM +0100, Stuart Yoder wrote:
->>>> However, there is an improvement we envision as possible due to
->>>> the limited number of SMMU contexts (i.e. 64).  If there are
->>>> 64 SMMU context registers it means that there is a max of
->>>> 64 software contexts where things can be isolated.  But, say I have
->>>> an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
->>>> to a KVM VM.  Those 8 PCI devices could share the same
->>>> streamID/ITS-device-ID since they all share the same isolation
->>>> context.
->>>>
->>>> What would be nice is at the time the 8 VFS are being added
->>>> to the IOMMU domain is for the pcidevid -> streamID mapping
->>>> table to be updated dynamically.  It simply lets us make
->>>> more efficient use of the limited streamIDs we have.
->>>>
->>>> I think it is this improvement that Minghuan had in mind
->>>> in this patch.
->>>
->>> Ok, but in this case it should be possible to use a single context bank for
->>> all of the VF streamIDs by configuring the appropriate SMR, no?
->>
->> Yes, but there are limited SMRs.  In our case there are only
->> 128 SMRs in SMMU-500 and we have potentially way more masters than
->> that.
-> 
-> Right, but you still only have 64 context banks at the end of the day, so do
-> you really anticipate having more than 128 masters concurrently using the
-> SMMU? If so, then we have devices sharing context banks so we could consider
-> reusing SMRs across masters, but historically that's not been something that
-> we've managed to solve.
-> 
->>> Wouldn't
->>> that sort of thing be preferable to dynamic StreamID assignment? It would
->>> certainly make life easier for the MSIs.
->>
->> It would be preferable, but given only 128 total stream IDS and
->> 64 context registers it's potentially an issue.  On our LS2085 SoC it is
->> PCI and the fsl-mc bus (see description here:
->> https://lkml.org/lkml/2015/3/5/795) that potentially have way
->> more masters than streamIDS. So, for those busses we would essentially
->> view a streamID as a "context ID"-- each SMR is associated with
->> 1 context bank register.
->>
->> For PCI we have a programmable "PCI req ID"-to-"stream ID"
->> mapping table in the PCI controller that is dynamically
->> programmable.
->>
->> Looking at it like that means that we could have
->> any number of masters but only 64 "contexts"
->> and since the masters all all programmable it's
->> seems feasbile to envision doing some bus/vendor
->> specific set up when a device is added to an
->> IOMMU domain.   One thing that would need to be conveyed
->> to the SMMU driver if doing dynamic streamID setup
->> is what streamIDs are available to be used.
-> 
-> Ok, but this is going to make life difficult for the MSI people, I suspect.
-> 
-> Marc...?
+Hi Joerg,
+This is quite strange. I checked the patches from patch 01 to 10 using 
+./scripts/checkpatch.pl under the kernel source directory, but got 0 
+errors and 0 warning.  Only some white spaces in the cover letter 00, 
+but is could not be checked by this script.
 
-We're really facing two conflicting requirements: in order to minimize
-SMR usage, we want to alias multiple ReqIDs to a single StreamID, but in
-order to efficiently deal with MSIs, we want to see discrete DeviceIDs
-(the actual ReqIDs). I don't easily see how we reconcile the two.
+But I checked the intel-iommu.c using "checkpatch.pl -f", found too many 
+warnings and errors. Maybe we need a new patch to fix them.
 
-We can deal with the aliasing, provided that we extend the level of
-quirkiness that pci_for_each_dma_alias can deal with. But that doesn't
-solve any form of hotplug/SR-IOV behaviour.
+Thanks
+Zhenhua
 
-Somehow, we're going to end-up with grossly oversized ITTs, just to
-accommodate for the fact that we have no idea how many MSIs we're going
-to end-up needing. I'm not thrilled with that prospect.
+On 04/02/2015 07:11 PM, Joerg Roedel wrote:
+> Hi Zhen-Hua,
+>
+> On Thu, Mar 19, 2015 at 01:36:18PM +0800, Li, Zhen-Hua wrote:
+>> This patchset is an update of Bill Sumner's patchset, implements a fix for:
+>> If a kernel boots with intel_iommu=on on a system that supports intel vt-d,
+>> when a panic happens, the kdump kernel will boot with these faults:
+>
+> I reviewed this patch-set and it is getting closer to a point where it
+> could be merged. I found a few white-space errors in the review, please
+> do a check_patch run on the next round and fix these. Besides that and
+> given some third-party testing and reviews I think we can look forward
+> to merge it early after the merge-window for v4.1, to give it enough
+> testing in -next too.
+>
+>
+> 	Joerg
+>
 
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
