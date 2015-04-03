@@ -1,190 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32240 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbbDCJ3P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:15 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 00/30] Refine PCI scan interfaces and make generic pci host bridge
-Date: Fri, 3 Apr 2015 17:25:33 +0800
-Message-ID: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47057 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752656AbbDCI22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 Apr 2015 04:28:28 -0400
+Date: Fri, 3 Apr 2015 16:28:16 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150403082816.GE22579@dhcp-128-53.nay.redhat.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v8->v9:
-	Add Thierry's Acked-by and Tested-by.
-	Fix the building error for powerpc found by Daniel.
-	Change pci_host_assign_domain_nr() to static.
-v7->v8:
-	Fix some cross building errors found by kbuild test.
-	Drop the rename patch for find_pci_host_bridge().
-v6->v7:
-	Drop previous patch which combined the domain and bus in one argument.
-	Make the pci_host_bridge hold the default busn resource, so we could
-	check whether new host busn resource is conflict with existing ones.
-	Move pci_host_assign_domain_nr() to drivers/pci/host-bridge.c
-	Other changes suggested by Bjorn and Suravee.
-v5->v6:
-	Fix cross building errors found by kbuild test.
-	Export busn_resource to Xen pcifront driver.
-v4->v5:
-	Fix some code style issues and rename some functions suggested by Bjorn.
-	Fix some code flaw(Eg. call pci_bus_add_devices() before resources claim
-	or lack the return checking).
-v3->v4:
-	Fix the rebase issue.
-v2->v3:
-	Rebase this series on v4.0-rc1.
-v1->v2:
-	Split pci_host_bridge_list into a new patch, remove .phb_probe_mode
-	and rework powerpc .phb_of_scan_bus() for simpilicty suggested by
-	Arnd. Refresh some patch description log, and add a new patch to fix
-	build warning in ia64.
+On 03/19/15 at 01:36pm, Li, Zhen-Hua wrote:
+> This patchset is an update of Bill Sumner's patchset, implements a fix for:
+> If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
+> when a panic happens, the kdump kernel will boot with these faults:
+> 
+>     dmar: DRHD: handling fault status reg 102
+>     dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
+>     DMAR:[fault reason 01] Present bit in root entry is clear
+> 
+>     dmar: DRHD: handling fault status reg 2
+>     dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
+>     INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+> 
+> On some system, the interrupt remapping fault will also happen even if the 
+> intel_iommu is not set to on, because the interrupt remapping will be enabled 
+> when x2apic is needed by the system.
+> 
+> The cause of the DMA fault is described in Bill's original version, and the 
+> INTR-Remap fault is caused by a similar reason. In short, the initialization 
+> of vt-d drivers causes the in-flight DMA and interrupt requests get wrong 
+> response.
+> 
+> To fix this problem, we modifies the behaviors of the intel vt-d in the 
+> crashdump kernel:
+> 
+> For DMA Remapping:
+> 1. To accept the vt-d hardware in an active state,
+> 2. Do not disable and re-enable the translation, keep it enabled.
+> 3. Use the old root entry table, do not rewrite the RTA register.
+> 4. Malloc and use new context entry table, copy data from the old ones that
+>    used by the old kernel.
+> 5. Keep using the old page tables before driver is loaded.
+> 6. After device driver is loaded, when it issues the first dma_map command, 
+>    free the dmar_domain structure for this device, and generate a new one, so 
+>    that the device can be assigned a new and empty page table. 
+> 7. When a new context entry table is generated, we also save its address to 
+>    the old root entry table.
+> 
+> For Interrupt Remapping:
+> 1. To accept the vt-d hardware in an active state,
+> 2. Do not disable and re-enable the interrupt remapping, keep it enabled.
+> 3. Use the old interrupt remapping table, do not rewrite the IRTA register.
+> 4. When ioapic entry is setup, the interrupt remapping table is changed, and 
+>    the updated data will be stored to the old interrupt remapping table.
+> 
+> Advantages of this approach:
+> 1. All manipulation of the IO-device is done by the Linux device-driver
+>    for that device.
+> 2. This approach behaves in a manner very similar to operation without an
+>    active iommu.
+> 3. Any activity between the IO-device and its RMRR areas is handled by the
+>    device-driver in the same manner as during a non-kdump boot.
+> 4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+>    This supports the practice of creating a special kdump kernel without
+>    drivers for any devices that are not required for taking a crashdump. 
+> 5. Minimal code-changes among the existing mainline intel vt-d code.
+> 
+> Summary of changes in this patch set:
+> 1. Added some useful function for root entry table in code intel-iommu.c
+> 2. Added new members to struct root_entry and struct irte;
+> 3. Functions to load old root entry table to iommu->root_entry from the memory 
+>    of old kernel.
+> 4. Functions to malloc new context entry table and copy the data from the old
+>    ones to the malloced new ones.
+> 5. Functions to enable support for DMA remapping in kdump kernel.
+> 6. Functions to load old irte data from the old kernel to the kdump kernel.
+> 7. Some code changes that support other behaviours that have been listed.
+> 8. In the new functions, use physical address as "unsigned long" type, not 
+>    pointers.
+> 
+> Original version by Bill Sumner:
+>     https://lkml.org/lkml/2014/1/10/518
+>     https://lkml.org/lkml/2014/4/15/716
+>     https://lkml.org/lkml/2014/4/24/836
+> 
+> Zhenhua's updates:
+>     https://lkml.org/lkml/2014/10/21/134
+>     https://lkml.org/lkml/2014/12/15/121
+>     https://lkml.org/lkml/2014/12/22/53
+>     https://lkml.org/lkml/2015/1/6/1166
+>     https://lkml.org/lkml/2015/1/12/35
+> 
+> Changelog[v9]:
+>     1. Add new function iommu_attach_domain_with_id.
+>     2. Do not copy old page tables, keep using the old ones.
+>     3. Remove functions:
+>            intel_iommu_did_to_domain_values_entry
+>            intel_iommu_get_dids_from_old_kernel
+>            device_to_domain_id
+>            copy_page_addr
+>            copy_page_table
+>            copy_context_entry
+>            copy_context_entry_table
+>     4. Add new function device_to_existing_context_entry.
+> 
+> Changelog[v8]:
+>     1. Add a missing __iommu_flush_cache in function copy_page_table.
+> 
+> Changelog[v7]:
+>     1. Use __iommu_flush_cache to flush the data to hardware.
+> 
+> Changelog[v6]:
+>     1. Use "unsigned long" as type of physical address.
+>     2. Use new function unmap_device_dma to unmap the old dma.
+>     3. Some small incorrect bits order for aw shift.
+> 
+> Changelog[v5]:
+>     1. Do not disable and re-enable traslation and interrupt remapping. 
+>     2. Use old root entry table.
+>     3. Use old interrupt remapping table.
+>     4. New functions to copy data from old kernel, and save to old kernel mem.
+>     5. New functions to save updated root entry table and irte table.
+>     6. Use intel_unmap to unmap the old dma;
+>     7. Allocate new pages while driver is being loaded.
+> 
+> Changelog[v4]:
+>     1. Cut off the patches that move some defines and functions to new files.
+>     2. Reduce the numbers of patches to five, make it more easier to read.
+>     3. Changed the name of functions, make them consistent with current context
+>        get/set functions.
+>     4. Add change to function __iommu_attach_domain.
+> 
+> Changelog[v3]:
+>     1. Commented-out "#define DEBUG 1" to eliminate debug messages.
+>     2. Updated the comments about changes in each version.
+>     3. Fixed: one-line added to Copy-Translations patch to initialize the iovad
+>           struct as recommended by Baoquan He [bhe@redhat.com]
+>           init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
+> 
+> Changelog[v2]:
+>     The following series implements a fix for:
+>     A kdump problem about DMA that has been discussed for a long time. That is,
+>     when a kernel panics and boots into the kdump kernel, DMA started by the
+>     panicked kernel is not stopped before the kdump kernel is booted and the
+>     kdump kernel disables the IOMMU while this DMA continues.  This causes the
+>     IOMMU to stop translating the DMA addresses as IOVAs and begin to treat
+>     them as physical memory addresses -- which causes the DMA to either:
+>         (1) generate DMAR errors or 
+>         (2) generate PCI SERR errors or 
+>         (3) transfer data to or from incorrect areas of memory. Often this 
+>             causes the dump to fail.
+> 
+> Changelog[v1]:
+>     The original version.
+> 
+> Changed in this version:
+> 1. Do not disable and re-enable traslation and interrupt remapping. 
+> 2. Use old root entry table.
+> 3. Use old interrupt remapping table.
+> 4. Use "unsigned long" as physical address.
+> 5. Use intel_unmap to unmap the old dma;
+> 
+> Baoquan He <bhe@redhat.com> helps testing this patchset.
+> Takao Indoh <indou.takao@jp.fujitsu.com> gives valuable suggestions.
+> 
+> Li, Zhen-Hua (10):
+>   iommu/vt-d: New function to attach domain with id
+>   iommu/vt-d: Items required for kdump
+>   iommu/vt-d: Function to get old context entry
+>   iommu/vt-d: functions to copy data from old mem
+>   iommu/vt-d: Add functions to load and save old re
+>   iommu/vt-d: datatypes and functions used for kdump
+>   iommu/vt-d: enable kdump support in iommu module
+>   iommu/vt-d: assign new page table for dma_map
+>   iommu/vt-d: Copy functions for irte
+>   iommu/vt-d: Use old irte in kdump kernel
+> 
+>  drivers/iommu/intel-iommu.c         | 535 ++++++++++++++++++++++++++++++++++--
+>  drivers/iommu/intel_irq_remapping.c | 105 ++++++-
+>  include/linux/intel-iommu.h         |  18 ++
+>  3 files changed, 628 insertions(+), 30 deletions(-)
+> 
+> -- 
+> 2.0.0-rc0
+> 
 
-This series is based on Bjorn's pci/enumeration branch.
-You could pull it from https://github.com/YijingWang/linux-pci.git enumer9
+Zhenhua,
 
-Now in kernel, we scan pci bus use the following ways:
-1. pci_scan_bus. 
-	parent = NULL, default io/mem/bus resources
-	call pci_bus_add_devices()
+I will review the patchset recently, sorry for jumping in late.
 
-2. pci_scan_bus_parented() + pci_bus_add_devices()
-	default io/mem/bus resources, only used by xen
-
-3. pci_scan_root_bus() + pci_bus_add_devices()
-
-4. pci_create_root_bus() + pci_scan_child_bus() + pci_bus_add_devices()
-
-5. pci_create_root_bus() + xx_of_scan_bus()  +  pci_bus_add_devices()
-
-And we have a lot of arch specific pci_domain_nr() and other platform
-specific weak function like pcibios_root_bridge_prepare().
-
-After applied this series, we have following scan interfaces:
-
-1. pci_scan_bus() 
-	parent = NULL, default io/mem/bus resources.
-	for legacy pci scan
-
-2. pci_scan_root_bus()
-	for callers provide its own parent and io/mem/bus resources
-	but no platform specific pci_host_bridge operations
-
-3. pci_scan_host_bridge()
-	for callers provide its own parent and io/mem/bus resources
-
-
-
-Arnd Bergmann (1):
-  xen/PCI: Don't use deprecated function pci_scan_bus_parented()
-
-Yijing Wang (29):
-  PCI: Remove deprecated pci_scan_bus_parented()
-  PCI: Save domain in pci_host_bridge
-  PCI: Move pci_bus_assign_domain_nr() declaration into
-    drivers/pci/pci.h
-  PCI: Introduce pci_host_assign_domain_nr() to assign domain
-  PCI: Separate pci_host_bridge creation out of pci_create_root_bus()
-  PCI: Add default bus resource in pci_host_bridge
-  PCI: Update pci_host_bridge bus resource
-  PCI: Introduce pci_host_first_busnr() function
-  PCI: Introduce pci_host_bridge_list to manage host bridges
-  PCI: Save sysdata in pci_host_bridge drvdata
-  powerpc/PCI: Rename pcibios_root_bridge_prepare() to
-    pcibios_set_root_bus_speed()
-  PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
-  PCI: Introduce pci_host_bridge_ops to support host specific
-    operations
-  PCI: Introduce new scan function pci_scan_host_bridge()
-  PCI: Introduce pci_bus_child_max_busnr()
-  x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-  ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-  powerpc/pci: Use pci_scan_host_bridge() for simplicity
-  PCI: Remove pcibios_root_bridge_prepare() and
-    pcibos_set_root_bus_speed()
-  sparc/PCI: Use pci_scan_host_bridge() for simplicity
-  parisc/PCI: Use pci_scan_root_bus() for simplicity
-  PCI/mvebu: Use pci_common_init_dev() to simplify code
-  PCI/tegra: Remove redundant tegra_pcie_scan_bus()
-  PCI/designware: Use pci_scan_root_bus() for simplicity
-  PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-  PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-  PCI: Remove platform specific pci_domain_nr()
-  PCI: Remove pci_bus_assign_domain_nr()
-  PCI: Clean up CONFIG_PCI_DOMAINS_GENERIC
-
- arch/alpha/include/asm/pci.h             |    2 -
- arch/alpha/kernel/pci.c                  |    4 +-
- arch/alpha/kernel/sys_nautilus.c         |    2 +-
- arch/arm/Kconfig                         |    3 -
- arch/arm/kernel/bios32.c                 |    2 +-
- arch/arm/mach-dove/pcie.c                |    2 +-
- arch/arm/mach-iop13xx/pci.c              |    4 +-
- arch/arm/mach-mv78xx0/pcie.c             |    2 +-
- arch/arm/mach-orion5x/pci.c              |    4 +-
- arch/arm64/Kconfig                       |    3 -
- arch/frv/mb93090-mb00/pci-vdk.c          |    3 +-
- arch/ia64/include/asm/pci.h              |    1 -
- arch/ia64/pci/pci.c                      |   34 +++--
- arch/ia64/sn/kernel/io_init.c            |    4 +-
- arch/m68k/coldfire/pci.c                 |    2 +-
- arch/microblaze/pci/pci-common.c         |   15 +--
- arch/mips/include/asm/pci.h              |    2 -
- arch/mips/pci/pci.c                      |    4 +-
- arch/mn10300/unit-asb2305/pci.c          |    3 +-
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |   79 ++++++------
- arch/powerpc/platforms/pseries/pci.c     |    8 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- arch/s390/pci/pci.c                      |   10 +-
- arch/sh/drivers/pci/pci.c                |    4 +-
- arch/sh/include/asm/pci.h                |    2 -
- arch/sparc/kernel/leon_pci.c             |    2 +-
- arch/sparc/kernel/pci.c                  |   45 +++----
- arch/sparc/kernel/pcic.c                 |    2 +-
- arch/tile/include/asm/pci.h              |    2 -
- arch/tile/kernel/pci.c                   |    4 +-
- arch/tile/kernel/pci_gx.c                |    4 +-
- arch/unicore32/kernel/pci.c              |    2 +-
- arch/x86/include/asm/pci.h               |    6 -
- arch/x86/pci/acpi.c                      |   37 +++---
- arch/x86/pci/common.c                    |    2 +-
- arch/xtensa/kernel/pci.c                 |    2 +-
- drivers/parisc/dino.c                    |    6 +-
- drivers/parisc/lba_pci.c                 |    4 +-
- drivers/pci/host-bridge.c                |  202 ++++++++++++++++++++++++++++
- drivers/pci/host/pci-mvebu.c             |   18 +---
- drivers/pci/host/pci-tegra.c             |   16 ---
- drivers/pci/host/pci-versatile.c         |    3 +-
- drivers/pci/host/pci-xgene.c             |    3 +-
- drivers/pci/host/pcie-designware.c       |    4 +-
- drivers/pci/host/pcie-xilinx.c           |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c       |   29 +----
- drivers/pci/hotplug/ibmphp_core.c        |    2 +-
- drivers/pci/pci.c                        |   85 ++++---------
- drivers/pci/pci.h                        |   15 ++
- drivers/pci/probe.c                      |  212 ++++++++++++------------------
- drivers/pci/xen-pcifront.c               |   16 ++-
- include/linux/pci.h                      |   46 +++----
- 54 files changed, 517 insertions(+), 459 deletions(-)
-
+Thanks
+Dave
