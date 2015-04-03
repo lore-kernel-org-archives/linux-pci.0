@@ -1,220 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Bugfix v4] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Tue,  7 Apr 2015 12:30:18 +0800
-Message-Id: <1428381018-27406-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42067 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751897AbbDCJV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 Apr 2015 05:21:58 -0400
+Date: Fri, 3 Apr 2015 17:21:11 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <551E56F6.60503@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <551E56F6.60503@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 593669c2ac0f("Use common ACPI resource interfaces to
-simplify implementation"), arch/x86/pci/acpi.c applies following
-rules when parsing ACPI resources for PCI host bridge:
-1) Ignore IO port resources defined by acpi_resource_io and
-   acpi_resource_fixed_io, which should be used to define resource
-   for PCI device instead of PCI bridge.
-2) Accept IOMEM resource defined by acpi_resource_memory24,
-   acpi_resource_memory32 and acpi_resource_fixed_memory32.
-   These IOMEM resources are accepted to workaround some BIOS issue,
-   though they should be ignored. For example, PC Engines APU.1C
-   platform defines PCI host bridge IOMEM resources as:
-                Memory32Fixed (ReadOnly,
-                    0x000A0000,         // Address Base
-                    0x00020000,         // Address Length
-                    )
-                Memory32Fixed (ReadOnly,
-                    0x00000000,         // Address Base
-                    0x00000000,         // Address Length
-                    _Y00)
-3) Accept all IO port and IOMEM resources defined by
-   acpi_resource_address{16,32,64,extended64}, no matter it's marked as
-   ACPI_CONSUMER or ACPI_PRODUCER.
+On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
+> Hi Dave,
+> 
+> There may be some possibilities that the old iommu data is corrupted by
+> some other modules. Currently we do not have a better solution for the
+> dmar faults.
+> 
+> But I think when this happens, we need to fix the module that corrupted
+> the old iommu data. I once met a similar problem in normal kernel, the
+> queue used by the qi_* functions was written again by another module.
+> The fix was in that module, not in iommu module.
 
-Commit 593669c2ac0f("Use common ACPI resource interfaces to
-simplify implementation") accept all IO port and IOMEM resources
-defined by acpi_resource_io, acpi_resource_fixed_io,
-acpi_resource_memory24, acpi_resource_memory32,
-acpi_resource_fixed_memory32 and
-acpi_resource_address{16,32,64,extended64}, which causes IO port
-resources consumed by host bridge itself are listed in to host bridge
-resource list.
+It is too late, there will be no chance to save vmcore then.
 
-Then commit 63f1789ec716("Ignore resources consumed by host bridge
-itself") ignores resources consumed by host bridge itself by checking
-IORESOURCE_WINDOW flag, which accidently removed the workaround in 2)
-above for BIOS bug .
+Also if it is possible to continue corrupt other area of oldmem because
+of using old iommu tables then it will cause more problems.
 
-It's really costed us much time to figure out this whole picture.
-So we refine interface acpi_dev_filter_resource_type as below,
-which should be easier for maintence:
-1) Caller specifies IORESOURCE_WINDOW flag to explicitly query resource
-   for bridge(PRODUCER), otherwise it's querying resource for
-   device(CONSUMER).
-2) Ignore IO port resources defined by acpi_resource_io and
-   acpi_resource_fixed_io if IORESOURCE_WINDOW is specified.
-3) Accpet IOMEM resource defined by acpi_resource_memory24,
-   acpi_resource_memory32 and acpi_resource_fixed_memory32 if both
-   IORESOURCE_WINDOW and IORESOURCE_MEM_8AND16BIT are specified to work
-   around BIOS issues.
-4) Accept IO port and IOMEM defined by acpi_resource_addressxx if
-   a) IORESOURCE_WINDOW is specified and ACPI_PRODUCER is true
-   b) IORESOURCE_WINDOW is not specified and ACPI_PRODUCER is false
+So I think the tables at least need some verifycation before being used.
 
-Currently acpi_dev_filter_resource_type() is only used by ACPI pci
-host bridge and IOAPIC driver, so it shouldn't affect other drivers.
-
-Another possible fix is to only ignore IO resource consumed by host
-bridge and keep IOMEM resource consumed by host bridge, please refer to:
-http://www.spinics.net/lists/linux-pci/msg39706.html
-
-Sample ACPI table are archived at:
-https://bugzilla.kernel.org/show_bug.cgi?id=94221
-
-V3->V4:
-1) Improve comments
-2) Use flag IORESOURCE_MEM_8AND16BIT to work around BIOS issue
-
-Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
-Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/acpi.c     |    8 +++++---
- drivers/acpi/resource.c |   52 +++++++++++++++++++++++++++++++++++++++++------
- 2 files changed, 51 insertions(+), 9 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index e4695985f9de..150774be0f3f 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -332,12 +332,15 @@ static void probe_pci_root_info(struct pci_root_info *info,
- {
- 	int ret;
- 	struct resource_entry *entry, *tmp;
-+	unsigned long res_flags;
- 
- 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
- 	info->bridge = device;
-+	res_flags = IORESOURCE_IO | IORESOURCE_MEM |
-+		    IORESOURCE_WINDOW | IORESOURCE_MEM_8AND16BIT;
- 	ret = acpi_dev_get_resources(device, list,
- 				     acpi_dev_filter_resource_type_cb,
--				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
-+				     (void *)res_flags);
- 	if (ret < 0)
- 		dev_warn(&device->dev,
- 			 "failed to parse _CRS method, error code %d\n", ret);
-@@ -346,8 +349,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			"no IO and memory resources present in _CRS\n");
- 	else
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
--			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
--			    (entry->res->flags & IORESOURCE_DISABLED))
-+			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
- 			else
- 				entry->res->name = info->name;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5589a6e2a023..0187e0e11bb8 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -567,6 +567,12 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
- }
- EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
- 
-+static bool acpi_dev_match_producer_consumer(unsigned long types, int producer)
-+{
-+	return ((types & IORESOURCE_WINDOW) && producer == ACPI_PRODUCER) ||
-+		((types & IORESOURCE_WINDOW) == 0 && producer == ACPI_CONSUMER);
-+}
-+
- /**
-  * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
-  *				   types
-@@ -574,7 +580,19 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
-  * @types: Valid resource types of IORESOURCE_XXX
-  *
-  * This is a hepler function to support acpi_dev_get_resources(), which filters
-- * ACPI resource objects according to resource types.
-+ * ACPI resource objects according to resource types and flags as below:
-+ * 1) If flag IORESOURCE_WINDOW is not specified, it's querying resources
-+ *    consumed by device. That is to return:
-+ * 	a) ACPI resources without producer_consumer flag
-+ *	b) ACPI resources with producer_consumer flag setting to CONSUMER.
-+ * 2) If flag IORESOURCE_WINDOW is specified, it's querying resources provided
-+ *    by device. That is to return:
-+ *	a) ACPI resources with producer_consumer flag setting to PRODUCER.
-+ * 3) But there's an exception. Some platforms, such as PC Engines APU.1C,
-+ *    report PCI host bridge resource provision by Memory32Fixed().
-+ *    Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=94221
-+ *    So a special flag IORESOURCE_MEM_8AND16BIT is used to work around this
-+ *    BIOS issue.
-  */
- int acpi_dev_filter_resource_type(struct acpi_resource *ares,
- 				  unsigned long types)
-@@ -585,27 +603,49 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
- 	case ACPI_RESOURCE_TYPE_MEMORY24:
- 	case ACPI_RESOURCE_TYPE_MEMORY32:
- 	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		type = IORESOURCE_MEM;
-+		/*
-+		 * These types of resource descriptor should be used to
-+		 * describe resource consumption instead of resource provision.
-+		 * But some platforms, such as PC Engines APU.1C, report
-+		 * resource provision by Memory32Fixed(). Please refer to:
-+		 * https://bugzilla.kernel.org/show_bug.cgi?id=94221
-+		 * So a special rule to work around BIOS issues.
-+		 */
-+		if ((types & (IORESOURCE_WINDOW | IORESOURCE_MEM_8AND16BIT)) ==
-+		    (IORESOURCE_WINDOW | IORESOURCE_MEM_8AND16BIT) ||
-+		    acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_MEM;
- 		break;
- 	case ACPI_RESOURCE_TYPE_IO:
- 	case ACPI_RESOURCE_TYPE_FIXED_IO:
--		type = IORESOURCE_IO;
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_IO;
- 		break;
- 	case ACPI_RESOURCE_TYPE_IRQ:
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_IRQ;
-+		break;
- 	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
--		type = IORESOURCE_IRQ;
-+		if (acpi_dev_match_producer_consumer(types,
-+				ares->data.extended_irq.producer_consumer))
-+			type = IORESOURCE_IRQ;
- 		break;
- 	case ACPI_RESOURCE_TYPE_DMA:
- 	case ACPI_RESOURCE_TYPE_FIXED_DMA:
--		type = IORESOURCE_DMA;
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_DMA;
- 		break;
- 	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
--		type = IORESOURCE_REG;
-+		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
-+			type = IORESOURCE_REG;
- 		break;
- 	case ACPI_RESOURCE_TYPE_ADDRESS16:
- 	case ACPI_RESOURCE_TYPE_ADDRESS32:
- 	case ACPI_RESOURCE_TYPE_ADDRESS64:
- 	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-+		if (!acpi_dev_match_producer_consumer(types,
-+				ares->data.address.producer_consumer))
-+			break;
- 		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
- 			type = IORESOURCE_MEM;
- 		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
--- 
-1.7.10.4
-
+> 
+> 
+> Thanks
+> Zhenhua
+> 
+> On 04/03/2015 04:40 PM, Dave Young wrote:
+> >>To fix this problem, we modifies the behaviors of the intel vt-d in the
+> >>crashdump kernel:
+> >>
+> >>For DMA Remapping:
+> >>1. To accept the vt-d hardware in an active state,
+> >>2. Do not disable and re-enable the translation, keep it enabled.
+> >>3. Use the old root entry table, do not rewrite the RTA register.
+> >>4. Malloc and use new context entry table, copy data from the old ones that
+> >>    used by the old kernel.
+> >
+> >Have not read all the patches, but I have a question, not sure this has been
+> >answered before. Old memory is not reliable, what if the old memory get corrupted
+> >before panic? Is it safe to continue using it in 2nd kernel, I worry that it will
+> >cause problems.
+> >
+> >Hope I'm wrong though.
+> >
+> >Thanks
+> >Dave
+> >
+> >
+> 
