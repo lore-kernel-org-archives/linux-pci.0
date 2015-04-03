@@ -1,194 +1,180 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:55385 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbbDCJ3T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:19 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v9 14/30] PCI: Introduce pci_host_bridge_ops to support host specific operations
+Date: Fri, 3 Apr 2015 17:25:48 +0800
+Message-ID: <1428053164-28277-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <2145313.EW8TNIQHUl@vostro.rjw.lan>
-References: <2001450.KHHLaZsp3O@vostro.rjw.lan> <CAJZ5v0g+zdvDMyg+YE4iUH5Q6HCCQDfhfXZo9=euNYv0=BiGLw@mail.gmail.com>
- <CAJZ5v0jFzidqni=rFKJUzmsJ6pvN01iUyywB7HywWTjABYR_zA@mail.gmail.com> <2145313.EW8TNIQHUl@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Apr 2015 09:19:55 -0500
-Message-ID: <CAErSpo5Ya9tyCxn55B_b1bzv+1-EPSkU70pi9NTGQP17mNV7iQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to parent
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	tiagdtd-lava <tiagdtd-lava@yahoo.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 15, 2015 at 12:01 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Wednesday, April 15, 2015 05:36:42 PM Rafael J. Wysocki wrote:
->> On Apr 15, 2015 3:16 PM, "Rafael J. Wysocki" <rafael@kernel.org> wrote:
->> >
->> > On Wed, Apr 15, 2015 at 2:55 PM, Bjorn Helgaas <bhelgaas@google.com>
->> wrote:
->> > > On Tue, Apr 14, 2015 at 8:03 PM, Rafael J. Wysocki <rjw@rjwysocki.net>
->> wrote:
->> > >> On Tuesday, April 14, 2015 12:28:12 PM Henrique de Moraes Holschuh
->> wrote:
->> > >>> On Mon, Apr 13, 2015, at 11:23, Rafael J. Wysocki wrote:
->> > >>> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> > >>> >
->> > >>> > Refine the mechanism introduced by commit f244d8b623da (ACPIPHP /
->> radeon
->> > >>> > / nouveau: Fix VGA switcheroo problem related to hotplug) to
->> propagate
->> > >>> > the ignore_hotplug setting of the device to its parent bridge in
->> case
->> > >>> > hotplug notifications related to the graphics adapter switching are
->> > >>> > given for the bridge rather than for the device itself (the need to
->> > >>> > be ignored in both cases).
->> > >>>
->> > >>> I do apologise if this is a stupid question, but is there any chance
->> the
->> > >>> bridge will be connected to other devices that do require hotplug
->> handling,
->> > >>> and not just to the GPU?
->> > >>
->> > >> The bridge is actually a downstream PCIe port holding the GPU, so no.
->> :-)
->> > >
->> > > When radeon/nouveau call pci_ignore_hotplug(), that's the case, but in
->> > > general all we know is that pci_ignore_hotplug() receives a PCI
->> > > device.  We don't know whether it's PCI or PCIe.  In the hotplug
->> > > topologies I'm familiar with, a bridge only leads to one hot-pluggable
->> > > slot, but I don't remember anything that would guarantee that.  For
->> > > PCIe, I think there can only be one slot, but for PCI I would think it
->> > > possible to have one bridge leading to several hotpluggable slots,
->> > > with the hotplug controller(s) being separate from the bridge.
->> >
->> > Realistically, the switcheroo people are the only users of
->> > pci_ignore_hotplug() today and if somebody wants the hotplug events to
->> > be ignored for him and perhaps not for someone else on the same
->> > bridge, then something is seriously broken about that system anyway.
->>
->> There may be a problem if somebody *already* calls this function for the
->> parent bridge (which some callers do ISTR) in which case the setting will
->> be propagated unnecessarily.
->>
->> That said, since all of the existing callers of pci_ignore_hotplug() appear
->> to need to set the flag for the parent too, IMO it's better to put that
->> logic into the interface instead of duplicating it in the callers. So, why
->> don't we add a second argument indicating whether or not to propagate the
->> setting?
->
-> My previous message didn't seem to reach the mailing lists, so above is a
-> quote from it and below is a new version of the patch with the additional
-> argument to pci_ignore_hotplug().
+Now we have weak functions like pcibios_root_bridge_prepare()
+to setup pci host bridge, We could introduce pci_host_bridge_ops
+which contain host bridge specific ops to setup pci_host_bridge.
+Then host bridge driver could add pci_host_bridge_ops hooks
+intead of weak function to setup pci_host_bridge.
+This patch add following pci_host_bridge_ops hooks:
 
-I can't remember why you added the "propagate" argument.  Both of the
-existing callers supply "true".  How would a new caller decide whether
-to supply "true" or "false"?  The question of whether hotplug
-notifications go to the device or the bridge seems like a property of
-the platform/ACPI design that the driver wouldn't know about.
+pci_host_bridge_ops {
+	struct pci_ops *ops;
+	/* set root bus speed, some platform need this like powerpc */
+	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
+	int (*prepare)(struct pci_host_bridge *host);
+	/* platform specific of scan hook to scan pci device */
+	int (*scan_bus)(struct pci_host_bridge *);
+}
+We could easily extend it to support different host bridge
+specific operations.
 
-For pciehp, the notification always goes to the bridge, and we check
-all the devices on the secondary bus for "ignore_hotplug".  If it's
-feasible, it would be nice if acpiphp could use a similar design that
-doesn't require the propagation.  That would reduce code differences
-and also remove a little ambiguity about what "bridge->ignore_hotplug"
-means (does it mean "ignore hotplug of devices below the bridge" or
-"ignore hotplug of this bridge"?)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    9 ++++++++-
+ drivers/pci/pci.h         |    5 +++--
+ drivers/pci/probe.c       |   11 ++++++++---
+ include/linux/pci.h       |    9 +++++++++
+ 4 files changed, 28 insertions(+), 6 deletions(-)
 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / hotplug: Propagate the "ignore hotplug" setting to parent
->
-> Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
-> / nouveau: Fix VGA switcheroo problem related to hotplug) to optionally
-> propagate the ignore_hotplug setting of the device to its parent bridge
-> in case hotplug notifications related to the graphics adapter switching
-> are given for the bridge rather than for the device itself (the need to
-> be ignored in both cases).
->
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
-> Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
-> Reported-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/gpu/drm/nouveau/nouveau_drm.c |    2 +-
->  drivers/gpu/drm/radeon/radeon_drv.c   |    2 +-
->  drivers/pci/pci.c                     |   16 ++++++++++++++++
->  include/linux/pci.h                   |    6 +-----
->  4 files changed, 19 insertions(+), 7 deletions(-)
->
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -4319,6 +4319,22 @@ bool pci_device_is_present(struct pci_de
->  }
->  EXPORT_SYMBOL_GPL(pci_device_is_present);
->
-> +/**
-> + * pci_ignore_hotplug - Ignore subsequent hotplug notifies for this device.
-> + * @dev: Target device.
-> + * @propagate: Whether or not to ignore hotplug notifies for the parent bridge.
-> + */
-> +void pci_ignore_hotplug(struct pci_dev *dev, bool propagate)
-> +{
-> +       struct pci_dev *bridge = dev->bus->self;
-> +
-> +       dev->ignore_hotplug = 1;
-> +       /* Propagate the "ignore hotplug" setting to the parent bridge. */
-> +       if (bridge && propagate)
-> +               bridge->ignore_hotplug = 1;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
-> +
->  #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
->  static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
->  static DEFINE_SPINLOCK(resource_alignment_lock);
-> Index: linux-pm/include/linux/pci.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pci.h
-> +++ linux-pm/include/linux/pci.h
-> @@ -1002,6 +1002,7 @@ int __must_check pci_assign_resource(str
->  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
->  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
-> +void pci_ignore_hotplug(struct pci_dev *dev, bool propagate);
->
->  /* ROM control related routines */
->  int pci_enable_rom(struct pci_dev *pdev);
-> @@ -1039,11 +1040,6 @@ bool pci_dev_run_wake(struct pci_dev *de
->  bool pci_check_pme_status(struct pci_dev *dev);
->  void pci_pme_wakeup_bus(struct pci_bus *bus);
->
-> -static inline void pci_ignore_hotplug(struct pci_dev *dev)
-> -{
-> -       dev->ignore_hotplug = 1;
-> -}
-> -
->  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->                                   bool enable)
->  {
-> Index: linux-pm/drivers/gpu/drm/nouveau/nouveau_drm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/gpu/drm/nouveau/nouveau_drm.c
-> +++ linux-pm/drivers/gpu/drm/nouveau/nouveau_drm.c
-> @@ -731,7 +731,7 @@ nouveau_pmops_runtime_suspend(struct dev
->         ret = nouveau_do_suspend(drm_dev, true);
->         pci_save_state(pdev);
->         pci_disable_device(pdev);
-> -       pci_ignore_hotplug(pdev);
-> +       pci_ignore_hotplug(pdev, true);
->         pci_set_power_state(pdev, PCI_D3cold);
->         drm_dev->switch_power_state = DRM_SWITCH_POWER_DYNAMIC_OFF;
->         return ret;
-> Index: linux-pm/drivers/gpu/drm/radeon/radeon_drv.c
-> ===================================================================
-> --- linux-pm.orig/drivers/gpu/drm/radeon/radeon_drv.c
-> +++ linux-pm/drivers/gpu/drm/radeon/radeon_drv.c
-> @@ -453,7 +453,7 @@ static int radeon_pmops_runtime_suspend(
->         ret = radeon_suspend_kms(drm_dev, false, false);
->         pci_save_state(pdev);
->         pci_disable_device(pdev);
-> -       pci_ignore_hotplug(pdev);
-> +       pci_ignore_hotplug(pdev, true);
->         pci_set_power_state(pdev, PCI_D3cold);
->         drm_dev->switch_power_state = DRM_SWITCH_POWER_DYNAMIC_OFF;
->
->
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 8733b19..f2639f7 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -63,7 +63,8 @@ static bool pci_host_busn_res_overlap(
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+ 		struct device *parent, int domain, int bus,
+-		void *sysdata, struct list_head *resources)
++		void *sysdata, struct list_head *resources,
++		struct pci_host_bridge_ops *ops)
+ {
+ 	int error;
+ 	struct pci_host_bridge *host, *tmp;
+@@ -98,10 +99,16 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	list_add_tail(&host->list, &pci_host_bridge_list);
+ 	mutex_unlock(&pci_host_mutex);
+ 
++	host->ops = ops;
+ 	host->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
++	if (host->ops && host->ops->prepare) {
++		error = host->ops->prepare(host);
++		if (error)
++			goto list_del;
++	}
+ 
+ 	error = pcibios_root_bridge_prepare(host);
+ 	if (error)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 027fba0..ef10cc1 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -334,8 +334,9 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
+ }
+ #endif
+ 
+-struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+-        int domain, int bus, void *sysdata, struct list_head *resources);
++struct pci_host_bridge *pci_create_host_bridge(
++		struct device *parent, int domain, int bus, void *sysdata,
++		struct list_head *resources, struct pci_host_bridge_ops *ops);
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ 
+ static inline int pci_host_first_busnr(struct pci_host_bridge *host)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ee17d9a..36dfee0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1894,6 +1894,8 @@ static struct pci_bus *__pci_create_root_bus(
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+ 
++	if (bridge->ops && bridge->ops->set_root_bus_speed)
++		bridge->ops->set_root_bus_speed(bridge);
+ 	pcibios_set_root_bus_speed(bridge);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+@@ -1958,7 +1960,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+ 	struct pci_host_bridge *host;
+ 
+ 	host = pci_create_host_bridge(parent, domain, bus,
+-			sysdata, resources);
++			sysdata, resources, NULL);
+ 	if (!host)
+ 		return NULL;
+ 
+@@ -2048,7 +2050,10 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	max = pci_scan_child_bus(b);
++	if (host->ops && host->ops->scan_bus)
++		max = host->ops->scan_bus(host);
++	else
++		max = pci_scan_child_bus(b);
+ 
+ 	/* If default busn resource used, update the max bus number */
+ 	if (host->busn_res.flags & IORESOURCE_BUS) {
+@@ -2066,7 +2071,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 	struct pci_host_bridge *host;
+ 
+ 	host = pci_create_host_bridge(parent, domain, bus,
+-			sysdata, resources);
++			sysdata, resources, NULL);
+ 	if (!host)
+ 		return NULL;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 91cba01..2702a51 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -400,6 +400,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
+ }
+ 
++struct pci_host_bridge;
++struct pci_host_bridge_ops {
++	struct pci_ops *pci_ops;
++	int (*prepare)(struct pci_host_bridge *host);
++	void (*set_root_bus_speed)(struct pci_host_bridge *host);
++	int (*scan_bus)(struct pci_host_bridge *host);
++};
++
+ struct pci_host_bridge {
+ 	int domain;
+ 	struct device dev;
+@@ -408,6 +416,7 @@ struct pci_host_bridge {
+ 	struct resource busn_res;
+ 	struct list_head windows;	/* resource_entry */
+ 	struct list_head list;
++	struct pci_host_bridge_ops *ops;
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ };
+-- 
+1.7.1
+
