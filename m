@@ -1,197 +1,268 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0111.outbound.protection.outlook.com ([157.56.110.111]:10683
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932921AbbDXT5r convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Apr 2015 15:57:47 -0400
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Will Deacon <will.deacon@arm.com>
-CC: Varun Sethi <Varun.Sethi@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Fri, 24 Apr 2015 19:24:35 +0000
-Message-ID: <CY1PR0301MB0748607620CC4BDCE43130EA87EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
- <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
- <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <20150416104008.GB25640@arm.com>
- <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150422170718.GG13019@arm.com>
- <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150424161818.GC7313@arm.com> <553A72D4.7000801@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v9 28/30] PCI: Remove platform specific pci_domain_nr()
+Date: Fri, 3 Apr 2015 17:26:02 +0800
+Message-ID: <1428053164-28277-30-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+Alex W
+Now pci_host_bridge holds the domain number,
+so we could eliminate all platform specific
+pci_domain_nr().
 
-> -----Original Message-----
-> From: Yoder Stuart-B08248
-> Sent: Friday, April 24, 2015 1:19 PM
-> To: 'Marc Zyngier'; Will Deacon
-> Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284;
-> Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: Marc Zyngier [mailto:marc.zyngier@arm.com]
-> > Sent: Friday, April 24, 2015 11:44 AM
-> > To: Will Deacon; Yoder Stuart-B08248
-> > Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284;
-> > Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> > Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> >
-> > On 24/04/15 17:18, Will Deacon wrote:
-> > > On Wed, Apr 22, 2015 at 08:41:02PM +0100, Stuart Yoder wrote:
-> > >>>> However, there is an improvement we envision as possible due to
-> > >>>> the limited number of SMMU contexts (i.e. 64).  If there are
-> > >>>> 64 SMMU context registers it means that there is a max of
-> > >>>> 64 software contexts where things can be isolated.  But, say I have
-> > >>>> an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
-> > >>>> to a KVM VM.  Those 8 PCI devices could share the same
-> > >>>> streamID/ITS-device-ID since they all share the same isolation
-> > >>>> context.
-> > >>>>
-> > >>>> What would be nice is at the time the 8 VFS are being added
-> > >>>> to the IOMMU domain is for the pcidevid -> streamID mapping
-> > >>>> table to be updated dynamically.  It simply lets us make
-> > >>>> more efficient use of the limited streamIDs we have.
-> > >>>>
-> > >>>> I think it is this improvement that Minghuan had in mind
-> > >>>> in this patch.
-> > >>>
-> > >>> Ok, but in this case it should be possible to use a single context bank for
-> > >>> all of the VF streamIDs by configuring the appropriate SMR, no?
-> > >>
-> > >> Yes, but there are limited SMRs.  In our case there are only
-> > >> 128 SMRs in SMMU-500 and we have potentially way more masters than
-> > >> that.
-> > >
-> > > Right, but you still only have 64 context banks at the end of the day, so do
-> > > you really anticipate having more than 128 masters concurrently using the
-> > > SMMU? If so, then we have devices sharing context banks so we could consider
-> > > reusing SMRs across masters, but historically that's not been something that
-> > > we've managed to solve.
-> > >
-> > >>> Wouldn't
-> > >>> that sort of thing be preferable to dynamic StreamID assignment? It would
-> > >>> certainly make life easier for the MSIs.
-> > >>
-> > >> It would be preferable, but given only 128 total stream IDS and
-> > >> 64 context registers it's potentially an issue.  On our LS2085 SoC it is
-> > >> PCI and the fsl-mc bus (see description here:
-> > >> https://lkml.org/lkml/2015/3/5/795) that potentially have way
-> > >> more masters than streamIDS. So, for those busses we would essentially
-> > >> view a streamID as a "context ID"-- each SMR is associated with
-> > >> 1 context bank register.
-> > >>
-> > >> For PCI we have a programmable "PCI req ID"-to-"stream ID"
-> > >> mapping table in the PCI controller that is dynamically
-> > >> programmable.
-> > >>
-> > >> Looking at it like that means that we could have
-> > >> any number of masters but only 64 "contexts"
-> > >> and since the masters all all programmable it's
-> > >> seems feasbile to envision doing some bus/vendor
-> > >> specific set up when a device is added to an
-> > >> IOMMU domain.   One thing that would need to be conveyed
-> > >> to the SMMU driver if doing dynamic streamID setup
-> > >> is what streamIDs are available to be used.
-> > >
-> > > Ok, but this is going to make life difficult for the MSI people, I suspect.
-> > >
-> > > Marc...?
-> >
-> > We're really facing two conflicting requirements: in order to minimize
-> > SMR usage, we want to alias multiple ReqIDs to a single StreamID
-> 
-> Another reason could be the isolation characteristics of the
-> hardware...see comment below about PCI bridges.
-> 
-> > but in
-> > order to efficiently deal with MSIs, we want to see discrete DeviceIDs
-> > (the actual ReqIDs). I don't easily see how we reconcile the two.
-> >
-> > We can deal with the aliasing, provided that we extend the level of
-> > quirkiness that pci_for_each_dma_alias can deal with. But that doesn't
-> > solve any form of hotplug/SR-IOV behaviour.
-> >
-> > Somehow, we're going to end-up with grossly oversized ITTs, just to
-> > accommodate for the fact that we have no idea how many MSIs we're going
-> > to end-up needing. I'm not thrilled with that prospect.
-> 
-> How can we avoid that in the face of hotplug?
-> 
-> And what are we really worried about regarding over-sized ITTs...bytes
-> of memory saved?
-> 
-> A fundamental thing built into the IOMMU subsystem in Linux is
-> representing iommu groups that can represent things like
-> multiple PCI devices that for hardware reasons cannot
-> be isolated (and the example I've seen given relates to
-> devices behind PCI bridges).
-> 
-> So, I think the thing we are facing here is that while the
-> IOMMU subsystem has accounted for reprsenting the isolation
-> characteristics of a system with iommu groups, there is
-> no corresponding "msi group" concept.
-> 
-> In the SMMU/GIC-500-ITS world the iommu isolation
-> ID (the stream ID) and the GIC-ITS device ID are in
-> fact the same ID.
-> 
-> Is there some way we could sanely correlate IOMMU group creation
-> (which establishes isolation granularity) with the creation
-> of an ITT for the GIC-ITS?
-> 
-> (I don't have a good feel for how device IDs work on x86,
-> I know there is an interrupt remapping table in the
-> x86 IOMMUs that is distinct from the memory isolation
-> page tables)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/alpha/include/asm/pci.h     |    2 --
+ arch/ia64/include/asm/pci.h      |    1 -
+ arch/microblaze/pci/pci-common.c |   11 -----------
+ arch/mips/include/asm/pci.h      |    2 --
+ arch/powerpc/kernel/pci-common.c |   11 -----------
+ arch/s390/pci/pci.c              |    6 ------
+ arch/sh/include/asm/pci.h        |    2 --
+ arch/sparc/kernel/pci.c          |   17 -----------------
+ arch/tile/include/asm/pci.h      |    2 --
+ arch/x86/include/asm/pci.h       |    6 ------
+ drivers/pci/host-bridge.c        |   10 ++++++++++
+ include/linux/pci.h              |    7 +------
+ 12 files changed, 11 insertions(+), 66 deletions(-)
 
-For reference see Alex Williamson's description of IOMMU
-isolation scenarios in Documentation/vfio.txt:
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index f7f680f..63a9a1e 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -95,8 +95,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 	return channel ? 15 : 14;
+ }
+ 
+-#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_controller *hose = bus->sysdata;
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 52af5ed..1dcea49 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -99,7 +99,6 @@ struct pci_controller {
+ 
+ 
+ #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+-#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
+ 
+ extern struct pci_ops pci_root_ops;
+ 
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index d232c8a..6f64908 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 193b4c6..2e4d808 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -122,8 +122,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ #endif
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+-#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_controller *hose = bus->sysdata;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 50b32f6..362f82e 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -181,17 +181,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 7c5199b..d2c108e 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -101,12 +101,6 @@ static struct zpci_dev *get_zdev_by_bus(struct pci_bus *bus)
+ 	return (bus && bus->sysdata) ? (struct zpci_dev *) bus->sysdata : NULL;
+ }
+ 
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	return ((struct zpci_dev *) bus->sysdata)->domain;
+-}
+-EXPORT_SYMBOL_GPL(pci_domain_nr);
+-
+ int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return pci_domain_nr(bus);
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 5b45115..4dc3ad6 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -109,8 +109,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+ /* Board-specific fixup routines. */
+ int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
+ 
+-#define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	struct pci_channel *hose = bus->sysdata;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index fa95a1d..57857c7 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -905,23 +905,6 @@ int pcibus_to_node(struct pci_bus *pbus)
+ EXPORT_SYMBOL(pcibus_to_node);
+ #endif
+ 
+-/* Return the domain number for this pci bus */
+-
+-int pci_domain_nr(struct pci_bus *pbus)
+-{
+-	struct pci_pbm_info *pbm = pbus->sysdata;
+-	int ret;
+-
+-	if (!pbm) {
+-		ret = -ENXIO;
+-	} else {
+-		ret = pbm->index;
+-	}
+-
+-	return ret;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ #ifdef CONFIG_PCI_MSI
+ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
+ {
+diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
+index dfedd7a..23a726e 100644
+--- a/arch/tile/include/asm/pci.h
++++ b/arch/tile/include/asm/pci.h
+@@ -199,8 +199,6 @@ int __init pcibios_init(void);
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus);
+ 
+-#define pci_domain_nr(bus) (((struct pci_controller *)(bus)->sysdata)->index)
+-
+ /*
+  * This decides whether to display the domain number in /proc.
+  */
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5..4fe0458 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -29,12 +29,6 @@ extern int noioapicreroute;
+ #ifdef CONFIG_PCI
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+-static inline int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_sysdata *sd = bus->sysdata;
+-	return sd->domain;
+-}
+-
+ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return pci_domain_nr(bus);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 832e1c3..04c69c5 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -151,6 +151,16 @@ static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ 	return to_pci_host_bridge(root_bus->bridge);
+ }
+ 
++#ifdef CONFIG_PCI_DOMAINS
++int pci_domain_nr(struct pci_bus *bus)
++{
++	struct pci_host_bridge *host = find_pci_host_bridge(bus);
++
++	return host->domain;
++}
++EXPORT_SYMBOL(pci_domain_nr);
++#endif
++
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 				 void (*release_fn)(struct pci_host_bridge *),
+ 				 void *release_data)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 62333ff..c2c6675 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1320,6 +1320,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+ int pci_get_new_domain_nr(void);
++int pci_domain_nr(struct pci_bus *bus);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+@@ -1332,12 +1333,6 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+  * architecture does not need custom management of PCI
+  * domains then this implementation will be used
+  */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-static inline int pci_domain_nr(struct pci_bus *bus)
+-{
+-	return bus->domain_nr;
+-}
+-#endif
+ 
+ /* some architectures require additional setup to direct VGA traffic */
+ typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
+-- 
+1.7.1
 
-   ...
-   This isolation is not always at the granularity of a single device
-   though.  Even when an IOMMU is capable of this, properties of devices,
-   interconnects, and IOMMU topologies can each reduce this isolation.
-   For instance, an individual device may be part of a larger multi-
-   function enclosure.  While the IOMMU may be able to distinguish
-   between devices within the enclosure, the enclosure may not require
-   transactions between devices to reach the IOMMU.  Examples of this
-   could be anything from a multi-function PCI device with backdoors
-   between functions to a non-PCI-ACS (Access Control Services) capable
-   bridge allowing redirection without reaching the IOMMU.  Topology
-   can also play a factor in terms of hiding devices.  A PCIe-to-PCI
-   bridge masks the devices behind it, making transaction appear as if
-   from the bridge itself.  Obviously IOMMU design plays a major factor
-   as well.
-
-   Therefore, while for the most part an IOMMU may have device level
-   granularity, any system is susceptible to reduced granularity.  The
-   IOMMU API therefore supports a notion of IOMMU groups.  A group is
-   a set of devices which is isolatable from all other devices in the
-   system.  Groups are therefore the unit of ownership used by VFIO.
-   ...
-
-The isolation granularity issues he raises are going to impact how
-we deal with MSIs with GIC ITS because again, isolation ID and 
-GIC ITS device ID are the same.
-
-Stuart
