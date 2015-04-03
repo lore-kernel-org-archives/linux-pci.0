@@ -1,96 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32520 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753028AbbDMGK2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 02:10:28 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: [Patch Part1 v8 03/37] x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
-Date: Mon, 13 Apr 2015 14:11:25 +0800
-Message-Id: <1428905519-23704-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <bhelgaas@google.com>
+Return-Path: <bhelgaas@google.com>
+Date: Fri, 3 Apr 2015 10:45:26 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Miller <davem@davemloft.net>
+Cc: bjorn@helgaas.com, bjorn.helgaas@gmail.com, sparclinux@vger.kernel.org,
+	linux-pci@vger.kernel.org, yinghai@kernel.org,
+	david.ahern@oracle.com, linux-kernel@vger.kernel.org
+Subject: Re: d63e2e1f3df breaks sparc/T5-8
+Message-ID: <20150403154526.GB10892@google.com>
+References: <CAE9FiQXAD1ncuJ=ZiOSR4xCKbamPJ-5JSqEx1Veiai5bZKBcGA@mail.gmail.com>
+ <20150327.145016.86183910134380870.davem@davemloft.net>
+ <CABhMZUVqgsYdT4wn2H8hsrh4f=6hT0G+sg=wwYSt33+jtvBS9A@mail.gmail.com>
+ <20150329.113250.2136683943336875789.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150329.113250.2136683943336875789.davem@davemloft.net>
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
-kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+On Sun, Mar 29, 2015 at 11:32:50AM -0700, David Miller wrote:
+> From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+> Date: Sun, 29 Mar 2015 08:30:40 -0500
+> 
+> > Help me understand the sparc64 situation: are you saying that BAR
+> > addresses, i.e., MMIO transactions from a CPU or a peer-to-peer DMA can be
+> > 64 bits, but a DMA to main memory can only be 32 bits?
+> > 
+> > I assume this would work if we made dma_addr_t 64 bits on sparc64.  What
+> > would be the cost of doing that?
+> 
+> The cost is 4 extra bytes in every datastructure, kernel wide, that
+> stores DMA addresses.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Link: http://lkml.kernel.org/r/1416894816-23245-4-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/kernel/hpet.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+That much is fairly obvious.  What I don't know is how much difference this
+makes in the end.
 
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index 3acbff4716b0..ae29554f57ea 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,6 +11,7 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
-@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
- static int hpet_setup_msi_irq(unsigned int irq)
- {
- 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
--		irq_free_hwirq(irq);
-+		irq_domain_free_irqs(irq, 1);
- 		return -EINVAL;
- 	}
- 	return 0;
-@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
- 
- static int hpet_assign_irq(struct hpet_dev *dev)
- {
--	unsigned int irq = irq_alloc_hwirq(-1);
-+	int irq;
- 
--	if (!irq)
-+	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+	if (irq <= 0)
- 		return -EINVAL;
- 
- 	irq_set_handler_data(irq, dev);
--- 
-1.7.10.4
+> Don't use DMA addresses for PCI addresses.  They are absolutely not
+> the same, especially when an IOMMU is always present because in that
+> case all DMA addresses are virtual and exist in a different realm
+> and set of constraints/restrictions.
 
+I'm still trying to figure out a clear description of how a DMA address is
+different from a PCI address.  If you capture a transaction with a PCI
+analyzer, I don't think you can tell a DMA address from a PCI address
+unless you know how bridge windows are programmed.  Even then, I'm not sure
+you can tell a CPU-generated PCI address from a DMA address in a
+device-generated peer-to-peer transaction.
+
+Bjorn
