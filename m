@@ -1,89 +1,109 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	kernel@stlinux.com, linux-pci@vger.kernel.org,
-	Lee Jones <lee.jones@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
-Date: Sat, 11 Apr 2015 16:55:50 +0200
-Message-ID: <2529595.kpEIoZMpcn@wuerfel>
-In-Reply-To: <1428747477.17822.90.camel@x220>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org> <1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org> <1428747477.17822.90.camel@x220>
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	"Fenghua Yu" <fenghua.yu@intel.com>
+Subject: [PATCH v9 18/30] ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
+Date: Fri, 3 Apr 2015 17:25:52 +0800
+Message-ID: <1428053164-28277-20-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 11 April 2015 12:17:57 Paul Bolle wrote:
-> Something I didn't spot in my first look at this patch.
-> 
-> On Fri, 2015-04-10 at 11:12 +0200, Gabriel FERNANDEZ wrote:
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> >  
-> > +config PCI_ST
-> > +     bool "ST PCIe controller"
-> > +     depends on ARCH_STI || (ARM && COMPILE_TEST)
-> > +     select PCIE_DW
-> > +     help
-> > +       Enable PCIe controller support on ST Socs. This controller is based
-> > +       on Designware hardware and therefore the driver re-uses the
-> > +       Designware core functions to implement the driver.
-> 
-> You can't have ARCH_STI without ARM, so ARM will always be set if this
-> driver is enabled. Correct?
+From: Yijing Wang <wangyijing0307@gmail.com>
 
-Right, though the ARM dependency could soon be dropped, once the PCIE_DW
-driver can use generic infrastructure in the few places it relies on
-ARM specific code today.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Tony Luck <tony.luck@intel.com>
+CC: Fenghua Yu <fenghua.yu@intel.com>
+CC: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |   34 +++++++++++++++++++---------------
+ 1 files changed, 19 insertions(+), 15 deletions(-)
 
-> > --- /dev/null
-> > +++ b/drivers/pci/host/pci-st.c
-> 
-> > +     if (IS_ENABLED(CONFIG_ARM)) {
-> > +             /*
-> > +              * We have to hook the abort handler so that we can intercept
-> > +              * bus errors when doing config read/write that return UR,
-> > +              * which is flagged up as a bus error
-> > +              */
-> > +             hook_fault_code(16+6, st_pcie_abort_handler, SIGBUS, 0,
-> > +                             "imprecise external abort");
-> > +     }
-> 
-> So, unless I'm missing something obvious here, IS_ENABLED(CONFIG_ARM)
-> will always evaluate to 1. Can't that test be dropped?
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index c642bc8..95dc43b 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -420,6 +420,19 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 	return 0;
+ }
+ 
++static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *controller = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
++	return 0;
++}
++
++static struct pci_host_bridge_ops pci_host_ops = {
++	.pci_ops = &pci_root_ops,
++	.prepare = pci_host_bridge_prepare,
++};
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -428,7 +441,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_controller *controller;
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+-	struct pci_bus *pbus;
++	struct pci_host_bridge *host;
+ 	int ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+@@ -465,26 +478,17 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * should handle the case here, but it appears that IA64 hasn't
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+-	pbus = pci_create_root_bus(NULL, domain, bus, &pci_root_ops,
+-			controller, &info->resources);
+-	if (!pbus) {
++	host = pci_scan_host_bridge(NULL, domain, bus, controller,
++			&info->resources, &pci_host_ops);
++	if (!host) {
+ 		pci_free_resource_list(&info->resources);
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
++	pci_set_host_bridge_release(host,
+ 			release_pci_root_info, info);
+-	pci_scan_child_bus(pbus);
+-	return pbus;
+-}
+-
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	struct pci_controller *controller = bridge->bus->sysdata;
+-
+-	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	return 0;
++	return host->bus;
+ }
+ 
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
+-- 
+1.7.1
 
-I would leave it in, as it's quite likely to get reused with ARM64 at some
-point in the future (no, I don't know anything about ST's product plans,
-but everybody seems to be doing this).
-
-	Arnd
