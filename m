@@ -1,183 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Joerg Roedel <jroedel@suse.de>
-Subject: [Patch Part2 v5 09/33] irq_remapping: Clean up unsued code to support IOAPIC
-Date: Tue, 14 Apr 2015 10:29:46 +0800
-Message-Id: <1428978610-28986-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v9 27/30] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
+Date: Fri, 3 Apr 2015 17:26:01 +0800
+Message-ID: <1428053164-28277-29-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so clean up unused code.
+Now no one use pci_create_root_bus(), we could remove it
+and rename __pci_create_root_bus() to pci_create_root_bus().
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-19-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: wangyijing@huawei.com
 ---
- arch/x86/include/asm/irq_remapping.h |   23 -----------------------
- arch/x86/kernel/apic/vector.c        |    1 -
- drivers/iommu/irq_remapping.c        |   33 ---------------------------------
- 3 files changed, 57 deletions(-)
+ drivers/pci/probe.c |   35 +++++++++--------------------------
+ include/linux/pci.h |    3 ---
+ 2 files changed, 9 insertions(+), 29 deletions(-)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 4b5bbd104ae2..09efa358c831 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -26,12 +26,7 @@
- #include <asm/hw_irq.h>
- #include <asm/io_apic.h>
- 
--struct IO_APIC_route_entry;
--struct io_apic_irq_attr;
--struct irq_chip;
- struct msi_msg;
--struct pci_dev;
--struct irq_cfg;
- struct irq_alloc_info;
- 
- #ifdef CONFIG_IRQ_REMAP
-@@ -42,13 +37,7 @@ extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
- extern int irq_remapping_reenable(int);
- extern int irq_remap_enable_fault_handling(void);
--extern void free_remapped_irq(int irq);
- extern void panic_if_irq_remap(const char *msg);
--extern bool setup_remapped_irq(int irq,
--			       struct irq_cfg *cfg,
--			       struct irq_chip *chip);
--
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
- 
- extern struct irq_domain *
- irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info);
-@@ -72,23 +61,11 @@ static inline int irq_remapping_enable(void) { return -ENODEV; }
- static inline void irq_remapping_disable(void) { }
- static inline int irq_remapping_reenable(int eim) { return -ENODEV; }
- static inline int irq_remap_enable_fault_handling(void) { return -ENODEV; }
--static inline void free_remapped_irq(int irq) { }
- 
- static inline void panic_if_irq_remap(const char *msg)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 7796bf8..cb0237f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
  {
  }
  
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
--
--static inline bool setup_remapped_irq(int irq,
--				      struct irq_cfg *cfg,
--				      struct irq_chip *chip)
--{
--	return false;
--}
--
- static inline struct irq_domain *
- irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info)
+-static struct pci_bus *__pci_create_root_bus(
++static struct pci_bus *pci_create_root_bus(
+ 		struct pci_host_bridge *bridge, struct pci_ops *ops)
  {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 31dc4a871673..ca30365507a0 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -283,7 +283,6 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(x86_vector_domain, virq + i);
- 		if (irq_data && irq_data->chip_data) {
--			free_remapped_irq(virq);
- 			clear_irq_vector(virq + i, irq_data->chip_data);
- 			free_irq_cfg(irq_data->chip_data);
- #ifdef	CONFIG_X86_IO_APIC
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index bca42550b1ad..fc78b0d41f71 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -25,11 +25,6 @@ int no_x2apic_optout;
- static int disable_irq_remap;
- static struct irq_remap_ops *remap_ops;
- 
--static bool irq_remapped(struct irq_cfg *cfg)
--{
--	return (cfg->remapped == 1);
--}
--
- static void irq_remapping_disable_io_apic(void)
- {
- 	/*
-@@ -140,14 +135,6 @@ int __init irq_remap_enable_fault_handling(void)
- 	return remap_ops->enable_faulting();
+ 	int error;
+@@ -1937,24 +1937,6 @@ put_dev:
+ 	return NULL;
  }
  
--void free_remapped_irq(int irq)
+-struct pci_bus *pci_create_root_bus(struct device *parent,
+-		int domain, int bus, struct pci_ops *ops, void *sysdata,
+-		struct list_head *resources)
 -{
--	struct irq_cfg *cfg = irq_cfg(irq);
+-	struct pci_host_bridge *host;
 -
--	if (irq_remapped(cfg) && remap_ops->free_irq)
--		remap_ops->free_irq(irq);
+-	host = pci_create_host_bridge(parent, domain, bus,
+-			sysdata, resources, NULL);
+-	if (!host)
+-		return NULL;
+-
+-	host->bus = __pci_create_root_bus(host, ops);
+-	if (!host->bus)
+-		pci_free_host_bridge(host);
+-
+-	return host->bus;
 -}
 -
- void panic_if_irq_remap(const char *msg)
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
  {
- 	if (irq_remapping_enabled)
-@@ -159,26 +146,6 @@ void ir_ack_apic_edge(struct irq_data *data)
- 	ack_APIC_irq();
- }
+ 	struct resource *res = &b->busn_res;
+@@ -2030,7 +2012,7 @@ static struct pci_bus *__pci_scan_root_bus(
+ 	struct pci_bus *b;
+ 	int max;
  
--static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
--{
--	seq_printf(p, " IR-%s", data->chip->name);
--}
--
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--	chip->irq_print_chip = ir_print_prefix;
--	chip->irq_ack = ir_ack_apic_edge;
--}
--
--bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
--{
--	if (!irq_remapped(cfg))
--		return false;
--	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
--	irq_remap_modify_chip_defaults(chip);
--	return true;
--}
--
- /**
-  * irq_remapping_get_ir_irq_domain - Get the irqdomain associated with the IOMMU
-  *				     device serving request @info
+-	b = __pci_create_root_bus(host, ops);
++	b = pci_create_root_bus(host, ops);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -2093,19 +2075,20 @@ struct pci_bus *pci_scan_bus(int domain, int bus,
+ 		struct pci_ops *ops, void *sysdata)
+ {
+ 	LIST_HEAD(resources);
+-	struct pci_bus *b;
++	struct pci_host_bridge *host;
+ 
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, domain, bus, ops, sysdata,
+-			&resources);
+-	if (b) {
+-		pci_scan_child_bus(b);
++	host = pci_create_host_bridge(NULL, domain, bus, sysdata,
++			&resources, NULL);
++	if (host) {
++		__pci_scan_root_bus(host, ops);
++		return host->bus;
+ 	} else {
+ 		pci_free_resource_list(&resources);
+ 	}
+-	return b;
++	return NULL;
+ }
+ EXPORT_SYMBOL(pci_scan_bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 61e0853..62333ff 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -782,9 +782,6 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus *pci_scan_bus(int domain, int bus, struct pci_ops *ops,
+ 					void *sysdata);
+-struct pci_bus *pci_create_root_bus(struct device *parent, int domain, int bus,
+-				    struct pci_ops *ops, void *sysdata,
+-				    struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
-1.7.10.4
+1.7.1
 
