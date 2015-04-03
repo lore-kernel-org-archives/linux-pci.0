@@ -1,74 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:60100 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902AbbD3HzJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2015 03:55:09 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pavel Fedin <p.fedin@samsung.com>
-Cc: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-	'Jayachandran C' <jchandra@broadcom.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, 'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'Sergey Dyasly' <s.dyasly@samsung.com>
-Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
-Date: Thu, 30 Apr 2015 09:55 +0200
-Message-ID: <2123326.va7nY6tTq7@wuerfel>
-In-Reply-To: <"00b001d08310$82022b40$860681c0$@fedin"@samsung.com>
-References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com> <20150429174356.GA20947@red-moon> <"00b001d08310$82022b40$860681c0$@fedin"@samsung.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:55222 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560AbbDCJ3K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:10 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v9 19/30] powerpc/pci: Use pci_scan_host_bridge() for simplicity
+Date: Fri, 3 Apr 2015 17:25:53 +0800
+Message-ID: <1428053164-28277-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 30 April 2015 09:40:10 Pavel Fedin wrote:
-> > The other bit missing is MSI handling, that should still be implemented.
-> 
->  Hello! I decided to have a voice here.
->  I am currently working on a virtualization project, and i have made some
-> experimental additions to PCI-Generic code which enable PCI-X support. I
-> wanted to upstream this, but as far as i can see, you are refactoring
-> everything here.
->  Personally i think that pci_common_init_dev() is a good thing and it should
-> not be removed. Even more, perhaps it needs to be expanded with PCI-X
-> support. My current code adds a piece very similar to
-> mvebu_pcie_msi_enable(), which reads "msi-parent" property and then calls
-> of_pci_find_msi_chip_by_node().
->  MVEBU driver then fills in hw.msi_ctrl with the obtained pointer and calls
-> pci_common_init(), which is the same as pci_common_init_dev(NULL, hw). My
-> modified Generic driver now does the same. So, the question is - may be we
-> should extract "msi-parent" handling from MVEBU and move it into
-> pci_common_init_dev() ?
->  Just IMHO copy-pasting this function over and over again in all drivers is
-> a bad idea.
-> 
->  And one more. pci_common_init_dev() currently does not assign bus->msi,
-> therefore IRQ domain operations do not work. I have fixed this too, but
-> perhaps it's another story...
+Now we could use pci_scan_host_bridge() to scan
+pci buses, provide powerpc specific pci_host_bridge_ops.
 
-Hi Pavel,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/kernel/pci-common.c |   62 +++++++++++++++++++++++--------------
+ 1 files changed, 38 insertions(+), 24 deletions(-)
 
-There are a few problems with pci_common_init_dev() that we are solving
-by not calling it:
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 2c58200..50b32f6 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -773,6 +773,29 @@ void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+ 		return ppc_md.pcibios_set_root_bus_speed(bridge);
+ }
+ 
++static int pci_host_scan_bus(struct pci_host_bridge *host)
++{
++	int mode = PCI_PROBE_NORMAL;
++	struct pci_bus *bus = host->bus;
++	struct pci_controller *hose = dev_get_drvdata(&host->dev);
++
++	/* Get probe mode and perform scan */
++	if (hose->dn && ppc_md.pci_probe_mode)
++		mode = ppc_md.pci_probe_mode(bus);
++
++	pr_debug("    probe mode: %d\n", mode);
++	if (mode == PCI_PROBE_DEVTREE)
++		of_scan_bus(hose->dn, bus);
++
++	if (mode == PCI_PROBE_NORMAL) {
++		pci_bus_update_busn_res_end(bus, 255);
++		hose->last_busno = pci_scan_child_bus(bus);
++		pci_bus_update_busn_res_end(bus, hose->last_busno);
++	}
++
++	return pci_bus_child_max_busnr(bus);
++}
++
+ /* This header fixup will do the resource fixup for all devices as they are
+  * probed, but not for bridge ranges
+  */
+@@ -1585,6 +1608,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ 	return of_node_get(hose->dn);
+ }
+ 
++static struct pci_host_bridge_ops pci_host_ops = {
++	.set_root_bus_speed = pcibios_set_root_bus_speed,
++	.scan_bus = pci_host_scan_bus,
++};
++
+ /**
+  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
+  * @hose: Pointer to the PCI host controller instance structure
+@@ -1592,9 +1620,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+ void pcibios_scan_phb(struct pci_controller *hose)
+ {
+ 	LIST_HEAD(resources);
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host;
+ 	struct device_node *node = hose->dn;
+-	int mode;
+ 
+ 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
+ 
+@@ -1609,30 +1636,17 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 	hose->busn.flags = IORESOURCE_BUS;
+ 	pci_add_resource(&resources, &hose->busn);
+ 
++	pci_host_ops.pci_ops = hose->ops;
+ 	/* Create an empty bus for the toplevel */
+-	bus = pci_create_root_bus(hose->parent, hose->global_number,
+-			hose->first_busno, hose->ops, hose, &resources);
+-	if (bus == NULL) {
+-		pr_err("Failed to create bus for PCI domain %04x\n",
+-			hose->global_number);
++	host = pci_scan_host_bridge(hose->parent, hose->global_number,
++			hose->first_busno, hose, &resources, &pci_host_ops);
++	if (host == NULL) {
++		pr_err("Failed to create host bridge for pci%04x:%02x\n",
++			hose->global_number, hose->first_busno);
+ 		pci_free_resource_list(&resources);
+ 		return;
+ 	}
+-	hose->bus = bus;
+-
+-	/* Get probe mode and perform scan */
+-	mode = PCI_PROBE_NORMAL;
+-	if (node && ppc_md.pci_probe_mode)
+-		mode = ppc_md.pci_probe_mode(bus);
+-	pr_debug("    probe mode: %d\n", mode);
+-	if (mode == PCI_PROBE_DEVTREE)
+-		of_scan_bus(node, bus);
+-
+-	if (mode == PCI_PROBE_NORMAL) {
+-		pci_bus_update_busn_res_end(bus, 255);
+-		hose->last_busno = pci_scan_child_bus(bus);
+-		pci_bus_update_busn_res_end(bus, hose->last_busno);
+-	}
++	hose->bus = host->bus;
+ 
+ 	/* Platform gets a chance to do some global fixups before
+ 	 * we proceed to resource allocation
+@@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
+ 		ppc_md.pcibios_fixup_phb(hose);
+ 
+ 	/* Configure PCI Express settings */
+-	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+ 		struct pci_bus *child;
+-		list_for_each_entry(child, &bus->children, node)
++		list_for_each_entry(child, &host->bus->children, node)
+ 			pcie_bus_configure_settings(child);
+ 	}
+ }
+-- 
+1.7.1
 
-- The interface is ARM specific, and not easily extended to other
-  architectures that have requirements it does not handle today, and
-  we definitely want to share host drivers between arm, arm64, mips
-  and microblaze at least, probably most others in the long run.
-
-- The lack of return code and error handling means it is not good for
-  pci host drivers in loadable modules.
-
-- The way that the interface registers multiple host bridges at the
-  same time means that implementing that error handling is not possible
-  without major changes.
-
-The plan forward at this point is to move over all drivers in
-drivers/pci/host to one of the architecture-independent interfaces.
-
-There is a lot of work going on at the moment to improve those interfaces
-to reduce code duplication and to make it as easy as possible to bring
-up a PCI host controller though, and there are probably more things that
-could be included there. 
-
-	Arnd
