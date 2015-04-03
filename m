@@ -1,174 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60545 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbbEAGEf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:35 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:34 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D74742CE804E
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:31 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164NSN50397402
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:31 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163vrt000785
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:58 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 16/21] powerpc/pci: Create eeh_dev while creating pci_dn
-Date: Fri,  1 May 2015 16:03:03 +1000
-Message-Id: <1430460188-31343-17-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:55282 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbbDCJ3O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:14 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v9 13/30] PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
+Date: Fri, 3 Apr 2015 17:25:47 +0800
+Message-ID: <1428053164-28277-15-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The eeh_dev is always created based on pci_dn, but with initcall
-supported by core_initcall_sync(). The patch creates eeh_dev
-when pci_dn is created, indicating they have same life cycle.
+Move pcibios_root_bridge_prepare() to pci_create_host_bridge().
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/include/asm/eeh.h         |  6 ++++--
- arch/powerpc/kernel/eeh_dev.c          | 18 ++++--------------
- arch/powerpc/kernel/pci_dn.c           | 12 ++++++++++++
- arch/powerpc/platforms/pseries/setup.c |  6 +-----
- 4 files changed, 21 insertions(+), 21 deletions(-)
+ drivers/pci/host-bridge.c |   16 +++++++++++++---
+ drivers/pci/probe.c       |    3 ---
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 2793d24..4ed88f6 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -269,7 +269,8 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
- const char *eeh_pe_loc_get(struct eeh_pe *pe);
- struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 98047c6..8733b19 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -92,9 +92,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 			pr_warn("pci host bridge pci%04x:%02x exist\n",
+ 					host->domain, bus);
+ 			mutex_unlock(&pci_host_mutex);
+-			pci_free_resource_list(&host->windows);
+-			kfree(host);
+-			return NULL;
++			goto free_res;
+ 		}
+ 	}
+ 	list_add_tail(&host->list, &pci_host_bridge_list);
+@@ -105,6 +103,10 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
  
--void *eeh_dev_init(struct pci_dn *pdn, void *data);
-+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+			     struct pci_controller *phb);
- void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
- int eeh_init(void);
- int __init eeh_ops_register(struct eeh_ops *ops);
-@@ -322,7 +323,8 @@ static inline int eeh_init(void)
- 	return 0;
- }
- 
--static inline void *eeh_dev_init(struct pci_dn *pdn, void *data)
-+static inline struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+					   struct pci_controller *phb)
- {
- 	return NULL;
- }
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index f33ce5b..7486932 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -44,14 +44,14 @@
- /**
-  * eeh_dev_init - Create EEH device according to OF node
-  * @pdn: PCI device node
-- * @data: PHB
-+ * @phb: PCI controller
-  *
-  * It will create EEH device according to the given OF node. The function
-  * might be called by PCI emunation, DR, PHB hotplug.
-  */
--void *eeh_dev_init(struct pci_dn *pdn, void *data)
-+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+			     struct pci_controller *phb)
- {
--	struct pci_controller *phb = data;
- 	struct eeh_dev *edev;
- 
- 	/* Allocate EEH device */
-@@ -68,7 +68,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
- 	edev->phb = phb;
- 	INIT_LIST_HEAD(&edev->list);
- 
--	return NULL;
-+	return edev;
- }
- 
- /**
-@@ -80,16 +80,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
-  */
- void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
- {
--	struct pci_dn *root = phb->pci_data;
--
- 	/* EEH PE for PHB */
- 	eeh_phb_pe_create(phb);
--
--	/* EEH device for PHB */
--	eeh_dev_init(root, phb);
--
--	/* EEH devices for children OF nodes */
--	traverse_pci_dn(root, eeh_dev_init, phb);
- }
- 
- /**
-@@ -105,8 +97,6 @@ static int __init eeh_dev_phb_init(void)
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		eeh_dev_phb_init_dynamic(phb);
- 
--	pr_info("EEH: devices created\n");
--
- 	return 0;
- }
- 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index d3833af..abc81fa 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -276,6 +276,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	const __be32 *regs;
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
-+#ifdef CONFIG_EEH
-+	struct eeh_dev *edev;
-+#endif
- 
- 	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (pdn == NULL)
-@@ -306,6 +309,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	/* Extended config space */
- 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
- 
-+	/* Initialize EEH device */
-+#ifdef CONFIG_EEH
-+	edev = eeh_dev_init(pdn, phb);
-+	if (!edev) {
-+		kfree(pdn);
-+		return NULL;
-+	}
-+#endif
++	error = pcibios_root_bridge_prepare(host);
++	if (error)
++		goto list_del;
 +
- 	/* Attach to parent node */
- 	INIT_LIST_HEAD(&pdn->child_list);
- 	INIT_LIST_HEAD(&pdn->list);
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 5f80758..92974aa 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -261,12 +261,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
- 	switch (action) {
- 	case OF_RECONFIG_ATTACH_NODE:
- 		pci = np->parent->data;
--		if (pci) {
-+		if (pci)
- 			update_dn_pci_info(np, pci->phb);
--
--			/* Create EEH device for the OF node */
--			eeh_dev_init(PCI_DN(np), pci->phb);
--		}
- 		break;
- 	default:
- 		err = NOTIFY_DONE;
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+@@ -112,6 +114,14 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	}
+ 
+ 	return host;
++list_del:
++	mutex_lock(&pci_host_mutex);
++	list_del(&host->list);
++	mutex_unlock(&pci_host_mutex);
++free_res:
++	pci_free_resource_list(&host->windows);
++	kfree(host);
++	return NULL;
+ }
+ 
+ void pci_free_host_bridge(struct pci_host_bridge *host)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 418a426..ee17d9a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1893,9 +1893,6 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error)
+-		goto put_dev;
+ 
+ 	pcibios_set_root_bus_speed(bridge);
+ 	device_enable_async_suspend(b->bridge);
 -- 
-2.1.0
+1.7.1
 
