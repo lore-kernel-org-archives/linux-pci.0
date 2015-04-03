@@ -1,118 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52946 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221AbbDEMFl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 5 Apr 2015 08:05:41 -0400
-Date: Sun, 5 Apr 2015 14:05:07 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:55306 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704AbbDCJ3P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:15 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
 	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	linux-api@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>,
-	Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
-Subject: Re: [PATCH v2] pci: export class IDs from pci_ids.h
-Message-ID: <20150405132041-mutt-send-email-mst@redhat.com>
-References: <1427714755-16873-1-git-send-email-mst@redhat.com>
- <20150402205347.GA10892@google.com>
- <20150402232804-mutt-send-email-mst@redhat.com>
- <CAErSpo7Wtg2QTznd7RpqXrGO7BL7OekE89iH6CvuXsC6gyVXWg@mail.gmail.com>
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v9 20/30] PCI: Remove pcibios_root_bridge_prepare() and pcibos_set_root_bus_speed()
+Date: Fri, 3 Apr 2015 17:25:54 +0800
+Message-ID: <1428053164-28277-22-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7Wtg2QTznd7RpqXrGO7BL7OekE89iH6CvuXsC6gyVXWg@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 02, 2015 at 05:32:14PM -0500, Bjorn Helgaas wrote:
-> [+cc Martin]
+Now no one use weak pcibios_root_bridge_prepare() and
+pcibios_set_root_bus_speed, we could clean up them.
 
-That's a good idea. Martin, could you please answer the following:
-assuming that linux exported linux/pci_ids.h providing class
-IDs that are currently in /usr/include/pci/header.h
-in a header /usr/include/linux/pci_ids.h,
-would libpci be open to replacing part of
-/usr/include/pci/header.h with #include <linux/pci_ids.h>,
-assuming that a solution for old systems that lack this
-header is also provided?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    4 ----
+ drivers/pci/probe.c       |   18 +-----------------
+ include/linux/pci.h       |    2 --
+ 3 files changed, 1 insertions(+), 23 deletions(-)
 
-> On Thu, Apr 2, 2015 at 4:28 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> > On Thu, Apr 02, 2015 at 03:53:47PM -0500, Bjorn Helgaas wrote:
-> >> On Mon, Mar 30, 2015 at 01:33:28PM +0200, Michael S. Tsirkin wrote:
-> >> > The basic class ID macros in pci_ids.h are pretty useful for userspace
-> >> > using the pci sysfs interface, and they aren't fundamentally different
-> >> > from the constants in pci_regs.h - both are defined in the
-> >> > pci spec.
-> >> >
-> >> > At the moment userspace is forced to duplicate these macros
-> >> > (e.g. QEMU does this, so do seabios, gpxe, and others), it is better to
-> >> > expose them in /usr/include/linux/pci_ids.h so everyone can just include
-> >> > this header.
-> >>
-> >> I agree that it would be nice for applications to get these definitions
-> >> from a single place, but I'm not sure that include/uapi/linux/pci_ids.h
-> >> needs to be that place.
-> >>
-> >> These constants are just copies of what's in the spec, and I don't think
-> >> you're suggesting that the constants are necessary to use a kernel API.
-> >>
-> >> I know the kernel does provide access to values via sysfs "class" files,
-> >> but the kernel is just passing the values through from the hardware.
-> >> That's analogous to reading the class with setpci, and I don't think it
-> >> leads to a requirement that the kernel export all the information about how
-> >> to interpret the class values.
-> >>
-> >> I haven't looked at libpci or libudev, but it sounds like you think those
-> >> are not good solutions.  Is that because they don't currently have this
-> >> information?  People don't want to add dependencies on them?
-> >
-> > People don't want to add dependencies on them.
-> 
-> Why not?  I'm not a user-space programmer, so it's not obvious to me
-> what the problems with adding a dependency are.  If a package provides
-> functionality you want, it seems like a *good* thing to use it and
-> depend on it rather than reimplementing the functionality yourself.
-> The /usr/include/pci/header.h supplied by libpci-dev (on Ubuntu) looks
-> like it has most or all of the constants you want.
-> 
-> Bjorn
-
-Well, so does libudev-devel according to Greg.  Do you know why doesn't
-libudev-devel include /usr/include/pci/header.h?
-xorg has a copy too: /usr/include/xorg/xf86Pci.h
-Why does not xorg include /usr/include/pci/header.h?
-
-I think I know - I think that's because each extra dependency does
-introduce overhead: it's another community to interact with to fix bugs
-and add features, it's more portability and version skew headaches.
-
-Besides, I'm guessing that the linux header is less likely to have bugs.
-Consider PCI_CLASS_STORAGE_IDE:
-
-pciutils]$ git grep PCI_CLASS_STORAGE_IDE
-lib/header.h:#define PCI_CLASS_STORAGE_IDE              0x0101
-$ git grep PCI_CLASS_STORAGE_IDE                                
-arch/alpha/kernel/pci.c:        if (dev->class >> 8 == PCI_CLASS_STORAGE_IDE) {
-....
-many more hits.
-
-pciutils does nothing with this value itself, it's possible for a distro
-to ship a wrong header, and no one will notice. OTOH Linux will break if
-it's wrong.  In fact there are 3 values libpci does appear to use
-internally:
-PCI_CLASS_BRIDGE_HOST
-PCI_CLASS_DISPLAY_VGA
-PCI_CLASS_BRIDGE_PCI
-
-I'm guessing others are re-exported for the benefit of
-applications using libpci.
-
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index f2639f7..832e1c3 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -110,10 +110,6 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 			goto list_del;
+ 	}
+ 
+-	error = pcibios_root_bridge_prepare(host);
+-	if (error)
+-		goto list_del;
+-
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b3d9b1b..7796bf8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1844,22 +1844,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+ 
+-/**
+- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
+- * @bridge: Host bridge to set up.
+- *
+- * Default empty implementation.  Replace with an architecture-specific setup
+- * routine, if necessary.
+- */
+-int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	return 0;
+-}
+-
+-void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+-{
+-}
+-
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1896,7 +1880,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	if (bridge->ops && bridge->ops->set_root_bus_speed)
+ 		bridge->ops->set_root_bus_speed(bridge);
+-	pcibios_set_root_bus_speed(bridge);
++
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0b921d6..61e0853 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -426,8 +426,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
 -- 
-MST
+1.7.1
+
