@@ -1,40 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:41304 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540AbbDBUhR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2015 16:37:17 -0400
-Date: Thu, 02 Apr 2015 16:37:15 -0400 (EDT)
-Message-Id: <20150402.163715.643586069492103151.davem@davemloft.net>
-To: yinghai@kernel.org
-Cc: bhelgaas@google.com, david.ahern@oracle.com,
-	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:33642 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbbDDTtV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Apr 2015 15:49:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo55rpO6SNeY57zZ8ah0PJ3eY+-L92vUJwYiRn4tCfLtJg@mail.gmail.com>
 References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+ <1427857069-6789-2-git-send-email-yinghai@kernel.org> <20150403193234.GD10892@google.com>
+ <20150403205201.GF10892@google.com> <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
+ <CAErSpo55rpO6SNeY57zZ8ah0PJ3eY+-L92vUJwYiRn4tCfLtJg@mail.gmail.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Sat, 4 Apr 2015 14:48:59 -0500
+Message-ID: <CAL_JsqJyH==8OtkcU8_P4_47U6qe6FYqj-WUZ20_Y+iC_OF4_w@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	David Ahern <david.ahern@oracle.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 31 Mar 2015 19:57:46 -0700
+On Sat, Apr 4, 2015 at 7:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Apr 3, 2015 at 10:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, Apr 3, 2015 at 1:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> [+cc Sam (commented on previous versions), Russell, linux-arm-kernel, Ralf,
+>>> linux-mips, Ben, linuxppc-dev, x86]
+>>>
+>>> On Fri, Apr 03, 2015 at 02:32:34PM -0500, Bjorn Helgaas wrote:
+>>>> On Tue, Mar 31, 2015 at 07:57:47PM -0700, Yinghai Lu wrote:
+>>>> > David Ahern found commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
+>>>> > to fit in upstream windows") broke booting on sparc/T5-8.
+>>>> >
+>>>> > In the boot log, there is
+>>>> >   pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
+>>>> >   0x110204000)
+>>>> > but that only could happen when dma_addr_t is 32-bit.
+>>>> >
+>>>> > According to David Miller, all DMA occurs behind an IOMMU and these
+>>>> > IOMMUs only support 32-bit addressing, therefore dma_addr_t is
+>>>> > 32-bit on sparc64.
+>>>> >
+>>>> > Let's introduce pci_bus_addr_t instead of using dma_addr_t,
+>>>> > and pci_bus_addr_t will be 64-bit on 64-bit platform or X86_PAE.
+>>>> >
+>>>> > Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+>>>> > Fixes: commit 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+>>>> > Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+>>>> > Reported-by: David Ahern <david.ahern@oracle.com>
+>>>> > Tested-by: David Ahern <david.ahern@oracle.com>
+>>>> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>> > Cc: <stable@vger.kernel.org> #3.19
+>>>> > ---
+>>>> >  drivers/pci/Kconfig |  4 ++++
+>>>> >  drivers/pci/bus.c   | 10 +++++-----
+>>>> >  drivers/pci/probe.c | 12 ++++++------
+>>>> >  include/linux/pci.h | 12 +++++++++---
+>>>> >  4 files changed, 24 insertions(+), 14 deletions(-)
+>>>> >
+>>>> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>>>> > index 7a8f1c5..6a5a269 100644
+>>>> > --- a/drivers/pci/Kconfig
+>>>> > +++ b/drivers/pci/Kconfig
+>>>> > @@ -1,6 +1,10 @@
+>>>> >  #
+>>>> >  # PCI configuration
+>>>> >  #
+>>>> > +config PCI_BUS_ADDR_T_64BIT
+>>>> > +   def_bool y if (64BIT || X86_PAE)
+>>>> > +   depends on PCI
+>>>>
+>>>> We're going to use pci_bus_addr_t in some places where we previously used
+>>>> dma_addr_t, which means pci_bus_addr_t should be at least as large as
+>>>> dma_addr_t.  Can you enforce that directly, e.g., with something like this?
+>>>>
+>>>>     def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT || X86_PAE)
+>>
+>> then should use
+>>
+>> def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+>
+> OK, would you mind updating this series, incorporating the doc
+> updates, and reposting it?
+>
+> I think there's still an unresolved question about the OF parsing code.
 
-> Fix regression by commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to
-> fit in upstream windows").
-> 
-> That cause bridge bar get clipped wrongly.
-> 
-> The sparc64 dma_addr_t is 32-bit, we can not use it to check if we can
-> use 64bit bar, introduce pci_bus_addr_t.
-> 
-> sparc ofpci does not parse 64bit mem for root bus, add code to
-> make sure that we get correct resource for root.
-> 
-> Also there are device 64-bit res does not have pref bit flag, but bridges
-> do have pref bit set, that cause extra "no compatible window".
-> Set pref bit for them according to the errata.
+Got a pointer to what that is? I'll take a guess. Generally, we make
+the parsing code independent of the kernel addr sizes and use u64
+types. The DT sizes and kernel sizes are not always aligned. For
+example, an LPAE capable platform running a non-LPAE kernel build.
 
-Just to be clear, who is going to merge this? :-)
+Rob
 
+>
+> Bjorn
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
