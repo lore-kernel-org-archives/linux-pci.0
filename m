@@ -1,150 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32162 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559AbbDCJ3K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:10 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Fri, 3 Apr 2015 17:25:34 +0800
-Message-ID: <1428053164-28277-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:33929 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752878AbbDDMrI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Apr 2015 08:47:08 -0400
+Received: by qcyk17 with SMTP id k17so3647047qcy.1
+        for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2015 05:47:07 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+ <1427857069-6789-2-git-send-email-yinghai@kernel.org> <20150403193234.GD10892@google.com>
+ <20150403205201.GF10892@google.com> <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 4 Apr 2015 07:46:47 -0500
+Message-ID: <CAErSpo55rpO6SNeY57zZ8ah0PJ3eY+-L92vUJwYiRn4tCfLtJg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"the arch/x86 maintainers" <x86@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save platform specific sysdata in pci_host_bridge
-drvdata, host bridge specific operation need to
-access it before the pci bus creation.
+On Fri, Apr 3, 2015 at 10:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Apr 3, 2015 at 1:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Sam (commented on previous versions), Russell, linux-arm-kernel, Ralf,
+>> linux-mips, Ben, linuxppc-dev, x86]
+>>
+>> On Fri, Apr 03, 2015 at 02:32:34PM -0500, Bjorn Helgaas wrote:
+>>> On Tue, Mar 31, 2015 at 07:57:47PM -0700, Yinghai Lu wrote:
+>>> > David Ahern found commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
+>>> > to fit in upstream windows") broke booting on sparc/T5-8.
+>>> >
+>>> > In the boot log, there is
+>>> >   pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
+>>> >   0x110204000)
+>>> > but that only could happen when dma_addr_t is 32-bit.
+>>> >
+>>> > According to David Miller, all DMA occurs behind an IOMMU and these
+>>> > IOMMUs only support 32-bit addressing, therefore dma_addr_t is
+>>> > 32-bit on sparc64.
+>>> >
+>>> > Let's introduce pci_bus_addr_t instead of using dma_addr_t,
+>>> > and pci_bus_addr_t will be 64-bit on 64-bit platform or X86_PAE.
+>>> >
+>>> > Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+>>> > Fixes: commit 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+>>> > Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+>>> > Reported-by: David Ahern <david.ahern@oracle.com>
+>>> > Tested-by: David Ahern <david.ahern@oracle.com>
+>>> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> > Cc: <stable@vger.kernel.org> #3.19
+>>> > ---
+>>> >  drivers/pci/Kconfig |  4 ++++
+>>> >  drivers/pci/bus.c   | 10 +++++-----
+>>> >  drivers/pci/probe.c | 12 ++++++------
+>>> >  include/linux/pci.h | 12 +++++++++---
+>>> >  4 files changed, 24 insertions(+), 14 deletions(-)
+>>> >
+>>> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>>> > index 7a8f1c5..6a5a269 100644
+>>> > --- a/drivers/pci/Kconfig
+>>> > +++ b/drivers/pci/Kconfig
+>>> > @@ -1,6 +1,10 @@
+>>> >  #
+>>> >  # PCI configuration
+>>> >  #
+>>> > +config PCI_BUS_ADDR_T_64BIT
+>>> > +   def_bool y if (64BIT || X86_PAE)
+>>> > +   depends on PCI
+>>>
+>>> We're going to use pci_bus_addr_t in some places where we previously used
+>>> dma_addr_t, which means pci_bus_addr_t should be at least as large as
+>>> dma_addr_t.  Can you enforce that directly, e.g., with something like this?
+>>>
+>>>     def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT || X86_PAE)
+>
+> then should use
+>
+> def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    3 ++-
- drivers/pci/pci.h         |    2 +-
- drivers/pci/probe.c       |   20 ++++++++++----------
- 3 files changed, 13 insertions(+), 12 deletions(-)
+OK, would you mind updating this series, incorporating the doc
+updates, and reposting it?
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index dffb345..98047c6 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -63,7 +63,7 @@ static bool pci_host_busn_res_overlap(
- 
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
--		struct list_head *resources)
-+		void *sysdata, struct list_head *resources)
- {
- 	int error;
- 	struct pci_host_bridge *host, *tmp;
-@@ -101,6 +101,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	mutex_unlock(&pci_host_mutex);
- 
- 	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 886d72f..aa8dff6 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -335,7 +335,7 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- #endif
- 
- struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
--		int domain, int bus, struct list_head *resources);
-+		int domain, int bus, void *sysdata, struct list_head *resources);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- 
- static inline int pci_host_first_busnr(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8517d1b..0ac2bf6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- static struct pci_bus *__pci_create_root_bus(
--		struct pci_host_bridge *bridge, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
- 	struct pci_bus *b;
-@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
-+	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start =
- 		pci_host_first_busnr(bridge);
-@@ -1956,11 +1955,12 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, domain, bus, resources);
-+	host = pci_create_host_bridge(parent, domain, bus,
-+			sysdata, resources);
- 	if (!host)
- 		return NULL;
- 
--	host->bus = __pci_create_root_bus(host, ops, sysdata);
-+	host->bus = __pci_create_root_bus(host, ops);
- 	if (!host->bus)
- 		pci_free_host_bridge(host);
- 
-@@ -2037,13 +2037,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- }
- 
- static struct pci_bus *__pci_scan_root_bus(
--		struct pci_host_bridge *host, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *host, struct pci_ops *ops)
- {
- 	struct pci_bus *b;
- 	int max;
- 
--	b = __pci_create_root_bus(host, ops, sysdata);
-+	b = __pci_create_root_bus(host, ops);
- 	if (!b)
- 		return NULL;
- 
-@@ -2064,11 +2063,12 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, domain, bus, resources);
-+	host = pci_create_host_bridge(parent, domain, bus,
-+			sysdata, resources);
- 	if (!host)
- 		return NULL;
- 
--	host->bus = __pci_scan_root_bus(host, ops, sysdata);
-+	host->bus = __pci_scan_root_bus(host, ops);
- 	if (!host->bus)
- 		pci_free_host_bridge(host);
- 
--- 
-1.7.1
+I think there's still an unresolved question about the OF parsing code.
 
+Bjorn
