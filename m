@@ -1,101 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 13/33] x86/irq: Kill irq_cfg.irq_remapped
-Date: Tue, 14 Apr 2015 10:29:50 +0800
-Message-Id: <1428978610-28986-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34290 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752457AbbDDDkr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 23:40:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150403185939.GC10892@google.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	<1427857069-6789-2-git-send-email-yinghai@kernel.org>
+	<20150403185939.GC10892@google.com>
+Date: Fri, 3 Apr 2015 20:40:46 -0700
+Message-ID: <CAE9FiQX6Q4nPqZbCTfO+=obv6EGpeV4LRU-LkSsFWZQOaxOMrw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is no user of irq_cfg.irq_remapped, so kill it.
+On Fri, Apr 3, 2015 at 11:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Mar 31, 2015 at 07:57:47PM -0700, Yinghai Lu wrote:
+>> David Ahern found commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
+>> to fit in upstream windows") broke booting on sparc/T5-8.
+>>
+>> In the boot log, there is
+>>   pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
+>>   0x110204000)
+>> but that only could happen when dma_addr_t is 32-bit.
+>>
+>> According to David Miller, all DMA occurs behind an IOMMU and these
+>> IOMMUs only support 32-bit addressing, therefore dma_addr_t is
+>> 32-bit on sparc64.
+>>
+>> Let's introduce pci_bus_addr_t instead of using dma_addr_t,
+>> and pci_bus_addr_t will be 64-bit on 64-bit platform or X86_PAE.
+>
+> I propose the following doc updates (I can just fold them into this patch
+> if you approve):
+>
+>
+> commit 13fca18e2f1d9dd078b8dfea965718cf13a4b600
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Fri Apr 3 12:39:35 2015 -0500
+>
+>     pci-bus-addr-fixups
+>
+> diff --git a/include/linux/types.h b/include/linux/types.h
+> index 6747247e3f9f..00a127e89752 100644
+> --- a/include/linux/types.h
+> +++ b/include/linux/types.h
+> @@ -139,12 +139,20 @@ typedef unsigned long blkcnt_t;
+>   */
+>  #define pgoff_t unsigned long
+>
+> -/* A dma_addr_t can hold any valid DMA or bus address for the platform */
+> +/*
+> + * A dma_addr_t can hold any valid DMA address, i.e., any address returned
+> + * by the DMA API.
+> + *
+> + * If the DMA API only uses 32-bit addresses, dma_addr_t need only be 32
+> + * bits wide.  Bus addresses, e.g., PCI BARs, may be wider than 32 bits,
+> + * but drivers do memory-mapped I/O to ioremapped kernel virtual addresses,
+> + * so they don't care about the size of the actual bus addresses.
+> + */
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-23-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h       |    1 -
- drivers/iommu/amd_iommu.c           |    1 -
- drivers/iommu/intel_irq_remapping.c |    2 --
- 3 files changed, 4 deletions(-)
+Good to me.
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index bbf90fe2a224..88632ea75fe0 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -193,7 +193,6 @@ struct irq_cfg {
- 	u8			vector;
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
--	u8			remapped : 1;
- 	union {
- 		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 20abdbaf80d9..fa26c742bc39 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -4131,7 +4131,6 @@ static void irq_remapping_prepare_irte(struct amd_ir_data *data,
- 	struct msi_msg *msg = &data->msi_entry;
- 	struct IO_APIC_route_entry *entry;
- 
--	irq_cfg->remapped = 1;
- 	data->irq_2_irte.devid = devid;
- 	data->irq_2_irte.index = index + sub_handle;
- 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index e76e5723ae87..21fc899e7c49 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -67,7 +67,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
- 	int index;
-@@ -94,7 +93,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq,
- 	if (index < 0) {
- 		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
- 	} else {
--		cfg->remapped = 1;
- 		irq_iommu->iommu = iommu;
- 		irq_iommu->irte_index =  index;
- 		irq_iommu->sub_handle = 0;
--- 
-1.7.10.4
+Thanks
 
+Yinghai
