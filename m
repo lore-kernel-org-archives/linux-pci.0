@@ -1,104 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:41551 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156AbbEAGEM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:12 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:09 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5578A3578054
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:08 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t41640ef42926254
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:08 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163YIl005491
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:34 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 01/21] pci: Add pcibios_setup_bridge()
-Date: Fri,  1 May 2015 16:02:48 +1000
-Message-Id: <1430460188-31343-2-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 5 Apr 2015 13:20:12 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH v2] pci: export class IDs from pci_ids.h
+Message-ID: <20150405130256-mutt-send-email-mst@redhat.com>
+References: <1427714755-16873-1-git-send-email-mst@redhat.com>
+ <20150402205347.GA10892@google.com>
+ <20150402232804-mutt-send-email-mst@redhat.com>
+ <20150402215921.GA3942@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150402215921.GA3942@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
-which is called for once after PCI probing and resource assignment
-are completed, to allocate platform required resources for PCI devices:
-PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
-Obviously, it's not hotplug friendly.
+On Thu, Apr 02, 2015 at 11:59:21PM +0200, Greg KH wrote:
+> On Thu, Apr 02, 2015 at 11:28:19PM +0200, Michael S. Tsirkin wrote:
+> > On Thu, Apr 02, 2015 at 03:53:47PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, Mar 30, 2015 at 01:33:28PM +0200, Michael S. Tsirkin wrote:
+> > > > The basic class ID macros in pci_ids.h are pretty useful for userspace
+> > > > using the pci sysfs interface, and they aren't fundamentally different
+> > > > from the constants in pci_regs.h - both are defined in the
+> > > > pci spec.
+> > > > 
+> > > > At the moment userspace is forced to duplicate these macros
+> > > > (e.g. QEMU does this, so do seabios, gpxe, and others), it is better to
+> > > > expose them in /usr/include/linux/pci_ids.h so everyone can just include
+> > > > this header.
+> > > 
+> > > I agree that it would be nice for applications to get these definitions
+> > > from a single place, but I'm not sure that include/uapi/linux/pci_ids.h
+> > > needs to be that place.
+> > > 
+> > > These constants are just copies of what's in the spec, and I don't think
+> > > you're suggesting that the constants are necessary to use a kernel API.
+> > > 
+> > > I know the kernel does provide access to values via sysfs "class" files,
+> > > but the kernel is just passing the values through from the hardware.
+> > > That's analogous to reading the class with setpci, and I don't think it
+> > > leads to a requirement that the kernel export all the information about how
+> > > to interpret the class values.
+> > > 
+> > > I haven't looked at libpci or libudev, but it sounds like you think those
+> > > are not good solutions.  Is that because they don't currently have this
+> > > information?  People don't want to add dependencies on them?
+> > > 
+> > > Bjorn
+> > 
+> > People don't want to add dependencies on them.
+> 
+> So you want us to create yet-a-third-location for these values?
 
-The patch adds weak function pcibios_setup_bridge(), which is called
-by pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
-to assign above platform required resources to newly added PCI devices,
-in order to support PCI hotplug on PowerPC PowerNV platform.
+I propose making this part of base Linux system headers, yes.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c | 12 +++++++++---
- include/linux/pci.h     |  1 +
- 2 files changed, 10 insertions(+), 3 deletions(-)
+BTW it's not a third location actually. It would be a third location in a
+library, but there are many other packages that duplicate this code.
+Since we have this code around anyway, if we just export it, then
+there's hope that with time all this duplicate code will go away, then
+when e.g. a new value is added to spec, people will add it to linux and
+everyone benefits.  As I work on QEMU, I know QEMU will do it,
+likely bios and gpxe too, I expect libpci/libudev to be no different.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4fd0cac..a7d0c3c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -674,7 +674,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
- 	pci_write_config_dword(bridge, PCI_PREF_LIMIT_UPPER32, lu);
- }
- 
--static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
-+
-+void pci_setup_bridge_resources(struct pci_bus *bus, unsigned long type)
- {
- 	struct pci_dev *bridge = bus->self;
- 
-@@ -693,12 +694,17 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
- 	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
- }
- 
-+void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
-+{
-+	pci_setup_bridge_resources(bus, type);
-+}
-+
- void pci_setup_bridge(struct pci_bus *bus)
- {
- 	unsigned long type = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 
--	__pci_setup_bridge(bus, type);
-+	pcibios_setup_bridge(bus, type);
- }
- 
- 
-@@ -1467,7 +1473,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		/* avoiding touch the one without PREF */
- 		if (type & IORESOURCE_PREFETCH)
- 			type = IORESOURCE_PREFETCH;
--		__pci_setup_bridge(bus, type);
-+		pci_setup_bridge_resources(bus, type);
- 		/* for next child res under same bridge */
- 		r->flags = old_flags;
- 	}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..68c5ef9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1175,6 +1175,7 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
- int pci_cfg_space_size(struct pci_dev *dev);
- unsigned char pci_bus_max_busnr(struct pci_bus *bus);
-+void pci_setup_bridge_resources(struct pci_bus *bus, unsigned long type);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
--- 
-2.1.0
+> Both
+> libpci and libudev are on all systems.  And it's not a run-time
+> dependancy you are talking about here, but a build-time one, which is
+> quite different.
 
+Yes: build-time dependencies annoy developers, run-time ones annoy users :)
+In a sense build-time dependencies are more annoying as it's harder to
+resolve them.
+
+> Having a build-time dependancy on packages that ship
+> with all Linux distributions seems acceptable to me.
+> 
+> thanks,
+> 
+> greg k-h
