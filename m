@@ -1,127 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Wed, 29 Apr 2015 16:15:34 +0200
-Message-ID: <2290160.KqiWSgJfFU@vostro.rjw.lan>
-In-Reply-To: <5540DD9C.9030707@linux.intel.com>
-References: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4zBFUBwSJjF1CuB8w06CDwYx+ZZaL1X71Joi0uMCObbg@mail.gmail.com> <5540DD9C.9030707@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44335 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751384AbbDEBzo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 4 Apr 2015 21:55:44 -0400
+Date: Sun, 5 Apr 2015 09:54:53 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Dave Young <dyoung@redhat.com>
+Cc: "Li, ZhenHua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <551E56F6.60503@hp.com>
+ <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 29, 2015 09:33:16 PM Jiang Liu wrote:
-> On 2015/4/29 21:20, Bjorn Helgaas wrote:
-> > On Tue, Apr 28, 2015 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> On Monday, April 20, 2015 11:08:58 AM Jiang Liu wrote:
-> >>> An IO port or MMIO resource assigned to a PCI host bridge may be
-> >>> consumed by the host bridge itself or available to its child
-> >>> bus/devices. On x86 and IA64 platforms, all IO port and MMIO
-> >>> resources are assumed to be available to child bus/devices
-> >>> except one special case:
-> >>>     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
-> >>>     to access PCI configuration space.
-> >>>
-> >>> But the ACPI and PCI Firmware specifications haven't provided a method
-> >>> to tell whether a resource is consumed by the host bridge itself.
-> >>> So before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
-> >>> interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
-> >>> all IO port resources defined by acpi_resource_io and
-> >>> acpi_resource_fixed_io to filter out IO ports consumed by the host
-> >>> bridge itself.
-> >>>
-> >>> Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
-> >>> to simplify implementation")started accepting all IO port and MMIO
-> >>> resources, which caused a regression that IO port resources consumed
-> >>> by the host bridge itself became available to its child devices.
-> >>>
-> >>> Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
-> >>> host bridge itself") ignored resources consumed by the host bridge
-> >>> itself by checking the IORESOURCE_WINDOW flag, which accidently removed
-> >>> MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
-> >>> and acpi_resource_fixed_memory32.
-> >>>
-> >>> So revert to the behavior before v3.19 to fix the regression.
-> >>>
-> >>> There is also a discussion about ignoring the Producer/Consumer flag on
-> >>> IA64 platforms at:
-> >>> http://patchwork.ozlabs.org/patch/461633/
-> >>>
-> >>> Related ACPI table are archived at:
-> >>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
-> >>>
-> >>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
-> >>> Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
-> >>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> >>
-> >> Bjorn, Ingo, is anyone looking at this?  We're still having a regression in
-> >> this area ...
+On 04/03/15 at 05:21pm, Dave Young wrote:
+> On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
+> > Hi Dave,
 > > 
-> >>> ---
-> >>>  arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
-> >>>  drivers/acpi/resource.c |    6 +++++-
-> >>>  2 files changed, 27 insertions(+), 4 deletions(-)
-> >>>
-> >>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> >>> index e4695985f9de..fc2da98985c3 100644
-> >>> --- a/arch/x86/pci/acpi.c
-> >>> +++ b/arch/x86/pci/acpi.c
-> >>> @@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
-> >>>  {
-> >>>       int ret;
-> >>>       struct resource_entry *entry, *tmp;
-> >>> +     unsigned long res_flags;
-> >>>
-> >>>       sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
-> >>>       info->bridge = device;
-> >>> +
-> >>> +     /*
-> >>> +      * An IO or MMIO resource assigned to PCI host bridge may be consumed
-> >>> +      * by the host bridge itself or available to its child bus/devices.
-> >>> +      * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
-> >>> +      * be available to child bus/devices except one special case:
-> >>> +      *      IO port [0xCF8-0xCFF] is consumed by host bridge itself to
-> >>> +      *      access PCI configuration space.
-> >>> +      *
-> >>> +      * Due to lack of specification to define resources consumed by host
-> >>> +      * bridge itself, all IO port resources defined by acpi_resource_io
-> >>> +      * and acpi_resource_fixed_io are ignored to filter out IO
-> >>> +      * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
-> >>> +      * it's not perfect.
+> > There may be some possibilities that the old iommu data is corrupted by
+> > some other modules. Currently we do not have a better solution for the
+> > dmar faults.
 > > 
-> > 1) I think it's misleading to say "the specs haven't provided a
-> > method."  As far as I can tell, the Producer/Consumer bit is intended
-> > precisely to distinguish resources consumed by a bridge from those
-> > forwarded to downstream devices.  It would be more accurate to say
-> > "the spec defines a bit, but firmware hasn't used that bit
-> > consistently, so we can't rely on it."
+> > But I think when this happens, we need to fix the module that corrupted
+> > the old iommu data. I once met a similar problem in normal kernel, the
+> > queue used by the qi_* functions was written again by another module.
+> > The fix was in that module, not in iommu module.
 > 
-> Hi Bjorn,
-> 	Thanks for review, I will refine the words as suggested by you.
+> It is too late, there will be no chance to save vmcore then.
 > 
-> > If you want to say "it's not perfect," it would be useful to mention
-> > the ways in which it is not perfect.  This code is still a candidate
-> > for unification with ia64 and arm64, so we should avoid x86-specific
-> > things here as much as possible.
+> Also if it is possible to continue corrupt other area of oldmem because
+> of using old iommu tables then it will cause more problems.
 > 
-> Yes, I have another pending patch set to consolidate IA64 and x86 code
-> for ACPI PCI root.
+> So I think the tables at least need some verifycation before being used.
+> 
 
-That's OK, but can we please fix the regression first before doing that
-unification?  Like to make life easier for the "stable" people and
-whoever wants to backport the fix?
+Yes, it's a good thinking anout this and verification is also an
+interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
+and then verify this again when panic happens in purgatory. This checks
+whether any code stomps into region reserved for kexec/kernel and corrupt
+the loaded kernel.
 
+If this is decided to do it should be an enhancement to current
+patchset but not a approach change. Since this patchset is going very
+close to point as maintainers expected maybe this can be merged firstly,
+then think about enhancement. After all without this patchset vt-d often
+raised error message, hung.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+By the way I tested this patchset it works very well on my HP z420 work
+station.
+
+Thanks
+Baoquan
