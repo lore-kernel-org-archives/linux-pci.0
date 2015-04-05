@@ -1,83 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og116.obsmtp.com ([64.18.0.147]:37654 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751623AbbDSSkl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Apr 2015 14:40:41 -0400
-Received: by obbeb7 with SMTP id eb7so103785057obb.3
-        for <linux-pci@vger.kernel.org>; Sun, 19 Apr 2015 11:40:40 -0700 (PDT)
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:35503 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752295AbbDEDZY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Apr 2015 23:25:24 -0400
+Received: by qcbii10 with SMTP id ii10so1838603qcb.2
+        for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2015 20:25:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <2306642.JeuMKoBEGq@wuerfel>
-References: <cover.1429263201.git.dhdang@apm.com> <5160bc222361ff36cc6e72ca14358c5dee8c7548.1429263201.git.dhdang@apm.com>
- <2306642.JeuMKoBEGq@wuerfel>
-From: Duc Dang <dhdang@apm.com>
-Date: Sun, 19 Apr 2015 11:40:09 -0700
-Message-ID: <CADaLNDn_U_VKBg-ve+X_Ovvzi7TZZJkPotCTKiWjfvANXqsSPQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
- termination driver
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>
+In-Reply-To: <CAL_JsqJyH==8OtkcU8_P4_47U6qe6FYqj-WUZ20_Y+iC_OF4_w@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+ <1427857069-6789-2-git-send-email-yinghai@kernel.org> <20150403193234.GD10892@google.com>
+ <20150403205201.GF10892@google.com> <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
+ <CAErSpo55rpO6SNeY57zZ8ah0PJ3eY+-L92vUJwYiRn4tCfLtJg@mail.gmail.com> <CAL_JsqJyH==8OtkcU8_P4_47U6qe6FYqj-WUZ20_Y+iC_OF4_w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 4 Apr 2015 22:25:03 -0500
+Message-ID: <CAErSpo4cw2MSPmrur_QFMwnH01qf0XMfBEAyZ2f+HrUOGEXyjw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
+To: Rob Herring <robherring2@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	David Ahern <david.ahern@oracle.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 17, 2015 at 7:10 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 17 April 2015 02:50:07 Duc Dang wrote:
->> +
->> +       /*
->> +        * MSIINTn (n is 0..F) indicates if there is a pending MSI interrupt
->> +        * If bit x of this register is set (x is 0..7), one or more interupts
->> +        * corresponding to MSInIRx is set.
->> +        */
->> +       grp_select = readl(xgene_msi->msi_regs + MSI_INT0 + (msi_grp << 16));
->> +       while (grp_select) {
->> +               msir_index = ffs(grp_select) - 1;
->> +               /*
->> +                * Calculate MSInIRx address to read to check for interrupts
->> +                * (refer to termination address and data assignment
->> +                * described in xgene_compose_msi_msg function)
->> +                */
->> +               msir_reg = (msi_grp << 19) + (msir_index << 16);
->> +               msir_val = readl(xgene_msi->msi_regs + MSI_IR0 + msir_reg);
->> +               while (msir_val) {
->> +                       intr_index = ffs(msir_val) - 1;
->> +                       /*
->> +                        * Calculate MSI vector number (refer to the termination
->> +                        * address and data assignment described in
->> +                        * xgene_compose_msi_msg function)
->> +                        */
->> +                       hw_irq = (((msir_index * IRQS_PER_IDX) + intr_index) *
->> +                                NR_HW_IRQS) + msi_grp;
->> +                       virq = irq_find_mapping(xgene_msi->domain, hw_irq);
->> +                       if (virq != 0)
->> +                               generic_handle_irq(virq);
->> +                       msir_val &= ~(1 << intr_index);
->> +                       processed++;
->> +               }
->> +               grp_select &= ~(1 << msir_index);
->> +       }
->>
->
-> As the MSI is forwarded to the GIC here, how do you maintain ordering
-> between DMA data getting forwarded from the PCI host bridge to RAM
-> with regard to the MSI handler getting entered from this code?
+On Sat, Apr 4, 2015 at 2:48 PM, Rob Herring <robherring2@gmail.com> wrote:
+> On Sat, Apr 4, 2015 at 7:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-When device perform a DMA transfer, the order of PCIE inbound requests
-will be like this:
-1. DMA data get transferred via PCIe inbound request
-2. After devices issue DMA transfer request, the device fires an MSI
-interrupt by issuing another inbound write to write MSI data to MSI
-termination address.
-
-As these 2 requests are transferred via PCIe bus in order, the DMA
-data will be all in DDR before the MSI data hit the termination
-address to trigger the MSI handler in interrupt handler code.
+>> I think there's still an unresolved question about the OF parsing code.
 >
->         Arnd
-Regards,
-Duc Dang.
+> Got a pointer to what that is? I'll take a guess. Generally, we make
+> the parsing code independent of the kernel addr sizes and use u64
+> types. The DT sizes and kernel sizes are not always aligned. For
+> example, an LPAE capable platform running a non-LPAE kernel build.
+
+Yep: http://lkml.kernel.org/r/1427857069-6789-3-git-send-email-yinghai@kernel.org
+
+Yinghai made a change to the sparc OF parsing code.  The question is
+whether a similar change should be made to clones of that code (two
+others in arch/sparc, one in arch/powerpc, and one in drivers/of).
+
+Bjorn
