@@ -1,161 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34626 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751055AbbDVNBv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 09:01:51 -0400
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jg1.han@samsung.com>, <bhelgaas@google.com>,
-	<Minghuan.Lian@freescale.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH 2/2] PCI: designware: use iATU0 for cfg and IO, iATU1 for MEM
-Date: Wed, 22 Apr 2015 20:58:14 +0800
-Message-ID: <1429707494-2732-3-git-send-email-jszhang@marvell.com>
-In-Reply-To: <1429707494-2732-1-git-send-email-jszhang@marvell.com>
-References: <1429707494-2732-1-git-send-email-jszhang@marvell.com>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:38728 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752797AbbDFNF4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Apr 2015 09:05:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo4cw2MSPmrur_QFMwnH01qf0XMfBEAyZ2f+HrUOGEXyjw@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+ <1427857069-6789-2-git-send-email-yinghai@kernel.org> <20150403193234.GD10892@google.com>
+ <20150403205201.GF10892@google.com> <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
+ <CAErSpo55rpO6SNeY57zZ8ah0PJ3eY+-L92vUJwYiRn4tCfLtJg@mail.gmail.com>
+ <CAL_JsqJyH==8OtkcU8_P4_47U6qe6FYqj-WUZ20_Y+iC_OF4_w@mail.gmail.com> <CAErSpo4cw2MSPmrur_QFMwnH01qf0XMfBEAyZ2f+HrUOGEXyjw@mail.gmail.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Mon, 6 Apr 2015 08:05:33 -0500
+Message-ID: <CAL_JsqLhteW8p1B7DrRzWzC_0UNYOKAU-yu2UhWRcb8PZ9AEnQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	David Ahern <david.ahern@oracle.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	David Miller <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most transactions' type are cfg0 and MEM, so the Current iATU usage is not
-balanced, iATU0 is hot while iATU1 is rarely used. This patch refactors
-the iATU usage: iATU0 for cfg and IO, iATU1 for MEM. This allocation
-ideas comes from Minghuan Lian <Minghuan.Lian@freescale.com>:
+On Sat, Apr 4, 2015 at 10:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Apr 4, 2015 at 2:48 PM, Rob Herring <robherring2@gmail.com> wrote:
+>> On Sat, Apr 4, 2015 at 7:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>>> I think there's still an unresolved question about the OF parsing code.
+>>
+>> Got a pointer to what that is? I'll take a guess. Generally, we make
+>> the parsing code independent of the kernel addr sizes and use u64
+>> types. The DT sizes and kernel sizes are not always aligned. For
+>> example, an LPAE capable platform running a non-LPAE kernel build.
+>
+> Yep: http://lkml.kernel.org/r/1427857069-6789-3-git-send-email-yinghai@kernel.org
+>
+> Yinghai made a change to the sparc OF parsing code.  The question is
+> whether a similar change should be made to clones of that code (two
+> others in arch/sparc, one in arch/powerpc, and one in drivers/of).
 
- http://www.spinics.net/lists/linux-pci/msg40440.html
+Yes, it appears to me that is needed. At least the drivers/of/ code
+does not distinguish 32 and 64 bit ATM.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
----
- drivers/pci/host/pcie-designware.c | 83 +++++++++++++++++++++-----------------
- 1 file changed, 47 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1da1446..bb81c8ad 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -508,6 +508,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  pp->io_bus_addr, pp->io_size);
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+				  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+				  pp->mem_bus_addr, pp->mem_size);
-+
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
- 	/* program correct class for RC */
-@@ -533,66 +540,70 @@ int dw_pcie_host_init(struct pcie_port *pp)
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
--	int ret = PCIBIOS_SUCCESSFUL;
--	u32 address, busdev;
-+	int ret, type;
-+	u32 address, busdev, cfg_size;
-+	u64 cpu_addr;
-+	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
--					  busdev, pp->cfg0_size);
--		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
--					  pp->mem_bus_addr, pp->mem_size);
-+		type = PCIE_ATU_TYPE_CFG0;
-+		cpu_addr = pp->cfg0_mod_base;
-+		cfg_size = pp->cfg0_size;
-+		va_cfg_base = pp->va_cfg0_base;
- 	} else {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
--					  busdev, pp->cfg1_size);
--		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
--					  pp->io_bus_addr, pp->io_size);
-+		type = PCIE_ATU_TYPE_CFG1;
-+		cpu_addr = pp->cfg1_mod_base;
-+		cfg_size = pp->cfg1_size;
-+		va_cfg_base = pp->va_cfg1_base;
- 	}
- 
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  type, cpu_addr,
-+				  busdev, cfg_size);
-+	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  pp->io_bus_addr, pp->io_size);
-+
- 	return ret;
- }
- 
- static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 val)
- {
--	int ret = PCIBIOS_SUCCESSFUL;
--	u32 address, busdev;
-+	int ret, type;
-+	u32 address, busdev, cfg_size;
-+	u64 cpu_addr;
-+	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
--					  busdev, pp->cfg0_size);
--		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
--					  pp->mem_bus_addr, pp->mem_size);
-+		type = PCIE_ATU_TYPE_CFG0;
-+		cpu_addr = pp->cfg0_mod_base;
-+		cfg_size = pp->cfg0_size;
-+		va_cfg_base = pp->va_cfg0_base;
- 	} else {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
--					  busdev, pp->cfg1_size);
--		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
--					  pp->io_bus_addr, pp->io_size);
-+		type = PCIE_ATU_TYPE_CFG1;
-+		cpu_addr = pp->cfg1_mod_base;
-+		cfg_size = pp->cfg1_size;
-+		va_cfg_base = pp->va_cfg1_base;
- 	}
- 
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  type, cpu_addr,
-+				  busdev, cfg_size);
-+	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  pp->io_bus_addr, pp->io_size);
-+
- 	return ret;
- }
- 
--- 
-2.1.4
-
+Rob
