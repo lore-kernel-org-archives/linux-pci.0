@@ -1,30 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36700 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755326AbbDNN6n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 09:58:43 -0400
-Received: by igblo3 with SMTP id lo3so74518082igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2015 06:58:43 -0700 (PDT)
-Date: Tue, 14 Apr 2015 08:58:40 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: moussa ba <musaba@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI Out of Resources
-Message-ID: <20150414135840.GB19151@google.com>
-References: <CAEkKNCc9BpCXNCw1RD2gngUhSs13_-P_rtk=w4tVDW+3QaR6xQ@mail.gmail.com>
- <CAErSpo5K9utm4Bt75L75jTY5HPZO8qTtHfy9OzVqzxjV3FAW4A@mail.gmail.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:35229 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130AbbDFWfl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Apr 2015 18:35:41 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5K9utm4Bt75L75jTY5HPZO8qTtHfy9OzVqzxjV3FAW4A@mail.gmail.com>
+In-Reply-To: <20150406220638.GH10892@google.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	<1427857069-6789-4-git-send-email-yinghai@kernel.org>
+	<20150406220638.GH10892@google.com>
+Date: Mon, 6 Apr 2015 15:35:40 -0700
+Message-ID: <CAE9FiQWz_VYOmrN+L3nAAmA7OqZdAYawwku2A09RVrNObQn4jQ@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 14, 2015 at 08:05:42AM -0500, Bjorn Helgaas wrote:
-> 2) Please post a complete dmesg log, complete "lspci -vv" output,
-> contents of /proc/iomem, and a transcript of what you're doing with
-> setpci (remove vendor/device IDs if they are confidential, ...
+On Mon, Apr 6, 2015 at 3:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-BTW, here are some sed scripts I've used to sanitize dmesg output
-in the past.  It's tedious to do this by hand.
+> But this is a general change that affects all platforms, and it's late in
+> the cycle for something as invasive as this.  I'd rather include your patch
+> in the v4.1 merge window, and revert d63e2e1f3df9 ("sparc/PCI: Clip bridge
+> windows to fit in upstream windows") for v4.0.
 
-  dmesg | sed -r 's/(pci ....:..:..\..: \[)....:....(\].*)/\1VVVV:DDDD\2/' | sed -r 's/(DMI:).*/\1 (removed)/' | sed -r 's/(ACPI: [A-Z]{4} [0-9a-fA-F]{16} .*\().*(\).*)/\1...\2/' | sed -r 's/(scsi.*: Direct-Access).*/\1 .../'
+How about applying first two in this patchset for v4.0, and leaving
+this one for v4.1?
+
+Thanks
+
+Yinghai
