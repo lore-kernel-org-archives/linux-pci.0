@@ -1,131 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18903 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751392AbbDQC1s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Apr 2015 22:27:48 -0400
-Date: Fri, 17 Apr 2015 10:24:13 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-CC: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, CPGS <cpgs@samsung.com>
-Subject: Re: [query] how to use "ranges" in device tree
-Message-ID: <20150417102413.705b1ca0@xhacker>
-In-Reply-To: <55303EE1.1050108@samsung.com>
-References: <20150416215938.347caa68@xhacker>
-	<55303EE1.1050108@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:34942 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752673AbbDGAbm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Apr 2015 20:31:42 -0400
+Received: by pddn5 with SMTP id n5so60481731pdd.2
+        for <linux-pci@vger.kernel.org>; Mon, 06 Apr 2015 17:31:41 -0700 (PDT)
+Message-ID: <1428366696.22268.28.camel@axtens.net>
+Subject: Re: [PATCH v2 04/19] powerpc: Create
+ pci_controller_ops.dma_dev_setup and shim
+From: Daniel Axtens <dja@axtens.net>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linuxppc-dev@lists.ozlabs.org, wangyijing@huawei.com,
+	linux-pci@vger.kernel.org
+Date: Tue, 07 Apr 2015 10:31:36 +1000
+In-Reply-To: <5500778.Q4t9Fg7Irn@wuerfel>
+References: <1427778057-9505-1-git-send-email-dja@axtens.net>
+	 <1427778057-9505-5-git-send-email-dja@axtens.net>
+	 <5500778.Q4t9Fg7Irn@wuerfel>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-TVh8S7fVsFWscyQVZw4D"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jaehoon,
 
-On Thu, 16 Apr 2015 15:59:45 -0700
-Jaehoon Chung <jh80.chung@samsung.com> wrote:
+--=-TVh8S7fVsFWscyQVZw4D
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Hi,
-> 
-> Well, I'm not sure..
-> But in my understanding..configuration range might be support both "ranges" and "config" of reg.
-> 
-> On 04/16/2015 10:59 PM, Jisheng Zhang wrote:
-> > Hi all,
-> > 
-> > I didn't fully understand the "ranges" usage, here is one situation which I dunno
-> > how to handle.
-> > 
-> > In arch/arm/boot/dts/berlin2q.dtsi, we describe the /soc ranges as
-> > 
-> > ranges = <0 0xf7000000 0x1000000>;
-> > 
-> > That's fine. Now there's a pci device based on pcie-designware.c which prefer
-> > put "config" space in reg. But the config space starts at 0xe0000000, due to
-> > the /soc ranges, the "config" space following pcie node is not correct in fact.
-> > 
-> > soc {
-> > 	ranges = <0 0xf7000000 0x1000000>;
-> > 	...
-> > 	pcie: pcie@e40000 {
-> > 		compatible = "...";
-> > 		reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
-> > 		reg-names = "dbi", "pad", "config";
-> > 		...
-> > 	};
-> > 	...
-> > };
-> 
-> According to yours,
-> 
-> reg = <0xe40000 0x1000		/* dbi */
-> 	0xe000000 0x800000	/* pad */
-> 	0xf7000000 0x1000000>;	/* config ? */
+> Please see https://patchwork.ozlabs.org/patch/431333/ for related work.
+>=20
+I'm familiar with that patch series - I've been helping Yijing get it up
+to speed on PowerPC.
 
-oops, there's no pad at all, dbi starts at 0xf7e40000, config space starts at 0xe0000000
 
-so my pcie in my understanding is
+> I think it would be better not to introduce another architecture-specific
+> pci host bridge operations structure, but instead consolidate into
+> the one that is already there. We are also adding a generic way to set up
+> PCI DMA, so it would seems reasonable to hook into that place.
+I see what you're getting at, and I agree that we want to move towards
+generic operations.=20
 
-pcie: pcie@e40000 {
-	compatible = "...";
-	reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
-	reg-names = "dbi", "config";
-};
+However, I think this should go in as is at this point, for two main
+reasons:
 
-But the "/soc" ranges is defined as "<0 0xf7000000 0x1000000>;", so the config space
-in the above dts is not correct.
+1) This is a good midpoint that makes it easier to move to a generic
+structure. Our arch specific stuff is quirky and difficult. This patch
+series does a lot to reduce the complexity, and would make it very easy
+to move these ops into a generic structure at some future point.=20
 
-My solution is change the "/soc" ranges as following:
+2) Trying to go generic at this point risks making the change set so
+complex and wide ranging that it will really struggle to get in. For
+example, Yijing's patch set, despite not changing any of the quirky
+stuff in PowerPC, is already quite long, and will require agreement from
+a lot of people before it can go in.
 
-soc {
-	ranges;
-	...
-};
+Much as I would like to have everything as generic as possible, if we
+were to try to do the whole job in one go, it'd become a big, difficult,
+messy patch set, and would be less likely to happen than if we were to
+do it in two steps.
 
-Is there any elegant solutions for this situation?
+Regards,
+Daniel
 
-> 
-> If there is not "config" into reg-names, it should be tried to find it into "ranges".
 
-The pcie-designware driver prefers users define config space in "reg"
 
-Thanks for your help,
-Jisheng
+--=-TVh8S7fVsFWscyQVZw4D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-> 
-> If my understanding is wrong, let me know, plz.
-> 
-> In my case,
-> 
-> 	reg = <0x156b0000 0x1000
-> 		0x15680000 0x1000
-> 		0x0c000000 0x1000>;
-> 	reg-names = "elbi", "phy", "config";
-> 
-> 	ranges = < ..... /* downstream I/O */
-> 		  ...... /* non-prefetchable memory */
-> 
-> 
-> Best Regards,
-> Jaehoon Chung	
-> 
-> > 
-> > How to define the "config" space in this situation? Did we need to change
-> > the /soc ranges as the following?
-> > 
-> > soc {
-> > 	ranges;
-> > }
-> > 
-> > Thanks in advance,
-> > Jisheng
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> > 
-> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAABCAAGBQJVIyVoAAoJEPC3R3P2I92FTlwP/3Qk6njMhm/gy6E4+DVQ39Az
+JiXZQwdZ1ltTJDiDqSHLm3wPwRk/i/r4kGzX+dPCTVapMZTeyx4uKFGYqAkO5hnU
+bdsoL8GXS9zHFwItRUewoXAQOti7lQ4Zn4BKw4G0ir6dp3q1wlh1twc6d9jZ6c30
+4OLTpnvvO0BXnLoDjSse64pKO/YlKPgSM2oXE2Nec9Pm6zG+JKUgcGiD+6vbfh+h
+RqRg42Epw8RMWSF099Mc3UGxwrWz/SJkIiXRUq9MOgcLZjolKx+UE160YUAHC/Ni
+8PUE62k+wTYiqejTROVcgEwTth717j0UNy4sr0THBztghmH7Xf3qOGMhlL9GbFhf
+5qpglbnNj+NfTS1sBycY8KguZsJ58Zj3eA9cq7InSso6+mfE46nYXlD55RmdwgHB
+aez4RfkLLzZ8GebzEPsmXX2KYnYqEtOYMba/Tx79r3FXjOj2xZCqtVursDZgb00y
+0X0iNogP2YBDCKIfYflu783W4Nn3asxojehVOzGDr5Fg+ZCQMIKalrfdsKHVjLv1
+PpKROQ5ITcVooyvwdPdwfK30iyV4axpn5wblMOXuDptLt1AF1pLHUI4a8RQJfVP/
+EGvu+lIVneJqhMMeaCVLqOq0R+5Qy3CO+OFeBOxmBMgyAxPlVuSiV5WWvpgpdeP+
+KD4XPEjZ5H5rQemoTUN6
+=kHEb
+-----END PGP SIGNATURE-----
+
+--=-TVh8S7fVsFWscyQVZw4D--
 
