@@ -1,180 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55385 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbbDCJ3T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:19 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 14/30] PCI: Introduce pci_host_bridge_ops to support host specific operations
-Date: Fri, 3 Apr 2015 17:25:48 +0800
-Message-ID: <1428053164-28277-16-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:36799 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbbDGFXI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 01:23:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo6au3nWwNJCQBOLV=9=5Jy5=MKnky4LLjThKf8J7MJfdg@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	<1427857069-6789-4-git-send-email-yinghai@kernel.org>
+	<20150406220638.GH10892@google.com>
+	<CAE9FiQWz_VYOmrN+L3nAAmA7OqZdAYawwku2A09RVrNObQn4jQ@mail.gmail.com>
+	<20150406224913.GI10892@google.com>
+	<CAE9FiQWGqjyp9YABc=BvzFSm7Tj7reojOoMPDybQZ1RYXD8XZQ@mail.gmail.com>
+	<CAErSpo6au3nWwNJCQBOLV=9=5Jy5=MKnky4LLjThKf8J7MJfdg@mail.gmail.com>
+Date: Mon, 6 Apr 2015 22:23:06 -0700
+Message-ID: <CAE9FiQVguGRDbYxRW=KNW6ZnUE23ifHJN4WXrf03JZB_P+d21w@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have weak functions like pcibios_root_bridge_prepare()
-to setup pci host bridge, We could introduce pci_host_bridge_ops
-which contain host bridge specific ops to setup pci_host_bridge.
-Then host bridge driver could add pci_host_bridge_ops hooks
-intead of weak function to setup pci_host_bridge.
-This patch add following pci_host_bridge_ops hooks:
+On Mon, Apr 6, 2015 at 8:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Apr 6, 2015 at 8:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Mon, Apr 6, 2015 at 3:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>> For "[PATCH 1/3] PCI: Introduce pci_bus_addr_t", I'm waiting for an updated
+>>> version with Kconfig tweaks so we don't break other arches.
+>>
+>> I was thinking that you will update it manually.
+>
+> I asked you for an updated version, incorporating the documentation
+> updates, to make sure I got everything you intended.  But I did go
+> ahead and do it manually for you.
 
-pci_host_bridge_ops {
-	struct pci_ops *ops;
-	/* set root bus speed, some platform need this like powerpc */
-	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-	/* setup pci_host_bridge before pci_host_bridge be added to driver core */
-	int (*prepare)(struct pci_host_bridge *host);
-	/* platform specific of scan hook to scan pci device */
-	int (*scan_bus)(struct pci_host_bridge *);
-}
-We could easily extend it to support different host bridge
-specific operations.
+Good.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    9 ++++++++-
- drivers/pci/pci.h         |    5 +++--
- drivers/pci/probe.c       |   11 ++++++++---
- include/linux/pci.h       |    9 +++++++++
- 4 files changed, 28 insertions(+), 6 deletions(-)
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=f70899ff889a38f9697d3c153aaacaed25f501c3
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 8733b19..f2639f7 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -63,7 +63,8 @@ static bool pci_host_busn_res_overlap(
- 
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
--		void *sysdata, struct list_head *resources)
-+		void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops)
- {
- 	int error;
- 	struct pci_host_bridge *host, *tmp;
-@@ -98,10 +99,16 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	list_add_tail(&host->list, &pci_host_bridge_list);
- 	mutex_unlock(&pci_host_mutex);
- 
-+	host->ops = ops;
- 	host->dev.release = pci_release_host_bridge_dev;
- 	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
-+	if (host->ops && host->ops->prepare) {
-+		error = host->ops->prepare(host);
-+		if (error)
-+			goto list_del;
-+	}
- 
- 	error = pcibios_root_bridge_prepare(host);
- 	if (error)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 027fba0..ef10cc1 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -334,8 +334,9 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- }
- #endif
- 
--struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
--        int domain, int bus, void *sysdata, struct list_head *resources);
-+struct pci_host_bridge *pci_create_host_bridge(
-+		struct device *parent, int domain, int bus, void *sysdata,
-+		struct list_head *resources, struct pci_host_bridge_ops *ops);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- 
- static inline int pci_host_first_busnr(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ee17d9a..36dfee0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1894,6 +1894,8 @@ static struct pci_bus *__pci_create_root_bus(
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
- 
-+	if (bridge->ops && bridge->ops->set_root_bus_speed)
-+		bridge->ops->set_root_bus_speed(bridge);
- 	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-@@ -1958,7 +1960,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
- 	struct pci_host_bridge *host;
- 
- 	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources);
-+			sysdata, resources, NULL);
- 	if (!host)
- 		return NULL;
- 
-@@ -2048,7 +2050,10 @@ static struct pci_bus *__pci_scan_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	max = pci_scan_child_bus(b);
-+	if (host->ops && host->ops->scan_bus)
-+		max = host->ops->scan_bus(host);
-+	else
-+		max = pci_scan_child_bus(b);
- 
- 	/* If default busn resource used, update the max bus number */
- 	if (host->busn_res.flags & IORESOURCE_BUS) {
-@@ -2066,7 +2071,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 	struct pci_host_bridge *host;
- 
- 	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources);
-+			sysdata, resources, NULL);
- 	if (!host)
- 		return NULL;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 91cba01..2702a51 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -400,6 +400,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 	return (pdev->error_state != pci_channel_io_normal);
- }
- 
-+struct pci_host_bridge;
-+struct pci_host_bridge_ops {
-+	struct pci_ops *pci_ops;
-+	int (*prepare)(struct pci_host_bridge *host);
-+	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-+	int (*scan_bus)(struct pci_host_bridge *host);
-+};
-+
- struct pci_host_bridge {
- 	int domain;
- 	struct device dev;
-@@ -408,6 +416,7 @@ struct pci_host_bridge {
- 	struct resource busn_res;
- 	struct list_head windows;	/* resource_entry */
- 	struct list_head list;
-+	struct pci_host_bridge_ops *ops;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
--- 
-1.7.1
+Please consider to split that into two patches.
+First one include changes in : include/linux/types.h and
+Documentation/DMA-API-HOWTO.txt.
+and you should be author for that.
 
+
+>
+>>> For "[PATCH 2/3] sparc/PCI: Add mem64 resource parsing for root bus", I'm
+>>> waiting for a version that fixes the other of_bus_pci_get_flags() and
+>>> pci_parse_of_flags() implementations at the same time (or an explanation
+>>> about why we should fix only the arch/sparc version).  I don't want to fix
+>>> one place and leave the same bug in other places.
+>>
+>> I don't even know if other arch like powerpc support 64-bit bus address.
+>>
+>> No one from powerpc reported a problem, why should we mess it up now?
+>>
+>> I would like to see someone get access those three kinds of machine that support
+>> of to unify of support code.
+>
+> Of course changes there should be tested on all the affected machines.
+> I opened https://bugzilla.kernel.org/show_bug.cgi?id=96241 and
+> assigned it to you as a reminder that there is nearly identical code
+> in several other places that may have the same issue.
+
+ok, will on that to have three patches cover them.
+
+>
+> I pushed these two changes to for-linus.  I'll work on the third
+> tomorrow.  The current changelog is very sparc64-centric, and it needs
+> to be much more explicit about how the change will affect every arch.
+
+Sure. That will affect all platform.
+
+Thanks
+
+Yinghai
