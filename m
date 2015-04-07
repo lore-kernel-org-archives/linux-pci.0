@@ -1,42 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39518 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755316AbbDVDDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Apr 2015 23:03:20 -0400
-Message-ID: <55370F4E.6020604@redhat.com>
-Date: Tue, 21 Apr 2015 23:02:38 -0400
-From: Jon Masters <jcm@redhat.com>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:36160 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666AbbDGTrA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 15:47:00 -0400
+Received: by qcgx3 with SMTP id x3so26287901qcg.3
+        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 12:46:59 -0700 (PDT)
 MIME-Version: 1.0
-To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>
-Subject: Re: [PATCH v5 0/4]PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination
- driver
-References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
-In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CACna6ryiajzYAW+SJkJ-9ETpUe1+VDt99yKw9C39u_Na2q2kTQ@mail.gmail.com>
+References: <CACna6ryiajzYAW+SJkJ-9ETpUe1+VDt99yKw9C39u_Na2q2kTQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 7 Apr 2015 14:46:38 -0500
+Message-ID: <CAErSpo6wObVZUwkBoUfi3bqfJ-BtQwX0=WEkWqoTsNXhs5dHVA@mail.gmail.com>
+Subject: Re: Preventing PCI from assigning mem (for MMIO) to bridge device
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Alex Henrie <alexhenrie24@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/21/2015 12:04 AM, Duc Dang wrote:
-> This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
-> APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
-> to GIC V2M specification for MSI Termination.
-> 
-> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
-> block supports 2048 MSI termination ports coalesced into 16 physical HW IRQ lines
-> and shared across all 5 PCIe ports. As the version 5 of this patch, the total MSI
-> vectors this driver supports is reduced to 256 to maintain the correct set_affinity 
-> behavior for each MSI.
+Hi Rafał,
 
-Quick note that I have tested the previous several versions of this
-patch series on several platforms and will test v6 once available with
-the pending feedback addressed.
+On Tue, Apr 7, 2015 at 4:51 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> Hello,
+>
+> I own a home router Linksys WRT300N v1.0 with CardBus slot on PCB and
+> wireless card attached.
+>
+> This is MIPS SoC BCM4704 using following code for PCI controller:
+> 1) register_pci_controller
+> http://lxr.free-electrons.com/source/arch/mips/pci/pci.c?v=3.18#L167
+> 2) ssb_pcicore_init_hostmode
+> http://lxr.free-electrons.com/source/drivers/ssb/driver_pcicore.c?v=3.18#L317
+>
+> There are two PCI devices discoverable:
+> 1) 0000:00:00.0 (bridge)
+> 14e4:472d / class 0x068000 / hdr_type 0
+> 2) 0000:00:01.0 (wireless device)
+> 14e4:4329 / class 0x028000 / hdr_type 0
+>
+> My problem is that PCI subsystem assigns memory to the bridge device:
+> pci 0000:00:00.0: BAR 1: assigned [mem 0x40000000-0x47ffffff pref]
+> pci 0000:00:01.0: BAR 0: assigned [mem 0x48000000-0x48003fff]
+> pci 0000:00:00.0: BAR 0: assigned [mem 0x48004000-0x48005fff]
+>
+> This ancient & simple PCI controller allows assigning resources to the
+> wireless device only (slot 1). Trying to assign resources to the
+> bridge device (writing to slot 0 to registers PCI_BASE_ADDRESS_[0-5])
+> results in overwriting wireless device (slot 0) configuration!
+> As you can guess from the above log, the last assignment (targeting
+> slot 0) will break (overwrite) wireless device (slot 1) configuration.
+> Trying to access any MMIO register of wireless device will cause "Data
+> bus error".
+> For more details please see my comment in OpenWrt Trac:
+> https://dev.openwrt.org/ticket/12682#comment:11 (there is a nice
+> configuration dump after every assignment).
+>
+> So I'm looking for a way to stop PCI subsystem from assigning any
+> memory to the bridge device (slot 0). I still need it to assign memory
+> for wireless device (slot 1) as its driver requires MMIO access.
+>
+> I'm wondering what is the best way to achieve that?
+>
+> MIPS arch code seems to respect PCI_PROBE_ONLY but this will stop
+> assigning memory to wireless device (slot 1) too.
+>
+> I was considering modifying my "struct pci_ops" write callback to
+> include something like this:
+> if (extpci_core->cardbusmode && dev == 0 &&
+>     off >= PCI_BASE_ADDRESS_0 &&
+>     off <= PCI_BASE_ADDRESS_5)
+>         return -ENOTSUPP;
+> It seems to be working fine, all I get with above change is:
+> pci 0000:00:01.0: BAR 0: assigned [mem 0x40000000-0x40003fff]
+> , but I need an opinion if this is a correct solution.
 
-Jon.
+I'd have to understand the problem better to give you a good opinion.
+It sounds like you think there's a hardware defect in the bridge?  If
+that's the case, we can often write a quirk to work around it.
 
+Could you open a report at bugzilla.kernel.org against drivers/PCI,
+and attach a complete dmesg log and output of "lspci -vv"?  The newer
+the kernel you can try, the better.
+
+Bjorn
