@@ -1,121 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37747 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757044AbbDPKEG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Apr 2015 06:04:06 -0400
-Message-ID: <552F8910.9000701@arm.com>
-Date: Thu, 16 Apr 2015 11:04:00 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:37549 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753869AbbDGVio (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 17:38:44 -0400
+Received: by igblo3 with SMTP id lo3so23702145igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 14:38:43 -0700 (PDT)
+Date: Tue, 7 Apr 2015 16:38:39 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, dja@axtens.net,
+	x86@kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>	<1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com> <20150415173654.431f5d89@arm.com> <DM2PR0301MB0640576D29E70392C41444DFE2E40@DM2PR0301MB0640.namprd03.prod.outlook.com>
-In-Reply-To: <DM2PR0301MB0640576D29E70392C41444DFE2E40@DM2PR0301MB0640.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v9 06/30] PCI: Separate pci_host_bridge creation out of
+ pci_create_root_bus()
+Message-ID: <20150407213839.GJ10892@google.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+ <1428053164-28277-8-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1428053164-28277-8-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/04/15 03:57, Minghuan.Lian@freescale.com wrote:
-> Hi Marc,
+On Fri, Apr 03, 2015 at 05:25:40PM +0800, Yijing Wang wrote:
+> This patch separate pci_host_bridge creation out
+> of pci_create_root_bus(), and try to make a generic
+> pci_host_bridge, then we could make it hold host
+> bridge specific operations like
+> pcibios_root_bridge_prepare(). The changes are
+> transparent to platform host bridge drivers.
 > 
-> Please see my comments inline
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/host-bridge.c |   52 +++++++++++++++++++++
+>  drivers/pci/pci.h         |    3 +
+>  drivers/pci/probe.c       |  113 +++++++++++++++++++++------------------------
+>  3 files changed, 108 insertions(+), 60 deletions(-)
 > 
->> -----Original Message----- From: Marc Zyngier 
->> [mailto:marc.zyngier@arm.com] Sent: Thursday, April 16, 2015 12:37
->>  AM To: Lian Minghuan-B31939 Cc: linux-pci@vger.kernel.org; Arnd 
->> Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-B08248;
->>  Bjorn Helgaas; Wood Scott-B07421; linux- 
->> arm-kernel@lists.infradead.org; Jason Cooper; Thomas Gleixner 
->> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device 
->> ID
->> 
->> On Wed, 15 Apr 2015 17:49:23 +0800 Minghuan Lian 
->> <Minghuan.Lian@freescale.com> wrote:
->> 
->>> SMMU of some platforms can only isolate limited device ID. This 
->>> may require that all PCI devices share the same ITS device with 
->>> the fixed device ID. The patch adds function 
->>> arch_msi_share_devid_update used for these platforms to update 
->>> the fixed device ID and maximum MSI interrupts number.
->>> 
->>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com> --- 
->>> drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++ 1 file changed,
->>> 11 insertions(+)
->>> 
->>> diff --git a/drivers/irqchip/irq-gic-v3-its.c 
->>> b/drivers/irqchip/irq-gic-v3-its.c index d0374a6..be78d0a 100644 
->>> --- a/drivers/irqchip/irq-gic-v3-its.c +++ 
->>> b/drivers/irqchip/irq-gic-v3-its.c @@ -1169,6 +1169,15 @@ static
->>>  int its_get_pci_alias(struct pci_dev *pdev,
->> u16 alias, void *data)
->>> return 0; }
->>> 
->>> +void __weak +arch_msi_share_devid_update(struct pci_dev *pdev, 
->>> u32 *dev_id, u32 +*nvesc) { +	/* +	 * use PCI_DEVID NOT share 
->>> device ID as default +	 * so nothing need to do +	 */ +} +
->> 
->> NAK. On top of being ugly as sin, this breaks any form of 
->> multiplatform support. No way anything like this is going in. Guys,
->> you really should know better.
->> 
-> [Minghuan]  The current ITS MSI will create an individual ITS device 
-> for each PCIe device, and use PCI_DEVID as ITS dev_id However, out 
-> platform only supports  ITS dev_id 0 -63.  A normal PCIe DEVID of 
-> 0000:01:00.0 is 256 bigger than 63. Besides, because of the limited 
-> dev_id number, all the PCIe device will share the same ITS dev. Our 
-> platform provides a hardware module LUT to map PCI DEVID to ITS 
-> dev_id.  So, when creating ITS device, we need to update dev_id and 
-> the nvesc. I may change pci_for_each_dma_alias to add a new flag to 
-> use alias_bus and alias_devfn.
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 39b2dbe..7d52a0a 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -8,6 +8,58 @@
+>  
+>  #include "pci.h"
+>  
+> +static void pci_release_host_bridge_dev(struct device *dev)
+> +{
+> +	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
+> +
+> +	if (bridge->release_fn)
+> +		bridge->release_fn(bridge);
+> +
+> +	pci_free_resource_list(&bridge->windows);
+> +	kfree(bridge);
+> +}
+> +
+> +struct pci_host_bridge *pci_create_host_bridge(
+> +		struct device *parent, int domain, int bus,
+> +		struct list_head *resources)
+> +{
+> +	int error;
+> +	struct pci_host_bridge *host;
+> +	struct resource_entry *window, *n;
+> +
+> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
+> +	if (!host)
+> +		return NULL;
+> +
+> +	host->dev.parent = parent;
+> +	INIT_LIST_HEAD(&host->windows);
+> +	resource_list_for_each_entry_safe(window, n, resources)
+> +		list_move_tail(&window->node, &host->windows);
+> +	/*
+> +	 * If support CONFIG_PCI_DOMAINS_GENERIC, use
+> +	 * pci_host_assign_domain_nr() to update domain
+> +	 * number.
+> +	 */
+> +	host->domain = domain;
+> +	pci_host_assign_domain_nr(host);
 
-Yes, that's where you should take care of this hack.
+I think it's a bit confusing that there's another "host->domain ="
+assignment buried inside pci_host_assign_domain_nr(), so the first
+assignment is overwritten when CONFIG_PCI_DOMAINS_GENERIC is set.
 
-> But I also need to update nvesc which should contains all the PCI 
-> device MSI/MSIX nvesc and PCIe PME, aerdrv interrupts. The main 
-> difference is that we need a ITS device to service multiple PCIe 
-> devices. Could you give me some suggestions how to implement this 
-> requirement.
+Can you do something like this instead:
 
-It you take the time to read the code in its_msi_prepare(), you'll
-quickly notice that we already handle aliasing of multiple PCI devices
-to a single DeviceID. Once you have the aliasing taken care of in
-pci_for_each_dma_alias, the ITS code will automatically adjust the
-number of vectors (using its_get_pci_alias as a callback from
-pci_for_each_dma_alias).
+  int pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
+  {
+  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+    host->domain = pci_assign_domain_nr(host->dev.parent);
+  #else
+    host->domain = domain;
+  #endif
+  }
 
->>> static int its_msi_prepare(struct irq_domain *domain, struct 
->>> device *dev, int nvec, msi_alloc_info_t *info)  { @@ -1185,6
->> +1194,8 @@
->>> static int its_msi_prepare(struct irq_domain *domain, struct 
->>> device *dev, dev_alias.count = nvec;
->>> 
->>> pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias); + 
->>> arch_msi_share_devid_update(pdev, &dev_alias.dev_id, 
->>> +&dev_alias.count); +
->> 
->> See the function above? That's where the aliasing should be taken 
->> care of.
->> 
-> [Minghuan] The alias will use dma_alias_devfn, but it does not 
-> contains alias_bus. I need to translate PCI_DEVID to a fixed ID.
+Then the alternatives (CONFIG_PCI_DOMAINS_GENERIC=y and
+CONFIG_PCI_DOMAINS_GENERIC being unset) are close together and right at the
+#ifdef CONFIG_PCI_DOMAINS_GENERIC, so no extra comments are needed.
 
-Then add another flag to deal with that. Your hardware is "creative"
-(some might even argue it is broken), so deal with the creativity as a
-quirk, which has no business in the ITS driver (or any other driver).
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Bjorn
