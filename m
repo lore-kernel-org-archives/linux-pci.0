@@ -1,65 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49711 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751146AbbDOGsR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Apr 2015 02:48:17 -0400
-Date: Wed, 15 Apr 2015 14:48:03 +0800
-From: Dave Young <dyoung@redhat.com>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150415064803.GF19051@localhost.localdomain>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
- <20150415005731.GC19051@localhost.localdomain>
- <552DFB56.1070600@hp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <552DFB56.1070600@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQWGqjyp9YABc=BvzFSm7Tj7reojOoMPDybQZ1RYXD8XZQ@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+ <1427857069-6789-4-git-send-email-yinghai@kernel.org> <20150406220638.GH10892@google.com>
+ <CAE9FiQWz_VYOmrN+L3nAAmA7OqZdAYawwku2A09RVrNObQn4jQ@mail.gmail.com>
+ <20150406224913.GI10892@google.com> <CAE9FiQWGqjyp9YABc=BvzFSm7Tj7reojOoMPDybQZ1RYXD8XZQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 6 Apr 2015 22:43:20 -0500
+Message-ID: <CAErSpo6au3nWwNJCQBOLV=9=5Jy5=MKnky4LLjThKf8J7MJfdg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/15/15 at 01:47pm, Li, ZhenHua wrote:
-> On 04/15/2015 08:57 AM, Dave Young wrote:
-> >Again, I think it is bad to use old page table, below issues need consider:
-> >1) make sure old page table are reliable across crash
-> >2) do not allow writing oldmem after crash
-> >
-> >Please correct me if I'm wrong, or if above is not doable I think I will vote for
-> >resetting pci bus.
-> >
-> >Thanks
-> >Dave
-> >
-> Hi Dave,
-> 
-> When updating the context tables, we have to write their address to root
-> tables, this will cause writing to old mem.
-> 
-> Resetting the pci bus has been discussed, please check this:
-> http://lists.infradead.org/pipermail/kexec/2014-October/012752.html
-> https://lkml.org/lkml/2014/10/21/890
+On Mon, Apr 6, 2015 at 8:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Apr 6, 2015 at 3:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> For "[PATCH 1/3] PCI: Introduce pci_bus_addr_t", I'm waiting for an updated
+>> version with Kconfig tweaks so we don't break other arches.
+>
+> I was thinking that you will update it manually.
 
-I know one reason to use old pgtable is this looks better because it fixes the
-real problem, but it is not a good way if it introduce more problems because of
-it have to use oldmem. I will be glad if this is not a problem but I have not
-been convinced.
+I asked you for an updated version, incorporating the documentation
+updates, to make sure I got everything you intended.  But I did go
+ahead and do it manually for you.
 
-OTOH, there's many types of iommu, intel, amd, a lot of other types. They need
-their own fixes, so it looks not that elegant.
+>> For "[PATCH 2/3] sparc/PCI: Add mem64 resource parsing for root bus", I'm
+>> waiting for a version that fixes the other of_bus_pci_get_flags() and
+>> pci_parse_of_flags() implementations at the same time (or an explanation
+>> about why we should fix only the arch/sparc version).  I don't want to fix
+>> one place and leave the same bug in other places.
+>
+> I don't even know if other arch like powerpc support 64-bit bus address.
+>
+> No one from powerpc reported a problem, why should we mess it up now?
+>
+> I would like to see someone get access those three kinds of machine that support
+> of to unify of support code.
 
-For pci reset, it is not perfect, but it has another advantage, the patch is
-simpler. The problem I see from the old discusssion is, reset bus in 2nd kernel
-is acceptable but it does not fix things on sparc platform. AFAIK current reported
-problems are intel and amd iommu, at least pci reset stuff does not make it worse.
+Of course changes there should be tested on all the affected machines.
+I opened https://bugzilla.kernel.org/show_bug.cgi?id=96241 and
+assigned it to you as a reminder that there is nearly identical code
+in several other places that may have the same issue.
 
-Thanks
-Dave
+I pushed these two changes to for-linus.  I'll work on the third
+tomorrow.  The current changelog is very sparc64-centric, and it needs
+to be much more explicit about how the change will affect every arch.
+
+Bjorn
