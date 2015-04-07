@@ -1,83 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f49.google.com ([209.85.216.49]:33816 "EHLO
-	mail-vn0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751748AbbD0Fn0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 01:43:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150421202807.7963.2088.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150421194625.4792.69968.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150421202807.7963.2088.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Date: Mon, 27 Apr 2015 11:13:25 +0530
-Message-ID: <CAOh2x=kQ0nNO-ZU6G2KG7kYqcQqS6=jy1a-=xHZAnr5B=tSOFA@mail.gmail.com>
-Subject: Re: [PATCH v2] MAINTAINERS: Remove Mohit Kumar (email bounces)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Joe Perches <joe@perches.com>,
-	Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	Mohit Kumar <mohit.kumar.dhaka@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Matthew Garrett <mjg59@coreos.com>
+To: linux-pci@vger.kernel.org
+Cc: rjw@rjwysocki.net, lenb@kernel.org, linux-acpi@vger.kernel.org,
+	bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	Matthew Garrett <mjg59@coreos.com>
+Date: Tue,  7 Apr 2015 11:07:00 -0700
+Message-Id: <1428430020-29633-1-git-send-email-mjg59@coreos.com>
+Subject: [PATCH] PCI: Don't clear ASPM bits when the FADT declares it's unsupported
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Fixing Mohit's and Pratyush's email ids]
+Communications with a hardware vendor confirm that the expected behaviour on
+systems that set the FADT ASPM disable bit but which still grant full PCIe
+control is for the OS to leave any BIOS configuration intact and refuse to
+touch the ASPM bits. This mimics the behaviour of Windows.
 
-On Wed, Apr 22, 2015 at 1:58 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Email to Mohit Kumar <mohit.kumar@st.com> has been bouncing, so remove the
-> address from MAINTAINERS and add an entry in CREDITS.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  CREDITS     |    4 ++++
->  MAINTAINERS |    4 +---
->  2 files changed, 5 insertions(+), 3 deletions(-)
->
-> diff --git a/CREDITS b/CREDITS
-> index 843e17647f3b..6bb0d51e83de 100644
-> --- a/CREDITS
-> +++ b/CREDITS
-> @@ -2045,6 +2045,10 @@ D: pirq addr, CS5535 alsa audio driver
->  S: Gurgaon, India
->  S: Kuala Lumpur, Malaysia
->
-> +N: Mohit Kumar
-> +D: ST Microelectronics SPEAr13xx PCI host bridge driver
-> +D: Synopsys Designware PCI host bridge driver
-> +
->  N: Gabor Kuti
->  M: seasons@falcon.sch.bme.hu
->  M: seasons@makosteszta.sote.hu
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a123c39b4f0e..1c95b707a5f6 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7490,7 +7490,6 @@ S:        Maintained
->  F:     drivers/pci/host/pci-exynos.c
->
->  PCI DRIVER FOR SYNOPSIS DESIGNWARE
-> -M:     Mohit Kumar <mohit.kumar@st.com>
->  M:     Jingoo Han <jg1.han@samsung.com>
->  L:     linux-pci@vger.kernel.org
->  S:     Maintained
-> @@ -7505,9 +7504,8 @@ F:        Documentation/devicetree/bindings/pci/host-generic-pci.txt
->  F:     drivers/pci/host/pci-host-generic.c
->
->  PCIE DRIVER FOR ST SPEAR13XX
-> -M:     Mohit Kumar <mohit.kumar@st.com>
->  L:     linux-pci@vger.kernel.org
-> -S:     Maintained
-> +S:     Orphan
->  F:     drivers/pci/host/*spear*
->
->  PCMCIA SUBSYSTEM
+Signed-off-by: Matthew Garrett <mjg59@coreos.com>
+---
+ drivers/acpi/pci_root.c  | 19 ++++++++-----------
+ drivers/pci/pcie/aspm.c  | 18 ------------------
+ include/linux/pci-aspm.h |  4 ----
+ 3 files changed, 8 insertions(+), 33 deletions(-)
 
-Its really sad that we have to get down to this, these two
-should have done it..
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 68a5f71..1b5569c 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -423,8 +423,7 @@ out:
+ }
+ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ 
+-static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+-				 int *clear_aspm)
++static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ {
+ 	u32 support, control, requested;
+ 	acpi_status status;
+@@ -495,10 +494,12 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		decode_osc_control(root, "OS now controls", control);
+ 		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+ 			/*
+-			 * We have ASPM control, but the FADT indicates
+-			 * that it's unsupported. Clear it.
++			 * We have ASPM control, but the FADT indicates that
++			 * it's unsupported. Leave existing configuration
++			 * intact and prevent the OS from touching it.
+ 			 */
+-			*clear_aspm = 1;
++			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
++			*no_aspm = 1;
+ 		}
+ 	} else {
+ 		decode_osc_control(root, "OS requested", requested);
+@@ -525,7 +526,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	int result;
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle = device->handle;
+-	int no_aspm = 0, clear_aspm = 0;
++	int no_aspm = 0;
+ 	bool hotadd = system_state != SYSTEM_BOOTING;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+@@ -584,7 +585,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 
+ 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
+ 
+-	negotiate_os_control(root, &no_aspm, &clear_aspm);
++	negotiate_os_control(root, &no_aspm);
+ 
+ 	/*
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+@@ -607,10 +608,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		goto remove_dmar;
+ 	}
+ 
+-	if (clear_aspm) {
+-		dev_info(&device->dev, "Disabling ASPM (FADT indicates it is unsupported)\n");
+-		pcie_clear_aspm(root->bus);
+-	}
+ 	if (no_aspm)
+ 		pcie_no_aspm();
+ 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 820740a..7d4fcdc 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -782,24 +782,6 @@ void pci_disable_link_state(struct pci_dev *pdev, int state)
+ }
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
+-void pcie_clear_aspm(struct pci_bus *bus)
+-{
+-	struct pci_dev *child;
+-
+-	if (aspm_force)
+-		return;
+-
+-	/*
+-	 * Clear any ASPM setup that the firmware has carried out on this bus
+-	 */
+-	list_for_each_entry(child, &bus->devices, bus_list) {
+-		__pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
+-					 PCIE_LINK_STATE_L1 |
+-					 PCIE_LINK_STATE_CLKPM,
+-					 false, true);
+-	}
+-}
+-
+ static int pcie_aspm_set_policy(const char *val, struct kernel_param *kp)
+ {
+ 	int i;
+diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+index 8af4610..207c561 100644
+--- a/include/linux/pci-aspm.h
++++ b/include/linux/pci-aspm.h
+@@ -29,7 +29,6 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+ void pci_disable_link_state(struct pci_dev *pdev, int state);
+ void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+-void pcie_clear_aspm(struct pci_bus *bus);
+ void pcie_no_aspm(void);
+ #else
+ static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
+@@ -47,9 +46,6 @@ static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+ static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
+ }
+-static inline void pcie_clear_aspm(struct pci_bus *bus)
+-{
+-}
+ static inline void pcie_no_aspm(void)
+ {
+ }
+-- 
+2.3.4
 
-Anyway, please hold on this patch and I will update it for them.
