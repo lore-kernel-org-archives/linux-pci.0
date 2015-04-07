@@ -1,190 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	tiagdtd-lava <tiagdtd-lava@yahoo.de>
-Subject: Re: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to parent
-Date: Wed, 22 Apr 2015 04:02:02 +0200
-Message-ID: <3299062.WsuX6ATqg0@vostro.rjw.lan>
-In-Reply-To: <2145313.EW8TNIQHUl@vostro.rjw.lan>
-References: <2001450.KHHLaZsp3O@vostro.rjw.lan> <CAJZ5v0jFzidqni=rFKJUzmsJ6pvN01iUyywB7HywWTjABYR_zA@mail.gmail.com> <2145313.EW8TNIQHUl@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og108.obsmtp.com ([64.18.0.186]:55843 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753328AbbDGT5T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 15:57:19 -0400
+Received: by oblw8 with SMTP id w8so56619878obl.0
+        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 12:57:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <5509C951.30402@arm.com>
+References: <cover.1425497218.git.dhdang@apm.com> <ca98e05f8a8dabdc6cc5b6e8c3ce50cf4e900fac.1425497218.git.dhdang@apm.com>
+ <5509BE7C.1000901@arm.com> <CADaLNDn0V8F27Yu1-j8H0Dw2t-Ac04TZcbtsg++ALdB4orXrUQ@mail.gmail.com>
+ <5509C951.30402@arm.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Tue, 7 Apr 2015 12:56:48 -0700
+Message-ID: <CADaLNDnhbR+i3b7X2zE7Fyou55Pu8qv-6QxpnRf4hqfq=0XyJQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, Feng Kan <fkan@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, Loc Ho <lho@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 15, 2015 07:01:06 PM Rafael J. Wysocki wrote:
-> On Wednesday, April 15, 2015 05:36:42 PM Rafael J. Wysocki wrote:
-> > On Apr 15, 2015 3:16 PM, "Rafael J. Wysocki" <rafael@kernel.org> wrote:
-> > >
-> > > On Wed, Apr 15, 2015 at 2:55 PM, Bjorn Helgaas <bhelgaas@google.com>
-> > wrote:
-> > > > On Tue, Apr 14, 2015 at 8:03 PM, Rafael J. Wysocki <rjw@rjwysocki.net>
-> > wrote:
-> > > >> On Tuesday, April 14, 2015 12:28:12 PM Henrique de Moraes Holschuh
-> > wrote:
-> > > >>> On Mon, Apr 13, 2015, at 11:23, Rafael J. Wysocki wrote:
-> > > >>> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > >>> >
-> > > >>> > Refine the mechanism introduced by commit f244d8b623da (ACPIPHP /
-> > radeon
-> > > >>> > / nouveau: Fix VGA switcheroo problem related to hotplug) to
-> > propagate
-> > > >>> > the ignore_hotplug setting of the device to its parent bridge in
-> > case
-> > > >>> > hotplug notifications related to the graphics adapter switching are
-> > > >>> > given for the bridge rather than for the device itself (the need to
-> > > >>> > be ignored in both cases).
-> > > >>>
-> > > >>> I do apologise if this is a stupid question, but is there any chance
-> > the
-> > > >>> bridge will be connected to other devices that do require hotplug
-> > handling,
-> > > >>> and not just to the GPU?
-> > > >>
-> > > >> The bridge is actually a downstream PCIe port holding the GPU, so no.
-> > :-)
-> > > >
-> > > > When radeon/nouveau call pci_ignore_hotplug(), that's the case, but in
-> > > > general all we know is that pci_ignore_hotplug() receives a PCI
-> > > > device.  We don't know whether it's PCI or PCIe.  In the hotplug
-> > > > topologies I'm familiar with, a bridge only leads to one hot-pluggable
-> > > > slot, but I don't remember anything that would guarantee that.  For
-> > > > PCIe, I think there can only be one slot, but for PCI I would think it
-> > > > possible to have one bridge leading to several hotpluggable slots,
-> > > > with the hotplug controller(s) being separate from the bridge.
-> > >
-> > > Realistically, the switcheroo people are the only users of
-> > > pci_ignore_hotplug() today and if somebody wants the hotplug events to
-> > > be ignored for him and perhaps not for someone else on the same
-> > > bridge, then something is seriously broken about that system anyway.
-> > 
-> > There may be a problem if somebody *already* calls this function for the
-> > parent bridge (which some callers do ISTR) in which case the setting will
-> > be propagated unnecessarily.
-> > 
-> > That said, since all of the existing callers of pci_ignore_hotplug() appear
-> > to need to set the flag for the parent too, IMO it's better to put that
-> > logic into the interface instead of duplicating it in the callers. So, why
-> > don't we add a second argument indicating whether or not to propagate the
-> > setting?
-> 
-> My previous message didn't seem to reach the mailing lists, so above is a
-> quote from it and below is a new version of the patch with the additional
-> argument to pci_ignore_hotplug().
+On Wed, Mar 18, 2015 at 11:52 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On 18/03/15 18:29, Duc Dang wrote:
+>> On Wed, Mar 18, 2015 at 11:05 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>>> On 04/03/15 19:39, Duc Dang wrote:
+>>>> X-Gene v1 SOC supports total 2688 MSI/MSIX vectors coalesced into
+>>>> 16 HW IRQ lines.
+>>>>
+>>>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>>>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>>>
+>>> I just had a quick look at this, and this seems to be going in the exact
+>>> opposite direction compared to what we now have on arm64, where we move
+>>> away from using struct msi_controller for most thing, and implement PCI
+>>> MSI/MSIX in a generic way, using MSI domains.
+>>>
+>>> I suggest you have a look at how GICv2m and GICv3 ITS implement the MSI
+>>> support. You can also have a look at what I did for the Tegra MSI
+>>> controller in this patch:
+>>>
+>>> https://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/kill-msi-controller&id=83b3602fcee7972b9d549ed729b56ec28de16081
+>>>
+>>> Eventually, the plan is to kill msi_controller entirely, so introducing
+>>> new drivers that rely on it is not something I'm eager to see.
+>>
+>> Thanks, Marc.
+>>
+>>  X-Gene 1 MSI is handled by separate MSI controller block, so its
+>> driver implementation is different from GICv2m and GICv3. I will refer
+>
+> It will certainly be different in the sense that you won't use a stacked
+> domain on top of the GIC. But what I want to see is the use of a generic
+> pci_msi_domain on top of an irq_domain, just like we have on v2m and v3.
+> Thomas has also been vocal enough about that in the past, and x86 is
+> going down that road as well.
+>
+>> to what you did for Tegra MSI, but I don't see your latest changes in
+>> 4.0-rc4. Is the change you made for Tegra MSI going to mainline soon?
+>
+> Not yet. As you can see in this branch, this relies on some other
+> cleanups. But you can already convert most of your driver and put it in
+> the shape that matches what we have for v2m and v3. Once the required
+> cleanups are in, I'll remove the last traces of msi_controller myself if
+> necessary.
+>
 
-Do you have any comments on this one?
+Hi Marc, Bjorn,
 
+I follow Marc's suggestion and convert my X-Gene 1 MSI driver to
+remove msi_controller struct and use generic pci_msi_domain on top of
+an irq_domain. The code requires Marc's changes in
+irq/kill-msi-controller branch to be compiled and function correctly,
+so I plan to post the patch on top of Marc's tree. Please let me know
+if you think I should have different approach to post this patch.
 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / hotplug: Propagate the "ignore hotplug" setting to parent
-> 
-> Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
-> / nouveau: Fix VGA switcheroo problem related to hotplug) to optionally
-> propagate the ignore_hotplug setting of the device to its parent bridge
-> in case hotplug notifications related to the graphics adapter switching
-> are given for the bridge rather than for the device itself (the need to
-> be ignored in both cases).
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
-> Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
-> Reported-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/gpu/drm/nouveau/nouveau_drm.c |    2 +-
->  drivers/gpu/drm/radeon/radeon_drv.c   |    2 +-
->  drivers/pci/pci.c                     |   16 ++++++++++++++++
->  include/linux/pci.h                   |    6 +-----
->  4 files changed, 19 insertions(+), 7 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -4319,6 +4319,22 @@ bool pci_device_is_present(struct pci_de
->  }
->  EXPORT_SYMBOL_GPL(pci_device_is_present);
->  
-> +/**
-> + * pci_ignore_hotplug - Ignore subsequent hotplug notifies for this device.
-> + * @dev: Target device.
-> + * @propagate: Whether or not to ignore hotplug notifies for the parent bridge.
-> + */
-> +void pci_ignore_hotplug(struct pci_dev *dev, bool propagate)
-> +{
-> +	struct pci_dev *bridge = dev->bus->self;
-> +
-> +	dev->ignore_hotplug = 1;
-> +	/* Propagate the "ignore hotplug" setting to the parent bridge. */
-> +	if (bridge && propagate)
-> +		bridge->ignore_hotplug = 1;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
-> +
->  #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
->  static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
->  static DEFINE_SPINLOCK(resource_alignment_lock);
-> Index: linux-pm/include/linux/pci.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pci.h
-> +++ linux-pm/include/linux/pci.h
-> @@ -1002,6 +1002,7 @@ int __must_check pci_assign_resource(str
->  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
->  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
-> +void pci_ignore_hotplug(struct pci_dev *dev, bool propagate);
->  
->  /* ROM control related routines */
->  int pci_enable_rom(struct pci_dev *pdev);
-> @@ -1039,11 +1040,6 @@ bool pci_dev_run_wake(struct pci_dev *de
->  bool pci_check_pme_status(struct pci_dev *dev);
->  void pci_pme_wakeup_bus(struct pci_bus *bus);
->  
-> -static inline void pci_ignore_hotplug(struct pci_dev *dev)
-> -{
-> -	dev->ignore_hotplug = 1;
-> -}
-> -
->  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->  				  bool enable)
->  {
-> Index: linux-pm/drivers/gpu/drm/nouveau/nouveau_drm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/gpu/drm/nouveau/nouveau_drm.c
-> +++ linux-pm/drivers/gpu/drm/nouveau/nouveau_drm.c
-> @@ -731,7 +731,7 @@ nouveau_pmops_runtime_suspend(struct dev
->  	ret = nouveau_do_suspend(drm_dev, true);
->  	pci_save_state(pdev);
->  	pci_disable_device(pdev);
-> -	pci_ignore_hotplug(pdev);
-> +	pci_ignore_hotplug(pdev, true);
->  	pci_set_power_state(pdev, PCI_D3cold);
->  	drm_dev->switch_power_state = DRM_SWITCH_POWER_DYNAMIC_OFF;
->  	return ret;
-> Index: linux-pm/drivers/gpu/drm/radeon/radeon_drv.c
-> ===================================================================
-> --- linux-pm.orig/drivers/gpu/drm/radeon/radeon_drv.c
-> +++ linux-pm/drivers/gpu/drm/radeon/radeon_drv.c
-> @@ -453,7 +453,7 @@ static int radeon_pmops_runtime_suspend(
->  	ret = radeon_suspend_kms(drm_dev, false, false);
->  	pci_save_state(pdev);
->  	pci_disable_device(pdev);
-> -	pci_ignore_hotplug(pdev);
-> +	pci_ignore_hotplug(pdev, true);
->  	pci_set_power_state(pdev, PCI_D3cold);
->  	drm_dev->switch_power_state = DRM_SWITCH_POWER_DYNAMIC_OFF;
->  
-> 
+Another question I have is when do you plan to roll out this hierarchy
+irq domain implementation for MSI, as I see some of Marc's changes to
+kill msi_controller structure and implement MSI irq domain still does
+not get into Bjorn's tree.
+
+Regards,
+Duc Dang.
+
+> Thanks,
+>
+>         M.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> Jazz is not dead. It just smells funny...
