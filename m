@@ -1,102 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:36158 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753913AbbDGWmr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 18:42:47 -0400
+Received: by igblo3 with SMTP id lo3so25525158igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 15:42:47 -0700 (PDT)
+Date: Tue, 7 Apr 2015 17:42:43 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, dja@axtens.net,
+	x86@kernel.org, Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 14/33] irq_remapping/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
-Date: Tue, 14 Apr 2015 10:29:51 +0800
-Message-Id: <1428978610-28986-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yijing Wang <wangyijing0307@gmail.com>
+Subject: Re: [PATCH v9 08/30] PCI: Update pci_host_bridge bus resource
+Message-ID: <20150407224243.GL10892@google.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+ <1428053164-28277-10-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1428053164-28277-10-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only intel_irq_remapping.c access irq_2_iommu, so move it from
-hw_irq.h into intel_irq_remapping.c.
+On Fri, Apr 03, 2015 at 05:25:42PM +0800, Yijing Wang wrote:
+> From: Yijing Wang <wangyijing0307@gmail.com>
+> 
+> Sometimes, the bus resource start number is not equal to
+> root bus number. For example, in pci_scan_bus(), we always
+> add the default bus resource which start bus number is 0,
+> but the root bus number callers given may != 0, so
+> we need to update pci_host_bridge bus resource, because we
+> would check whether host bridge bus resoruce is confict
+> in later patch.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-24-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h       |    9 ---------
- drivers/iommu/intel_irq_remapping.c |    7 +++++++
- 2 files changed, 7 insertions(+), 9 deletions(-)
+It's true that pci_scan_bus() always inserts [bus 00-ff].  But I think
+that's completely bogus.  The caller of pci_scan_bus() supplies a root bus
+number X.  Any bus numbers below X are useless as far as this host bridge
+is concerned, and it's pointless to include them in the range inserted by
+pci_scan_bus().
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 88632ea75fe0..3520f71f168b 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -95,14 +95,6 @@ extern void trace_call_function_single_interrupt(void);
- #endif /* CONFIG_TRACING */
- 
- #ifdef CONFIG_IRQ_REMAP
--/* Intel specific interrupt remapping information */
--struct irq_2_iommu {
--	struct intel_iommu *iommu;
--	u16 irte_index;
--	u16 sub_handle;
--	u8  irte_mask;
--};
--
- /* AMD specific interrupt remapping information */
- struct irq_2_irte {
- 	u16 devid; /* Device ID for IRTE table */
-@@ -194,7 +186,6 @@ struct irq_cfg {
- 	u8			move_in_progress : 1;
- #ifdef CONFIG_IRQ_REMAP
- 	union {
--		struct irq_2_iommu irq_2_iommu;
- 		struct irq_2_irte  irq_2_irte;
- 	};
- #endif
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 21fc899e7c49..8a71ef6af93c 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -32,6 +32,13 @@ struct hpet_scope {
- 	unsigned int devfn;
- };
- 
-+struct irq_2_iommu {
-+	struct intel_iommu *iommu;
-+	u16 irte_index;
-+	u16 sub_handle;
-+	u8  irte_mask;
-+};
-+
- struct intel_ir_data {
- 	struct irq_2_iommu			irq_2_iommu;
- 	struct irte				irte_entry;
--- 
-1.7.10.4
+I think we'd be better off if we forced every pci_scan_bus() caller to
+supply a real non-overlapping bus number range.  We probably can't do that
+easily because the arch knows the beginning bus number, but some don't know
+how to figure out the ending bus number.
 
+Do we have a per-domain structure that tracks the bus numbers in use in the
+domain?  It seems like if we had one, we could use that to approximate the
+end.  For example, if the arch scans three root buses, at bus 00, bus 40,
+and bus 80, we could start with the first one at [bus 00-ff], and when we
+scan the one at bus 40, we could either report a conflict (if the bus 00
+tree included a bus 40) or reduce the first range to [bus 00-3f].
+
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/host-bridge.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index ecc1a7c..1a9834b 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -26,8 +26,11 @@ static void pci_host_update_busn_res(
+>  	struct resource_entry *window;
+>  
+>  	resource_list_for_each_entry(window, resources)
+> -		if (window->res->flags & IORESOURCE_BUS)
+> +		if (window->res->flags & IORESOURCE_BUS) {
+> +			if (bus > window->res->start)
+> +				window->res->start = bus;
+
+I see what you're trying to do here, but I think this is the wrong place to
+do it.  I'd rather figure out a way to insert something other than
+busn_resource in pci_scan_bus().  That probably means we need to
+dynamically allocate a new busn_res struct.
+
+>  			return;
+> +		}
+>  
+>  	pr_info(
+>  	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
