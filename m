@@ -1,78 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43970 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752843AbbDMJhN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 05:37:13 -0400
-Date: Mon, 13 Apr 2015 17:37:08 +0800
-From: Fam Zheng <famz@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, linux-pci@vger.kernel.org,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>, famz@redhat.com
-Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
-Message-ID: <20150413093708.GE17059@ad.nay.redhat.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:44491 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754875AbbDGNEK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 09:04:10 -0400
+Date: Tue, 7 Apr 2015 14:57:19 +0200
+From: Martin Mares <mj@ucw.cz>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Alexei Starovoitov <ast@plumgrid.com>,
+	stephen hemminger <stephen@networkplumber.org>,
+	Masahiro Yamada <yamada.m@jp.panasonic.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-api@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2] pci: export class IDs from pci_ids.h
+Message-ID: <mj+md-20150407.125023.43354.nikam@ucw.cz>
+References: <1427714755-16873-1-git-send-email-mst@redhat.com>
+ <20150402205347.GA10892@google.com>
+ <20150402232804-mutt-send-email-mst@redhat.com>
+ <CAErSpo7Wtg2QTznd7RpqXrGO7BL7OekE89iH6CvuXsC6gyVXWg@mail.gmail.com>
+ <20150405132041-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150405132041-mutt-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hello!
 
-On Fri, 04/10 17:54, Bjorn Helgaas wrote:
-> From: Michael S. Tsirkin <mst@redhat.com>
-> 
-> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
-> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
-> 
-> The problem is that after we disable MSI, the device may assert INTx, and
-> if the driver hasn't registered an interrupt handler for it, the interrupt
-> is never deasserted and causes a kernel hang.  In particular, this was
-> observed with virtio.
-> 
-> We now disable MSI/MSI-X for all devices during enumeration regardless of
-> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
-> old one.
-> 
-> Stop disabling MSIs at shutdown to avoid the kernel hang.
-> 
-> XXX bugzilla reference, details about how the hang happens?
+> That's a good idea. Martin, could you please answer the following:
+> assuming that linux exported linux/pci_ids.h providing class
+> IDs that are currently in /usr/include/pci/header.h
+> in a header /usr/include/linux/pci_ids.h,
+> would libpci be open to replacing part of
+> /usr/include/pci/header.h with #include <linux/pci_ids.h>,
+> assuming that a solution for old systems that lack this
+> header is also provided?
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=96571
+Please remember that libpci is cross-platform. Your proposal would make it
+use <linux/pci_ids.h> on Linux and provide its own definitions on all other
+systems, which is likely to bring less consistency, not more.
 
-Please let me know if you need any further information in the bug.
+I do not see any point in using kernel headers for things, which are unrelated
+to the kernel.
 
-Fam
+> pciutils does nothing with this value itself, it's possible for a distro
+> to ship a wrong header, and no one will notice. OTOH Linux will break if
+> it's wrong.  In fact there are 3 values libpci does appear to use
+> internally:
+> PCI_CLASS_BRIDGE_HOST
+> PCI_CLASS_DISPLAY_VGA
+> PCI_CLASS_BRIDGE_PCI
+> 
+> I'm guessing others are re-exported for the benefit of
+> applications using libpci.
 
-> 
-> [bhelgaas: changelog]
-> Reported-by: Fam Zheng <famz@redhat.com>
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> CC: Ulrich Obergfell <uobergfe@redhat.com>
-> CC: Rusty Russell <rusty@rustcorp.com.au>
-> ---
->  drivers/pci/pci-driver.c |    2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3cb2210de553..38a602cb9fb7 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
->  
->  	if (drv && drv->shutdown)
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
->  
->  #ifdef CONFIG_KEXEC
->  	/*
-> 
+Exactly. And I expect that it will be quite similar with the kernel --
+most classes defined in <linux/pci_ids.h> are not likely to be used anywhere
+in the kernel.
+
+				Martin
