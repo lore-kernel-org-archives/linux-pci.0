@@ -1,81 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:4564 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbbDULiL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:11 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v10 04/29] PCI: Move pci_bus_assign_domain_nr() declaration into drivers/pci/pci.h
-Date: Tue, 21 Apr 2015 19:34:23 +0800
-Message-ID: <1429616088-10249-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49873 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883AbbDGJJc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Apr 2015 05:09:32 -0400
+Date: Tue, 7 Apr 2015 17:08:37 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Baoquan He <bhe@redhat.com>
+Cc: "Li, ZhenHua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150407090837.GE7213@localhost.localdomain>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <551E56F6.60503@hp.com>
+ <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
+ <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
+ <20150407034622.GB7213@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150407034622.GB7213@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_bus_assign_domain_nr() is only called in probe.c,
-Move pci_bus_assign_domain_nr() declaration into
-drivers/pci/pci.h.
+On 04/07/15 at 11:46am, Dave Young wrote:
+> On 04/05/15 at 09:54am, Baoquan He wrote:
+> > On 04/03/15 at 05:21pm, Dave Young wrote:
+> > > On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
+> > > > Hi Dave,
+> > > > 
+> > > > There may be some possibilities that the old iommu data is corrupted by
+> > > > some other modules. Currently we do not have a better solution for the
+> > > > dmar faults.
+> > > > 
+> > > > But I think when this happens, we need to fix the module that corrupted
+> > > > the old iommu data. I once met a similar problem in normal kernel, the
+> > > > queue used by the qi_* functions was written again by another module.
+> > > > The fix was in that module, not in iommu module.
+> > > 
+> > > It is too late, there will be no chance to save vmcore then.
+> > > 
+> > > Also if it is possible to continue corrupt other area of oldmem because
+> > > of using old iommu tables then it will cause more problems.
+> > > 
+> > > So I think the tables at least need some verifycation before being used.
+> > > 
+> > 
+> > Yes, it's a good thinking anout this and verification is also an
+> > interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
+> > and then verify this again when panic happens in purgatory. This checks
+> > whether any code stomps into region reserved for kexec/kernel and corrupt
+> > the loaded kernel.
+> > 
+> > If this is decided to do it should be an enhancement to current
+> > patchset but not a approach change. Since this patchset is going very
+> > close to point as maintainers expected maybe this can be merged firstly,
+> > then think about enhancement. After all without this patchset vt-d often
+> > raised error message, hung.
+> 
+> It does not convince me, we should do it right at the beginning instead of
+> introduce something wrong.
+> 
+> I wonder why the old dma can not be remap to a specific page in kdump kernel
+> so that it will not corrupt more memory. But I may missed something, I will
+> looking for old threads and catch up.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.h   |    9 +++++++++
- include/linux/pci.h |    6 ------
- 2 files changed, 9 insertions(+), 6 deletions(-)
+I have read the old discussion, above way was dropped because it could corrupt
+filesystem. Apologize about late commenting.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d72f849..dbf1ac0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -323,4 +323,13 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
- 
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
-+#else
-+static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
-+					struct device *parent)
-+{
-+}
-+#endif
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1a0f8d2..0bdc639 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1331,12 +1331,6 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- {
- 	return bus->domain_nr;
- }
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
--#else
--static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
--{
--}
- #endif
- 
- /* some architectures require additional setup to direct VGA traffic */
--- 
-1.7.1
+But current solution sounds bad to me because of using old memory which is not
+reliable. 
 
+Thanks
+Dave
