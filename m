@@ -1,135 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15505 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743AbbDULiU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:20 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36024 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109AbbDGHEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 03:04:37 -0400
+Received: by pabsx10 with SMTP id sx10so69321628pab.3
+        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 00:04:36 -0700 (PDT)
+Message-ID: <1428390266.14169.1.camel@axtens.net>
+Subject: Re: [PATCH v9 14/30] PCI: Introduce pci_host_bridge_ops to support
+ host specific operations
+From: Daniel Axtens <dja@axtens.net>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
 	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v10 11/29] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Tue, 21 Apr 2015 19:34:30 +0800
-Message-ID: <1429616088-10249-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 07 Apr 2015 17:04:26 +1000
+In-Reply-To: <1428053164-28277-16-git-send-email-wangyijing@huawei.com>
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+	 <1428053164-28277-16-git-send-email-wangyijing@huawei.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-+p8vPjV/hW23nWb2qOTV"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save platform specific sysdata in pci_host_bridge
-drvdata, host bridge specific operation need to
-access it before the pci bus creation.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    3 ++-
- drivers/pci/pci.h         |    2 +-
- drivers/pci/probe.c       |   13 ++++++-------
- 3 files changed, 9 insertions(+), 9 deletions(-)
+--=-+p8vPjV/hW23nWb2qOTV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index e05d8fc..b1cc6ef 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -81,7 +81,7 @@ static int pci_host_busn_res_check(
- }
- 
- struct pci_host_bridge *pci_create_host_bridge(
--		struct device *parent, int domain,
-+		struct device *parent, int domain, void *sysdata,
- 		struct list_head *resources)
- {
- 	int error, bus;
-@@ -118,6 +118,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	mutex_unlock(&pci_host_mutex);
- 
- 	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 947c05a..3d6f455 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -334,6 +334,6 @@ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
- struct resource_entry *pci_busn_resource(struct list_head *resources);
- void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
- struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
--		int domain, struct list_head *resources);
-+		int domain, void *sysdata, struct list_head *resources);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index d8c4da8..cba3474 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1871,8 +1871,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- static struct pci_bus *__pci_create_root_bus(
--		struct pci_host_bridge *bridge, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error, bus;
- 	struct pci_bus *b;
-@@ -1892,7 +1891,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
-+	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bus;
- 	pci_bus_assign_domain_nr(b, parent);
-@@ -1973,11 +1972,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
- 		return NULL;
- 	}
- 
--	host = pci_create_host_bridge(parent, domain, resources);
-+	host = pci_create_host_bridge(parent, domain, sysdata, resources);
- 	if (!host)
- 		return NULL;
- 
--	host->bus = __pci_create_root_bus(host, ops, sysdata);
-+	host->bus = __pci_create_root_bus(host, ops);
- 	if (!host->bus) {
- 		pci_free_host_bridge(host);
- 		return NULL;
-@@ -2083,7 +2082,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 			bus);
- 	}
- 
--	host = pci_create_host_bridge(parent, domain, resources);
-+	host = pci_create_host_bridge(parent, domain, sysdata, resources);
- 	if (!host) {
- 		kfree(busn_resource);
- 		return NULL;
-@@ -2092,7 +2091,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 	if (busn_resource)
- 		host->dynamic_busn = true;
- 
--	host->bus = __pci_create_root_bus(host, ops, sysdata);
-+	host->bus = __pci_create_root_bus(host, ops);
- 	if (!host->bus) {
- 		pci_free_host_bridge(host);
- 		return NULL;
--- 
-1.7.1
+On Fri, 2015-04-03 at 17:25 +0800, Yijing Wang wrote:
+> Now we have weak functions like pcibios_root_bridge_prepare()
+> to setup pci host bridge, We could introduce pci_host_bridge_ops
+> which contain host bridge specific ops to setup pci_host_bridge.
+> Then host bridge driver could add pci_host_bridge_ops hooks
+> intead of weak function to setup pci_host_bridge.
+> This patch add following pci_host_bridge_ops hooks:
+>=20
+> pci_host_bridge_ops {
+> 	struct pci_ops *ops;
+Trivial nit, but this is 'struct pci_ops *pci_ops' in the code below.
+
+> +struct pci_host_bridge;
+> +struct pci_host_bridge_ops {
+> +	struct pci_ops *pci_ops;
+> +	int (*prepare)(struct pci_host_bridge *host);
+> +	void (*set_root_bus_speed)(struct pci_host_bridge *host);
+> +	int (*scan_bus)(struct pci_host_bridge *host);
+> +};
+> +
+
+Regards,
+Daniel
+
+--=-+p8vPjV/hW23nWb2qOTV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+Comment: GPGTools - https://gpgtools.org
+
+iQIcBAABCAAGBQJVI4F6AAoJEPC3R3P2I92FjZwQAJw/0Bh3rRl6fwPkYFP66J+c
+2ZnbAeR25jp8VwFrHLBjTOLB/FYNkYnc1rOa6lrLi2Tzl9JupQ4Qr0GqkrUlU6tU
+z5mIxlBYbXGxquDSKlriq4Jh/7hP7Jsbztbo+WWz2oEH5QMD4bPcnAlXp26Y+h/D
+3kbiMiKQ9nbp9/AaME1PReUSVd1ZMvvu2Mb9IZaf0g+XR0QWBQTLuxI8KESdlozp
+wFY3sr9GtjcHLbjneeM4oiknWgnabIbcksBnBcajUItz/N8ik/56ofMevx+fMG6I
+TduJRjJdObe7vfnuPVQu9aOhgIOtGuqmzAUy9fpOkC967f7+nv0yn8CjVLhsSEYj
+DCyZfkEQ0YthVFUc/yBrYI89VBceyLxq0yCv8nOpWYRXHV2NZd+T5iahKZr0skHA
+Gu7WVC/mED3UOxRempwGFlDgMOakOYHjZVFRnjAnVzD3cCS9cCCfHhFfjAzR3CJG
+78QxuZxiV1nGH0AAvoGpVqQk8wbNrHa2ARPsku9Obf/tOp/GUC7zmDJj+1uNVlIt
+tLP6MVpv2y2nk2j6NK8HeTX1rdDontaBUIQk3wtPC8xGZuaDifgXPnEA5K6zpmzD
+SmcBfxXW4gA2Eh49XAA37poVZg/B/LbfuBXemqPhkdqO1HwZVRi4aVKp78C0dEnI
+ibpvlkMwd4AhMN4hcj4g
+=8gut
+-----END PGP SIGNATURE-----
+
+--=-+p8vPjV/hW23nWb2qOTV--
 
