@@ -1,243 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33711 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752357AbbD3RiT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2015 13:38:19 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: bhelgaas@google.com, mst@redhat.com, plagnioj@jcrosoft.com,
-	tomi.valkeinen@ti.com, airlied@linux.ie, daniel.vetter@intel.com
-Cc: linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	cocci@systeme.lip6.fr, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
-	xen-devel@lists.xensource.com
-Subject: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
-Date: Thu, 30 Apr 2015 10:36:04 -0700
-Message-Id: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:36070 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751028AbbDGJvo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 05:51:44 -0400
+Received: by igblo3 with SMTP id lo3so7131627igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 02:51:43 -0700 (PDT)
 MIME-Version: 1.0
+Date: Tue, 7 Apr 2015 11:51:43 +0200
+Message-ID: <CACna6ryiajzYAW+SJkJ-9ETpUe1+VDt99yKw9C39u_Na2q2kTQ@mail.gmail.com>
+Subject: Preventing PCI from assigning mem (for MMIO) to bridge device
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Alex Henrie <alexhenrie24@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Hello,
 
-This allows drivers to take advantage of write-combining
-when possible. The PCI specification does not allow for us
-to automatically identify a memory region which needs
-write-combining so drivers have to identify these areas
-on their own. There is IORESOURCE_PREFETCH but as clarified
-by Michael and confirmed later by Bjorn, PCI prefetch bit
-merely means bridges can combine writes and prefetch reads.
-Prefetch does not affect ordering rules and does not allow
-writes to be collapsed [0]. WC is stronger, it allows collapsing
-and changes ordering rules. WC can also hurt latency as small
-writes are buffered. Because of all this drivers needs to
-know what they are doing, we can't set a write-combining
-preference flag in the pci core automatically for drivers.
+I own a home router Linksys WRT300N v1.0 with CardBus slot on PCB and
+wireless card attached.
 
-Lastly although there is also arch_phys_wc_add() this makes
-use of architecture specific write-combining *hacks* and
-the only one currently defined and used is MTRR for x86.
-MTRRs are legacy, limited in number, have restrictive size
-constraints, and are known to interact pooly with the BIOS.
-MTRRs should only really be considered on old video framebuffer
-drivers. If we made ioremap_wc() and similar calls start
-automatically adding MTRRs, then performance will vary wildly
-with the order of driver loading because we'll run out of MTRRs
-part-way through bootup.
+This is MIPS SoC BCM4704 using following code for PCI controller:
+1) register_pci_controller
+http://lxr.free-electrons.com/source/arch/mips/pci/pci.c?v=3.18#L167
+2) ssb_pcicore_init_hostmode
+http://lxr.free-electrons.com/source/drivers/ssb/driver_pcicore.c?v=3.18#L317
 
-There are a few motivations for phasing out of MTRR and
-helping driver change over to use write-combining with PAT:
+There are two PCI devices discoverable:
+1) 0000:00:00.0 (bridge)
+14e4:472d / class 0x068000 / hdr_type 0
+2) 0000:00:01.0 (wireless device)
+14e4:4329 / class 0x028000 / hdr_type 0
 
-a) Take advantage of PAT when available
+My problem is that PCI subsystem assigns memory to the bridge device:
+pci 0000:00:00.0: BAR 1: assigned [mem 0x40000000-0x47ffffff pref]
+pci 0000:00:01.0: BAR 0: assigned [mem 0x48000000-0x48003fff]
+pci 0000:00:00.0: BAR 0: assigned [mem 0x48004000-0x48005fff]
 
-b) Help bury MTRR code away, MTRR is architecture specific and on
-   x86 its replaced by PAT
+This ancient & simple PCI controller allows assigning resources to the
+wireless device only (slot 1). Trying to assign resources to the
+bridge device (writing to slot 0 to registers PCI_BASE_ADDRESS_[0-5])
+results in overwriting wireless device (slot 0) configuration!
+As you can guess from the above log, the last assignment (targeting
+slot 0) will break (overwrite) wireless device (slot 1) configuration.
+Trying to access any MMIO register of wireless device will cause "Data
+bus error".
+For more details please see my comment in OpenWrt Trac:
+https://dev.openwrt.org/ticket/12682#comment:11 (there is a nice
+configuration dump after every assignment).
 
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
+So I'm looking for a way to stop PCI subsystem from assigning any
+memory to the bridge device (slot 0). I still need it to assign memory
+for wireless device (slot 1) as its driver requires MMIO access.
 
-[0] https://lkml.org/lkml/2015/4/21/714
+I'm wondering what is the best way to achieve that?
 
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: venkatesh.pallipadi@intel.com
-Cc: Stefan Bader <stefan.bader@canonical.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: konrad.wilk@oracle.com
-Cc: ville.syrjala@linux.intel.com
-Cc: david.vrabel@citrix.com
-Cc: jbeulich@suse.com
-Cc: Roger Pau Monné <roger.pau@citrix.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
+MIPS arch code seems to respect PCI_PROBE_ONLY but this will stop
+assigning memory to wireless device (slot 1) too.
 
-This v5 makes the code return NULL for IORESOURCE_IO and fixes the commit
-log to clarify the conclusions reached for MTRR and our review of
-IORESOURCE_PREFETCH.
+I was considering modifying my "struct pci_ops" write callback to
+include something like this:
+if (extpci_core->cardbusmode && dev == 0 &&
+    off >= PCI_BASE_ADDRESS_0 &&
+    off <= PCI_BASE_ADDRESS_5)
+        return -ENOTSUPP;
+It seems to be working fine, all I get with above change is:
+pci 0000:00:01.0: BAR 0: assigned [mem 0x40000000-0x40003fff]
+, but I need an opinion if this is a correct solution.
 
- include/asm-generic/pci_iomap.h | 14 ++++++++++
- lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 75 insertions(+)
-
-diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
-index 7389c87..b1e17fc 100644
---- a/include/asm-generic/pci_iomap.h
-+++ b/include/asm-generic/pci_iomap.h
-@@ -15,9 +15,13 @@ struct pci_dev;
- #ifdef CONFIG_PCI
- /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
- extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-+extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
- extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 				     unsigned long offset,
- 				     unsigned long maxlen);
-+extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					unsigned long offset,
-+					unsigned long maxlen);
- /* Create a virtual mapping cookie for a port on a given PCI device.
-  * Do not call this directly, it exists to make it easier for architectures
-  * to override */
-@@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
- 	return NULL;
- }
- 
-+static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
-+{
-+	return NULL;
-+}
- static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 					    unsigned long offset,
- 					    unsigned long maxlen)
- {
- 	return NULL;
- }
-+static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					       unsigned long offset,
-+					       unsigned long maxlen)
-+{
-+	return NULL;
-+}
- #endif
- 
- #endif /* __ASM_GENERIC_IO_H */
-diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
-index bcce5f1..9604dcb 100644
---- a/lib/pci_iomap.c
-+++ b/lib/pci_iomap.c
-@@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_iomap_range);
- 
- /**
-+ * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @offset: map memory at the given offset in BAR
-+ * @maxlen: max length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR from offset to the end, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-+				 int bar,
-+				 unsigned long offset,
-+				 unsigned long maxlen)
-+{
-+	resource_size_t start = pci_resource_start(dev, bar);
-+	resource_size_t len = pci_resource_len(dev, bar);
-+	unsigned long flags = pci_resource_flags(dev, bar);
-+
-+	if (len <= offset || !start)
-+		return NULL;
-+	len -= offset;
-+	start += offset;
-+	if (maxlen && len > maxlen)
-+		len = maxlen;
-+	if (flags & IORESOURCE_IO)
-+		return NULL;
-+	if (flags & IORESOURCE_MEM)
-+		return ioremap_wc(start, len);
-+	/* What? */
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
-+
-+/**
-  * pci_iomap - create a virtual mapping cookie for a PCI BAR
-  * @dev: PCI device that owns the BAR
-  * @bar: BAR number
-@@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
- 	return pci_iomap_range(dev, bar, 0, maxlen);
- }
- EXPORT_SYMBOL(pci_iomap);
-+
-+/**
-+ * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @maxlen: length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR without checking for its length first, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
-+{
-+	return pci_iomap_wc_range(dev, bar, 0, maxlen);
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc);
- #endif /* CONFIG_PCI */
 -- 
-2.3.2.209.gd67f9d5.dirty
-
+Rafał
