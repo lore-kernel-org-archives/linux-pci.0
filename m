@@ -1,92 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jan Beulich <JBeulich@suse.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 27/33] x86/irq: Refine the way to calculate NR_IRQS
-Date: Tue, 14 Apr 2015 10:30:04 +0800
-Message-Id: <1428978610-28986-28-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60806 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753106AbbDGDqi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Apr 2015 23:46:38 -0400
+Date: Tue, 7 Apr 2015 11:46:22 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Baoquan He <bhe@redhat.com>
+Cc: "Li, ZhenHua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150407034622.GB7213@localhost.localdomain>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <551E56F6.60503@hp.com>
+ <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
+ <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have made MSI independent of IOAPIC, so we need to refine the
-way to calculate NR_IRQS to support configuration with MSI enabled but
-IOAPIC disabled.
+On 04/05/15 at 09:54am, Baoquan He wrote:
+> On 04/03/15 at 05:21pm, Dave Young wrote:
+> > On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
+> > > Hi Dave,
+> > > 
+> > > There may be some possibilities that the old iommu data is corrupted by
+> > > some other modules. Currently we do not have a better solution for the
+> > > dmar faults.
+> > > 
+> > > But I think when this happens, we need to fix the module that corrupted
+> > > the old iommu data. I once met a similar problem in normal kernel, the
+> > > queue used by the qi_* functions was written again by another module.
+> > > The fix was in that module, not in iommu module.
+> > 
+> > It is too late, there will be no chance to save vmcore then.
+> > 
+> > Also if it is possible to continue corrupt other area of oldmem because
+> > of using old iommu tables then it will cause more problems.
+> > 
+> > So I think the tables at least need some verifycation before being used.
+> > 
+> 
+> Yes, it's a good thinking anout this and verification is also an
+> interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
+> and then verify this again when panic happens in purgatory. This checks
+> whether any code stomps into region reserved for kexec/kernel and corrupt
+> the loaded kernel.
+> 
+> If this is decided to do it should be an enhancement to current
+> patchset but not a approach change. Since this patchset is going very
+> close to point as maintainers expected maybe this can be merged firstly,
+> then think about enhancement. After all without this patchset vt-d often
+> raised error message, hung.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Jan Beulich <JBeulich@suse.com>
-Link: http://lkml.kernel.org/r/1416901802-24211-36-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/irq_vectors.h |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+It does not convince me, we should do it right at the beginning instead of
+introduce something wrong.
 
-diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
-index 666c89ec4bd7..b26cb124a4f1 100644
---- a/arch/x86/include/asm/irq_vectors.h
-+++ b/arch/x86/include/asm/irq_vectors.h
-@@ -155,18 +155,22 @@ static inline int invalid_vm86_irq(int irq)
-  * static arrays.
-  */
- 
--#define NR_IRQS_LEGACY			  16
-+#define NR_IRQS_LEGACY			16
- 
--#define IO_APIC_VECTOR_LIMIT		( 32 * MAX_IO_APICS )
-+#define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
-+#define IO_APIC_VECTOR_LIMIT		(32 * MAX_IO_APICS)
- 
--#ifdef CONFIG_X86_IO_APIC
--# define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
--# define NR_IRQS					\
-+#if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_PCI_MSI)
-+#define NR_IRQS						\
- 	(CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT ?	\
- 		(NR_VECTORS + CPU_VECTOR_LIMIT)  :	\
- 		(NR_VECTORS + IO_APIC_VECTOR_LIMIT))
--#else /* !CONFIG_X86_IO_APIC: */
--# define NR_IRQS			NR_IRQS_LEGACY
-+#elif defined(CONFIG_X86_IO_APIC)
-+#define	NR_IRQS				(NR_VECTORS + IO_APIC_VECTOR_LIMIT)
-+#elif defined(CONFIG_PCI_MSI)
-+#define NR_IRQS				(NR_VECTORS + CPU_VECTOR_LIMIT)
-+#else
-+#define NR_IRQS				NR_IRQS_LEGACY
- #endif
- 
- #endif /* _ASM_X86_IRQ_VECTORS_H */
--- 
-1.7.10.4
+I wonder why the old dma can not be remap to a specific page in kdump kernel
+so that it will not corrupt more memory. But I may missed something, I will
+looking for old threads and catch up.
 
+Thanks
+Dave
