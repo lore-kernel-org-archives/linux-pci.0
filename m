@@ -1,52 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0132.outbound.protection.outlook.com ([157.56.111.132]:15296
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932187AbbDOJqx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Apr 2015 05:46:53 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Jingoo Han" <jg1.han@samsung.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH v2 0/3] pci/designware: Add architecture-independent driver for Designware PCIe
-Date: Wed, 15 Apr 2015 17:48:32 +0800
-Message-ID: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:59013 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbbDGHor (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 03:44:47 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Daniel Axtens <dja@axtens.net>
+Cc: linuxppc-dev@lists.ozlabs.org, wangyijing@huawei.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 04/19] powerpc: Create pci_controller_ops.dma_dev_setup and shim
+Date: Tue, 07 Apr 2015 09:44:36 +0200
+Message-ID: <2489424.TEiBTfgpvS@wuerfel>
+In-Reply-To: <1428366696.22268.28.camel@axtens.net>
+References: <1427778057-9505-1-git-send-email-dja@axtens.net> <5500778.Q4t9Fg7Irn@wuerfel> <1428366696.22268.28.camel@axtens.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys Designware IP is shared with couples of platforms
-under multiple architectures. The series of patches is to
-provide basic architecture-independent Designware PCIe host
-driver including ATU initialization and PCI OPS. Currently,
-which supports arm and arm64 simultaneously.
+On Tuesday 07 April 2015 10:31:36 Daniel Axtens wrote:
+> > Please see https://patchwork.ozlabs.org/patch/431333/ for related work.
+> > 
+> I'm familiar with that patch series - I've been helping Yijing get it up
+> to speed on PowerPC.
+> 
+> 
+> > I think it would be better not to introduce another architecture-specific
+> > pci host bridge operations structure, but instead consolidate into
+> > the one that is already there. We are also adding a generic way to set up
+> > PCI DMA, so it would seems reasonable to hook into that place.
+> I see what you're getting at, and I agree that we want to move towards
+> generic operations. 
+> 
+> However, I think this should go in as is at this point, for two main
+> reasons:
+> 
+> 1) This is a good midpoint that makes it easier to move to a generic
+> structure. Our arch specific stuff is quirky and difficult. This patch
+> series does a lot to reduce the complexity, and would make it very easy
+> to move these ops into a generic structure at some future point. 
+> 
+> 2) Trying to go generic at this point risks making the change set so
+> complex and wide ranging that it will really struggle to get in. For
+> example, Yijing's patch set, despite not changing any of the quirky
+> stuff in PowerPC, is already quite long, and will require agreement from
+> a lot of people before it can go in.
+> 
+> Much as I would like to have everything as generic as possible, if we
+> were to try to do the whole job in one go, it'd become a big, difficult,
+> messy patch set, and would be less likely to happen than if we were to
+> do it in two steps.
 
-I do not directly add arm64 support to pcie-designware.c, the
-main reason is that it is hard to port other 5 platform PCIe
-driver based on pcie-designware to the new implementation.
-However, not changing those PCIe driver means the code for
-arm32 must be remained.
+Ok, fair enough. Let's do this one first then.
 
-I add a new file pcie-designware-base.c. Compared with
-pcie-designware.c, there are main 3 differences.
-1. It is a new implementation followed the latest PCIe
-architecture-independent API without any code for specific
-architecture.
-2. There is no MSI chip code, which will be implemented in a 
-separated file.
-3. Improve ATU use - support more than 2 ATUs and use an exclusive
-ATU to translate MEM transaction.
-
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-
--- 
-1.9.1
-
+	Arnd
