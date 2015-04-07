@@ -1,154 +1,246 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:28282
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751928AbbDVSkh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 14:40:37 -0400
-From: Varun Sethi <Varun.Sethi@freescale.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>
-CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	"Roy Zang" <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Wed, 22 Apr 2015 18:40:33 +0000
-Message-ID: <BN3PR0301MB121901C218955F709AE892F3EAEE0@BN3PR0301MB1219.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
- <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
- <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <20150416104008.GB25640@arm.com>
- <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150422170718.GG13019@arm.com>
-In-Reply-To: <20150422170718.GG13019@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5523EF7D.1000906@linux.intel.com>
+Date: Tue, 07 Apr 2015 22:53:49 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix v4] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+References: <1428381018-27406-1-git-send-email-jiang.liu@linux.intel.com> <2892229.MnX9GPrTyU@vostro.rjw.lan>
+In-Reply-To: <2892229.MnX9GPrTyU@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Will,
+On 2015/4/7 19:47, Rafael J. Wysocki wrote:
+> On Tuesday, April 07, 2015 12:30:18 PM Jiang Liu wrote:
+>> Before commit 593669c2ac0f("Use common ACPI resource interfaces to
+>> simplify implementation"), arch/x86/pci/acpi.c applies following
+>> rules when parsing ACPI resources for PCI host bridge:
+>> 1) Ignore IO port resources defined by acpi_resource_io and
+>>    acpi_resource_fixed_io, which should be used to define resource
+>>    for PCI device instead of PCI bridge.
+>> 2) Accept IOMEM resource defined by acpi_resource_memory24,
+>>    acpi_resource_memory32 and acpi_resource_fixed_memory32.
+>>    These IOMEM resources are accepted to workaround some BIOS issue,
+>>    though they should be ignored. For example, PC Engines APU.1C
+>>    platform defines PCI host bridge IOMEM resources as:
+>>                 Memory32Fixed (ReadOnly,
+>>                     0x000A0000,         // Address Base
+>>                     0x00020000,         // Address Length
+>>                     )
+>>                 Memory32Fixed (ReadOnly,
+>>                     0x00000000,         // Address Base
+>>                     0x00000000,         // Address Length
+>>                     _Y00)
+>> 3) Accept all IO port and IOMEM resources defined by
+>>    acpi_resource_address{16,32,64,extended64}, no matter it's marked as
+>>    ACPI_CONSUMER or ACPI_PRODUCER.
+>>
+>> Commit 593669c2ac0f("Use common ACPI resource interfaces to
+>> simplify implementation") accept all IO port and IOMEM resources
+>> defined by acpi_resource_io, acpi_resource_fixed_io,
+>> acpi_resource_memory24, acpi_resource_memory32,
+>> acpi_resource_fixed_memory32 and
+>> acpi_resource_address{16,32,64,extended64}, which causes IO port
+>> resources consumed by host bridge itself are listed in to host bridge
+>> resource list.
+>>
+>> Then commit 63f1789ec716("Ignore resources consumed by host bridge
+>> itself") ignores resources consumed by host bridge itself by checking
+>> IORESOURCE_WINDOW flag, which accidently removed the workaround in 2)
+>> above for BIOS bug .
+>>
+>> It's really costed us much time to figure out this whole picture.
+>> So we refine interface acpi_dev_filter_resource_type as below,
+>> which should be easier for maintence:
+>> 1) Caller specifies IORESOURCE_WINDOW flag to explicitly query resource
+>>    for bridge(PRODUCER), otherwise it's querying resource for
+>>    device(CONSUMER).
+>> 2) Ignore IO port resources defined by acpi_resource_io and
+>>    acpi_resource_fixed_io if IORESOURCE_WINDOW is specified.
+>> 3) Accpet IOMEM resource defined by acpi_resource_memory24,
+>>    acpi_resource_memory32 and acpi_resource_fixed_memory32 if both
+>>    IORESOURCE_WINDOW and IORESOURCE_MEM_8AND16BIT are specified to work
+>>    around BIOS issues.
+>> 4) Accept IO port and IOMEM defined by acpi_resource_addressxx if
+>>    a) IORESOURCE_WINDOW is specified and ACPI_PRODUCER is true
+>>    b) IORESOURCE_WINDOW is not specified and ACPI_PRODUCER is false
+>>
+>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
+>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
+>>
+>> Another possible fix is to only ignore IO resource consumed by host
+>> bridge and keep IOMEM resource consumed by host bridge, please refer to:
+>> http://www.spinics.net/lists/linux-pci/msg39706.html
+>>
+>> Sample ACPI table are archived at:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>>
+>> V3->V4:
+>> 1) Improve comments
+>> 2) Use flag IORESOURCE_MEM_8AND16BIT to work around BIOS issue
+> 
+> OK, so how does that address the comments in the previous thread?
+> 
+> It would *really* help if you responded there instead of starting a new
+> thread by sending a new patch version.  This makes it really difficult to
+> follow the entire discussion, which is part of why we keep forgetting things.
+Hi Rafael,
+	Apologize:) I miss understood previous mail. Please ignore
+this version.
+Regards!
+Gerry
 
-> -----Original Message-----
-> From: Will Deacon [mailto:will.deacon@arm.com]
-> Sent: Wednesday, April 22, 2015 10:37 PM
-> To: Yoder Stuart-B08248
-> Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org;
-> Arnd Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood
-> Scott-B07421; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
 > 
-> Hi Stuart,
+>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+>> Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  arch/x86/pci/acpi.c     |    8 +++++---
+>>  drivers/acpi/resource.c |   52 +++++++++++++++++++++++++++++++++++++++++------
+>>  2 files changed, 51 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index e4695985f9de..150774be0f3f 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -332,12 +332,15 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>>  {
+>>  	int ret;
+>>  	struct resource_entry *entry, *tmp;
+>> +	unsigned long res_flags;
+>>  
+>>  	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+>>  	info->bridge = device;
+>> +	res_flags = IORESOURCE_IO | IORESOURCE_MEM |
+>> +		    IORESOURCE_WINDOW | IORESOURCE_MEM_8AND16BIT;
+>>  	ret = acpi_dev_get_resources(device, list,
+>>  				     acpi_dev_filter_resource_type_cb,
+>> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
+>> +				     (void *)res_flags);
+>>  	if (ret < 0)
+>>  		dev_warn(&device->dev,
+>>  			 "failed to parse _CRS method, error code %d\n", ret);
+>> @@ -346,8 +349,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>>  			"no IO and memory resources present in _CRS\n");
+>>  	else
+>>  		resource_list_for_each_entry_safe(entry, tmp, list) {
+>> -			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+>> -			    (entry->res->flags & IORESOURCE_DISABLED))
+>> +			if (entry->res->flags & IORESOURCE_DISABLED)
+>>  				resource_list_destroy_entry(entry);
+>>  			else
+>>  				entry->res->name = info->name;
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index 5589a6e2a023..0187e0e11bb8 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -567,6 +567,12 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
+>>  }
+>>  EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+>>  
+>> +static bool acpi_dev_match_producer_consumer(unsigned long types, int producer)
+>> +{
+>> +	return ((types & IORESOURCE_WINDOW) && producer == ACPI_PRODUCER) ||
+>> +		((types & IORESOURCE_WINDOW) == 0 && producer == ACPI_CONSUMER);
+>> +}
+>> +
+>>  /**
+>>   * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
+>>   *				   types
+>> @@ -574,7 +580,19 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+>>   * @types: Valid resource types of IORESOURCE_XXX
+>>   *
+>>   * This is a hepler function to support acpi_dev_get_resources(), which filters
+>> - * ACPI resource objects according to resource types.
+>> + * ACPI resource objects according to resource types and flags as below:
+>> + * 1) If flag IORESOURCE_WINDOW is not specified, it's querying resources
+>> + *    consumed by device. That is to return:
+>> + * 	a) ACPI resources without producer_consumer flag
+>> + *	b) ACPI resources with producer_consumer flag setting to CONSUMER.
 > 
-> First of, thanks for taking the time to explain this in more detail.
-> Comments inline.
+> OK, so what if the resource is not of an "extended" type, say DWORD address space,
+> but has a non-empty Resource Source field pointing to the device itself?
 > 
-> On Fri, Apr 17, 2015 at 03:19:08PM +0100, Stuart Yoder wrote:
-> > > On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
-> > > > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if
-> > > > TBU ID would also be forwarded as a part of stream id to GIC. My
-> > > > understanding is that TBU ID is forwarded (as a part of the stream
-> > > > ID) to the TCU in case of a TBU translation miss. In case of the
-> > > > LS2085 PCIe controller you would have to setup the PCIe device ID
-> > > > to stream ID translation table. We may have to restrict the number
-> > > > of entries based on the available number of contexts.
-> > >
-> > > Unfortunately, I'm having a really hard time parsing this thread
-> > > (some parts of it simply don't make sense; others use
-> > > non-architectural terms and overall I don't get a feeling for the problem).
-> > >
-> > > Please could you explain your system design step by step so that I
-> > > can understand (a) what you've built and (b) why the current design
-> > > of Linux is causing you problems?
-> > >
-> > > Sorry if I'm just being thick, but it's important that we get this right.
-> >
-> > I'll try to summarize some key points about the system...
-> >
-> > System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.
-> > There are PCI, fsl-mc, and platform devices that do DMA.  Devices on
-> > the PCI and fsl-mc bus generate message interrupts.
+> Shouldn't we treat that device as a "producer" too?
 > 
-> Ah cool, so you have multiple buses sharing a single SMMU? That's going to
-> necessitate some ID remapping in the device-tree. Perhaps you could
-> comment on Mark Rutland's proposal if it does/doesn't work for you:
+>> + * 2) If flag IORESOURCE_WINDOW is specified, it's querying resources provided
+>> + *    by device. That is to return:
+>> + *	a) ACPI resources with producer_consumer flag setting to PRODUCER.
+>> + * 3) But there's an exception. Some platforms, such as PC Engines APU.1C,
+>> + *    report PCI host bridge resource provision by Memory32Fixed().
+>> + *    Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>> + *    So a special flag IORESOURCE_MEM_8AND16BIT is used to work around this
+>> + *    BIOS issue.
 > 
->   http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
-> March/333199.html
+> This is a legitimate thing for the BIOS to do if my reading of the spec is
+> correct, as the "producer" thing really is supposed to mean "this resource
+> comes from the device itself".
 > 
+>>   */
+>>  int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+>>  				  unsigned long types)
+>> @@ -585,27 +603,49 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+>>  	case ACPI_RESOURCE_TYPE_MEMORY24:
+>>  	case ACPI_RESOURCE_TYPE_MEMORY32:
+>>  	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+>> -		type = IORESOURCE_MEM;
+>> +		/*
+>> +		 * These types of resource descriptor should be used to
+>> +		 * describe resource consumption instead of resource provision.
+>> +		 * But some platforms, such as PC Engines APU.1C, report
+>> +		 * resource provision by Memory32Fixed(). Please refer to:
+>> +		 * https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>> +		 * So a special rule to work around BIOS issues.
+>> +		 */
+>> +		if ((types & (IORESOURCE_WINDOW | IORESOURCE_MEM_8AND16BIT)) ==
+>> +		    (IORESOURCE_WINDOW | IORESOURCE_MEM_8AND16BIT) ||
+>> +		    acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>> +			type = IORESOURCE_MEM;
+>>  		break;
+>>  	case ACPI_RESOURCE_TYPE_IO:
+>>  	case ACPI_RESOURCE_TYPE_FIXED_IO:
+>> -		type = IORESOURCE_IO;
+>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>> +			type = IORESOURCE_IO;
+>>  		break;
+>>  	case ACPI_RESOURCE_TYPE_IRQ:
+>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>> +			type = IORESOURCE_IRQ;
+>> +		break;
+>>  	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+>> -		type = IORESOURCE_IRQ;
+>> +		if (acpi_dev_match_producer_consumer(types,
+>> +				ares->data.extended_irq.producer_consumer))
+>> +			type = IORESOURCE_IRQ;
+>>  		break;
+>>  	case ACPI_RESOURCE_TYPE_DMA:
+>>  	case ACPI_RESOURCE_TYPE_FIXED_DMA:
+>> -		type = IORESOURCE_DMA;
+>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>> +			type = IORESOURCE_DMA;
+>>  		break;
+>>  	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
+>> -		type = IORESOURCE_REG;
+>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>> +			type = IORESOURCE_REG;
+>>  		break;
+>>  	case ACPI_RESOURCE_TYPE_ADDRESS16:
+>>  	case ACPI_RESOURCE_TYPE_ADDRESS32:
+>>  	case ACPI_RESOURCE_TYPE_ADDRESS64:
+>>  	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+>> +		if (!acpi_dev_match_producer_consumer(types,
+>> +				ares->data.address.producer_consumer))
+>> +			break;
+>>  		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
+>>  			type = IORESOURCE_MEM;
+>>  		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
+>>
 > 
-> > The flow a message interrupt would take is this:
-> >
-> >     --------------
-> >       PCI device
-> >     --------------
-> >           |
-> >           | pcidevid + MSI msg
-> >           |
-> >           V
-> >     --------------
-> >     PCI controller
-> >       pcidevid ->
-> >       streamID
-> >       mapping
-> >     --------------
-> >           |
-> >           | streamID + MSI msg
-> >           |
-> >           V
-> >     --------------
-> >         SMMU
-> >     --------------
-> >           |
-> >           | streamID + MSI msg
-> >           |
-> >           V
-> >     --------------
-> >        CCN-504 (Dickens)
-> >     --------------
-> >           |
-> >           | streamID + MSI msg
-> >           |
-> >           V
-> 
-> The streamID here as the same as the one coming out of the SMMU, right?
-> (just trying to out why you have the CCN-504 in the picture).
-> 
-> >     --------------
-> >       GICv3 ITS    streamID == ITS deviceID
-> >     --------------
-> >
-> > So, the way things work (at least initially) is that each PCI device
-> > maps to a single streamID, and thus each device has a separate ITT in
-> > the ITS.  So, things should be cool.
-> >
-> > However, there is an improvement we envision as possible due to the
-> > limited number of SMMU contexts (i.e. 64).  If there are
-> > 64 SMMU context registers it means that there is a max of
-> > 64 software contexts where things can be isolated.  But, say I have an
-> > SRIOV card with 64 VFs, and I want to assign 8 of the VFs to a KVM VM.
-> > Those 8 PCI devices could share the same streamID/ITS-device-ID since
-> > they all share the same isolation context.
-> >
-> > What would be nice is at the time the 8 VFS are being added to the
-> > IOMMU domain is for the pcidevid -> streamID mapping table to be
-> > updated dynamically.  It simply lets us make more efficient use of the
-> > limited streamIDs we have.
-> >
-> > I think it is this improvement that Minghuan had in mind in this
-> > patch.
-> 
-> Ok, but in this case it should be possible to use a single context bank for all of
-> the VF streamIDs by configuring the appropriate SMR, no? Wouldn't that sort
-> of thing be preferable to dynamic StreamID assignment? It would certainly
-> make life easier for the MSIs.
-> 
-Yes, that would happen when the all the VFs are attached to the same domain. But it would be an issue if we have to attach devices to different domains.
-
--Varun
