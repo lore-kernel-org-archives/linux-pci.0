@@ -1,162 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60172 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751199AbbDZGuP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 26 Apr 2015 02:50:15 -0400
-Date: Sun, 26 Apr 2015 08:50:06 +0200
-From: "Michael S. Tsirkin" <mst@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
-Message-ID: <20150426084739-mutt-send-email-mst@kernel.org>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:34919 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754177AbbDHSN5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 14:13:57 -0400
+Received: by obbfy7 with SMTP id fy7so151302527obb.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 11:13:56 -0700 (PDT)
+Date: Wed, 8 Apr 2015 13:13:52 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 1/2] PCI: add helper function to find root port for
+ device
+Message-ID: <20150408181352.GA30967@google.com>
+References: <1427712913-13678-1-git-send-email-l.stach@pengutronix.de>
+ <1427726038.3643.913.camel@redhat.com>
+ <1427731601.3370.14.camel@pengutronix.de>
+ <1427734370.3643.949.camel@redhat.com>
+ <1427804588.3370.19.camel@pengutronix.de>
+ <1427810993.5567.90.camel@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <1427810993.5567.90.camel@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
-> Hi Michael,
+On Tue, Mar 31, 2015 at 08:09:53AM -0600, Alex Williamson wrote:
+> On Tue, 2015-03-31 at 14:23 +0200, Lucas Stach wrote:
+> > Am Montag, den 30.03.2015, 10:52 -0600 schrieb Alex Williamson:
+> > > On Mon, 2015-03-30 at 18:06 +0200, Lucas Stach wrote:
+> > > > Am Montag, den 30.03.2015, 08:33 -0600 schrieb Alex Williamson:
+> > > > > On Mon, 2015-03-30 at 12:55 +0200, Lucas Stach wrote:
+> > > > > > This adds a simple way to get the root port a given device
+> > > > > > is connected to.
+> > > > > > 
+> > > > > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > > > > ---
+> > > > > > v2: new patch in v2
+> > > > > > v3: rename to pci_find_rootport to fit better with other API
+> > > > > > v4: - rename to make it obvious that this function is PCIe specific
+> > > > > >     - fixes wrong assumption about what is a root bus in the presence
+> > > > > >       virtual buses
+> > > > > > ---
+> > > > > >  drivers/pci/search.c | 20 ++++++++++++++++++++
+> > > > > >  include/linux/pci.h  |  1 +
+> > > > > >  2 files changed, 21 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> > > > > > index a20ce7d5e2a7..d7c599103ae1 100644
+> > > > > > --- a/drivers/pci/search.c
+> > > > > > +++ b/drivers/pci/search.c
+> > > > > > @@ -384,3 +384,23 @@ int pci_dev_present(const struct pci_device_id *ids)
+> > > > > >  	return 0;
+> > > > > >  }
+> > > > > >  EXPORT_SYMBOL(pci_dev_present);
+> > > > > > +
+> > > > > > +/**
+> > > > > > + * pcie_find_root_port - Returns the root port the given device is connected to.
+> > > > > > + * @dev: PCI device for which the root port should be found.
+> > > > > > + */
+> > > > > > +struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
+> > > > > > +{
+> > > > > > +	struct pci_bus *bus = dev->bus;
+> > > > > > +
+> > > > > > +	/* if this device is located on the root bus, it is a root port */
+> > > > > > +	if (pci_is_root_bus(bus))
+> > > > > > +		return dev;
+> > > > > 
+> > > > > It could also be a root complex endpoint or a conventional PCI
+> > > > > device/bridge sitting on the host bridge bus.
+> > > > 
+> > > > > > +
+> > > > > > +	/* walk up the PCI hierarchy to the first level below the root */
+> > > > > > +	while (bus->parent && bus->parent->parent)
+> > > > > > +		bus = bus->parent;
+> > > > > > +
+> > > > > > +	return bus->self;
+> > > > > > +}
+> > > > > > +EXPORT_SYMBOL(pcie_find_root_port);
+> > > > > 
+> > > > > IMHO, this makes too many assumptions about the topology that it's
+> > > > > working with for a generic interface.  Your usage may be fairly fixed,
+> > > > > but there are too many cases where it could return something that's not
+> > > > > a root port as a general interface.  Thanks,
+> > > > > 
+> > > > I'm open to suggestions on how to improve the detection. I really need
+> > > > something which works reliable in the majority of cases, as the Tegra
+> > > > quirk should not be executed on other platforms.
+> > > > 
+> > > > Do you think filtering out EP devices and conventional PCI bridges on
+> > > > the root bus is enough?
+> > > 
+> > > I'm actually pretty confused by the implementation of the quirk as well,
+> > > why do you even need this pcie_find_root_port() function?  Your fixup is
+> > > called for every single PCI device in the system, so why do you need to
+> > > go to the trouble of scanning the topology for the root port?  You'll be
+> > > passed the root port eventually and it will match your ID table w/o any
+> > > extra effort.  As coded, you're calling the set capability function
+> > > multiple times per root port, once for itself and once for each device
+> > > below it.
+> > > 
+> > > Personally, I'd probably do away with the table, declare a fixup for
+> > > each entry for the specific vendor/device ID, and make a simple quirk
+> > > callback that sets the capability bit.  Just my preference though.
+> > > Thanks,
+> > > 
+> > No, you missed the point of the fixup here.
+> > 
+> > We need to apply this fixup on every device in the system if the root
+> > port is a Tegra. So the fixup needs to get called for every device,
+> > filtering on a specific vendor/device ID is not possible.
+> > 
+> > But on the other hand this fixup may be compiled into a multiplatform
+> > kernel. If this kernel is strated on a device which isn't a Tegra (and
+> > so has no Tegra root port) we don't want to apply the fixup at all.
 > 
-> I put your patches on my pci/msi branch and I hope to merge them for v4.1.
-> I didn't apply the acks from Fam and Eric because I made changes to those
-> patches that weren't completely trivial.  I think the end result is
-> equivalent, though.  The diff attached to this cover letter is the
-> difference between your v5 series and this v6 series.
-> 
-> As far as I'm concerned, this is ready to go except that I would like a
-> little more info about the virtio kernel hang to include in the changelog
-> for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
+> Yes, you're right, sorry for the misinterpretation.  So the quirk works
+> as expected, but I think at a minimum the helper function needs to be
+> renamed to something like pci_find_root_bus_dev() since there is no
+> attempt made to verify whether the returned device is actually a root
+> port.  If you don't support hotplug, you could also apply the quirk from
+> the root port down instead of searching from every device up.  Thanks,
 
+How should we proceed here?  I agree with Alex's comments.
 
-Hi Bjorn,
-do you have eveything you need to merge this?
-
-> Changes from v5:
-> 	Edit summaries and changelogs for consistency
-> 	Split msi_set_enable() rename/export for reviewability
-> 	Move pci_msi_setup_pci_dev() to its ultimate location to avoid
-> 	    unnecessary diffs in subsequent patch
-> 	Call pci_msi_setup_pci_dev() from its ultimate location to avoid
-> 	    unnecessary diffs in subsequent patch
-> 	Skip pci_msi_off() duplicate code removal since we can remove
-> 	    it completely later
-> 	Remove pci_msi_off() completely
-> 
-> v5 posting: http://lkml.kernel.org/r/1427641227-7574-1-git-send-email-mst@redhat.com
-> 
-> Bjorn
->     
-> ---
-> 
-> Bjorn Helgaas (1):
->       PCI/MSI: Remove unused pci_msi_off()
-> 
-> Michael S. Tsirkin (9):
->       PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
->       PCI/MSI: Export pci_msi_set_enable(), pci_msix_clear_and_set_ctrl()
->       PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI
->       PCI/MSI: Don't disable MSI/MSI-X at shutdown
->       PCI/MSI: Make pci_msi_shutdown(), pci_msix_shutdown() static
->       virtio_pci: drop pci_msi_off() call during probe
->       ntb: Drop pci_msi_off() call during probe
->       mic: Drop pci_msi_off() call during probe
->       PCI/MSI: Drop pci_msi_off() calls from quirks
-> 
-> 
->  drivers/misc/mic/host/mic_intr.c   |    2 -
->  drivers/ntb/ntb_hw.c               |    2 -
->  drivers/pci/msi.c                  |   57 ++++++++----------------------------
->  drivers/pci/pci-driver.c           |    2 -
->  drivers/pci/pci.c                  |   33 ---------------------
->  drivers/pci/pci.h                  |   21 +++++++++++++
->  drivers/pci/probe.c                |   18 +++++++++++
->  drivers/pci/quirks.c               |    2 -
->  drivers/virtio/virtio_pci_common.c |    3 --
->  include/linux/pci.h                |    5 ---
->  10 files changed, 51 insertions(+), 94 deletions(-)
-> 
-> 
-> --- This is "git diff v5 v6":
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 54cefb442d19..3d938a7d3b04 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3096,24 +3096,6 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
->  
-> -/**
-> - * pci_msi_off - disables any MSI or MSI-X capabilities
-> - * @dev: the PCI device to operate on
-> - *
-> - * If you want to use MSI, see pci_enable_msi() and friends.
-> - * This is a lower-level primitive that allows us to disable
-> - * MSI operation at the device level.
-> - * Not for use by drivers.
-> - */
-> -void pci_msi_off(struct pci_dev *dev)
-> -{
-> -	if (dev->msi_cap)
-> -		pci_msi_set_enable(dev, 0);
-> -
-> -	if (dev->msix_cap)
-> -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> -}
-> -
->  int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
->  {
->  	return dma_set_max_seg_size(&dev->dev, size);
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 620fcad1935d..17f213d494de 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -146,8 +146,6 @@ static inline void pci_no_msi(void) { }
->  static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
->  #endif
->  
-> -void pci_msi_off(struct pci_dev *dev);
-> -
->  static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
->  {
->  	u16 control;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 120772c219c7..740113b70ade 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1086,14 +1086,18 @@ int pci_cfg_space_size(struct pci_dev *dev)
->  
->  static void pci_msi_setup_pci_dev(struct pci_dev *dev)
->  {
-> -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -
-> -	/* Disable the msi hardware to avoid screaming interrupts
-> +	/*
-> +	 * Disable the MSI hardware to avoid screaming interrupts
->  	 * during boot.  This is the power on reset default so
->  	 * usually this should be a noop.
->  	 */
-> -	pci_msi_off(dev);
-> +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +	if (dev->msi_cap)
-> +		pci_msi_set_enable(dev, 0);
-> +
-> +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> +	if (dev->msix_cap)
-> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  }
->  
->  /**
-> @@ -1151,7 +1155,6 @@ int pci_setup_device(struct pci_dev *dev)
->  	/* "Unknown power state" */
->  	dev->current_state = PCI_UNKNOWN;
->  
-> -	/* MSI/MSI-X setup has to be done early since it's used by quirks. */
->  	pci_msi_setup_pci_dev(dev);
->  
->  	/* Early fixups, before probing the BARs */
+Bjorn
