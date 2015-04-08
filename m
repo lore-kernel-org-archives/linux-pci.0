@@ -1,54 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33858 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750785AbbD3ERF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Apr 2015 00:17:05 -0400
-From: Pratyush Anand <panand@redhat.com>
-To: bhelgaas@google.com, jg1.han@samsung.com
-Cc: linux-pci@vger.kernel.org, mohit.kumar.dhaka@gmail.com,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: [PATCH] MAINTAINERS: Update SPEAr13xx and Designware PCIe maintainer
-Date: Thu, 30 Apr 2015 09:46:07 +0530
-Message-Id: <dd210909090e843e8f7cfc84479af7baa2250d33.1430366548.git.panand@redhat.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:63467 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbbDHIcG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:32:06 -0400
+Message-ID: <5524E72F.1050500@huawei.com>
+Date: Wed, 8 Apr 2015 16:30:39 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Marc Zyngier" <marc.zyngier@arm.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linux-m68k@lists.linux-m68k.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <dja@axtens.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-alpha@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v9 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
+ code
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-25-git-send-email-wangyijing@huawei.com> <5524E1F9.6030700@free-electrons.com>
+In-Reply-To: <5524E1F9.6030700@free-electrons.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@gmail.com>
+> 2 months ago, Thomas Petazzoni was concerned about the removal of
+> mvebu_pcie_scan_bus(). So I dig the archives of the discussion
+> surrounding the pcie-mvebu drive. I found that the main purpose
+> of using this function was to allow to pass "struct device *" pointer.
+> 
+> Thanks to the introduction of pci_common_init_dev it was not needed
+> anymore. Actually we should have done this change when this function
+> had been introduced. So for the point of view of the code it's fine.
+> Then I tested your full series on Armada XP, Armada 375 and Armada 38x
+> SoCs, and I didn't saw any regression. So you can add my:
+> 
+> Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 
-Didn't add myself as Maintainer earlier, as I was moving out of ST
-and didn't had a board to test. But learnt recently that, its fine being
-in MAINTAINERS in such situations, at least I can review the patches.
+Great, thanks very much!
 
-So, let me add myself.
+Thanks!
+Yijing.
 
-Signed-off-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- MAINTAINERS | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 68e96ee0d58c..69ce49782ff9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7553,6 +7553,7 @@ F:	drivers/pci/host/pci-exynos.c
- 
- PCI DRIVER FOR SYNOPSIS DESIGNWARE
- M:	Jingoo Han <jg1.han@samsung.com>
-+M:	Pratyush Anand <pratyush.anand@gmail.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*designware*
-@@ -7566,8 +7567,9 @@ F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
- F:	drivers/pci/host/pci-host-generic.c
- 
- PCIE DRIVER FOR ST SPEAR13XX
-+M:	Pratyush Anand <pratyush.anand@gmail.com>
- L:	linux-pci@vger.kernel.org
--S:	Orphan
-+S:	Maintained
- F:	drivers/pci/host/*spear*
- 
- PCMCIA SUBSYSTEM
+> 
+> 
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+>> CC: Jason Cooper <jason@lakedaemon.net>
+>> ---
+>>  drivers/pci/host/pci-mvebu.c |   18 +-----------------
+>>  1 files changed, 1 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+>> index 0cfc494..d5a2b70 100644
+>> --- a/drivers/pci/host/pci-mvebu.c
+>> +++ b/drivers/pci/host/pci-mvebu.c
+>> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>>  	return 1;
+>>  }
+>>  
+>> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>> -{
+>> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+>> -	struct pci_bus *bus;
+>> -
+>> -	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
+>> -				  &mvebu_pcie_ops, sys, &sys->resources);
+>> -	if (!bus)
+>> -		return NULL;
+>> -
+>> -	pci_scan_child_bus(bus);
+>> -
+>> -	return bus;
+>> -}
+>> -
+>>  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+>>  						 const struct resource *res,
+>>  						 resource_size_t start,
+>> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>>  	hw.nr_controllers = 1;
+>>  	hw.private_data   = (void **)&pcie;
+>>  	hw.setup          = mvebu_pcie_setup;
+>> -	hw.scan           = mvebu_pcie_scan_bus;
+>>  	hw.map_irq        = of_irq_parse_and_map_pci;
+>>  	hw.ops            = &mvebu_pcie_ops;
+>>  	hw.align_resource = mvebu_pcie_align_resource;
+>>  
+>> -	pci_common_init(&hw);
+>> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
+>>  }
+>>  
+>>  /*
+>>
+> 
+> 
+
+
 -- 
-2.1.0
+Thanks!
+Yijing
 
