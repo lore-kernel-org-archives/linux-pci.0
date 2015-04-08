@@ -1,107 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu-smtp-delivery-143.mimecast.com ([146.101.78.143]:12204 "EHLO
-	eu-smtp-delivery-143.mimecast.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966044AbbDVQRE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Apr 2015 12:17:04 -0400
-Date: Wed, 22 Apr 2015 17:17:01 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>
-Subject: Re: [[PATCH v1]] of/pci: fix a bug in function pci_pio_to_address
-Message-ID: <20150422161701.GM932@e106497-lin.cambridge.arm.com>
-References: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
- <20150422151111.GG20701@google.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:36179 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbbDHJWp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 05:22:45 -0400
+Message-ID: <5524F33D.7090800@huawei.com>
+Date: Wed, 8 Apr 2015 17:22:05 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150422151111.GG20701@google.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing0307@gmail.com>
+Subject: Re: [PATCH v9 08/30] PCI: Update pci_host_bridge bus resource
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-10-git-send-email-wangyijing@huawei.com> <20150407224243.GL10892@google.com>
+In-Reply-To: <20150407224243.GL10892@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 22, 2015 at 04:11:11PM +0100, Bjorn Helgaas wrote:
-> On Wed, Apr 22, 2015 at 09:35:59PM +0800, Zhichang Yuan wrote:
-> > In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
-> > was introduced to retieve the corresponding I/O port by CPU address. But the
-> > convertion processing is not correct. It will return a wrong I/O port.
-> > This patch will fix it.
+On 2015/4/8 6:42, Bjorn Helgaas wrote:
+> On Fri, Apr 03, 2015 at 05:25:42PM +0800, Yijing Wang wrote:
+>> From: Yijing Wang <wangyijing0307@gmail.com>
+>>
+>> Sometimes, the bus resource start number is not equal to
+>> root bus number. For example, in pci_scan_bus(), we always
+>> add the default bus resource which start bus number is 0,
+>> but the root bus number callers given may != 0, so
+>> we need to update pci_host_bridge bus resource, because we
+>> would check whether host bridge bus resoruce is confict
+>> in later patch.
 > 
-> Hmmm, this subject and changelog don't seem right.  41f8bba7f555 did add
-> pci_pio_to_address(), but that converts an I/O port to a CPU address, and
-> this patch doesn't touch that function.
-> 
-> This patch changes pci_address_to_pio(), which does return the I/O port
-> corresponding to a CPU physical address.  This function was modified (but
-> not added) by 41f8bba7f555.
-> 
-> Please add:
-> 
-> Fixes: 41f8bba7f555 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
-> CC: stable@vger.kernel.org	# v3.18+
-> 
-> > Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> > ---
-> >  drivers/of/address.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > index 78a7dcb..6906a3f 100644
-> > --- a/drivers/of/address.c
-> > +++ b/drivers/of/address.c
-> > @@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
-> >  	spin_lock(&io_range_lock);
-> >  	list_for_each_entry(res, &io_range_list, list) {
-> >  		if (address >= res->start && address < res->start + res->size) {
-> > -			addr = res->start - address + offset;
-> > +			addr = address - res->start + offset;
-> 
-> This looks like it's been broken since v3.18, and it's used by many
-> platforms.  I/O port space isn't as common as it used to be, but it's still
-> surprising that nobody noticed until now.
+> It's true that pci_scan_bus() always inserts [bus 00-ff].  But I think
+> that's completely bogus.  The caller of pci_scan_bus() supplies a root bus
+> number X.  Any bus numbers below X are useless as far as this host bridge
+> is concerned, and it's pointless to include them in the range inserted by
+> pci_scan_bus().
 
-Add to that the fact that the code is guarded by PCI_IOBASE and the resulting
-number of affected architectures shrinks to 4: arm, arm64, microblaze and
-unicore32. Microblaze gets struck off the list because it re-implements the
-function, which leaves mainly ARM architectures.
-
-Main user of this function now is of_pci_range_to_resource() which
-was newly added and used by my generic parsing code. of_address_to_resource() also
-uses pci_address_to_pio() but only microblaze would fall under all the right
-conditions and that is protected due to re-implementation.
+Agree, I think it's better to use the [bus start - FF] instead of [00-FF].
 
 > 
-> This change does look correct to me, but I want to double-check that we're
-> actually going to *fix* a bunch of platforms rather than breaking them.
+> I think we'd be better off if we forced every pci_scan_bus() caller to
+> supply a real non-overlapping bus number range.  We probably can't do that
+> easily because the arch knows the beginning bus number, but some don't know
+> how to figure out the ending bus number.
 
-My guess is that Zhichang was the first to experience the issue unless there
-are systems out there that have a host bridge with two IO ranges (or two
-host bridges each one IO range) that are silently using the wrong IO port
-addresses.
-
-Fixing latest stable might be enough as there are no affected users of the earlier
-code?
-
-Best regards,
-Liviu
+It seems to have some problems in pci_scan_bus() if we have more than one pci host bridge
+in a domain. Because we add the default busn_res[00-FF] to resource list in pci_scan_bus(),
+and pass the resource list to pci_create_root_bus().  The pci root bus would
+consume the bus range from the start to the 0xFF, and request it from the per-domain resource[00-FF].
+So if we have another pci host bridge in this domain, and pass another start bus number, it would
+fail when the root bus try to request bus resource from per-domain resource. Now only several archs
+call pci_scan_bus(), I guess they didn't run the code in above case, so we didn't find
+the bus report.
 
 > 
-> >  			break;
-> >  		}
-> >  		offset += res->size;
-> > -- 
-> > 1.9.1
-> > 
+> Do we have a per-domain structure that tracks the bus numbers in use in the
+> domain?  It seems like if we had one, we could use that to approximate the
+> end.  For example, if the arch scans three root buses, at bus 00, bus 40,
+> and bus 80, we could start with the first one at [bus 00-ff], and when we
+> scan the one at bus 40, we could either report a conflict (if the bus 00
+> tree included a bus 40) or reduce the first range to [bus 00-3f].
+
+Per-domain resource pci_domain_busn_res is what we are looking for.
+For simplicity, we could report a conflict and fail when we find a conflict bus
+resource in system.
+
+
+>>  	resource_list_for_each_entry(window, resources)
+>> -		if (window->res->flags & IORESOURCE_BUS)
+>> +		if (window->res->flags & IORESOURCE_BUS) {
+>> +			if (bus > window->res->start)
+>> +				window->res->start = bus;
 > 
+> I see what you're trying to do here, but I think this is the wrong place to
+> do it.  I'd rather figure out a way to insert something other than
+> busn_resource in pci_scan_bus().  That probably means we need to
+> dynamically allocate a new busn_res struct.
+
+Allocate a new busn_res maybe unnecessary, the bus resource we added to resource list
+and passed to pci_create_root_bus() will never be used again after we call
+pci_bus_insert_busn_res(), we may could consider to use local busn_res in pci_scan_bus().
+
+Thanks!
+Yijing.
+
+> 
+>>  			return;
+>> +		}
+>>  
+>>  	pr_info(
+>>  	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
+>> -- 
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
 
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Thanks!
+Yijing
 
