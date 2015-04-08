@@ -1,93 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9209 "EHLO mga09.intel.com"
+Received: from ozlabs.org ([103.22.144.67]:46905 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227AbbDMGP6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 02:15:58 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiri Kosina <trivial@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>
-Subject: [Patch Part1 v8 30/37] x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
-Date: Mon, 13 Apr 2015 14:11:52 +0800
-Message-Id: <1428905519-23704-31-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1752866AbbDHDbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Apr 2015 23:31:47 -0400
+Message-ID: <1428463905.29968.2.camel@ellerman.id.au>
+Subject: Re: [PATCH v2 04/19] powerpc: Create
+ pci_controller_ops.dma_dev_setup and shim
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Daniel Axtens <dja@axtens.net>, wangyijing@huawei.com,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Date: Wed, 08 Apr 2015 13:31:45 +1000
+In-Reply-To: <2489424.TEiBTfgpvS@wuerfel>
+References: <1427778057-9505-1-git-send-email-dja@axtens.net>
+	 <5500778.Q4t9Fg7Irn@wuerfel> <1428366696.22268.28.camel@axtens.net>
+	 <2489424.TEiBTfgpvS@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Correctly indent code in function sfi_parse_mtmr().
+On Tue, 2015-04-07 at 09:44 +0200, Arnd Bergmann wrote:
+> On Tuesday 07 April 2015 10:31:36 Daniel Axtens wrote:
+> > > Please see https://patchwork.ozlabs.org/patch/431333/ for related work.
+> > > 
+> > I'm familiar with that patch series - I've been helping Yijing get it up
+> > to speed on PowerPC.
+> > 
+> > 
+> > > I think it would be better not to introduce another architecture-specific
+> > > pci host bridge operations structure, but instead consolidate into
+> > > the one that is already there. We are also adding a generic way to set up
+> > > PCI DMA, so it would seems reasonable to hook into that place.
+> > I see what you're getting at, and I agree that we want to move towards
+> > generic operations. 
+> > 
+> > However, I think this should go in as is at this point, for two main
+> > reasons:
+> > 
+> > 1) This is a good midpoint that makes it easier to move to a generic
+> > structure. Our arch specific stuff is quirky and difficult. This patch
+> > series does a lot to reduce the complexity, and would make it very easy
+> > to move these ops into a generic structure at some future point. 
+> > 
+> > 2) Trying to go generic at this point risks making the change set so
+> > complex and wide ranging that it will really struggle to get in. For
+> > example, Yijing's patch set, despite not changing any of the quirky
+> > stuff in PowerPC, is already quite long, and will require agreement from
+> > a lot of people before it can go in.
+> > 
+> > Much as I would like to have everything as generic as possible, if we
+> > were to try to do the whole job in one go, it'd become a big, difficult,
+> > messy patch set, and would be less likely to happen than if we were to
+> > do it in two steps.
+> 
+> Ok, fair enough. Let's do this one first then.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: H. Peter Anvin <hpa@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Jiri Kosina <trivial@kernel.org>
-Cc: David Cohen <david.a.cohen@linux.intel.com>
-Link: http://lkml.kernel.org/r/1416901802-24211-3-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/platform/intel-mid/sfi.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+Thanks Arnd.
 
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index aa59f88868f8..9a16749935d4 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -95,16 +95,16 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
- 			totallen, (u32)pentry->phys_addr,
- 			pentry->freq_hz, pentry->irq);
--			mp_irq.type = MP_INTSRC;
--			mp_irq.irqtype = mp_INT;
--/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
--			mp_irq.irqflag = 5;
--			mp_irq.srcbus = MP_BUS_ISA;
--			mp_irq.srcbusirq = pentry->irq;	/* IRQ */
--			mp_irq.dstapic = MP_APIC_ALL;
--			mp_irq.dstirq = pentry->irq;
--			mp_save_irq(&mp_irq);
--			mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
-+		mp_irq.type = MP_INTSRC;
-+		mp_irq.irqtype = mp_INT;
-+		/* triggering mode edge bit 2-3, active high polarity bit 0-1 */
-+		mp_irq.irqflag = 5;
-+		mp_irq.srcbus = MP_BUS_ISA;
-+		mp_irq.srcbusirq = pentry->irq;	/* IRQ */
-+		mp_irq.dstapic = MP_APIC_ALL;
-+		mp_irq.dstirq = pentry->irq;
-+		mp_save_irq(&mp_irq);
-+		mp_map_gsi_to_irq(pentry->irq, IOAPIC_MAP_ALLOC);
- 	}
- 
- 	return 0;
--- 
-1.7.10.4
+cheers
+
 
