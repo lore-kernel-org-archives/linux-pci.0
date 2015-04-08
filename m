@@ -1,42 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:35876 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152AbbDHWim (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 18:38:42 -0400
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:35317 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932343AbbDHVc0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 17:32:26 -0400
+Received: by obbfy7 with SMTP id fy7so159863679obb.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 14:32:25 -0700 (PDT)
+Date: Wed, 8 Apr 2015 16:32:22 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 0/3] PCI / ACPI: PCI delay optimization from ACPI
+Message-ID: <20150408213222.GF30967@google.com>
+References: <54FD4FB9.2060802@intel.com>
+ <55125611.8040507@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1428480074.18187.8.camel@kernel.crashing.org>
-References: <1428452669-24824-1-git-send-email-yinghai@kernel.org>
-	<1428464944.4947.69.camel@kernel.crashing.org>
-	<CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
-	<1428480074.18187.8.camel@kernel.crashing.org>
-Date: Wed, 8 Apr 2015 15:38:42 -0700
-Message-ID: <CAE9FiQU=SHqopf_eZWBufD5-LNo_Lv_SH=iptOhFUuPGLgcxAw@mail.gmail.com>
-Subject: Re: [PATCH] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in
- of parsing
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: David Miller <davem@davemloft.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55125611.8040507@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 8, 2015 at 1:01 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
+On Wed, Mar 25, 2015 at 02:30:41PM +0800, Aaron Lu wrote:
+> Here is v3, changes from v2 are:
+> - Patch 1/3: add Rafael's acked-by tag;
+> - Patch 2/3: newly introduced, to rename find_pci_host_bridge and export it
+> - Patch 3/3: address Bjorn's comments for v2
 
-> Use a different flag to indicate the BAR policy or temporarily tweak a
-> local copy of the resource flag during BAR assignment or whatever you
-> prefer to fix the original problem but do *not* change the Linux overall
-> view of that BAR to lie about prefetchability.
-
-ok, will give it a try.
-
-        Yinghai
+Applied to pci/misc for v4.1, thanks!
