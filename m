@@ -1,41 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45485 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750747AbbDBKJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Apr 2015 06:09:05 -0400
-Date: Thu, 2 Apr 2015 12:09:01 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Dave Jones <davej@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH 00/86] pci: export pci_ids.h and related cleanups
-Message-ID: <20150402120711-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <20150402094424.0de6c990@endymion.delvare>
- <20150402094608-mutt-send-email-mst@redhat.com>
- <20150402082306.GA24610@infradead.org>
- <1427965456.4063.1272.camel@chaos.site>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:33495 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753647AbbDHTd1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 15:33:27 -0400
+Received: by oblw8 with SMTP id w8so104401177obl.0
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 12:33:26 -0700 (PDT)
+Date: Wed, 8 Apr 2015 14:33:24 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+Cc: linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	Liviu.Dudau@arm.com, cpgs@samsung.com
+Subject: Re: [PATCH] pci: pci-exynos: fixed the sentence error
+Message-ID: <20150408193324.GE30967@google.com>
+References: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1427965456.4063.1272.camel@chaos.site>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 02, 2015 at 11:04:16AM +0200, Jean Delvare wrote:
-> Le Thursday 02 April 2015 à 01:23 -0700, Christoph Hellwig a écrit :
-> > The class ids are a hardware defintion, not a kernel API.  Just use the
-> > definitions from libpci, or copy over the kernel header if you prefer
-> > it over the libpci definutions.
+On Wed, Mar 25, 2015 at 02:13:12PM +0900, Jaehoon Chung wrote:
+> There is the sentence error.
+> Changed the semicolon instead of comma.
 > 
-> I agree with Christoph, such defines would better come from
-> pciutils-devel, not the kernel.
+> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
 
-This just leads to code duplication.  Projects that don't link with
-pciutils don't want to depend on it.
+Applied to pci/host-exynos for v4.1.  Jingoo, speak up if you object, but
+this looks like a pretty obvious error.
 
--- 
-MST
+> ---
+>  drivers/pci/host/pci-exynos.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index d202b37..c139237 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -396,7 +396,7 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
+>  
+>  	/* enable INTX interrupt */
+>  	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
+> -		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
+> +		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
+>  	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
+>  }
+>  
+> -- 
+> 1.9.1
+> 
