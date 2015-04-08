@@ -1,97 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38457 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752842AbbD0GjW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:22 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:21 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 7FD572CE8056
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:18 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dA8144171284
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:18 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6ciSe009505
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:45 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 11/21] powerpc/powernv: Fundamental reset for PCI bus reset
-Date: Mon, 27 Apr 2015 16:37:43 +1000
-Message-Id: <1430116673-22500-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from foss.arm.com ([217.140.101.70]:50182 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751411AbbDHKc2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Apr 2015 06:32:28 -0400
+Date: Wed, 8 Apr 2015 11:32:22 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Query] Direction of adding arm64 support to PCIe designware
+ driver
+Message-ID: <20150408103222.GB22376@red-moon>
+References: <20150403174621.02681f0d@xhacker>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150403174621.02681f0d@xhacker>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pnv_pci_reset_secondary_bus() is used to reset specified
-PCI bus, which is leaded by root complex or PCI bridge. That means
-the function shouldn't be called on PCI root bus and the patch
-removes the logic for that case.
+Hi Jisheng,
 
-Also, some adapters beneath the indicated PCI bus may require
-fundamental reset in order to successfully reload their firmwares
-after the reset. The patch translates hot reset to fundamental reset
-for that case.
+On Fri, Apr 03, 2015 at 10:46:21AM +0100, Jisheng Zhang wrote:
+> Hi all,
+> 
+> Currently, the pci designware driver still lacks of arm64 support and I noticed
+> that many works are done to achieve this goal.
+> 
+> Some patches are merged and some are under discussion. And Per my understanding, 
+> even w/ these patches merged, the driver still doesn't support arm64. Could you
+> please kindly point out the direction to add arm64 support to the PCIe
+> designware driver?
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
- 1 file changed, 26 insertions(+), 9 deletions(-)
+We should remove pci_sys_data dependency since ARM depends on that.
+I removed it from a couple of places already (eg pci_mmap_page_range).
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 3c01095..58e4dcf 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
- }
- 
--void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
-+static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
- {
--	struct pci_controller *hose;
-+	int *freset = data;
- 
--	if (pci_is_root_bus(dev->bus)) {
--		hose = pci_bus_to_host(dev->bus);
--		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
--		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
--	} else {
--		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
--		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
-+	/*
-+	 * Stop the iteration immediately if there is any
-+	 * one PCI device requesting fundamental reset
-+	 */
-+	*freset |= pdev->needs_freset;
-+	return *freset;
-+}
-+
-+void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
-+{
-+	int option = EEH_RESET_HOT;
-+	int freset = 0;
-+
-+	/* Check if there're any PCI devices asking for fundamental reset */
-+	if (pdev->subordinate) {
-+		pci_walk_bus(pdev->subordinate,
-+			     pnv_pci_dev_reset_type,
-+			     &freset);
-+		if (freset)
-+			option = EEH_RESET_FUNDAMENTAL;
- 	}
-+
-+	/* Issue the requested type of reset */
-+	pnv_eeh_bridge_reset(pdev, option);
-+	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
- }
- 
- /**
--- 
-2.1.0
+Now, pcibios_align_resource and pcibios_msi_controller need patching.
 
+I have a patch for pcibios_align_resource() (I am waiting for Yijing
+Wang series to get merged so that we can move the align_resource
+function pointer in the host bridge):
+
+https://lkml.org/lkml/2015/4/3/171
+
+For MSI, code converted to use CONFIG_PCI_MSI_IRQ_DOMAIN should
+not need pcibios_msi_controller ARM function, but if we still compile
+that function in we do need pci_sys_data on ARM, so we have to have
+it even if it can be dead code in some platforms, I have to vet all
+ARM PCI host controllers to check, but removing it would break MSI
+support.
+
+Does it help ? MSIs are the most important change required,
+align_resource() pointer can be sorted out easily once Yijing's
+code gets in.
+
+Lorenzo
