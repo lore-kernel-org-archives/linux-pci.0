@@ -1,59 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:44866 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:36531 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754944AbbDIDRy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Apr 2015 23:17:54 -0400
-Message-ID: <1428549459.18187.56.camel@kernel.crashing.org>
-Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+	id S1751272AbbDHIBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Apr 2015 04:01:52 -0400
+Message-ID: <1428480074.18187.8.camel@kernel.crashing.org>
+Subject: Re: [PATCH] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+ in of parsing
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
+Cc: David Miller <davem@davemloft.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Date: Thu, 09 Apr 2015 13:17:39 +1000
-In-Reply-To: <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-	 <1427857069-6789-4-git-send-email-yinghai@kernel.org>
-	 <20150406220638.GH10892@google.com>
-	 <20150406.203533.1356187749826485194.davem@davemloft.net>
-	 <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
-	 <20150408154759.GN10892@google.com>
-	 <1428527527.18187.28.camel@kernel.crashing.org>
-	 <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@samba.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Wed, 08 Apr 2015 18:01:14 +1000
+In-Reply-To: <CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
+References: <1428452669-24824-1-git-send-email-yinghai@kernel.org>
+	 <1428464944.4947.69.camel@kernel.crashing.org>
+	 <CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-04-08 at 17:06 -0700, Yinghai Lu wrote:
-> On Wed, Apr 8, 2015 at 2:12 PM, Benjamin Herrenschmidt
+On Tue, 2015-04-07 at 22:39 -0700, Yinghai Lu wrote:
+> On Tue, Apr 7, 2015 at 8:49 PM, Benjamin Herrenschmidt
 > <benh@kernel.crashing.org> wrote:
+> > On Tue, 2015-04-07 at 17:24 -0700, Yinghai Lu wrote:
+> >> For device resource PREF bit setting under bridge 64-bit pref resource,
+> >> we need to make sure only set PREF for 64bit resource, so set IORESOUCE_MEM_64
+> >> for 64bit resource during of device resource flags parsing.
+> >
+> >> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+> >> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+> >
+> > These patches (from the above BZ) aren't right for one thing: You
+> > shouldn't set the IORESOURCE_PREFETCH in the resource itself. This
+> > *will* break stuff.
+> >
+> > You can put the resource in a prefetchable region indeed, if you
+> > are on a PCIe-only path (though we should have some arch flag
+> > to check that the host bridge indeed doesn't do any prefetch,
+> > on powerpc we are good there).
 > 
-> > Thanks Bjorn. We can fix Yinghai patch for 4.2, it would be indeed handy
-> > even for us to be able to support putting 64-bit NP BARs in prefetch
-> > windows (For some SR-IOV adapters for example) too, but we need to do it
-> > right.
+> The patch is at:
 > 
-> Please check if you are ok with attached.
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=1a3ec5e7b00dcd9cac24efe3d65bfccf82597ce5
+> 
+> and we limit to set pref bit for pcie end devices mmio 64bit resource.
 
-I'll let Bjorn be the final judge here but I am not fan of the way you
-set/clear/set/clear the IORESOURCE_PREFETCH bit with
-pci_set_pref_under_pref(). It's error prone and confusing, the code is
-already barely readable as it is ...
+This is still completely wrong. Please revert.
 
-I would rather you replace those various masks compares with a helper
-that does something like pci_resource_compatible(parent_res, child_res),
-which has the logic to test. That or a helper that does something like
-pci_calc_compatible_res_flags() which returns a "flags" that has
-PREFETCH set, which you use in place of res->flags in the various
-allocation path.
+> >
+> > But you can't set the "prefetch" bit on the resource because that would
+> > be losing the indication that this resource has side effects. This bit
+> > is used in some cases to enable store gathering when mmap'ing via sysfs
+> > and can be used for similar uses by drivers.
+> 
+> Any pointer for that?
+>
+> >
+> > It's one thing to say "you can put non-prefetch BARs in prefetch windows
+> > on that path", it's another one to completely make the BAR looks like
+> > it's prefetchable when it's not.
+> 
+> Too hard for me to tell the difference.
 
-As-is, your patch looks like a band-aid and smells like a hack :-)
+Fix it. Add a new bit if necessary "CAN_BE_IN_PREFETCH" or whatever but
+you just cannot randomly fuck around with the flag like that.
 
+You are basically dropping the information that the BAR has side effects
+completely. This is WRONG.
+
+The fact that you can put a non-prefetchable BAR in a prefetchable
+window doesn't make the BAR itself prefetchable. Your patch makes it so.
+
+That means that anything that rely on the BAR flag to establish
+prefetchable or write-combining mappings will be fucked. Drivers might
+test that, arch code will, powerpc sysfs mmap will (see our
+implementation of __pci_mmap_set_pgprot), and quite possibly others
+architectures or drivers doing the same thing.
+
+This is utterly WRONG.
+
+Use a different flag to indicate the BAR policy or temporarily tweak a
+local copy of the resource flag during BAR assignment or whatever you
+prefer to fix the original problem but do *not* change the Linux overall
+view of that BAR to lie about prefetchability.
+
+Bjorn, please revert this ASAP.
+
+Cheers,
 Ben.
 
 
