@@ -1,28 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:59620 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753208AbbDXFPH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Apr 2015 01:15:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1YlVxA-0003rH-8C
-	for linux-pci@vger.kernel.org; Fri, 24 Apr 2015 07:15:04 +0200
-Received: from 104.153.31.46 ([104.153.31.46])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2015 07:15:04 +0200
-Received: from msander by 104.153.31.46 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2015 07:15:04 +0200
-To: linux-pci@vger.kernel.org
-From: Michael Sander <msander@appliedlogix.com>
-Subject: Rescan and devices behind a bridge
-Date: Fri, 24 Apr 2015 05:10:02 +0000 (UTC)
-Message-ID: <loom.20150424T070626-449@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:34937 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163AbbDHSym (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 14:54:42 -0400
+Received: by obbfy7 with SMTP id fy7so153179953obb.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 11:54:41 -0700 (PDT)
+Date: Wed, 8 Apr 2015 13:54:38 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
+	kernel@pengutronix.de, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
+Message-ID: <20150408185438.GB30967@google.com>
+References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
+ <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
+ <20150320220753.GN26935@google.com>
+ <1427714234.3370.8.camel@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427714234.3370.8.camel@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4oCcL3N5cy9idXMvcGNpL3Jlc2NhbuKAnSBpcyBub3QgZmluZGluZyBkZXZpY2VzIGNvbm5lY3RlZCB0byBhIGJyaWRnZS4gCgpXZSBoYXZlIGEgc2VydmVyIHJ1bm5pbmcgQ2VudE9TIDcuMCBhbmQgYSBjdXN0b20gUENJZSBjYXJkIHdpdGggMiBQQ0llIApleHRlbmRlciBjYWJsZXMgZ29pbmcgdG8gYSBjdXN0b20gYm9hcmQgd2l0aCAzIFBDSWUgZGV2aWNlcy4gVGhpcyBib2FyZCBoYXMgCmEgc2VwYXJhdGUgcG93ZXIgc3VwcGx5LiAoQWxsIGV4YW1wbGVzIHNob3cgYSBzaW5nbGUgZXh0ZW5kZXIgYmVpbmcgdXNlZC4pIAoKSWYgd2UgcG93ZXIgdGhlIGJvYXJkIG9uIGZpcnN0LCB0aGVuIHRoZSBzZXJ2ZXIsIHRoZSBkZXZpY2VzIGFyZSBhbGwgCmRpc2NvdmVyZWQuIEhlcmUgaXMgd2hhdCDigJxsc3BjaSAtdHbigJ0gc2hvd3M6CgogfCAgICAgICAgICAgXC0xMy42ICBJbnRlbCBDb3Jwb3JhdGlvbiBYZW9uIEU1L0NvcmUgaTcgUmluZyB0byBRdWlja1BhdGggCkludGVyY29ubmVjdCBMaW5rIDEgUGVyZm9ybWFuY2UgTW9uaXRvcgogXC1bMDAwMDowMF0tKy0wMC4wICBJbnRlbCBDb3Jwb3JhdGlvbiBYZW9uIEU1L0NvcmUgaTcgRE1JMgogICAgICAgICAgICAgKy0wMS4wLVswMV0tLQogICAgICAgICAgICAgKy0wMS4xLVswMl0tLSstMDAuMCAgTlZJRElBIENvcnBvcmF0aW9uIEdUMjE4IFtJT05dCiAgICAgICAgICAgICB8ICAgICAgICAgICAgXC0wMC4xICBOVklESUEgQ29ycG9yYXRpb24gSGlnaCBEZWZpbml0aW9uIEF1ZGlvIApDb250cm9sbGVyCiAgICAgICAgICAgICArLTAyLjAtWzAzLTBiXS0tLS0wMC4wLVswNC0wYl0tLSstMDguMC1bMDUtMGFdLS0tLTAwLjAtWzA2LTBhXS0KLSstMDQuMC1bMDddLS0tLTAwLjAgIFhpbGlueCBDb3Jwb3JhdGlvbiBEZXZpY2UgMDY0YwogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAorLTA1LjAtWzA4XS0tLS0wMC4wICBYaWxpbnggQ29ycG9yYXRpb24gRGV2aWNlIDA2NGMKICAgICAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKKy0wNi4wLVswOV0tLS0tMDAuMCAgWGlsaW54IENvcnBvcmF0aW9uIERldmljZSAwNjRjCiAgICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgClwtMDcuMC1bMGFdLS0tLTAwLjAgIFhpbGlueCBDb3Jwb3JhdGlvbiBEZXZpY2UgMDY0YwogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTEwLjAtWzBiXS0tCiAgICAgICAgICAgICArLTAzLjAtWzBjXS0tCgpJZiB3ZSBwb3dlciB0aGUgc2VydmVyIG9uIGZpcnN0LCB0aGVuIHRoZSBib2FyZCAsIG5laXRoZXIgdGhlIGRldmljZXMgYXJlIApub3QgZGlzY292ZXJlZC4gSGVyZSBpcyB3aGF0IOKAnGxzcGNpIC10duKAnSBzaG93czoKCiB8ICAgICAgICAgICBcLTEzLjYgIEludGVsIENvcnBvcmF0aW9uIFhlb24gRTUvQ29yZSBpNyBSaW5nIHRvIFF1aWNrUGF0aCAKSW50ZXJjb25uZWN0IExpbmsgMSBQZXJmb3JtYW5jZSBNb25pdG9yCiBcLVswMDAwOjAwXS0rLTAwLjAgIEludGVsIENvcnBvcmF0aW9uIFhlb24gRTUvQ29yZSBpNyBETUkyCiAgICAgICAgICAgICArLTAxLjAtWzAxXS0tCiAgICAgICAgICAgICArLTAxLjEtWzAyXS0tKy0wMC4wICBOVklESUEgQ29ycG9yYXRpb24gR1QyMTggW0lPTl0KICAgICAgICAgICAgIHwgICAgICAgICAgICBcLTAwLjEgIE5WSURJQSBDb3Jwb3JhdGlvbiBIaWdoIERlZmluaXRpb24gQXVkaW8gCkNvbnRyb2xsZXIKICAgICAgICAgICAgICstMDIuMC1bMDMtMDZdLS0tLTAwLjAtWzA0LTA2XS0tKy0wOC4wLVswNV0tLQogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTEwLjAtWzA2XS0tCiAgICAgICAgICAgICArLTAzLjAtWzA3XS0tCgpBZnRlciBydW5uaW5nIOKAnGVjaG8gMSA+IC9zeXMvYnVzL3BjaS9yZXNjYW7igJ0gdGhlIGRvd25zdHJlYW0gZW5kIG9mIHRoZSBQQ0llIApleHRlbmRlciBpcyBmb3VuZCwgYnV0IG5vbmUgb2YgdGhlIGRldmljZXMgY29ubmVjdGVkIHRvIGl0LiAKCnwgICAgICAgICAgIFwtMTMuNiAgSW50ZWwgQ29ycG9yYXRpb24gWGVvbiBFNS9Db3JlIGk3IFJpbmcgdG8gUXVpY2tQYXRoIApJbnRlcmNvbm5lY3QgTGluayAxIFBlcmZvcm1hbmNlIE1vbml0b3IKIFwtWzAwMDA6MDBdLSstMDAuMCAgSW50ZWwgQ29ycG9yYXRpb24gWGVvbiBFNS9Db3JlIGk3IERNSTIKICAgICAgICAgICAgICstMDEuMC1bMDFdLS0KICAgICAgICAgICAgICstMDEuMS1bMDJdLS0rLTAwLjAgIE5WSURJQSBDb3Jwb3JhdGlvbiBHVDIxOCBbSU9OXQogICAgICAgICAgICAgfCAgICAgICAgICAgIFwtMDAuMSAgTlZJRElBIENvcnBvcmF0aW9uIEhpZ2ggRGVmaW5pdGlvbiBBdWRpbyAKQ29udHJvbGxlcgogICAgICAgICAgICAgKy0wMi4wLVswMy0wNl0tLS0tMDAuMC1bMDQtMDZdLS0rLTA4LjAtWzA1XS0tLS0wMC4wLVswMF0tLQogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTEwLjAtWzA2XS0tCiAgICAgICAgICAgICArLTAzLjAtWzA3XS0tCgpUaGUg4oCccmVzY2Fu4oCdIGRvZXMgcHJvZHVjZSBzb21lIGludGVyZXN0aW5nIGRtZXNnIG91dHB1dDoKClsgIDMzNC4wODU3NTRdIHBjaSAwMDAwOjA1OjAwLjA6IFsxMGI1Ojg2MzJdIHR5cGUgMDEgY2xhc3MgMHgwNjA0MDAKWyAgMzM0LjA4NTc3N10gcGNpIDAwMDA6MDU6MDAuMDogcmVnIDB4MTA6IFttZW0gMHgwMDAwMDAwMC0weDAwMDFmZmZmXQpbICAzMzQuMDg1OTc4XSBwY2kgMDAwMDowNTowMC4wOiBQTUUjIHN1cHBvcnRlZCBmcm9tIEQwIEQzaG90IEQzY29sZApbICAzMzQuMDg3ODgwXSBwY2kgMDAwMDowNTowMC4wOiBicmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksIApyZWNvbmZpZ3VyaW5nClsgIDMzNC4wODc4OThdIHBjaSAwMDAwOjA1OjAwLjA6IGNhbid0IGFsbG9jYXRlIGNoaWxkIGJ1cyAwNSBmcm9tIFtidXMgMDVdClsgIDMzNC4wODgyMTBdIHBjaWVwb3J0IDAwMDA6MDM6MDAuMDogQkFSIDE0OiBjYW4ndCBhc3NpZ24gbWVtIChzaXplIAoweDEwMDAwMCkKWyAgMzM0LjA4ODIxN10gcGNpZXBvcnQgMDAwMDowNDowOC4wOiBCQVIgMTQ6IGNhbid0IGFzc2lnbiBtZW0gKHNpemUgCjB4MTAwMDAwKQpbICAzMzQuMDg4MjIxXSBwY2kgMDAwMDowNTowMC4wOiBCQVIgMDogY2FuJ3QgYXNzaWduIG1lbSAoc2l6ZSAweDIwMDAwKQpbICAzMzQuMDg4MjI3XSBwY2kgMDAwMDowMDoxZS4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMGRdClsgIDMzNC4wODgyODddIHBjaWVwb3J0IDAwMDA6MDU6MDAuMDogZGV2aWNlIFsxMGI1Ojg2MzJdIGhhcyBpbnZhbGlkIElSUTsgCmNoZWNrIHZlbmRvciBCSU9TClsgIDMzNC4wODg0MjhdIHBjaWVwb3J0IDAwMDA6MDU6MDAuMDogaXJxIDExMCBmb3IgTVNJL01TSS1YCgpJIGhhdmUgdHJpZWQgdGhlIOKAnHJlbW92ZeKAnSBjb21tYW5kIGF0IHZhcmlvdXMgUENJIGxldmVscywgbGlrZSDigJxlY2hvIDEgPiAKL3N5cy9idXMvcGNpL2RldmljZXMvMDAwMFw6MDBcOjAyLjAvcmVtb3Zl4oCdLiB3aXRob3V0IGFueSBpbXByb3ZlbWVudC4KCklzIHRoZXJlIHNvbWV0aGluZyBlbHNlIEkgY2FuIGRvIHRvIGRpc2NvdmVyIGhvdC1wbHVnIFBDSSBkZXZpY2VzPwoKdGhhbmtzLAo=
+[+cc Thomas]
 
+[Thomas, this is just FYI.  The previous patch adds
+
++       int (*setup_irqs)(struct msi_controller *chip, struct pci_dev *dev,
++                         int nvec, int type);
+
+to struct msi_controller.]
+
+On Mon, Mar 30, 2015 at 01:17:14PM +0200, Lucas Stach wrote:
+> Am Freitag, den 20.03.2015, 17:07 -0500 schrieb Bjorn Helgaas:
+> > On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
+> > > Allows to properly set up multiple MSI irqs per device.
+> > > 
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > ---
+> > > The ifdef is needed to avoid a compile error on
+> > > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> > > when the kernel is compiled with MSI support.
+> > > ---
+> > >  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
+> > >  1 file changed, 46 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index 1f4ea6f2d910..8a15ea2e8eab 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> > >  	}
+> > >  
+> > >  	*pos = pos0;
+> > > +	desc->nvec_used = no_irqs;
+> > > +	desc->msi_attrib.multiple = order_base_2(no_irqs);
+> > > +
+> > >  	return irq;
+> > >  
+> > >  no_valid_irq:
+> > > @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+> > >  
+> > >  	return 0;
+> > >  }
+> > > +#ifdef CONFIG_PCI_MSI
+> > > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> > > +			     int nvec, int type)
+> > > +{
+> > > +	int irq, pos;
+> > > +	struct msi_desc *desc;
+> > > +	struct msi_msg msg;
+> > > +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> > > +
+> > > +	/* MSI-X interrupts are not supported */
+> > > +	if (type == PCI_CAP_ID_MSIX)
+> > > +		return -EINVAL;
+> > > +
+> > > +	WARN_ON(!list_is_singular(&pdev->msi_list));
+> > > +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> > > +
+> > > +	irq = assign_irq(nvec, desc, &pos);
+> > > +	if (irq < 0)
+> > > +		return irq;
+> > > +
+> > > +	if (pp->ops->get_msi_addr)
+> > > +		msg.address_lo = pp->ops->get_msi_addr(pp);
+> > > +	else
+> > > +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> > > +	msg.address_hi = 0x0;
+> > > +
+> > > +	if (pp->ops->get_msi_data)
+> > > +		msg.data = pp->ops->get_msi_data(pp, pos);
+> > > +	else
+> > > +		msg.data = pos;
+> > > +
+> > > +	pci_write_msi_msg(irq, &msg);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +#else
+> > > +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
+> > > +			     int nvec, int type)
+> > > +{
+> > > +	return -ENOSYS;
+> > > +}
+> > 
+> > Seems strange that we need even this stub function when we don't have
+> > CONFIG_PCI_MSI.  Is there some way we can fix this so dw_pcie_msi_chip is
+> > only defined when we have CONFIG_PCI_MSI?
+> > 
+> I would rather not do this. We try to keep as much code as possible to
+> at least see some compile coverage, even if the options are not set by
+> using the IS_ENABLED() macro instead of ifdefs. All other MSI related
+> code compiles even without CONFIG_PCI_MSI being set.
+
+Is it really a goal to compile code for disabled config options?  I see
+that a lot of the host drivers do that, especially for MSI-related code,
+and the lack of #ifdefs might be an advantage.  But I don't think we want
+code for disabled config options to appear in the object file, and I'm not
+sure it improves readability for human readers who lose the #ifdef clues.
+
+> The problem with the above function is that the msi_list member of
+> struct pci_device is only declared if CONFIG_PCI_MSI is set. So of you
+> really want to get rid of the above stub, my preferred solution would be
+> to remove the ifdef in struct pci_device, so we can compile the code
+> regardless of the config options.
+
+No, I don't really want to remove the #ifdef in struct pci_device, because
+if CONFIG_PCI_MSI is disabled, there's no reason to include the space in
+the structure.  For one config option, it's not a big deal, but it doesn't
+scale well if we apply the same rule to all config options.
+
+But since these patches don't change the disabled config option strategy,
+I'll apply them mostly as-is, given an ack from Mohit and/or Jingoo.
+
+Bjorn
