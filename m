@@ -1,298 +1,215 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:41591 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753346AbbEAGEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:35 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 17DF1357804C
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:32 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164NZK22151200
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:32 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163vmu009584
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:58 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 15/21] powerpc/pci: Delay creating pci_dn
-Date: Fri,  1 May 2015 16:03:02 +1000
-Message-Id: <1430460188-31343-16-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Thu, 09 Apr 2015 01:44:08 +0200
+Message-ID: <1859870.HzuzAL1ZiX@vostro.rjw.lan>
+In-Reply-To: <5524C13E.3060101@linux.intel.com>
+References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com> <1832914.AK2bZGkVxq@vostro.rjw.lan> <5524C13E.3060101@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_dn instances are allocated from memblock or bootmem when
-creating PCI controller (hoses) in setup_arch(). The PCI hotplug,
-which will be supported by proceeding patches, will release PCI
-device nodes and their corresponding pci_dn on unplugging event.
-The pci_dn instance memory chunks alloed from memblock or bootmem
-are hard to reused after being released.
+On Wednesday, April 08, 2015 01:48:46 PM Jiang Liu wrote:
+> On 2015/4/7 8:28, Rafael J. Wysocki wrote:
+> > On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
+> >> Hi Jiang,
+> <snip>
+> >>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
+> >>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
+> >>
+> >> We should assume it will eventually be used for all ACPI devices,
+> >> shouldn't we?
+> > 
+> > I'm not sure about that, really.  In fact, I'd restrict its use to devices
+> > types that actually can "produce" resources (ie. do not require the resources
+> > to be provided by their ancestors or to be available from a global pool).
+> > 
+> > Otherwise we're pretty much guaranteed to get into trouble.
+> > 
+> > And all of the above rules need to be documented in the kernel source tree
+> > or people will get confused.
+> Hi Rafael,
+>     How about following comments for acpi_dev_filter_resource_type()?
+> Thanks!
+> Gerry
+> --------------------------------------------------------------------
+> /**
+>  * According to ACPI specifications, Consumer/Producer flag in ACPI resource
+>  * descriptor means:
+>  *      1(CONSUMER): This device consumes this resource
+>  *      0(PRODUCER): This device produces and consumes this resource
+>  * But for ACPI PCI host bridge, it is interpreted in another way:
 
-The patch delay creating pci_dn so that they can be allocated from
-slab. In turn, the memory chunks for them can be reused after being
-released without problem. The creation of eeh_dev instances, which
-depends on pci_dn, is delayed a bit as well.
+So first of all, this leads to a question: Why is it interpreted for ACPI PCI
+host bridges differently?
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/ppc-pci.h     |  1 -
- arch/powerpc/kernel/eeh_dev.c          |  2 +-
- arch/powerpc/kernel/pci_dn.c           | 40 +++++++++++++++++++---------------
- arch/powerpc/platforms/maple/pci.c     | 35 +++++++++++++++++------------
- arch/powerpc/platforms/pasemi/pci.c    |  3 ---
- arch/powerpc/platforms/powermac/pci.c  | 39 ++++++++++++++++++++-------------
- arch/powerpc/platforms/powernv/pci.c   |  3 ---
- arch/powerpc/platforms/pseries/setup.c |  1 -
- 8 files changed, 68 insertions(+), 56 deletions(-)
+Is it something we've figured out from experience, or is there a standard
+mandating that? 
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index 4122a86..7388316 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -40,7 +40,6 @@ void *traverse_pci_dn(struct pci_dn *root,
- 		      void *(*fn)(struct pci_dn *, void *),
- 		      void *data);
- 
--extern void pci_devs_phb_init(void);
- extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
- 
- /* From rtas_pci.h */
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index aabba94..f33ce5b 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -110,4 +110,4 @@ static int __init eeh_dev_phb_init(void)
- 	return 0;
- }
- 
--core_initcall(eeh_dev_phb_init);
-+core_initcall_sync(eeh_dev_phb_init);
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..d3833af 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -277,7 +277,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
- 
--	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
-+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (pdn == NULL)
- 		return NULL;
- 	dn->data = pdn;
-@@ -442,33 +442,37 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	traverse_pci_devices(dn, update_dn_pci_info, phb);
- }
- 
--/** 
-+static void pci_dev_pdn_setup(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn;
-+
-+	if (pdev->dev.archdata.pci_data)
-+		return;
-+
-+	/* Setup the fast path */
-+	pdn = pci_get_pdn(pdev);
-+	pdev->dev.archdata.pci_data = pdn;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-+
-+/*
-  * pci_devs_phb_init - Initialize phbs and pci devs under them.
-- * 
-- * This routine walks over all phb's (pci-host bridges) on the
-- * system, and sets up assorted pci-related structures 
-+ *
-+ * This routine walks over all phb's (pci-host bridges) on
-+ * the system, and sets up assorted pci-related structures
-  * (including pci info in the device node structs) for each
-  * pci device found underneath.  This routine runs once,
-  * early in the boot sequence.
-  */
--void __init pci_devs_phb_init(void)
-+static int __init pci_devs_phb_init(void)
- {
- 	struct pci_controller *phb, *tmp;
- 
- 	/* This must be done first so the device nodes have valid pci info! */
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		pci_devs_phb_init_dynamic(phb);
--}
--
--static void pci_dev_pdn_setup(struct pci_dev *pdev)
--{
--	struct pci_dn *pdn;
- 
--	if (pdev->dev.archdata.pci_data)
--		return;
--
--	/* Setup the fast path */
--	pdn = pci_get_pdn(pdev);
--	pdev->dev.archdata.pci_data = pdn;
-+	return 0;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-+
-+core_initcall(pci_devs_phb_init);
-diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
-index a923230..04a69a8 100644
---- a/arch/powerpc/platforms/maple/pci.c
-+++ b/arch/powerpc/platforms/maple/pci.c
-@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
- 	DBG(" <- maple_pci_irq_fixup\n");
- }
- 
-+static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
-+	struct device_node *np, *child;
-+
-+	if (hose != u3_agp)
-+		return 0;
-+
-+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
-+	 * assume there is no P2P bridge on the AGP bus, which should be a
-+	 * safe assumptions hopefully.
-+	 */
-+	np = hose->dn;
-+	PCI_DN(np)->busno = 0xf0;
-+	for_each_child_of_node(np, child)
-+		PCI_DN(child)->busno = 0xf0;
-+
-+	return 0;
-+}
-+
- void __init maple_pci_init(void)
- {
- 	struct device_node *np, *root;
-@@ -605,20 +625,7 @@ void __init maple_pci_init(void)
- 	if (ht && maple_add_bridge(ht) != 0)
- 		of_node_put(ht);
- 
--	/* Setup the linkage between OF nodes and PHBs */ 
--	pci_devs_phb_init();
--
--	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
--	 * assume there is no P2P bridge on the AGP bus, which should be a
--	 * safe assumptions hopefully.
--	 */
--	if (u3_agp) {
--		struct device_node *np = u3_agp->dn;
--		PCI_DN(np)->busno = 0xf0;
--		for (np = np->child; np; np = np->sibling)
--			PCI_DN(np)->busno = 0xf0;
--	}
--
-+	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
- 	/* Tell pci.c to not change any resource allocations.  */
- 	pci_add_flags(PCI_PROBE_ONLY);
- }
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
-index f3a68a0..10c4e8f 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
- 			of_node_get(np);
- 
- 	of_node_put(root);
--
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
- }
- 
- void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
-diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
-index 59ab16f..368716f 100644
---- a/arch/powerpc/platforms/powermac/pci.c
-+++ b/arch/powerpc/platforms/powermac/pci.c
-@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
- #endif /* CONFIG_PPC32 */
- }
- 
-+#ifdef CONFIG_PPC64
-+static int pmac_pci_root_bridge_prepare(struct pci_hot_bridge *bridge)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
-+	struct device_node *np, *child;
-+
-+	if (hose != u3_agp)
-+		return 0;
-+
-+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
-+	 * assume there is no P2P bridge on the AGP bus, which should be a
-+	 * safe assumptions for now. We should do something better in the
-+	 * future though
-+	 */
-+	np = hose->dn;
-+	PCI_DN(np)->busno = 0xf0;
-+	for_each_child_of_node(np, child)
-+		PCI_DN(child)->busno = 0xf0;
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PPC64 */
-+
- void __init pmac_pci_init(void)
- {
- 	struct device_node *np, *root;
-@@ -914,22 +937,8 @@ void __init pmac_pci_init(void)
- 	if (ht && pmac_add_bridge(ht) != 0)
- 		of_node_put(ht);
- 
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
--
--	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
--	 * assume there is no P2P bridge on the AGP bus, which should be a
--	 * safe assumptions for now. We should do something better in the
--	 * future though
--	 */
--	if (u3_agp) {
--		struct device_node *np = u3_agp->dn;
--		PCI_DN(np)->busno = 0xf0;
--		for (np = np->child; np; np = np->sibling)
--			PCI_DN(np)->busno = 0xf0;
--	}
- 	/* pmac_check_ht_link(); */
--
-+	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
- #else /* CONFIG_PPC64 */
- 	init_p2pbridge();
- 	init_second_ohare();
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 60e6d65..21a4eb3 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -819,9 +819,6 @@ void __init pnv_pci_init(void)
- 	for_each_compatible_node(np, NULL, "ibm,ioda2-phb")
- 		pnv_pci_init_ioda2_phb(np);
- 
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
--
- 	/* Configure IOMMU DMA hooks */
- 	ppc_md.tce_build = pnv_tce_build_vm;
- 	ppc_md.tce_free = pnv_tce_free_vm;
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..5f80758 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -482,7 +482,6 @@ static void __init find_and_init_phbs(void)
- 	}
- 
- 	of_node_put(root);
--	pci_devs_phb_init();
- 
- 	/*
- 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
+>  *      1(CONSUMER): PCI host bridge itself consumes the resource, such as
+>  *                   IOPORT 0xCF8-0xCFF to access PCI configuraiton space.
+>  *      0(PRODUCER): PCI host bridge provides this resource to its child
+>  *                   bus and devices.
+>  *
+>  * So this is a specially designed helper function to support ACPI PCI host
+>  * bridge and ACPI IOAPIC, and its usage should be limited to those specific
+
+And this will make the reader wonder why the IOAPIC should be treated the same
+way as a PCI host bridge in that respect.
+
+>  * scenarioso only. It filters ACPI resource descriptors as below:
+>  * 1) If flag IORESOURCE_WINDOW is not specified, it's querying resources
+>  *    consumed by device. That is to return:
+>  *      a) ACPI resources without producer_consumer flag
+>  *      b) ACPI resources with producer_consumer flag setting to CONSUMER.
+>  * 2) If flag IORESOURCE_WINDOW is specified, it's querying resources
+> provided
+>  *    by device. That is to return:
+>  *      a) ACPI resources with producer_consumer flag setting to PRODUCER.
+>  * 3) But there's an exception. Some platforms, such as PC Engines APU.1C,
+>  *    report PCI host bridge resource provision by Memory32Fixed().
+>  *    Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>  *    So a special flag IORESOURCE_MEM_8AND16BIT is used to work around this
+>  *    BIOS issue.
+>  */
+> 
+> > 
+> >>> Another possible fix is to only ignore IO resource consumed by host
+> >>> bridge and keep IOMEM resource consumed by host bridge, please refer to:
+> >>> http://www.spinics.net/lists/linux-pci/msg39706.html
+> >>>
+> >>> Sample ACPI table are archived at:
+> >>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
+> >>>
+> >>> V2->V3:
+> >>> Refine function acpi_dev_match_producer_consumer() as suggested by Rafael
+> >>>
+> >>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+> >>> Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+> >>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >>> ---
+> >>>  arch/x86/pci/acpi.c     |    5 ++---
+> >>>  drivers/acpi/resource.c |   33 +++++++++++++++++++++++++++++----
+> >>>  2 files changed, 31 insertions(+), 7 deletions(-)
+> >>>
+> >>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> >>> index e4695985f9de..8c4b1201f340 100644
+> >>> --- a/arch/x86/pci/acpi.c
+> >>> +++ b/arch/x86/pci/acpi.c
+> >>> @@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+> >>>  	info->bridge = device;
+> >>>  	ret = acpi_dev_get_resources(device, list,
+> >>>  				     acpi_dev_filter_resource_type_cb,
+> >>> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
+> >>> +				     (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
+> >>>  	if (ret < 0)
+> >>>  		dev_warn(&device->dev,
+> >>>  			 "failed to parse _CRS method, error code %d\n", ret);
+> >>> @@ -346,8 +346,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+> >>>  			"no IO and memory resources present in _CRS\n");
+> >>>  	else
+> >>>  		resource_list_for_each_entry_safe(entry, tmp, list) {
+> >>> -			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+> >>> -			    (entry->res->flags & IORESOURCE_DISABLED))
+> >>> +			if (entry->res->flags & IORESOURCE_DISABLED)
+> >>>  				resource_list_destroy_entry(entry);
+> >>>  			else
+> >>>  				entry->res->name = info->name;
+> >>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> >>> index 5589a6e2a023..e761a868bdba 100644
+> >>> --- a/drivers/acpi/resource.c
+> >>> +++ b/drivers/acpi/resource.c
+> >>> @@ -567,6 +567,12 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
+> >>>  }
+> >>>  EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+> >>>  
+> >>> +static bool acpi_dev_match_producer_consumer(unsigned long types, int producer)
+> >>> +{
+> >>> +	return ((types & IORESOURCE_WINDOW) && producer == ACPI_PRODUCER) ||
+> >>> +		((types & IORESOURCE_WINDOW) == 0 && producer == ACPI_CONSUMER);
+> >>> +}
+> >>> +
+> >>>  /**
+> >>>   * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
+> >>>   *				   types
+> >>> @@ -585,27 +591,46 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+> >>>  	case ACPI_RESOURCE_TYPE_MEMORY24:
+> >>>  	case ACPI_RESOURCE_TYPE_MEMORY32:
+> >>>  	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+> >>> +		/*
+> >>> +		 * These types of resource descriptor should be used to
+> >>> +		 * describe resource consumption instead of resource provision.
+> >>> +		 * But some platforms, such as PC Engines APU.1C, reports
+> >>> +		 * resource provision by Memory32Fixed(). Please refer to:
+> >>> +		 * https://bugzilla.kernel.org/show_bug.cgi?id=94221
+> >>> +		 * So accept it no matter IORESOURCE_WINDOW is specified or not.
+> >>> +		 */
+> >>>  		type = IORESOURCE_MEM;
+> >>
+> >> I think this means these resources will be accepted regardless of whether
+> >> the caller is looking for Consumer or Producer resources.  To preserve the
+> >> behavior I added with 66528fdd45b0, we might be forced to do that for PCI
+> >> host bridges (or maybe we could just add a quirk for the PC Engines BIOS).
+> >>
+> >> But I don't think it matches the ACPI spec intent, so I'm not sure it's
+> >> right to do it for all devices.
+> > 
+> > No, it isn't, which is why acpi_dev_filter_resource_type() should not be used
+> > for all devices.
+> > 
+> >>>  		break;
+> >>>  	case ACPI_RESOURCE_TYPE_IO:
+> >>>  	case ACPI_RESOURCE_TYPE_FIXED_IO:
+> >>> -		type = IORESOURCE_IO;
+> >>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+> >>> +			type = IORESOURCE_IO;
+> >>>  		break;
+> >>>  	case ACPI_RESOURCE_TYPE_IRQ:
+> >>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+> >>> +			type = IORESOURCE_IRQ;
+> >>> +		break;
+> >>>  	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+> >>> -		type = IORESOURCE_IRQ;
+> >>> +		if (acpi_dev_match_producer_consumer(types,
+> >>> +				ares->data.extended_irq.producer_consumer))
+> >>> +			type = IORESOURCE_IRQ;
+> >>>  		break;
+> >>>  	case ACPI_RESOURCE_TYPE_DMA:
+> >>>  	case ACPI_RESOURCE_TYPE_FIXED_DMA:
+> >>> -		type = IORESOURCE_DMA;
+> >>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+> >>> +			type = IORESOURCE_DMA;
+> >>>  		break;
+> >>>  	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
+> >>> -		type = IORESOURCE_REG;
+> >>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+> >>> +			type = IORESOURCE_REG;
+> >>>  		break;
+> >>>  	case ACPI_RESOURCE_TYPE_ADDRESS16:
+> >>>  	case ACPI_RESOURCE_TYPE_ADDRESS32:
+> >>>  	case ACPI_RESOURCE_TYPE_ADDRESS64:
+> >>>  	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+> >>> +		if (!acpi_dev_match_producer_consumer(types,
+> >>> +				ares->data.address.producer_consumer))
+> >>> +			break;
+> >>>  		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
+> >>>  			type = IORESOURCE_MEM;
+> >>>  		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+
 -- 
-2.1.0
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
