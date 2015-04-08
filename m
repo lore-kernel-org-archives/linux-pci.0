@@ -1,356 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:35169 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752908AbbDNCeD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 22:34:03 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 29/33] x86, ioapic: Use proper defines for the entry fields
-Date: Tue, 14 Apr 2015 10:30:06 +0800
-Message-Id: <1428978610-28986-30-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:58236 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbbDHJKu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 05:10:50 -0400
+Message-ID: <1428484245.2809.20.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
+	kernel@pengutronix.de, linux-pci@vger.kernel.org
+Date: Wed, 08 Apr 2015 11:10:45 +0200
+In-Reply-To: <1427714234.3370.8.camel@pengutronix.de>
+References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
+	 <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
+	 <20150320220753.GN26935@google.com>
+	 <1427714234.3370.8.camel@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Hello Bjorn,
 
-While looking at the printout issue, I stumbled more than once over
-the various 0/1 assignments which are either commented in strange ways
-or force to lookup the meaning.
+Am Montag, den 30.03.2015, 13:17 +0200 schrieb Lucas Stach:
+> Am Freitag, den 20.03.2015, 17:07 -0500 schrieb Bjorn Helgaas:
+> > On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
+> > > Allows to properly set up multiple MSI irqs per device.
+> > > 
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > > ---
+> > > The ifdef is needed to avoid a compile error on
+> > > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> > > when the kernel is compiled with MSI support.
+> > > ---
+> > >  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
+> > >  1 file changed, 46 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index 1f4ea6f2d910..8a15ea2e8eab 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> > >  	}
+> > >  
+> > >  	*pos = pos0;
+> > > +	desc->nvec_used = no_irqs;
+> > > +	desc->msi_attrib.multiple = order_base_2(no_irqs);
+> > > +
+> > >  	return irq;
+> > >  
+> > >  no_valid_irq:
+> > > @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+> > >  
+> > >  	return 0;
+> > >  }
+> > > +#ifdef CONFIG_PCI_MSI
+> > > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> > > +			     int nvec, int type)
+> > > +{
+> > > +	int irq, pos;
+> > > +	struct msi_desc *desc;
+> > > +	struct msi_msg msg;
+> > > +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> > > +
+> > > +	/* MSI-X interrupts are not supported */
+> > > +	if (type == PCI_CAP_ID_MSIX)
+> > > +		return -EINVAL;
+> > > +
+> > > +	WARN_ON(!list_is_singular(&pdev->msi_list));
+> > > +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> > > +
+> > > +	irq = assign_irq(nvec, desc, &pos);
+> > > +	if (irq < 0)
+> > > +		return irq;
+> > > +
+> > > +	if (pp->ops->get_msi_addr)
+> > > +		msg.address_lo = pp->ops->get_msi_addr(pp);
+> > > +	else
+> > > +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> > > +	msg.address_hi = 0x0;
+> > > +
+> > > +	if (pp->ops->get_msi_data)
+> > > +		msg.data = pp->ops->get_msi_data(pp, pos);
+> > > +	else
+> > > +		msg.data = pos;
+> > > +
+> > > +	pci_write_msi_msg(irq, &msg);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +#else
+> > > +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
+> > > +			     int nvec, int type)
+> > > +{
+> > > +	return -ENOSYS;
+> > > +}
+> > 
+> > Seems strange that we need even this stub function when we don't have
+> > CONFIG_PCI_MSI.  Is there some way we can fix this so dw_pcie_msi_chip is
+> > only defined when we have CONFIG_PCI_MSI?
+> > 
+> I would rather not do this. We try to keep as much code as possible to
+> at least see some compile coverage, even if the options are not set by
+> using the IS_ENABLED() macro instead of ifdefs. All other MSI related
+> code compiles even without CONFIG_PCI_MSI being set.
+> 
+> The problem with the above function is that the msi_list member of
+> struct pci_device is only declared if CONFIG_PCI_MSI is set. So of you
+> really want to get rid of the above stub, my preferred solution would be
+> to remove the ifdef in struct pci_device, so we can compile the code
+> regardless of the config options.
+> 
+I'm waiting on your feedback on the above issue. Would you be OK with
+changing the common struct pci_device to allow for more compile
+coverage?
 
-Use proper constants and fix the misleading comments. While at it
-remove pointless 0 assignments in native_disable_io_apic() which have
-no value for understanding the code.
+If not I would like if you could take those patches as is.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: x86@kernel.org
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |   16 +++++--
- arch/x86/kernel/apic/io_apic.c |  100 ++++++++++++++++++++--------------------
- 2 files changed, 63 insertions(+), 53 deletions(-)
+Regards,
+Lucas
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index cca97c961641..53a70a30b674 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -98,9 +98,19 @@ struct IR_IO_APIC_route_entry {
- struct irq_alloc_info;
- struct irq_data;
- 
--#define IOAPIC_AUTO     -1
--#define IOAPIC_EDGE     0
--#define IOAPIC_LEVEL    1
-+#define IOAPIC_AUTO			-1
-+#define IOAPIC_EDGE			0
-+#define IOAPIC_LEVEL			1
-+
-+#define IOAPIC_MASKED			1
-+#define IOAPIC_UNMASKED			0
-+
-+#define IOAPIC_POL_HIGH			0
-+#define IOAPIC_POL_LOW			1
-+
-+#define IOAPIC_DEST_MODE_PHYSICAL	0
-+#define IOAPIC_DEST_MODE_LOGICAL	1
-+
- #define	IOAPIC_MAP_ALLOC		0x1
- #define	IOAPIC_MAP_CHECK		0x2
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 71971b89da59..cf42a6adf9c0 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -356,7 +356,7 @@ static void ioapic_write_entry(int apic, int pin, struct IO_APIC_route_entry e)
- static void ioapic_mask_entry(int apic, int pin)
- {
- 	unsigned long flags;
--	union entry_union eu = { .entry.mask = 1 };
-+	union entry_union eu = { .entry.mask = IOAPIC_MASKED };
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
- 	io_apic_write(apic, 0x10 + 2*pin, eu.w1);
-@@ -517,7 +517,7 @@ static void __eoi_ioapic_pin(int apic, int pin, int vector)
- 		/*
- 		 * Mask the entry and change the trigger mode to edge.
- 		 */
--		entry1.mask = 1;
-+		entry1.mask = IOAPIC_MASKED;
- 		entry1.trigger = IOAPIC_EDGE;
- 
- 		__ioapic_write_entry(apic, pin, entry1);
-@@ -553,8 +553,8 @@ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
- 	 * Make sure the entry is masked and re-read the contents to check
- 	 * if it is a level triggered pin and if the remote-IRR is set.
- 	 */
--	if (!entry.mask) {
--		entry.mask = 1;
-+	if (entry.mask == IOAPIC_UNMASKED) {
-+		entry.mask = IOAPIC_MASKED;
- 		ioapic_write_entry(apic, pin, entry);
- 		entry = ioapic_read_entry(apic, pin);
- 	}
-@@ -567,7 +567,7 @@ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
- 		 * doesn't clear the remote-IRR if the trigger mode is not
- 		 * set to level.
- 		 */
--		if (!entry.trigger) {
-+		if (entry.trigger == IOAPIC_EDGE) {
- 			entry.trigger = IOAPIC_LEVEL;
- 			ioapic_write_entry(apic, pin, entry);
- 		}
-@@ -670,8 +670,8 @@ void mask_ioapic_entries(void)
- 			struct IO_APIC_route_entry entry;
- 
- 			entry = ioapics[apic].saved_registers[pin];
--			if (!entry.mask) {
--				entry.mask = 1;
-+			if (entry.mask == IOAPIC_UNMASKED) {
-+				entry.mask = IOAPIC_MASKED;
- 				ioapic_write_entry(apic, pin, entry);
- 			}
- 		}
-@@ -773,11 +773,11 @@ static int EISA_ELCR(unsigned int irq)
- 
- #endif
- 
--/* ISA interrupts are always polarity zero edge triggered,
-+/* ISA interrupts are always active high edge triggered,
-  * when listed as conforming in the MP table. */
- 
--#define default_ISA_trigger(idx)	(0)
--#define default_ISA_polarity(idx)	(0)
-+#define default_ISA_trigger(idx)	(IOAPIC_EDGE)
-+#define default_ISA_polarity(idx)	(IOAPIC_POL_HIGH)
- 
- /* EISA interrupts are always polarity zero and can be edge or level
-  * trigger depending on the ELCR value.  If an interrupt is listed as
-@@ -787,11 +787,11 @@ static int EISA_ELCR(unsigned int irq)
- #define default_EISA_trigger(idx)	(EISA_ELCR(mp_irqs[idx].srcbusirq))
- #define default_EISA_polarity(idx)	default_ISA_polarity(idx)
- 
--/* PCI interrupts are always polarity one level triggered,
-+/* PCI interrupts are always active low level triggered,
-  * when listed as conforming in the MP table. */
- 
--#define default_PCI_trigger(idx)	(1)
--#define default_PCI_polarity(idx)	(1)
-+#define default_PCI_trigger(idx)	(IOAPIC_LEVEL)
-+#define default_PCI_polarity(idx)	(IOAPIC_POL_LOW)
- 
- static int irq_polarity(int idx)
- {
-@@ -811,24 +811,24 @@ static int irq_polarity(int idx)
- 			break;
- 		case 1: /* high active */
- 		{
--			polarity = 0;
-+			polarity = IOAPIC_POL_HIGH;
- 			break;
- 		}
- 		case 2: /* reserved */
- 		{
- 			pr_warn("broken BIOS!!\n");
--			polarity = 1;
-+			polarity = IOAPIC_POL_LOW;
- 			break;
- 		}
- 		case 3: /* low active */
- 		{
--			polarity = 1;
-+			polarity = IOAPIC_POL_LOW;
- 			break;
- 		}
- 		default: /* invalid */
- 		{
- 			pr_warn("broken BIOS!!\n");
--			polarity = 1;
-+			polarity = IOAPIC_POL_LOW;
- 			break;
- 		}
- 	}
-@@ -870,7 +870,7 @@ static int irq_trigger(int idx)
- 				default:
- 				{
- 					pr_warn("broken BIOS!!\n");
--					trigger = 1;
-+					trigger = IOAPIC_LEVEL;
- 					break;
- 				}
- 			}
-@@ -878,24 +878,24 @@ static int irq_trigger(int idx)
- 			break;
- 		case 1: /* edge */
- 		{
--			trigger = 0;
-+			trigger = IOAPIC_EDGE;
- 			break;
- 		}
- 		case 2: /* reserved */
- 		{
- 			pr_warn("broken BIOS!!\n");
--			trigger = 1;
-+			trigger = IOAPIC_LEVEL;
- 			break;
- 		}
- 		case 3: /* level */
- 		{
--			trigger = 1;
-+			trigger = IOAPIC_LEVEL;
- 			break;
- 		}
- 		default: /* invalid */
- 		{
- 			pr_warn("broken BIOS!!\n");
--			trigger = 0;
-+			trigger = IOAPIC_EDGE;
- 			break;
- 		}
- 	}
-@@ -939,11 +939,11 @@ static void ioapic_copy_alloc_attr(struct irq_alloc_info *dst,
- 			dst->ioapic_polarity = polarity;
- 		} else {
- 			/*
--			 * PCI interrupts are always polarity one level
-+			 * PCI interrupts are always active low level
- 			 * triggered.
- 			 */
--			dst->ioapic_trigger = 1;
--			dst->ioapic_polarity = 1;
-+			dst->ioapic_trigger = IOAPIC_LEVEL;
-+			dst->ioapic_polarity = IOAPIC_POL_LOW;
- 		}
- 	}
- }
-@@ -1296,9 +1296,10 @@ static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
- 		entry = ioapic_read_entry(apic, i);
- 		snprintf(buf, sizeof(buf),
- 			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
--			 i, entry.mask ? "disabled" : "enabled ",
--			 entry.trigger ? "level" : "edge ",
--			 entry.polarity ? "low " : "high",
-+			 i,
-+			 entry.mask == IOAPIC_MASKED ? "disabled" : "enabled ",
-+			 entry.trigger == IOAPIC_LEVEL ? "level" : "edge ",
-+			 entry.polarity == IOAPIC_POL_LOW ? "low " : "high",
- 			 entry.vector, entry.irr, entry.delivery_status);
- 		if (ir_entry->format)
- 			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
-@@ -1306,7 +1307,9 @@ static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
- 			       ir_entry->zero);
- 		else
- 			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
--			       buf, entry.dest_mode ? "logical " : "physical",
-+			       buf,
-+			       entry.dest_mode == IOAPIC_DEST_MODE_LOGICAL ?
-+			       "logical " : "physical",
- 			       entry.dest, entry.delivery_mode);
- 	}
- }
-@@ -1476,15 +1479,12 @@ void native_disable_io_apic(void)
- 		struct IO_APIC_route_entry entry;
- 
- 		memset(&entry, 0, sizeof(entry));
--		entry.mask            = 0; /* Enabled */
--		entry.trigger         = 0; /* Edge */
--		entry.irr             = 0;
--		entry.polarity        = 0; /* High */
--		entry.delivery_status = 0;
--		entry.dest_mode       = 0; /* Physical */
--		entry.delivery_mode   = dest_ExtINT; /* ExtInt */
--		entry.vector          = 0;
--		entry.dest            = read_apic_id();
-+		entry.mask		= IOAPIC_UNMASKED;
-+		entry.trigger		= IOAPIC_EDGE;
-+		entry.polarity		= IOAPIC_POL_HIGH;
-+		entry.dest_mode		= IOAPIC_DEST_MODE_PHYSICAL;
-+		entry.delivery_mode	= dest_ExtINT;
-+		entry.dest		= read_apic_id();
- 
- 		/*
- 		 * Add it to the IO-APIC irq-routing table:
-@@ -1494,7 +1494,6 @@ void native_disable_io_apic(void)
- 
- 	if (cpu_has_apic || apic_from_smp_config())
- 		disconnect_bsp_APIC(ioapic_i8259.pin != -1);
--
- }
- 
- /*
-@@ -2018,12 +2017,12 @@ static inline void __init unlock_ExtINT_logic(void)
- 
- 	memset(&entry1, 0, sizeof(entry1));
- 
--	entry1.dest_mode = 0;			/* physical delivery */
--	entry1.mask = 0;			/* unmask IRQ now */
-+	entry1.dest_mode = IOAPIC_DEST_MODE_PHYSICAL;
-+	entry1.mask = IOAPIC_UNMASKED;
- 	entry1.dest = hard_smp_processor_id();
- 	entry1.delivery_mode = dest_ExtINT;
- 	entry1.polarity = entry0.polarity;
--	entry1.trigger = 0;
-+	entry1.trigger = IOAPIC_EDGE;
- 	entry1.vector = 0;
- 
- 	ioapic_write_entry(apic, pin, entry1);
-@@ -2911,9 +2910,9 @@ static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
- 		data->polarity = info->ioapic_polarity;
- 	} else if (acpi_get_override_irq(gsi, &data->trigger,
- 					 &data->polarity) < 0) {
--		/* PCI interrupts are always polarity one level triggered. */
--		data->trigger = 1;
--		data->polarity = 1;
-+		/* PCI interrupts are always active low level triggered. */
-+		data->trigger = IOAPIC_LEVEL;
-+		data->polarity = IOAPIC_POL_LOW;
- 	}
- }
- 
-@@ -2925,15 +2924,16 @@ static void mp_setup_entry(struct irq_cfg *cfg, struct mp_chip_data *data,
- 	entry->dest_mode     = apic->irq_dest_mode;
- 	entry->dest	     = cfg->dest_apicid;
- 	entry->vector	     = cfg->vector;
--	entry->mask	     = 0;	/* enable IRQ */
- 	entry->trigger	     = data->trigger;
- 	entry->polarity	     = data->polarity;
- 	/*
--	 * Mask level triggered irqs.
--	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
-+	 * Mask level triggered irqs. Edge triggered irqs are masked
-+	 * by the irq core code in case they fire.
- 	 */
--	if (data->trigger)
--		entry->mask = 1;
-+	if (data->trigger == IOAPIC_LEVEL)
-+		entry->mask = IOAPIC_MASKED;
-+	else
-+		entry->mask = IOAPIC_UNMASKED;
- }
- 
- int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
 -- 
-1.7.10.4
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
