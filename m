@@ -1,98 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:33938 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998AbbDTToL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2015 15:44:11 -0400
-Received: by qgfi89 with SMTP id i89so58067919qgf.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 12:44:10 -0700 (PDT)
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:34846 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753177AbbDHS4Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 14:56:25 -0400
+Received: by obbfy7 with SMTP id fy7so153256032obb.2
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 11:56:25 -0700 (PDT)
+Date: Wed, 8 Apr 2015 13:56:20 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
+	linux-pci@vger.kernel.org, kernel@pengutronix.de
+Subject: Re: [PATCH 2/2] PCI: designware: implement multiple MSI irq setup
+Message-ID: <20150408185620.GC30967@google.com>
+References: <1425922388-30464-1-git-send-email-l.stach@pengutronix.de>
+ <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7iQgigqV6dhUQsWqzob-3Kwh4-YNPqBBtDMHCOvhtOnQ@mail.gmail.com>
-References: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
- <CAErSpo7TkdZ7nHHwFzwqhyTA3X_09x0ywbAmW+m2D-Or1AhyYw@mail.gmail.com>
- <CABPqkBSuQmGD=ho8vJvDw=r2CdW+_gqpapy5sYyzZrPXg0mWfg@mail.gmail.com> <CAErSpo7iQgigqV6dhUQsWqzob-3Kwh4-YNPqBBtDMHCOvhtOnQ@mail.gmail.com>
-From: Sonny Rao <sonnyrao@chromium.org>
-Date: Mon, 20 Apr 2015 12:43:50 -0700
-Message-ID: <CAPz6YkUYU_hSSeU+EyLF3HXuep23t2fc-qtZL41RR6iOWj-CEA@mail.gmail.com>
-Subject: Re: [PATCH] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephane Eranian <eranian@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Paul Mackerras <paulus@samba.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1425922388-30464-2-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 20, 2015 at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 20, 2015 at 1:58 PM, Stephane Eranian <eranian@google.com> wrote:
->> On Mon, Apr 20, 2015 at 11:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> On Mon, Apr 20, 2015 at 1:42 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
->>> > This uncore is the same as the Haswell desktop part but uses a
->>> > different PCI ID.
->>> >
->>> > Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
->>> > ---
->>> >  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 5 +++++
->>> >  include/linux/pci_ids.h                           | 1 +
->>> >  2 files changed, 6 insertions(+)
->>> >
->>> > diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
->>> > index 3001015..0bda6fc 100644
->>> > --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
->>> > +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
->>> > @@ -472,6 +472,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
->>> >                 PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
->>> >                 .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
->>> >         },
->>> > +       { /* IMC */
->>> > +               PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
->>> > +               .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
->>> > +       },
->>> >         { /* end: all zeroes */ },
->>> >  };
->>> >
->>> > @@ -502,6 +506,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
->>> >         IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
->>> >         IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
->>> >         IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
->>> > +       IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
->>> >         {  /* end marker */ }
->>> >  };
->>> >
->>> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>> > index 38cff8f..e5ae042 100644
->>> > --- a/include/linux/pci_ids.h
->>> > +++ b/include/linux/pci_ids.h
->>> > @@ -2545,6 +2545,7 @@
->>> >  #define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
->>> >  #define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
->>> >  #define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
->>> > +#define PCI_DEVICE_ID_INTEL_HSW_U_IMC  0x0a04
->>>
->>> Please either use the 0x0a04 constant directly in
->>> perf_event_intel_uncore_snb.c, or explain why the #define should be
->>> here, e.g., maybe it will be used in multiple places.  See the comment
->>> at the top of pci_ids.h.
->>>
->> But then, the same reasoning would apply to the other 3 IMC defines,
->> wouldn't it?
->
-> Yes.  But if we made a mistake in the past, that doesn't mean we
-> should repeat it today.
+On Mon, Mar 09, 2015 at 06:33:08PM +0100, Lucas Stach wrote:
+> Allows to properly set up multiple MSI irqs per device.
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> The ifdef is needed to avoid a compile error on
+> !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> when the kernel is compiled with MSI support.
+> ---
+>  drivers/pci/host/pcie-designware.c | 46 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 1f4ea6f2d910..8a15ea2e8eab 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -269,6 +269,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>  	}
+>  
+>  	*pos = pos0;
+> +	desc->nvec_used = no_irqs;
+> +	desc->msi_attrib.multiple = order_base_2(no_irqs);
+> +
+>  	return irq;
+>  
+>  no_valid_irq:
+> @@ -305,6 +308,48 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+>  
+>  	return 0;
+>  }
+> +#ifdef CONFIG_PCI_MSI
+> +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> +			     int nvec, int type)
+> +{
+> +	int irq, pos;
+> +	struct msi_desc *desc;
+> +	struct msi_msg msg;
+> +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> +
+> +	/* MSI-X interrupts are not supported */
+> +	if (type == PCI_CAP_ID_MSIX)
+> +		return -EINVAL;
+> +
+> +	WARN_ON(!list_is_singular(&pdev->msi_list));
+> +	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> +
+> +	irq = assign_irq(nvec, desc, &pos);
+> +	if (irq < 0)
+> +		return irq;
+> +
+> +	if (pp->ops->get_msi_addr)
+> +		msg.address_lo = pp->ops->get_msi_addr(pp);
+> +	else
+> +		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> +	msg.address_hi = 0x0;
+> +
+> +	if (pp->ops->get_msi_data)
+> +		msg.data = pp->ops->get_msi_data(pp, pos);
+> +	else
+> +		msg.data = pos;
+> +
+> +	pci_write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +#else
+> +static int dw_msi_setup_irqs(struct msi_chip *chip, struct pci_dev *pdev,
+> +			     int nvec, int type)
+> +{
+> +	return -ENOSYS;
+> +}
+> +#endif
 
-Shall I post a patch moving the others as well?
-
->
->>> >  #define PCI_DEVICE_ID_INTEL_PXHD_0     0x0320
->>> >  #define PCI_DEVICE_ID_INTEL_PXHD_1     0x0321
->>> >  #define PCI_DEVICE_ID_INTEL_PXH_0      0x0329
->>> > --
->>> > 2.1.2
->>> >
+I think it would be better to have the #ifdef inside the function to avoid
+the error that occurred here, where the function prototype is different
+between the CONFIG_PCI_MSI enabled and disabled definitions ("struct
+msi_controller *" vs. "struct msi_chip *").
+>  
+>  static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>  {
+> @@ -317,6 +362,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>  
+>  static struct msi_controller dw_pcie_msi_chip = {
+>  	.setup_irq = dw_msi_setup_irq,
+> +	.setup_irqs = dw_msi_setup_irqs,
+>  	.teardown_irq = dw_msi_teardown_irq,
+>  };
+>  
+> -- 
+> 2.1.4
+> 
