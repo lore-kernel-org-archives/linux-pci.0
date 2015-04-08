@@ -1,134 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:37164 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752868AbbD0GjW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:22 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:21 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 278F02CE8052
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:19 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dAV08323372
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:19 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cjNJ029395
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:45 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 13/21] powerpc/pci: Move pcibios_find_pci_bus() around
-Date: Mon, 27 Apr 2015 16:37:45 +1000
-Message-Id: <1430116673-22500-14-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v8 1/3] PCI: Export symbols of PCI functions
+Date: Wed, 8 Apr 2015 11:21:33 -0700
+Message-ID: <1428517295-12825-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
+References: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
-that it can be reused by hotplug code for pSeries and PowerNV
-platform at the same time.
+Export symbols of the following PCI functions so they can be referenced
+by a PCI driver compiled as a kernel loadable module:
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+pci_common_swizzle
+pci_create_root_bus
+pci_stop_root_bus
+pci_remove_root_bus
+pci_assign_unassigned_bus_resources
+pci_fixup_irqs
+
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
- 2 files changed, 36 insertions(+), 32 deletions(-)
+ drivers/pci/pci.c       |    1 +
+ drivers/pci/probe.c     |    1 +
+ drivers/pci/remove.c    |    2 ++
+ drivers/pci/setup-bus.c |    1 +
+ drivers/pci/setup-irq.c |    1 +
+ 5 files changed, 6 insertions(+)
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 651a866a..67094fd 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -21,6 +21,42 @@
- #include <asm/firmware.h>
- #include <asm/eeh.h>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 81f06e8..14e7f3c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
+ 	*pinp = pin;
+ 	return PCI_SLOT(dev->devfn);
+ }
++EXPORT_SYMBOL_GPL(pci_common_swizzle);
  
-+static struct pci_bus *find_pci_bus(struct pci_bus *bus,
-+				    struct device_node *dn)
-+{
-+	struct pci_bus *tmp, *child = NULL;
-+	struct device_node *busdn;
-+
-+	busdn = pci_bus_to_OF_node(bus);
-+	if (busdn == dn)
-+		return bus;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		child = find_pci_bus(tmp, dn);
-+		if (child)
-+			break;
-+	}
-+
-+	return child;
-+}
-+
-+/**
-+ * pcibios_find_pci_bus - find PCI bus according to the given device node
-+ * @dn: Device node
-+ *
-+ * Find the corresponding PCI bus according to the given device node.
-+ */
-+struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
-+{
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-+		return NULL;
-+
-+	return find_pci_bus(pdn->phb->bus, dn);
-+}
-+EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-+
  /**
-  * pcibios_release_device - release PCI device
-  * @dev: PCI device
-diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-index 5d4a3df..906dbaa 100644
---- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-@@ -34,38 +34,6 @@
+  *	pci_release_region - Release a PCI bar
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..f13a78a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1993,6 +1993,7 @@ err_out:
+ 	kfree(b);
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(pci_create_root_bus);
  
- #include "pseries.h"
- 
--static struct pci_bus *
--find_bus_among_children(struct pci_bus *bus,
--                        struct device_node *dn)
--{
--	struct pci_bus *child = NULL;
--	struct pci_bus *tmp;
--	struct device_node *busdn;
--
--	busdn = pci_bus_to_OF_node(bus);
--	if (busdn == dn)
--		return bus;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		child = find_bus_among_children(tmp, dn);
--		if (child)
--			break;
--	};
--	return child;
--}
--
--struct pci_bus *
--pcibios_find_pci_bus(struct device_node *dn)
--{
--	struct pci_dn *pdn = dn->data;
--
--	if (!pdn  || !pdn->phb || !pdn->phb->bus)
--		return NULL;
--
--	return find_bus_among_children(pdn->phb->bus, dn);
--}
--EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
--
- struct pci_controller *init_phb_dynamic(struct device_node *dn)
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
  {
- 	struct pci_controller *phb;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8bd76c9..8a280e9 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+ 	/* stop the host bridge */
+ 	device_release_driver(&host_bridge->dev);
+ }
++EXPORT_SYMBOL_GPL(pci_stop_root_bus);
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+ {
+@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	/* remove the host bridge */
+ 	device_unregister(&host_bridge->dev);
+ }
++EXPORT_SYMBOL_GPL(pci_remove_root_bus);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e3e17f3..8169597 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+ }
++EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 4e2d595..95c225b 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 	for_each_pci_dev(dev)
+ 		pdev_fixup_irq(dev, swizzle, map_irq);
+ }
++EXPORT_SYMBOL_GPL(pci_fixup_irqs);
 -- 
-2.1.0
+1.7.9.5
 
