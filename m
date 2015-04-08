@@ -1,112 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f53.google.com ([209.85.216.53]:43592 "EHLO
-	mail-vn0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194AbbDMHff (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2015 03:35:35 -0400
-Received: by vnbg7 with SMTP id g7so16781876vnb.10
-        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2015 00:35:35 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:57120 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157AbbDHIgm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:36:42 -0400
+Message-ID: <5524E79B.5020304@huawei.com>
+Date: Wed, 8 Apr 2015 16:32:27 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <2529595.kpEIoZMpcn@wuerfel>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
-	<1428747477.17822.90.camel@x220>
-	<2529595.kpEIoZMpcn@wuerfel>
-Date: Mon, 13 Apr 2015 09:35:34 +0200
-Message-ID: <CAG374jDUPK5hCZBLR_r5om8mh8wy1NyxDaZ-DP_A-xjNN6f2pQ@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-ia64@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rusty Russell" <rusty@rustcorp.com.au>,
+	<linux-m68k@lists.linux-m68k.org>,
+	"Thomas Gleixner" <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <dja@axtens.net>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	<linux-alpha@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v9 03/30] PCI: Save domain in pci_host_bridge
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-5-git-send-email-wangyijing@huawei.com> <5524E248.9010509@free-electrons.com>
+In-Reply-To: <5524E248.9010509@free-electrons.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
-
-Thanks for reviewing.
-
-On 11 April 2015 at 16:55, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Saturday 11 April 2015 12:17:57 Paul Bolle wrote:
->> Something I didn't spot in my first look at this patch.
+On 2015/4/8 16:09, Gregory CLEMENT wrote:
+> Hi Yijing,
+> 
+> On 03/04/2015 11:25, Yijing Wang wrote:
+>> Save domain in pci_host_bridge, so we could get domain
+>> from pci_host_bridge, and at the end of series, we could
+>> clean up the arch specific pci_domain_nr(). For arm,
+>> we pass -1 as the domain number, we would update the
+>> domain number in core by pci_bus_assign_domain_nr().
 >>
->> On Fri, 2015-04-10 at 11:12 +0200, Gabriel FERNANDEZ wrote:
->> > --- a/drivers/pci/host/Kconfig
->> > +++ b/drivers/pci/host/Kconfig
->> >
->> > +config PCI_ST
->> > +     bool "ST PCIe controller"
->> > +     depends on ARCH_STI || (ARM && COMPILE_TEST)
->> > +     select PCIE_DW
->> > +     help
->> > +       Enable PCIe controller support on ST Socs. This controller is based
->> > +       on Designware hardware and therefore the driver re-uses the
->> > +       Designware core functions to implement the driver.
->>
->> You can't have ARCH_STI without ARM, so ARM will always be set if this
->> driver is enabled. Correct?
->
-> Right, though the ARM dependency could soon be dropped, once the PCIE_DW
-> driver can use generic infrastructure in the few places it relies on
-> ARM specific code today.
->
->> > --- /dev/null
->> > +++ b/drivers/pci/host/pci-st.c
->>
->> > +     if (IS_ENABLED(CONFIG_ARM)) {
->> > +             /*
->> > +              * We have to hook the abort handler so that we can intercept
->> > +              * bus errors when doing config read/write that return UR,
->> > +              * which is flagged up as a bus error
->> > +              */
->> > +             hook_fault_code(16+6, st_pcie_abort_handler, SIGBUS, 0,
->> > +                             "imprecise external abort");
->> > +     }
->>
->> So, unless I'm missing something obvious here, IS_ENABLED(CONFIG_ARM)
->> will always evaluate to 1. Can't that test be dropped?
->
-> I would leave it in, as it's quite likely to get reused with ARM64 at some
-> point in the future (no, I don't know anything about ST's product plans,
-> but everybody seems to be doing this).
->
->         Arnd
+> For the mvebu part I tested on Armada XP, Armada 375 and Armada 38x
+> SoCs, and I didn't saw any regression. So you can add my:
+> 
+> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 
-Yes i agree with that.
+Thanks a lot for your test!
 
-Gabriel
+Thanks!
+Yijing.
+
+
+>>
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
