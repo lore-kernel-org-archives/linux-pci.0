@@ -1,77 +1,121 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [RFC 0/7] Consolidate common ACPI PCI host bridge code into ACPI core
-Date: Tue,  7 Apr 2015 12:31:05 +0800
-Message-Id: <1428381072-27486-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:39934 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751510AbbDHIIa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:08:30 -0400
+Message-ID: <5524E1F9.6030700@free-electrons.com>
+Date: Wed, 08 Apr 2015 10:08:25 +0200
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-ia64@vger.kernel.org,
+	linux-pci@vger.kernel.org, Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-m68k@lists.linux-m68k.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, dja@axtens.net,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-alpha@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v9 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
+ code
+References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-25-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1428053164-28277-25-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As suggested by Bjorn, this patch set consolidates common ACPI PCI host
-bridge code from x86 and IA64 into ACPI core. It may also help to
-support ACPI PCI host bridge on ARM64 platfrom too in future.
+Hi Yijing,
 
-It introduces struct acpi_pci_root_ops and acpi_pci_root_create().
-Arch code only needs to implement struct acpi_pci_root_ops and then
-invoke acpi_pci_root_create() to parse ACPI resources and create
-PCI root bus.
-struct acpi_pci_root_info_common {
-        struct pci_controller           controller;
-        struct acpi_pci_root            *root;
-        struct acpi_device              *bridge;
-        struct acpi_pci_root_ops        *ops;
-        struct list_head                resources;
-        char                            name[16];
-};
-struct acpi_pci_root_ops {
-	struct pci_ops *pci_ops;
-	int (*init_info)(struct acpi_pci_root_info_common *info);
-	void (*release_info)(struct acpi_pci_root_info_common *info);
-	int (*prepare_resources)(struct acpi_pci_root_info_common *info,
-				 int status);
-};
-extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-					    struct acpi_pci_root_ops *ops,
-					    size_t extra_size);
-It passes Fengguang's 0day test suite and has been tested on 
-1) An Intel x86 4 socket platform
-2) An Intel IA64 SDV
-3) An HP IA64 platform
+On 03/04/2015 11:25, Yijing Wang wrote:
+> Mvebu_pcie_scan_bus() is not necessary, we could use
+> pci_common_init_dev() instead of pci_common_init(),
+> and pass the device pointer as the parent. Then
+> pci_scan_root_bus() will be called to scan the pci busses.
+> 
 
-And you may access it at:
-https://github.com/jiangliu/linux.git acpi_pci_root_v1
+2 months ago, Thomas Petazzoni was concerned about the removal of
+mvebu_pcie_scan_bus(). So I dig the archives of the discussion
+surrounding the pcie-mvebu drive. I found that the main purpose
+of using this function was to allow to pass "struct device *" pointer.
 
-Thanks!
-Gerry
+Thanks to the introduction of pci_common_init_dev it was not needed
+anymore. Actually we should have done this change when this function
+had been introduced. So for the point of view of the code it's fine.
+Then I tested your full series on Armada XP, Armada 375 and Armada 38x
+SoCs, and I didn't saw any regression. So you can add my:
 
-Jiang Liu (7):
-  ACPI/PCI: Enhance ACPI core to support sparse IO space
-  ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
-    bridge
-  ia64/PCI: Use common struct resource_entry to replace struct
-    iospace_resource
-  x86/PCI: Rename struct pci_sysdata as struct pci_controller
-  PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
-  x86/PCI/ACPI: Use common interface to support PCI host bridge
-  ia64/PCI/ACPI: Use common interface to support PCI host bridge
+Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 
- arch/ia64/include/asm/pci.h   |    5 -
- arch/ia64/pci/pci.c           |  360 ++++++++++-------------------------------
- arch/x86/include/asm/pci.h    |   12 +-
- arch/x86/include/asm/pci_64.h |    4 +-
- arch/x86/pci/acpi.c           |  283 +++++++++-----------------------
- arch/x86/pci/common.c         |    2 +-
- drivers/acpi/pci_root.c       |  215 ++++++++++++++++++++++++
- drivers/acpi/resource.c       |    9 +-
- include/linux/ioport.h        |    1 +
- include/linux/pci-acpi.h      |   24 +++
- 10 files changed, 409 insertions(+), 506 deletions(-)
+Thanks,
+
+Gregory
+
+
+
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> CC: Jason Cooper <jason@lakedaemon.net>
+> ---
+>  drivers/pci/host/pci-mvebu.c |   18 +-----------------
+>  1 files changed, 1 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 0cfc494..d5a2b70 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  	return 1;
+>  }
+>  
+> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> -{
+> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+> -	struct pci_bus *bus;
+> -
+> -	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
+> -				  &mvebu_pcie_ops, sys, &sys->resources);
+> -	if (!bus)
+> -		return NULL;
+> -
+> -	pci_scan_child_bus(bus);
+> -
+> -	return bus;
+> -}
+> -
+>  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+>  						 const struct resource *res,
+>  						 resource_size_t start,
+> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>  	hw.nr_controllers = 1;
+>  	hw.private_data   = (void **)&pcie;
+>  	hw.setup          = mvebu_pcie_setup;
+> -	hw.scan           = mvebu_pcie_scan_bus;
+>  	hw.map_irq        = of_irq_parse_and_map_pci;
+>  	hw.ops            = &mvebu_pcie_ops;
+>  	hw.align_resource = mvebu_pcie_align_resource;
+>  
+> -	pci_common_init(&hw);
+> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
+>  }
+>  
+>  /*
+> 
+
 
 -- 
-1.7.10.4
-
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
