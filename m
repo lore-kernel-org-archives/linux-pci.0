@@ -1,108 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27193 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754775AbbDNCay (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 22:30:54 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: [Patch Part2 v5 15/33] irq_remapping/amd: Move struct irq_2_irte into amd_iommu.c
-Date: Tue, 14 Apr 2015 10:29:52 +0800
-Message-Id: <1428978610-28986-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:33528 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932081AbbDHPsD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 11:48:03 -0400
+Received: by iebmp1 with SMTP id mp1so77752379ieb.0
+        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 08:48:03 -0700 (PDT)
+Date: Wed, 8 Apr 2015 10:47:59 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Miller <davem@davemloft.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+Message-ID: <20150408154759.GN10892@google.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+ <1427857069-6789-4-git-send-email-yinghai@kernel.org>
+ <20150406220638.GH10892@google.com>
+ <20150406.203533.1356187749826485194.davem@davemloft.net>
+ <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
-amd_iommu.c.
+[+cc Ben]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-25-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h |   13 -------------
- drivers/iommu/amd_iommu.c     |    5 +++++
- 2 files changed, 5 insertions(+), 13 deletions(-)
+On Tue, Apr 07, 2015 at 11:48:44AM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 6, 2015 at 7:35 PM, David Miller <davem@davemloft.net> wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> > Date: Mon, 6 Apr 2015 17:06:38 -0500
+> >
+> >> But this is a general change that affects all platforms, and it's late in
+> >> the cycle for something as invasive as this.  I'd rather include your patch
+> >> in the v4.1 merge window, and revert d63e2e1f3df9 ("sparc/PCI: Clip bridge
+> >> windows to fit in upstream windows") for v4.0.
+> >
+> > I would kindly ask that we not proceed this way and use the change
+> > which implements the fix properly.
+> 
+> I reworked the changelog and pushed this to my for-linus branch for
+> v4.0.  I'll ask Linus to pull it tomorrow.
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=1a3ec5e7b00dcd9cac24efe3d65bfccf82597ce5
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 3520f71f168b..494d541d2aee 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
- 
--#ifdef CONFIG_IRQ_REMAP
--/* AMD specific interrupt remapping information */
--struct irq_2_irte {
--	u16 devid; /* Device ID for IRTE table */
--	u16 index; /* Index into IRTE table*/
--};
--#endif	/* CONFIG_IRQ_REMAP */
--
- struct irq_domain;
- 
- #ifdef	CONFIG_X86_LOCAL_APIC
-@@ -184,11 +176,6 @@ struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
--#ifdef CONFIG_IRQ_REMAP
--	union {
--		struct irq_2_irte  irq_2_irte;
--	};
--#endif
- 	union {
- #ifdef CONFIG_X86_IO_APIC
- 		struct {
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index fa26c742bc39..a5a17f50691c 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -3858,6 +3858,11 @@ union irte {
- 	} fields;
- };
- 
-+struct irq_2_irte {
-+	u16 devid; /* Device ID for IRTE table */
-+	u16 index; /* Index into IRTE table*/
-+};
-+
- struct amd_ir_data {
- 	struct irq_2_irte			irq_2_irte;
- 	union irte				irte_entry;
--- 
-1.7.10.4
+Based on Ben's concerns, I dropped Yinghai's three patches for now:
 
+  PCI: Add pci_bus_addr_t
+  sparc/PCI: Parse 64-bit host bridge windows from OF
+  PCI: Allow non-prefetchable PCIe BARs in prefetchable windows
+
+and reverted d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in
+upstream windows") instead.
+
+I pushed this to my for-linus branch, which I intend to merge for v4.0.
+You can browse it here to see if you agree:
+
+  https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=for-linus
+
+Dave, I know you weren't happy with this proposal the first time around,
+but I'm not sure why.  If you have a better idea, let me know.
+
+Bjorn
