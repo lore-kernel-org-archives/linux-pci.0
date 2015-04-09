@@ -1,55 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:56581 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755501AbbDUPPZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 11:15:25 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] ia64/PCI: Treat all host bridge Address Space Descriptors (even consumers) as windows
-Date: Tue, 21 Apr 2015 17:40:05 +0200
-Message-ID: <8894432.G9pvVBipeX@vostro.rjw.lan>
-In-Reply-To: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from gate.crashing.org ([63.228.1.57]:48758 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933539AbbDII5L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Apr 2015 04:57:11 -0400
+Message-ID: <1428569815.18187.71.camel@kernel.crashing.org>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Date: Thu, 09 Apr 2015 18:56:55 +1000
+In-Reply-To: <CAE9FiQUnpKmQmeHvBpk1t-NSAPuWAC9tX7LXeGpVR1w78i658g@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	 <1427857069-6789-4-git-send-email-yinghai@kernel.org>
+	 <20150406220638.GH10892@google.com>
+	 <20150406.203533.1356187749826485194.davem@davemloft.net>
+	 <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
+	 <20150408154759.GN10892@google.com>
+	 <1428527527.18187.28.camel@kernel.crashing.org>
+	 <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
+	 <1428549459.18187.56.camel@kernel.crashing.org>
+	 <CAE9FiQUnpKmQmeHvBpk1t-NSAPuWAC9tX7LXeGpVR1w78i658g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 20, 2015 06:30:55 PM Bjorn Helgaas wrote:
-> Prior to c770cb4cb505 ("PCI: Mark invalid BARs as unassigned"), if we tried
-> to claim a PCI BAR but could not find an upstream bridge window that
-> matched it, we complained but still allowed the device to be enabled.
-> 
-> c770cb4cb505 broke devices that previously worked (mptsas and igb in the
-> case Tony reported, but it could be any devices) because it marks those
-> BARs as IORESOURCE_UNSET, which makes pci_enable_device() complain and
-> return failure:
-> 
->   igb 0000:81:00.0: can't enable device: BAR 0 [mem size 0x00020000] not assigned
->   igb: probe of 0000:81:00.0 failed with error -22
-> 
-> The underlying cause is an ACPI Address Space Descriptor for a PCI host
-> bridge window that is marked as "consumer".  This is a firmware defect:
-> resources that are produced on the downstream side of a bridge should be
-> marked "producer".  But rejecting these BARs that we previously allowed is
-> a functionality regression, and firmware has not used the producer/consumer
-> bit consistently, so we can't rely on it anyway.
-> 
-> Stop checking the producer/consumer bit, and assume all bridge Address
-> Space Descriptors are for bridge windows.
-> 
-> Note that this change does not affect I/O Port or Fixed Location I/O Port
-> Descriptors, which are commonly used for the [io 0x0cf8-0x0cff] config
-> access range.  That range is a "consumer" range and should not be treated
-> as a window.
-> 
-> Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96961
-> Reported-and-tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, 2015-04-08 at 21:11 -0700, Yinghai Lu wrote:
+> That way should be more intrusive to current code, as we are using
+> type_mask checking to share the code among
+> parent(pref)/child(pref), parent(no-pref)/child(pref), and
+> parent(no-pref)/child(pref)
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+That's fine, as long as the helper knows which one is the parent and
+which one is the child.
+
+In fact, as "cute" as the mask trick is, I think it would generally make
+the code more self explanatory if it explicitly tested for the
+combinations that are supported, ie something like
+
+	if (parent_is_pref && !child_is_pref && child->pcie_only)
+		...
+	else if (!parent_is_pref)
+		...
+etc...
+
+The impact in performance would be in the noise and the logic of the
+algorithm a LOT more explicit.
+
+Cheers,
+Ben.
+
 
