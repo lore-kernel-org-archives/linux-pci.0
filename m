@@ -1,99 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55282 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbbDCJ3O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:14 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 13/30] PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
-Date: Fri, 3 Apr 2015 17:25:47 +0800
-Message-ID: <1428053164-28277-15-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:36763 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755991AbbDIT6v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 15:58:51 -0400
+Received: by obbeb7 with SMTP id eb7so122243358obb.3
+        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 12:58:50 -0700 (PDT)
+Date: Thu, 9 Apr 2015 14:58:46 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Export pci_probe_reset_function()
+Message-ID: <20150409195846.GL30967@google.com>
+References: <20150409155100.6891.72838.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150409155100.6891.72838.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move pcibios_root_bridge_prepare() to pci_create_host_bridge().
+On Thu, Apr 09, 2015 at 09:51:43AM -0600, Alex Williamson wrote:
+> The equivalent bus and slot versions of this are already exported and
+> vfio-pci would like a function-probe available so we can expose
+> function-level reset capabilities to the user without necessarily
+> using it to perform a reset before enabling the device for the user.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   16 +++++++++++++---
- drivers/pci/probe.c       |    3 ---
- 2 files changed, 13 insertions(+), 6 deletions(-)
+Applied to pci/virtualization for v4.1, thanks!
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 98047c6..8733b19 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -92,9 +92,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 			pr_warn("pci host bridge pci%04x:%02x exist\n",
- 					host->domain, bus);
- 			mutex_unlock(&pci_host_mutex);
--			pci_free_resource_list(&host->windows);
--			kfree(host);
--			return NULL;
-+			goto free_res;
- 		}
- 	}
- 	list_add_tail(&host->list, &pci_host_bridge_list);
-@@ -105,6 +103,10 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
- 
-+	error = pcibios_root_bridge_prepare(host);
-+	if (error)
-+		goto list_del;
-+
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-@@ -112,6 +114,14 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	}
- 
- 	return host;
-+list_del:
-+	mutex_lock(&pci_host_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&pci_host_mutex);
-+free_res:
-+	pci_free_resource_list(&host->windows);
-+	kfree(host);
-+	return NULL;
- }
- 
- void pci_free_host_bridge(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 418a426..ee17d9a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1893,9 +1893,6 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto put_dev;
- 
- 	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
--- 
-1.7.1
-
+> ---
+>  drivers/pci/pci.c   |    1 +
+>  include/linux/pci.h |    1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 81f06e8..9f3e691 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3524,6 +3524,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
+>  {
+>  	return pci_dev_reset(dev, 1);
+>  }
+> +EXPORT_SYMBOL_GPL(pci_probe_reset_function);
+>  
+>  /**
+>   * pci_reset_function - quiesce and reset a PCI device function
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 211e9da..233d1ae 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -986,6 +986,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>  			  enum pcie_link_width *width);
+>  int __pci_reset_function(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
+> +int pci_probe_reset_function(struct pci_dev *dev);
+>  int pci_reset_function(struct pci_dev *dev);
+>  int pci_try_reset_function(struct pci_dev *dev);
+>  int pci_probe_reset_slot(struct pci_slot *slot);
+> 
