@@ -1,116 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0125.outbound.protection.outlook.com ([207.46.100.125]:33888
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753608AbbDOLiX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 07:38:23 -0400
-From: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-To: Varun Sethi <Varun.Sethi@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"Stuart Yoder" <stuart.yoder@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Wed, 15 Apr 2015 11:38:21 +0000
-Message-ID: <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
- <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
-In-Reply-To: <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 9 Apr 2015 15:11:15 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Duc Dang <dhdang@apm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+Message-ID: <20150409201115.GN30967@google.com>
+References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
+ <cover.1428564115.git.dhdang@apm.com>
+ <7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Varun,
-
-Freescale LS2085A SMMU uses in hit/miss mechanism for the concatenation {tbu number,stream_id}. This concatenation is then assigned to a context bank that determines the translation type and form. The Isolation Context Identifier ICID is the main field of stream_id which will be used to hit ITS device. We may look ICID as ITS device ID and PCI device ID. But there are only 64 ICIDs  0 - 63.  If using default PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn)), PCI device(bus >=1) ) ID will larger than 63.  SMMU will miss this translation.
-In addition, because the ICID number  is only 64, all the PCIe device will use the same ICID and share the same ITS device.
-
-Thanks,
-Minghuan
-
-> -----Original Message-----
-> From: Sethi Varun-B16395
-> Sent: Wednesday, April 15, 2015 7:08 PM
-> To: Lian Minghuan-B31939; linux-pci@vger.kernel.org
-> Cc: Arnd Bergmann; Lian Minghuan-B31939; Hu Mingkai-B21284; Zang Roy-
-> R61911; Yoder Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421; linux-arm-
-> kernel@lists.infradead.org
-> Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+On Thu, Apr 09, 2015 at 10:05:03AM -0700, Duc Dang wrote:
+> X-Gene v1 SoC supports total 2688 MSI/MSIX vectors coalesced into
+> 16 HW IRQ lines.
 > 
-> Hi Minghuan,
-> Not clear what this patch intends to do. Can you please explain the point
-> about SMMU isolating limited device ID.
-> 
-> Regards
-> Varun
-> 
-> > -----Original Message-----
-> > From: linux-arm-kernel [mailto:linux-arm-kernel-
-> > bounces@lists.infradead.org] On Behalf Of Minghuan Lian
-> > Sent: Wednesday, April 15, 2015 3:19 PM
-> > To: linux-pci@vger.kernel.org
-> > Cc: Arnd Bergmann; Lian Minghuan-B31939; Hu Mingkai-B21284; Zang Roy-
-> > R61911; Yoder Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421;
-> > linux-arm- kernel@lists.infradead.org
-> > Subject: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> >
-> > SMMU of some platforms can only isolate limited device ID.
-> > This may require that all PCI devices share the same ITS device with
-> > the fixed device ID. The patch adds function
-> > arch_msi_share_devid_update used for these platforms to update the
-> > fixed device ID and maximum MSI interrupts number.
-> >
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> > ---
-> >  drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++
-> >  1 file changed, 11 insertions(+)
-> >
-> > diff --git a/drivers/irqchip/irq-gic-v3-its.c
-> > b/drivers/irqchip/irq-gic-v3-its.c
-> > index d0374a6..be78d0a 100644
-> > --- a/drivers/irqchip/irq-gic-v3-its.c
-> > +++ b/drivers/irqchip/irq-gic-v3-its.c
-> > @@ -1169,6 +1169,15 @@ static int its_get_pci_alias(struct pci_dev
-> > *pdev,
-> > u16 alias, void *data)
-> >  	return 0;
-> >  }
-> >
-> > +void __weak
-> > +arch_msi_share_devid_update(struct pci_dev *pdev, u32 *dev_id, u32
-> > +*nvesc) {
-> > +	/*
-> > +	 * use PCI_DEVID NOT share device ID as default
-> > +	 * so nothing need to do
-> > +	 */
-> > +}
-> > +
-> >  static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
-> >  			   int nvec, msi_alloc_info_t *info)  { @@ -1185,6
-> > +1194,8 @@ static int its_msi_prepare(struct irq_domain *domain,
-> > +struct
-> > device *dev,
-> >  	dev_alias.count = nvec;
-> >
-> >  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
-> > +	arch_msi_share_devid_update(pdev, &dev_alias.dev_id,
-> > +&dev_alias.count);
-> > +
-> >  	its = domain->parent->host_data;
-> >
-> >  	its_dev = its_find_device(its, dev_alias.dev_id);
-> > --
-> > 1.9.1
-> >
-> >
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> ...
+
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -0,0 +1,407 @@
+> ...
+
+> +static void xgene_irq_domain_free(struct irq_domain *domain,
+> +				  unsigned int virq, unsigned int nr_irqs)
+> +{
+> +	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+> +	struct xgene_msi *msi = irq_data_get_irq_chip_data(d);
+> +
+> +	mutex_lock(&msi->bitmap_lock);
+> +
+> +	if (!test_bit(d->hwirq, msi->bitmap))
+> +		pr_err("trying to free unused MSI#%lu\n", d->hwirq);
+
+I'll let Marc comment on the substance of this patch, but I'd sure like to
+see more information in this and the other pr_errs below.  The text "failed
+to create parent MSI domain" in the dmesg log is not enough.  Ideally it
+would identify the relevant host bridge.
+
+> +	else
+> +		clear_bit(d->hwirq, msi->bitmap);
+> +
+> +	mutex_unlock(&msi->bitmap_lock);
+> +
+> +	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+> +}
+> +
+> +static const struct irq_domain_ops msi_domain_ops = {
+> +	.alloc  = xgene_irq_domain_alloc,
+> +	.free   = xgene_irq_domain_free,
+> +};
+> +
+> +static int xgene_allocate_domains(struct xgene_msi *msi)
+> +{
+> +	msi->domain = irq_domain_add_linear(NULL, msi->settings->nr_msi_vec,
+> +					    &msi_domain_ops, msi);
+> +
+> +	if (!msi->domain) {
+> +		pr_err("failed to create parent MSI domain\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	msi->mchip.of_node = msi->node;
+> +	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+> +						      &xgene_msi_domain_info,
+> +						      msi->domain);
+> +
+> +	if (!msi->mchip.domain) {
+> +		pr_err("failed to create MSI domain\n");
+> +		irq_domain_remove(msi->domain);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void xgene_free_domains(struct xgene_msi *msi)
+> +{
+> +	if (msi->mchip.domain)
+> +		irq_domain_remove(msi->mchip.domain);
+> +	if (msi->domain)
+> +		irq_domain_remove(msi->domain);
+> +}
+> +
+> +static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+> +{
+> +	u32 msi_irq_count = xgene_msi->settings->nr_msi_vec;
+> +	u32 hw_irq_count = xgene_msi->settings->nr_hw_irqs;
+> +	int size = BITS_TO_LONGS(msi_irq_count) * sizeof(long);
+> +
+> +	xgene_msi->bitmap = kzalloc(size, GFP_KERNEL);
+> +	if (!xgene_msi->bitmap)
+> +		return -ENOMEM;
+> +
+> +	mutex_init(&xgene_msi->bitmap_lock);
+> +
+> +	xgene_msi->msi_virqs = kcalloc(hw_irq_count, sizeof(int), GFP_KERNEL);
+> +	if (!xgene_msi->msi_virqs)
+> +		return -ENOMEM;
+> +
+> +	return 0;
+> +}
+> +
+> +static irqreturn_t xgene_msi_isr(int irq, void *data)
+> +{
+> +	struct xgene_msi *xgene_msi = (struct xgene_msi *) data;
+> +	unsigned int virq;
+> +	int msir_index, msir_reg, msir_val, hw_irq;
+> +	u32 intr_index, grp_select, msi_grp, processed = 0;
+> +	u32 nr_hw_irqs, irqs_per_index, index_per_group;
+> +
+> +	msi_grp = irq - xgene_msi->msi_virqs[0];
+> +	if (msi_grp >= xgene_msi->settings->nr_hw_irqs) {
+> +		pr_err("invalid msi received\n");
+> +		return IRQ_NONE;
+> +	}
+
+Bjorn
