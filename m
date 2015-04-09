@@ -1,144 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [Patch Part2 v5 28/33] x86/irq, ACPI: Kill private function mp_register_gsi()/ mp_unregister_gsi()
-Date: Tue, 14 Apr 2015 10:30:05 +0800
-Message-Id: <1428978610-28986-29-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:44866 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754944AbbDIDRy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Apr 2015 23:17:54 -0400
+Message-ID: <1428549459.18187.56.camel@kernel.crashing.org>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Date: Thu, 09 Apr 2015 13:17:39 +1000
+In-Reply-To: <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	 <1427857069-6789-4-git-send-email-yinghai@kernel.org>
+	 <20150406220638.GH10892@google.com>
+	 <20150406.203533.1356187749826485194.davem@davemloft.net>
+	 <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
+	 <20150408154759.GN10892@google.com>
+	 <1428527527.18187.28.camel@kernel.crashing.org>
+	 <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function mp_register_gsi() is only called once, so fold it into caller
-acpi_register_gsi_ioapic(). Do the same for mp_unregister_gsi().
+On Wed, 2015-04-08 at 17:06 -0700, Yinghai Lu wrote:
+> On Wed, Apr 8, 2015 at 2:12 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> 
+> > Thanks Bjorn. We can fix Yinghai patch for 4.2, it would be indeed handy
+> > even for us to be able to support putting 64-bit NP BARs in prefetch
+> > windows (For some SR-IOV adapters for example) too, but we need to do it
+> > right.
+> 
+> Please check if you are ok with attached.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Len Brown <len.brown@intel.com>
-Cc: Pavel Machek <pavel@ucw.cz>
-Link: http://lkml.kernel.org/r/1416901802-24211-37-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/acpi/boot.c |   57 ++++++++++++++-----------------------------
- 1 file changed, 18 insertions(+), 39 deletions(-)
+I'll let Bjorn be the final judge here but I am not fan of the way you
+set/clear/set/clear the IORESOURCE_PREFETCH bit with
+pci_set_pref_under_pref(). It's error prone and confusing, the code is
+already barely readable as it is ...
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 21e460b3b360..91a10120ed10 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -400,42 +400,6 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- 	return 0;
- }
- 
--static int mp_register_gsi(struct device *dev, u32 gsi, int trigger,
--			   int polarity)
--{
--	int irq, node;
--	struct irq_alloc_info info;
--
--	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
--		return gsi;
--
--	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
--	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
--	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
--	ioapic_set_alloc_attr(&info, node, trigger, polarity);
--	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
--	if (irq < 0)
--		return irq;
--
--	/* Don't set up the ACPI SCI because it's already set up */
--	if (enable_update_mptable && acpi_gbl_FADT.sci_interrupt != gsi)
--		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
--
--	return irq;
--}
--
--static void mp_unregister_gsi(u32 gsi)
--{
--	int irq;
--
--	if (acpi_irq_model != ACPI_IRQ_MODEL_IOAPIC)
--		return;
--
--	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
--	if (irq > 0)
--		mp_unmap_irq(irq);
--}
--
- static struct irq_domain_ops acpi_irqdomain_ops = {
- 	.alloc = mp_irqdomain_alloc,
- 	.free = mp_irqdomain_free,
-@@ -662,10 +626,21 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- 				    int trigger, int polarity)
- {
- 	int irq = gsi;
--
- #ifdef CONFIG_X86_IO_APIC
-+	int node;
-+	struct irq_alloc_info info;
-+
-+	node = dev ? dev_to_node(dev) : NUMA_NO_NODE;
-+	trigger = trigger == ACPI_EDGE_SENSITIVE ? 0 : 1;
-+	polarity = polarity == ACPI_ACTIVE_HIGH ? 0 : 1;
-+	ioapic_set_alloc_attr(&info, node, trigger, polarity);
-+
- 	mutex_lock(&acpi_ioapic_lock);
--	irq = mp_register_gsi(dev, gsi, trigger, polarity);
-+	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
-+	/* Don't set up the ACPI SCI because it's already set up */
-+	if (irq >= 0 && enable_update_mptable &&
-+	    acpi_gbl_FADT.sci_interrupt != gsi)
-+		mp_config_acpi_gsi(dev, gsi, trigger, polarity);
- 	mutex_unlock(&acpi_ioapic_lock);
- #endif
- 
-@@ -675,8 +650,12 @@ static int acpi_register_gsi_ioapic(struct device *dev, u32 gsi,
- static void acpi_unregister_gsi_ioapic(u32 gsi)
- {
- #ifdef CONFIG_X86_IO_APIC
-+	int irq;
-+
- 	mutex_lock(&acpi_ioapic_lock);
--	mp_unregister_gsi(gsi);
-+	irq = mp_map_gsi_to_irq(gsi, 0, NULL);
-+	if (irq > 0)
-+		mp_unmap_irq(irq);
- 	mutex_unlock(&acpi_ioapic_lock);
- #endif
- }
--- 
-1.7.10.4
+I would rather you replace those various masks compares with a helper
+that does something like pci_resource_compatible(parent_res, child_res),
+which has the logic to test. That or a helper that does something like
+pci_calc_compatible_res_flags() which returns a "flags" that has
+PREFETCH set, which you use in place of res->flags in the various
+allocation path.
+
+As-is, your patch looks like a band-aid and smells like a hack :-)
+
+Ben.
+
 
