@@ -1,94 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:8132 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933491AbbDXHDz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Apr 2015 03:03:55 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
-	<rwhite@pobox.com>, <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2] PCI: Fix NULL pointer when find parent pcie_link_state
-Date: Fri, 24 Apr 2015 14:59:51 +0800
-Message-ID: <1429858791-26331-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:35504 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933178AbbDITpn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 15:45:43 -0400
+Received: by obbfy7 with SMTP id fy7so31140481obb.2
+        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 12:45:42 -0700 (PDT)
+Subject: [PATCH] PCI: keystone: Don't dereference possible NULL pointer
+To: Murali Karicheri <m-karicheri2@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Date: Thu, 09 Apr 2015 14:45:40 -0500
+Message-ID: <20150409194540.18977.25638.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
-in ATCA platform, system had unusual pcie topology:
+Check for failure from platform_get_resource() (this check actually happens
+inside devm_ioremap_resource()) before dereferencing the pointer returned
+from platform_get_resource().
 
-(root port)   (downstream port)   (upstream port)
-+-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
-|                               +-01.0-[05]-- (downstream port)
-|                               +-02.0-[06]--
-|                               +-03.0-[07]--
-|                               +-08.0-[08]--
-|                               +-09.0-[09]--
-|                               \-0a.0-[0a]--
-We assumed root port and downstream port always
-have external link, and downstream port always has a
-upstream port. So in this case, when we allocated
-pcie_link_state for downstream port 02:00.0, it try
-to get parent bus pcie_link_state,
-parent = pdev->bus->parent->self->link_state;
-because root bus self is NULL, system will crash here.
-
-This patch fix this issue based on the following
-assumption suggested by Bjorn.
-1. Root port is always on the upstream end of a link.
-2. The pcie hierarchy should alternate between links
-and internal switch logic, there should be no adjacent
-links or internal buses in pcie tree.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/aspm.c |   23 +++++++++++++++++++++--
- 1 files changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-keystone-dw.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 7d4fcdc..61b9d3f 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -546,6 +546,25 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	return link;
- }
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index 66d8ea41b972..f34892e0edb4 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -496,11 +496,12 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
  
-+/*
-+ * We assume root port is always on the upstream end of
-+ * a link, and the pcie hierarchy should alternate
-+ * between links and internal switch logic.
-+ */
-+static bool pcie_has_external_link(struct pci_dev *pdev)
-+{
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
-+		return true;
-+
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
-+		if (!pdev->bus->self->link_state)
-+			return true;
-+
-+	return false;
-+}
- /*
-  * pcie_aspm_init_link_state: Initiate PCI express link state.
-  * It is called after the pcie and its children devices are scanned.
-@@ -561,8 +580,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	/* Index 1 is the application reg. space address */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-	ks_pcie->app = *res;
+ 	ks_pcie->va_app_base = devm_ioremap_resource(pp->dev, res);
+ 	if (IS_ERR(ks_pcie->va_app_base))
+ 		return PTR_ERR(ks_pcie->va_app_base);
  
- 	if (!pci_is_pcie(pdev) || pdev->link_state)
- 		return;
--	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
--	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
++	ks_pcie->app = *res;
 +
-+	if (!pcie_has_external_link(pdev))
- 		return;
- 
- 	/* VIA has a strange chipset, root port is under a bridge */
--- 
-1.7.1
+ 	/* Create legacy IRQ domain */
+ 	ks_pcie->legacy_irq_domain =
+ 			irq_domain_add_linear(ks_pcie->legacy_intc_np,
 
