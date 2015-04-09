@@ -1,83 +1,174 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to parent
-Date: Mon, 13 Apr 2015 16:23:36 +0200
-Message-ID: <2001450.KHHLaZsp3O@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og107.obsmtp.com ([64.18.0.184]:35227 "EHLO
+	mail-vn0-f52.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753284AbbDIX0f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 19:26:35 -0400
+Received: by vnbf129 with SMTP id f129so645461vnb.9
+        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 16:26:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6VKuu2AewfqSrJaoVyQ-CqMtKbnH_U83XYxsXem+hQJg@mail.gmail.com>
+References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
+ <cover.1428564115.git.dhdang@apm.com> <7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>
+ <20150409201115.GN30967@google.com> <CADaLND=3dj5LuHx9+OLmes8zDO_qFa1qV4bJz4Oy5Gw_OsgGXQ@mail.gmail.com>
+ <CAErSpo6VKuu2AewfqSrJaoVyQ-CqMtKbnH_U83XYxsXem+hQJg@mail.gmail.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 9 Apr 2015 16:26:04 -0700
+Message-ID: <CADaLNDkJZ2v8S+PqQ4sVkmuu40KacW6S4WmVEM+b-b9YOcFKpg@mail.gmail.com>
+Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Apr 9, 2015 at 3:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Apr 9, 2015 at 4:52 PM, Duc Dang <dhdang@apm.com> wrote:
+>> On Thu, Apr 9, 2015 at 1:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Thu, Apr 09, 2015 at 10:05:03AM -0700, Duc Dang wrote:
+>>>> X-Gene v1 SoC supports total 2688 MSI/MSIX vectors coalesced into
+>>>> 16 HW IRQ lines.
+>>>>
+>>>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>>>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>>>> ...
+>>>
+>>>> --- /dev/null
+>>>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>>>> @@ -0,0 +1,407 @@
+>>>> ...
+>>>
+>>>> +static void xgene_irq_domain_free(struct irq_domain *domain,
+>>>> +                               unsigned int virq, unsigned int nr_irqs)
+>>>> +{
+>>>> +     struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+>>>> +     struct xgene_msi *msi = irq_data_get_irq_chip_data(d);
+>>>> +
+>>>> +     mutex_lock(&msi->bitmap_lock);
+>>>> +
+>>>> +     if (!test_bit(d->hwirq, msi->bitmap))
+>>>> +             pr_err("trying to free unused MSI#%lu\n", d->hwirq);
+>>>
+>>> I'll let Marc comment on the substance of this patch, but I'd sure like to
+>>> see more information in this and the other pr_errs below.  The text "failed
+>>> to create parent MSI domain" in the dmesg log is not enough.  Ideally it
+>>> would identify the relevant host bridge.
+>>>
+>> Hi Bjorn,
+>>
+>> X-Gene has single MSI block that serves 5 PCIe ports. so in this
+>> implementation, 5 X-Gene PCIe host bridges share the same MSI domain.
+>>
+>> I can add X-Gene 1 MSI driver name and device tree node name into
+>> these messages, but the host bridge information is not available.
+>>
+>> As I understand, in case of error, the upper layer MSI core and driver
+>> code will check and report the error with additional device
+>> information (bus number, function number, etc)?
+>
+> If you think the upper layers already report the error, maybe you
+> could just drop the output from the X-Gene code.
+>
+> I just think it's pointless to print messages that are constant
+> strings with no hook for the user to associate them with a device or
+> event.
 
-Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
-/ nouveau: Fix VGA switcheroo problem related to hotplug) to propagate
-the ignore_hotplug setting of the device to its parent bridge in case
-hotplug notifications related to the graphics adapter switching are
-given for the bridge rather than for the device itself (the need to
-be ignored in both cases).
+Hi Bjorn,
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
-Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
-Reported-and-tested-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+Yes, I will do so.
 
-"Stable" material AFAICS.
-
----
- drivers/pci/pci.c   |   11 +++++++++++
- include/linux/pci.h |    6 +-----
- 2 files changed, 12 insertions(+), 5 deletions(-)
-
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -4319,6 +4319,17 @@ bool pci_device_is_present(struct pci_de
- }
- EXPORT_SYMBOL_GPL(pci_device_is_present);
- 
-+void pci_ignore_hotplug(struct pci_dev *dev)
-+{
-+	struct pci_dev *bridge = dev->bus->self;
-+
-+	dev->ignore_hotplug = 1;
-+	/* Propagate the "ignore hotplug" setting to the parent bridge. */
-+	if (bridge)
-+		bridge->ignore_hotplug = 1;
-+}
-+EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
-+
- #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
- static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
- static DEFINE_SPINLOCK(resource_alignment_lock);
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -1002,6 +1002,7 @@ int __must_check pci_assign_resource(str
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
- bool pci_device_is_present(struct pci_dev *pdev);
-+void pci_ignore_hotplug(struct pci_dev *dev);
- 
- /* ROM control related routines */
- int pci_enable_rom(struct pci_dev *pdev);
-@@ -1039,11 +1040,6 @@ bool pci_dev_run_wake(struct pci_dev *de
- bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- 
--static inline void pci_ignore_hotplug(struct pci_dev *dev)
--{
--	dev->ignore_hotplug = 1;
--}
--
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
- {
-
+Regards,
+Duc Dang.
+>
+>>>> +     else
+>>>> +             clear_bit(d->hwirq, msi->bitmap);
+>>>> +
+>>>> +     mutex_unlock(&msi->bitmap_lock);
+>>>> +
+>>>> +     irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+>>>> +}
+>>>> +
+>>>> +static const struct irq_domain_ops msi_domain_ops = {
+>>>> +     .alloc  = xgene_irq_domain_alloc,
+>>>> +     .free   = xgene_irq_domain_free,
+>>>> +};
+>>>> +
+>>>> +static int xgene_allocate_domains(struct xgene_msi *msi)
+>>>> +{
+>>>> +     msi->domain = irq_domain_add_linear(NULL, msi->settings->nr_msi_vec,
+>>>> +                                         &msi_domain_ops, msi);
+>>>> +
+>>>> +     if (!msi->domain) {
+>>>> +             pr_err("failed to create parent MSI domain\n");
+>>>> +             return -ENOMEM;
+>>>> +     }
+>>>> +
+>>>> +     msi->mchip.of_node = msi->node;
+>>>> +     msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+>>>> +                                                   &xgene_msi_domain_info,
+>>>> +                                                   msi->domain);
+>>>> +
+>>>> +     if (!msi->mchip.domain) {
+>>>> +             pr_err("failed to create MSI domain\n");
+>>>> +             irq_domain_remove(msi->domain);
+>>>> +             return -ENOMEM;
+>>>> +     }
+>>>> +
+>>>> +     return 0;
+>>>> +}
+>>>> +
+>>>> +static void xgene_free_domains(struct xgene_msi *msi)
+>>>> +{
+>>>> +     if (msi->mchip.domain)
+>>>> +             irq_domain_remove(msi->mchip.domain);
+>>>> +     if (msi->domain)
+>>>> +             irq_domain_remove(msi->domain);
+>>>> +}
+>>>> +
+>>>> +static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+>>>> +{
+>>>> +     u32 msi_irq_count = xgene_msi->settings->nr_msi_vec;
+>>>> +     u32 hw_irq_count = xgene_msi->settings->nr_hw_irqs;
+>>>> +     int size = BITS_TO_LONGS(msi_irq_count) * sizeof(long);
+>>>> +
+>>>> +     xgene_msi->bitmap = kzalloc(size, GFP_KERNEL);
+>>>> +     if (!xgene_msi->bitmap)
+>>>> +             return -ENOMEM;
+>>>> +
+>>>> +     mutex_init(&xgene_msi->bitmap_lock);
+>>>> +
+>>>> +     xgene_msi->msi_virqs = kcalloc(hw_irq_count, sizeof(int), GFP_KERNEL);
+>>>> +     if (!xgene_msi->msi_virqs)
+>>>> +             return -ENOMEM;
+>>>> +
+>>>> +     return 0;
+>>>> +}
+>>>> +
+>>>> +static irqreturn_t xgene_msi_isr(int irq, void *data)
+>>>> +{
+>>>> +     struct xgene_msi *xgene_msi = (struct xgene_msi *) data;
+>>>> +     unsigned int virq;
+>>>> +     int msir_index, msir_reg, msir_val, hw_irq;
+>>>> +     u32 intr_index, grp_select, msi_grp, processed = 0;
+>>>> +     u32 nr_hw_irqs, irqs_per_index, index_per_group;
+>>>> +
+>>>> +     msi_grp = irq - xgene_msi->msi_virqs[0];
+>>>> +     if (msi_grp >= xgene_msi->settings->nr_hw_irqs) {
+>>>> +             pr_err("invalid msi received\n");
+>>>> +             return IRQ_NONE;
+>>>> +     }
+>>>
+>>> Bjorn
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
