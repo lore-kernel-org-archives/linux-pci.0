@@ -1,81 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49873 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883AbbDGJJc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Apr 2015 05:09:32 -0400
-Date: Tue, 7 Apr 2015 17:08:37 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Baoquan He <bhe@redhat.com>
-Cc: "Li, ZhenHua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150407090837.GE7213@localhost.localdomain>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <551E56F6.60503@hp.com>
- <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
- <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
- <20150407034622.GB7213@localhost.localdomain>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14699 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753864AbbDICrN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 22:47:13 -0400
+Date: Thu, 9 Apr 2015 10:43:35 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, CPGS <cpgs@samsung.com>
+Subject: Re: [Query] Direction of adding arm64 support to PCIe designware
+ driver
+Message-ID: <20150409104335.3b016ffd@xhacker>
+In-Reply-To: <5525D789.2060200@samsung.com>
+References: <20150403174621.02681f0d@xhacker>
+	<20150408103222.GB22376@red-moon>
+	<5525D789.2060200@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150407034622.GB7213@localhost.localdomain>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/15 at 11:46am, Dave Young wrote:
-> On 04/05/15 at 09:54am, Baoquan He wrote:
-> > On 04/03/15 at 05:21pm, Dave Young wrote:
-> > > On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
-> > > > Hi Dave,
-> > > > 
-> > > > There may be some possibilities that the old iommu data is corrupted by
-> > > > some other modules. Currently we do not have a better solution for the
-> > > > dmar faults.
-> > > > 
-> > > > But I think when this happens, we need to fix the module that corrupted
-> > > > the old iommu data. I once met a similar problem in normal kernel, the
-> > > > queue used by the qi_* functions was written again by another module.
-> > > > The fix was in that module, not in iommu module.
-> > > 
-> > > It is too late, there will be no chance to save vmcore then.
-> > > 
-> > > Also if it is possible to continue corrupt other area of oldmem because
-> > > of using old iommu tables then it will cause more problems.
-> > > 
-> > > So I think the tables at least need some verifycation before being used.
-> > > 
-> > 
-> > Yes, it's a good thinking anout this and verification is also an
-> > interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
-> > and then verify this again when panic happens in purgatory. This checks
-> > whether any code stomps into region reserved for kexec/kernel and corrupt
-> > the loaded kernel.
-> > 
-> > If this is decided to do it should be an enhancement to current
-> > patchset but not a approach change. Since this patchset is going very
-> > close to point as maintainers expected maybe this can be merged firstly,
-> > then think about enhancement. After all without this patchset vt-d often
-> > raised error message, hung.
+Hi Lorenzo, Jaehoon
+
+On Wed, 8 Apr 2015 18:36:09 -0700
+Jaehoon Chung <jh80.chung@samsung.com> wrote:
+
+> Hi.
 > 
-> It does not convince me, we should do it right at the beginning instead of
-> introduce something wrong.
+> On 04/08/2015 07:32 PM, Lorenzo Pieralisi wrote:
+> > Hi Jisheng,
+> > 
+> > On Fri, Apr 03, 2015 at 10:46:21AM +0100, Jisheng Zhang wrote:
+> >> Hi all,
+> >>
+> >> Currently, the pci designware driver still lacks of arm64 support and I noticed
+> >> that many works are done to achieve this goal.
+> >>
+> >> Some patches are merged and some are under discussion. And Per my understanding, 
+> >> even w/ these patches merged, the driver still doesn't support arm64. Could you
+> >> please kindly point out the direction to add arm64 support to the PCIe
+> >> designware driver?
+> > 
+> > We should remove pci_sys_data dependency since ARM depends on that.
+> > I removed it from a couple of places already (eg pci_mmap_page_range).
+> > 
+> > Now, pcibios_align_resource and pcibios_msi_controller need patching.
+> > 
+> > I have a patch for pcibios_align_resource() (I am waiting for Yijing
+> > Wang series to get merged so that we can move the align_resource
+> > function pointer in the host bridge):
+> > 
+> > https://lkml.org/lkml/2015/4/3/171
+> > 
+> > For MSI, code converted to use CONFIG_PCI_MSI_IRQ_DOMAIN should
+> > not need pcibios_msi_controller ARM function, but if we still compile
+> > that function in we do need pci_sys_data on ARM, so we have to have
+> > it even if it can be dead code in some platforms, I have to vet all
+> > ARM PCI host controllers to check, but removing it would break MSI
+> > support.
+> > 
+> > Does it help ? MSIs are the most important change required,
+> > align_resource() pointer can be sorted out easily once Yijing's
+> > code gets in.
+
+I haven't go to that deeper, and didn't fully understand the pcibios_align_resource()
+does.
+
 > 
-> I wonder why the old dma can not be remap to a specific page in kdump kernel
-> so that it will not corrupt more memory. But I may missed something, I will
-> looking for old threads and catch up.
+> I'm not sure whether my working is right..I used the pcie_port instead of pci_sys_data.
+> 
+> static inline struct *sys_to_pcie(struct pci_sys_data *sys)
+> -> static inline struct *sys_to_pcie(struct pcie_port *pp)
+> 
+> And add "struct list_head resources" as member of pcie_port.
+> 
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 91484a9..1cde583 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -53,6 +53,7 @@ struct pcie_port {
+>         struct irq_domain       *irq_domain;
+>         unsigned long           msi_data;
+>         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> +       struct list_head        resources;
+>  };
+> 
+> and just used pci_scan_root_bus(). (before call this, it's added the offset of resources..)
+> So i got the below message.
+> 
+> [    2.396822] exynos-pcie 156b0000.pcie: Link up!
+> [    2.397011] exynos-pcie 156b0000.pcie: PCI host bridge to bus 0000:00
+> [    2.397021] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+> [    2.397026] pci_bus 0000:00: root bus resource [mem 0x0c011000-0x0ffffffe]
+> [    2.397033] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    2.409000] pci 0000:00:00.0: BAR 8: assigned [mem 0x0c200000-0x0c7fffff]
+> [    2.409009] pci 0000:01:00.0: BAR 2: assigned [mem 0x0c400000-0x0c7fffff 64bit]
+> [    2.409509] pci 0000:01:00.0: BAR 0: assigned [mem 0x0c200000-0x0c207fff 64bit]
+> [    2.410008] pci 0000:00:00.0: PCI bridge to [bus 01]
+> [    2.410027] pci 0000:00:00.0:   bridge window [mem 0x0c200000-0x0c7fffff]
+> 
+> Well, i needs to work more and get the knowledge for pcie. (It's not working completely.)
+> If somebody is working this, it's great..otherwise I will send the RFC patch to get comment for my code.
+> 
 
-I have read the old discussion, above way was dropped because it could corrupt
-filesystem. Apologize about late commenting.
+I'm doing based on Lorenzo's patches to port the designware driver to new DT parsing API
 
-But current solution sounds bad to me because of using old memory which is not
-reliable. 
+http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/314008.html
 
-Thanks
-Dave
+Then modify the driver as drivers/pci/host/pci-versatile.c does to remove pci_sys_data
+
+I'm not sure my direction is correct or not, that's why I sent out this email a few days ago.
+
+And I still dunno are there other changes necessary to remove pci_sys_data from
+the desginware driver.
+
+Thanks for all your hints,
+Jisheng
