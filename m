@@ -1,131 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5540E259.4040105@linux.intel.com>
-Date: Wed, 29 Apr 2015 21:53:29 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-References: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4zBFUBwSJjF1CuB8w06CDwYx+ZZaL1X71Joi0uMCObbg@mail.gmail.com> <5540DD9C.9030707@linux.intel.com> <2290160.KqiWSgJfFU@vostro.rjw.lan>
-In-Reply-To: <2290160.KqiWSgJfFU@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og122.obsmtp.com ([64.18.0.192]:42994 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933004AbbDIRFi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 13:05:38 -0400
+Received: by pabtp1 with SMTP id tp1so49938821pab.2
+        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 10:05:37 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v3 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
+Date: Thu,  9 Apr 2015 10:05:02 -0700
+Message-Id: <cover.1428564115.git.dhdang@apm.com>
+In-Reply-To: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
+References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+to GIC V2M specification for MSI Termination.
 
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
+block supports 2688 MSI termination ports coalesced into 16 physical HW IRQ lines
+and shared across all 5 PCIe ports.
 
-On 2015/4/29 22:15, Rafael J. Wysocki wrote:
-> On Wednesday, April 29, 2015 09:33:16 PM Jiang Liu wrote:
->> On 2015/4/29 21:20, Bjorn Helgaas wrote:
->>> On Tue, Apr 28, 2015 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>>> On Monday, April 20, 2015 11:08:58 AM Jiang Liu wrote:
->>>>> An IO port or MMIO resource assigned to a PCI host bridge may be
->>>>> consumed by the host bridge itself or available to its child
->>>>> bus/devices. On x86 and IA64 platforms, all IO port and MMIO
->>>>> resources are assumed to be available to child bus/devices
->>>>> except one special case:
->>>>>     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
->>>>>     to access PCI configuration space.
->>>>>
->>>>> But the ACPI and PCI Firmware specifications haven't provided a method
->>>>> to tell whether a resource is consumed by the host bridge itself.
->>>>> So before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
->>>>> interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
->>>>> all IO port resources defined by acpi_resource_io and
->>>>> acpi_resource_fixed_io to filter out IO ports consumed by the host
->>>>> bridge itself.
->>>>>
->>>>> Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
->>>>> to simplify implementation")started accepting all IO port and MMIO
->>>>> resources, which caused a regression that IO port resources consumed
->>>>> by the host bridge itself became available to its child devices.
->>>>>
->>>>> Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
->>>>> host bridge itself") ignored resources consumed by the host bridge
->>>>> itself by checking the IORESOURCE_WINDOW flag, which accidently removed
->>>>> MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
->>>>> and acpi_resource_fixed_memory32.
->>>>>
->>>>> So revert to the behavior before v3.19 to fix the regression.
->>>>>
->>>>> There is also a discussion about ignoring the Producer/Consumer flag on
->>>>> IA64 platforms at:
->>>>> http://patchwork.ozlabs.org/patch/461633/
->>>>>
->>>>> Related ACPI table are archived at:
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
->>>>>
->>>>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
->>>>> Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
->>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>>
->>>> Bjorn, Ingo, is anyone looking at this?  We're still having a regression in
->>>> this area ...
->>>
->>>>> ---
->>>>>  arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
->>>>>  drivers/acpi/resource.c |    6 +++++-
->>>>>  2 files changed, 27 insertions(+), 4 deletions(-)
->>>>>
->>>>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->>>>> index e4695985f9de..fc2da98985c3 100644
->>>>> --- a/arch/x86/pci/acpi.c
->>>>> +++ b/arch/x86/pci/acpi.c
->>>>> @@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
->>>>>  {
->>>>>       int ret;
->>>>>       struct resource_entry *entry, *tmp;
->>>>> +     unsigned long res_flags;
->>>>>
->>>>>       sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
->>>>>       info->bridge = device;
->>>>> +
->>>>> +     /*
->>>>> +      * An IO or MMIO resource assigned to PCI host bridge may be consumed
->>>>> +      * by the host bridge itself or available to its child bus/devices.
->>>>> +      * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
->>>>> +      * be available to child bus/devices except one special case:
->>>>> +      *      IO port [0xCF8-0xCFF] is consumed by host bridge itself to
->>>>> +      *      access PCI configuration space.
->>>>> +      *
->>>>> +      * Due to lack of specification to define resources consumed by host
->>>>> +      * bridge itself, all IO port resources defined by acpi_resource_io
->>>>> +      * and acpi_resource_fixed_io are ignored to filter out IO
->>>>> +      * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
->>>>> +      * it's not perfect.
->>>
->>> 1) I think it's misleading to say "the specs haven't provided a
->>> method."  As far as I can tell, the Producer/Consumer bit is intended
->>> precisely to distinguish resources consumed by a bridge from those
->>> forwarded to downstream devices.  It would be more accurate to say
->>> "the spec defines a bit, but firmware hasn't used that bit
->>> consistently, so we can't rely on it."
->>
->> Hi Bjorn,
->> 	Thanks for review, I will refine the words as suggested by you.
->>
->>> If you want to say "it's not perfect," it would be useful to mention
->>> the ways in which it is not perfect.  This code is still a candidate
->>> for unification with ia64 and arm64, so we should avoid x86-specific
->>> things here as much as possible.
->>
->> Yes, I have another pending patch set to consolidate IA64 and x86 code
->> for ACPI PCI root.
-> 
-> That's OK, but can we please fix the regression first before doing that
-> unification?  Like to make life easier for the "stable" people and
-> whoever wants to backport the fix?
+v3 changes:
+	1. Implement MSI support using PCI MSI IRQ domain
+	2. Only use msi_controller to store IRQ domain
+v2 changes:
+        1. Use msi_controller structure
+        2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
+ 
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      |  63 ++++
+ MAINTAINERS                                        |   8 +
+ arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 ++
+ drivers/pci/host/Kconfig                           |   6 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-xgene-msi.c                   | 407 +++++++++++++++++++++
+ drivers/pci/host/pci-xgene.c                       |  21 ++
+ 7 files changed, 533 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ create mode 100644 drivers/pci/host/pci-xgene-msi.c
 
-Hi Rafael,
-	Yes, I will fix the regression first before sending out the
-pending patch set.
-Thanks!
-Gerry
+-- 
+1.9.1
+
