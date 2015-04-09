@@ -1,335 +1,165 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:34258 "EHLO
+	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755474AbbDIWkU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 18:40:20 -0400
+Received: by qkgx75 with SMTP id x75so2513196qkg.1
+        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 15:40:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CADaLND=3dj5LuHx9+OLmes8zDO_qFa1qV4bJz4Oy5Gw_OsgGXQ@mail.gmail.com>
+References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
+ <cover.1428564115.git.dhdang@apm.com> <7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>
+ <20150409201115.GN30967@google.com> <CADaLND=3dj5LuHx9+OLmes8zDO_qFa1qV4bJz4Oy5Gw_OsgGXQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Apr 2015 17:39:58 -0500
+Message-ID: <CAErSpo6VKuu2AewfqSrJaoVyQ-CqMtKbnH_U83XYxsXem+hQJg@mail.gmail.com>
+Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+To: Duc Dang <dhdang@apm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
-	sfi-devel@simplefirmware.org
-Subject: [Patch Part2 v5 31/33] x86: Cleanup irq_domain ops
-Date: Tue, 14 Apr 2015 10:30:08 +0800
-Message-Id: <1428978610-28986-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Thu, Apr 9, 2015 at 4:52 PM, Duc Dang <dhdang@apm.com> wrote:
+> On Thu, Apr 9, 2015 at 1:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Apr 09, 2015 at 10:05:03AM -0700, Duc Dang wrote:
+>>> X-Gene v1 SoC supports total 2688 MSI/MSIX vectors coalesced into
+>>> 16 HW IRQ lines.
+>>>
+>>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>>> ...
+>>
+>>> --- /dev/null
+>>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>>> @@ -0,0 +1,407 @@
+>>> ...
+>>
+>>> +static void xgene_irq_domain_free(struct irq_domain *domain,
+>>> +                               unsigned int virq, unsigned int nr_irqs)
+>>> +{
+>>> +     struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+>>> +     struct xgene_msi *msi = irq_data_get_irq_chip_data(d);
+>>> +
+>>> +     mutex_lock(&msi->bitmap_lock);
+>>> +
+>>> +     if (!test_bit(d->hwirq, msi->bitmap))
+>>> +             pr_err("trying to free unused MSI#%lu\n", d->hwirq);
+>>
+>> I'll let Marc comment on the substance of this patch, but I'd sure like to
+>> see more information in this and the other pr_errs below.  The text "failed
+>> to create parent MSI domain" in the dmesg log is not enough.  Ideally it
+>> would identify the relevant host bridge.
+>>
+> Hi Bjorn,
+>
+> X-Gene has single MSI block that serves 5 PCIe ports. so in this
+> implementation, 5 X-Gene PCIe host bridges share the same MSI domain.
+>
+> I can add X-Gene 1 MSI driver name and device tree node name into
+> these messages, but the host bridge information is not available.
+>
+> As I understand, in case of error, the upper layer MSI core and driver
+> code will check and report the error with additional device
+> information (bus number, function number, etc)?
 
-We have 3 identical copies of the ioapic domain ops for acpi, mpparse,
-and sfi. Have a global one in the io_apic code and be done with it.
+If you think the upper layers already report the error, maybe you
+could just drop the output from the X-Gene code.
 
-To avoid include hell in io_apic.h, create a private irqdomain header
-and include the generic irqdomain header from there.
+I just think it's pointless to print messages that are constant
+strings with no hook for the user to associate them with a device or
+event.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: x86@kernel.org
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h   |   29 ++---------------------------
- arch/x86/include/asm/irqdomain.h |   34 ++++++++++++++++++++++++++++++++++
- arch/x86/kernel/acpi/boot.c      |   13 +++----------
- arch/x86/kernel/apic/io_apic.c   |    9 ++++++++-
- arch/x86/kernel/devicetree.c     |   12 ++++++------
- arch/x86/kernel/mpparse.c        |    9 +--------
- arch/x86/platform/sfi/sfi.c      |   10 ++--------
- 7 files changed, 56 insertions(+), 60 deletions(-)
- create mode 100644 arch/x86/include/asm/irqdomain.h
-
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 53a70a30b674..144c4d37ae86 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -96,7 +96,7 @@ struct IR_IO_APIC_route_entry {
- } __attribute__ ((packed));
- 
- struct irq_alloc_info;
--struct irq_data;
-+struct ioapic_domain_cfg;
- 
- #define IOAPIC_AUTO			-1
- #define IOAPIC_EDGE			0
-@@ -163,23 +163,6 @@ extern int restore_ioapic_entries(void);
- extern void setup_ioapic_ids_from_mpc(void);
- extern void setup_ioapic_ids_from_mpc_nocheck(void);
- 
--enum ioapic_domain_type {
--	IOAPIC_DOMAIN_INVALID,
--	IOAPIC_DOMAIN_LEGACY,
--	IOAPIC_DOMAIN_STRICT,
--	IOAPIC_DOMAIN_DYNAMIC,
--};
--
--struct device_node;
--struct irq_domain;
--struct irq_domain_ops;
--
--struct ioapic_domain_cfg {
--	enum ioapic_domain_type		type;
--	const struct irq_domain_ops	*ops;
--	struct device_node		*dev;
--};
--
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
-@@ -189,15 +172,7 @@ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
- extern int mp_unregister_ioapic(u32 gsi_base);
- extern int mp_ioapic_registered(u32 gsi_base);
--extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
--			      unsigned int nr_irqs, void *arg);
--extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
--			      unsigned int nr_irqs);
--extern void mp_irqdomain_activate(struct irq_domain *domain,
--				  struct irq_data *irq_data);
--extern void mp_irqdomain_deactivate(struct irq_domain *domain,
--				    struct irq_data *irq_data);
--extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
-+
- extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
- 				  int node, int trigger, int polarity);
- 
-diff --git a/arch/x86/include/asm/irqdomain.h b/arch/x86/include/asm/irqdomain.h
-new file mode 100644
-index 000000000000..fe0d4c6636ec
---- /dev/null
-+++ b/arch/x86/include/asm/irqdomain.h
-@@ -0,0 +1,34 @@
-+#ifndef _ASM_IRQDOMAIN_H
-+#define _ASM_IRQDOMAIN_H
-+
-+#include <linux/irqdomain.h>
-+
-+enum ioapic_domain_type {
-+	IOAPIC_DOMAIN_INVALID,
-+	IOAPIC_DOMAIN_LEGACY,
-+	IOAPIC_DOMAIN_STRICT,
-+	IOAPIC_DOMAIN_DYNAMIC,
-+};
-+
-+struct device_node;
-+struct irq_data;
-+
-+struct ioapic_domain_cfg {
-+	enum ioapic_domain_type		type;
-+	const struct irq_domain_ops	*ops;
-+	struct device_node		*dev;
-+};
-+
-+extern const struct irq_domain_ops mp_ioapic_irqdomain_ops;
-+
-+extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs, void *arg);
-+extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
-+			      unsigned int nr_irqs);
-+extern void mp_irqdomain_activate(struct irq_domain *domain,
-+				  struct irq_data *irq_data);
-+extern void mp_irqdomain_deactivate(struct irq_domain *domain,
-+				    struct irq_data *irq_data);
-+extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
-+
-+#endif
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 91a10120ed10..cb9f6f12246b 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -31,12 +31,12 @@
- #include <linux/module.h>
- #include <linux/dmi.h>
- #include <linux/irq.h>
--#include <linux/irqdomain.h>
- #include <linux/slab.h>
- #include <linux/bootmem.h>
- #include <linux/ioport.h>
- #include <linux/pci.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/pci_x86.h>
- #include <asm/pgtable.h>
- #include <asm/io_apic.h>
-@@ -400,20 +400,13 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
- 	return 0;
- }
- 
--static struct irq_domain_ops acpi_irqdomain_ops = {
--	.alloc = mp_irqdomain_alloc,
--	.free = mp_irqdomain_free,
--	.activate = mp_irqdomain_activate,
--	.deactivate = mp_irqdomain_deactivate,
--};
--
- static int __init
- acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
- {
- 	struct acpi_madt_io_apic *ioapic = NULL;
- 	struct ioapic_domain_cfg cfg = {
- 		.type = IOAPIC_DOMAIN_DYNAMIC,
--		.ops = &acpi_irqdomain_ops,
-+		.ops = &mp_ioapic_irqdomain_ops,
- 	};
- 
- 	ioapic = (struct acpi_madt_io_apic *)header;
-@@ -764,7 +757,7 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- 	u64 addr;
- 	struct ioapic_domain_cfg cfg = {
- 		.type = IOAPIC_DOMAIN_DYNAMIC,
--		.ops = &acpi_irqdomain_ops,
-+		.ops = &mp_ioapic_irqdomain_ops,
- 	};
- 
- 	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index ce7063087f74..1eea1682b01b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -41,13 +41,13 @@
- #include <linux/acpi.h>
- #include <linux/module.h>
- #include <linux/syscore_ops.h>
--#include <linux/irqdomain.h>
- #include <linux/freezer.h>
- #include <linux/kthread.h>
- #include <linux/jiffies.h>	/* time_after() */
- #include <linux/slab.h>
- #include <linux/bootmem.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/idle.h>
- #include <asm/io.h>
- #include <asm/smp.h>
-@@ -2995,3 +2995,10 @@ int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
- {
- 	return (int)(long)domain->host_data;
- }
-+
-+const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
-+	.alloc		= mp_irqdomain_alloc,
-+	.free		= mp_irqdomain_free,
-+	.activate	= mp_irqdomain_activate,
-+	.deactivate	= mp_irqdomain_deactivate,
-+};
-diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
-index 9ca73a700912..421375b1efd5 100644
---- a/arch/x86/kernel/devicetree.c
-+++ b/arch/x86/kernel/devicetree.c
-@@ -4,7 +4,6 @@
- #include <linux/bootmem.h>
- #include <linux/export.h>
- #include <linux/io.h>
--#include <linux/irqdomain.h>
- #include <linux/interrupt.h>
- #include <linux/list.h>
- #include <linux/of.h>
-@@ -17,6 +16,7 @@
- #include <linux/of_pci.h>
- #include <linux/initrd.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/hpet.h>
- #include <asm/apic.h>
- #include <asm/pci_x86.h>
-@@ -216,11 +216,11 @@ static int dt_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
- 	return mp_irqdomain_alloc(domain, virq, nr_irqs, &tmp);
- }
- 
--const struct irq_domain_ops ioapic_irq_domain_ops = {
--	.alloc = dt_irqdomain_alloc,
--	.free = mp_irqdomain_free,
--	.activate = mp_irqdomain_activate,
--	.deactivate = mp_irqdomain_deactivate,
-+static const struct irq_domain_ops ioapic_irq_domain_ops = {
-+	.alloc		= dt_irqdomain_alloc,
-+	.free		= mp_irqdomain_free,
-+	.activate	= mp_irqdomain_activate,
-+	.deactivate	= mp_irqdomain_deactivate,
- };
- 
- static void __init dtb_add_ioapic(struct device_node *dn)
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index aa4feee74dbe..30ca7607cbbb 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -19,8 +19,8 @@
- #include <linux/module.h>
- #include <linux/smp.h>
- #include <linux/pci.h>
--#include <linux/irqdomain.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/mtrr.h>
- #include <asm/mpspec.h>
- #include <asm/pgalloc.h>
-@@ -113,13 +113,6 @@ static void __init MP_bus_info(struct mpc_bus *m)
- 		pr_warn("Unknown bustype %s - ignoring\n", str);
- }
- 
--static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
--	.alloc = mp_irqdomain_alloc,
--	.free = mp_irqdomain_free,
--	.activate = mp_irqdomain_activate,
--	.deactivate = mp_irqdomain_deactivate,
--};
--
- static void __init MP_ioapic_info(struct mpc_ioapic *m)
- {
- 	struct ioapic_domain_cfg cfg = {
-diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
-index b66b194f9900..6c7111bbd1e9 100644
---- a/arch/x86/platform/sfi/sfi.c
-+++ b/arch/x86/platform/sfi/sfi.c
-@@ -25,8 +25,8 @@
- #include <linux/init.h>
- #include <linux/sfi.h>
- #include <linux/io.h>
--#include <linux/irqdomain.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/io_apic.h>
- #include <asm/mpspec.h>
- #include <asm/setup.h>
-@@ -71,12 +71,6 @@ static int __init sfi_parse_cpus(struct sfi_table_header *table)
- #endif /* CONFIG_X86_LOCAL_APIC */
- 
- #ifdef CONFIG_X86_IO_APIC
--static struct irq_domain_ops sfi_ioapic_irqdomain_ops = {
--	.alloc = mp_irqdomain_alloc,
--	.free = mp_irqdomain_free,
--	.activate = mp_irqdomain_activate,
--	.deactivate = mp_irqdomain_deactivate,
--};
- 
- static int __init sfi_parse_ioapic(struct sfi_table_header *table)
- {
-@@ -85,7 +79,7 @@ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
- 	int i, num;
- 	struct ioapic_domain_cfg cfg = {
- 		.type = IOAPIC_DOMAIN_STRICT,
--		.ops = &sfi_ioapic_irqdomain_ops,
-+		.ops = &mp_ioapic_irqdomain_ops,
- 	};
- 
- 	sb = (struct sfi_table_simple *)table;
--- 
-1.7.10.4
-
+>>> +     else
+>>> +             clear_bit(d->hwirq, msi->bitmap);
+>>> +
+>>> +     mutex_unlock(&msi->bitmap_lock);
+>>> +
+>>> +     irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+>>> +}
+>>> +
+>>> +static const struct irq_domain_ops msi_domain_ops = {
+>>> +     .alloc  = xgene_irq_domain_alloc,
+>>> +     .free   = xgene_irq_domain_free,
+>>> +};
+>>> +
+>>> +static int xgene_allocate_domains(struct xgene_msi *msi)
+>>> +{
+>>> +     msi->domain = irq_domain_add_linear(NULL, msi->settings->nr_msi_vec,
+>>> +                                         &msi_domain_ops, msi);
+>>> +
+>>> +     if (!msi->domain) {
+>>> +             pr_err("failed to create parent MSI domain\n");
+>>> +             return -ENOMEM;
+>>> +     }
+>>> +
+>>> +     msi->mchip.of_node = msi->node;
+>>> +     msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+>>> +                                                   &xgene_msi_domain_info,
+>>> +                                                   msi->domain);
+>>> +
+>>> +     if (!msi->mchip.domain) {
+>>> +             pr_err("failed to create MSI domain\n");
+>>> +             irq_domain_remove(msi->domain);
+>>> +             return -ENOMEM;
+>>> +     }
+>>> +
+>>> +     return 0;
+>>> +}
+>>> +
+>>> +static void xgene_free_domains(struct xgene_msi *msi)
+>>> +{
+>>> +     if (msi->mchip.domain)
+>>> +             irq_domain_remove(msi->mchip.domain);
+>>> +     if (msi->domain)
+>>> +             irq_domain_remove(msi->domain);
+>>> +}
+>>> +
+>>> +static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+>>> +{
+>>> +     u32 msi_irq_count = xgene_msi->settings->nr_msi_vec;
+>>> +     u32 hw_irq_count = xgene_msi->settings->nr_hw_irqs;
+>>> +     int size = BITS_TO_LONGS(msi_irq_count) * sizeof(long);
+>>> +
+>>> +     xgene_msi->bitmap = kzalloc(size, GFP_KERNEL);
+>>> +     if (!xgene_msi->bitmap)
+>>> +             return -ENOMEM;
+>>> +
+>>> +     mutex_init(&xgene_msi->bitmap_lock);
+>>> +
+>>> +     xgene_msi->msi_virqs = kcalloc(hw_irq_count, sizeof(int), GFP_KERNEL);
+>>> +     if (!xgene_msi->msi_virqs)
+>>> +             return -ENOMEM;
+>>> +
+>>> +     return 0;
+>>> +}
+>>> +
+>>> +static irqreturn_t xgene_msi_isr(int irq, void *data)
+>>> +{
+>>> +     struct xgene_msi *xgene_msi = (struct xgene_msi *) data;
+>>> +     unsigned int virq;
+>>> +     int msir_index, msir_reg, msir_val, hw_irq;
+>>> +     u32 intr_index, grp_select, msi_grp, processed = 0;
+>>> +     u32 nr_hw_irqs, irqs_per_index, index_per_group;
+>>> +
+>>> +     msi_grp = irq - xgene_msi->msi_virqs[0];
+>>> +     if (msi_grp >= xgene_msi->settings->nr_hw_irqs) {
+>>> +             pr_err("invalid msi received\n");
+>>> +             return IRQ_NONE;
+>>> +     }
+>>
+>> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
