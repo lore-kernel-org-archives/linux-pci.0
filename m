@@ -1,89 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:33950 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932205AbbDJWza (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:55:30 -0400
-Received: by iedfl3 with SMTP id fl3so32537463ied.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:55:29 -0700 (PDT)
-Subject: [PATCH v6 10/10] PCI/MSI: Remove unused pci_msi_off()
-To: "Michael S. Tsirkin" <mst@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Date: Fri, 10 Apr 2015 17:55:27 -0500
-Message-ID: <20150410225527.20848.88717.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3369608.UAniFEi9kX@vostro.rjw.lan>
+References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com>
+ <1859870.HzuzAL1ZiX@vostro.rjw.lan> <5525E8DA.601@linux.intel.com> <3369608.UAniFEi9kX@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Apr 2015 17:00:08 -0500
+Message-ID: <CAErSpo5aMwv5thgx+6195Cg+AM7FEeNJ_KDJj-pVCWGQp70XMg@mail.gmail.com>
+Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_msi_off() is unused, so remove it.
+On Thu, Apr 9, 2015 at 4:37 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Thursday, April 09, 2015 10:50:02 AM Jiang Liu wrote:
+>> On 2015/4/9 7:44, Rafael J. Wysocki wrote:
+>> > On Wednesday, April 08, 2015 01:48:46 PM Jiang Liu wrote:
+>> >> On 2015/4/7 8:28, Rafael J. Wysocki wrote:
+>> >>> On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
+>> >>>> Hi Jiang,
+>> >> <snip>
+>> >>>>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
+>> >>>>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
+>> >>>>
+>> >>>> We should assume it will eventually be used for all ACPI devices,
+>> >>>> shouldn't we?
+>> >>>
+>> >>> I'm not sure about that, really.  In fact, I'd restrict its use to devices
+>> >>> types that actually can "produce" resources (ie. do not require the resources
+>> >>> to be provided by their ancestors or to be available from a global pool).
+>> >>>
+>> >>> Otherwise we're pretty much guaranteed to get into trouble.
+>> >>>
+>> >>> And all of the above rules need to be documented in the kernel source tree
+>> >>> or people will get confused.
+>> >> Hi Rafael,
+>> >>     How about following comments for acpi_dev_filter_resource_type()?
+>> >> Thanks!
+>> >> Gerry
+>> >> --------------------------------------------------------------------
+>> >> /**
+>> >>  * According to ACPI specifications, Consumer/Producer flag in ACPI resource
+>> >>  * descriptor means:
+>> >>  *      1(CONSUMER): This device consumes this resource
+>> >>  *      0(PRODUCER): This device produces and consumes this resource
+>> >>  * But for ACPI PCI host bridge, it is interpreted in another way:
+>> >
+>> > So first of all, this leads to a question: Why is it interpreted for ACPI PCI
+>> > host bridges differently?
+>> >
+>> > Is it something we've figured out from experience, or is there a standard
+>> > mandating that?
+>> Hi Rafael,
+>>       I think we got this knowledge by experiences. PCI FW spec only
+>> states _CRS reports resources assigned to the host bridge by firmware.
+>> There's no statement about whether the resource is consumed by host
+>> bridge itself or provided to it's child bus/devices. On x86/IA64 side,
+>> the main resource consumed by PCI host bridge is IOPORT 0xCF8-0xCFF,
+>> but not sure about ARM64 side. So how about:
+>
+> This:
+>
+>> PCI Firmware specification states that _CRS reports resources
+>> assigned to the host bridge, but there's no way to tell whether
+>> the resource is consumed by host bridge itself or provided to
+>> its child bus/devices.
+>
+> looks OK to me, but I'd replace the below with something like:
+>
+> "However, experience shows, that in the PCI host bridge case firmware writers
+>  expect the resource to be provided to devices on the bus (below the bridge) for
+>  consumption entirely if its Consumer/Producer flag is clear.  That expectation
+>  is reflected by the code in this routine as follows:".
 
-Removes the exported symbol pci_msi_off().
+What a mess.  The spec is regrettably lacking in Consumer/Producer
+specifics.  But I don't see what's confusing about the descriptors
+that have Consumer/Producer bits.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c   |   33 ---------------------------------
- include/linux/pci.h |    1 -
- 2 files changed, 34 deletions(-)
+QWord, DWord, and Word descriptors don't seem to have a
+Consumer/Producer bit, but they do contain _TRA, so they must be
+intended for bridge windows.  Can they also be used for device
+registers?  I don't know.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8dcc04..3d938a7d3b04 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3096,39 +3096,6 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
- 
--/**
-- * pci_msi_off - disables any MSI or MSI-X capabilities
-- * @dev: the PCI device to operate on
-- *
-- * If you want to use MSI, see pci_enable_msi() and friends.
-- * This is a lower-level primitive that allows us to disable
-- * MSI operation at the device level.
-- */
--void pci_msi_off(struct pci_dev *dev)
--{
--	int pos;
--	u16 control;
--
--	/*
--	 * This looks like it could go in msi.c, but we need it even when
--	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
--	 * dev->msi_cap or dev->msix_cap here.
--	 */
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (pos) {
--		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
--		control &= ~PCI_MSI_FLAGS_ENABLE;
--		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
--	}
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--	if (pos) {
--		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
--		control &= ~PCI_MSIX_FLAGS_ENABLE;
--		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
--	}
--}
--EXPORT_SYMBOL_GPL(pci_msi_off);
--
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
- {
- 	return dma_set_max_seg_size(&dev->dev, size);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a34df456faf2..ef15f91207b4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -970,7 +970,6 @@ void pci_intx(struct pci_dev *dev, int enable);
- bool pci_intx_mask_supported(struct pci_dev *dev);
- bool pci_check_and_mask_intx(struct pci_dev *dev);
- bool pci_check_and_unmask_intx(struct pci_dev *dev);
--void pci_msi_off(struct pci_dev *dev);
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
- int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
- int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+The Extended Address descriptor has a Consumer/Producer bit, and I
+would interpret the spec to mean that if the flag is clear (the device
+produces and consumes this resource), the resource is available on the
+bus below the bridge, i.e., the bridge consumes the resource on its
+upstream side and produces it on its downstream side.  If the bit were
+set (the device only consumes the resource), I would expect that to
+mean the descriptor is for bridge registers like 0xcf8/0xcfc that
+never appear on the downstream side.
 
+Maybe I'm reading the spec too naively, but this doesn't seem a matter
+of experience.
+
+>> So according to experiences, PCI host bridge
+>> interprets Consumer/Producer flag as below to tell whether the resource
+>> is consumed by host bridge itself.
+
+Bjorn
