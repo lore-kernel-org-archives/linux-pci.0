@@ -1,101 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56629 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752217AbbDBDib (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Apr 2015 23:38:31 -0400
-Date: Thu, 2 Apr 2015 11:38:27 +0800
-From: Fam Zheng <famz@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: [PATCH v5 02/10] pci: move pci_msi_init_pci_dev to probe.c
-Message-ID: <20150402033827.GE15412@fam-t430.nay.redhat.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
- <1427641227-7574-3-git-send-email-mst@redhat.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:35823 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932647AbbDISbb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 14:31:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-3-git-send-email-mst@redhat.com>
+In-Reply-To: <1428569681.18187.69.camel@kernel.crashing.org>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	<1427857069-6789-4-git-send-email-yinghai@kernel.org>
+	<20150406220638.GH10892@google.com>
+	<20150406.203533.1356187749826485194.davem@davemloft.net>
+	<CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
+	<20150408154759.GN10892@google.com>
+	<1428527527.18187.28.camel@kernel.crashing.org>
+	<CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
+	<1428549459.18187.56.camel@kernel.crashing.org>
+	<CAErSpo5VwuLjZtQFcJqfpkC=j5TJmLD0oZPQ=6oJpSOthB+BFA@mail.gmail.com>
+	<1428569681.18187.69.camel@kernel.crashing.org>
+Date: Thu, 9 Apr 2015 11:31:30 -0700
+Message-ID: <CAE9FiQWf1kRx2Dx7LzCy7WhDonO54Q3o+5Nu+uxxsCs1unBMtg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 03/29 17:04, Michael S. Tsirkin wrote:
-> commit d5dea7d95c48d7bc951cee4910a7fd9c0cd26fb0
->     "PCI: msi: Disable msi interrupts when we initialize a pci device"
-> fixes kexec when the booting kernel does not enable msi interupts.
-> 
-> Unfortunately the relevant functionality is in msi.c so it isn't
-> compiled in when CONFIG_PCI_MSI is off, which means such configurations
-> would still get interrupt storms.
-> 
-> Fix by moving part of the functionality probe.c, and compiling it
-> unconditionally.
+On Thu, Apr 9, 2015 at 1:54 AM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2015-04-08 at 23:26 -0500, Bjorn Helgaas wrote:
+>> I'm not planning to review this until after the merge window opens,
+>> but I took a quick glance, and I agree with Ben.  I don't want to add
+>> a new IORESOURCE_ flag.  I think a pci_resource_compatible() helper is
+>> a great idea.
+>
+> So the new resource flag was handy here still regardless of the
+> implementation choice because otherwise, we have to do the whole tree
+> walk to check for "PCI Express only path".
+>
+> *But*, this is a property of the device as a whole, not of the resource,
+> so we could instead have a pci_dev flag established at probe time that
+> indicates that the path to a given device is PCIe only.
 
-Reviewed-by: Fam Zheng <famz@redhat.com>
+> That way, you avoid the special resource flag alltogether.
 
-> 
-> Cc: Eric W. Biederman <ebiederm@xmission.com>
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/pci/msi.c   | 12 ------------
->  drivers/pci/probe.c | 16 ++++++++++++++++
->  2 files changed, 16 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 9942f68..f66be86 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1041,18 +1041,6 @@ EXPORT_SYMBOL(pci_msi_enabled);
->  void pci_msi_init_pci_dev(struct pci_dev *dev)
->  {
->  	INIT_LIST_HEAD(&dev->msi_list);
-> -
-> -	/* Disable the msi hardware to avoid screaming interrupts
-> -	 * during boot.  This is the power on reset default so
-> -	 * usually this should be a noop.
-> -	 */
-> -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -	if (dev->msi_cap)
-> -		pci_msi_set_enable(dev, 0);
-> -
-> -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -	if (dev->msix_cap)
-> -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  }
->  
->  /**
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8d2f400..50dd934 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1483,10 +1483,26 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->  	return dev;
->  }
->  
-> +static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-> +{
-> +	/* Disable the msi hardware to avoid screaming interrupts
-> +	 * during boot.  This is the power on reset default so
-> +	 * usually this should be a noop.
-> +	 */
-> +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +	if (dev->msi_cap)
-> +		pci_msi_set_enable(dev, 0);
-> +
-> +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> +	if (dev->msix_cap)
-> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> +}
-> +
->  static void pci_init_capabilities(struct pci_dev *dev)
->  {
->  	/* MSI/MSI-X list */
->  	pci_msi_init_pci_dev(dev);
-> +	pci_msi_setup_pci_dev(dev);
->  
->  	/* Buffers for saving PCIe and PCI-X capabilities */
->  	pci_allocate_cap_save_buffers(dev);
-> -- 
-> MST
-> 
+in the assign path: pci_bus_alloc_resource() does not take dev pointer.
+
+should we make
+
+int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+
+to
+
+int pci_bus_alloc_resource(struct pci_bus *bus, struct pci_dev *dev,
+struct resource *res,
+
+?
