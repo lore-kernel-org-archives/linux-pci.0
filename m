@@ -1,156 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15921 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754901AbbDULic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44186 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933018AbbDIUL1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Apr 2015 16:11:27 -0400
+Message-ID: <1428610286.5567.606.camel@redhat.com>
+Subject: Re: [PATCH] PCI: Export pci_probe_reset_function()
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: [PATCH v10 19/29] powerpc/pci: Use pci_scan_host_bridge() for simplicity
-Date: Tue, 21 Apr 2015 19:34:38 +0800
-Message-ID: <1429616088-10249-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 09 Apr 2015 14:11:26 -0600
+In-Reply-To: <20150409200048.GM30967@google.com>
+References: <20150409155100.6891.72838.stgit@gimli.home>
+	 <20150409195846.GL30967@google.com> <20150409200048.GM30967@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we could use pci_scan_host_bridge() to scan
-pci buses, provide powerpc specific pci_host_bridge_ops.
+On Thu, 2015-04-09 at 15:00 -0500, Bjorn Helgaas wrote:
+> On Thu, Apr 09, 2015 at 02:58:46PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Apr 09, 2015 at 09:51:43AM -0600, Alex Williamson wrote:
+> > > The equivalent bus and slot versions of this are already exported and
+> > > vfio-pci would like a function-probe available so we can expose
+> > > function-level reset capabilities to the user without necessarily
+> > > using it to perform a reset before enabling the device for the user.
+> > > 
+> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > 
+> > Applied to pci/virtualization for v4.1, thanks!
+> 
+> Actually, maybe it makes more sense for you to apply this along with the
+> vfio patch that uses it?  So if you want:
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Tested-by: Daniel Axtens <dja@axtens.net>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Daniel Axtens <dja@axtens.net>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci-common.c |   62 +++++++++++++++++++++++--------------
- 1 files changed, 38 insertions(+), 24 deletions(-)
+That would be more convenient, I'll take it.  Thanks!
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 630cac6..3210495 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -773,6 +773,29 @@ void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
- 		return ppc_md.pcibios_set_root_bus_speed(bridge);
- }
- 
-+static int pci_host_scan_bus(struct pci_host_bridge *host)
-+{
-+	int mode = PCI_PROBE_NORMAL;
-+	struct pci_bus *bus = host->bus;
-+	struct pci_controller *hose = dev_get_drvdata(&host->dev);
-+
-+	/* Get probe mode and perform scan */
-+	if (hose->dn && ppc_md.pci_probe_mode)
-+		mode = ppc_md.pci_probe_mode(bus);
-+
-+	pr_debug("    probe mode: %d\n", mode);
-+	if (mode == PCI_PROBE_DEVTREE)
-+		of_scan_bus(hose->dn, bus);
-+
-+	if (mode == PCI_PROBE_NORMAL) {
-+		pci_bus_update_busn_res_end(bus, 255);
-+		hose->last_busno = pci_scan_child_bus(bus);
-+		pci_bus_update_busn_res_end(bus, hose->last_busno);
-+	}
-+
-+	return pci_bus_child_max_busnr(bus);
-+}
-+
- /* This header fixup will do the resource fixup for all devices as they are
-  * probed, but not for bridge ranges
-  */
-@@ -1585,6 +1608,11 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- 	return of_node_get(hose->dn);
- }
- 
-+static struct pci_host_bridge_ops pci_host_ops = {
-+	.set_root_bus_speed = pcibios_set_root_bus_speed,
-+	.scan_bus = pci_host_scan_bus,
-+};
-+
- /**
-  * pci_scan_phb - Given a pci_controller, setup and scan the PCI bus
-  * @hose: Pointer to the PCI host controller instance structure
-@@ -1592,9 +1620,8 @@ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- void pcibios_scan_phb(struct pci_controller *hose)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host;
- 	struct device_node *node = hose->dn;
--	int mode;
- 
- 	pr_debug("PCI: Scanning PHB %s\n", of_node_full_name(node));
- 
-@@ -1609,30 +1636,17 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	hose->busn.flags = IORESOURCE_BUS;
- 	pci_add_resource(&resources, &hose->busn);
- 
-+	pci_host_ops.pci_ops = hose->ops;
- 	/* Create an empty bus for the toplevel */
--	bus = pci_create_root_bus(hose->parent, hose->global_number,
--			hose->ops, hose, &resources);
--	if (bus == NULL) {
--		pr_err("Failed to create bus for PCI domain %04x\n",
--			hose->global_number);
-+	host = pci_scan_host_bridge(hose->parent, hose->global_number,
-+			hose, &resources, &pci_host_ops);
-+	if (host == NULL) {
-+		pr_err("Failed to create host bridge for pci%04x:%02x\n",
-+			hose->global_number, hose->first_busno);
- 		pci_free_resource_list(&resources);
- 		return;
- 	}
--	hose->bus = bus;
--
--	/* Get probe mode and perform scan */
--	mode = PCI_PROBE_NORMAL;
--	if (node && ppc_md.pci_probe_mode)
--		mode = ppc_md.pci_probe_mode(bus);
--	pr_debug("    probe mode: %d\n", mode);
--	if (mode == PCI_PROBE_DEVTREE)
--		of_scan_bus(node, bus);
--
--	if (mode == PCI_PROBE_NORMAL) {
--		pci_bus_update_busn_res_end(bus, 255);
--		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
--	}
-+	hose->bus = host->bus;
- 
- 	/* Platform gets a chance to do some global fixups before
- 	 * we proceed to resource allocation
-@@ -1641,9 +1655,9 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 		ppc_md.pcibios_fixup_phb(hose);
- 
- 	/* Configure PCI Express settings */
--	if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-+	if (host->bus && !pci_has_flag(PCI_PROBE_ONLY)) {
- 		struct pci_bus *child;
--		list_for_each_entry(child, &bus->children, node)
-+		list_for_each_entry(child, &host->bus->children, node)
- 			pcie_bus_configure_settings(child);
- 	}
- }
--- 
-1.7.1
+Alex
+
+> > > ---
+> > >  drivers/pci/pci.c   |    1 +
+> > >  include/linux/pci.h |    1 +
+> > >  2 files changed, 2 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 81f06e8..9f3e691 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -3524,6 +3524,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
+> > >  {
+> > >  	return pci_dev_reset(dev, 1);
+> > >  }
+> > > +EXPORT_SYMBOL_GPL(pci_probe_reset_function);
+> > >  
+> > >  /**
+> > >   * pci_reset_function - quiesce and reset a PCI device function
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > index 211e9da..233d1ae 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -986,6 +986,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+> > >  			  enum pcie_link_width *width);
+> > >  int __pci_reset_function(struct pci_dev *dev);
+> > >  int __pci_reset_function_locked(struct pci_dev *dev);
+> > > +int pci_probe_reset_function(struct pci_dev *dev);
+> > >  int pci_reset_function(struct pci_dev *dev);
+> > >  int pci_try_reset_function(struct pci_dev *dev);
+> > >  int pci_probe_reset_slot(struct pci_slot *slot);
+> > > 
+
+
 
