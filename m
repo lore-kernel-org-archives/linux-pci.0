@@ -1,107 +1,244 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og120.obsmtp.com ([64.18.0.137]:45063 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751430AbbDUEFj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 00:05:39 -0400
-Received: by pabsx10 with SMTP id sx10so228204214pab.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 21:05:38 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v5 3/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node
-Date: Mon, 20 Apr 2015 21:04:23 -0700
-Message-Id: <cfdb95a38689836bac693df6edb8c09829ea61cd.1429586144.git.dhdang@apm.com>
-In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
-References: <cover.1429586144.git.dhdang@apm.com>
-In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
-References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
+Received: from mga11.intel.com ([192.55.52.93]:3440 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754441AbbDICuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Apr 2015 22:50:13 -0400
+Message-ID: <5525E8DA.601@linux.intel.com>
+Date: Thu, 09 Apr 2015 10:50:02 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com> <1832914.AK2bZGkVxq@vostro.rjw.lan> <5524C13E.3060101@linux.intel.com> <1859870.HzuzAL1ZiX@vostro.rjw.lan>
+In-Reply-To: <1859870.HzuzAL1ZiX@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+On 2015/4/9 7:44, Rafael J. Wysocki wrote:
+> On Wednesday, April 08, 2015 01:48:46 PM Jiang Liu wrote:
+>> On 2015/4/7 8:28, Rafael J. Wysocki wrote:
+>>> On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
+>>>> Hi Jiang,
+>> <snip>
+>>>>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
+>>>>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
+>>>>
+>>>> We should assume it will eventually be used for all ACPI devices,
+>>>> shouldn't we?
+>>>
+>>> I'm not sure about that, really.  In fact, I'd restrict its use to devices
+>>> types that actually can "produce" resources (ie. do not require the resources
+>>> to be provided by their ancestors or to be available from a global pool).
+>>>
+>>> Otherwise we're pretty much guaranteed to get into trouble.
+>>>
+>>> And all of the above rules need to be documented in the kernel source tree
+>>> or people will get confused.
+>> Hi Rafael,
+>>     How about following comments for acpi_dev_filter_resource_type()?
+>> Thanks!
+>> Gerry
+>> --------------------------------------------------------------------
+>> /**
+>>  * According to ACPI specifications, Consumer/Producer flag in ACPI resource
+>>  * descriptor means:
+>>  *      1(CONSUMER): This device consumes this resource
+>>  *      0(PRODUCER): This device produces and consumes this resource
+>>  * But for ACPI PCI host bridge, it is interpreted in another way:
+> 
+> So first of all, this leads to a question: Why is it interpreted for ACPI PCI
+> host bridges differently?
+> 
+> Is it something we've figured out from experience, or is there a standard
+> mandating that? 
+Hi Rafael,
+	I think we got this knowledge by experiences. PCI FW spec only
+states _CRS reports resources assigned to the host bridge by firmware.
+There's no statement about whether the resource is consumed by host
+bridge itself or provided to it's child bus/devices. On x86/IA64 side,
+the main resource consumed by PCI host bridge is IOPORT 0xCF8-0xCFF,
+but not sure about ARM64 side. So how about:
+PCI Firmware specification states that _CRS reports resources
+assigned to the host bridge, but there's no way to tell whether
+the resource is consumed by host bridge itself or provided to
+its child bus/devices. So according to experiences, PCI host bridge
+interprets Consumer/Producer flag as below to tell whether the resource
+is consumed by host bridge itself.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pci-msi.txt      | 63 ++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+> 
+>>  *      1(CONSUMER): PCI host bridge itself consumes the resource, such as
+>>  *                   IOPORT 0xCF8-0xCFF to access PCI configuraiton space.
+>>  *      0(PRODUCER): PCI host bridge provides this resource to its child
+>>  *                   bus and devices.
+>>  *
+>>  * So this is a specially designed helper function to support ACPI PCI host
+>>  * bridge and ACPI IOAPIC, and its usage should be limited to those specific
+> 
+> And this will make the reader wonder why the IOAPIC should be treated the same
+> way as a PCI host bridge in that respect.
+If a hot-pluggable IOAPIC is represented as an ACPI device, its _CRS
+reports MMIO address assigned to the IOAPIC. And an IOAPIC device
+won't produce MMIO resources by itself. So we could reuse
+acpi_dev_filter_resource_type() here.
+How about:
+  * So this is a specially designed helper function to support:
+  * 1) ACPI PCI host bridge, as explained above
+  * 2) ACPI IOAPIC, its _CRS reports only one MMIO resource and
+  *    it won't produce MMIO resources by itself.
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-new file mode 100644
-index 0000000..0ffdcb3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-@@ -0,0 +1,63 @@
-+* AppliedMicro X-Gene PCIe MSI interface
-+
-+Required properties:
-+
-+- compatible: should contain "apm,xgene1-msi" to identify the core.
-+- msi-controller: indicates that this is X-Gene1 PCIe MSI controller node
-+- reg: A list of physical base address and length for each set of controller
-+       registers.
-+- interrupts: A list of interrupt outputs of the controller.
-+
-+Each PCIe node needs to have property msi-parent that points to msi controller node
-+
-+Examples:
-+
-+SoC DTSI:
-+
-+	+ MSI node:
-+	msi@79000000 {
-+		compatible = "apm,xgene1-msi";
-+		msi-controller;
-+		reg = <0x00 0x79000000 0x0 0x900000>;
-+		interrupts = <  0x0 0x10 0x4
-+				0x0 0x11 0x4
-+				0x0 0x12 0x4
-+				0x0 0x13 0x4
-+				0x0 0x14 0x4
-+				0x0 0x15 0x4
-+				0x0 0x16 0x4
-+				0x0 0x17 0x4
-+				0x0 0x18 0x4
-+				0x0 0x19 0x4
-+				0x0 0x1a 0x4
-+				0x0 0x1b 0x4
-+				0x0 0x1c 0x4
-+				0x0 0x1d 0x4
-+				0x0 0x1e 0x4
-+				0x0 0x1f 0x4>;
-+	};
-+
-+	+ PCIe controller node with msi-parent property pointing to MSI node:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		dma-coherent;
-+		clocks = <&pcie0clk 0>;
-+		msi-parent= <&msi>;
-+	};
--- 
-1.9.1
+Thanks!
+Gerry
 
+> 
+>>  * scenarioso only. It filters ACPI resource descriptors as below:
+>>  * 1) If flag IORESOURCE_WINDOW is not specified, it's querying resources
+>>  *    consumed by device. That is to return:
+>>  *      a) ACPI resources without producer_consumer flag
+>>  *      b) ACPI resources with producer_consumer flag setting to CONSUMER.
+>>  * 2) If flag IORESOURCE_WINDOW is specified, it's querying resources
+>> provided
+>>  *    by device. That is to return:
+>>  *      a) ACPI resources with producer_consumer flag setting to PRODUCER.
+>>  * 3) But there's an exception. Some platforms, such as PC Engines APU.1C,
+>>  *    report PCI host bridge resource provision by Memory32Fixed().
+>>  *    Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>>  *    So a special flag IORESOURCE_MEM_8AND16BIT is used to work around this
+>>  *    BIOS issue.
+>>  */
+>>
+>>>
+>>>>> Another possible fix is to only ignore IO resource consumed by host
+>>>>> bridge and keep IOMEM resource consumed by host bridge, please refer to:
+>>>>> http://www.spinics.net/lists/linux-pci/msg39706.html
+>>>>>
+>>>>> Sample ACPI table are archived at:
+>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>>>>>
+>>>>> V2->V3:
+>>>>> Refine function acpi_dev_match_producer_consumer() as suggested by Rafael
+>>>>>
+>>>>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+>>>>> Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+>>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>>>> ---
+>>>>>  arch/x86/pci/acpi.c     |    5 ++---
+>>>>>  drivers/acpi/resource.c |   33 +++++++++++++++++++++++++++++----
+>>>>>  2 files changed, 31 insertions(+), 7 deletions(-)
+>>>>>
+>>>>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>>>>> index e4695985f9de..8c4b1201f340 100644
+>>>>> --- a/arch/x86/pci/acpi.c
+>>>>> +++ b/arch/x86/pci/acpi.c
+>>>>> @@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>>>>>  	info->bridge = device;
+>>>>>  	ret = acpi_dev_get_resources(device, list,
+>>>>>  				     acpi_dev_filter_resource_type_cb,
+>>>>> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
+>>>>> +				     (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
+>>>>>  	if (ret < 0)
+>>>>>  		dev_warn(&device->dev,
+>>>>>  			 "failed to parse _CRS method, error code %d\n", ret);
+>>>>> @@ -346,8 +346,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>>>>>  			"no IO and memory resources present in _CRS\n");
+>>>>>  	else
+>>>>>  		resource_list_for_each_entry_safe(entry, tmp, list) {
+>>>>> -			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+>>>>> -			    (entry->res->flags & IORESOURCE_DISABLED))
+>>>>> +			if (entry->res->flags & IORESOURCE_DISABLED)
+>>>>>  				resource_list_destroy_entry(entry);
+>>>>>  			else
+>>>>>  				entry->res->name = info->name;
+>>>>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>>>>> index 5589a6e2a023..e761a868bdba 100644
+>>>>> --- a/drivers/acpi/resource.c
+>>>>> +++ b/drivers/acpi/resource.c
+>>>>> @@ -567,6 +567,12 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
+>>>>>  }
+>>>>>  EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+>>>>>  
+>>>>> +static bool acpi_dev_match_producer_consumer(unsigned long types, int producer)
+>>>>> +{
+>>>>> +	return ((types & IORESOURCE_WINDOW) && producer == ACPI_PRODUCER) ||
+>>>>> +		((types & IORESOURCE_WINDOW) == 0 && producer == ACPI_CONSUMER);
+>>>>> +}
+>>>>> +
+>>>>>  /**
+>>>>>   * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
+>>>>>   *				   types
+>>>>> @@ -585,27 +591,46 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+>>>>>  	case ACPI_RESOURCE_TYPE_MEMORY24:
+>>>>>  	case ACPI_RESOURCE_TYPE_MEMORY32:
+>>>>>  	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+>>>>> +		/*
+>>>>> +		 * These types of resource descriptor should be used to
+>>>>> +		 * describe resource consumption instead of resource provision.
+>>>>> +		 * But some platforms, such as PC Engines APU.1C, reports
+>>>>> +		 * resource provision by Memory32Fixed(). Please refer to:
+>>>>> +		 * https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>>>>> +		 * So accept it no matter IORESOURCE_WINDOW is specified or not.
+>>>>> +		 */
+>>>>>  		type = IORESOURCE_MEM;
+>>>>
+>>>> I think this means these resources will be accepted regardless of whether
+>>>> the caller is looking for Consumer or Producer resources.  To preserve the
+>>>> behavior I added with 66528fdd45b0, we might be forced to do that for PCI
+>>>> host bridges (or maybe we could just add a quirk for the PC Engines BIOS).
+>>>>
+>>>> But I don't think it matches the ACPI spec intent, so I'm not sure it's
+>>>> right to do it for all devices.
+>>>
+>>> No, it isn't, which is why acpi_dev_filter_resource_type() should not be used
+>>> for all devices.
+>>>
+>>>>>  		break;
+>>>>>  	case ACPI_RESOURCE_TYPE_IO:
+>>>>>  	case ACPI_RESOURCE_TYPE_FIXED_IO:
+>>>>> -		type = IORESOURCE_IO;
+>>>>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>>>>> +			type = IORESOURCE_IO;
+>>>>>  		break;
+>>>>>  	case ACPI_RESOURCE_TYPE_IRQ:
+>>>>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>>>>> +			type = IORESOURCE_IRQ;
+>>>>> +		break;
+>>>>>  	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+>>>>> -		type = IORESOURCE_IRQ;
+>>>>> +		if (acpi_dev_match_producer_consumer(types,
+>>>>> +				ares->data.extended_irq.producer_consumer))
+>>>>> +			type = IORESOURCE_IRQ;
+>>>>>  		break;
+>>>>>  	case ACPI_RESOURCE_TYPE_DMA:
+>>>>>  	case ACPI_RESOURCE_TYPE_FIXED_DMA:
+>>>>> -		type = IORESOURCE_DMA;
+>>>>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>>>>> +			type = IORESOURCE_DMA;
+>>>>>  		break;
+>>>>>  	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
+>>>>> -		type = IORESOURCE_REG;
+>>>>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
+>>>>> +			type = IORESOURCE_REG;
+>>>>>  		break;
+>>>>>  	case ACPI_RESOURCE_TYPE_ADDRESS16:
+>>>>>  	case ACPI_RESOURCE_TYPE_ADDRESS32:
+>>>>>  	case ACPI_RESOURCE_TYPE_ADDRESS64:
+>>>>>  	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+>>>>> +		if (!acpi_dev_match_producer_consumer(types,
+>>>>> +				ares->data.address.producer_consumer))
+>>>>> +			break;
+>>>>>  		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
+>>>>>  			type = IORESOURCE_MEM;
+>>>>>  		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+> 
