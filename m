@@ -1,58 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34089 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313AbbEAGEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:35 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id C2A7E3578058
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:33 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164P0V13959422
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:33 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163xck005989
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:00 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 11/21] powerpc/pci: Don't scan empty slot
-Date: Fri,  1 May 2015 16:02:58 +1000
-Message-Id: <1430460188-31343-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH] vfio-pci: Attempt bus/slot reset on open
+From: Alex Williamson <alex.williamson@redhat.com>
+To: alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org
+Date: Thu, 09 Apr 2015 09:55:22 -0600
+Message-ID: <20150409155229.6935.47756.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In hotplug case, function pcibios_add_pci_devices() is called to
-rescan the specified PCI bus, which might not have any child devices.
-Access to the PCI bus's child device node will cause kernel crash
-without exception. The patch adds condition of skipping scanning
-PCI bus without child devices, in order to avoid kernel crash.
+Apply the same logic we use in vfio_pci_try_bus_reset() to perform a
+bus or slot reset as devices are released to the device open path.
+This not only improves our chances of handing the device to the user
+in a clean state, but we can also avoid duplicate resets if the device
+is released and re-opened while bound to vfio-pci.  We can also
+potentially reset multiple device with a single bus/slot reset and
+avoid multiple function-level resets later.  We switch to using
+pci_probe_reset_function() since we still want to expose function
+level reset to the user, but we may not use it as the reset mechanism
+of choice when enabling the device.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/powerpc/kernel/pci-hotplug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 0040343..651a866a 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -92,7 +92,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
- 	if (mode == PCI_PROBE_DEVTREE) {
- 		/* use ofdt-based probe */
- 		of_rescan_bus(dn, bus);
--	} else if (mode == PCI_PROBE_NORMAL) {
-+	} else if (mode == PCI_PROBE_NORMAL &&
-+		   dn->child && PCI_DN(dn->child)) {
- 		/*
- 		 * Use legacy probe. In the partial hotplug case, we
- 		 * probably have grandchildren devices unplugged. So
--- 
-2.1.0
+Depends on export of pci_probe_reset_function()
+http://article.gmane.org/gmane.linux.kernel.pci/40662
+
+ drivers/vfio/pci/vfio_pci.c |   24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 69fab0f..d9f7ec5 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -119,16 +119,32 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 	u16 cmd;
+ 	u8 msix_pos;
+ 
+-	pci_set_power_state(pdev, PCI_D0);
++	/*
++	 * Start by resetting the device(s).  A bus reset is our best method
++	 * and may not be available once other devices are in use.  It may
++	 * also mark multiple devices as clean, avoiding duplicate function
++	 * level resets later.
++	 */
++	vfio_pci_try_bus_reset(vdev);
++	if (vdev->needs_reset)
++		vdev->needs_reset = !(pci_try_reset_function(pdev) == 0);
+ 
+-	/* Don't allow our initial saved state to include busmaster */
++	/*
++	 * These are reset defaults, but let's be sure the device is awake
++	 * and not doing DMA.  We do not want BusMaster enabled in save state.
++	 */
++	pci_set_power_state(pdev, PCI_D0);
+ 	pci_clear_master(pdev);
+ 
++	/* Initialize device */
+ 	ret = pci_enable_device(pdev);
+ 	if (ret)
+ 		return ret;
+ 
+-	vdev->reset_works = (pci_reset_function(pdev) == 0);
++	/*
++	 * Checkpoint, this is the base level state we want to
++	 * restore when the device is released.
++	 */
+ 	pci_save_state(pdev);
+ 	vdev->pci_saved_state = pci_store_saved_state(pdev);
+ 	if (!vdev->pci_saved_state)
+@@ -948,6 +964,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+ 	mutex_init(&vdev->igate);
+ 	spin_lock_init(&vdev->irqlock);
++	vdev->reset_works = (pci_probe_reset_function(pdev) == 0);
++	vdev->needs_reset = true;
+ 
+ 	ret = vfio_add_group_dev(&pdev->dev, &vfio_pci_ops, vdev);
+ 	if (ret) {
 
