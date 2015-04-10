@@ -1,103 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43231 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932834AbbDNCcg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 22:32:36 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 22/33] x86/irq: Kill unused alloc_irq_and_cfg_at()
-Date: Tue, 14 Apr 2015 10:29:59 +0800
-Message-Id: <1428978610-28986-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:35579 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756440AbbDJWy3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:54:29 -0400
+Received: by iggg4 with SMTP id g4so9746582igg.0
+        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:54:28 -0700 (PDT)
+Subject: [PATCH v6 01/10] PCI/MSI: Rename msi_set_enable(),
+ msix_clear_and_set_ctrl()
+To: "Michael S. Tsirkin" <mst@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fam Zheng <famz@redhat.com>, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 10 Apr 2015 17:54:26 -0500
+Message-ID: <20150410225426.20848.45696.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no caller of alloc_irq_and_cfg_at() anymore, so kill it.
+From: Michael S. Tsirkin <mst@redhat.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416901802-24211-31-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Rename msi_set_enable() to pci_msi_set_enable() and
+msix_clear_and_set_ctrl() to pci_msix_clear_and_set_ctrl().
+
+No functional change.
+
+[bhelgaas: changelog, split into separate patch]
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Fam Zheng <famz@redhat.com>
+CC: stable@vger.kernel.org
 ---
- arch/x86/include/asm/hw_irq.h |    1 -
- arch/x86/kernel/apic/vector.c |   21 ---------------------
- 2 files changed, 22 deletions(-)
+ drivers/pci/msi.c |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 1ce5f8164c64..a88f5b325bf2 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -186,7 +186,6 @@ extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
- 				struct irq_alloc_info *src);
- extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
--extern struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node);
- extern void lock_vector_lock(void);
- extern void unlock_vector_lock(void);
- extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 91a89500f88f..8467ca47bd4a 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -76,27 +76,6 @@ out_cfg:
- 	return NULL;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c3e7dfcf9ff5..6cd366058ec4 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -185,7 +185,7 @@ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+ 	return default_restore_msi_irqs(dev);
  }
  
--struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
--{
--	int res = irq_alloc_desc_at(at, node);
--	struct irq_cfg *cfg;
--
--	if (res < 0) {
--		if (res != -EEXIST)
--			return NULL;
--		cfg = irq_cfg(at);
--		if (cfg)
--			return cfg;
--	}
--
--	cfg = alloc_irq_cfg(node);
--	if (cfg)
--		irq_set_chip_data(at, cfg);
--	else
--		irq_free_desc(at);
--	return cfg;
--}
--
- static void free_irq_cfg(struct irq_cfg *cfg)
+-static void msi_set_enable(struct pci_dev *dev, int enable)
++static void pci_msi_set_enable(struct pci_dev *dev, int enable)
  {
- 	if (cfg) {
--- 
-1.7.10.4
+ 	u16 control;
+ 
+@@ -196,7 +196,7 @@ static void msi_set_enable(struct pci_dev *dev, int enable)
+ 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+ }
+ 
+-static void msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
++static void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
+ {
+ 	u16 ctrl;
+ 
+@@ -452,7 +452,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
+ 	entry = irq_get_msi_desc(dev->irq);
+ 
+ 	pci_intx_for_msi(dev, 0);
+-	msi_set_enable(dev, 0);
++	pci_msi_set_enable(dev, 0);
+ 	arch_restore_msi_irqs(dev);
+ 
+ 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+@@ -473,14 +473,14 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	/* route the table */
+ 	pci_intx_for_msi(dev, 0);
+-	msix_clear_and_set_ctrl(dev, 0,
++	pci_msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+ 
+ 	arch_restore_msi_irqs(dev);
+ 	list_for_each_entry(entry, &dev->msi_list, list)
+ 		msix_mask_irq(entry, entry->masked);
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ }
+ 
+ void pci_restore_msi_state(struct pci_dev *dev)
+@@ -647,7 +647,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	int ret;
+ 	unsigned mask;
+ 
+-	msi_set_enable(dev, 0);	/* Disable MSI during set up */
++	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
+ 
+ 	entry = msi_setup_entry(dev, nvec);
+ 	if (!entry)
+@@ -683,7 +683,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 
+ 	/* Set MSI enabled bits	 */
+ 	pci_intx_for_msi(dev, 0);
+-	msi_set_enable(dev, 1);
++	pci_msi_set_enable(dev, 1);
+ 	dev->msi_enabled = 1;
+ 
+ 	dev->irq = entry->irq;
+@@ -775,7 +775,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	void __iomem *base;
+ 
+ 	/* Ensure MSI-X is disabled while it is set up */
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 
+ 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
+ 	/* Request & Map MSI-X table region */
+@@ -801,7 +801,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	 * MSI-X registers.  We need to mask all the vectors to prevent
+ 	 * interrupts coming in before they're fully set up.
+ 	 */
+-	msix_clear_and_set_ctrl(dev, 0,
++	pci_msix_clear_and_set_ctrl(dev, 0,
+ 				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
+ 
+ 	msix_program_entries(dev, entries);
+@@ -814,7 +814,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ 
+ 	return 0;
+ 
+@@ -919,7 +919,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 	BUG_ON(list_empty(&dev->msi_list));
+ 	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
+ 
+-	msi_set_enable(dev, 0);
++	pci_msi_set_enable(dev, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msi_enabled = 0;
+ 
+@@ -1027,7 +1027,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 		__pci_msix_desc_mask_irq(entry, 1);
+ 	}
+ 
+-	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msix_enabled = 0;
+ }
+@@ -1069,11 +1069,11 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
+ 	 */
+ 	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+ 	if (dev->msi_cap)
+-		msi_set_enable(dev, 0);
++		pci_msi_set_enable(dev, 0);
+ 
+ 	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+ 	if (dev->msix_cap)
+-		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ }
+ 
+ /**
 
