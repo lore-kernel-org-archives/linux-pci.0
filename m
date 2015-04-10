@@ -1,72 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH] ia64/PCI: Treat all host bridge Address Space Descriptors
- (even consumers) as windows
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	linux-ia64@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>
-Date: Mon, 20 Apr 2015 18:30:55 -0500
-Message-ID: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v10 10/10] iommu/vt-d: Use old irte in kdump kernel
+Date: Fri, 10 Apr 2015 16:42:13 +0800
+Message-Id: <1428655333-19504-11-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prior to c770cb4cb505 ("PCI: Mark invalid BARs as unassigned"), if we tried
-to claim a PCI BAR but could not find an upstream bridge window that
-matched it, we complained but still allowed the device to be enabled.
+Fix the intr-remapping fault.
 
-c770cb4cb505 broke devices that previously worked (mptsas and igb in the
-case Tony reported, but it could be any devices) because it marks those
-BARs as IORESOURCE_UNSET, which makes pci_enable_device() complain and
-return failure:
+[1.594890] dmar: DRHD: handling fault status reg 2
+[1.594894] dmar: INTR-REMAP: Request device [[41:00.0] fault index 4d
+[1.594894] INTR-REMAP:[fault reason 34] Present field in the IRTE entry
+is clear
 
-  igb 0000:81:00.0: can't enable device: BAR 0 [mem size 0x00020000] not assigned
-  igb: probe of 0000:81:00.0 failed with error -22
+Use old irte in second kernel, do not disable and re-enable interrupt
+remapping.
 
-The underlying cause is an ACPI Address Space Descriptor for a PCI host
-bridge window that is marked as "consumer".  This is a firmware defect:
-resources that are produced on the downstream side of a bridge should be
-marked "producer".  But rejecting these BARs that we previously allowed is
-a functionality regression, and firmware has not used the producer/consumer
-bit consistently, so we can't rely on it anyway.
-
-Stop checking the producer/consumer bit, and assume all bridge Address
-Space Descriptors are for bridge windows.
-
-Note that this change does not affect I/O Port or Fixed Location I/O Port
-Descriptors, which are commonly used for the [io 0x0cf8-0x0cff] config
-access range.  That range is a "consumer" range and should not be treated
-as a window.
-
-Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96961
-Reported-and-tested-by: Tony Luck <tony.luck@intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 ---
- arch/ia64/pci/pci.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/iommu/intel_irq_remapping.c | 28 ++++++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 4 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 48cc65705db4..d4e162d35b34 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -240,15 +240,12 @@ static acpi_status resource_to_window(struct acpi_resource *resource,
- 	 * We're only interested in _CRS descriptors that are
- 	 *	- address space descriptors for memory or I/O space
- 	 *	- non-zero size
--	 *	- producers, i.e., the address space is routed downstream,
--	 *	  not consumed by the bridge itself
- 	 */
- 	status = acpi_resource_to_address64(resource, addr);
- 	if (ACPI_SUCCESS(status) &&
- 	    (addr->resource_type == ACPI_MEMORY_RANGE ||
- 	     addr->resource_type == ACPI_IO_RANGE) &&
--	    addr->address.address_length &&
--	    addr->producer_consumer == ACPI_PRODUCER)
-+	    addr->address.address_length)
- 		return AE_OK;
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index e6426a0..02615a6 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -197,6 +197,10 @@ static int modify_irte(int irq, struct irte *irte_modified)
  
- 	return AE_ERROR;
+ 	set_64bit(&irte->low, irte_modified->low);
+ 	set_64bit(&irte->high, irte_modified->high);
++
++	if (iommu->pre_enabled_ir)
++		__iommu_update_old_irte(iommu, index);
++
+ 	__iommu_flush_cache(iommu, irte, sizeof(*irte));
+ 
+ 	rc = qi_flush_iec(iommu, index, 0);
+@@ -258,6 +262,9 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 	bitmap_release_region(iommu->ir_table->bitmap, index,
+ 			      irq_iommu->irte_mask);
+ 
++	if (iommu->pre_enabled_ir)
++		__iommu_update_old_irte(iommu, -1);
++
+ 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ }
+ 
+@@ -660,11 +667,13 @@ static int __init intel_enable_irq_remapping(void)
+ 		 */
+ 		dmar_fault(-1, iommu);
+ 
++		iommu_check_pre_ir_status(iommu);
++
+ 		/*
+-		 * Disable intr remapping and queued invalidation, if already
+-		 * enabled prior to OS handover.
++		 * Here we do not disable intr remapping,
++		 * if already enabled prior to OS handover.
+ 		 */
+-		iommu_disable_irq_remapping(iommu);
++		/* iommu_disable_irq_remapping(iommu); */
+ 
+ 		dmar_disable_qi(iommu);
+ 	}
+@@ -700,7 +709,18 @@ static int __init intel_enable_irq_remapping(void)
+ 	 * Setup Interrupt-remapping for all the DRHD's now.
+ 	 */
+ 	for_each_iommu(iommu, drhd) {
+-		iommu_set_irq_remapping(iommu, eim);
++		if (iommu->pre_enabled_ir) {
++			unsigned long long q;
++
++			q = dmar_readq(iommu->reg + DMAR_IRTA_REG);
++			iommu->ir_table->base_old_phys = q & VTD_PAGE_MASK;
++			iommu->ir_table->base_old_virt = ioremap_cache(
++				iommu->ir_table->base_old_phys,
++				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++			__iommu_load_old_irte(iommu);
++		} else
++			iommu_set_irq_remapping(iommu, eim);
++
+ 		setup = 1;
+ 	}
+ 
+-- 
+2.0.0-rc0
 
