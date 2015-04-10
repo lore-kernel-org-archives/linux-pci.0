@@ -1,127 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:35850 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459AbbDAWVj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Apr 2015 18:21:39 -0400
-Received: by igbud6 with SMTP id ud6so61531185igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 01 Apr 2015 15:21:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <551A40E8.4080708@huawei.com>
-References: <55167C1C.6010001@huawei.com>
-	<CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>
-	<551A40E8.4080708@huawei.com>
-Date: Wed, 1 Apr 2015 15:21:38 -0700
-Message-ID: <CAE9FiQUQ_Kz8sNzu9RmOfoe4xEwfZ3atGcfQ39UAp4dRz2rRFA@mail.gmail.com>
-Subject: Re: Assign mem resource fail after remove and rescan
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	PCI <linux-pci@vger.kernel.org>,
-	"Herui (Ray)" <Ray.herui@huawei.com>
-Content-Type: multipart/mixed; boundary=001a113e94b289c70d0512b123bb
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:36390 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754773AbbDJIoN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 04:44:13 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v10 09/10] iommu/vt-d: Copy functions for irte
+Date: Fri, 10 Apr 2015 16:42:12 +0800
+Message-Id: <1428655333-19504-10-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a113e94b289c70d0512b123bb
-Content-Type: text/plain; charset=UTF-8
+Functions to copy the irte data from the old kernel into the kdump kernel.
 
-On Mon, Mar 30, 2015 at 11:38 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2015/3/29 14:18, Yinghai Lu wrote:
->> On Sat, Mar 28, 2015 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> ...
->>>
->>> I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
->>> and when system boot up, it requested only 0x4800000.
->>>
->    I tested it, remove and rescan 05:19.0 device is ok now, but
-> if do the operations for the parent device of 05:19.0, the result is
-> still fail.
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel_irq_remapping.c | 68 +++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h         |  4 +++
+ 2 files changed, 72 insertions(+)
 
-Found the problem, attached patch should fix the problem.
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 14de1ab..e6426a0 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -17,6 +17,10 @@
+ 
+ #include "irq_remapping.h"
+ 
++static int __iommu_load_old_irte(struct intel_iommu *iommu);
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
++static void iommu_check_pre_ir_status(struct intel_iommu *iommu);
++
+ struct ioapic_scope {
+ 	struct intel_iommu *iommu;
+ 	unsigned int id;
+@@ -1302,3 +1306,67 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ 
+ 	return ret;
+ }
++
++static int __iommu_load_old_irte(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	memcpy(iommu->ir_table->base,
++		iommu->ir_table->base_old_virt,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	__iommu_flush_cache(iommu, iommu->ir_table->base,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	return 0;
++}
++
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
++{
++	int start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
++		return -1;
++
++	if (index == -1) {
++		start = 0;
++		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
++	} else {
++		start = index * sizeof(struct irte);
++		size = sizeof(struct irte);
++	}
++
++	to = iommu->ir_table->base_old_virt;
++	from = iommu->ir_table->base;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++
++	return 0;
++}
++
++static void iommu_check_pre_ir_status(struct intel_iommu *iommu)
++{
++	u32 sts;
++
++	sts = readl(iommu->reg + DMAR_GSTS_REG);
++	if (sts & DMA_GSTS_IRES) {
++		pr_info("IR is enabled prior to OS.\n");
++		iommu->pre_enabled_ir = 1;
++	}
++}
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 9ca025a..d7ee5ba 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -289,6 +289,8 @@ struct q_inval {
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
++	void __iomem *base_old_virt;
++	unsigned long base_old_phys;
+ };
+ #endif
+ 
+@@ -330,6 +332,8 @@ struct intel_iommu {
+ 
+ 	/* whether translation is enabled prior to OS*/
+ 	u8		pre_enabled_trans;
++	/* whether interrupt remapping is enabled prior to OS*/
++	u8		pre_enabled_ir;
+ 
+ 	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
+ 	unsigned long	root_entry_old_phys; /* root entry in old kernel */
+-- 
+2.0.0-rc0
 
-Thanks
-
-Yinghai
-
---001a113e94b289c70d0512b123bb
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_new_align_size_rule.patch"
-Content-Disposition: attachment; filename="pci_new_align_size_rule.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i7zashqg0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IE9wdGltaXplIGJ1cyBtZW0gc2l6aW5nIHRvIHNtYWxsIHNp
-emUKCkN1cnJlbnQgY29kZSB0cnkgdG8gZ2V0IG1pbl9hbGlnbiBhcyBwb3NzaWJsZSBhbmQgdXNl
-IHRoYXQgdG8KYWxpZ24gZmluYWwgc2l6ZS4KClRoYXQgY291bGQgY2F1c2UgZ2VuZXJhdGUgd3Jv
-bmcgYWxpZ24vc2l6ZSBvciB0b28gYmlnIHNpemUgaW4gc29tZSBjYXNlLgoKIHdoZW4gd2UgaGF2
-ZSBhbGlnbi9zaXplOiAxNk0vNjRNCiBtaW5fYWxpZ24vc2l6ZTAgd2lsbCBiZSA4TS82NE0sIHRo
-YXQgaXMgd3JvbmcsIGFsaWduIG11c3QgYmUgMTZNLgoKIHdoZW4gd2UgaGF2ZSBhbGlnbi9zaXpl
-OiAxTS8xTSwgNjRNLzY0TSwKIG1pbl9hbGlnbi9zaXplMCB3aWxsIGJlIDMyTS85Nk0sIHRoYXQg
-aXMgd2F5IHRvbyBiaWcgZm9yIHN1bSBzaXplIDY1TS4KClRoYXQgd2lsbCBjdWFzZSBhbGxvY2F0
-aW9uIGZhaWxzLgoKVGhlIHBhdGNoIGludHJvZHVjZSBtYXhfYWxpZ24vc2l6ZTBfbWF4LCBhbmQg
-c2l6ZTBfbWF4IGlzIGp1c3QKc3VtIG9mIGFsbCBjaGlsZHJlbiByZXNvdXJjZS4KClByZWZlciBz
-bWFsbCBzaXplIGluc3RlYWQgb2Ygc21hbGwgYWxpZ24uIE9ubHkgdXNlIG1pbl9hbGlnbiB3aGVu
-CnR3byBzaXplIGlzIHRoZSBzYW1lLgoKVGhlIG5ldyBzaXplIHdpbGwgb25seSBuZWVkIHRvIGJl
-IGFsaWduZWQgdG8gYnVzIHdpbmRvdyBhbGlnbm1lbnQuCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFp
-IEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL3NldHVwLWJ1cy5jIHwg
-ICA1MCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0KIDEg
-ZmlsZSBjaGFuZ2VkLCA0NyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKSW5kZXg6IGxp
-bnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYu
-b3JpZy9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Nl
-dHVwLWJ1cy5jCkBAIC04ODIsMTIgKzg4MiwxNCBAQCBzdGF0aWMgdm9pZCBwYnVzX3NpemVfaW8o
-c3RydWN0IHBjaV9idXMKIAl9CiAKIAlzaXplMCA9IGNhbGN1bGF0ZV9pb3NpemUoc2l6ZSwgbWlu
-X3NpemUsIHNpemUxLAotCQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGlnbik7CisJCQkJ
-IHJlc291cmNlX3NpemUoYl9yZXMpLAorCQkJCSB3aW5kb3dfYWxpZ25tZW50KGJ1cywgSU9SRVNP
-VVJDRV9JTykpOwogCWlmIChjaGlsZHJlbl9hZGRfc2l6ZSA+IGFkZF9zaXplKQogCQlhZGRfc2l6
-ZSA9IGNoaWxkcmVuX2FkZF9zaXplOwogCXNpemUxID0gKCFyZWFsbG9jX2hlYWQgfHwgKHJlYWxs
-b2NfaGVhZCAmJiAhYWRkX3NpemUpKSA/IHNpemUwIDoKIAkJY2FsY3VsYXRlX2lvc2l6ZShzaXpl
-LCBtaW5fc2l6ZSwgYWRkX3NpemUgKyBzaXplMSwKLQkJCXJlc291cmNlX3NpemUoYl9yZXMpLCBt
-aW5fYWxpZ24pOworCQkJCSByZXNvdXJjZV9zaXplKGJfcmVzKSwKKwkJCQkgd2luZG93X2FsaWdu
-bWVudChidXMsIElPUkVTT1VSQ0VfSU8pKTsKIAlpZiAoIXNpemUwICYmICFzaXplMSkgewogCQlp
-ZiAoYl9yZXMtPnN0YXJ0IHx8IGJfcmVzLT5lbmQpCiAJCQlkZXZfaW5mbygmYnVzLT5zZWxmLT5k
-ZXYsICJkaXNhYmxpbmcgYnJpZGdlIHdpbmRvdyAlcFIgdG8gJXBSICh1bnVzZWQpXG4iLApAQCAt
-OTYyLDYgKzk2NCw4IEBAIHN0YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1Y3QgcGNpX2J1cwog
-CXN0cnVjdCByZXNvdXJjZSAqYl9yZXMgPSBmaW5kX2ZyZWVfYnVzX3Jlc291cmNlKGJ1cywKIAkJ
-CQkJbWFzayB8IElPUkVTT1VSQ0VfUFJFRkVUQ0gsIHR5cGUpOwogCXJlc291cmNlX3NpemVfdCBj
-aGlsZHJlbl9hZGRfc2l6ZSA9IDA7CisJcmVzb3VyY2Vfc2l6ZV90IG1heF9hbGlnbiA9IDAsIHNp
-emUwX21heDsKKwlpbnQgY291bnQgPSAwOwogCiAJaWYgKCFiX3JlcykKIAkJcmV0dXJuIC1FTk9T
-UEM7CkBAIC0xMDE2LDE5ICsxMDIwLDU5IEBAIHN0YXRpYyBpbnQgcGJ1c19zaXplX21lbShzdHJ1
-Y3QgcGNpX2J1cwogCQkJaWYgKG9yZGVyID4gbWF4X29yZGVyKQogCQkJCW1heF9vcmRlciA9IG9y
-ZGVyOwogCisJCQljb3VudCsrOworCQkJaWYgKGFsaWduID4gbWF4X2FsaWduKQorCQkJCW1heF9h
-bGlnbiA9IGFsaWduOworCiAJCQlpZiAocmVhbGxvY19oZWFkKQogCQkJCWNoaWxkcmVuX2FkZF9z
-aXplICs9IGdldF9yZXNfYWRkX3NpemUocmVhbGxvY19oZWFkLCByKTsKIAkJfQogCX0KIAorCS8q
-CisJICogTmV3IHJ1bGU6IFByZWZlciB0byBzbWFsbCBzaXplIGluc3RlYWQgb2Ygc21hbGwgYWxp
-Z24sCisJICogd2hlbiB3ZSBoYXZlIGFsaWduL3NpemU6IDFNLzFNLCAyTS8yTSwKKwkgKiAgbWlu
-X2FsaWduL3NpemUwOiAxTS8zTSwgbWF4X2FsaWduL3NpemUwX21heDogMk0vM00KKwkgKiAgcGlj
-ayAxTS8zTS4KKwkgKiB3aGVuIHdlIGhhdmUgYWxpZ24vc2l6ZTogMU0vMU0sIDY0TS82NE0sCisJ
-ICogIG1pbl9hbGlnbi9zaXplMDogMzJNLzk2TSwgbWF4X2FsaWduL3NpemUwX21heDogNjRNLzY1
-TQorCSAqICBwaWNrIDY0TS82NU0uCisJICogd2hlbiB3ZSBoYXZlIGFsaWduL3NpemU6IDFNLzFN
-LCAxNk0vNjRNLAorCSAqICBtaW5fYWxpZ24vc2l6ZTA6IDhNLzcyTSwgbWF4X2FsaWduL3NpemUw
-X21heDogMTZNLzY1TQorCSAqICBwaWNrIDE2TS82NU0uCisJICogd2hlbiB3ZSBoYXZlIGFsaWdu
-L3NpemU6IDMyTS82NE0sIDEyOE0vNTEyTQorCSAqICBtaW5fYWxpZ24vc2l6ZTA6IDY0TS81NzZN
-LCBtYXhfYWxpZ24vc2l6ZTBfbWF4OiAxMjhNLzU3Nk0KKwkgKiAgcGljayA2NE0vNTc2TS4KKwkg
-KiB3aGVuIHdlIGhhdmUgYWxpZ24vc2l6ZTogMTZNLzMyTSwgMTI4TS81MTJNCisJICogIG1pbl9h
-bGlnbi9zaXplMDogNjRNLzU3Nk0sIG1heF9hbGlnbi9zaXplMF9tYXg6IDEyOE0vNTU0TQorCSAq
-ICBwaWNrIDEyOE0vNTU0TS4KKwkgKiB3aGVuIHdlIGhhdmUgYWxpZ24vc2l6ZTogMTZNLzY0TQor
-CSAqICBtaW5fYWxpZ24vc2l6ZTA6IDhNLzY0TSwgbWF4X2FsaWduL3NpemUwX21heDogMTZNLzY0
-TQorCSAqICBoYXZlIHRvIHVzZSAxNk0vNjRNLgorCSAqLwogCW1pbl9hbGlnbiA9IGNhbGN1bGF0
-ZV9tZW1fYWxpZ24oYWxpZ25zLCBtYXhfb3JkZXIpOwogCW1pbl9hbGlnbiA9IG1heChtaW5fYWxp
-Z24sIHdpbmRvd19hbGlnbm1lbnQoYnVzLCBiX3Jlcy0+ZmxhZ3MpKTsKKwltYXhfYWxpZ24gPSBt
-YXgobWF4X2FsaWduLCB3aW5kb3dfYWxpZ25tZW50KGJ1cywgYl9yZXMtPmZsYWdzKSk7CisJaWYg
-KGNvdW50ID09IDEpCisJCW1pbl9hbGlnbiA9IG1heF9hbGlnbjsKKwogCXNpemUwID0gY2FsY3Vs
-YXRlX21lbXNpemUoc2l6ZSwgbWluX3NpemUsIDAsIHJlc291cmNlX3NpemUoYl9yZXMpLCBtaW5f
-YWxpZ24pOworCXNpemUwX21heCA9IGNhbGN1bGF0ZV9tZW1zaXplKHNpemUsIG1pbl9zaXplLCAw
-LCByZXNvdXJjZV9zaXplKGJfcmVzKSwKKwkJCQkJd2luZG93X2FsaWdubWVudChidXMsIGJfcmVz
-LT5mbGFncykpOworCisJaWYgKHNpemUwX21heCA8IHNpemUwKSB7CisJCXNpemUwID0gc2l6ZTBf
-bWF4OworCQltaW5fYWxpZ24gPSBtYXhfYWxpZ247CisJCW1heF9hbGlnbi0tOyAvKiB0byB1c2Ug
-c21hbGwgYWxpZ24gZm9yIHNpemUxIGNhbGN1bGF0aW9uICovCisJfQorCiAJaWYgKGNoaWxkcmVu
-X2FkZF9zaXplID4gYWRkX3NpemUpCiAJCWFkZF9zaXplID0gY2hpbGRyZW5fYWRkX3NpemU7CiAJ
-c2l6ZTEgPSAoIXJlYWxsb2NfaGVhZCB8fCAocmVhbGxvY19oZWFkICYmICFhZGRfc2l6ZSkpID8g
-c2l6ZTAgOgogCQljYWxjdWxhdGVfbWVtc2l6ZShzaXplLCBtaW5fc2l6ZSwgYWRkX3NpemUsCi0J
-CQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGlnbik7CisJCQkJcmVzb3VyY2Vfc2l6ZShi
-X3JlcyksCisJCQkJbWluX2FsaWduIDw9IG1heF9hbGlnbiA/IG1pbl9hbGlnbiA6CisJCQkJCXdp
-bmRvd19hbGlnbm1lbnQoYnVzLCBiX3Jlcy0+ZmxhZ3MpKTsKIAlpZiAoIXNpemUwICYmICFzaXpl
-MSkgewogCQlpZiAoYl9yZXMtPnN0YXJ0IHx8IGJfcmVzLT5lbmQpCiAJCQlkZXZfaW5mbygmYnVz
-LT5zZWxmLT5kZXYsICJkaXNhYmxpbmcgYnJpZGdlIHdpbmRvdyAlcFIgdG8gJXBSICh1bnVzZWQp
-XG4iLAo=
---001a113e94b289c70d0512b123bb--
