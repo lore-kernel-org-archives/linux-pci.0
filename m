@@ -1,66 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55256450.3010309@broadcom.com>
-Date: Wed, 8 Apr 2015 10:24:32 -0700
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:35225 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932205AbbDJWzX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:55:23 -0400
+Received: by iejt8 with SMTP id t8so28806484iej.2
+        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:55:22 -0700 (PDT)
+Subject: [PATCH v6 09/10] PCI/MSI: Drop pci_msi_off() calls from quirks
+To: "Michael S. Tsirkin" <mst@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Date: Fri, 10 Apr 2015 17:55:21 -0500
+Message-ID: <20150410225520.20848.10739.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [PATCH v2 0/2] iProc PCIe driver Kconfig changes
-References: <1427267293-29585-1-git-send-email-rjui@broadcom.com> <55158425.3020608@broadcom.com> <20150408171317.GA25163@google.com>
-In-Reply-To: <20150408171317.GA25163@google.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: Michael S. Tsirkin <mst@redhat.com>
 
-Okay I'll send out a new patch set based on v4.0-rc1 today. The new
-patch set will be with subject:
+The PCI core now disables MSI and MSI-X for all devices during enumeration
+regardless of CONFIG_PCI_MSI.  Remove device-specific code to disable
+MSI/MSI-X.
 
-[PATCH v8 0/4] pci: iproc: Add Broadcom iProc PCIe support
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks,
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 85f247e28a80..df3e71855316 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1600,7 +1600,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_EESSC,	quirk_a
+ 
+ static void quirk_pcie_mch(struct pci_dev *pdev)
+ {
+-	pci_msi_off(pdev);
+ 	pdev->no_msi = 1;
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
+@@ -1614,7 +1613,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quir
+  */
+ static void quirk_pcie_pxh(struct pci_dev *dev)
+ {
+-	pci_msi_off(dev);
+ 	dev->no_msi = 1;
+ 	dev_warn(&dev->dev, "PXH quirk detected; SHPC device MSI disabled\n");
+ }
 
-Ray
-
-On 4/8/2015 10:13 AM, Bjorn Helgaas wrote:
-> On Fri, Mar 27, 2015 at 09:24:05AM -0700, Ray Jui wrote:
->> Hi Bjorn,
->>
->> Do you think the following changes are okay? If so, could you pull them in?
->>
->> Thanks!
-> 
-> Hi Ray,
-> 
-> I'm a little bit lost because these patches don't apply on top of what I
-> currently have in my pci/host-iproc branch.   I haven't merged that branch
-> into "next yet, so can you just repost the entire set of all the iproc
-> stuff, based on v4.0-rc1?  Then I'll just merge the final stuff with no
-> fixups.
-> 
-> Bjorn
-> 
->> On 3/25/2015 12:08 AM, Ray Jui wrote:
->>> This patch series contains two patches to address iProc PCIe Kconfig related
->>> issues. The first patch adds more protection to PCIE_IPROC so it cannot be
->>> accidentally enabled for non-ARM based platforms. The second patch changes the
->>> config name of the iProc PCIe platform driver from PCIE_IPROC_PLTFM to
->>> PCIE_IPROC_PLATFORM. The driver name is also changed from pcie-iproc-pltfm.c
->>> to pcie-iproc-platform.c so it's consistent with the config name change.
->>>
->>> Changes from v1:
->>>  - Changes the driver name from pcie-iproc-pltfm.c to pcie-iproc-platform.c
->>>
->>> Ray Jui (2):
->>>   pci: iproc: fix PCIE_IPROC in Kconfig
->>>   pci: iproc: change PCIE_IPROC_PLTFM to PCIE_IPROC_PLATFORM
->>>
->>>  drivers/pci/host/Kconfig                           |    4 +++-
->>>  drivers/pci/host/Makefile                          |    2 +-
->>>  .../{pcie-iproc-pltfm.c => pcie-iproc-platform.c}  |    0
->>>  3 files changed, 4 insertions(+), 2 deletions(-)
->>>  rename drivers/pci/host/{pcie-iproc-pltfm.c => pcie-iproc-platform.c} (100%)
->>>
