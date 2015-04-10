@@ -1,92 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15706 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754078AbbDULiZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:25 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH v10 23/29] PCI/mvebu: Use pci_common_init_dev() to simplify code
-Date: Tue, 21 Apr 2015 19:34:42 +0800
-Message-ID: <1429616088-10249-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:37387 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932205AbbDJWzQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:55:16 -0400
+Received: by igblo3 with SMTP id lo3so9501632igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:55:15 -0700 (PDT)
+Subject: [PATCH v6 08/10] mic: Drop pci_msi_off() call during probe
+To: "Michael S. Tsirkin" <mst@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Date: Fri, 10 Apr 2015 17:55:14 -0500
+Message-ID: <20150410225514.20848.44500.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mvebu_pcie_scan_bus() is not necessary, we could use
-pci_common_init_dev() instead of pci_common_init(),
-and pass the device pointer as the parent. Then
-pci_scan_root_bus() will be called to scan the pci busses.
+From: Michael S. Tsirkin <mst@redhat.com>
 
-Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Jason Cooper <jason@lakedaemon.net>
+The PCI core now disables MSI and MSI-X for all devices during enumeration
+regardless of CONFIG_PCI_MSI.  Remove device-specific code to disable
+MSI/MSI-X.
+
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-mvebu.c |   18 +-----------------
- 1 files changed, 1 insertions(+), 17 deletions(-)
+ drivers/misc/mic/host/mic_intr.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index c91a8b4..70aa095 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -751,21 +751,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
+diff --git a/drivers/misc/mic/host/mic_intr.c b/drivers/misc/mic/host/mic_intr.c
+index d686f2846ac7..b4ca6c884d19 100644
+--- a/drivers/misc/mic/host/mic_intr.c
++++ b/drivers/misc/mic/host/mic_intr.c
+@@ -363,8 +363,6 @@ static int mic_setup_intx(struct mic_device *mdev, struct pci_dev *pdev)
+ {
+ 	int rc;
  
--static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
+-	pci_msi_off(pdev);
 -
--	bus = pci_create_root_bus(&pcie->pdev->dev, -1,
--				  &mvebu_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -809,12 +794,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
--	hw.scan           = mvebu_pcie_scan_bus;
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev->dev, &hw);
- }
- 
- /*
--- 
-1.7.1
+ 	/* Enable intx */
+ 	pci_intx(pdev, 1);
+ 	rc = mic_setup_callbacks(mdev);
 
