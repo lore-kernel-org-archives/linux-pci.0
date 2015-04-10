@@ -1,208 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60520 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268AbbEAGEM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:12 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:10 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 171D8357804C
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:09 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t41640KL45416544
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:08 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163YLT005540
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 02/21] powerpc/powernv: Enable M64 on P7IOC
-Date: Fri,  1 May 2015 16:02:49 +1000
-Message-Id: <1430460188-31343-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:47956 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754416AbbDJHlg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 03:41:36 -0400
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: [PATCH 2/5] PCI: st: Add Device Tree bindings for sti pcie
+Date: Fri, 10 Apr 2015 09:38:24 +0200
+Message-Id: <1428651507-32554-3-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1428651507-32554-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1428651507-32554-1-git-send-email-gabriel.fernandez@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch enables M64 window on P7IOC, which has been enabled on
-PHB3. Comparing to PHB3, there are 16 M64 BARs and each of them
-are divided to 8 segments. So each PHB can support 128 M64 segments.
-Also, P7IOC has M64DT, which helps mapping one particular M64
-segment# to arbitrary PE#. However, we just provide 128 M64 (16 BARs)
-segments and fixed mapping between PE# and M64 segment# in order
-to keep same logic to support M64 for PHB3 and P7IOC. In turn, we
-just need different phb->init_m64() hooks for P7IOC and PHB3.
+sti pcie is built around a Synopsis Designware PCIe IP.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 115 ++++++++++++++++++++++++++----
- 1 file changed, 103 insertions(+), 12 deletions(-)
+ Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f8bc950..646962f 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -165,6 +165,67 @@ static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
- 	clear_bit(pe, phb->ioda.pe_alloc);
- }
- 
-+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
-+{
-+	struct resource *r;
-+	int seg;
-+	s64 rc;
+diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+new file mode 100644
+index 0000000..25fcab3
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+@@ -0,0 +1,53 @@
++STMicroelectronics STi PCIe controller
 +
-+	/* Each PHB supports 16 separate M64 BARs, each of which are
-+	 * divided into 8 segments. So there are number of M64 segments
-+	 * as total PE#, which is 128.
-+	 */
-+	for (seg = 0; seg < phb->ioda.total_pe; seg += 8) {
-+		unsigned long base;
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
 +
-+		base = phb->ioda.m64_base + seg * phb->ioda.m64_segsize;
-+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-+						 OPAL_M64_WINDOW_TYPE,
-+						 seg / 8,
-+						 base,
-+						 0, /* unused */
-+						 8 * phb->ioda.m64_segsize);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Failure %lld configuring M64 BAR#%d on PHB#%d\n",
-+				rc, seg / 8, phb->hose->global_number);
-+			goto fail;
-+		}
++Required properties:
++ - compatible: "st,stih407-pcie"
++ - reg: base address and length of the pcie controller, mem-window address
++   and length available to the controller.
++ - interrupts: A list of interrupt outputs of the controller. Must contain an
++   entry for each entry in the interrupt-names property.
++ - interrupt-names: Should be "msi". STi interrupt that is asserted when an
++   MSI is received.
++ - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
++   offset for IP configuration.
++ - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
++   Associated names must be "powerdown" and "softreset".
++ - phys, phy-names: the phandle for the PHY device.
++   Associated name must be "pcie"
 +
-+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+					      OPAL_M64_WINDOW_TYPE,
-+					      seg / 8,
-+					      OPAL_ENABLE_M64_SPLIT);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Failure %lld enabling M64 BAR#%d on PHB#%d\n",
-+				rc, seg / 8, phb->hose->global_number);
-+			goto fail;
-+		}
-+	}
++Optional properties:
++ - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
 +
-+	/* Strip of the segment used by the reserved PE, which
-+	 * is expected to be 0 or last supported PE#
-+	 */
-+	r = &phb->hose->mem_resources[1];
-+	if (phb->ioda.reserved_pe == 0)
-+		r->start += phb->ioda.m64_segsize;
-+	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
-+		r->end -= phb->ioda.m64_segsize;
-+	else
-+		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
-+			phb->ioda.reserved_pe);
++Example:
 +
-+	return 0;
++pcie0: pcie@9b00000 {
++	compatible = "st,pcie", "snps,dw-pcie";
++	device_type = "pci";
++	reg = <0x09b00000 0x4000>,	/* dbi cntrl registers */
++	      <0x2fff0000 0x00010000>,	/* configuration space */
++	      <0x40000000 0x80000000>;	/* lmi mem window */
++	reg-names = "dbi", "config", "mem-window";
++	st,syscfg = <&syscfg_core 0xd8 0xe0>;
++	#address-cells = <3>;
++	#size-cells = <2>;
++	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
++	num-lanes = <1>;
++	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
++	interrupt-names = "msi";
++	#interrupt-cells = <1>;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
++			<0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
++			<0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
++			<0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
 +
-+fail:
-+	for ( ; seg >= 0; seg -= 8)
-+		opal_pci_phb_mmio_enable(phb->opal_id,
-+					 OPAL_M64_WINDOW_TYPE,
-+					 seg / 8,
-+					 OPAL_DISABLE_M64);
-+
-+	return -EIO;
-+}
-+
- /* The default M64 BAR is shared by all PEs */
- static int pnv_ioda2_init_m64(struct pnv_phb *phb)
- {
-@@ -222,7 +283,7 @@ fail:
- 	return -EIO;
- }
- 
--static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
-+static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
- {
- 	resource_size_t sgsz = phb->ioda.m64_segsize;
- 	struct pci_dev *pdev;
-@@ -248,8 +309,8 @@ static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
- 	}
- }
- 
--static int pnv_ioda2_pick_m64_pe(struct pnv_phb *phb,
--				 struct pci_bus *bus, int all)
-+static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
-+				struct pci_bus *bus, int all)
- {
- 	resource_size_t segsz = phb->ioda.m64_segsize;
- 	struct pci_dev *pdev;
-@@ -346,6 +407,28 @@ done:
- 			pe->master = master_pe;
- 			list_add_tail(&pe->list, &master_pe->slaves);
- 		}
-+
-+		/* P7IOC supports M64DT, which helps mapping M64 segment
-+		 * to one particular PE#. Unfortunately, PHB3 has fixed
-+		 * mapping between M64 segment and PE#. In order for same
-+		 * logic for P7IOC and PHB3, we enforce fixed mapping
-+		 * between M64 segment and PE# on P7IOC.
-+		 */
-+		if (phb->type == PNV_PHB_IODA1) {
-+			int64_t rc;
-+
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+							 pe->pe_number,
-+							 OPAL_M64_WINDOW_TYPE,
-+							 pe->pe_number / 8,
-+							 pe->pe_number % 8);
-+			if (rc != OPAL_SUCCESS)
-+				pr_warn("%s: Failure %lld mapping "
-+					"M64 for PHB#%d-PE#%d\n",
-+					__func__, rc,
-+					phb->hose->global_number,
-+					pe->pe_number);
-+		}
- 	}
- 
- 	kfree(pe_alloc);
-@@ -360,12 +443,6 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 	const u32 *r;
- 	u64 pci_addr;
- 
--	/* FIXME: Support M64 for P7IOC */
--	if (phb->type != PNV_PHB_IODA2) {
--		pr_info("  Not support M64 window\n");
--		return;
--	}
--
- 	if (!firmware_has_feature(FW_FEATURE_OPALv3)) {
- 		pr_info("  Firmware too old to support M64 window\n");
- 		return;
-@@ -394,9 +471,23 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 
- 	/* Use last M64 BAR to cover M64 window */
- 	phb->ioda.m64_bar_idx = 15;
--	phb->init_m64 = pnv_ioda2_init_m64;
--	phb->reserve_m64_pe = pnv_ioda2_reserve_m64_pe;
--	phb->pick_m64_pe = pnv_ioda2_pick_m64_pe;
-+	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
-+	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		phb->init_m64 = pnv_ioda1_init_m64;
-+		break;
-+	case PNV_PHB_IODA2:
-+		phb->init_m64 = pnv_ioda2_init_m64;
-+		break;
-+	default:
-+		phb->init_m64 = NULL;
-+		phb->reserve_m64_pe = NULL;
-+		phb->pick_m64_pe = NULL;
-+		phb->ioda.m64_size = 0;
-+		phb->ioda.m64_segsize = 0;
-+		phb->ioda.m64_base = 0;
-+	}
- }
- 
- static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
++	resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
++		 <&softreset STIH407_PCIE0_SOFTRESET>;
++	reset-names = "powerdown",
++		      "softreset";
++	phys = <&phy_port0 PHY_TYPE_PCIE>;
++	phy-names = "pcie";
++};
 -- 
-2.1.0
+1.9.1
 
