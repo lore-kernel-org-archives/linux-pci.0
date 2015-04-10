@@ -1,137 +1,675 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Matthew Garrett <mjg59@coreos.com>
-To: linux-pci@vger.kernel.org
-Cc: rjw@rjwysocki.net, lenb@kernel.org, linux-acpi@vger.kernel.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	Matthew Garrett <mjg59@coreos.com>
-Date: Tue,  7 Apr 2015 11:07:00 -0700
-Message-Id: <1428430020-29633-1-git-send-email-mjg59@coreos.com>
-Subject: [PATCH] PCI: Don't clear ASPM bits when the FADT declares it's unsupported
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:50716 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754498AbbDJHli (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 03:41:38 -0400
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: [PATCH 3/5] PCI: st: Provide support for the sti PCIe controller
+Date: Fri, 10 Apr 2015 09:38:25 +0200
+Message-Id: <1428651507-32554-4-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1428651507-32554-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1428651507-32554-1-git-send-email-gabriel.fernandez@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Communications with a hardware vendor confirm that the expected behaviour on
-systems that set the FADT ASPM disable bit but which still grant full PCIe
-control is for the OS to leave any BIOS configuration intact and refuse to
-touch the ASPM bits. This mimics the behaviour of Windows.
+sti pcie is built around a Synopsis Designware PCIe IP.
 
-Signed-off-by: Matthew Garrett <mjg59@coreos.com>
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
 ---
- drivers/acpi/pci_root.c  | 19 ++++++++-----------
- drivers/pci/pcie/aspm.c  | 18 ------------------
- include/linux/pci-aspm.h |  4 ----
- 3 files changed, 8 insertions(+), 33 deletions(-)
+ drivers/pci/host/Kconfig  |   9 +
+ drivers/pci/host/Makefile |   1 +
+ drivers/pci/host/pci-st.c | 583 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 593 insertions(+)
+ create mode 100644 drivers/pci/host/pci-st.c
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 68a5f71..1b5569c 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -423,8 +423,7 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 7b892a9..af9f9212 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -106,4 +106,13 @@ config PCI_VERSATILE
+ 	bool "ARM Versatile PB PCI controller"
+ 	depends on ARCH_VERSATILE
  
--static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
--				 int *clear_aspm)
-+static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- {
- 	u32 support, control, requested;
- 	acpi_status status;
-@@ -495,10 +494,12 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
- 		decode_osc_control(root, "OS now controls", control);
- 		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
- 			/*
--			 * We have ASPM control, but the FADT indicates
--			 * that it's unsupported. Clear it.
-+			 * We have ASPM control, but the FADT indicates that
-+			 * it's unsupported. Leave existing configuration
-+			 * intact and prevent the OS from touching it.
- 			 */
--			*clear_aspm = 1;
-+			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
-+			*no_aspm = 1;
- 		}
- 	} else {
- 		decode_osc_control(root, "OS requested", requested);
-@@ -525,7 +526,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	int result;
- 	struct acpi_pci_root *root;
- 	acpi_handle handle = device->handle;
--	int no_aspm = 0, clear_aspm = 0;
-+	int no_aspm = 0;
- 	bool hotadd = system_state != SYSTEM_BOOTING;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-@@ -584,7 +585,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 
- 	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
- 
--	negotiate_os_control(root, &no_aspm, &clear_aspm);
-+	negotiate_os_control(root, &no_aspm);
- 
- 	/*
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
-@@ -607,10 +608,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		goto remove_dmar;
- 	}
- 
--	if (clear_aspm) {
--		dev_info(&device->dev, "Disabling ASPM (FADT indicates it is unsupported)\n");
--		pcie_clear_aspm(root->bus);
--	}
- 	if (no_aspm)
- 		pcie_no_aspm();
- 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 820740a..7d4fcdc 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -782,24 +782,6 @@ void pci_disable_link_state(struct pci_dev *pdev, int state)
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
--void pcie_clear_aspm(struct pci_bus *bus)
--{
--	struct pci_dev *child;
--
--	if (aspm_force)
--		return;
--
--	/*
--	 * Clear any ASPM setup that the firmware has carried out on this bus
--	 */
--	list_for_each_entry(child, &bus->devices, bus_list) {
--		__pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
--					 PCIE_LINK_STATE_L1 |
--					 PCIE_LINK_STATE_CLKPM,
--					 false, true);
--	}
--}
--
- static int pcie_aspm_set_policy(const char *val, struct kernel_param *kp)
- {
- 	int i;
-diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-index 8af4610..207c561 100644
---- a/include/linux/pci-aspm.h
-+++ b/include/linux/pci-aspm.h
-@@ -29,7 +29,6 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev);
- void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
- void pci_disable_link_state(struct pci_dev *pdev, int state);
- void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
--void pcie_clear_aspm(struct pci_bus *bus);
- void pcie_no_aspm(void);
- #else
- static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
-@@ -47,9 +46,6 @@ static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
- static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
- {
- }
--static inline void pcie_clear_aspm(struct pci_bus *bus)
--{
--}
- static inline void pcie_no_aspm(void)
- {
- }
++config PCI_ST
++	bool "ST PCIe controller"
++	depends on ARCH_STI || (ARM && COMPILE_TEST)
++	select PCIE_DW
++	help
++	  Enable PCIe controller support on ST Socs. This controller is based
++	  on Designware hardware and therefore the driver re-uses the
++	  Designware core functions to implement the driver.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index e61d91c..97c6622 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -13,3 +13,4 @@ obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+ obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
+ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
++obj-$(CONFIG_PCI_ST) += pci-st.o
+diff --git a/drivers/pci/host/pci-st.c b/drivers/pci/host/pci-st.c
+new file mode 100644
+index 0000000..1ff5ce2
+--- /dev/null
++++ b/drivers/pci/host/pci-st.c
+@@ -0,0 +1,583 @@
++/*
++ * Copyright (C) 2014 STMicroelectronics
++ *
++ * STMicroelectronics PCI express Driver for sti SoCs.
++ * ST PCIe IPs are built around a Synopsys IP Core.
++ *
++ * Author: Fabrice Gasnier <fabrice.gasnier@st.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2, as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/mfd/syscon.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_gpio.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/phy/phy.h>
++#include <linux/regmap.h>
++#include <linux/reset.h>
++
++#include "pcie-designware.h"
++
++#define TRANSLATION_CONTROL		0x900
++/* Controls if area is inclusive or exclusive */
++#define RC_PASS_ADDR_RANGE		BIT(1)
++
++/* Base of area reserved for config accesses. Fixed size of 64K. */
++#define CFG_BASE_ADDRESS		0x92c
++#define CFG_REGION_SIZE			65536
++#define CFG_SPACE1_OFFSET		0x1000
++
++/* First 4K of config space has this BDF (bus,device,function) */
++#define FUNC0_BDF_NUM			0x930
++
++/* Mem regions */
++#define IN0_MEM_ADDR_START		0x964
++#define IN0_MEM_ADDR_LIMIT		0x968
++#define IN1_MEM_ADDR_START		0x974
++#define IN1_MEM_ADDR_LIMIT		0x978
++
++/* This actually contains the LTSSM state machine state */
++#define PORT_LOGIC_DEBUG_REG_0		0x728
++
++/* LTSSM state machine values	*/
++#define DEBUG_REG_0_LTSSM_MASK		0x1f
++#define S_DETECT_QUIET			0x00
++#define S_DETECT_ACT			0x01
++#define S_POLL_ACTIVE			0x02
++#define S_POLL_COMPLIANCE		0x03
++#define S_POLL_CONFIG			0x04
++#define S_PRE_DETECT_QUIET		0x05
++#define S_DETECT_WAIT			0x06
++#define S_CFG_LINKWD_START		0x07
++#define S_CFG_LINKWD_ACEPT		0x08
++#define S_CFG_LANENUM_WAIT		0x09
++#define S_CFG_LANENUM_ACEPT		0x0A
++#define S_CFG_COMPLETE			0x0B
++#define S_CFG_IDLE			0x0C
++#define S_RCVRY_LOCK			0x0D
++#define S_RCVRY_SPEED			0x0E
++#define S_RCVRY_RCVRCFG			0x0F
++#define S_RCVRY_IDLE			0x10
++#define S_L0				0x11
++#define S_L0S				0x12
++#define S_L123_SEND_EIDLE		0x13
++#define S_L1_IDLE			0x14
++#define S_L2_IDLE			0x15
++#define S_L2_WAKE			0x16
++#define S_DISABLED_ENTRY		0x17
++#define S_DISABLED_IDLE			0x18
++#define S_DISABLED			0x19
++#define S_LPBK_ENTRY			0x1A
++#define S_LPBK_ACTIVE			0x1B
++#define S_LPBK_EXIT			0x1C
++#define S_LPBK_EXIT_TIMEOUT		0x1D
++#define S_HOT_RESET_ENTRY		0x1E
++#define S_HOT_RESET			0x1F
++
++/* syscfg bits */
++#define PCIE_SYS_INT			BIT(5)
++#define PCIE_APP_REQ_RETRY_EN		BIT(3)
++#define PCIE_APP_LTSSM_ENABLE		BIT(2)
++#define PCIE_APP_INIT_RST		BIT(1)
++#define PCIE_DEVICE_TYPE		BIT(0)
++#define PCIE_DEFAULT_VAL		PCIE_DEVICE_TYPE
++
++/* Time to wait between testing the link in msecs (hardware poll interval) */
++#define LINK_LOOP_DELAY_MS 1
++/* Total amount of time to wait for the link to come up in msecs */
++#define LINK_WAIT_MS 120
++#define LINK_LOOP_COUNT (LINK_WAIT_MS / LINK_LOOP_DELAY_MS)
++
++/* st,syscfg offsets */
++#define SYSCFG0_REG	1
++#define SYSCFG1_REG	2
++
++#define to_st_pcie(x)	container_of(x, struct st_pcie, pp)
++
++/**
++ * struct st_pcie - private data of the controller
++ * @pp: designware pcie port
++ * @syscfg0: PCIe configuration 0 register, regmap offset
++ * @syscfg1: PCIe configuration 1 register, regmap offset
++ * @phy: associated pcie phy
++ * @lmi: memory made available to the controller
++ * @regmap: Syscfg registers bank in which PCIe port is configured
++ * @pwr: power control
++ * @rst: reset control
++ * @reset_gpio: optional reset gpio
++ * @config_window_start: start address of 64K config space area
++ */
++struct st_pcie {
++	struct pcie_port pp;
++	int syscfg0;
++	int syscfg1;
++	struct phy *phy;
++	struct resource	*lmi;
++	struct regmap *regmap;
++	struct reset_control *pwr;
++	struct reset_control *rst;
++	int reset_gpio;
++	phys_addr_t config_window_start;
++};
++
++/*
++ * Function to test if the link is in an operational state or not. We must
++ * ensure the link is operational before we try to do a configuration access.
++ */
++static int st_pcie_link_up(struct pcie_port *pp)
++{
++	u32 status;
++	int link_up;
++	int count = 0;
++
++	/*
++	 * We have to be careful here. This is used in config read/write,
++	 * The higher levels switch off interrupts, so you cannot use
++	 * jiffies to do a timeout, or reschedule
++	 */
++	do {
++		/*
++		 * What about L2? I think software intervention is
++		 * required to get it out of L2, so in effect the link
++		 * is down. Requires more work when/if we implement power
++		 * management
++		 */
++		status = readl_relaxed(pp->dbi_base + PORT_LOGIC_DEBUG_REG_0);
++		status &= DEBUG_REG_0_LTSSM_MASK;
++
++		link_up = (status == S_L0) || (status == S_L0S) ||
++			  (status == S_L1_IDLE);
++
++		/*
++		 * It can take some considerable time for the link to actually
++		 * come up, caused by the PLLs. Experiments indicate it takes
++		 * about 8ms to actually bring the link up, but this can vary
++		 * considerably according to the specification. This code should
++		 * allow sufficient time
++		 */
++		if (!link_up)
++			mdelay(LINK_LOOP_DELAY_MS);
++
++	} while (!link_up && ++count < LINK_LOOP_COUNT);
++
++	return link_up;
++}
++
++/*
++ * On ARM platforms, we actually get a bus error returned when the PCIe IP
++ * returns a UR or CRS instead of an OK.
++ */
++static int st_pcie_abort_handler(unsigned long addr, unsigned int fsr,
++				 struct pt_regs *regs)
++{
++	return 0;
++}
++
++/*
++ * The PCI express core IP expects the following arrangement on it's address
++ * bus (slv_haddr) when driving config cycles.
++ * bus_number		[31:24]
++ * dev_number		[23:19]
++ * func_number		[18:16]
++ * unused		[15:12]
++ * ext_reg_number	[11:8]
++ * reg_number		[7:2]
++ *
++ * Bits [15:12] are unused.
++ *
++ * In the glue logic there is a 64K region of address space that can be
++ * written/read to generate config cycles. The base address of this is
++ * controlled by CFG_BASE_ADDRESS. There are 8 16 bit registers called
++ * FUNC0_BDF_NUM to FUNC8_BDF_NUM. These split the bottom half of the 64K
++ * window into 8 regions at 4K boundaries. These control the bus,device and
++ * function number you are trying to talk to.
++ *
++ * The decision on whether to generate a type 0 or type 1 access is controlled
++ * by bits 15:12 of the address you write to.  If they are zero, then a type 0
++ * is generated, if anything else it will be a type 1. Thus the bottom 4K
++ * region controlled by FUNC0_BDF_NUM can only generate type 0, all the others
++ * can only generate type 1.
++ *
++ * We only use FUNC0_BDF_NUM and FUNC1_BDF_NUM. Which one you use is selected
++ * by bit 12 of the address you write to. The selected register is then used
++ * for the top 16 bits of the slv_haddr to form the bus/dev/func, bit 15:12 are
++ * wired to zero, and bits 11:2 form the address of the register you want to
++ * read in config space.
++ *
++ * We always write FUNC0_BDF_NUM as a 32 bit write. So if we want type 1
++ * accesses we have to shift by 16 so in effect we are writing to FUNC1_BDF_NUM
++ */
++static inline u32 bdf_num(int bus, int devfn, int is_root_bus)
++{
++	return ((bus << 8) | devfn) << (is_root_bus ? 0 : 16);
++}
++
++static int st_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
++				 unsigned int devfn, int where, int size,
++				 u32 *val)
++{
++	int ret;
++	u32 bdf, addr;
++
++	addr = where & ~0x3;
++	bdf = bdf_num(bus->number, devfn, pci_is_root_bus(bus));
++
++	/* Set the config packet devfn */
++	writel_relaxed(bdf, pp->dbi_base + FUNC0_BDF_NUM);
++	readl_relaxed(pp->dbi_base + FUNC0_BDF_NUM);
++
++	if (bus->parent->number == pp->root_bus_nr)
++		ret = dw_pcie_cfg_read(pp->va_cfg0_base + addr, where, size,
++				       val);
++	else
++		ret = dw_pcie_cfg_read(pp->va_cfg1_base + addr, where, size,
++				       val);
++	return ret;
++}
++
++static int st_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
++				 unsigned int devfn, int where, int size,
++				 u32 val)
++{
++	int ret;
++	u32 bdf, addr;
++
++	addr = where & ~0x3;
++	bdf = bdf_num(bus->number, devfn, pci_is_root_bus(bus));
++
++	/* Set the config packet devfn */
++	writel_relaxed(bdf, pp->dbi_base + FUNC0_BDF_NUM);
++	readl_relaxed(pp->dbi_base + FUNC0_BDF_NUM);
++
++	if (bus->parent->number == pp->root_bus_nr)
++		ret = dw_pcie_cfg_write(pp->va_cfg0_base + addr, where, size,
++					val);
++	else
++		ret = dw_pcie_cfg_write(pp->va_cfg1_base + addr, where, size,
++					val);
++	return ret;
++}
++
++static void st_pcie_board_reset(struct pcie_port *pp)
++{
++	struct st_pcie *pcie = to_st_pcie(pp);
++
++	if (!gpio_is_valid(pcie->reset_gpio))
++		return;
++
++	if (gpio_direction_output(pcie->reset_gpio, 0)) {
++		dev_err(pp->dev, "Cannot set PERST# (gpio %u) to output\n",
++			pcie->reset_gpio);
++		return;
++	}
++
++	/* From PCIe spec */
++	msleep(2);
++	gpio_direction_output(pcie->reset_gpio, 1);
++
++	/*
++	 * PCIe specification states that you should not issue any config
++	 * requests until 100ms after asserting reset, so we enforce that here
++	 */
++	msleep(100);
++}
++
++static void st_pcie_hw_setup(struct pcie_port *pp)
++{
++	struct st_pcie *pcie = to_st_pcie(pp);
++
++	dw_pcie_setup_rc(pp);
++
++	/* Set up the config window to the top of the PCI address space */
++	writel_relaxed(pcie->config_window_start,
++		       pp->dbi_base + CFG_BASE_ADDRESS);
++
++	/*
++	 * Open up memory to the PCI controller. We could do slightly
++	 * better than this and exclude the kernel text segment and bss etc.
++	 * They are base/limit registers so can be of arbitrary alignment
++	 * presumably
++	 */
++	writel_relaxed(pcie->lmi->start, pp->dbi_base + IN0_MEM_ADDR_START);
++	writel_relaxed(pcie->lmi->end, pp->dbi_base + IN0_MEM_ADDR_LIMIT);
++
++	/* Disable the 2nd region */
++	writel_relaxed(~0, pp->dbi_base + IN1_MEM_ADDR_START);
++	writel_relaxed(0, pp->dbi_base + IN1_MEM_ADDR_LIMIT);
++
++	writel_relaxed(RC_PASS_ADDR_RANGE, pp->dbi_base + TRANSLATION_CONTROL);
++
++	/* Now assert the board level reset to the other PCIe device */
++	st_pcie_board_reset(pp);
++}
++
++static irqreturn_t st_pcie_msi_irq_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++
++	return dw_handle_msi_irq(pp);
++}
++
++static int st_pcie_init(struct pcie_port *pp)
++{
++	struct st_pcie *pcie = to_st_pcie(pp);
++	int ret;
++
++	ret = reset_control_deassert(pcie->pwr);
++	if (ret) {
++		dev_err(pp->dev, "unable to bring out of powerdown\n");
++		return ret;
++	}
++
++	ret = reset_control_deassert(pcie->rst);
++	if (ret) {
++		dev_err(pp->dev, "unable to bring out of softreset\n");
++		return ret;
++	}
++
++	/* Set device type : Root Complex */
++	ret = regmap_write(pcie->regmap, pcie->syscfg0, PCIE_DEVICE_TYPE);
++	if (ret < 0) {
++		dev_err(pp->dev, "unable to set device type\n");
++		return ret;
++	}
++
++	usleep_range(1000, 2000);
++	return ret;
++}
++
++static int st_pcie_enable_ltssm(struct pcie_port *pp)
++{
++	struct st_pcie *pcie = to_st_pcie(pp);
++
++	return regmap_update_bits(pcie->regmap, pcie->syscfg1,
++				  PCIE_APP_LTSSM_ENABLE, PCIE_APP_LTSSM_ENABLE);
++}
++
++static int st_pcie_disable_ltssm(struct pcie_port *pp)
++{
++	struct st_pcie *pcie = to_st_pcie(pp);
++
++	return regmap_update_bits(pcie->regmap, pcie->syscfg1,
++				  PCIE_APP_LTSSM_ENABLE, 0);
++}
++
++static void st_pcie_host_init(struct pcie_port *pp)
++{
++	struct st_pcie *pcie = to_st_pcie(pp);
++	int err;
++
++	/*
++	 * We have to initialise the PCIe cell on some hardware before we can
++	 * talk to the phy
++	 */
++	err = st_pcie_init(pp);
++	if (err)
++		return;
++
++	err = st_pcie_disable_ltssm(pp);
++	if (err) {
++		dev_err(pp->dev, "disable ltssm failed, %d\n", err);
++		return;
++	}
++
++	/* Now init the associated miphy */
++	err = phy_init(pcie->phy);
++	if (err < 0) {
++		dev_err(pp->dev, "Cannot init PHY: %d\n", err);
++		return;
++	}
++
++	/* Now do all the register poking */
++	st_pcie_hw_setup(pp);
++
++	/* Re-enable the link */
++	err = st_pcie_enable_ltssm(pp);
++	if (err)
++		dev_err(pp->dev, "enable ltssm failed, %d\n", err);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++}
++
++static struct pcie_host_ops st_pcie_host_ops = {
++	.rd_other_conf = st_pcie_rd_other_conf,
++	.wr_other_conf = st_pcie_wr_other_conf,
++	.link_up = st_pcie_link_up,
++	.host_init = st_pcie_host_init,
++};
++
++static const struct of_device_id st_pcie_of_match[] = {
++	{ .compatible = "st,pcie", },
++	{ },
++};
++
++static int st_pcie_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	struct st_pcie *pcie;
++	struct device_node *np = pdev->dev.of_node;
++	struct pcie_port *pp;
++	int ret;
++
++	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	memset(pcie, 0, sizeof(*pcie));
++
++	pp = &pcie->pp;
++	pp->dev = &pdev->dev;
++
++	/* mem regions */
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
++	pp->dbi_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(pp->dbi_base))
++		return PTR_ERR(pp->dbi_base);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	if (!res)
++		return -ENXIO;
++
++	/* Check that this has sensible values */
++	if ((resource_size(res) != CFG_REGION_SIZE) ||
++	    (res->start & (CFG_REGION_SIZE - 1))) {
++		dev_err(&pdev->dev, "Invalid config space properties\n");
++		return -EINVAL;
++	}
++	pcie->config_window_start = res->start;
++
++	pp->va_cfg0_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(pp->va_cfg0_base))
++		return PTR_ERR(pp->va_cfg0_base);
++	pp->va_cfg1_base = pp->va_cfg0_base + CFG_SPACE1_OFFSET;
++
++	pcie->lmi = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						 "mem-window");
++	if (!pcie->lmi)
++		return -ENXIO;
++
++	/* regmap registers for PCIe IP configuration */
++	pcie->regmap = syscon_regmap_lookup_by_phandle(np, "st,syscfg");
++	if (IS_ERR(pcie->regmap)) {
++		dev_err(&pdev->dev, "No syscfg phandle specified\n");
++		return PTR_ERR(pcie->regmap);
++	}
++
++	ret = of_property_read_u32_index(np, "st,syscfg", SYSCFG0_REG,
++					 &pcie->syscfg0);
++	if (ret) {
++		dev_err(&pdev->dev, "can't get syscfg0 offset (%d)\n", ret);
++		return ret;
++	}
++
++	ret = of_property_read_u32_index(np, "st,syscfg", SYSCFG1_REG,
++					 &pcie->syscfg1);
++	if (ret) {
++		dev_err(&pdev->dev, "can't get syscfg1 offset (%d)\n", ret);
++		return ret;
++	}
++
++	/* powerdown / resets */
++	pcie->pwr = devm_reset_control_get(&pdev->dev, "powerdown");
++	if (IS_ERR(pcie->pwr)) {
++		dev_err(&pdev->dev, "powerdown reset control not defined\n");
++		return PTR_ERR(pcie->pwr);
++	}
++
++	pcie->rst = devm_reset_control_get(&pdev->dev, "softreset");
++	if (IS_ERR(pcie->rst)) {
++		dev_err(&pdev->dev, "Soft reset control not defined\n");
++		return PTR_ERR(pcie->pwr);
++	}
++
++	/* phy */
++	pcie->phy = devm_phy_get(&pdev->dev, "pcie");
++	if (IS_ERR(pcie->phy)) {
++		dev_err(&pdev->dev, "no PHY configured\n");
++		return PTR_ERR(pcie->phy);
++	}
++
++	/* Claim the GPIO for PRST# if available */
++	pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
++	if (!gpio_is_valid(pcie->reset_gpio))
++		dev_dbg(&pdev->dev, "No reset-gpio configured\n");
++	else {
++		ret = devm_gpio_request(&pdev->dev,
++					pcie->reset_gpio,
++					"PCIe reset");
++		if (ret) {
++			dev_err(&pdev->dev, "Cannot request reset-gpio %d\n",
++				pcie->reset_gpio);
++			return ret;
++		}
++	}
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
++		if (pp->msi_irq <= 0) {
++			dev_err(&pdev->dev, "failed to get MSI irq\n");
++			return -ENODEV;
++		}
++
++		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++				       st_pcie_msi_irq_handler,
++				       IRQF_SHARED, "st-pcie-msi", pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request MSI irq\n");
++			return -ENODEV;
++		}
++	}
++
++	if (IS_ENABLED(CONFIG_ARM)) {
++		/*
++		 * We have to hook the abort handler so that we can intercept
++		 * bus errors when doing config read/write that return UR,
++		 * which is flagged up as a bus error
++		 */
++		hook_fault_code(16+6, st_pcie_abort_handler, SIGBUS, 0,
++				"imprecise external abort");
++	}
++
++	pp->root_bus_nr = -1;
++	pp->ops = &st_pcie_host_ops;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	platform_set_drvdata(pdev, pcie);
++
++	dev_info(&pdev->dev, "Initialized\n");
++	return 0;
++}
++
++MODULE_DEVICE_TABLE(of, st_pcie_of_match);
++
++static struct platform_driver st_pcie_driver = {
++	.driver = {
++		.name = "st-pcie",
++		.of_match_table = st_pcie_of_match,
++	},
++};
++
++/* ST PCIe driver does not allow module unload */
++static int __init pcie_init(void)
++{
++	return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
++}
++device_initcall(pcie_init);
++
++MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
++MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
++MODULE_LICENSE("GPL v2");
 -- 
-2.3.4
+1.9.1
 
