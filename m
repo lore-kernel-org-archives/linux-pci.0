@@ -1,79 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:47298 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752606AbbDUPTJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Apr 2015 11:19:09 -0400
-Message-ID: <55366A64.6000907@arm.com>
-Date: Tue, 21 Apr 2015 16:19:00 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>
-Subject: Re: [PATCH v5 2/4] arm64: dts: Add the device tree entry for the
- APM X-Gene PCIe MSI node
-References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com> <227f8c75e04110e279b78512924742ba7c7fe5fc.1429586144.git.dhdang@apm.com>
-In-Reply-To: <227f8c75e04110e279b78512924742ba7c7fe5fc.1429586144.git.dhdang@apm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v10 05/10] iommu/vt-d: Add functions to load and save old re
+Date: Fri, 10 Apr 2015 16:42:08 +0800
+Message-Id: <1428655333-19504-6-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/04/15 05:04, Duc Dang wrote:
-> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
-> 
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
->  1 file changed, 27 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-> index f1ad9c2..4b719c9 100644
-> --- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-> +++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-> @@ -354,6 +354,28 @@
->  			};
->  		};
->  
-> +		msi: msi@79000000 {
-> +			compatible = "apm,xgene1-msi";
-> +			msi-controller;
-> +			reg = <0x00 0x79000000 0x0 0x900000>;
+Add functions to load root entry table from old kernel, and to save updated
+root entry table.
+Add two member in struct intel_iommu, to store the RTA in old kernel, and
+the mapped virt address of it.
 
-I've been repeatedly puzzled by the size of this region. In patch 1, you
-say:
+We use the old RTA in dump kernel, and when the iommu->root_entry is used as
+a cache in kdump kernel, its phys address will not be save to RTA register,
+but when its data is changed, we will save the new data to old root entry table.
 
-+ * X-Gene v1 has 16 groups of MSI termination registers MSInIRx, where
-+ * n is group number (0..F), x is index of registers in each group (0..7)
-+ * The registers layout is like following:
-+ * MSI0IR0                     base_addr
-+ * MSI0IR1                     base_addr +  0x10000
-+ * ...                         ...
-+ * MSI0IR6                     base_addr +  0x60000
-+ * MSI0IR7                     base_addr +  0x70000
-+ * MSI1IR0                     base_addr +  0x80000
-+ * MSI1IR1                     base_addr +  0x90000
-+ * ...                         ...
-+ * MSI1IR7                     base_addr +  0xF0000
-+ * MSI2IR0                     base_addr + 0x100000
-+ * ...                         ...
-+ * MSIFIR0                     base_addr + 0x780000
-+ * MSIFIR1                     base_addr + 0x790000
-+ * ...                         ...
-+ * MSIFIR7                     base_addr + 0x7F0000
+Li, Zhen-hua:
+    The functions and logics.
 
-which implies that the size of the region is 0x800000. Or is there
-something hidden in the last 16 64k pages?
+Takao Indoh:
+    Add __iommu_flush_cache.
 
-Thanks,
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ drivers/iommu/intel-iommu.c | 54 ++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/intel-iommu.h |  3 +++
+ 2 files changed, 56 insertions(+), 1 deletion(-)
 
-	M.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 5ba403a..ef8a99c 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -373,6 +373,10 @@ static struct context_entry *device_to_existing_context_entry(
+ 				struct intel_iommu *iommu,
+ 				u8 bus, u8 devfn);
+ 
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
++
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
++
+ /*
+  * A structure used to store the address allocated by ioremap();
+  * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
+@@ -384,7 +388,6 @@ struct iommu_remapped_entry {
+ static LIST_HEAD(__iommu_remapped_mem);
+ static DEFINE_MUTEX(__iommu_mem_list_lock);
+ 
+-
+ /*
+  * This domain is a statically identity mapping domain.
+  *	1. This domain creats a static 1:1 mapping to all usable memory.
+@@ -4919,3 +4922,52 @@ int __iommu_free_mapped_mem(void)
+ 	return 0;
+ }
+ 
++/*
++ * Load the old root entry table to new root entry table.
++ */
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
++
++	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
++}
++
++/*
++ * When the data in new root entry table is changed, this function
++ * must be called to save the updated data to old root entry table.
++ */
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
++{
++	u8 start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++
++	if (index < -1 || index >= ROOT_ENTRY_NR)
++		return;
++
++	if (index == -1) {
++		start = 0;
++		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
++	} else {
++		start = index * sizeof(struct root_entry);
++		size = sizeof(struct root_entry);
++	}
++	to = iommu->root_entry_old_virt;
++	from = iommu->root_entry;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++}
++
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 4bca7b5..6fa0804 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -328,6 +328,9 @@ struct intel_iommu {
+ 	spinlock_t	lock; /* protect context, domain ids */
+ 	struct root_entry *root_entry; /* virtual address */
+ 
++	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
++	unsigned long	root_entry_old_phys; /* root entry in old kernel */
++
+ 	struct iommu_flush flush;
+ #endif
+ 	struct q_inval  *qi;            /* Queued invalidation info */
 -- 
-Jazz is not dead. It just smells funny...
+2.0.0-rc0
+
