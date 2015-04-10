@@ -1,90 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:25023 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883AbbDQGpx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 02:45:53 -0400
-Message-ID: <5530AC0F.3090301@hisilicon.com>
-Date: Fri, 17 Apr 2015 14:45:35 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [Query] PORT_LOGIC_SPEED_CHANGE set in PCIe designware driver
-References: <552CBFDF.2010905@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01385C3E@lhreml505-mbx.china.huawei.com>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01385C3E@lhreml505-mbx.china.huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: [PATCH v3 0/5] PCI: st: provide support for dw pcie
+Date: Fri, 10 Apr 2015 11:12:43 +0200
+Message-Id: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/4/14 17:48, Gabriele Paoloni wrote:
-> Hi All
-> 
-> Looking at par 3.13 of "Synopsis DesignWare Cores PCI Express Controller Databook" v4.20a (pag 159) I've found:
-> 
-> <<Speed Changing
-> 
-> When you set the default of the Directed Speed Change field of the Link Width and Speed Change Control
-> register (GEN2_CTRL_OFF . DIRECT_SPEED_CHANGE) using the DEFAULT_GEN2_SPEED_CHANGE
-> configuration parameter to "1", then the speed change is initiated automatically after link up, and the core
-> clears the contents of GEN2_CTRL_OFF . DIRECT_SPEED_CHANGE. If you want to prevent this automatic
-> speed change, then write a lower speed value to the Target Link Speed field of the Link Control 2 register
-> (LINK_CONTROL2_LINK_STATUS2_REG . PCIE_CAP_TARGET_LINK_SPEED) through the DBI before
-> link up.>>
-> 
-> 
-> So my interpretation would be that at init phase it would be correct to trigger the DIRECT_SPPED_CHANGE before the link is up; that is it seems correct to me to move that part of the code before link up.
-> 
-> Does anybody have any idea about this?
-> 
-> Many Thanks
-> 
-> Gab
-> 
+Changes in v3:
+ - Remove power management functions (was not fully tested)
+ - Remove configuration space range from dt binding
+ - Remove pci_common_init_dev() call in pcie-designware.c to avoid 
+   default IO space declaration. 
 
-Hi Gab,
+Changes in v2:
+ - comestic corrections in device tree binding
+ - add pci-st.c into MAINTAINERS
+ - remove st_pcie_ops structure to avoid another level of indirection
+ - remove nasty busy-loop
+ - remove useless test using virt_to_phys()
+ - move disable io support into dw-pcie driver
 
-Thanks for your reply. I will send a formal patch based on v4.1-rc1.
+I don't change the st_pcie_abort_handler() function because abort handling
+is masked during boot.
 
-Regards,
-Zhou
 
-> 
->> -----Original Message-----
->> From: Wangzhou (B)
->> Sent: Tuesday, April 14, 2015 8:21 AM
->> To: linux-pci@vger.kernel.org
->> Cc: zhangjukuo; Gabriele Paoloni; Liguozhu (Kenneth)
->> Subject: [Query] PORT_LOGIC_SPEED_CHANGE set in PCIe designware driver
->>
->> Hi All,
->>
->> In pcie-designware.c, it sets the PORT_LOGIC_SPEED_CHANGE bit after
->> linkup
->> finished:
->>
->> dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val); val |=
->> PORT_LOGIC_SPEED_CHANGE; dw_pcie_wr_own_conf(pp,
->> PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
->>
->> As far as I know, it will try to use 5G/8G to communicate after setting
->> this bit. When I used LSI SAS2208 PCIe-RAID card to test PCIe host
->> driver, PCIe3.0 link was unstable and can not read/write PCIe-RAID BAR.
->> When I moved above code before linkup, the process of enumeration was
->> successful.
->>
->> I wonder if anyone who also use the pcie-designware had met the same
->> problem.
->> Could we move the PORT_LOGIC_SPEED_CHANGE before linkup?
->>
->> It will be very appreciate if anyone can offer some information.
->>
->> Thanks,
->> Zhou
-> 
-> 
-> .
-> 
+This patch-set introduces a STMicroelectronics PCIe controller.
+It's based on designware PCIe driver.
 
+Gabriel Fernandez (5):
+  ARM: STi: Kconfig update for PCIe support
+  PCI: st: Add Device Tree bindings for sti pcie
+  PCI: st: Provide support for the sti PCIe controller
+  pci: designware: remove pci_common_init_dev()
+  MAINTAINERS: Add pci-st.c to ARCH/STI architecture
+
+ Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
+ MAINTAINERS                                       |   1 +
+ arch/arm/mach-sti/Kconfig                         |   2 +
+ drivers/pci/host/Kconfig                          |   9 +
+ drivers/pci/host/Makefile                         |   1 +
+ drivers/pci/host/pci-st.c                         | 583 ++++++++++++++++++++++
+ drivers/pci/host/pcie-designware.c                |  62 +--
+ drivers/pci/host/pcie-designware.h                |   1 +
+ 8 files changed, 682 insertions(+), 30 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+ create mode 100644 drivers/pci/host/pci-st.c
+
+-- 
+1.9.1
 
