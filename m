@@ -1,215 +1,180 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 13 Apr 2015 08:56:17 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit
- 63f1789ec716
-Message-ID: <20150413065617.GA22634@gmail.com>
-References: <552B4698.4020703@linux.intel.com>
- <1428907118-27099-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428907118-27099-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g2t2353.austin.hp.com ([15.217.128.52]:40290 "EHLO
+	g2t2353.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932494AbbDJIng (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 04:43:36 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v10 04/10] iommu/vt-d: functions to copy data from old mem
+Date: Fri, 10 Apr 2015 16:42:07 +0800
+Message-Id: <1428655333-19504-5-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add some functions to copy the data from old kernel.
+These functions are used to copy context tables and page tables.
 
-* Jiang Liu <jiang.liu@linux.intel.com> wrote:
+To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+use a link here, store the pointers , and then use iounmap to free them in
+another place.
 
-> Before commit 593669c2ac0f("Use common ACPI resource interfaces to
-> simplify implementation"), arch/x86/pci/acpi.c applies following
+Li, Zhen-hua:
+    The functions and logics.
 
-s/applies following
- /applied the following
+Takao Indoh:
+    Check if pfn is ram:
+        if (page_is_ram(pfn))
 
-> rules when parsing ACPI resources for PCI host bridge:
-> 1) Ignore IO port resources defined by acpi_resource_io and
->    acpi_resource_fixed_io, which should be used to define resource
->    for PCI device instead of PCI bridge.
-> 2) Accept IOMEM resource defined by acpi_resource_memory24,
->    acpi_resource_memory32 and acpi_resource_fixed_memory32.
->    These IOMEM resources are accepted to workaround some BIOS issue,
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ drivers/iommu/intel-iommu.c | 102 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |   6 +++
+ 2 files changed, 108 insertions(+)
 
-s/workaround
- /work around
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index ff5ac04..5ba403a 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -373,6 +373,17 @@ static struct context_entry *device_to_existing_context_entry(
+ 				struct intel_iommu *iommu,
+ 				u8 bus, u8 devfn);
+ 
++/*
++ * A structure used to store the address allocated by ioremap();
++ * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
++ */
++struct iommu_remapped_entry {
++	struct list_head list;
++	void __iomem *mem;
++};
++static LIST_HEAD(__iommu_remapped_mem);
++static DEFINE_MUTEX(__iommu_mem_list_lock);
++
+ 
+ /*
+  * This domain is a statically identity mapping domain.
+@@ -4817,3 +4828,94 @@ static struct context_entry *device_to_existing_context_entry(
+ 	return ret;
+ }
+ 
++/*
++ * Copy memory from a physically-addressed area into a virtually-addressed area
++ */
++int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = from >> VTD_PAGE_SHIFT;
++	offset = from & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
++	} else{
++
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)from, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(to, virt_mem, size);
++
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Copy memory from a virtually-addressed area into a physically-addressed area
++ */
++int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = to >> VTD_PAGE_SHIFT;
++	offset = to & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
++	} else{
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)to, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(virt_mem, from, size);
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Free the mapped memory for ioremap;
++ */
++int __iommu_free_mapped_mem(void)
++{
++	struct iommu_remapped_entry *mem_entry, *tmp;
++
++	mutex_lock(&__iommu_mem_list_lock);
++	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
++		iounmap(mem_entry->mem);
++		list_del(&mem_entry->list);
++		kfree(mem_entry);
++	}
++	mutex_unlock(&__iommu_mem_list_lock);
++	return 0;
++}
++
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index a65208a..4bca7b5 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -368,4 +368,10 @@ extern int dmar_ir_support(void);
+ 
+ extern const struct attribute_group *intel_iommu_groups[];
+ 
++extern int __iommu_load_from_oldmem(void *to, unsigned long from,
++					unsigned long size);
++extern int __iommu_save_to_oldmem(unsigned long to, void *from,
++					unsigned long size);
++extern int __iommu_free_mapped_mem(void);
++
+ #endif
+-- 
+2.0.0-rc0
 
-It's a verb, not a noun.
-
->    though they should be ignored. For example, PC Engines APU.1C
-
-Please put the platform name into quotes to make it more clearly stand 
-apart from the rest of the text.
-
->    platform defines PCI host bridge IOMEM resources as:
->                 Memory32Fixed (ReadOnly,
->                     0x000A0000,         // Address Base
->                     0x00020000,         // Address Length
->                     )
->                 Memory32Fixed (ReadOnly,
->                     0x00000000,         // Address Base
->                     0x00000000,         // Address Length
->                     _Y00)
-> 3) Accept all IO port and IOMEM resources defined by
->    acpi_resource_address{16,32,64,extended64}, no matter it's marked as
->    ACPI_CONSUMER or ACPI_PRODUCER.
-
-s/no matter it's marked
- /regardless of whether it's marked
-
-> Commit 593669c2ac0f("Use common ACPI resource interfaces to
-> simplify implementation") accept all IO port and IOMEM resources
-
-s/accept
- /started accepting
-
-> defined by acpi_resource_io, acpi_resource_fixed_io,
-> acpi_resource_memory24, acpi_resource_memory32,
-> acpi_resource_fixed_memory32 and
-> acpi_resource_address{16,32,64,extended64}, which causes IO port
-> resources consumed by host bridge itself are listed in to host bridge
-> resource list.
-
-this latter part of the sentence does not parse. Did you want to 
-write:
-
-  acpi_resource_address{16,32,64,extended64}, which causes IO port
-  resources consumed by the host bridge itself to be listed in the
-  host bridge resource list.
-
-?
-
-> Then commit 63f1789ec716("Ignore resources consumed by host bridge
-> itself") ignores resources consumed by host bridge itself by checking
-
-s/ignores
- /started ignoring
-
-s/by host bridge
- /by the host bridge
-
-> IORESOURCE_WINDOW flag, which accidently removed the workaround in 2)
-> above for BIOS bug .
-
-s/for BIOS bug .
- /for the BIOS bug.
-
-> So revert to the behavior before v3.19 to fix the regression.
-> 
-> Sample ACPI table are archived at:
-> https://bugzilla.kernel.org/show_bug.cgi?id=94221
-> 
-> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
-> Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
->  drivers/acpi/resource.c |    6 +++++-
->  2 files changed, 27 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index e4695985f9de..fc2da98985c3 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
->  {
->  	int ret;
->  	struct resource_entry *entry, *tmp;
-> +	unsigned long res_flags;
->  
->  	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
->  	info->bridge = device;
-> +
-> +	/*
-> +	 * An IO or MMIO resource assigned to PCI host bridge may be consumed
-
-s/to PCI host bridge
- /to a PCI host bridge
-
-> +	 * by the host bridge itself or available to its child bus/devices.
-> +	 * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
-> +	 * be available to child bus/devices except one special case:
-> +	 *	IO port [0xCF8-0xCFF] is consumed by host bridge itself to
-
-s/by host bridge
- /by the host bridge
-
-> +	 *	access PCI configuration space.
-> +	 *
-> +	 * Due to lack of specification to define resources consumed by host
-> +	 * bridge itself, all IO port resources defined by acpi_resource_io
-
-s/by host bridge
- /by the host bridge
-
-> +	 * and acpi_resource_fixed_io are ignored to filter out IO
-> +	 * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
-> +	 * it's not perfect.
-> +	 *
-> +	 * Another possible solution is to explicitly filter out IO
-
-s/is to
- /would be to
-
-> +	 * port[0xCF8-0xCFF].
-> +	 */
-> +	res_flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_IO_FIXED;
->  	ret = acpi_dev_get_resources(device, list,
->  				     acpi_dev_filter_resource_type_cb,
-> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
-> +				     (void *)res_flags);
->  	if (ret < 0)
->  		dev_warn(&device->dev,
->  			 "failed to parse _CRS method, error code %d\n", ret);
-> @@ -346,8 +366,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
->  			"no IO and memory resources present in _CRS\n");
->  	else
->  		resource_list_for_each_entry_safe(entry, tmp, list) {
-> -			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
-> -			    (entry->res->flags & IORESOURCE_DISABLED))
-> +			if (entry->res->flags & IORESOURCE_DISABLED)
->  				resource_list_destroy_entry(entry);
->  			else
->  				entry->res->name = info->name;
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 5589a6e2a023..79b6d3b5ffd2 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -575,6 +575,9 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
->   *
->   * This is a hepler function to support acpi_dev_get_resources(), which filters
->   * ACPI resource objects according to resource types.
-> + *
-> + * Flag IORESOURCE_IO_FIXED is used to opt out io and fixed_io resource
-
-s/Flag IORESOURCE_IO_FIXED is used to opt out io and fixed_io resource
-  The IORESOURCE_IO_FIXED flag is used to opt out IO and FIXED_IO resource
-
-> + * descriptors for ACPI host bridges on x86 and IA64 platforms.
->   */
->  int acpi_dev_filter_resource_type(struct acpi_resource *ares,
->  				  unsigned long types)
-> @@ -589,7 +592,8 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
->  		break;
->  	case ACPI_RESOURCE_TYPE_IO:
->  	case ACPI_RESOURCE_TYPE_FIXED_IO:
-> -		type = IORESOURCE_IO;
-> +		if ((types & IORESOURCE_IO_FIXED) == 0)
-> +			type = IORESOURCE_IO;
->  		break;
->  	case ACPI_RESOURCE_TYPE_IRQ:
->  	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-> -- 
-> 1.7.10.4
-> 
-
-Thanks,
-
-	Ingo
