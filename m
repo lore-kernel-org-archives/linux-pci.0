@@ -1,82 +1,243 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47285 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751533AbbDVU1Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Apr 2015 16:27:25 -0400
-Date: Wed, 22 Apr 2015 16:27:21 -0400
-From: Matthew Wilcox <willy@linux.intel.com>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] Report NUMA node in lspci -v
-Message-ID: <20150422202721.GY4003@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from g2t2353.austin.hp.com ([15.217.128.52]:40455 "EHLO
+	g2t2353.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932594AbbDJIn5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 04:43:57 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v10 07/10] iommu/vt-d: enable kdump support in iommu module
+Date: Fri, 10 Apr 2015 16:42:10 +0800
+Message-Id: <1428655333-19504-8-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Modify the operation of the following functions when called during crash dump:
+    device_to_context_entry
+    free_context_table
+    get_domain_for_dev
+    init_dmars
+    intel_iommu_init
 
-In multi-socket systems, it's useful to see which node a particular
-PCI device belongs to.  Linux provides this information through sysfs,
-but some users don't like poking through sysfs themselves to find it,
-and it's pretty straightforward to report it in lspci.
+Bill Sumner:
+    Original version.
 
-I should note that when there is no NUMA node for a particular device,
-Linux reports -1.  I've chosen to continue that convention in pciutils,
-and simply omit the information if the device does not belong to a NUMA
-node (eg on single-socket systems, or devices which are not preferentially
-attached to a particular node, like Nehalem-based systems).
+Zhenhua:
+    The name of new calling functions.
+    Do not disable and re-enable TE in kdump kernel.
+    Use the did and gaw from old context entry;
 
-This is going to break the library ABI again (and I don't feel confident
-adding those bits to this patch); might it be worth adding some more
-padding to struct pci_dev?
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 94 +++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 82 insertions(+), 12 deletions(-)
 
-diff --git a/lib/access.c b/lib/access.c
-index d292085..a547d2c 100644
---- a/lib/access.c
-+++ b/lib/access.c
-@@ -28,6 +28,7 @@ pci_alloc_dev(struct pci_access *a)
-   d->access = a;
-   d->methods = a->methods;
-   d->hdrtype = -1;
-+  d->numa_node = -1;
-   if (d->methods->init_dev)
-     d->methods->init_dev(d);
-   return d;
-diff --git a/lib/pci.h b/lib/pci.h
-index bd6f6a1..0ccfbe3 100644
---- a/lib/pci.h
-+++ b/lib/pci.h
-@@ -127,6 +127,7 @@ struct pci_dev {
-   u16 vendor_id, device_id;		/* Identity of the device */
-   u16 device_class;			/* PCI device class */
-   int irq;				/* IRQ number */
-+  int numa_node;			/* NUMA node */
-   pciaddr_t base_addr[6];		/* Base addresses including flags in lower bits */
-   pciaddr_t size[6];			/* Region sizes */
-   pciaddr_t rom_base_addr;		/* Expansion ROM base address */
-diff --git a/lib/sysfs.c b/lib/sysfs.c
-index 9f348bb..800fb4e 100644
---- a/lib/sysfs.c
-+++ b/lib/sysfs.c
-@@ -192,6 +192,7 @@ static void sysfs_scan(struct pci_access *a)
- 	{
- 	  sysfs_get_resources(d);
- 	  d->irq = sysfs_get_value(d, "irq");
-+	  d->numa_node = sysfs_get_value(d, "numa_node");
- 	  /*
- 	   *  We could read these faster from the config registers, but we want to give
- 	   *  the kernel a chance to fix up ID's and especially classes of broken devices.
-diff --git a/lspci.c b/lspci.c
-index 6f16142..a78eb26 100644
---- a/lspci.c
-+++ b/lspci.c
-@@ -757,6 +757,8 @@ show_verbose(struct device *d)
- 	printf(", latency %d", latency);
-       if (irq)
- 	printf(", IRQ " PCIIRQ_FMT, irq);
-+      if (p->numa_node != -1)
-+	printf(", NUMA node %d", p->numa_node);
-       putchar('\n');
-     }
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 78c1d65..3d4ea43 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -399,6 +399,7 @@ static int copy_root_entry_table(struct intel_iommu *iommu);
+ static int intel_iommu_load_translation_tables(struct intel_iommu *iommu);
  
+ static void iommu_check_pre_te_status(struct intel_iommu *iommu);
++static u8 g_translation_pre_enabled;
+ 
+ /*
+  * This domain is a statically identity mapping domain.
+@@ -839,6 +840,9 @@ static struct context_entry * device_to_context_entry(struct intel_iommu *iommu,
+ 		set_root_value(root, phy_addr);
+ 		set_root_present(root);
+ 		__iommu_flush_cache(iommu, root, sizeof(*root));
++
++		if (iommu->pre_enabled_trans)
++			__iommu_update_old_root_entry(iommu, bus);
+ 	}
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
+ 	return &context[devfn];
+@@ -890,7 +894,8 @@ static void free_context_table(struct intel_iommu *iommu)
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 	if (!iommu->root_entry) {
+-		goto out;
++		spin_unlock_irqrestore(&iommu->lock, flags);
++		return;
+ 	}
+ 	for (i = 0; i < ROOT_ENTRY_NR; i++) {
+ 		root = &iommu->root_entry[i];
+@@ -898,10 +903,23 @@ static void free_context_table(struct intel_iommu *iommu)
+ 		if (context)
+ 			free_pgtable_page(context);
+ 	}
++
++	if (iommu->pre_enabled_trans) {
++		iommu->root_entry_old_phys = 0;
++		root = iommu->root_entry_old_virt;
++		iommu->root_entry_old_virt = NULL;
++	}
++
+ 	free_pgtable_page(iommu->root_entry);
+ 	iommu->root_entry = NULL;
+-out:
++
+ 	spin_unlock_irqrestore(&iommu->lock, flags);
++
++	/* We put this out of spin_unlock is because iounmap() may
++	 * cause error if surrounded by spin_lock and unlock;
++	 */
++	if (iommu->pre_enabled_trans)
++		iounmap(root);
+ }
+ 
+ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
+@@ -2319,6 +2337,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	unsigned long flags;
+ 	u8 bus, devfn;
+ 	int did = -1;   /* Default to "no domain_id supplied" */
++	struct context_entry *ce = NULL;
+ 
+ 	domain = find_domain(dev);
+ 	if (domain)
+@@ -2352,6 +2371,20 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	domain = alloc_domain(0);
+ 	if (!domain)
+ 		return NULL;
++
++	if (iommu->pre_enabled_trans) {
++		/*
++		 * if this device had a did in the old kernel
++		 * use its values instead of generating new ones
++		 */
++		ce = device_to_existing_context_entry(iommu, bus, devfn);
++
++		if (ce) {
++			did = context_domain_id(ce);
++			gaw = agaw_to_width(context_address_width(ce));
++		}
++	}
++
+ 	domain->id = iommu_attach_domain_with_id(domain, iommu, did);
+ 	if (domain->id < 0) {
+ 		free_domain_mem(domain);
+@@ -2879,6 +2912,7 @@ static int __init init_dmars(void)
+ 		goto free_g_iommus;
+ 	}
+ 
++	g_translation_pre_enabled = 0; /* To know whether to skip RMRR */
+ 	for_each_active_iommu(iommu, drhd) {
+ 		g_iommus[iommu->seq_id] = iommu;
+ 
+@@ -2886,14 +2920,30 @@ static int __init init_dmars(void)
+ 		if (ret)
+ 			goto free_iommu;
+ 
+-		/*
+-		 * TBD:
+-		 * we could share the same root & context tables
+-		 * among all IOMMU's. Need to Split it later.
+-		 */
+-		ret = iommu_alloc_root_entry(iommu);
+-		if (ret)
+-			goto free_iommu;
++		iommu_check_pre_te_status(iommu);
++		if (iommu->pre_enabled_trans) {
++			pr_info("IOMMU Copying translate tables from panicked kernel\n");
++			ret = intel_iommu_load_translation_tables(iommu);
++			if (ret) {
++				pr_err("IOMMU: Copy translate tables failed\n");
++
++				/* Best to stop trying */
++				goto free_iommu;
++			}
++			pr_info("IOMMU: root_cache:0x%12.12llx phys:0x%12.12llx\n",
++				(u64)iommu->root_entry,
++				(u64)iommu->root_entry_old_phys);
++		} else {
++			/*
++			 * TBD:
++			 * we could share the same root & context tables
++			 * among all IOMMU's. Need to Split it later.
++			 */
++			ret = iommu_alloc_root_entry(iommu);
++			if (ret)
++				goto free_iommu;
++		}
++
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+@@ -2911,6 +2961,14 @@ static int __init init_dmars(void)
+ 	check_tylersburg_isoch();
+ 
+ 	/*
++	 * In the second kernel: Skip setting-up new domains for
++	 * si, rmrr, and the isa bus on the expectation that these
++	 * translations were copied from the old kernel.
++	 */
++	if (g_translation_pre_enabled)
++		goto skip_new_domains_for_si_rmrr_isa;
++
++	/*
+ 	 * If pass through is not set or not enabled, setup context entries for
+ 	 * identity mappings for rmrr, gfx, and isa and may fall back to static
+ 	 * identity mapping if iommu_identity_mapping is set.
+@@ -2950,6 +3008,8 @@ static int __init init_dmars(void)
+ 
+ 	iommu_prepare_isa();
+ 
++skip_new_domains_for_si_rmrr_isa:;
++
+ 	/*
+ 	 * for each drhd
+ 	 *   enable fault log
+@@ -2978,7 +3038,13 @@ static int __init init_dmars(void)
+ 
+ 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
+ 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
+-		iommu_enable_translation(iommu);
++
++		if (iommu->pre_enabled_trans) {
++			if (!(iommu->gcmd & DMA_GCMD_TE))
++				iommu_enable_translation(iommu);
++		} else
++			iommu_enable_translation(iommu);
++
+ 		iommu_disable_protect_mem_regions(iommu);
+ 	}
+ 
+@@ -4264,11 +4330,14 @@ int __init intel_iommu_init(void)
+ 	}
+ 
+ 	/*
+-	 * Disable translation if already enabled prior to OS handover.
++	 * We do not need to disable translation if already enabled prior
++	 * to OS handover. Because we will try to copy old tables;
+ 	 */
++	/*
+ 	for_each_active_iommu(iommu, drhd)
+ 		if (iommu->gcmd & DMA_GCMD_TE)
+ 			iommu_disable_translation(iommu);
++	*/
+ 
+ 	if (dmar_dev_scope_init() < 0) {
+ 		if (force_on)
+@@ -5090,5 +5159,6 @@ static void iommu_check_pre_te_status(struct intel_iommu *iommu)
+ 	if (sts & DMA_GSTS_TES) {
+ 		pr_info("Translation is enabled prior to OS.\n");
+ 		iommu->pre_enabled_trans = 1;
++		g_translation_pre_enabled = 1;
+ 	}
+ }
+-- 
+2.0.0-rc0
 
