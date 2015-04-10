@@ -1,69 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0140.outbound.protection.outlook.com ([157.56.110.140]:23728
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752073AbbDOJrh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Apr 2015 05:47:37 -0400
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Hu Mingkai-B21284 <B21284@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:59544 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754923AbbDJJOt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 05:14:49 -0400
+From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Minghuan Lian" <Minghuan.Lian@freescale.com>
-Subject: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Wed, 15 Apr 2015 17:49:23 +0800
-Message-ID: <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: [PATCH v3 4/5] pci: designware: remove pci_common_init_dev()
+Date: Fri, 10 Apr 2015 11:12:47 +0200
+Message-Id: <1428657168-12495-5-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SMMU of some platforms can only isolate limited device ID.
-This may require that all PCI devices share the same ITS
-device with the fixed device ID. The patch adds function
-arch_msi_share_devid_update used for these platforms to update
-the fixed device ID and maximum MSI interrupts number.
+Call directly pci_*() instead of using pci_common_init_dev().
+Enforce error handling in probe.
+It also allows st pcie driver not to declare IO space:
+pci_common_init_dev() is assigning one by default.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
 ---
- drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/pci/host/pcie-designware.c | 62 ++++++++++++++++++++------------------
+ drivers/pci/host/pcie-designware.h |  1 +
+ 2 files changed, 33 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index d0374a6..be78d0a 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1169,6 +1169,15 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1f4ea6f..d4b1bf7 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -67,8 +67,6 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
+-static struct hw_pci dw_pci;
+-
+ static unsigned long global_io_offset;
+ 
+ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+@@ -342,6 +340,9 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
+ };
+ 
++static int dw_pcie_setup(struct pci_sys_data *sys);
++static struct pci_bus *dw_pcie_scan_bus(struct pci_sys_data *sys);
++
+ int __init dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+@@ -352,6 +353,9 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	u32 val, na, ns;
+ 	const __be32 *addrp;
+ 	int i, index, ret;
++	struct list_head *resources = &pp->sysdata.resources;
++
++	INIT_LIST_HEAD(resources);
+ 
+ 	/* Find the address cell size and the number of cells in order to get
+ 	 * the untranslated address.
+@@ -504,13 +508,17 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	dw_pcie_msi_chip.dev = pp->dev;
+-	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
++	pp->sysdata.msi_ctrl = &dw_pcie_msi_chip;
+ #endif
+ 
+-	dw_pci.nr_controllers = 1;
+-	dw_pci.private_data = (void **)&pp;
++	pp->sysdata.private_data = pp;
+ 
+-	pci_common_init_dev(pp->dev, &dw_pci);
++	ret = dw_pcie_setup(&pp->sysdata);
++	if (ret)
++		return ret;
++
++	if (!dw_pcie_scan_bus(&pp->sysdata))
++		return -ENXIO;
+ 
  	return 0;
  }
+@@ -701,15 +709,19 @@ static struct pci_ops dw_pcie_ops = {
+ 	.write = dw_pcie_wr_conf,
+ };
  
-+void __weak
-+arch_msi_share_devid_update(struct pci_dev *pdev, u32 *dev_id, u32 *nvesc)
-+{
-+	/*
-+	 * use PCI_DEVID NOT share device ID as default
-+	 * so nothing need to do
-+	 */
-+}
-+
- static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
- 			   int nvec, msi_alloc_info_t *info)
+-static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
++static int dw_pcie_setup(struct pci_sys_data *sys)
  {
-@@ -1185,6 +1194,8 @@ static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
- 	dev_alias.count = nvec;
+ 	struct pcie_port *pp;
++	int err;
  
- 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
-+	arch_msi_share_devid_update(pdev, &dev_alias.dev_id, &dev_alias.count);
+ 	pp = sys_to_pcie(sys);
+ 
+ 	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+ 		sys->io_offset = global_io_offset - pp->io_bus_addr;
+-		pci_ioremap_io(global_io_offset, pp->io_base);
++		err = pci_ioremap_io(global_io_offset, pp->io_base);
++		if (err)
++			return err;
 +
- 	its = domain->parent->host_data;
+ 		global_io_offset += SZ_64K;
+ 		pci_add_resource_offset(&sys->resources, &pp->io,
+ 					sys->io_offset);
+@@ -719,10 +731,10 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+ 	pci_add_resource(&sys->resources, &pp->busn);
  
- 	its_dev = its_find_device(its, dev_alias.dev_id);
+-	return 1;
++	return 0;
+ }
+ 
+-static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
++static struct pci_bus *dw_pcie_scan_bus(struct pci_sys_data *sys)
+ {
+ 	struct pci_bus *bus;
+ 	struct pcie_port *pp = sys_to_pcie(sys);
+@@ -738,27 +750,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	if (bus && pp->ops->scan_bus)
+ 		pp->ops->scan_bus(pp);
+ 
+-	return bus;
+-}
+-
+-static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+-{
+-	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+-	int irq;
+-
+-	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+-	if (!irq)
+-		irq = pp->irq;
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_add_devices(bus);
+ 
+-	return irq;
++	return bus;
+ }
+ 
+-static struct hw_pci dw_pci = {
+-	.setup		= dw_pcie_setup,
+-	.scan		= dw_pcie_scan_bus,
+-	.map_irq	= dw_pcie_map_irq,
+-};
+-
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+ 	u32 val;
+@@ -822,8 +820,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	/* setup command register */
+ 	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
+ 	val &= 0xffff0000;
+-	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+-		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
++
++	if (!pp->io_size)
++		val |= PCI_COMMAND_IO;
++
++	val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
++
+ 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+ }
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index d0bbd27..45bc2c2 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -46,6 +46,7 @@ struct pcie_port {
+ 	struct resource		io;
+ 	struct resource		mem;
+ 	struct resource		busn;
++	struct pci_sys_data	sysdata;
+ 	int			irq;
+ 	u32			lanes;
+ 	struct pcie_host_ops	*ops;
 -- 
 1.9.1
 
