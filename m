@@ -1,130 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:4585 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754638AbbDULiT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:19 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v10 07/29] PCI: Allocate busn resource for pci_scan_root_bus()
-Date: Tue, 21 Apr 2015 19:34:26 +0800
-Message-ID: <1429616088-10249-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:36357 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932398AbbDJInX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 04:43:23 -0400
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v10 02/10] iommu/vt-d: Items required for kdump
+Date: Fri, 10 Apr 2015 16:42:05 +0800
+Message-Id: <1428655333-19504-3-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some pci_scan_root_bus() callers don't supply the busn
-resource, because they don't know the max bus number.
-Currently we insert default busn resource[bus-FF] to root bus,
-and update the max bus number after pci_scan_child_bus().
-We could dynamically allocate busn resource and add it
-to pci_host_bridge, in the later patch, it would be easy
-to check whether new pci_host_bridge busn resource conflict.
+Add context entry functions needed for kdump.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Bill Sumner:
+    Original version;
+
+Li, Zhenhua:
+    Changed the name of new functions, make them consistent with current
+    context get/set functions.
+    Remove the structure dve which is not used in new version.
+
+Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
 ---
- drivers/pci/probe.c |   43 ++++++++++++++++++++++++++++++-------------
- 1 files changed, 30 insertions(+), 13 deletions(-)
+ drivers/iommu/intel-iommu.c | 54 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c425755..0eafda2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2041,6 +2041,8 @@ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- 
- int pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
- {
-+	struct resource_entry *entry;
-+	struct pci_host_bridge *host;
- 	struct resource *res = &b->busn_res;
- 	struct resource old_res = *res;
- 	resource_size_t size;
-@@ -2058,6 +2060,14 @@ int pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
- 	if (!ret && !res->parent)
- 		pci_bus_insert_busn_res(b, res->start, res->end);
- 
-+	if (!ret && pci_is_root_bus(b)) {
-+		host = to_pci_host_bridge(b->bridge);
-+		if (host->dynamic_busn) {
-+			entry = pci_busn_resource(&host->windows);
-+			entry->res->end = bus_max;
-+		}
-+	}
-+
- 	return ret;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 3a93ce0..735e28f 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -211,6 +211,12 @@ get_context_addr_from_root(struct root_entry *root)
+ 		NULL);
  }
  
-@@ -2079,32 +2089,39 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 		int bus, struct pci_ops *ops, void *sysdata,
- 		struct list_head *resources)
++static inline unsigned long
++get_context_phys_from_root(struct root_entry *root)
++{
++	return  root_present(root) ? (root->val & VTD_PAGE_MASK) : 0;
++}
++
+ /*
+  * low 64 bits:
+  * 0: present
+@@ -231,6 +237,32 @@ static inline bool context_present(struct context_entry *context)
  {
--	struct resource_entry *window;
--	bool found = false;
-+	struct resource_entry *entry;
-+	struct resource *busn_resource = NULL;
-+	struct pci_host_bridge *host;
- 	struct pci_bus *b;
- 	int max;
+ 	return (context->lo & 1);
+ }
++
++static inline int context_fault_enable(struct context_entry *c)
++{
++	return((c->lo >> 1) & 0x1);
++}
++
++static inline int context_translation_type(struct context_entry *c)
++{
++	return((c->lo >> 2) & 0x3);
++}
++
++static inline u64 context_address_root(struct context_entry *c)
++{
++	return((c->lo >> VTD_PAGE_SHIFT));
++}
++
++static inline int context_address_width(struct context_entry *c)
++{
++	return((c->hi >> 0) & 0x7);
++}
++
++static inline int context_domain_id(struct context_entry *c)
++{
++	return((c->hi >> 8) & 0xffff);
++}
++
+ static inline void context_set_present(struct context_entry *context)
+ {
+ 	context->lo |= 1;
+@@ -316,6 +348,28 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+ 	return !((unsigned long)pte & ~VTD_PAGE_MASK);
+ }
  
--	resource_list_for_each_entry(window, resources)
--		if (window->res->flags & IORESOURCE_BUS) {
--			found = true;
--			break;
--		}
-+	entry = pci_busn_resource(resources);
-+	if (!entry) {
-+		busn_resource = kzalloc(sizeof (struct resource), GFP_KERNEL);
-+		if (!busn_resource)
-+			return NULL;
-+		busn_resource->start = bus;
-+		busn_resource->end = 255;
-+		busn_resource->flags = IORESOURCE_BUS;
-+		pci_add_resource(resources, busn_resource);
-+		pr_info(
-+		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-+			bus);
-+	}
- 
- 	b = pci_create_root_bus(parent, domain, ops,
- 			sysdata, resources);
- 	if (!b)
- 		return NULL;
- 
--	if (!found) {
--		dev_info(&b->dev,
--		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
--			bus);
--		pci_bus_insert_busn_res(b, bus, 255);
-+	if (busn_resource) {
-+		host = to_pci_host_bridge(b->bridge);
-+		host->dynamic_busn = true;
- 	}
- 
- 	max = pci_scan_child_bus(b);
- 
--	if (!found)
-+	if (busn_resource)
- 		pci_bus_update_busn_res_end(b, max);
- 
- 	return b;
++
++/*
++ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
++ *
++ * Fixes the crashdump kernel to deal with an active iommu and legacy
++ * DMA from the (old) panicked kernel in a manner similar to how legacy
++ * DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * In the crashdump kernel, this code:
++ * 1. skips disabling the IOMMU's translating.
++ * 2. Do not re-enable IOMMU's translating.
++ * 3. In kdump kernel, use the old root entry table.
++ * 4. Allocate pages for new context entry, copy data from old context entries
++ *    in the old kernel to the new ones.
++ *
++ * In other kinds of kernel, for example, a kernel started by kexec,
++ * do the same thing as crashdump kernel.
++ */
++
++
++
+ /*
+  * This domain is a statically identity mapping domain.
+  *	1. This domain creats a static 1:1 mapping to all usable memory.
 -- 
-1.7.1
+2.0.0-rc0
 
