@@ -1,74 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:37080 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753560AbbDHPdn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 11:33:43 -0400
-Received: by igblo3 with SMTP id lo3so41604918igb.0
-        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 08:33:42 -0700 (PDT)
-Date: Wed, 8 Apr 2015 10:33:19 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH] of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Message-ID: <20150408153319.GM10892@google.com>
-References: <1428452680-24861-1-git-send-email-yinghai@kernel.org>
- <CAL_JsqLx4dB9CG0t0pCV89VxECXVTZyyiGfq=awNJSgfD50Raw@mail.gmail.com>
+Received: from mail-bn1on0145.outbound.protection.outlook.com ([157.56.110.145]:30485
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751510AbbDJCYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Apr 2015 22:24:19 -0400
+From: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI: layerscape: Simplify platform_get_resource_byname()
+ failure checking
+Date: Fri, 10 Apr 2015 02:08:21 +0000
+Message-ID: <DM2PR0301MB064005C336CD164FD8C0A061E2FA0@DM2PR0301MB0640.namprd03.prod.outlook.com>
+References: <20150409194923.19293.96454.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150409194923.19293.96454.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqLx4dB9CG0t0pCV89VxECXVTZyyiGfq=awNJSgfD50Raw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 07, 2015 at 08:30:58PM -0500, Rob Herring wrote:
-> On Tue, Apr 7, 2015 at 7:24 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > For device resource PREF bit setting under bridge 64-bit pref resource,
-> > we need to make sure only set PREF for 64bit resource, so set IORESOUCE_MEM_64
-> > for 64bit resource during of device resource flags parsing.
-> >
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Cc: Grant Likely <grant.likely@linaro.org>
-> > Cc: Rob Herring <robh+dt@kernel.org>
-> > Cc: devicetree@vger.kernel.org
-> 
-> Acked-by: Rob Herring <robh@kernel.org>
-> 
-> Bjorn, are you collecting these or should I apply?
-
-I am not collecting them, at least not yet.  These seem a little more on
-the OF side of the fence than PCI.  They are a little intertwingled with
-the sparc PCI bridge window issue, and Ben has some concerns, so maybe
-we'll have to figure out what makes the most sense when that gets sorted
-out.
-
-I'm still curious whether all these functions can be consolidated.  If
-that's possible, it would be much nicer than having to fix all the copies.
-
-Bjorn
-
-> > ---
-> >  drivers/of/address.c |    4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> >
-> > Index: linux-2.6/drivers/of/address.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/of/address.c
-> > +++ linux-2.6/drivers/of/address.c
-> > @@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags
-> >                 flags |= IORESOURCE_IO;
-> >                 break;
-> >         case 0x02: /* 32 bits */
-> > -       case 0x03: /* 64 bits */
-> >                 flags |= IORESOURCE_MEM;
-> >                 break;
-> > +       case 0x03: /* 64 bits */
-> > +               flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-> > +               break;
-> >         }
-> >         if (w & 0x40000000)
-> >                 flags |= IORESOURCE_PREFETCH;
+SGkgQmpvcm4sDQoNClRoYW5rcyBmb3IgeW91ciBpbXByb3ZlbWVudC4NCkkgbm90aWNlIG15IG5l
+dyBwYXRjaGVzIHRvIGFkZCBzdXBwb3J0IGFybTMyIGFuZCBhcm02NCBmb3IgZGVzaWdud2FyZSBh
+bmQgbGF5ZXJzY2FwZSBhbHNvIGhhdmUgdGhlIHNpbWlsYXIgaXNzdWVzLCBJIHdpbGwgZml4IGFu
+ZCBzdWJtaXQgIHRoZW0gdjIgLg0KQ291bGQgeW91IHRlbGwgbWUgd2hldGhlciBpdCBpcyBhY2Nl
+cHRhYmxlIHRoYXQgSSBhZGQgYSBuZXcgZmlsZSBwY2llLWRlc2lnbndhcmUtYmFzZS5jICB0byBy
+ZS1pbXBsZW1lbnQgZGVzaWdud2FyZSBQQ0llIGRyaXZlciBmb3IgY29tcGF0aWJsZSB3aXRoIGFy
+bTMyIGFuZCBhcm02NC4gIFRoZSBiZW5lZml0ICBpcyB0aGF0ICB0aGUgbmV3IGltcGxlbWVudGF0
+aW9uIGlzIHNpbXBsZSBjbGVhciBhbmQgcGxhdGZvcm0taW5kZXBlbmRlbnQuIEluIGFkZGl0aW9u
+LCBNU0kgZHJpdmVyIHdpbGwgYmUgc3BsaXQgdG8gYSBzZXBhcmF0ZSBmaWxlLiBCdXQgd2UgbWF5
+IG5lZWQgdG8gcHVzaCBvdGhlciBwbGF0Zm9ybSBQQ0llIG1haW50YWluZXIgdG8gcG9ydCB0aGUg
+ZHJpdmVyIGJhc2VkIG9uIHBjaWUtZGVzaWdud2FyZS1iYXNlLmMgLg0KDQpUaGFua3MsDQpNaW5n
+aHVhbg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVs
+Z2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IEZyaWRheSwgQXByaWwg
+MTAsIDIwMTUgMzo0OSBBTQ0KPiBUbzogTGlhbiBNaW5naHVhbi1CMzE5Mzk7IEh1IE1pbmdrYWkt
+QjIxMjg0OyBaYW5nIFJveS1SNjE5MTENCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogW1BBVENIXSBQQ0k6IGxheWVyc2NhcGU6IFNpbXBsaWZ5IHBsYXRmb3JtX2dl
+dF9yZXNvdXJjZV9ieW5hbWUoKQ0KPiBmYWlsdXJlIGNoZWNraW5nDQo+IA0KPiBkZXZtX2lvcmVt
+YXBfcmVzb3VyY2UoKSB2YWxpZGF0ZXMgdGhlIHJlc291cmNlIGl0IHJlY2VpdmVzLCBzbyBpZiB3
+ZSBjaGVjaw0KPiBmb3IgZGV2bV9pb3JlbWFwX3Jlc291cmNlKCkgZmFpbHVyZSwgd2UgbmVlZCBu
+b3QgY2hlY2sgZm9yIGZhaWx1cmUgb2YgdGhlDQo+IHByZWNlZGluZyBwbGF0Zm9ybV9nZXRfcmVz
+b3VyY2UoKS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdv
+b2dsZS5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2ktbGF5ZXJzY2FwZS5jIHwg
+ICAgOSArKystLS0tLS0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDYgZGVs
+ZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktbGF5ZXJz
+Y2FwZS5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktDQo+IGxheWVyc2NhcGUuYw0KPiBpbmRleCA2
+OGM5ZTVlOWIwYTguLjRhNmU2MmY2NzU3OSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG9z
+dC9wY2ktbGF5ZXJzY2FwZS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWxheWVyc2Nh
+cGUuYw0KPiBAQCAtMTI3LDE0ICsxMjcsMTEgQEAgc3RhdGljIGludCBfX2luaXQgbHNfcGNpZV9w
+cm9iZShzdHJ1Y3QNCj4gcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiAgCXBjaWUtPmRldiA9ICZw
+ZGV2LT5kZXY7DQo+IA0KPiAgCWRiaV9iYXNlID0gcGxhdGZvcm1fZ2V0X3Jlc291cmNlX2J5bmFt
+ZShwZGV2LA0KPiBJT1JFU09VUkNFX01FTSwgInJlZ3MiKTsNCj4gLQlpZiAoIWRiaV9iYXNlKSB7
+DQo+IC0JCWRldl9lcnIoJnBkZXYtPmRldiwgIm1pc3NpbmcgKnJlZ3MqIHNwYWNlXG4iKTsNCj4g
+LQkJcmV0dXJuIC1FTk9ERVY7DQo+IC0JfQ0KPiAtDQo+ICAJcGNpZS0+ZGJpID0gZGV2bV9pb3Jl
+bWFwX3Jlc291cmNlKCZwZGV2LT5kZXYsIGRiaV9iYXNlKTsNCj4gLQlpZiAoSVNfRVJSKHBjaWUt
+PmRiaSkpDQo+ICsJaWYgKElTX0VSUihwY2llLT5kYmkpKSB7DQo+ICsJCWRldl9lcnIoJnBkZXYt
+PmRldiwgIm1pc3NpbmcgKnJlZ3MqIHNwYWNlXG4iKTsNCj4gIAkJcmV0dXJuIFBUUl9FUlIocGNp
+ZS0+ZGJpKTsNCj4gKwl9DQo+IA0KPiAgCXBjaWUtPnNjZmcgPSBzeXNjb25fcmVnbWFwX2xvb2t1
+cF9ieV9waGFuZGxlKHBkZXYtDQo+ID5kZXYub2Zfbm9kZSwNCj4gIAkJCQkJCSAgICAgImZzbCxw
+Y2llLXNjZmciKTsNCg0K
