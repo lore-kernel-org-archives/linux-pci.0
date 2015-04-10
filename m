@@ -1,121 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:36179 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbbDHJWp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 05:22:45 -0400
-Message-ID: <5524F33D.7090800@huawei.com>
-Date: Wed, 8 Apr 2015 17:22:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:38635 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756440AbbDJWyf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:54:35 -0400
+Received: by igbqf9 with SMTP id qf9so9442400igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:54:35 -0700 (PDT)
+Subject: [PATCH v6 02/10] PCI/MSI: Export pci_msi_set_enable(),
+ pci_msix_clear_and_set_ctrl()
+To: "Michael S. Tsirkin" <mst@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fam Zheng <famz@redhat.com>, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 10 Apr 2015 17:54:33 -0500
+Message-ID: <20150410225433.20848.65505.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing0307@gmail.com>
-Subject: Re: [PATCH v9 08/30] PCI: Update pci_host_bridge bus resource
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-10-git-send-email-wangyijing@huawei.com> <20150407224243.GL10892@google.com>
-In-Reply-To: <20150407224243.GL10892@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/4/8 6:42, Bjorn Helgaas wrote:
-> On Fri, Apr 03, 2015 at 05:25:42PM +0800, Yijing Wang wrote:
->> From: Yijing Wang <wangyijing0307@gmail.com>
->>
->> Sometimes, the bus resource start number is not equal to
->> root bus number. For example, in pci_scan_bus(), we always
->> add the default bus resource which start bus number is 0,
->> but the root bus number callers given may != 0, so
->> we need to update pci_host_bridge bus resource, because we
->> would check whether host bridge bus resoruce is confict
->> in later patch.
-> 
-> It's true that pci_scan_bus() always inserts [bus 00-ff].  But I think
-> that's completely bogus.  The caller of pci_scan_bus() supplies a root bus
-> number X.  Any bus numbers below X are useless as far as this host bridge
-> is concerned, and it's pointless to include them in the range inserted by
-> pci_scan_bus().
+From: Michael S. Tsirkin <mst@redhat.com>
 
-Agree, I think it's better to use the [bus start - FF] instead of [00-FF].
+Move pci_msi_set_enable() and pci_msix_clear_and_set_ctrl() to
+drivers/pci/pci.h so they're available even when MSI isn't configured
+into the kernel.
 
-> 
-> I think we'd be better off if we forced every pci_scan_bus() caller to
-> supply a real non-overlapping bus number range.  We probably can't do that
-> easily because the arch knows the beginning bus number, but some don't know
-> how to figure out the ending bus number.
+No functional change.
 
-It seems to have some problems in pci_scan_bus() if we have more than one pci host bridge
-in a domain. Because we add the default busn_res[00-FF] to resource list in pci_scan_bus(),
-and pass the resource list to pci_create_root_bus().  The pci root bus would
-consume the bus range from the start to the 0xFF, and request it from the per-domain resource[00-FF].
-So if we have another pci host bridge in this domain, and pass another start bus number, it would
-fail when the root bus try to request bus resource from per-domain resource. Now only several archs
-call pci_scan_bus(), I guess they didn't run the code in above case, so we didn't find
-the bus report.
+[bhelgaas: changelog, split into separate patch]
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Fam Zheng <famz@redhat.com>
+CC: stable@vger.kernel.org
+---
+ drivers/pci/msi.c |   21 ---------------------
+ drivers/pci/pci.h |   21 +++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 21 deletions(-)
 
-> 
-> Do we have a per-domain structure that tracks the bus numbers in use in the
-> domain?  It seems like if we had one, we could use that to approximate the
-> end.  For example, if the arch scans three root buses, at bus 00, bus 40,
-> and bus 80, we could start with the first one at [bus 00-ff], and when we
-> scan the one at bus 40, we could either report a conflict (if the bus 00
-> tree included a bus 40) or reduce the first range to [bus 00-3f].
-
-Per-domain resource pci_domain_busn_res is what we are looking for.
-For simplicity, we could report a conflict and fail when we find a conflict bus
-resource in system.
-
-
->>  	resource_list_for_each_entry(window, resources)
->> -		if (window->res->flags & IORESOURCE_BUS)
->> +		if (window->res->flags & IORESOURCE_BUS) {
->> +			if (bus > window->res->start)
->> +				window->res->start = bus;
-> 
-> I see what you're trying to do here, but I think this is the wrong place to
-> do it.  I'd rather figure out a way to insert something other than
-> busn_resource in pci_scan_bus().  That probably means we need to
-> dynamically allocate a new busn_res struct.
-
-Allocate a new busn_res maybe unnecessary, the bus resource we added to resource list
-and passed to pci_create_root_bus() will never be used again after we call
-pci_bus_insert_busn_res(), we may could consider to use local busn_res in pci_scan_bus().
-
-Thanks!
-Yijing.
-
-> 
->>  			return;
->> +		}
->>  
->>  	pr_info(
->>  	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 6cd366058ec4..9942f6827a4a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -185,27 +185,6 @@ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
+ 	return default_restore_msi_irqs(dev);
+ }
+ 
+-static void pci_msi_set_enable(struct pci_dev *dev, int enable)
+-{
+-	u16 control;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
+-	control &= ~PCI_MSI_FLAGS_ENABLE;
+-	if (enable)
+-		control |= PCI_MSI_FLAGS_ENABLE;
+-	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+-}
+-
+-static void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
+-{
+-	u16 ctrl;
+-
+-	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
+-	ctrl &= ~clear;
+-	ctrl |= set;
+-	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
+-}
+-
+ static inline __attribute_const__ u32 msi_mask(unsigned x)
+ {
+ 	/* Don't shift by >= width of type */
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4091f82239cd..17f213d494de 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -146,6 +146,27 @@ static inline void pci_no_msi(void) { }
+ static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+ #endif
+ 
++static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
++{
++	u16 control;
++
++	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
++	control &= ~PCI_MSI_FLAGS_ENABLE;
++	if (enable)
++		control |= PCI_MSI_FLAGS_ENABLE;
++	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
++}
++
++static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
++{
++	u16 ctrl;
++
++	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
++	ctrl &= ~clear;
++	ctrl |= set;
++	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
++}
++
+ void pci_realloc_get_opt(char *);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
 
