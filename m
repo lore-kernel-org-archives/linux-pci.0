@@ -1,117 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:63467 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbbDHIcG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:32:06 -0400
-Message-ID: <5524E72F.1050500@huawei.com>
-Date: Wed, 8 Apr 2015 16:30:39 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:34149 "EHLO
+	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755059AbbDKQBy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2015 12:01:54 -0400
+Received: by qkgx75 with SMTP id x75so84883256qkg.1
+        for <linux-pci@vger.kernel.org>; Sat, 11 Apr 2015 09:01:53 -0700 (PDT)
 MIME-Version: 1.0
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Marc Zyngier" <marc.zyngier@arm.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linux-m68k@lists.linux-m68k.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <dja@axtens.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-alpha@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v9 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
- code
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-25-git-send-email-wangyijing@huawei.com> <5524E1F9.6030700@free-electrons.com>
-In-Reply-To: <5524E1F9.6030700@free-electrons.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20150411073031.GA10481@kroah.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150410225426.20848.45696.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150411073031.GA10481@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 11 Apr 2015 11:01:33 -0500
+Message-ID: <CAErSpo6o46ZDB+KGCKxUYqJKShnjFnU-7P=YdefmzveEH51Xxg@mail.gmail.com>
+Subject: Re: [PATCH v6 01/10] PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
+To: Greg KH <greg@kroah.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Fam Zheng <famz@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 2 months ago, Thomas Petazzoni was concerned about the removal of
-> mvebu_pcie_scan_bus(). So I dig the archives of the discussion
-> surrounding the pcie-mvebu drive. I found that the main purpose
-> of using this function was to allow to pass "struct device *" pointer.
-> 
-> Thanks to the introduction of pci_common_init_dev it was not needed
-> anymore. Actually we should have done this change when this function
-> had been introduced. So for the point of view of the code it's fine.
-> Then I tested your full series on Armada XP, Armada 375 and Armada 38x
-> SoCs, and I didn't saw any regression. So you can add my:
-> 
-> Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-
-Great, thanks very much!
-
-Thanks!
-Yijing.
-
-
-> 
-> 
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> CC: Jason Cooper <jason@lakedaemon.net>
+On Sat, Apr 11, 2015 at 2:30 AM, Greg KH <greg@kroah.com> wrote:
+> On Fri, Apr 10, 2015 at 05:54:26PM -0500, Bjorn Helgaas wrote:
+>> From: Michael S. Tsirkin <mst@redhat.com>
+>>
+>> Rename msi_set_enable() to pci_msi_set_enable() and
+>> msix_clear_and_set_ctrl() to pci_msix_clear_and_set_ctrl().
+>>
+>> No functional change.
+>>
+>> [bhelgaas: changelog, split into separate patch]
+>> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Reviewed-by: Fam Zheng <famz@redhat.com>
+>> CC: stable@vger.kernel.org
 >> ---
->>  drivers/pci/host/pci-mvebu.c |   18 +-----------------
->>  1 files changed, 1 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
->> index 0cfc494..d5a2b70 100644
->> --- a/drivers/pci/host/pci-mvebu.c
->> +++ b/drivers/pci/host/pci-mvebu.c
->> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->>  	return 1;
->>  }
->>  
->> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->> -{
->> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
->> -	struct pci_bus *bus;
->> -
->> -	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
->> -				  &mvebu_pcie_ops, sys, &sys->resources);
->> -	if (!bus)
->> -		return NULL;
->> -
->> -	pci_scan_child_bus(bus);
->> -
->> -	return bus;
->> -}
->> -
->>  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
->>  						 const struct resource *res,
->>  						 resource_size_t start,
->> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
->>  	hw.nr_controllers = 1;
->>  	hw.private_data   = (void **)&pcie;
->>  	hw.setup          = mvebu_pcie_setup;
->> -	hw.scan           = mvebu_pcie_scan_bus;
->>  	hw.map_irq        = of_irq_parse_and_map_pci;
->>  	hw.ops            = &mvebu_pcie_ops;
->>  	hw.align_resource = mvebu_pcie_align_resource;
->>  
->> -	pci_common_init(&hw);
->> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
->>  }
->>  
->>  /*
->>
-> 
-> 
+>>  drivers/pci/msi.c |   28 ++++++++++++++--------------
+>>  1 file changed, 14 insertions(+), 14 deletions(-)
+>
+> How does this, and the other patch you marked for stable, relate to the
+> stable_kernel_rules.txt file that dictates what we can take for stable
+> patches?
 
+I fat-fingered the stable email address on the patches with the actual
+bug fixes, so you probably didn't see them.  The candidates for stable
+are patches 1-4 of this series:
 
--- 
-Thanks!
-Yijing
+      PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
+      PCI/MSI: Export pci_msi_set_enable(), pci_msix_clear_and_set_ctrl()
+      PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI
+      PCI/MSI: Don't disable MSI/MSI-X at shutdown
 
+The first two make no functional difference; the last two are the bug fixes.
+
+Bjorn
