@@ -1,95 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jan Beulich <JBeulich@suse.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lb1-smtp-cloud3.xs4all.net ([194.109.24.22]:50352 "EHLO
+	lb1-smtp-cloud3.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752702AbbDKKSJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2015 06:18:09 -0400
+Message-ID: <1428747477.17822.90.camel@x220>
+Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe
+ controller
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v8 31/37] x86/irq: Kill unused pre_init_apic_IRQ0()
-Date: Mon, 13 Apr 2015 14:11:53 +0800
-Message-Id: <1428905519-23704-32-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	kernel@stlinux.com, linux-pci@vger.kernel.org,
+	Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Sat, 11 Apr 2015 12:17:57 +0200
+In-Reply-To: <1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+	 <1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of pre_init_apic_IRQ0(), so kill it.
+Something I didn't spot in my first look at this patch.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-4-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/include/asm/io_apic.h |    1 -
- arch/x86/kernel/apic/io_apic.c |   17 -----------------
- 2 files changed, 18 deletions(-)
+On Fri, 2015-04-10 at 11:12 +0200, Gabriel FERNANDEZ wrote:
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+>  
+> +config PCI_ST
+> +	bool "ST PCIe controller"
+> +	depends on ARCH_STI || (ARM && COMPILE_TEST)
+> +	select PCIE_DW
+> +	help
+> +	  Enable PCIe controller support on ST Socs. This controller is based
+> +	  on Designware hardware and therefore the driver re-uses the
+> +	  Designware core functions to implement the driver.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 2f91685fe1cd..c976de126a91 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -204,7 +204,6 @@ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
- 			    irq_hw_number_t hwirq);
- extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
- extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
--extern void __init pre_init_apic_IRQ0(void);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 56d532106ef3..540598c77e55 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3091,20 +3091,3 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
- 
- 	return ret;
- }
--
--/* Enable IOAPIC early just for system timer */
--void __init pre_init_apic_IRQ0(void)
--{
--	struct io_apic_irq_attr attr = { 0, 0, 0, 0 };
--
--	printk(KERN_INFO "Early APIC setup for system timer0\n");
--#ifndef CONFIG_SMP
--	physid_set_mask_of_physid(boot_cpu_physical_apicid,
--					 &phys_cpu_present_map);
--#endif
--	setup_local_APIC();
--
--	io_apic_setup_irq_pin(0, 0, &attr);
--	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
--				      "edge");
--}
--- 
-1.7.10.4
+You can't have ARCH_STI without ARM, so ARM will always be set if this
+driver is enabled. Correct?
+
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-st.c
+
+> +	if (IS_ENABLED(CONFIG_ARM)) {
+> +		/*
+> +		 * We have to hook the abort handler so that we can intercept
+> +		 * bus errors when doing config read/write that return UR,
+> +		 * which is flagged up as a bus error
+> +		 */
+> +		hook_fault_code(16+6, st_pcie_abort_handler, SIGBUS, 0,
+> +				"imprecise external abort");
+> +	}
+
+So, unless I'm missing something obvious here, IS_ENABLED(CONFIG_ARM)
+will always evaluate to 1. Can't that test be dropped?
+
+
+Paul Bolle
 
