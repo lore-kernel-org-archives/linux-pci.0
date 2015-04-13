@@ -1,159 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43339 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751603AbbDQDxm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Apr 2015 23:53:42 -0400
-Date: Fri, 17 Apr 2015 11:50:16 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-CC: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, CPGS <cpgs@samsung.com>
-Subject: Re: [query] how to use "ranges" in device tree
-Message-ID: <20150417115016.69857a77@xhacker>
-In-Reply-To: <20150417102413.705b1ca0@xhacker>
-References: <20150416215938.347caa68@xhacker>
-	<55303EE1.1050108@samsung.com>
-	<20150417102413.705b1ca0@xhacker>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to parent
+Date: Mon, 13 Apr 2015 16:23:36 +0200
+Message-ID: <2001450.KHHLaZsp3O@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I got the solution, the ranges can define two or more ranges. What I need to do
-is just add ranges for 0xe0000000 - 0xf0000000 as the following:
+Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
+/ nouveau: Fix VGA switcheroo problem related to hotplug) to propagate
+the ignore_hotplug setting of the device to its parent bridge in case
+hotplug notifications related to the graphics adapter switching are
+given for the bridge rather than for the device itself (the need to
+be ignored in both cases).
 
-soc {
-	ranges = <0 0xf7000000 0x1000000
-		  0xe0000000 0xe0000000 0x10000000>;  //add this line
-	...
-	pcie: pcie@e40000 {
-		...
-		reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
-		reg-names = "dbi", "pad", "config";
-		...
-	};
-}
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
+Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
+Reported-and-tested-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-Now, we can get the config space correctly.
+"Stable" material AFAICS.
 
+---
+ drivers/pci/pci.c   |   11 +++++++++++
+ include/linux/pci.h |    6 +-----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
-Thanks,
-Jisheng
-
-On Thu, 16 Apr 2015 19:24:13 -0700
-Jisheng Zhang <jszhang@marvell.com> wrote:
-
-> Hi Jaehoon,
-> 
-> On Thu, 16 Apr 2015 15:59:45 -0700
-> Jaehoon Chung <jh80.chung@samsung.com> wrote:
-> 
-> > Hi,
-> > 
-> > Well, I'm not sure..
-> > But in my understanding..configuration range might be support both "ranges" and "config" of reg.
-> > 
-> > On 04/16/2015 10:59 PM, Jisheng Zhang wrote:
-> > > Hi all,
-> > > 
-> > > I didn't fully understand the "ranges" usage, here is one situation which I dunno
-> > > how to handle.
-> > > 
-> > > In arch/arm/boot/dts/berlin2q.dtsi, we describe the /soc ranges as
-> > > 
-> > > ranges = <0 0xf7000000 0x1000000>;
-> > > 
-> > > That's fine. Now there's a pci device based on pcie-designware.c which prefer
-> > > put "config" space in reg. But the config space starts at 0xe0000000, due to
-> > > the /soc ranges, the "config" space following pcie node is not correct in fact.
-> > > 
-> > > soc {
-> > > 	ranges = <0 0xf7000000 0x1000000>;
-> > > 	...
-> > > 	pcie: pcie@e40000 {
-> > > 		compatible = "...";
-> > > 		reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
-> > > 		reg-names = "dbi", "pad", "config";
-> > > 		...
-> > > 	};
-> > > 	...
-> > > };
-> > 
-> > According to yours,
-> > 
-> > reg = <0xe40000 0x1000		/* dbi */
-> > 	0xe000000 0x800000	/* pad */
-> > 	0xf7000000 0x1000000>;	/* config ? */
-> 
-> oops, there's no pad at all, dbi starts at 0xf7e40000, config space starts at 0xe0000000
-> 
-> so my pcie in my understanding is
-> 
-> pcie: pcie@e40000 {
-> 	compatible = "...";
-> 	reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
-> 	reg-names = "dbi", "config";
-> };
-> 
-> But the "/soc" ranges is defined as "<0 0xf7000000 0x1000000>;", so the config space
-> in the above dts is not correct.
-> 
-> My solution is change the "/soc" ranges as following:
-> 
-> soc {
-> 	ranges;
-> 	...
-> };
-> 
-> Is there any elegant solutions for this situation?
-> 
-> > 
-> > If there is not "config" into reg-names, it should be tried to find it into "ranges".
-> 
-> The pcie-designware driver prefers users define config space in "reg"
-> 
-> Thanks for your help,
-> Jisheng
-> 
-> > 
-> > If my understanding is wrong, let me know, plz.
-> > 
-> > In my case,
-> > 
-> > 	reg = <0x156b0000 0x1000
-> > 		0x15680000 0x1000
-> > 		0x0c000000 0x1000>;
-> > 	reg-names = "elbi", "phy", "config";
-> > 
-> > 	ranges = < ..... /* downstream I/O */
-> > 		  ...... /* non-prefetchable memory */
-> > 
-> > 
-> > Best Regards,
-> > Jaehoon Chung	
-> > 
-> > > 
-> > > How to define the "config" space in this situation? Did we need to change
-> > > the /soc ranges as the following?
-> > > 
-> > > soc {
-> > > 	ranges;
-> > > }
-> > > 
-> > > Thanks in advance,
-> > > Jisheng
-> > > 
-> > > _______________________________________________
-> > > linux-arm-kernel mailing list
-> > > linux-arm-kernel@lists.infradead.org
-> > > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> > > 
-> > 
-> 
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -4319,6 +4319,17 @@ bool pci_device_is_present(struct pci_de
+ }
+ EXPORT_SYMBOL_GPL(pci_device_is_present);
+ 
++void pci_ignore_hotplug(struct pci_dev *dev)
++{
++	struct pci_dev *bridge = dev->bus->self;
++
++	dev->ignore_hotplug = 1;
++	/* Propagate the "ignore hotplug" setting to the parent bridge. */
++	if (bridge)
++		bridge->ignore_hotplug = 1;
++}
++EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
++
+ #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+ static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+ static DEFINE_SPINLOCK(resource_alignment_lock);
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -1002,6 +1002,7 @@ int __must_check pci_assign_resource(str
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
++void pci_ignore_hotplug(struct pci_dev *dev);
+ 
+ /* ROM control related routines */
+ int pci_enable_rom(struct pci_dev *pdev);
+@@ -1039,11 +1040,6 @@ bool pci_dev_run_wake(struct pci_dev *de
+ bool pci_check_pme_status(struct pci_dev *dev);
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
+ 
+-static inline void pci_ignore_hotplug(struct pci_dev *dev)
+-{
+-	dev->ignore_hotplug = 1;
+-}
+-
+ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 				  bool enable)
+ {
 
