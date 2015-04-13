@@ -1,115 +1,215 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49730 "EHLO foss.arm.com"
+Received: from mga09.intel.com ([134.134.136.24]:61572 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751177AbbDHHn6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Apr 2015 03:43:58 -0400
-Date: Wed, 8 Apr 2015 08:44:48 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, Feng Kan <fkan@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
- termination driver
-Message-ID: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
-In-Reply-To: <CADaLNDnhbR+i3b7X2zE7Fyou55Pu8qv-6QxpnRf4hqfq=0XyJQ@mail.gmail.com>
-References: <cover.1425497218.git.dhdang@apm.com>
-	<ca98e05f8a8dabdc6cc5b6e8c3ce50cf4e900fac.1425497218.git.dhdang@apm.com>
-	<5509BE7C.1000901@arm.com>
-	<CADaLNDn0V8F27Yu1-j8H0Dw2t-Ac04TZcbtsg++ALdB4orXrUQ@mail.gmail.com>
-	<5509C951.30402@arm.com>
-	<CADaLNDnhbR+i3b7X2zE7Fyou55Pu8qv-6QxpnRf4hqfq=0XyJQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751492AbbDMGND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:13:03 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part1 v8 16/37] irq_remapping/amd: Clean up unused MSI related code
+Date: Mon, 13 Apr 2015 14:11:38 +0800
+Message-Id: <1428905519-23704-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 7 Apr 2015 20:56:48 +0100
-Duc Dang <dhdang@apm.com> wrote:
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code.
 
-Hi Duc,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Joerg Roedel <jroedel@suse.de>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416894816-23245-17-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ drivers/iommu/amd_iommu.c |  115 +--------------------------------------------
+ 1 file changed, 2 insertions(+), 113 deletions(-)
 
-> On Wed, Mar 18, 2015 at 11:52 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> > On 18/03/15 18:29, Duc Dang wrote:
-> >> On Wed, Mar 18, 2015 at 11:05 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> >>> On 04/03/15 19:39, Duc Dang wrote:
-> >>>> X-Gene v1 SOC supports total 2688 MSI/MSIX vectors coalesced into
-> >>>> 16 HW IRQ lines.
-> >>>>
-> >>>> Signed-off-by: Duc Dang <dhdang@apm.com>
-> >>>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> >>>
-> >>> I just had a quick look at this, and this seems to be going in the exact
-> >>> opposite direction compared to what we now have on arm64, where we move
-> >>> away from using struct msi_controller for most thing, and implement PCI
-> >>> MSI/MSIX in a generic way, using MSI domains.
-> >>>
-> >>> I suggest you have a look at how GICv2m and GICv3 ITS implement the MSI
-> >>> support. You can also have a look at what I did for the Tegra MSI
-> >>> controller in this patch:
-> >>>
-> >>> https://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/kill-msi-controller&id=83b3602fcee7972b9d549ed729b56ec28de16081
-> >>>
-> >>> Eventually, the plan is to kill msi_controller entirely, so introducing
-> >>> new drivers that rely on it is not something I'm eager to see.
-> >>
-> >> Thanks, Marc.
-> >>
-> >>  X-Gene 1 MSI is handled by separate MSI controller block, so its
-> >> driver implementation is different from GICv2m and GICv3. I will refer
-> >
-> > It will certainly be different in the sense that you won't use a stacked
-> > domain on top of the GIC. But what I want to see is the use of a generic
-> > pci_msi_domain on top of an irq_domain, just like we have on v2m and v3.
-> > Thomas has also been vocal enough about that in the past, and x86 is
-> > going down that road as well.
-> >
-> >> to what you did for Tegra MSI, but I don't see your latest changes in
-> >> 4.0-rc4. Is the change you made for Tegra MSI going to mainline soon?
-> >
-> > Not yet. As you can see in this branch, this relies on some other
-> > cleanups. But you can already convert most of your driver and put it in
-> > the shape that matches what we have for v2m and v3. Once the required
-> > cleanups are in, I'll remove the last traces of msi_controller myself if
-> > necessary.
-> >
-> 
-> Hi Marc, Bjorn,
-> 
-> I follow Marc's suggestion and convert my X-Gene 1 MSI driver to
-> remove msi_controller struct and use generic pci_msi_domain on top of
-> an irq_domain. The code requires Marc's changes in
-> irq/kill-msi-controller branch to be compiled and function correctly,
-> so I plan to post the patch on top of Marc's tree. Please let me know
-> if you think I should have different approach to post this patch.
-
-I don't think you should rely on this branch just yet (this is why I
-suggested matching what we currently have for GICv2m and v3). Keeping
-msi_controller is fine at the moment, even if we only use to store the
-MSI domain. If and when this series makes it to mainline, I'll go over
-the individual drivers to convert them to the new scheme, just like I
-did for GIC and Tegra.
-
-> Another question I have is when do you plan to roll out this hierarchy
-> irq domain implementation for MSI, as I see some of Marc's changes to
-> kill msi_controller structure and implement MSI irq domain still does
-> not get into Bjorn's tree.
-
-I'm still tinkering with it (I have some long standing comments from
-Bjorn to address), and I'm working on non-PCI MSI support at the moment.
-
-But the core MSI irq domain stuff is already in (this is what GICv2m
-and GICv3 ITS are using), and this should be an easy thing to convert
-your code.
-
-Please let me know if I can be of any help.
-
-Thanks,
-
-	M.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index db974bd348a1..62fce11e1cfd 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3961,8 +3961,7 @@ out_unlock:
+ 	return table;
+ }
+ 
+-static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
+-			   u16 devid, int count)
++static int alloc_irq_index(u16 devid, int count)
+ {
+ 	struct irq_remap_table *table;
+ 	unsigned long flags;
+@@ -3988,11 +3987,6 @@ static int alloc_irq_index(struct irq_cfg *cfg, struct irq_2_irte *irte_info,
+ 				table->table[index - c + 1] = IRTE_ALLOCATED;
+ 
+ 			index -= count - 1;
+-
+-			cfg->remapped	      = 1;
+-			irte_info->devid      = devid;
+-			irte_info->index      = index;
+-
+ 			goto out;
+ 		}
+ 	}
+@@ -4192,106 +4186,6 @@ static int free_irq(int irq)
+ 	return 0;
+ }
+ 
+-static void compose_msi_msg(struct pci_dev *pdev,
+-			    unsigned int irq, unsigned int dest,
+-			    struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	union irte irte;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return;
+-
+-	irte_info = &cfg->irq_2_irte;
+-
+-	irte.val		= 0;
+-	irte.fields.vector	= cfg->vector;
+-	irte.fields.int_type    = apic->irq_delivery_mode;
+-	irte.fields.destination	= dest;
+-	irte.fields.dm		= apic->irq_dest_mode;
+-	irte.fields.valid	= 1;
+-
+-	modify_irte(irte_info->devid, irte_info->index, irte);
+-
+-	msg->address_hi = MSI_ADDR_BASE_HI;
+-	msg->address_lo = MSI_ADDR_BASE_LO;
+-	msg->data       = irte_info->index;
+-}
+-
+-static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
+-{
+-	struct irq_cfg *cfg;
+-	int index;
+-	u16 devid;
+-
+-	if (!pdev)
+-		return -EINVAL;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	devid = get_device_id(&pdev->dev);
+-	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, nvec);
+-
+-	return index < 0 ? MAX_IRQS_PER_TABLE : index;
+-}
+-
+-static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
+-			 int index, int offset)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	u16 devid;
+-
+-	if (!pdev)
+-		return -EINVAL;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	if (index >= MAX_IRQS_PER_TABLE)
+-		return 0;
+-
+-	devid		= get_device_id(&pdev->dev);
+-	irte_info	= &cfg->irq_2_irte;
+-
+-	cfg->remapped	      = 1;
+-	irte_info->devid      = devid;
+-	irte_info->index      = index + offset;
+-
+-	return 0;
+-}
+-
+-static int alloc_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	struct irq_2_irte *irte_info;
+-	struct irq_cfg *cfg;
+-	int index, devid;
+-
+-	cfg = irq_cfg(irq);
+-	if (!cfg)
+-		return -EINVAL;
+-
+-	irte_info = &cfg->irq_2_irte;
+-	devid     = get_hpet_devid(id);
+-	if (devid < 0)
+-		return devid;
+-
+-	index = alloc_irq_index(cfg, &cfg->irq_2_irte, devid, 1);
+-	if (index < 0)
+-		return index;
+-
+-	cfg->remapped	      = 1;
+-	irte_info->devid      = devid;
+-	irte_info->index      = index;
+-
+-	return 0;
+-}
+-
+ static int get_devid(struct irq_alloc_info *info)
+ {
+ 	int devid = -1;
+@@ -4367,10 +4261,6 @@ struct irq_remap_ops amd_iommu_irq_ops = {
+ 	.setup_ioapic_entry	= setup_ioapic_entry,
+ 	.set_affinity		= set_affinity,
+ 	.free_irq		= free_irq,
+-	.compose_msi_msg	= compose_msi_msg,
+-	.msi_alloc_irq		= msi_alloc_irq,
+-	.msi_setup_irq		= msi_setup_irq,
+-	.alloc_hpet_msi		= alloc_hpet_msi,
+ 	.get_ir_irq_domain	= get_ir_irq_domain,
+ 	.get_irq_domain		= get_irq_domain,
+ };
+@@ -4468,8 +4358,7 @@ static int irq_remapping_alloc(struct irq_domain *domain, unsigned int virq,
+ 		else
+ 			ret = -ENOMEM;
+ 	} else {
+-		cfg = irq_cfg(virq);
+-		index = alloc_irq_index(cfg, &data->irq_2_irte, devid, nr_irqs);
++		index = alloc_irq_index(devid, nr_irqs);
+ 	}
+ 	if (index < 0) {
+ 		pr_warn("Failed to allocate IRTE\n");
 -- 
-Without deviation from the norm, progress is not possible.
+1.7.10.4
+
