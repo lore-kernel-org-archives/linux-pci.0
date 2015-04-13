@@ -1,58 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f41.google.com ([209.85.192.41]:34512 "EHLO
-	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751741AbbDBWN6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2015 18:13:58 -0400
-Received: by qgep97 with SMTP id p97so81381305qge.1
-        for <linux-pci@vger.kernel.org>; Thu, 02 Apr 2015 15:13:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV8=tGiPJ0qEJvMBAzk-i2aubmQhkNoa-Gei9y7SXiubw@mail.gmail.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
- <20150402.163715.643586069492103151.davem@davemloft.net> <CAE9FiQV8=tGiPJ0qEJvMBAzk-i2aubmQhkNoa-Gei9y7SXiubw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 2 Apr 2015 17:13:37 -0500
-Message-ID: <CAErSpo4uLHddoWUFW4RVrPGkw+2gJgsNaCkz85vUYFsORbOgJw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part1 v8 28/37] irq_remapping: Kill unused function irq_remapping_print_chip()
+Date: Mon, 13 Apr 2015 14:11:50 +0800
+Message-Id: <1428905519-23704-29-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 2, 2015 at 5:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Apr 2, 2015 at 1:37 PM, David Miller <davem@davemloft.net> wrote:
->> From: Yinghai Lu <yinghai@kernel.org>
->> Date: Tue, 31 Mar 2015 19:57:46 -0700
->>
->>> Fix regression by commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to
->>> fit in upstream windows").
->>>
->>> That cause bridge bar get clipped wrongly.
->>>
->>> The sparc64 dma_addr_t is 32-bit, we can not use it to check if we can
->>> use 64bit bar, introduce pci_bus_addr_t.
->>>
->>> sparc ofpci does not parse 64bit mem for root bus, add code to
->>> make sure that we get correct resource for root.
->>>
->>> Also there are device 64-bit res does not have pref bit flag, but bridges
->>> do have pref bit set, that cause extra "no compatible window".
->>> Set pref bit for them according to the errata.
->>
->> Just to be clear, who is going to merge this? :-)
->>
->
-> Should be you or Bjorn, but one should get ack from another.
+Now there's no user of irq_remapping_print_chip(), so kill it.
 
-I'm just getting back from vacation and would like to have a chance to
-look over this.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/irq_remapping.h |    2 --
+ drivers/iommu/irq_remapping.c        |   13 -------------
+ 2 files changed, 15 deletions(-)
 
-One first reaction is that if we add a pci_bus_addr_t,
-Documentation/DMA-API-HOWTO.txt needs to be updated.  It currently
-says a dma_addr_t "can hold any valid DMA or bus address."
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index bacac1052262..52e1a1f337b2 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -59,7 +59,6 @@ extern struct irq_domain *
+ irq_remapping_get_ir_irq_domain(struct irq_alloc_info *info);
+ extern struct irq_domain *
+ irq_remapping_get_irq_domain(struct irq_alloc_info *info);
+-extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
+ 
+ /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
+ extern struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent);
+@@ -115,6 +114,5 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info)
+ 	return NULL;
+ }
+ 
+-#define	irq_remapping_print_chip	NULL
+ #endif /* CONFIG_IRQ_REMAP */
+ #endif /* __X86_IRQ_REMAPPING_H */
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 3eaa822c30a9..558c804dbe11 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -204,19 +204,6 @@ static void ir_ack_apic_level(struct irq_data *data)
+ 	eoi_ioapic_irq(data->irq, irqd_cfg(data));
+ }
+ 
+-void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p)
+-{
+-	/*
+-	 * Assume interrupt is remapped if the parent irqdomain isn't the
+-	 * vector domain, which is true for MSI, HPET and IOAPIC on x86
+-	 * platforms.
+-	 */
+-	if (data->domain && data->domain->parent != arch_get_ir_parent_domain())
+-		seq_printf(p, " IR-%s", data->chip->name);
+-	else
+-		seq_printf(p, " %s", data->chip->name);
+-}
+-
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ {
+ 	seq_printf(p, " IR-%s", data->chip->name);
+-- 
+1.7.10.4
 
-Bjorn
