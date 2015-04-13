@@ -1,80 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3459 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932276AbbD1HGz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 03:06:55 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <dja@axtens.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH Part1 v11 1/5] PCI: mvebu: Use pci_common_init_dev() to simplify code
-Date: Tue, 28 Apr 2015 15:01:35 +0800
-Message-ID: <1430204499-19571-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-vn0-f53.google.com ([209.85.216.53]:43592 "EHLO
+	mail-vn0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194AbbDMHff (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2015 03:35:35 -0400
+Received: by vnbg7 with SMTP id g7so16781876vnb.10
+        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2015 00:35:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2529595.kpEIoZMpcn@wuerfel>
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
+	<1428747477.17822.90.camel@x220>
+	<2529595.kpEIoZMpcn@wuerfel>
+Date: Mon, 13 Apr 2015 09:35:34 +0200
+Message-ID: <CAG374jDUPK5hCZBLR_r5om8mh8wy1NyxDaZ-DP_A-xjNN6f2pQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mvebu_pcie_scan_bus() is not necessary, we could use
-pci_common_init_dev() instead of pci_common_init(),
-and pass the device pointer as the parent. Then
-pci_scan_root_bus() will be called to scan the pci busses.
+Hi
 
-Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Jason Cooper <jason@lakedaemon.net>
----
- drivers/pci/host/pci-mvebu.c |   18 +-----------------
- 1 files changed, 1 insertions(+), 17 deletions(-)
+Thanks for reviewing.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 1ab8635..70aa095 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -751,21 +751,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
--static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
--				  &mvebu_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	return bus;
--}
--
- static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 						 const struct resource *res,
- 						 resource_size_t start,
-@@ -809,12 +794,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
- 	hw.nr_controllers = 1;
- 	hw.private_data   = (void **)&pcie;
- 	hw.setup          = mvebu_pcie_setup;
--	hw.scan           = mvebu_pcie_scan_bus;
- 	hw.map_irq        = of_irq_parse_and_map_pci;
- 	hw.ops            = &mvebu_pcie_ops;
- 	hw.align_resource = mvebu_pcie_align_resource;
- 
--	pci_common_init(&hw);
-+	pci_common_init_dev(&pcie->pdev->dev, &hw);
- }
- 
- /*
--- 
-1.7.1
+On 11 April 2015 at 16:55, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Saturday 11 April 2015 12:17:57 Paul Bolle wrote:
+>> Something I didn't spot in my first look at this patch.
+>>
+>> On Fri, 2015-04-10 at 11:12 +0200, Gabriel FERNANDEZ wrote:
+>> > --- a/drivers/pci/host/Kconfig
+>> > +++ b/drivers/pci/host/Kconfig
+>> >
+>> > +config PCI_ST
+>> > +     bool "ST PCIe controller"
+>> > +     depends on ARCH_STI || (ARM && COMPILE_TEST)
+>> > +     select PCIE_DW
+>> > +     help
+>> > +       Enable PCIe controller support on ST Socs. This controller is based
+>> > +       on Designware hardware and therefore the driver re-uses the
+>> > +       Designware core functions to implement the driver.
+>>
+>> You can't have ARCH_STI without ARM, so ARM will always be set if this
+>> driver is enabled. Correct?
+>
+> Right, though the ARM dependency could soon be dropped, once the PCIE_DW
+> driver can use generic infrastructure in the few places it relies on
+> ARM specific code today.
+>
+>> > --- /dev/null
+>> > +++ b/drivers/pci/host/pci-st.c
+>>
+>> > +     if (IS_ENABLED(CONFIG_ARM)) {
+>> > +             /*
+>> > +              * We have to hook the abort handler so that we can intercept
+>> > +              * bus errors when doing config read/write that return UR,
+>> > +              * which is flagged up as a bus error
+>> > +              */
+>> > +             hook_fault_code(16+6, st_pcie_abort_handler, SIGBUS, 0,
+>> > +                             "imprecise external abort");
+>> > +     }
+>>
+>> So, unless I'm missing something obvious here, IS_ENABLED(CONFIG_ARM)
+>> will always evaluate to 1. Can't that test be dropped?
+>
+> I would leave it in, as it's quite likely to get reused with ARM64 at some
+> point in the future (no, I don't know anything about ST's product plans,
+> but everybody seems to be doing this).
+>
+>         Arnd
 
+Yes i agree with that.
+
+Gabriel
