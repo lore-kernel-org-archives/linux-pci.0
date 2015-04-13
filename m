@@ -1,60 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57244 "EHLO foss.arm.com"
+Received: from mga02.intel.com ([134.134.136.20]:32520 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753218AbbD0RE1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Apr 2015 13:04:27 -0400
-Date: Mon, 27 Apr 2015 18:04:23 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Varun Sethi <Varun.Sethi@freescale.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Message-ID: <20150427170423.GC3310@arm.com>
-References: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150422170718.GG13019@arm.com>
- <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150424161818.GC7313@arm.com>
- <553A72D4.7000801@arm.com>
- <CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150425113930.7386a42a@arm.com>
- <BN1PR0301MB06276181976E880432B8C49AEAEA0@BN1PR0301MB0627.namprd03.prod.outlook.com>
- <553DEC20.3010400@arm.com>
- <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
+	id S1753028AbbDMGK2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:10:28 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Subject: [Patch Part1 v8 03/37] x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
+Date: Mon, 13 Apr 2015 14:11:25 +0800
+Message-Id: <1428905519-23704-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 27, 2015 at 02:08:10PM +0100, Varun Sethi wrote:
-> > >>> In the SMMU/GIC-500-ITS world the iommu isolation ID (the stream ID)
-> > >>> and the GIC-ITS device ID are in fact the same ID.
-> > >>
-> > >> The DeviceID is the "MSI group" you mention. This is what provides
-> > >> isolation at the ITS level.
-> > >>
-> > > [varun] True, in case of a transparent host bridge device Id won't
-> > > provide the necessary isolation.
-> > 
-> > Well, it depends how you look at it. How necessary is this isolation, since
-> > we've already established that you couldn't distinguish between these
-> > devices at the IOMMU level?
-> > 
-> [varun] Yes, the devices would fall in the same IOMMU group. So, devices
-> would end up sharing the interrupt?
+Use new irqdomain interfaces to allocate/free IRQ for HPET, so we could
+kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
 
-Well, I think that's the crux of the issue here. If IOMMU groups are also
-needed to relay constraints to the IRQ subsystem, then perhaps we need a
-more general notion of device grouping and ID transformations between
-the different levels of group hierarchy.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Link: http://lkml.kernel.org/r/1416894816-23245-4-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/hpet.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Will
+diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+index 3acbff4716b0..ae29554f57ea 100644
+--- a/arch/x86/kernel/hpet.c
++++ b/arch/x86/kernel/hpet.c
+@@ -11,6 +11,7 @@
+ #include <linux/cpu.h>
+ #include <linux/pm.h>
+ #include <linux/io.h>
++#include <linux/irqdomain.h>
+ 
+ #include <asm/fixmap.h>
+ #include <asm/hpet.h>
+@@ -476,7 +477,7 @@ static int hpet_msi_next_event(unsigned long delta,
+ static int hpet_setup_msi_irq(unsigned int irq)
+ {
+ 	if (x86_msi.setup_hpet_msi(irq, hpet_blockid)) {
+-		irq_free_hwirq(irq);
++		irq_domain_free_irqs(irq, 1);
+ 		return -EINVAL;
+ 	}
+ 	return 0;
+@@ -484,9 +485,10 @@ static int hpet_setup_msi_irq(unsigned int irq)
+ 
+ static int hpet_assign_irq(struct hpet_dev *dev)
+ {
+-	unsigned int irq = irq_alloc_hwirq(-1);
++	int irq;
+ 
+-	if (!irq)
++	irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
++	if (irq <= 0)
+ 		return -EINVAL;
+ 
+ 	irq_set_handler_data(irq, dev);
+-- 
+1.7.10.4
+
