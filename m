@@ -1,157 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:33868 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754024AbbDJWyW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:54:22 -0400
-Received: by iget9 with SMTP id t9so22712803ige.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:54:21 -0700 (PDT)
-Subject: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
-To: "Michael S. Tsirkin" <mst@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Date: Fri, 10 Apr 2015 17:54:19 -0500
-Message-ID: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga14.intel.com ([192.55.52.115]:12271 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753336AbbDMGL3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:11:29 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part1 v8 09/37] irq_remapping/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
+Date: Mon, 13 Apr 2015 14:11:31 +0800
+Message-Id: <1428905519-23704-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michael,
+Prepare for support hierarchy irqdomain by changing function prototypes,
+should be no function changes.
 
-I put your patches on my pci/msi branch and I hope to merge them for v4.1.
-I didn't apply the acks from Fam and Eric because I made changes to those
-patches that weren't completely trivial.  I think the end result is
-equivalent, though.  The diff attached to this cover letter is the
-difference between your v5 series and this v6 series.
-
-As far as I'm concerned, this is ready to go except that I would like a
-little more info about the virtio kernel hang to include in the changelog
-for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
-
-Changes from v5:
-	Edit summaries and changelogs for consistency
-	Split msi_set_enable() rename/export for reviewability
-	Move pci_msi_setup_pci_dev() to its ultimate location to avoid
-	    unnecessary diffs in subsequent patch
-	Call pci_msi_setup_pci_dev() from its ultimate location to avoid
-	    unnecessary diffs in subsequent patch
-	Skip pci_msi_off() duplicate code removal since we can remove
-	    it completely later
-	Remove pci_msi_off() completely
-
-v5 posting: http://lkml.kernel.org/r/1427641227-7574-1-git-send-email-mst@redhat.com
-
-Bjorn
-    
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Joerg Roedel <jroedel@suse.de>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416894816-23245-10-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
+ drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-Bjorn Helgaas (1):
-      PCI/MSI: Remove unused pci_msi_off()
-
-Michael S. Tsirkin (9):
-      PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
-      PCI/MSI: Export pci_msi_set_enable(), pci_msix_clear_and_set_ctrl()
-      PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI
-      PCI/MSI: Don't disable MSI/MSI-X at shutdown
-      PCI/MSI: Make pci_msi_shutdown(), pci_msix_shutdown() static
-      virtio_pci: drop pci_msi_off() call during probe
-      ntb: Drop pci_msi_off() call during probe
-      mic: Drop pci_msi_off() call during probe
-      PCI/MSI: Drop pci_msi_off() calls from quirks
-
-
- drivers/misc/mic/host/mic_intr.c   |    2 -
- drivers/ntb/ntb_hw.c               |    2 -
- drivers/pci/msi.c                  |   57 ++++++++----------------------------
- drivers/pci/pci-driver.c           |    2 -
- drivers/pci/pci.c                  |   33 ---------------------
- drivers/pci/pci.h                  |   21 +++++++++++++
- drivers/pci/probe.c                |   18 +++++++++++
- drivers/pci/quirks.c               |    2 -
- drivers/virtio/virtio_pci_common.c |    3 --
- include/linux/pci.h                |    5 ---
- 10 files changed, 51 insertions(+), 94 deletions(-)
-
-
---- This is "git diff v5 v6":
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 54cefb442d19..3d938a7d3b04 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3096,24 +3096,6 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev)
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 14de1ab223c8..d3adaf32b3ec 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
  
--/**
-- * pci_msi_off - disables any MSI or MSI-X capabilities
-- * @dev: the PCI device to operate on
-- *
-- * If you want to use MSI, see pci_enable_msi() and friends.
-- * This is a lower-level primitive that allows us to disable
-- * MSI operation at the device level.
-- * Not for use by drivers.
-- */
--void pci_msi_off(struct pci_dev *dev)
--{
--	if (dev->msi_cap)
--		pci_msi_set_enable(dev, 0);
--
--	if (dev->msix_cap)
--		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
--}
--
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
+-static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
++static int alloc_irte(struct intel_iommu *iommu, int irq,
++		      struct irq_2_iommu *irq_iommu, u16 count)
  {
- 	return dma_set_max_seg_size(&dev->dev, size);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 620fcad1935d..17f213d494de 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -146,8 +146,6 @@ static inline void pci_no_msi(void) { }
- static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
- #endif
+ 	struct ir_table *table = iommu->ir_table;
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
+ 	return 0;
+ }
  
--void pci_msi_off(struct pci_dev *dev);
--
- static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
+-static int modify_irte(int irq, struct irte *irte_modified)
++static int modify_irte(struct irq_2_iommu *irq_iommu,
++		       struct irte *irte_modified)
  {
- 	u16 control;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 120772c219c7..740113b70ade 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1086,14 +1086,18 @@ int pci_cfg_space_size(struct pci_dev *dev)
+-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	struct intel_iommu *iommu;
+ 	unsigned long flags;
+ 	struct irte *irte;
+@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 		return 0;
  
- static void pci_msi_setup_pci_dev(struct pci_dev *dev)
- {
--	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--
--	/* Disable the msi hardware to avoid screaming interrupts
-+	/*
-+	 * Disable the MSI hardware to avoid screaming interrupts
- 	 * during boot.  This is the power on reset default so
- 	 * usually this should be a noop.
+ 	iommu = irq_iommu->iommu;
+-	index = irq_iommu->irte_index + irq_iommu->sub_handle;
++	index = irq_iommu->irte_index;
+ 
+ 	start = iommu->ir_table->base + index;
+ 	end = start + (1 << irq_iommu->irte_mask);
+@@ -986,7 +986,7 @@ static int intel_setup_ioapic_entry(int irq,
+ 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
+ 		index = -ENODEV;
+ 	} else {
+-		index = alloc_irte(iommu, irq, 1);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+ 		if (index < 0) {
+ 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
+ 				ioapic_id);
+@@ -1002,7 +1002,7 @@ static int intel_setup_ioapic_entry(int irq,
+ 	/* Set source-id of interrupt request */
+ 	set_ioapic_sid(&irte, ioapic_id);
+ 
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
+ 
+ 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
+ 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
+@@ -1089,7 +1089,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	 * Atomically updates the IRTE with the new destination, vector
+ 	 * and flushes the interrupt entry cache.
  	 */
--	pci_msi_off(dev);
-+	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	if (dev->msi_cap)
-+		pci_msi_set_enable(dev, 0);
-+
-+	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-+	if (dev->msix_cap)
-+		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
- }
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
  
- /**
-@@ -1151,7 +1155,6 @@ int pci_setup_device(struct pci_dev *dev)
- 	/* "Unknown power state" */
- 	dev->current_state = PCI_UNKNOWN;
+ 	/*
+ 	 * After this point, all the interrupts will start arriving
+@@ -1125,7 +1125,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
+ 	else
+ 		set_hpet_sid(&irte, hpet_id);
  
--	/* MSI/MSI-X setup has to be done early since it's used by quirks. */
- 	pci_msi_setup_pci_dev(dev);
+-	modify_irte(irq, &irte);
++	modify_irte(irq_2_iommu(irq), &irte);
  
- 	/* Early fixups, before probing the BARs */
+ 	msg->address_hi = MSI_ADDR_BASE_HI;
+ 	msg->data = sub_handle;
+@@ -1152,7 +1152,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
+ 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
+ 		index = -ENOENT;
+ 	} else {
+-		index = alloc_irte(iommu, irq, nvec);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
+ 		if (index < 0) {
+ 			printk(KERN_ERR
+ 			       "Unable to allocate %d IRTE for PCI %s\n",
+@@ -1196,7 +1196,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
+ 	down_read(&dmar_global_lock);
+ 	iommu = map_hpet_to_ir(id);
+ 	if (iommu) {
+-		index = alloc_irte(iommu, irq, 1);
++		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
+ 		if (index >= 0)
+ 			ret = 0;
+ 	}
+-- 
+1.7.10.4
+
