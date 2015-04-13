@@ -1,61 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50182 "EHLO foss.arm.com"
+Received: from mga09.intel.com ([134.134.136.24]:57657 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751411AbbDHKc2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Apr 2015 06:32:28 -0400
-Date: Wed, 8 Apr 2015 11:32:22 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Query] Direction of adding arm64 support to PCIe designware
- driver
-Message-ID: <20150408103222.GB22376@red-moon>
-References: <20150403174621.02681f0d@xhacker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150403174621.02681f0d@xhacker>
+	id S1753270AbbDMGRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:17:16 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 35/37] x86/irq: Simplify the way to print IOAPIC entry
+Date: Mon, 13 Apr 2015 14:11:57 +0800
+Message-Id: <1428905519-23704-36-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jisheng,
+Simplify the way to print IOAPIC entry content, so we could kill
+native_io_apic_print_entries(), intel_ir_io_apic_print_entries()
+and x86_io_apic_ops.print_entries() later.
 
-On Fri, Apr 03, 2015 at 10:46:21AM +0100, Jisheng Zhang wrote:
-> Hi all,
-> 
-> Currently, the pci designware driver still lacks of arm64 support and I noticed
-> that many works are done to achieve this goal.
-> 
-> Some patches are merged and some are under discussion. And Per my understanding, 
-> even w/ these patches merged, the driver still doesn't support arm64. Could you
-> please kindly point out the direction to add arm64 support to the PCIe
-> designware driver?
+Folded a patch from Thomas to fix errors in printed pin attributes,
+http://www.spinics.net/lists/linux-tip-commits/msg26108.html
 
-We should remove pci_sys_data dependency since ARM depends on that.
-I removed it from a couple of places already (eg pci_mmap_page_range).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-8-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/apic/io_apic.c |   30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-Now, pcibios_align_resource and pcibios_msi_controller need patching.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 16d4ba3ac844..3c6609617306 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1424,6 +1424,33 @@ void ioapic_zap_locks(void)
+ 	raw_spin_lock_init(&ioapic_lock);
+ }
+ 
++static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
++{
++	int i;
++	char buf[256];
++	struct IO_APIC_route_entry entry;
++	struct IR_IO_APIC_route_entry *ir_entry = (void *)&entry;
++
++	printk(KERN_DEBUG "IOAPIC %d:\n", apic);
++	for (i = 0; i <= nr_entries; i++) {
++		entry = ioapic_read_entry(apic, i);
++		snprintf(buf, sizeof(buf),
++			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
++			 i, entry.mask ? "disabled" : "enabled ",
++			 entry.trigger ? "level" : "edge ",
++			 entry.polarity ? "low " : "high",
++			 entry.vector, entry.irr, entry.delivery_status);
++		if (ir_entry->format)
++			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
++			       buf, (ir_entry->index << 15) | ir_entry->index,
++			       ir_entry->zero);
++		else
++			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
++			       buf, entry.dest_mode ? "logical " : "physical",
++			       entry.dest, entry.delivery_mode);
++	}
++}
++
+ static void __init print_IO_APIC(int ioapic_idx)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+@@ -1477,8 +1504,7 @@ static void __init print_IO_APIC(int ioapic_idx)
+ 	}
+ 
+ 	printk(KERN_DEBUG ".... IRQ redirection table:\n");
+-
+-	x86_io_apic_ops.print_entries(ioapic_idx, reg_01.bits.entries);
++	io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
+ }
+ 
+ void __init print_IO_APICs(void)
+-- 
+1.7.10.4
 
-I have a patch for pcibios_align_resource() (I am waiting for Yijing
-Wang series to get merged so that we can move the align_resource
-function pointer in the host bridge):
-
-https://lkml.org/lkml/2015/4/3/171
-
-For MSI, code converted to use CONFIG_PCI_MSI_IRQ_DOMAIN should
-not need pcibios_msi_controller ARM function, but if we still compile
-that function in we do need pci_sys_data on ARM, so we have to have
-it even if it can be dead code in some platforms, I have to vet all
-ARM PCI host controllers to check, but removing it would break MSI
-support.
-
-Does it help ? MSIs are the most important change required,
-align_resource() pointer can be sorted out easily once Yijing's
-code gets in.
-
-Lorenzo
