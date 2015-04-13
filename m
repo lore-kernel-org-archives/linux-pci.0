@@ -1,113 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:37549 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753869AbbDGVio (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 17:38:44 -0400
-Received: by igblo3 with SMTP id lo3so23702145igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 14:38:43 -0700 (PDT)
-Date: Tue, 7 Apr 2015 16:38:39 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, dja@axtens.net,
-	x86@kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v9 06/30] PCI: Separate pci_host_bridge creation out of
- pci_create_root_bus()
-Message-ID: <20150407213839.GJ10892@google.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
- <1428053164-28277-8-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428053164-28277-8-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 00/37] Convert x86 to hierarchy irqdomain and stacked irqchip
+Date: Mon, 13 Apr 2015 14:11:22 +0800
+Message-Id: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 03, 2015 at 05:25:40PM +0800, Yijing Wang wrote:
-> This patch separate pci_host_bridge creation out
-> of pci_create_root_bus(), and try to make a generic
-> pci_host_bridge, then we could make it hold host
-> bridge specific operations like
-> pcibios_root_bridge_prepare(). The changes are
-> transparent to platform host bridge drivers.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/host-bridge.c |   52 +++++++++++++++++++++
->  drivers/pci/pci.h         |    3 +
->  drivers/pci/probe.c       |  113 +++++++++++++++++++++------------------------
->  3 files changed, 108 insertions(+), 60 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index 39b2dbe..7d52a0a 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -8,6 +8,58 @@
->  
->  #include "pci.h"
->  
-> +static void pci_release_host_bridge_dev(struct device *dev)
-> +{
-> +	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> +
-> +	if (bridge->release_fn)
-> +		bridge->release_fn(bridge);
-> +
-> +	pci_free_resource_list(&bridge->windows);
-> +	kfree(bridge);
-> +}
-> +
-> +struct pci_host_bridge *pci_create_host_bridge(
-> +		struct device *parent, int domain, int bus,
-> +		struct list_head *resources)
-> +{
-> +	int error;
-> +	struct pci_host_bridge *host;
-> +	struct resource_entry *window, *n;
-> +
-> +	host = kzalloc(sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return NULL;
-> +
-> +	host->dev.parent = parent;
-> +	INIT_LIST_HEAD(&host->windows);
-> +	resource_list_for_each_entry_safe(window, n, resources)
-> +		list_move_tail(&window->node, &host->windows);
-> +	/*
-> +	 * If support CONFIG_PCI_DOMAINS_GENERIC, use
-> +	 * pci_host_assign_domain_nr() to update domain
-> +	 * number.
-> +	 */
-> +	host->domain = domain;
-> +	pci_host_assign_domain_nr(host);
+Hi all,
+	The generic hierarchy irqdomain and stacked irqchip implementation
+has been merged into v3.19, so this patch set converts x86 interupt
+management to hierarchy irqdomain and stacked irqchip. You may access it at:
+https://github.com/jiangliu/linux.git irqdomain/x86_p1_v8
 
-I think it's a bit confusing that there's another "host->domain ="
-assignment buried inside pci_host_assign_domain_nr(), so the first
-assignment is overwritten when CONFIG_PCI_DOMAINS_GENERIC is set.
+	This patch set has been reviewed several times and it missed v3.19
+merging because several bugs got fixed just before the merging window.
+The main changes since last review are:
+1) Rebased the patch set onto v4.0-rc6.
+2) Merged bugfixes into the patch introducing the bug so they don't break
+   bisecting.
 
-Can you do something like this instead:
+I will send out another following-on patch set to clean up code and interfaces
+obseleted by this patch set.
 
-  int pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
-  {
-  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-    host->domain = pci_assign_domain_nr(host->dev.parent);
-  #else
-    host->domain = domain;
-  #endif
-  }
+Jiang Liu (36):
+  x86/irq: Save destination CPU ID in irq_cfg
+  x86/irq: Use hierarchy irqdomain to manage CPU interrupt vectors
+  x86/hpet: Use new irqdomain interfaces to allocate/free IRQ
+  x86/MSI: Use new irqdomain interfaces to allocate/free IRQ
+  x86/uv: Use new irqdomain interfaces to allocate/free IRQ
+  x86/htirq: Use new irqdomain interfaces to allocate/free IRQ
+  x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
+  irq_remapping: Introduce new interfaces to support hierarchy
+    irqdomain
+  irq_remapping/vt-d: Change prototypes to prepare for enabling
+    hierarchy irqdomain
+  irq_remapping/vt-d: Enhance Intel IR driver to support hierarchy
+    irqdomain
+  irq_remapping/amd: Enhance AMD IR driver to support hierarchy
+    irqdomain
+  x86/hpet: Enhance HPET IRQ to support hierarchy irqdomain
+  x86/MSI: Use hierarchy irqdomain to manage MSI interrupts
+  x86/irq: Directly call native_compose_msi_msg() for DMAR IRQ
+  irq_remapping/vt-d: Clean up unused MSI related code
+  irq_remapping/amd: Clean up unused MSI related code
+  irq_remapping: Clean up unused MSI related code
+  x86/MSI: Clean up unused MSI related code and interfaces
+  iommu/vt-d: Refine the interfaces to create IRQ for DMAR unit
+  x86/irq: Use hierarchy irqdomain to manage DMAR interrupts
+  x86/htirq: Use hierarchy irqdomain to manage Hypertransport
+    interrupts
+  x86/uv: Use hierarchy irqdomain to manage UV interrupts
+  x86/irq: Normalize x86 irq_chip name
+  x86/MSI: Simplify the way to deal with remapped MSI interrupts
+  x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
+  x86/irq: Implement irq_chip.irq_write_msi_msg for MSI/DMAR/HPET
+    irq_chips
+  x86/irq: Simplify MSI/DMAR/HPET implementation by using common code
+  irq_remapping: Kill unused function irq_remapping_print_chip()
+  x86/intel-mid, trivial: Refine code syntax for sfi_parse_mtmr()
+  x86/irq: Kill unused pre_init_apic_IRQ0()
+  x86/irq: Prepare IOAPIC interfaces to support hierarchy irqdomain
+  x86/irq: Implement callbacks to enable hierarchy irqdomain on IOAPICs
+  x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
+  x86/irq: Simplify the way to print IOAPIC entry
+  x86/irq: Introduce helper functions to support hierarchy irqdomain
+    for IOAPIC
+  x86/irq: Convert IOAPIC to use hierarchy irqdomain interfaces
 
-Then the alternatives (CONFIG_PCI_DOMAINS_GENERIC=y and
-CONFIG_PCI_DOMAINS_GENERIC being unset) are close together and right at the
-#ifdef CONFIG_PCI_DOMAINS_GENERIC, so no extra comments are needed.
+Thomas Gleixner (1):
+  x86/intel-mid: Delay initialization of APB timer
 
-Bjorn
+ arch/ia64/include/asm/irq_remapping.h              |    2 -
+ arch/ia64/kernel/msi_ia64.c                        |   30 +-
+ arch/x86/Kconfig                                   |    4 +-
+ arch/x86/include/asm/hpet.h                        |   16 +-
+ arch/x86/include/asm/hw_irq.h                      |   91 +++
+ arch/x86/include/asm/io_apic.h                     |   25 +-
+ arch/x86/include/asm/irq_remapping.h               |   45 +-
+ arch/x86/include/asm/msi.h                         |    7 +
+ arch/x86/include/asm/pci.h                         |    5 -
+ arch/x86/include/asm/x86_init.h                    |    4 -
+ arch/x86/kernel/acpi/boot.c                        |   17 +-
+ arch/x86/kernel/apb_timer.c                        |    4 -
+ arch/x86/kernel/apic/htirq.c                       |  173 ++++--
+ arch/x86/kernel/apic/io_apic.c                     |  602 +++++++++++++++-----
+ arch/x86/kernel/apic/msi.c                         |  416 ++++++++------
+ arch/x86/kernel/apic/vector.c                      |  205 ++++++-
+ arch/x86/kernel/devicetree.c                       |   37 +-
+ arch/x86/kernel/hpet.c                             |   57 +-
+ arch/x86/kernel/mpparse.c                          |    6 +-
+ arch/x86/kernel/x86_init.c                         |    2 -
+ arch/x86/pci/intel_mid_pci.c                       |    6 +-
+ .../platform/intel-mid/device_libs/platform_wdt.c  |    5 +-
+ arch/x86/platform/intel-mid/intel-mid.c            |   18 +-
+ arch/x86/platform/intel-mid/sfi.c                  |   30 +-
+ arch/x86/platform/sfi/sfi.c                        |    5 +-
+ arch/x86/platform/uv/uv_irq.c                      |  299 ++++------
+ drivers/iommu/amd_iommu.c                          |  376 +++++++++---
+ drivers/iommu/amd_iommu_init.c                     |    4 +
+ drivers/iommu/amd_iommu_proto.h                    |    9 +
+ drivers/iommu/amd_iommu_types.h                    |    5 +
+ drivers/iommu/dmar.c                               |   19 +-
+ drivers/iommu/intel_irq_remapping.c                |  451 ++++++++++-----
+ drivers/iommu/irq_remapping.c                      |  178 ++----
+ drivers/iommu/irq_remapping.h                      |   20 +-
+ drivers/pci/htirq.c                                |   48 +-
+ include/linux/dmar.h                               |    3 +-
+ include/linux/htirq.h                              |   22 +-
+ include/linux/intel-iommu.h                        |    4 +
+ 38 files changed, 2100 insertions(+), 1150 deletions(-)
+ create mode 100644 arch/x86/include/asm/msi.h
+
+-- 
+1.7.10.4
+
