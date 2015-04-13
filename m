@@ -1,48 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:40363 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbbDCIbm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 04:31:42 -0400
-Message-ID: <551E4FC4.3030601@hp.com>
-Date: Fri, 03 Apr 2015 16:31:00 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
-MIME-Version: 1.0
-To: Dave Young <dyoung@redhat.com>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com> <20150403082816.GE22579@dhcp-128-53.nay.redhat.com>
-In-Reply-To: <20150403082816.GE22579@dhcp-128-53.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:59135 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751382AbbDMGPu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:15:50 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [Patch Part1 v8 29/37] x86/intel-mid: Delay initialization of APB timer
+Date: Mon, 13 Apr 2015 14:11:51 +0800
+Message-Id: <1428905519-23704-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/03/2015 04:28 PM, Dave Young wrote:
-> On 03/19/15 at 01:36pm, Li, Zhen-Hua wrote:
->> This patchset is an update of Bill Sumner's patchset, implements a fix for:
->> If a kernel boots with intel_iommu=on on a system that supports intel vt-d,
->> when a panic happens, the kdump kernel will boot with these faults:
-> Zhenhua,
->
-> I will review the patchset recently, sorry for jumping in late.
->
-> Thanks
-> Dave
->
-Hi Dave,
-Thanks for your review. And please also take a look at the plan I sent 
-in another mail:
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Change use of
-      if (is_kdump_kernel()) { }
+MID has no PIC, but depending on the platform it requires the
+abt_timer, which is connected to irq0. The timer is set up at
+late_time_init().
 
-To:
-     if (iommu_enabled_in_last_kernel) { }
+But, looking at the MID code it seems, that there is no reason to do
+so. The only code which might need the timer working is the TSC
+calibration code, but thats a non issue on MID as that is using its
+own empty calibration function. And check_timer() is not invoked
+either because MID has no PIC and therefor no legacy irqs.
+
+So if you look at intel_mid_time_init() then you'll see that in the
+ARAT case the timer setup is skipped already. So until the point where
+x86_init.timers.setup_percpu_clockev() is called for the boot cpu
+nothing really needs a timer on MID.
+
+According to the MID code the apbt horror is only used for moorestown.
+Medfield and later use the local apic timer without the apbt nonsense.
+
+The best thing we can do is to drop moorestown support and get rid of
+that apbt nonsense alltogether.
+
+I don't think anyone deeply cares about it not being supported from
+3.18 on. The number of devices which sport a moorestown should be
+pretty limited and the only relevant use case of those is to act as a
+pocket heater with short battery life time. Its pretty pointless to
+update kernels on pocket heaters except for bragging reasons.
+
+If someone at Intel really thinks that we need to keep moorestown
+alive for other than documentary and sentimental reasons, then we can
+move the apbt setup to x86_init.timers.setup_percpu_clockev(). At that
+point the IOAPIC is setup already, so it should just work.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: H. Peter Anvin <hpa@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: David Cohen <david.a.cohen@linux.intel.com>
+Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Link: http://lkml.kernel.org/r/1416901802-24211-2-git-send-email-jiang.liu@linux.intel.com
+Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/kernel/apb_timer.c             |    4 ----
+ arch/x86/platform/intel-mid/intel-mid.c |   18 +++++++++++++-----
+ arch/x86/platform/intel-mid/sfi.c       |    2 --
+ 3 files changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
+index 6a7c23ff21d3..ede92c3364d3 100644
+--- a/arch/x86/kernel/apb_timer.c
++++ b/arch/x86/kernel/apb_timer.c
+@@ -171,10 +171,6 @@ static int __init apbt_clockevent_register(void)
+ 
+ static void apbt_setup_irq(struct apbt_dev *adev)
+ {
+-	/* timer0 irq has been setup early */
+-	if (adev->irq == 0)
+-		return;
+-
+ 	irq_modify_status(adev->irq, 0, IRQ_MOVE_PCNTXT);
+ 	irq_set_affinity(adev->irq, cpumask_of(adev->cpu));
+ }
+diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
+index 3005f0c89f2e..01d54ea766c1 100644
+--- a/arch/x86/platform/intel-mid/intel-mid.c
++++ b/arch/x86/platform/intel-mid/intel-mid.c
+@@ -81,26 +81,34 @@ static unsigned long __init intel_mid_calibrate_tsc(void)
+ 	return 0;
+ }
+ 
++static void __init intel_mid_setup_bp_timer(void)
++{
++	apbt_time_init();
++	setup_boot_APIC_clock();
++}
++
+ static void __init intel_mid_time_init(void)
+ {
+ 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
++
+ 	switch (intel_mid_timer_options) {
+ 	case INTEL_MID_TIMER_APBT_ONLY:
+ 		break;
+ 	case INTEL_MID_TIMER_LAPIC_APBT:
+-		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
++		/* Use apbt and local apic */
++		x86_init.timers.setup_percpu_clockev = intel_mid_setup_bp_timer;
+ 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
+-		break;
++		return;
+ 	default:
+ 		if (!boot_cpu_has(X86_FEATURE_ARAT))
+ 			break;
++		/* Lapic only, no apbt */
+ 		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
+ 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
+ 		return;
+ 	}
+-	/* we need at least one APB timer */
+-	pre_init_apic_IRQ0();
+-	apbt_time_init();
++
++	x86_init.timers.setup_percpu_clockev = apbt_time_init;
+ }
+ 
+ static void intel_mid_arch_setup(void)
+diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
+index c14ad34776c4..aa59f88868f8 100644
+--- a/arch/x86/platform/intel-mid/sfi.c
++++ b/arch/x86/platform/intel-mid/sfi.c
+@@ -95,8 +95,6 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
+ 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
+ 			totallen, (u32)pentry->phys_addr,
+ 			pentry->freq_hz, pentry->irq);
+-			if (!pentry->irq)
+-				continue;
+ 			mp_irq.type = MP_INTSRC;
+ 			mp_irq.irqtype = mp_INT;
+ /* triggering mode edge bit 2-3, active high polarity bit 0-1 */
+-- 
+1.7.10.4
 
