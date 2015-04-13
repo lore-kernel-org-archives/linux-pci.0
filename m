@@ -1,115 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og122.obsmtp.com ([64.18.0.192]:34076 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757727AbbDVGQU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 02:16:20 -0400
-Received: by pacyx8 with SMTP id yx8so263607229pac.1
-        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2015 23:16:19 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v6 1/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node
-Date: Tue, 21 Apr 2015 23:15:08 -0700
-Message-Id: <5afde3aebe64c4f4685395e34bd2e0feb64a7259.1429677787.git.dhdang@apm.com>
-In-Reply-To: <cover.1429677787.git.dhdang@apm.com>
-References: <cover.1429677787.git.dhdang@apm.com>
-In-Reply-To: <cover.1429677787.git.dhdang@apm.com>
-References: <553667FD.9090806@arm.com> <cover.1429677787.git.dhdang@apm.com>
+Received: from mail-vn0-f46.google.com ([209.85.216.46]:37938 "EHLO
+	mail-vn0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932101AbbDMPln (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2015 11:41:43 -0400
+Received: by vnbf1 with SMTP id f1so20920128vnb.5
+        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2015 08:41:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150413093708.GE17059@ad.nay.redhat.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150413093708.GE17059@ad.nay.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 13 Apr 2015 10:41:22 -0500
+Message-ID: <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
+Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+To: Fam Zheng <famz@redhat.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-X-Gene v1 PCIe MSI controller block provides PCIE MSI functionality for 5 X-Gene v1
-PCIE ports
+On Mon, Apr 13, 2015 at 4:37 AM, Fam Zheng <famz@redhat.com> wrote:
+> Hi Bjorn,
+>
+> On Fri, 04/10 17:54, Bjorn Helgaas wrote:
+>> From: Michael S. Tsirkin <mst@redhat.com>
+>>
+>> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
+>> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
+>>
+>> The problem is that after we disable MSI, the device may assert INTx, and
+>> if the driver hasn't registered an interrupt handler for it, the interrupt
+>> is never deasserted and causes a kernel hang.  In particular, this was
+>> observed with virtio.
+>>
+>> We now disable MSI/MSI-X for all devices during enumeration regardless of
+>> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
+>> old one.
+>>
+>> Stop disabling MSIs at shutdown to avoid the kernel hang.
+>>
+>> XXX bugzilla reference, details about how the hang happens?
+>
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=96571
+>
+> Please let me know if you need any further information in the bug.
 
-The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+Please attach a complete dmesg log.  The bugzilla doesn't really have
+any new information other than that you see a soft lockup.  I'm trying
+to connect more of the dots between a spurious interrupt and a hang or
+soft lockup.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pci-msi.txt      | 68 ++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+It doesn't seem right that a spurious interrupt could cause a hang or
+soft lockup.  I would think Linux would emit a message about the
+unexpected interrupt, but would otherwise be relatively unconcerned.
+So I'm trying to figure out why my assumption is wrong.  Probably this
+is just because I don't know much about Linux IRQ handling.
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-new file mode 100644
-index 0000000..36d881c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-@@ -0,0 +1,68 @@
-+* AppliedMicro X-Gene v1 PCIe MSI controller
-+
-+Required properties:
-+
-+- compatible: should be "apm,xgene1-msi" to identify
-+	      X-Gene v1 PCIe MSI controller block.
-+- msi-controller: indicates that this is X-Gene v1 PCIe MSI controller node
-+- reg: physical base address (0x79000000) and length (0x900000) for controller
-+       registers. These registers include the MSI termination address and data
-+       registers as well as the MSI interrupt status registers.
-+- reg-names: not required
-+- interrupts: A list of 16 interrupt outputs of the controller, starting from
-+	      interrupt number 0x10 to 0x1f.
-+- interrupt-names: not required
-+
-+Each PCIe node needs to have property msi-parent that points to msi controller node
-+
-+Examples:
-+
-+SoC DTSI:
-+
-+	+ MSI node:
-+	msi@79000000 {
-+		compatible = "apm,xgene1-msi";
-+		msi-controller;
-+		reg = <0x00 0x79000000 0x0 0x900000>;
-+		interrupts = 	<0x0 0x10 0x4>
-+				<0x0 0x11 0x4>
-+				<0x0 0x12 0x4>
-+				<0x0 0x13 0x4>
-+				<0x0 0x14 0x4>
-+				<0x0 0x15 0x4>
-+				<0x0 0x16 0x4>
-+				<0x0 0x17 0x4>
-+				<0x0 0x18 0x4>
-+				<0x0 0x19 0x4>
-+				<0x0 0x1a 0x4>
-+				<0x0 0x1b 0x4>
-+				<0x0 0x1c 0x4>
-+				<0x0 0x1d 0x4>
-+				<0x0 0x1e 0x4>
-+				<0x0 0x1f 0x4>;
-+	};
-+
-+	+ PCIe controller node with msi-parent property pointing to MSI node:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		dma-coherent;
-+		clocks = <&pcie0clk 0>;
-+		msi-parent= <&msi>;
-+	};
--- 
-1.9.1
+Having more details, e.g., a stacktrace fragment from a soft lockup,
+can also help people connect a problem they're seeing with the
+solution.  It's pretty hard to google for "kernel hang," but if you
+can google for a soft lockup in a specific function, that can be much
+more useful.
 
+>> [bhelgaas: changelog]
+>> Reported-by: Fam Zheng <famz@redhat.com>
+>> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
+>> CC: Ulrich Obergfell <uobergfe@redhat.com>
+>> CC: Rusty Russell <rusty@rustcorp.com.au>
+>> ---
+>>  drivers/pci/pci-driver.c |    2 --
+>>  1 file changed, 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 3cb2210de553..38a602cb9fb7 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+>>
+>>       if (drv && drv->shutdown)
+>>               drv->shutdown(pci_dev);
+>> -     pci_msi_shutdown(pci_dev);
+>> -     pci_msix_shutdown(pci_dev);
+>>
+>>  #ifdef CONFIG_KEXEC
+>>       /*
+>>
