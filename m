@@ -1,76 +1,145 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:23902 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbbDNJyg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 05:54:36 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [Query] PORT_LOGIC_SPEED_CHANGE set in PCIe designware driver
-Date: Tue, 14 Apr 2015 09:48:22 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01385C3E@lhreml505-mbx.china.huawei.com>
-References: <552CBFDF.2010905@hisilicon.com>
-In-Reply-To: <552CBFDF.2010905@hisilicon.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Mon, 13 Apr 2015 14:38:38 +0800
+Message-Id: <1428907118-27099-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <552B4698.4020703@linux.intel.com>
+References: <552B4698.4020703@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All
+Before commit 593669c2ac0f("Use common ACPI resource interfaces to
+simplify implementation"), arch/x86/pci/acpi.c applies following
+rules when parsing ACPI resources for PCI host bridge:
+1) Ignore IO port resources defined by acpi_resource_io and
+   acpi_resource_fixed_io, which should be used to define resource
+   for PCI device instead of PCI bridge.
+2) Accept IOMEM resource defined by acpi_resource_memory24,
+   acpi_resource_memory32 and acpi_resource_fixed_memory32.
+   These IOMEM resources are accepted to workaround some BIOS issue,
+   though they should be ignored. For example, PC Engines APU.1C
+   platform defines PCI host bridge IOMEM resources as:
+                Memory32Fixed (ReadOnly,
+                    0x000A0000,         // Address Base
+                    0x00020000,         // Address Length
+                    )
+                Memory32Fixed (ReadOnly,
+                    0x00000000,         // Address Base
+                    0x00000000,         // Address Length
+                    _Y00)
+3) Accept all IO port and IOMEM resources defined by
+   acpi_resource_address{16,32,64,extended64}, no matter it's marked as
+   ACPI_CONSUMER or ACPI_PRODUCER.
 
-Looking at par 3.13 of "Synopsis DesignWare Cores PCI Express Controller Databook" v4.20a (pag 159) I've found:
+Commit 593669c2ac0f("Use common ACPI resource interfaces to
+simplify implementation") accept all IO port and IOMEM resources
+defined by acpi_resource_io, acpi_resource_fixed_io,
+acpi_resource_memory24, acpi_resource_memory32,
+acpi_resource_fixed_memory32 and
+acpi_resource_address{16,32,64,extended64}, which causes IO port
+resources consumed by host bridge itself are listed in to host bridge
+resource list.
 
-<<Speed Changing
+Then commit 63f1789ec716("Ignore resources consumed by host bridge
+itself") ignores resources consumed by host bridge itself by checking
+IORESOURCE_WINDOW flag, which accidently removed the workaround in 2)
+above for BIOS bug .
 
-When you set the default of the Directed Speed Change field of the Link Width and Speed Change Control
-register (GEN2_CTRL_OFF . DIRECT_SPEED_CHANGE) using the DEFAULT_GEN2_SPEED_CHANGE
-configuration parameter to "1", then the speed change is initiated automatically after link up, and the core
-clears the contents of GEN2_CTRL_OFF . DIRECT_SPEED_CHANGE. If you want to prevent this automatic
-speed change, then write a lower speed value to the Target Link Speed field of the Link Control 2 register
-(LINK_CONTROL2_LINK_STATUS2_REG . PCIE_CAP_TARGET_LINK_SPEED) through the DBI before
-link up.>>
+So revert to the behavior before v3.19 to fix the regression.
 
+Sample ACPI table are archived at:
+https://bugzilla.kernel.org/show_bug.cgi?id=94221
 
-So my interpretation would be that at init phase it would be correct to trigger the DIRECT_SPPED_CHANGE before the link is up; that is it seems correct to me to move that part of the code before link up.
+Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
+ drivers/acpi/resource.c |    6 +++++-
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-Does anybody have any idea about this?
-
-Many Thanks
-
-Gab
-
-
-> -----Original Message-----
-> From: Wangzhou (B)
-> Sent: Tuesday, April 14, 2015 8:21 AM
-> To: linux-pci@vger.kernel.org
-> Cc: zhangjukuo; Gabriele Paoloni; Liguozhu (Kenneth)
-> Subject: [Query] PORT_LOGIC_SPEED_CHANGE set in PCIe designware driver
-> 
-> Hi All,
-> 
-> In pcie-designware.c, it sets the PORT_LOGIC_SPEED_CHANGE bit after
-> linkup
-> finished:
-> 
-> dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val); val |=
-> PORT_LOGIC_SPEED_CHANGE; dw_pcie_wr_own_conf(pp,
-> PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> 
-> As far as I know, it will try to use 5G/8G to communicate after setting
-> this bit. When I used LSI SAS2208 PCIe-RAID card to test PCIe host
-> driver, PCIe3.0 link was unstable and can not read/write PCIe-RAID BAR.
-> When I moved above code before linkup, the process of enumeration was
-> successful.
-> 
-> I wonder if anyone who also use the pcie-designware had met the same
-> problem.
-> Could we move the PORT_LOGIC_SPEED_CHANGE before linkup?
-> 
-> It will be very appreciate if anyone can offer some information.
-> 
-> Thanks,
-> Zhou
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index e4695985f9de..fc2da98985c3 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ {
+ 	int ret;
+ 	struct resource_entry *entry, *tmp;
++	unsigned long res_flags;
+ 
+ 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
++
++	/*
++	 * An IO or MMIO resource assigned to PCI host bridge may be consumed
++	 * by the host bridge itself or available to its child bus/devices.
++	 * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
++	 * be available to child bus/devices except one special case:
++	 *	IO port [0xCF8-0xCFF] is consumed by host bridge itself to
++	 *	access PCI configuration space.
++	 *
++	 * Due to lack of specification to define resources consumed by host
++	 * bridge itself, all IO port resources defined by acpi_resource_io
++	 * and acpi_resource_fixed_io are ignored to filter out IO
++	 * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
++	 * it's not perfect.
++	 *
++	 * Another possible solution is to explicitly filter out IO
++	 * port[0xCF8-0xCFF].
++	 */
++	res_flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_IO_FIXED;
+ 	ret = acpi_dev_get_resources(device, list,
+ 				     acpi_dev_filter_resource_type_cb,
+-				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
++				     (void *)res_flags);
+ 	if (ret < 0)
+ 		dev_warn(&device->dev,
+ 			 "failed to parse _CRS method, error code %d\n", ret);
+@@ -346,8 +366,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 			"no IO and memory resources present in _CRS\n");
+ 	else
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
+-			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+-			    (entry->res->flags & IORESOURCE_DISABLED))
++			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+ 			else
+ 				entry->res->name = info->name;
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 5589a6e2a023..79b6d3b5ffd2 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -575,6 +575,9 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+  *
+  * This is a hepler function to support acpi_dev_get_resources(), which filters
+  * ACPI resource objects according to resource types.
++ *
++ * Flag IORESOURCE_IO_FIXED is used to opt out io and fixed_io resource
++ * descriptors for ACPI host bridges on x86 and IA64 platforms.
+  */
+ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+ 				  unsigned long types)
+@@ -589,7 +592,8 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+-		type = IORESOURCE_IO;
++		if ((types & IORESOURCE_IO_FIXED) == 0)
++			type = IORESOURCE_IO;
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_IRQ:
+ 	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+-- 
+1.7.10.4
 
