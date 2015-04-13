@@ -1,105 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Apr 2015 11:26:47 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: mst@redhat.com, plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, daniel.vetter@intel.com,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	cocci@systeme.lip6.fr, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:46721 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753156AbbDMGO4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:14:56 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	xen-devel@lists.xensource.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 2/5] lib: devres: add pcim_iomap_wc() variants
-Message-ID: <20150430162647.GD7888@google.com>
-References: <1430343372-687-1-git-send-email-mcgrof@do-not-panic.com>
- <1430343372-687-3-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430343372-687-3-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 23/37] x86/irq: Normalize x86 irq_chip name
+Date: Mon, 13 Apr 2015 14:11:45 +0800
+Message-Id: <1428905519-23704-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Some irq_chip names use underscore, others use hyphen. So normalize them
+to use hythen as separator.
 
-Hi Luis,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-24-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/apic/msi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-On Wed, Apr 29, 2015 at 02:36:09PM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> Now that we have pci_iomap_wc() add the respective devres helpers.
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index a24b803b199a..2bf13484fbfd 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -188,7 +188,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ }
+ 
+ static struct irq_chip dmar_msi_controller = {
+-	.name			= "DMAR_MSI",
++	.name			= "DMAR-MSI",
+ 	.irq_unmask		= dmar_msi_unmask,
+ 	.irq_mask		= dmar_msi_mask,
+ 	.irq_ack		= irq_chip_ack_parent,
+@@ -319,7 +319,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ }
+ 
+ static struct irq_chip hpet_msi_controller = {
+-	.name = "HPET_MSI",
++	.name = "HPET-MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+ 	.irq_ack = irq_chip_ack_parent,
+-- 
+1.7.10.4
 
-I guess I'm still confused about the relationship between pci_iomap_wc()
-and arch_phys_wc_add().
-
-Do you expect every caller of pcim_iomap_wc() to also call
-arch_phys_wc_add()?
-
-If so, I'm not sure how pcim_iomap_wc() fits into the picture.  A driver
-can call both pcim_iomap_wc() and arch_phys_wc_add(), but the driver
-doesn't explicitly do the unmap, so where would the arch_phys_wc_del()
-happen?
-
-If not, how does a driver know whether it should call arch_phys_wc_add()?
-
-> ...
->  /**
-> + * pcim_iomap_wc_regions - Request and iomap PCI BARs with write-combining
-> + * @pdev: PCI device to map IO resources for
-> + * @mask: Mask of BARs to request and iomap
-> + * @name: Name used when requesting regions
-> + *
-> + * Request and iomap regions specified by @mask with a preference for
-> + * write-combining.
-> + */
-> +int pcim_iomap_wc_regions(struct pci_dev *pdev, int mask, const char *name)
-> +{
-> +	void __iomem * const *iomap;
-> +	int i, rc;
-> +
-> +	iomap = pcim_iomap_table(pdev);
-> +	if (!iomap)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +		unsigned long len;
-> +
-> +		if (!(mask & (1 << i)))
-> +			continue;
-> +
-> +		rc = -EINVAL;
-> +		len = pci_resource_len(pdev, i);
-> +		if (!len)
-> +			goto err_inval;
-> +
-> +		rc = pci_request_region(pdev, i, name);
-> +		if (rc)
-> +			goto err_inval;
-> +
-> +		rc = -ENOMEM;
-> +		if (!pcim_iomap_wc(pdev, i, 0))
-> +			goto err_region;
-
-Is there a user for this?  Are there really devices where *all* the BARs
-can be mapped with WC?  Are there enough of them to make it worth adding
-this?
-
-I don't see users of either pcim_iomap_wc() or pcim_iomap_wc_regions() so
-far.  Did I miss them, or do you just expect them in the near future?
-
-Bjorn
