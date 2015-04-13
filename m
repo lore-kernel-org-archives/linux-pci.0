@@ -1,84 +1,161 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Apr 2015 08:26:00 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Michael D Labriola <mlabriol@gdeb.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	"Matwey V. Kornilov" <matwey@sai.msu.ru>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [GIT PULL] PCI fixes for v4.0
-Message-ID: <20150409132600.GH30967@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:55767 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753572AbbDMLjx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2015 07:39:53 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Mon, 13 Apr 2015 14:04:22 +0200
+Message-ID: <1906438.yxTb4bal4c@vostro.rjw.lan>
+In-Reply-To: <552B4698.4020703@linux.intel.com>
+References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com> <CAJZ5v0jtv8pB4EJHVLpsMfeqi7stnH1vvANbhFSTKiaU2RB1Ug@mail.gmail.com> <552B4698.4020703@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Monday, April 13, 2015 12:31:20 PM Jiang Liu wrote:
+> On 2015/4/10 8:28, Rafael J. Wysocki wrote:
+> > On Fri, Apr 10, 2015 at 12:37 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> On Thursday, April 09, 2015 05:00:08 PM Bjorn Helgaas wrote:
+> >>> On Thu, Apr 9, 2015 at 4:37 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >>>> On Thursday, April 09, 2015 10:50:02 AM Jiang Liu wrote:
+> >>>>> On 2015/4/9 7:44, Rafael J. Wysocki wrote:
+> >>>>>> On Wednesday, April 08, 2015 01:48:46 PM Jiang Liu wrote:
+> >>>>>>> On 2015/4/7 8:28, Rafael J. Wysocki wrote:
+> >>>>>>>> On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
+> >>>>>>>>> Hi Jiang,
+> >>>>>>> <snip>
+> >>>>>>>>>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
+> >>>>>>>>>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
+> >>>>>>>>>
+> >>>>>>>>> We should assume it will eventually be used for all ACPI devices,
+> >>>>>>>>> shouldn't we?
+> >>>>>>>>
+> >>>>>>>> I'm not sure about that, really.  In fact, I'd restrict its use to devices
+> >>>>>>>> types that actually can "produce" resources (ie. do not require the resources
+> >>>>>>>> to be provided by their ancestors or to be available from a global pool).
+> >>>>>>>>
+> >>>>>>>> Otherwise we're pretty much guaranteed to get into trouble.
+> >>>>>>>>
+> >>>>>>>> And all of the above rules need to be documented in the kernel source tree
+> >>>>>>>> or people will get confused.
+> >>>>>>> Hi Rafael,
+> >>>>>>>     How about following comments for acpi_dev_filter_resource_type()?
+> >>>>>>> Thanks!
+> >>>>>>> Gerry
+> >>>>>>> --------------------------------------------------------------------
+> >>>>>>> /**
+> >>>>>>>  * According to ACPI specifications, Consumer/Producer flag in ACPI resource
+> >>>>>>>  * descriptor means:
+> >>>>>>>  *      1(CONSUMER): This device consumes this resource
+> >>>>>>>  *      0(PRODUCER): This device produces and consumes this resource
+> >>>>>>>  * But for ACPI PCI host bridge, it is interpreted in another way:
+> >>>>>>
+> >>>>>> So first of all, this leads to a question: Why is it interpreted for ACPI PCI
+> >>>>>> host bridges differently?
+> >>>>>>
+> >>>>>> Is it something we've figured out from experience, or is there a standard
+> >>>>>> mandating that?
+> >>>>> Hi Rafael,
+> >>>>>       I think we got this knowledge by experiences. PCI FW spec only
+> >>>>> states _CRS reports resources assigned to the host bridge by firmware.
+> >>>>> There's no statement about whether the resource is consumed by host
+> >>>>> bridge itself or provided to it's child bus/devices. On x86/IA64 side,
+> >>>>> the main resource consumed by PCI host bridge is IOPORT 0xCF8-0xCFF,
+> >>>>> but not sure about ARM64 side. So how about:
+> >>>>
+> >>>> This:
+> >>>>
+> >>>>> PCI Firmware specification states that _CRS reports resources
+> >>>>> assigned to the host bridge, but there's no way to tell whether
+> >>>>> the resource is consumed by host bridge itself or provided to
+> >>>>> its child bus/devices.
+> >>>>
+> >>>> looks OK to me, but I'd replace the below with something like:
+> >>>>
+> >>>> "However, experience shows, that in the PCI host bridge case firmware writers
+> >>>>  expect the resource to be provided to devices on the bus (below the bridge) for
+> >>>>  consumption entirely if its Consumer/Producer flag is clear.  That expectation
+> >>>>  is reflected by the code in this routine as follows:".
+> >>>
+> >>> What a mess.  The spec is regrettably lacking in Consumer/Producer
+> >>> specifics.  But I don't see what's confusing about the descriptors
+> >>> that have Consumer/Producer bits.
+> >>>
+> >>> QWord, DWord, and Word descriptors don't seem to have a
+> >>> Consumer/Producer bit, but they do contain _TRA, so they must be
+> >>> intended for bridge windows.  Can they also be used for device
+> >>> registers?  I don't know.
+> >>>
+> >>> The Extended Address descriptor has a Consumer/Producer bit, and I
+> >>> would interpret the spec to mean that if the flag is clear (the device
+> >>> produces and consumes this resource), the resource is available on the
+> >>> bus below the bridge, i.e., the bridge consumes the resource on its
+> >>> upstream side and produces it on its downstream side.
+> >>
+> >> OK, that makes sense for bridges.
+> 
+> >>> If the bit were
+> >>> set (the device only consumes the resource), I would expect that to
+> >>> mean the descriptor is for bridge registers like 0xcf8/0xcfc that
+> >>> never appear on the downstream side.
+> >>
+> >> That part is clear.  What is not clear is whether or not we can *always*
+> >> expect the resources with Consumer/Producer *clear* to be produced on the
+> >> downstram side.  That appears to be the case for host bridges if my
+> >> understanding of things is correct, but is it the case in general?
+> >>
+> >>> Maybe I'm reading the spec too naively, but this doesn't seem a matter
+> >>> of experience.
+> >>
+> >> Well, the specification is not clear enough in that respect, at least as
+> >> far as I can say, or maybe it is, but then does firmware always follow that
+> >> interpretation?
+> > 
+> > So I guess I'd like to propose to go back to the 3.19 behavior for PCI host
+> > bridges and then to handle the IOAPIC as a separate case.
+> > 
+> > We can think about consolidating the two later.
+> > 
+> > Any objections to doing that?
+> Hi Rafael,
+> 	When reverting to the behavior before v3.19, I found a simpler
+> solution. The logic before v3.19 is:
+> on x86 and IA64, all IO port and MMIO resources assigned to PCI host
+> bridge are available to child bus/devices, except one special case to
+> filter out IO port[0xCF8-0xCFF] for PCI configuration space access.
+> 
+> And with pre-v3.19 kernels, all IO port defined by IO and fixed_IO
+> resource descriptors are ignored to filter out IO port[0xCF8-0xCFF].
+> 
+> So I plan to make following change to revert to the behavior before
+> v3.19:
+> 1) make acpi_dev_filter_resource_type() filter descriptors based on
+>    descriptor type, and don't check consumer_producer flag anymore.
+> 2) use IORESOURCE_IO_FIXED flag to filter out io and fixed_io resource
+>    descriptors.
+> 3) x86 ACPI pci host bridge driver calls acpi_dev_filter_resource_type()
+>    with flag IORESOURCE_IO_FIXED,
+> 
+> By this way, we could keep acpi_dev_filter_resource_type()
+> as a generic interface and could be reused. And the change
+> is small too. Any comments?
 
-Here are some fixes for v4.0.  I apologize for how late they are.  We were
-hoping for some better fixes, but couldn't get them polished in time.
-These fix:
-
-  - a Xen domU oops with PCI passthrough devices
-  - a sparc T5 boot failure
-  - a STM SPEAr13xx crash (use after initdata freed)
-  - a cpcihp hotplug driver thinko
-  - an AER thinko that printed stack junk
-
-Bjorn
+Sounds good to me.
 
 
-The following changes since commit 085a68d0010ffa57603b93c2b09fdf98bf74218c:
-
-  PCI: xgene: Add register offset to config space base address (2015-03-05 22:14:21 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.0-fixes-3
-
-for you to fetch changes up to d10b730f97a7f1fa58c9ec300828f87157cd6b95:
-
-  Revert "sparc/PCI: Clip bridge windows to fit in upstream windows" (2015-04-08 10:04:55 -0500)
-
-----------------------------------------------------------------
-PCI updates for v4.0:
-
-  Enumeration
-    - Don't look for ACPI hotplug parameters if ACPI is disabled (Bjorn Helgaas)
-
-  Resource management
-    - Revert "sparc/PCI: Clip bridge windows to fit in upstream windows" (Bjorn Helgaas)
-
-  AER
-    - Avoid info leak in __print_tlp_header() (Rasmus Villemoes)
-
-  PCI device hotplug
-    - Add missing curly braces in cpci_configure_slot() (Dan Carpenter)
-
-  ST Microelectronics SPEAr13xx host bridge driver
-    - Drop __initdata from spear13xx_pcie_driver (Matwey V. Kornilov)
-
-----------------------------------------------------------------
-Bjorn Helgaas (2):
-      PCI: Don't look for ACPI hotplug parameters if ACPI is disabled
-      Revert "sparc/PCI: Clip bridge windows to fit in upstream windows"
-
-Dan Carpenter (1):
-      PCI: cpcihp: Add missing curly braces in cpci_configure_slot()
-
-Matwey V. Kornilov (1):
-      PCI: spear: Drop __initdata from spear13xx_pcie_driver
-
-Rasmus Villemoes (1):
-      PCI/AER: Avoid info leak in __print_tlp_header()
-
- arch/sparc/kernel/pci.c                |  5 +----
- drivers/pci/host/pcie-designware.c     |  2 +-
- drivers/pci/host/pcie-spear13xx.c      |  6 +++---
- drivers/pci/hotplug/cpci_hotplug_pci.c |  3 ++-
- drivers/pci/pci-acpi.c                 |  3 +++
- drivers/pci/pcie/aer/aerdrv_errprint.c | 12 ++----------
- 6 files changed, 12 insertions(+), 19 deletions(-)
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
