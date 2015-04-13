@@ -1,80 +1,194 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 21 Apr 2015 18:00:41 -0500
-Message-ID: <CAErSpo6P-rr1sdp-d2zairPEKWr1q4E=8f=wRoaP56LDU8bcfw@mail.gmail.com>
-Subject: Re: [PATCH] ia64/PCI: Treat all host bridge Address Space Descriptors
- (even consumers) as windows
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 18/37] x86/MSI: Clean up unused MSI related code and interfaces
+Date: Mon, 13 Apr 2015 14:11:40 +0800
+Message-Id: <1428905519-23704-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 20, 2015 at 6:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Prior to c770cb4cb505 ("PCI: Mark invalid BARs as unassigned"), if we tried
-> to claim a PCI BAR but could not find an upstream bridge window that
-> matched it, we complained but still allowed the device to be enabled.
->
-> c770cb4cb505 broke devices that previously worked (mptsas and igb in the
-> case Tony reported, but it could be any devices) because it marks those
-> BARs as IORESOURCE_UNSET, which makes pci_enable_device() complain and
-> return failure:
->
->   igb 0000:81:00.0: can't enable device: BAR 0 [mem size 0x00020000] not assigned
->   igb: probe of 0000:81:00.0 failed with error -22
->
-> The underlying cause is an ACPI Address Space Descriptor for a PCI host
-> bridge window that is marked as "consumer".  This is a firmware defect:
-> resources that are produced on the downstream side of a bridge should be
-> marked "producer".  But rejecting these BARs that we previously allowed is
-> a functionality regression, and firmware has not used the producer/consumer
-> bit consistently, so we can't rely on it anyway.
->
-> Stop checking the producer/consumer bit, and assume all bridge Address
-> Space Descriptors are for bridge windows.
->
-> Note that this change does not affect I/O Port or Fixed Location I/O Port
-> Descriptors, which are commonly used for the [io 0x0cf8-0x0cff] config
-> access range.  That range is a "consumer" range and should not be treated
-> as a window.
->
-> Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96961
-> Reported-and-tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Now MSI interrupt has been converted to new hierarchy irqdomain
+interfaces, so kill legacy MSI related code and interfaces.
 
-I applied this with Rafael's ack to for-linus for v4.1-rc1.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Link: http://lkml.kernel.org/r/1416894816-23245-19-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/include/asm/hpet.h     |    9 -------
+ arch/x86/include/asm/x86_init.h |    4 ---
+ arch/x86/kernel/apic/msi.c      |   55 +++------------------------------------
+ 3 files changed, 4 insertions(+), 64 deletions(-)
 
-> ---
->  arch/ia64/pci/pci.c |    5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
->
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index 48cc65705db4..d4e162d35b34 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -240,15 +240,12 @@ static acpi_status resource_to_window(struct acpi_resource *resource,
->          * We're only interested in _CRS descriptors that are
->          *      - address space descriptors for memory or I/O space
->          *      - non-zero size
-> -        *      - producers, i.e., the address space is routed downstream,
-> -        *        not consumed by the bridge itself
->          */
->         status = acpi_resource_to_address64(resource, addr);
->         if (ACPI_SUCCESS(status) &&
->             (addr->resource_type == ACPI_MEMORY_RANGE ||
->              addr->resource_type == ACPI_IO_RANGE) &&
-> -           addr->address.address_length &&
-> -           addr->producer_consumer == ACPI_PRODUCER)
-> +           addr->address.address_length)
->                 return AE_OK;
->
->         return AE_ERROR;
->
+diff --git a/arch/x86/include/asm/hpet.h b/arch/x86/include/asm/hpet.h
+index e87e9faf87a9..5fa9fb0f8809 100644
+--- a/arch/x86/include/asm/hpet.h
++++ b/arch/x86/include/asm/hpet.h
+@@ -85,15 +85,6 @@ extern struct irq_domain *hpet_create_irq_domain(int hpet_id);
+ extern int hpet_assign_irq(struct irq_domain *domain,
+ 			   struct hpet_dev *dev, int dev_num);
+ 
+-#ifdef CONFIG_PCI_MSI
+-extern int default_setup_hpet_msi(unsigned int irq, unsigned int id);
+-#else
+-static inline int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	return -EINVAL;
+-}
+-#endif
+-
+ #ifdef CONFIG_HPET_EMULATE_RTC
+ 
+ #include <linux/interrupt.h>
+diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
+index f58a9c7a3c86..1649bb9ca27c 100644
+--- a/arch/x86/include/asm/x86_init.h
++++ b/arch/x86/include/asm/x86_init.h
+@@ -175,13 +175,9 @@ struct msi_msg;
+ 
+ struct x86_msi_ops {
+ 	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
+-	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
+-				unsigned int dest, struct msi_msg *msg,
+-			       u8 hpet_id);
+ 	void (*teardown_msi_irq)(unsigned int irq);
+ 	void (*teardown_msi_irqs)(struct pci_dev *dev);
+ 	void (*restore_msi_irqs)(struct pci_dev *dev);
+-	int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
+ };
+ 
+ struct IO_APIC_route_entry;
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index fa2dd6ebcaea..afaaa1166a7d 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -25,16 +25,12 @@
+ 
+ static struct irq_domain *msi_default_domain;
+ 
+-void native_compose_msi_msg(struct pci_dev *pdev,
+-			    unsigned int irq, unsigned int dest,
+-			    struct msi_msg *msg, u8 hpet_id)
++static void native_compose_msi_msg(struct irq_cfg *cfg, struct msi_msg *msg)
+ {
+-	struct irq_cfg *cfg = irq_cfg(irq);
+-
+ 	msg->address_hi = MSI_ADDR_BASE_HI;
+ 
+ 	if (x2apic_enabled())
+-		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(dest);
++		msg->address_hi |= MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
+ 
+ 	msg->address_lo =
+ 		MSI_ADDR_BASE_LO |
+@@ -44,7 +40,7 @@ void native_compose_msi_msg(struct pci_dev *pdev,
+ 		((apic->irq_delivery_mode != dest_LowestPrio) ?
+ 			MSI_ADDR_REDIRECTION_CPU :
+ 			MSI_ADDR_REDIRECTION_LOWPRI) |
+-		MSI_ADDR_DEST_ID(dest);
++		MSI_ADDR_DEST_ID(cfg->dest_apicid);
+ 
+ 	msg->data =
+ 		MSI_DATA_TRIGGER_EDGE |
+@@ -93,31 +89,6 @@ static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
+ 	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
+ }
+ 
+-static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+-			   struct msi_msg *msg, u8 hpet_id)
+-{
+-	struct irq_cfg *cfg;
+-	int err;
+-	unsigned dest;
+-
+-	if (disable_apic)
+-		return -ENXIO;
+-
+-	cfg = irq_cfg(irq);
+-	err = assign_irq_vector(irq, cfg, apic->target_cpus());
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(cfg->domain,
+-					   apic->target_cpus(), &dest);
+-	if (err)
+-		return err;
+-
+-	x86_msi.compose_msi_msg(pdev, irq, dest, msg, hpet_id);
+-
+-	return 0;
+-}
+-
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -262,7 +233,7 @@ int arch_setup_dmar_msi(unsigned int irq)
+ 	struct msi_msg msg;
+ 	struct irq_cfg *cfg = irq_cfg(irq);
+ 
+-	native_compose_msi_msg(NULL, irq, cfg->dest_apicid, &msg, -1);
++	native_compose_msi_msg(cfg, &msg);
+ 	dmar_msi_write(irq, &msg);
+ 	irq_set_chip_and_handler_name(irq, &dmar_msi_type, handle_edge_irq,
+ 				      "edge");
+@@ -318,24 +289,6 @@ static struct irq_chip hpet_msi_controller = {
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+-{
+-	struct irq_chip *chip = &hpet_msi_controller;
+-	struct msi_msg msg;
+-	int ret;
+-
+-	ret = msi_compose_msg(NULL, irq, &msg, id);
+-	if (ret < 0)
+-		return ret;
+-
+-	hpet_msi_write(irq_get_handler_data(irq), &msg);
+-	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	setup_remapped_irq(irq, irq_cfg(irq), chip);
+-
+-	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+-	return 0;
+-}
+-
+ static int hpet_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 			     unsigned int nr_irqs, void *arg)
+ {
+-- 
+1.7.10.4
+
