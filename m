@@ -1,173 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55273 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbbDCJ3N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 10/30] PCI: Introduce pci_host_bridge_list to manage host bridges
-Date: Fri, 3 Apr 2015 17:25:44 +0800
-Message-ID: <1428053164-28277-12-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <552B60FF.5050804@linux.intel.com>
+Date: Mon, 13 Apr 2015 14:23:59 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Ingo Molnar <mingo@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [Patch Part1 v8 00/37] Convert x86 to hierarchy irqdomain and
+ stacked irqchip
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com> <20150413061914.GA13953@gmail.com>
+In-Reply-To: <20150413061914.GA13953@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_host_bridge_list to manage pci host
-bridges in system, this make us have the ability
-to check whether the new host would conflict with
-existing one. Then we could remove bus alreay exist
-check in __pci_create_root_bus().
+On 2015/4/13 14:19, Ingo Molnar wrote:
+> 
+> * Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> 
+>> Hi all,
+>> 	The generic hierarchy irqdomain and stacked irqchip implementation
+>> has been merged into v3.19, so this patch set converts x86 interupt
+>> management to hierarchy irqdomain and stacked irqchip. You may access it at:
+>> https://github.com/jiangliu/linux.git irqdomain/x86_p1_v8
+>>
+>> 	This patch set has been reviewed several times and it missed v3.19
+>> merging because several bugs got fixed just before the merging window.
+>> The main changes since last review are:
+>> 1) Rebased the patch set onto v4.0-rc6.
+>> 2) Merged bugfixes into the patch introducing the bug so they don't break
+>>    bisecting.
+>>
+>> I will send out another following-on patch set to clean up code and interfaces
+>> obseleted by this patch set.
+> 
+> So JFYI, the v4.1 merge window has just opened and I probably won't 
+> have time to look at this for a week or two.
+Hi Ingo,
+	Thanks for reminder:) Thomas pinged me on this patch set,
+so I send it out right now. Originally I planned to send it out
+after v4.1 merge window.
+Regards!
+Gerry
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   41 ++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/probe.c       |    9 +--------
- include/linux/pci.h       |    1 +
- 3 files changed, 42 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 1a9834b..dffb345 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,6 +8,9 @@
- 
- #include "pci.h"
- 
-+static LIST_HEAD(pci_host_bridge_list);
-+static DEFINE_MUTEX(pci_host_mutex);
-+
- static void pci_release_host_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-@@ -41,12 +44,29 @@ static void pci_host_update_busn_res(
- 	pci_add_resource(resources, &host->busn_res);
- }
- 
-+static bool pci_host_busn_res_overlap(
-+		struct pci_host_bridge *new, struct pci_host_bridge *old)
-+{
-+	struct resource_entry *entry;
-+	struct resource *res1 = NULL, *res2 = NULL;
-+
-+	resource_list_for_each_entry(entry, &old->windows)
-+		if (entry->res->flags & IORESOURCE_BUS)
-+			res1 = entry->res;
-+
-+	resource_list_for_each_entry(entry, &new->windows)
-+		if (entry->res->flags & IORESOURCE_BUS)
-+			res2 = entry->res;
-+
-+	return resource_overlaps(res1, res2);
-+}
-+
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
- 		struct list_head *resources)
- {
- 	int error;
--	struct pci_host_bridge *host;
-+	struct pci_host_bridge *host, *tmp;
- 	struct resource_entry *window, *n;
- 
- 	host = kzalloc(sizeof(*host), GFP_KERNEL);
-@@ -65,6 +85,21 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	 */
- 	host->domain = domain;
- 	pci_host_assign_domain_nr(host);
-+	mutex_lock(&pci_host_mutex);
-+	list_for_each_entry(tmp, &pci_host_bridge_list, list) {
-+		if (tmp->domain == host->domain
-+			  && pci_host_busn_res_overlap(host, tmp)) {
-+			pr_warn("pci host bridge pci%04x:%02x exist\n",
-+					host->domain, bus);
-+			mutex_unlock(&pci_host_mutex);
-+			pci_free_resource_list(&host->windows);
-+			kfree(host);
-+			return NULL;
-+		}
-+	}
-+	list_add_tail(&host->list, &pci_host_bridge_list);
-+	mutex_unlock(&pci_host_mutex);
-+
- 	host->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
-@@ -80,6 +115,10 @@ struct pci_host_bridge *pci_create_host_bridge(
- 
- void pci_free_host_bridge(struct pci_host_bridge *host)
- {
-+	mutex_lock(&pci_host_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&pci_host_mutex);
-+
- 	device_unregister(&host->dev);
- }
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 25ac741..8517d1b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1869,7 +1869,7 @@ static struct pci_bus *__pci_create_root_bus(
- 		void *sysdata)
- {
- 	int error;
--	struct pci_bus *b, *b2;
-+	struct pci_bus *b;
- 	struct resource_entry *window;
- 	struct device *parent;
- 	struct resource *res;
-@@ -1887,12 +1887,6 @@ static struct pci_bus *__pci_create_root_bus(
- 	b->number = b->busn_res.start =
- 		pci_host_first_busnr(bridge);
- 	pci_bus_assign_domain_nr(b, parent);
--	b2 = pci_find_bus(pci_domain_nr(b), b->number);
--	if (b2) {
--		/* If we already got to this bus through a different bridge, ignore it */
--		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
--	}
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
-@@ -1952,7 +1946,6 @@ static struct pci_bus *__pci_create_root_bus(
- 
- put_dev:
- 	put_device(&bridge->dev);
--err_out:
- 	kfree(b);
- 	return NULL;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f189dfb..91cba01 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -407,6 +407,7 @@ struct pci_host_bridge {
- 	/* we use default bus resource if no bus resource provided */
- 	struct resource busn_res;
- 	struct list_head windows;	/* resource_entry */
-+	struct list_head list;
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- };
--- 
-1.7.1
-
+> 
+> Thanks,
+> 
+> 	Ingo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
