@@ -1,109 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:53075 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423010AbbD2Me2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Apr 2015 08:34:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
-Date: Wed, 29 Apr 2015 14:34:20 +0200
-Message-ID: <6662179.AoBfCMOsxD@wuerfel>
-In-Reply-To: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
-References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:6561 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752098AbbDMGO4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 02:14:56 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 24/37] x86/MSI: Simplify the way to deal with remapped MSI interrupts
+Date: Mon, 13 Apr 2015 14:11:46 +0800
+Message-Id: <1428905519-23704-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 29 April 2015 17:09:58 Jayachandran C wrote:
-> The current code in pci-host-generic.c uses pci_common_init_dev()
-> from the arch/arm/ to do a part of the PCI initialization, and this
-> prevents it from being used on arm64.
-> 
-> The initialization done by pci_common_init_dev() that is really
-> needed by pci-host-generic.c can be done in the same file without
-> using the hw_pci API of ARM.
-> 
-> The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
-> this is be handled by setting up 'struct gen_pci' to embed a
-> pci_sys_data variable as the first element on the ARM platform.
-> 
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Simplify the way to deal with remapped MSI interrupts, so we could
+kill irq_chip.irq_print_chip later.
 
-This seems very useful
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-25-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/apic/msi.c |   28 ++++++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 4 deletions(-)
 
->  
-> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> +static int gen_pci_init(struct device *dev, struct gen_pci *pci)
->  {
-> -	struct gen_pci *pci = sys->private_data;
-> -	list_splice_init(&pci->resources, &sys->resources);
-> -	return 1;
-> +	struct pci_bus *bus;
-> +
-> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 2bf13484fbfd..8e8f2435f25e 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -77,7 +77,6 @@ static struct irq_chip pci_msi_controller = {
+ 	.irq_ack		= irq_chip_ack_parent,
+ 	.irq_set_affinity	= msi_domain_set_affinity,
+ 	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+-	.irq_print_chip		= irq_remapping_print_chip,
+ 	.irq_compose_msi_msg	= irq_msi_compose_msg,
+ 	.irq_write_msi_msg	= pci_msi_domain_write_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+@@ -143,7 +142,7 @@ static struct msi_domain_ops pci_msi_domain_ops = {
+ 
+ static struct msi_domain_info pci_msi_domain_info = {
+ 	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+-			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
++			  MSI_FLAG_PCI_MSIX,
+ 	.ops		= &pci_msi_domain_ops,
+ 	.chip		= &pci_msi_controller,
+ 	.handler	= handle_edge_irq,
+@@ -162,9 +161,29 @@ void arch_init_msi_domain(struct irq_domain *parent)
+ }
+ 
+ #ifdef CONFIG_IRQ_REMAP
++static struct irq_chip pci_msi_ir_controller = {
++	.name			= "IR-PCI-MSI",
++	.irq_unmask		= pci_msi_unmask_irq,
++	.irq_mask		= pci_msi_mask_irq,
++	.irq_ack		= irq_chip_ack_parent,
++	.irq_set_affinity	= msi_domain_set_affinity,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_write_msi_msg	= pci_msi_domain_write_msg,
++	.flags			= IRQCHIP_SKIP_SET_WAKE,
++};
++
++static struct msi_domain_info pci_msi_ir_domain_info = {
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
++	.ops		= &pci_msi_domain_ops,
++	.chip		= &pci_msi_ir_controller,
++	.handler	= handle_edge_irq,
++	.handler_name	= "edge",
++};
++
+ struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
+ {
+-	return msi_create_irq_domain(NULL, &pci_msi_domain_info, parent);
++	return pci_msi_create_irq_domain(NULL, &pci_msi_ir_domain_info, parent);
+ }
+ #endif
+ 
+@@ -325,7 +344,6 @@ static struct irq_chip hpet_msi_controller = {
+ 	.irq_ack = irq_chip_ack_parent,
+ 	.irq_set_affinity = hpet_msi_set_affinity,
+ 	.irq_retrigger = irq_chip_retrigger_hierarchy,
+-	.irq_print_chip = irq_remapping_print_chip,
+ 	.irq_compose_msi_msg = irq_msi_compose_msg,
+ 	.flags = IRQCHIP_SKIP_SET_WAKE,
+ };
+@@ -402,6 +420,8 @@ struct irq_domain *hpet_create_irq_domain(int hpet_id)
+ 	parent = irq_remapping_get_ir_irq_domain(&info);
+ 	if (parent == NULL)
+ 		parent = x86_vector_domain;
++	else
++		hpet_msi_controller.name = "IR-HPET-MSI";
+ 
+ 	return irq_domain_add_hierarchy(parent, 0, 0, NULL, &hpet_domain_ops,
+ 					(void *)(long)hpet_id);
+-- 
+1.7.10.4
 
-Do we want to set that flag unconditionally? At least for servers,
-the resources should get assigned by firmware, and things might
-go wrong if Linux tries to reassign them. This is probably the
-case on kvmtool as well.
-
-> +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
-> +	if (!bus) {
-> +		dev_err(dev, "Scanning rootbus failed");
-> +		return -ENODEV;
-> +	}
-> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-
-I thought this was done by default now. If it is not, can
-we make the of_irq swizzling the default?
-
-> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +		pci_bus_size_bridges(bus);
-> +		pci_bus_assign_resources(bus);
-> +	}
-> +	pci_bus_add_devices(bus);
-> +
-> +	/* Configure PCI Express settings */
-> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
-> +		struct pci_bus *child;
-> +
-> +		list_for_each_entry(child, &bus->children, node)
-> +			pcie_bus_configure_settings(child);
-> +	}
-> +	return 0;
->  }
-
-We should also try to come up wtih a way to make that
-pcie_bus_configure_settings() automatic if it's required here.
-
->  static int gen_pci_probe(struct platform_device *pdev)
-> @@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> -	struct hw_pci hw = {
-> -		.nr_controllers	= 1,
-> -		.private_data	= (void **)&pci,
-> -		.setup		= gen_pci_setup,
-> -		.map_irq	= of_irq_parse_and_map_pci,
-> -		.ops		= &gen_pci_ops,
-> -	};
->  
->  	if (!pci)
->  		return -ENOMEM;
-> @@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  		return err;
->  	}
->  
-> -	pci_common_init_dev(dev, &hw);
-> -	return 0;
-> +	return gen_pci_init(dev, pci);
-
-How about moving the new code right into the probe() function?
-
-	Arnd
