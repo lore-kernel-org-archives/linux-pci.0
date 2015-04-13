@@ -1,151 +1,355 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:32780 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755488AbbDITVa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 15:21:30 -0400
-Received: by oblw8 with SMTP id w8so147175526obl.0
-        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 12:21:30 -0700 (PDT)
-Date: Thu, 9 Apr 2015 14:21:27 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Matthew Garrett <mjg59@coreos.com>
-Cc: linux-pci@vger.kernel.org, rjw@rjwysocki.net, lenb@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Don't clear ASPM bits when the FADT declares it's
- unsupported
-Message-ID: <20150409192127.GJ30967@google.com>
-References: <1428430020-29633-1-git-send-email-mjg59@coreos.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428430020-29633-1-git-send-email-mjg59@coreos.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+	Joerg Roedel <jroedel@suse.de>
+Subject: [Patch Part1 v8 13/37] x86/MSI: Use hierarchy irqdomain to manage MSI interrupts
+Date: Mon, 13 Apr 2015 14:11:35 +0800
+Message-Id: <1428905519-23704-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 07, 2015 at 11:07:00AM -0700, Matthew Garrett wrote:
-> Communications with a hardware vendor confirm that the expected behaviour on
-> systems that set the FADT ASPM disable bit but which still grant full PCIe
-> control is for the OS to leave any BIOS configuration intact and refuse to
-> touch the ASPM bits. This mimics the behaviour of Windows.
-> 
-> Signed-off-by: Matthew Garrett <mjg59@coreos.com>
+Enhance MSI code to support hierarchy irqdomain, it helps to make
+the architecture more clear.
 
-Applied to pci/misc for v4.1, thanks!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416894816-23245-14-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/Kconfig                     |    1 +
+ arch/x86/include/asm/hw_irq.h        |    9 ++-
+ arch/x86/include/asm/irq_remapping.h |    6 +-
+ arch/x86/include/asm/msi.h           |    7 ++
+ arch/x86/kernel/apic/msi.c           |  141 ++++++++++++++++++----------------
+ arch/x86/kernel/apic/vector.c        |    2 +
+ drivers/iommu/irq_remapping.c        |    1 -
+ 7 files changed, 94 insertions(+), 73 deletions(-)
+ create mode 100644 arch/x86/include/asm/msi.h
 
-> ---
->  drivers/acpi/pci_root.c  | 19 ++++++++-----------
->  drivers/pci/pcie/aspm.c  | 18 ------------------
->  include/linux/pci-aspm.h |  4 ----
->  3 files changed, 8 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 68a5f71..1b5569c 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -423,8 +423,7 @@ out:
->  }
->  EXPORT_SYMBOL(acpi_pci_osc_control_set);
->  
-> -static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
-> -				 int *clear_aspm)
-> +static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  {
->  	u32 support, control, requested;
->  	acpi_status status;
-> @@ -495,10 +494,12 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
->  		decode_osc_control(root, "OS now controls", control);
->  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
->  			/*
-> -			 * We have ASPM control, but the FADT indicates
-> -			 * that it's unsupported. Clear it.
-> +			 * We have ASPM control, but the FADT indicates that
-> +			 * it's unsupported. Leave existing configuration
-> +			 * intact and prevent the OS from touching it.
->  			 */
-> -			*clear_aspm = 1;
-> +			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
-> +			*no_aspm = 1;
->  		}
->  	} else {
->  		decode_osc_control(root, "OS requested", requested);
-> @@ -525,7 +526,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	int result;
->  	struct acpi_pci_root *root;
->  	acpi_handle handle = device->handle;
-> -	int no_aspm = 0, clear_aspm = 0;
-> +	int no_aspm = 0;
->  	bool hotadd = system_state != SYSTEM_BOOTING;
->  
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-> @@ -584,7 +585,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  
->  	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
->  
-> -	negotiate_os_control(root, &no_aspm, &clear_aspm);
-> +	negotiate_os_control(root, &no_aspm);
->  
->  	/*
->  	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> @@ -607,10 +608,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		goto remove_dmar;
->  	}
->  
-> -	if (clear_aspm) {
-> -		dev_info(&device->dev, "Disabling ASPM (FADT indicates it is unsupported)\n");
-> -		pcie_clear_aspm(root->bus);
-> -	}
->  	if (no_aspm)
->  		pcie_no_aspm();
->  
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 820740a..7d4fcdc 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -782,24 +782,6 @@ void pci_disable_link_state(struct pci_dev *pdev, int state)
->  }
->  EXPORT_SYMBOL(pci_disable_link_state);
->  
-> -void pcie_clear_aspm(struct pci_bus *bus)
-> -{
-> -	struct pci_dev *child;
-> -
-> -	if (aspm_force)
-> -		return;
-> -
-> -	/*
-> -	 * Clear any ASPM setup that the firmware has carried out on this bus
-> -	 */
-> -	list_for_each_entry(child, &bus->devices, bus_list) {
-> -		__pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
-> -					 PCIE_LINK_STATE_L1 |
-> -					 PCIE_LINK_STATE_CLKPM,
-> -					 false, true);
-> -	}
-> -}
-> -
->  static int pcie_aspm_set_policy(const char *val, struct kernel_param *kp)
->  {
->  	int i;
-> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-> index 8af4610..207c561 100644
-> --- a/include/linux/pci-aspm.h
-> +++ b/include/linux/pci-aspm.h
-> @@ -29,7 +29,6 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev);
->  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
->  void pci_disable_link_state(struct pci_dev *pdev, int state);
->  void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
-> -void pcie_clear_aspm(struct pci_bus *bus);
->  void pcie_no_aspm(void);
->  #else
->  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
-> @@ -47,9 +46,6 @@ static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
->  static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
->  {
->  }
-> -static inline void pcie_clear_aspm(struct pci_bus *bus)
-> -{
-> -}
->  static inline void pcie_no_aspm(void)
->  {
->  }
-> -- 
-> 2.3.4
-> 
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 2ca708961a3c..fecb8b7d74bd 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -923,6 +923,7 @@ config X86_LOCAL_APIC
+ 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
+ 	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
+ 	select IRQ_DOMAIN_HIERARCHY
++	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+ 
+ config X86_IO_APIC
+ 	def_bool X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_IOAPIC
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index bd7881c5a57a..270c432971f8 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -110,9 +110,10 @@ struct irq_2_irte {
+ };
+ #endif	/* CONFIG_IRQ_REMAP */
+ 
++struct irq_domain;
++
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
+-struct irq_domain;
+ struct pci_dev;
+ struct msi_desc;
+ 
+@@ -214,6 +215,12 @@ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+ #endif	/* CONFIG_X86_LOCAL_APIC */
+ 
++#ifdef	CONFIG_PCI_MSI
++extern void arch_init_msi_domain(struct irq_domain *domain);
++#else
++static inline void arch_init_msi_domain(struct irq_domain *domain) { }
++#endif
++
+ /* Statistics */
+ extern atomic_t irq_err_count;
+ extern atomic_t irq_mis_count;
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 0cd6195cc375..0d3bbd0e2c42 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -66,11 +66,7 @@ irq_remapping_get_irq_domain(struct irq_alloc_info *info);
+ extern void irq_remapping_print_chip(struct irq_data *data, struct seq_file *p);
+ 
+ /* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
+-static inline struct irq_domain *
+-arch_create_msi_irq_domain(struct irq_domain *parent)
+-{
+-	return NULL;
+-}
++extern struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent);
+ 
+ /* Get parent irqdomain for interrupt remapping irqdomain */
+ static inline struct irq_domain *arch_get_ir_parent_domain(void)
+diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
+new file mode 100644
+index 000000000000..93724cc62177
+--- /dev/null
++++ b/arch/x86/include/asm/msi.h
+@@ -0,0 +1,7 @@
++#ifndef _ASM_X86_MSI_H
++#define _ASM_X86_MSI_H
++#include <asm/hw_irq.h>
++
++typedef struct irq_alloc_info msi_alloc_info_t;
++
++#endif /* _ASM_X86_MSI_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 10d9ae8f2166..e82ab7973477 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -3,6 +3,8 @@
+  *
+  * Copyright (C) 1997, 1998, 1999, 2000, 2009 Ingo Molnar, Hajnalka Szabo
+  *	Moved from arch/x86/kernel/apic/io_apic.c.
++ * Jiang Liu <jiang.liu@linux.intel.com>
++ *	Convert to hierarchy irqdomain
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -21,6 +23,8 @@
+ #include <asm/apic.h>
+ #include <asm/irq_remapping.h>
+ 
++static struct irq_domain *msi_default_domain;
++
+ void native_compose_msi_msg(struct pci_dev *pdev,
+ 			    unsigned int irq, unsigned int dest,
+ 			    struct msi_msg *msg, u8 hpet_id)
+@@ -114,102 +118,107 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+ 	return 0;
+ }
+ 
+-static int
+-msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	struct msi_msg msg;
+-	unsigned int dest;
+-	int ret;
+-
+-	ret = apic_set_affinity(data, mask, &dest);
+-	if (ret)
+-		return ret;
+-
+-	__get_cached_msi_msg(data->msi_desc, &msg);
+-
+-	msg.data &= ~MSI_DATA_VECTOR_MASK;
+-	msg.data |= MSI_DATA_VECTOR(cfg->vector);
+-	msg.address_lo &= ~MSI_ADDR_DEST_ID_MASK;
+-	msg.address_lo |= MSI_ADDR_DEST_ID(dest);
+-
+-	__pci_write_msi_msg(data->msi_desc, &msg);
+-
+-	return IRQ_SET_MASK_OK_NOCOPY;
+-}
+-
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+  */
+-static struct irq_chip msi_chip = {
++static struct irq_chip pci_msi_controller = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= pci_msi_unmask_irq,
+ 	.irq_mask		= pci_msi_mask_irq,
+-	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= msi_set_affinity,
+-	.irq_retrigger		= apic_retrigger_irq,
++	.irq_ack		= irq_chip_ack_parent,
++	.irq_set_affinity	= msi_domain_set_affinity,
++	.irq_retrigger		= irq_chip_retrigger_hierarchy,
++	.irq_print_chip		= irq_remapping_print_chip,
++	.irq_compose_msi_msg	= irq_msi_compose_msg,
++	.irq_write_msi_msg	= pci_msi_domain_write_msg,
+ 	.flags			= IRQCHIP_SKIP_SET_WAKE,
+ };
+ 
+-int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-		  unsigned int irq_base, unsigned int irq_offset)
++int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+-	struct irq_chip *chip = &msi_chip;
+-	struct msi_msg msg;
+-	unsigned int irq = irq_base + irq_offset;
+-	int ret;
++	struct irq_domain *domain;
++	struct irq_alloc_info info;
+ 
+-	ret = msi_compose_msg(dev, irq, &msg, -1);
+-	if (ret < 0)
+-		return ret;
++	init_irq_alloc_info(&info, NULL);
++	info.type = X86_IRQ_ALLOC_TYPE_MSI;
++	info.msi_dev = dev;
+ 
+-	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
++	domain = irq_remapping_get_irq_domain(&info);
++	if (domain == NULL)
++		domain = msi_default_domain;
++	if (domain == NULL)
++		return -ENOSYS;
+ 
+-	/*
+-	 * MSI-X message is written per-IRQ, the offset is always 0.
+-	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+-	 */
+-	if (!irq_offset)
+-		pci_write_msi_msg(irq, &msg);
++	return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
++}
+ 
+-	setup_remapped_irq(irq, irq_cfg(irq), chip);
++void native_teardown_msi_irq(unsigned int irq)
++{
++	irq_domain_free_irqs(irq, 1);
++}
+ 
+-	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
++static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
++					 msi_alloc_info_t *arg)
++{
++	return arg->msi_hwirq;
++}
+ 
+-	dev_dbg(&dev->dev, "irq %d for MSI/MSI-X\n", irq);
++static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
++			   int nvec, msi_alloc_info_t *arg)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct msi_desc *desc = first_pci_msi_entry(pdev);
++
++	init_irq_alloc_info(arg, NULL);
++	arg->msi_dev = pdev;
++	if (desc->msi_attrib.is_msix) {
++		arg->type = X86_IRQ_ALLOC_TYPE_MSIX;
++	} else {
++		arg->type = X86_IRQ_ALLOC_TYPE_MSI;
++		arg->flags |= X86_IRQ_ALLOC_CONTIGOUS_VECTORS;
++	}
+ 
+ 	return 0;
+ }
+ 
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ {
+-	struct msi_desc *msidesc;
+-	int irq, ret;
++	arg->msi_hwirq = pci_msi_domain_calc_hwirq(arg->msi_dev, desc);
++}
+ 
+-	/* Multiple MSI vectors only supported with interrupt remapping */
+-	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
++static struct msi_domain_ops pci_msi_domain_ops = {
++	.get_hwirq	= pci_msi_get_hwirq,
++	.msi_prepare	= pci_msi_prepare,
++	.set_desc	= pci_msi_set_desc,
++};
+ 
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
+-		irq = irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
+-		if (irq <= 0)
+-			return -ENOSPC;
++static struct msi_domain_info pci_msi_domain_info = {
++	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
++	.ops		= &pci_msi_domain_ops,
++	.chip		= &pci_msi_controller,
++	.handler	= handle_edge_irq,
++	.handler_name	= "edge",
++};
+ 
+-		ret = setup_msi_irq(dev, msidesc, irq, 0);
+-		if (ret < 0) {
+-			irq_domain_free_irqs(irq, 1);
+-			return ret;
+-		}
++void arch_init_msi_domain(struct irq_domain *parent)
++{
++	if (disable_apic)
++		return;
+ 
+-	}
+-	return 0;
++	msi_default_domain = pci_msi_create_irq_domain(NULL,
++					&pci_msi_domain_info, parent);
++	if (!msi_default_domain)
++		pr_warn("failed to initialize irqdomain for MSI/MSI-x.\n");
+ }
+ 
+-void native_teardown_msi_irq(unsigned int irq)
++#ifdef CONFIG_IRQ_REMAP
++struct irq_domain *arch_create_msi_irq_domain(struct irq_domain *parent)
+ {
+-	irq_domain_free_irqs(irq, 1);
++	return msi_create_irq_domain(NULL, &pci_msi_domain_info, parent);
+ }
++#endif
+ 
+ #ifdef CONFIG_DMAR_TABLE
+ static int
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index f8340c72546f..e971c87f7858 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -364,6 +364,8 @@ int __init arch_early_irq_init(void)
+ 	BUG_ON(x86_vector_domain == NULL);
+ 	irq_set_default_host(x86_vector_domain);
+ 
++	arch_init_msi_domain(x86_vector_domain);
++
+ 	return arch_early_ioapic_init();
+ }
+ 
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index c306421d86c1..d77e3711c2aa 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -170,7 +170,6 @@ static void __init irq_remapping_modify_x86_ops(void)
+ 	x86_io_apic_ops.set_affinity	= set_remapped_irq_affinity;
+ 	x86_io_apic_ops.setup_entry	= setup_ioapic_remapped_entry;
+ 	x86_io_apic_ops.eoi_ioapic_pin	= eoi_ioapic_pin_remapped;
+-	x86_msi.setup_msi_irqs		= irq_remapping_setup_msi_irqs;
+ 	x86_msi.setup_hpet_msi		= setup_hpet_msi_remapped;
+ 	x86_msi.compose_msi_msg		= compose_remapped_msi_msg;
+ }
+-- 
+1.7.10.4
+
