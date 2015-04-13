@@ -1,65 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16105 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754960AbbDULif (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:35 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v10 26/29] PCI/xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
-Date: Tue, 21 Apr 2015 19:34:45 +0800
-Message-ID: <1429616088-10249-27-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 01/37] x86/irq: Save destination CPU ID in irq_cfg
+Date: Mon, 13 Apr 2015 14:11:23 +0800
+Message-Id: <1428905519-23704-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_scan_root_bus() instead of pci_create_root_bus() +
-pci_scan_child_bus() for simplicity.
+Cache destination CPU APIC ID into struct irq_cfg when assigning vector
+for interrupt. Upper layer just needs to read the cached APIC ID instead
+of calling apic->cpu_mask_to_apicid_and(), it helps to hide APIC driver
+details from IOAPIC/HPET/MSI drivers..
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416894816-23245-2-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/host/pci-xgene.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ arch/x86/include/asm/hw_irq.h |    1 +
+ arch/x86/kernel/apic/vector.c |    6 ++++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index f11e77b..a91a739 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 9662290e0b20..b988ddf7434b 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -116,6 +116,7 @@ struct irq_data;
+ struct irq_cfg {
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
++	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 6cedd7914581..c724ef6b218c 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -188,6 +188,12 @@ next:
+ 	}
+ 	free_cpumask_var(tmp_mask);
  
--	bus = pci_create_root_bus(&pdev->dev, -1,
--					&xgene_pcie_ops, port, &res);
-+	bus = pci_scan_root_bus(&pdev->dev, -1, &xgene_pcie_ops,
-+			port, &res);
- 	if (!bus)
- 		return -ENOMEM;
- 
--	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
- 	pci_bus_add_devices(bus);
++	if (!err) {
++		/* cache destination APIC IDs into cfg->dest_apicid */
++		err = apic->cpu_mask_to_apicid_and(mask, cfg->domain,
++						   &cfg->dest_apicid);
++	}
++
+ 	return err;
+ }
  
 -- 
-1.7.1
+1.7.10.4
 
