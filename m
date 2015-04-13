@@ -1,57 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:44955 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbbDCHyu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 03:54:50 -0400
-Message-ID: <551E471F.7090504@hp.com>
-Date: Fri, 03 Apr 2015 15:54:07 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
-MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com> <20150402111133.GM4441@8bytes.org>
-In-Reply-To: <20150402111133.GM4441@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jan Beulich <JBeulich@suse.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part1 v8 31/37] x86/irq: Kill unused pre_init_apic_IRQ0()
+Date: Mon, 13 Apr 2015 14:11:53 +0800
+Message-Id: <1428905519-23704-32-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
-This is quite strange. I checked the patches from patch 01 to 10 using 
-./scripts/checkpatch.pl under the kernel source directory, but got 0 
-errors and 0 warning.  Only some white spaces in the cover letter 00, 
-but is could not be checked by this script.
+Now there's no user of pre_init_apic_IRQ0(), so kill it.
 
-But I checked the intel-iommu.c using "checkpatch.pl -f", found too many 
-warnings and errors. Maybe we need a new patch to fix them.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-4-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |    1 -
+ arch/x86/kernel/apic/io_apic.c |   17 -----------------
+ 2 files changed, 18 deletions(-)
 
-Thanks
-Zhenhua
-
-On 04/02/2015 07:11 PM, Joerg Roedel wrote:
-> Hi Zhen-Hua,
->
-> On Thu, Mar 19, 2015 at 01:36:18PM +0800, Li, Zhen-Hua wrote:
->> This patchset is an update of Bill Sumner's patchset, implements a fix for:
->> If a kernel boots with intel_iommu=on on a system that supports intel vt-d,
->> when a panic happens, the kdump kernel will boot with these faults:
->
-> I reviewed this patch-set and it is getting closer to a point where it
-> could be merged. I found a few white-space errors in the review, please
-> do a check_patch run on the next round and fix these. Besides that and
-> given some third-party testing and reviews I think we can look forward
-> to merge it early after the merge-window for v4.1, to give it enough
-> testing in -next too.
->
->
-> 	Joerg
->
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 2f91685fe1cd..c976de126a91 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -204,7 +204,6 @@ extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
+ 			    irq_hw_number_t hwirq);
+ extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
+ extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
+-extern void __init pre_init_apic_IRQ0(void);
+ 
+ extern void mp_save_irq(struct mpc_intsrc *m);
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 56d532106ef3..540598c77e55 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3091,20 +3091,3 @@ int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
+ 
+ 	return ret;
+ }
+-
+-/* Enable IOAPIC early just for system timer */
+-void __init pre_init_apic_IRQ0(void)
+-{
+-	struct io_apic_irq_attr attr = { 0, 0, 0, 0 };
+-
+-	printk(KERN_INFO "Early APIC setup for system timer0\n");
+-#ifndef CONFIG_SMP
+-	physid_set_mask_of_physid(boot_cpu_physical_apicid,
+-					 &phys_cpu_present_map);
+-#endif
+-	setup_local_APIC();
+-
+-	io_apic_setup_irq_pin(0, 0, &attr);
+-	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
+-				      "edge");
+-}
+-- 
+1.7.10.4
 
