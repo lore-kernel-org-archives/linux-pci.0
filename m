@@ -1,78 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39090 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753495AbbDNKpR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Apr 2015 06:45:17 -0400
+Date: Tue, 14 Apr 2015 18:45:05 +0800
+From: Fam Zheng <famz@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150414104505.GA32015@ad.nay.redhat.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150413093708.GE17059@ad.nay.redhat.com>
+ <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
+ <20150414114433-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6gLGy9tGZXPsCTfzPBNSdM8nYjNzAETSHXWJ9ZuYN9FQ@mail.gmail.com>
-References: <1429643395-25411-1-git-send-email-sonnyrao@chromium.org> <CAErSpo6gLGy9tGZXPsCTfzPBNSdM8nYjNzAETSHXWJ9ZuYN9FQ@mail.gmail.com>
-From: Sonny Rao <sonnyrao@chromium.org>
-Date: Tue, 21 Apr 2015 12:31:08 -0700
-Message-ID: <CAPz6YkU3XxRa=6wrd9BGUNwC7teqZEy32g58vh5cJXfN9i2x0w@mail.gmail.com>
-Subject: Re: [PATCH] perf/x86/intel/uncore: Move PCI IDs for IMC to uncore driver
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Stephane Eranian <eranian@google.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Paul Mackerras <paulus@samba.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150414114433-mutt-send-email-mst@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 21, 2015 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Apr 21, 2015 at 2:09 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
->> This keeps all the related PCI IDs together in the driver where they
->> are used.
->>
->> Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->> ---
->>  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 6 +++++-
->>  include/linux/pci_ids.h                           | 4 ----
->>  2 files changed, 5 insertions(+), 5 deletions(-)
->>
->> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
->> index ca75e70..02c1a13 100644
->> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
->> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
->> @@ -1,7 +1,11 @@
->>  /* Nehalem/SandBridge/Haswell uncore support */
->>  #include "perf_event_intel_uncore.h"
->>
->> -/* Uncore IMC PCI Id */
->> +/* Uncore IMC PCI Ids */
->
-> "IDs" would be more consistent.
->
+On Tue, 04/14 11:47, Michael S. Tsirkin wrote:
+> I have investigated this, and I at this point I think the hang is basically
+> a non issue. So the commit log should say
+> 
+> 	if the driver hasn't registered an interrupt handler for it, the interrupt
+> 	is never deasserted and causes spurious interrupts, typically
+> 	followed by kernel disabling the irq.
 
-Oops, will fix.
+Or, how about disabling intx immediately too?
 
->> +#define PCI_DEVICE_ID_INTEL_SNB_IMC    0x0100
->> +#define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
->> +#define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
->> +#define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
->>  #define PCI_DEVICE_ID_INTEL_HSW_U_IMC  0x0a04
->>
->>  /* SNB event control */
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 38cff8f..2f7b9a4 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -2541,10 +2541,6 @@
->>
->>  #define PCI_VENDOR_ID_INTEL            0x8086
->>  #define PCI_DEVICE_ID_INTEL_EESSC      0x0008
->> -#define PCI_DEVICE_ID_INTEL_SNB_IMC    0x0100
->> -#define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
->> -#define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
->> -#define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
->>  #define PCI_DEVICE_ID_INTEL_PXHD_0     0x0320
->>  #define PCI_DEVICE_ID_INTEL_PXHD_1     0x0321
->>  #define PCI_DEVICE_ID_INTEL_PXH_0      0x0329
->> --
->> 2.1.2
->>
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..dd7dcc1 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -452,6 +452,7 @@ static void pci_device_shutdown(struct device *dev)
+                drv->shutdown(pci_dev);
+        pci_msi_shutdown(pci_dev);
+        pci_msix_shutdown(pci_dev);
++       pci_intx(pci_dev, 0);
+
+ #ifdef CONFIG_KEXEC
+        /*
+
+> 
+> 
+> > >> [bhelgaas: changelog]
+> > >> Reported-by: Fam Zheng <famz@redhat.com>
+> > >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> > >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > >> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> > >> CC: Ulrich Obergfell <uobergfe@redhat.com>
+> > >> CC: Rusty Russell <rusty@rustcorp.com.au>
+> > >> ---
+> > >>  drivers/pci/pci-driver.c |    2 --
+> > >>  1 file changed, 2 deletions(-)
+> > >>
+> > >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > >> index 3cb2210de553..38a602cb9fb7 100644
+> > >> --- a/drivers/pci/pci-driver.c
+> > >> +++ b/drivers/pci/pci-driver.c
+> > >> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+> > >>
+> > >>       if (drv && drv->shutdown)
+> > >>               drv->shutdown(pci_dev);
+> > >> -     pci_msi_shutdown(pci_dev);
+> > >> -     pci_msix_shutdown(pci_dev);
+> > >>
+> > >>  #ifdef CONFIG_KEXEC
+> > >>       /*
+> > >>
