@@ -1,53 +1,249 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:33964 "EHLO
-	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932843AbbDJNmP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 09:42:15 -0400
-Received: by qkgx75 with SMTP id x75so30581574qkg.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 06:42:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1428658811.2796.2.camel@pengutronix.de>
-References: <20150409194923.19293.96454.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <DM2PR0301MB064005C336CD164FD8C0A061E2FA0@DM2PR0301MB0640.namprd03.prod.outlook.com>
- <1428658811.2796.2.camel@pengutronix.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 10 Apr 2015 08:41:54 -0500
-Message-ID: <CAErSpo5hMtTqzoQR9pP_FwOdVyvUcNhPeTVxQXPKKQMi2i8XZg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: layerscape: Simplify platform_get_resource_byname()
- failure checking
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:18387 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752795AbbDNCfX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 22:35:23 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Joerg Roedel <jroedel@suse.de>,
+	Andy Lutomirski <luto@amacapital.net>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 32/33] x86/irq: Move irqdomain specific code into asm/irqdomain.h
+Date: Tue, 14 Apr 2015 10:30:09 +0800
+Message-Id: <1428978610-28986-33-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 10, 2015 at 4:40 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Freitag, den 10.04.2015, 02:08 +0000 schrieb
-> Minghuan.Lian@freescale.com:
->> Hi Bjorn,
->>
->> Thanks for your improvement.
->> I notice my new patches to add support arm32 and arm64 for designware
->> and layerscape also have the similar issues, I will fix and submit
->> them v2 .
->> Could you tell me whether it is acceptable that I add a new file
->> pcie-designware-base.c  to re-implement designware PCIe driver for
->> compatible with arm32 and arm64.  The benefit  is that  the new
->> implementation is simple clear and platform-independent. In addition,
->> MSI driver will be split to a separate file. But we may need to push
->> other platform PCIe maintainer to port the driver based on
->> pcie-designware-base.c .
->>
-> In that case you probably should have put the other maintainers of
-> designware based PCI drivers on CC for your patches. You will not gain
-> momentum for such a radical change if you fail to address the right
-> people.
+Now we have dedicated asm/irqdomain.h, so move irqdomain specific
+code into it.
 
-I haven't reviewed your patches in detail, but you might need to go
-even farther and do the conversion yourself.  That's what somebody
-introducing new infrastructure usually does.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/hw_irq.h        |   24 -----------------------
+ arch/x86/include/asm/irq_remapping.h |    2 +-
+ arch/x86/include/asm/irqdomain.h     |   35 +++++++++++++++++++++++++++++++---
+ arch/x86/kernel/apic/htirq.c         |    2 +-
+ arch/x86/kernel/apic/msi.c           |    2 +-
+ arch/x86/kernel/apic/vector.c        |    2 +-
+ arch/x86/kernel/hpet.c               |    2 +-
+ arch/x86/platform/uv/uv_irq.c        |    2 +-
+ 8 files changed, 38 insertions(+), 33 deletions(-)
 
-Bjorn
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index e7ae6eb84934..f671d4331e7e 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -94,8 +94,6 @@ extern void trace_call_function_single_interrupt(void);
+ #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+ #endif /* CONFIG_TRACING */
+ 
+-struct irq_domain;
+-
+ #ifdef	CONFIG_X86_LOCAL_APIC
+ struct irq_data;
+ struct pci_dev;
+@@ -165,22 +163,11 @@ struct irq_alloc_info {
+ 	};
+ };
+ 
+-enum {
+-	/* Allocate contigious CPU vectors */
+-	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
+-};
+-
+ struct irq_cfg {
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+ };
+ 
+-extern struct irq_domain *x86_vector_domain;
+-
+-extern void init_irq_alloc_info(struct irq_alloc_info *info,
+-				const struct cpumask *mask);
+-extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
+-				struct irq_alloc_info *src);
+ extern struct irq_cfg *irq_cfg(unsigned int irq);
+ extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
+ extern void lock_vector_lock(void);
+@@ -200,17 +187,6 @@ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+ #endif	/* CONFIG_X86_LOCAL_APIC */
+ 
+-#ifdef	CONFIG_PCI_MSI
+-extern void arch_init_msi_domain(struct irq_domain *domain);
+-#else
+-static inline void arch_init_msi_domain(struct irq_domain *domain) { }
+-#endif
+-#ifdef	CONFIG_HT_IRQ
+-extern void arch_init_htirq_domain(struct irq_domain *domain);
+-#else
+-static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
+-#endif
+-
+ /* Statistics */
+ extern atomic_t irq_err_count;
+ extern atomic_t irq_mis_count;
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 09efa358c831..78974fbc33b4 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -22,7 +22,7 @@
+ #ifndef __X86_IRQ_REMAPPING_H
+ #define __X86_IRQ_REMAPPING_H
+ 
+-#include <linux/irqdomain.h>
++#include <asm/irqdomain.h>
+ #include <asm/hw_irq.h>
+ #include <asm/io_apic.h>
+ 
+diff --git a/arch/x86/include/asm/irqdomain.h b/arch/x86/include/asm/irqdomain.h
+index fe0d4c6636ec..ae941c3f8c51 100644
+--- a/arch/x86/include/asm/irqdomain.h
++++ b/arch/x86/include/asm/irqdomain.h
+@@ -2,6 +2,25 @@
+ #define _ASM_IRQDOMAIN_H
+ 
+ #include <linux/irqdomain.h>
++#include <asm/hw_irq.h>
++
++#ifdef CONFIG_X86_LOCAL_APIC
++enum {
++	/* Allocate contigious CPU vectors */
++	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
++};
++
++extern struct irq_domain *x86_vector_domain;
++
++extern void init_irq_alloc_info(struct irq_alloc_info *info,
++				const struct cpumask *mask);
++extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
++				struct irq_alloc_info *src);
++#endif /* CONFIG_X86_LOCAL_APIC */
++
++#ifdef CONFIG_X86_IO_APIC
++struct device_node;
++struct irq_data;
+ 
+ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_INVALID,
+@@ -10,9 +29,6 @@ enum ioapic_domain_type {
+ 	IOAPIC_DOMAIN_DYNAMIC,
+ };
+ 
+-struct device_node;
+-struct irq_data;
+-
+ struct ioapic_domain_cfg {
+ 	enum ioapic_domain_type		type;
+ 	const struct irq_domain_ops	*ops;
+@@ -30,5 +46,18 @@ extern void mp_irqdomain_activate(struct irq_domain *domain,
+ extern void mp_irqdomain_deactivate(struct irq_domain *domain,
+ 				    struct irq_data *irq_data);
+ extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
++#endif /* CONFIG_X86_IO_APIC */
++
++#ifdef CONFIG_PCI_MSI
++extern void arch_init_msi_domain(struct irq_domain *domain);
++#else
++static inline void arch_init_msi_domain(struct irq_domain *domain) { }
++#endif
++
++#ifdef CONFIG_HT_IRQ
++extern void arch_init_htirq_domain(struct irq_domain *domain);
++#else
++static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
++#endif
+ 
+ #endif
+diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
+index 4ba6b3ae7a95..94bca925bf7d 100644
+--- a/arch/x86/kernel/apic/htirq.c
++++ b/arch/x86/kernel/apic/htirq.c
+@@ -16,7 +16,7 @@
+ #include <linux/device.h>
+ #include <linux/pci.h>
+ #include <linux/htirq.h>
+-#include <linux/irqdomain.h>
++#include <asm/irqdomain.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
+ #include <asm/hypertransport.h>
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index da163da5fdee..4ca80bbcd632 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -16,7 +16,7 @@
+ #include <linux/dmar.h>
+ #include <linux/hpet.h>
+ #include <linux/msi.h>
+-#include <linux/irqdomain.h>
++#include <asm/irqdomain.h>
+ #include <asm/msidef.h>
+ #include <asm/hpet.h>
+ #include <asm/hw_irq.h>
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 0e7c39beefed..f5eb3999383f 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -13,8 +13,8 @@
+ #include <linux/interrupt.h>
+ #include <linux/init.h>
+ #include <linux/compiler.h>
+-#include <linux/irqdomain.h>
+ #include <linux/slab.h>
++#include <asm/irqdomain.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
+ #include <asm/i8259.h>
+diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+index e3bc18080052..e2449cf38b06 100644
+--- a/arch/x86/kernel/hpet.c
++++ b/arch/x86/kernel/hpet.c
+@@ -11,8 +11,8 @@
+ #include <linux/cpu.h>
+ #include <linux/pm.h>
+ #include <linux/io.h>
+-#include <linux/irqdomain.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/fixmap.h>
+ #include <asm/hpet.h>
+ #include <asm/time.h>
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 091b36ac44c4..cdf86cd3fd97 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -12,8 +12,8 @@
+ #include <linux/rbtree.h>
+ #include <linux/slab.h>
+ #include <linux/irq.h>
+-#include <linux/irqdomain.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/apic.h>
+ #include <asm/uv/uv_irq.h>
+ #include <asm/uv/uv_hub.h>
+-- 
+1.7.10.4
+
