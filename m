@@ -1,65 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:59809 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750847AbbDRTNg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Apr 2015 15:13:36 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Duc Dang <dhdang@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>
-Subject: Re: [PATCH v4 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX termination driver
-Date: Fri, 17 Apr 2015 16:10:20 +0200
-Message-ID: <2306642.JeuMKoBEGq@wuerfel>
-In-Reply-To: <5160bc222361ff36cc6e72ca14358c5dee8c7548.1429263201.git.dhdang@apm.com>
-References: <cover.1429263201.git.dhdang@apm.com> <5160bc222361ff36cc6e72ca14358c5dee8c7548.1429263201.git.dhdang@apm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v5 14/33] irq_remapping/vt-d: Move struct irq_2_iommu into intel_irq_remapping.c
+Date: Tue, 14 Apr 2015 10:29:51 +0800
+Message-Id: <1428978610-28986-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 17 April 2015 02:50:07 Duc Dang wrote:
-> +
-> +       /*
-> +        * MSIINTn (n is 0..F) indicates if there is a pending MSI interrupt
-> +        * If bit x of this register is set (x is 0..7), one or more interupts
-> +        * corresponding to MSInIRx is set.
-> +        */
-> +       grp_select = readl(xgene_msi->msi_regs + MSI_INT0 + (msi_grp << 16));
-> +       while (grp_select) {
-> +               msir_index = ffs(grp_select) - 1;
-> +               /*
-> +                * Calculate MSInIRx address to read to check for interrupts
-> +                * (refer to termination address and data assignment
-> +                * described in xgene_compose_msi_msg function)
-> +                */
-> +               msir_reg = (msi_grp << 19) + (msir_index << 16);
-> +               msir_val = readl(xgene_msi->msi_regs + MSI_IR0 + msir_reg);
-> +               while (msir_val) {
-> +                       intr_index = ffs(msir_val) - 1;
-> +                       /*
-> +                        * Calculate MSI vector number (refer to the termination
-> +                        * address and data assignment described in
-> +                        * xgene_compose_msi_msg function)
-> +                        */
-> +                       hw_irq = (((msir_index * IRQS_PER_IDX) + intr_index) *
-> +                                NR_HW_IRQS) + msi_grp;
-> +                       virq = irq_find_mapping(xgene_msi->domain, hw_irq);
-> +                       if (virq != 0)
-> +                               generic_handle_irq(virq);
-> +                       msir_val &= ~(1 << intr_index);
-> +                       processed++;
-> +               }
-> +               grp_select &= ~(1 << msir_index);
-> +       }
-> 
+Now only intel_irq_remapping.c access irq_2_iommu, so move it from
+hw_irq.h into intel_irq_remapping.c.
 
-As the MSI is forwarded to the GIC here, how do you maintain ordering
-between DMA data getting forwarded from the PCI host bridge to RAM
-with regard to the MSI handler getting entered from this code?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-24-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/hw_irq.h       |    9 ---------
+ drivers/iommu/intel_irq_remapping.c |    7 +++++++
+ 2 files changed, 7 insertions(+), 9 deletions(-)
 
-	Arnd
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 88632ea75fe0..3520f71f168b 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -95,14 +95,6 @@ extern void trace_call_function_single_interrupt(void);
+ #endif /* CONFIG_TRACING */
+ 
+ #ifdef CONFIG_IRQ_REMAP
+-/* Intel specific interrupt remapping information */
+-struct irq_2_iommu {
+-	struct intel_iommu *iommu;
+-	u16 irte_index;
+-	u16 sub_handle;
+-	u8  irte_mask;
+-};
+-
+ /* AMD specific interrupt remapping information */
+ struct irq_2_irte {
+ 	u16 devid; /* Device ID for IRTE table */
+@@ -194,7 +186,6 @@ struct irq_cfg {
+ 	u8			move_in_progress : 1;
+ #ifdef CONFIG_IRQ_REMAP
+ 	union {
+-		struct irq_2_iommu irq_2_iommu;
+ 		struct irq_2_irte  irq_2_irte;
+ 	};
+ #endif
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 21fc899e7c49..8a71ef6af93c 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -32,6 +32,13 @@ struct hpet_scope {
+ 	unsigned int devfn;
+ };
+ 
++struct irq_2_iommu {
++	struct intel_iommu *iommu;
++	u16 irte_index;
++	u16 sub_handle;
++	u8  irte_mask;
++};
++
+ struct intel_ir_data {
+ 	struct irq_2_iommu			irq_2_iommu;
+ 	struct irte				irte_entry;
+-- 
+1.7.10.4
+
