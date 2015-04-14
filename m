@@ -1,150 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55331 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709AbbDCJ3R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:17 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40208 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752323AbbDNJr5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Apr 2015 05:47:57 -0400
+Date: Tue, 14 Apr 2015 11:47:39 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Cc: Fam Zheng <famz@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 11/30] PCI: Save sysdata in pci_host_bridge drvdata
-Date: Fri, 3 Apr 2015 17:25:45 +0800
-Message-ID: <1428053164-28277-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150414114433-mutt-send-email-mst@redhat.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150413093708.GE17059@ad.nay.redhat.com>
+ <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save platform specific sysdata in pci_host_bridge
-drvdata, host bridge specific operation need to
-access it before the pci bus creation.
+On Mon, Apr 13, 2015 at 10:41:22AM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 13, 2015 at 4:37 AM, Fam Zheng <famz@redhat.com> wrote:
+> > Hi Bjorn,
+> >
+> > On Fri, 04/10 17:54, Bjorn Helgaas wrote:
+> >> From: Michael S. Tsirkin <mst@redhat.com>
+> >>
+> >> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
+> >> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
+> >>
+> >> The problem is that after we disable MSI, the device may assert INTx, and
+> >> if the driver hasn't registered an interrupt handler for it, the interrupt
+> >> is never deasserted and causes a kernel hang.  In particular, this was
+> >> observed with virtio.
+> >>
+> >> We now disable MSI/MSI-X for all devices during enumeration regardless of
+> >> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
+> >> old one.
+> >>
+> >> Stop disabling MSIs at shutdown to avoid the kernel hang.
+> >>
+> >> XXX bugzilla reference, details about how the hang happens?
+> >
+> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=96571
+> >
+> > Please let me know if you need any further information in the bug.
+> 
+> Please attach a complete dmesg log.  The bugzilla doesn't really have
+> any new information other than that you see a soft lockup.  I'm trying
+> to connect more of the dots between a spurious interrupt and a hang or
+> soft lockup.
+> 
+> It doesn't seem right that a spurious interrupt could cause a hang or
+> soft lockup.  I would think Linux would emit a message about the
+> unexpected interrupt, but would otherwise be relatively unconcerned.
+> So I'm trying to figure out why my assumption is wrong.  Probably this
+> is just because I don't know much about Linux IRQ handling.
+> 
+> Having more details, e.g., a stacktrace fragment from a soft lockup,
+> can also help people connect a problem they're seeing with the
+> solution.  It's pretty hard to google for "kernel hang," but if you
+> can google for a soft lockup in a specific function, that can be much
+> more useful.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |    3 ++-
- drivers/pci/pci.h         |    2 +-
- drivers/pci/probe.c       |   20 ++++++++++----------
- 3 files changed, 13 insertions(+), 12 deletions(-)
+I have investigated this, and I at this point I think the hang is basically
+a non issue. So the commit log should say
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index dffb345..98047c6 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -63,7 +63,7 @@ static bool pci_host_busn_res_overlap(
- 
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
--		struct list_head *resources)
-+		void *sysdata, struct list_head *resources)
- {
- 	int error;
- 	struct pci_host_bridge *host, *tmp;
-@@ -101,6 +101,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	mutex_unlock(&pci_host_mutex);
- 
- 	host->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&host->dev, sysdata);
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 886d72f..027fba0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -335,7 +335,7 @@ static inline void pci_host_assign_domain_nr(struct pci_host_bridge *host)
- #endif
- 
- struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
--		int domain, int bus, struct list_head *resources);
-+        int domain, int bus, void *sysdata, struct list_head *resources);
- void pci_free_host_bridge(struct pci_host_bridge *host);
- 
- static inline int pci_host_first_busnr(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8517d1b..0ac2bf6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1865,8 +1865,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- }
- 
- static struct pci_bus *__pci_create_root_bus(
--		struct pci_host_bridge *bridge, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
- 	struct pci_bus *b;
-@@ -1882,7 +1881,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
-+	b->sysdata = dev_get_drvdata(&bridge->dev);
- 	b->ops = ops;
- 	b->number = b->busn_res.start =
- 		pci_host_first_busnr(bridge);
-@@ -1956,11 +1955,12 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, domain, bus, resources);
-+	host = pci_create_host_bridge(parent, domain, bus,
-+			sysdata, resources);
- 	if (!host)
- 		return NULL;
- 
--	host->bus = __pci_create_root_bus(host, ops, sysdata);
-+	host->bus = __pci_create_root_bus(host, ops);
- 	if (!host->bus)
- 		pci_free_host_bridge(host);
- 
-@@ -2037,13 +2037,12 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- }
- 
- static struct pci_bus *__pci_scan_root_bus(
--		struct pci_host_bridge *host, struct pci_ops *ops,
--		void *sysdata)
-+		struct pci_host_bridge *host, struct pci_ops *ops)
- {
- 	struct pci_bus *b;
- 	int max;
- 
--	b = __pci_create_root_bus(host, ops, sysdata);
-+	b = __pci_create_root_bus(host, ops);
- 	if (!b)
- 		return NULL;
- 
-@@ -2064,11 +2063,12 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- {
- 	struct pci_host_bridge *host;
- 
--	host = pci_create_host_bridge(parent, domain, bus, resources);
-+	host = pci_create_host_bridge(parent, domain, bus,
-+			sysdata, resources);
- 	if (!host)
- 		return NULL;
- 
--	host->bus = __pci_scan_root_bus(host, ops, sysdata);
-+	host->bus = __pci_scan_root_bus(host, ops);
- 	if (!host->bus)
- 		pci_free_host_bridge(host);
- 
--- 
-1.7.1
+	if the driver hasn't registered an interrupt handler for it, the interrupt
+	is never deasserted and causes spurious interrupts, typically
+	followed by kernel disabling the irq.
 
+
+> >> [bhelgaas: changelog]
+> >> Reported-by: Fam Zheng <famz@redhat.com>
+> >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> >> CC: Ulrich Obergfell <uobergfe@redhat.com>
+> >> CC: Rusty Russell <rusty@rustcorp.com.au>
+> >> ---
+> >>  drivers/pci/pci-driver.c |    2 --
+> >>  1 file changed, 2 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> >> index 3cb2210de553..38a602cb9fb7 100644
+> >> --- a/drivers/pci/pci-driver.c
+> >> +++ b/drivers/pci/pci-driver.c
+> >> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+> >>
+> >>       if (drv && drv->shutdown)
+> >>               drv->shutdown(pci_dev);
+> >> -     pci_msi_shutdown(pci_dev);
+> >> -     pci_msix_shutdown(pci_dev);
+> >>
+> >>  #ifdef CONFIG_KEXEC
+> >>       /*
+> >>
