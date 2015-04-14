@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -10,8 +10,10 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Borislav Petkov <bp@alien8.de>,
 	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh@kernel.org>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	David Cohen <david.a.cohen@linux.intel.com>,
 	Sander Eikelenboom <linux@eikelenboom.it>,
@@ -21,555 +23,313 @@ Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Joerg Roedel <joro@8bytes.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 16/33] x86/irq: Move irq_cfg.irq_2_pin into io_apic.c
-Date: Tue, 14 Apr 2015 10:29:53 +0800
-Message-Id: <1428978610-28986-17-git-send-email-jiang.liu@linux.intel.com>
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+	sfi-devel@simplefirmware.org
+Subject: [Patch Part2 v5 31/33] x86: Cleanup irq_domain ops
+Date: Tue, 14 Apr 2015 10:30:08 +0800
+Message-Id: <1428978610-28986-32-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now only io_apic.c accesses struct irq_cfg.irq_2_pin, so move irq_2_pin
-into struct mp_chip_data in io_apic.c to clean up struct irq_cfg further.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-26-git-send-email-jiang.liu@linux.intel.com
+We have 3 identical copies of the ioapic domain ops for acpi, mpparse,
+and sfi. Have a global one in the io_apic code and be done with it.
+
+To avoid include hell in io_apic.h, create a private irqdomain header
+and include the generic irqdomain header from there.
+
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: x86@kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/hw_irq.h  |    7 --
- arch/x86/kernel/apic/io_apic.c |  164 +++++++++++++++++++---------------------
- arch/x86/kernel/apic/vector.c  |    3 -
- 3 files changed, 77 insertions(+), 97 deletions(-)
+ arch/x86/include/asm/io_apic.h   |   29 ++---------------------------
+ arch/x86/include/asm/irqdomain.h |   34 ++++++++++++++++++++++++++++++++++
+ arch/x86/kernel/acpi/boot.c      |   13 +++----------
+ arch/x86/kernel/apic/io_apic.c   |    9 ++++++++-
+ arch/x86/kernel/devicetree.c     |   12 ++++++------
+ arch/x86/kernel/mpparse.c        |    9 +--------
+ arch/x86/platform/sfi/sfi.c      |   10 ++--------
+ 7 files changed, 56 insertions(+), 60 deletions(-)
+ create mode 100644 arch/x86/include/asm/irqdomain.h
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 494d541d2aee..1ce5f8164c64 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -176,13 +176,6 @@ struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- 	u8			move_in_progress : 1;
--	union {
--#ifdef CONFIG_X86_IO_APIC
--		struct {
--			struct list_head	irq_2_pin;
--		};
--#endif
--	};
- };
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 53a70a30b674..144c4d37ae86 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -96,7 +96,7 @@ struct IR_IO_APIC_route_entry {
+ } __attribute__ ((packed));
  
- extern struct irq_domain *x86_vector_domain;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 998fefad820e..a1abdcf2cb5f 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -78,7 +78,13 @@ static DEFINE_MUTEX(ioapic_mutex);
- static unsigned int ioapic_dynirq_base;
- static int ioapic_initialized;
+ struct irq_alloc_info;
+-struct irq_data;
++struct ioapic_domain_cfg;
  
-+struct irq_pin_list {
-+	struct list_head list;
-+	int apic, pin;
-+};
-+
- struct mp_chip_data {
-+	struct list_head irq_2_pin;
- 	struct IO_APIC_route_entry entry;
- 	int trigger;
- 	int polarity;
-@@ -215,16 +221,6 @@ void mp_save_irq(struct mpc_intsrc *m)
- 		panic("Max # of irq sources exceeded!!\n");
- }
+ #define IOAPIC_AUTO			-1
+ #define IOAPIC_EDGE			0
+@@ -163,23 +163,6 @@ extern int restore_ioapic_entries(void);
+ extern void setup_ioapic_ids_from_mpc(void);
+ extern void setup_ioapic_ids_from_mpc_nocheck(void);
  
--struct irq_pin_list {
--	struct list_head list;
--	int apic, pin;
+-enum ioapic_domain_type {
+-	IOAPIC_DOMAIN_INVALID,
+-	IOAPIC_DOMAIN_LEGACY,
+-	IOAPIC_DOMAIN_STRICT,
+-	IOAPIC_DOMAIN_DYNAMIC,
 -};
 -
--static struct irq_pin_list *alloc_irq_pin_list(int node)
--{
--	return kzalloc_node(sizeof(struct irq_pin_list), GFP_ATOMIC, node);
--}
+-struct device_node;
+-struct irq_domain;
+-struct irq_domain_ops;
 -
- static void alloc_ioapic_saved_registers(int idx)
- {
- 	size_t size;
-@@ -379,16 +375,17 @@ static void ioapic_mask_entry(int apic, int pin)
-  * shared ISA-space IRQs, so we have to support them. We are super
-  * fast in the common case, and fast for shared ISA-space IRQs.
-  */
--static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
-+static int __add_pin_to_irq_node(struct mp_chip_data *data,
-+				 int node, int apic, int pin)
- {
- 	struct irq_pin_list *entry;
+-struct ioapic_domain_cfg {
+-	enum ioapic_domain_type		type;
+-	const struct irq_domain_ops	*ops;
+-	struct device_node		*dev;
+-};
+-
+ extern int mp_find_ioapic(u32 gsi);
+ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
+@@ -189,15 +172,7 @@ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 			      struct ioapic_domain_cfg *cfg);
+ extern int mp_unregister_ioapic(u32 gsi_base);
+ extern int mp_ioapic_registered(u32 gsi_base);
+-extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+-			      unsigned int nr_irqs, void *arg);
+-extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
+-			      unsigned int nr_irqs);
+-extern void mp_irqdomain_activate(struct irq_domain *domain,
+-				  struct irq_data *irq_data);
+-extern void mp_irqdomain_deactivate(struct irq_domain *domain,
+-				    struct irq_data *irq_data);
+-extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
++
+ extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
+ 				  int node, int trigger, int polarity);
  
- 	/* don't allow duplicates */
--	for_each_irq_pin(entry, cfg->irq_2_pin)
-+	for_each_irq_pin(entry, data->irq_2_pin)
- 		if (entry->apic == apic && entry->pin == pin)
- 			return 0;
+diff --git a/arch/x86/include/asm/irqdomain.h b/arch/x86/include/asm/irqdomain.h
+new file mode 100644
+index 000000000000..fe0d4c6636ec
+--- /dev/null
++++ b/arch/x86/include/asm/irqdomain.h
+@@ -0,0 +1,34 @@
++#ifndef _ASM_IRQDOMAIN_H
++#define _ASM_IRQDOMAIN_H
++
++#include <linux/irqdomain.h>
++
++enum ioapic_domain_type {
++	IOAPIC_DOMAIN_INVALID,
++	IOAPIC_DOMAIN_LEGACY,
++	IOAPIC_DOMAIN_STRICT,
++	IOAPIC_DOMAIN_DYNAMIC,
++};
++
++struct device_node;
++struct irq_data;
++
++struct ioapic_domain_cfg {
++	enum ioapic_domain_type		type;
++	const struct irq_domain_ops	*ops;
++	struct device_node		*dev;
++};
++
++extern const struct irq_domain_ops mp_ioapic_irqdomain_ops;
++
++extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs, void *arg);
++extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
++			      unsigned int nr_irqs);
++extern void mp_irqdomain_activate(struct irq_domain *domain,
++				  struct irq_data *irq_data);
++extern void mp_irqdomain_deactivate(struct irq_domain *domain,
++				    struct irq_data *irq_data);
++extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
++
++#endif
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 91a10120ed10..cb9f6f12246b 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -31,12 +31,12 @@
+ #include <linux/module.h>
+ #include <linux/dmi.h>
+ #include <linux/irq.h>
+-#include <linux/irqdomain.h>
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ #include <linux/ioport.h>
+ #include <linux/pci.h>
  
--	entry = alloc_irq_pin_list(node);
-+	entry = kzalloc_node(sizeof(struct irq_pin_list), GFP_ATOMIC, node);
- 	if (!entry) {
- 		pr_err("can not alloc irq_pin_list (%d,%d,%d)\n",
- 		       node, apic, pin);
-@@ -396,16 +393,16 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
- 	}
- 	entry->apic = apic;
- 	entry->pin = pin;
-+	list_add_tail(&entry->list, &data->irq_2_pin);
- 
--	list_add_tail(&entry->list, &cfg->irq_2_pin);
++#include <asm/irqdomain.h>
+ #include <asm/pci_x86.h>
+ #include <asm/pgtable.h>
+ #include <asm/io_apic.h>
+@@ -400,20 +400,13 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
  	return 0;
  }
  
--static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
-+static void __remove_pin_from_irq(struct mp_chip_data *data, int apic, int pin)
- {
- 	struct irq_pin_list *tmp, *entry;
- 
--	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
-+	list_for_each_entry_safe(entry, tmp, &data->irq_2_pin, list)
- 		if (entry->apic == apic && entry->pin == pin) {
- 			list_del(&entry->list);
- 			kfree(entry);
-@@ -413,22 +410,23 @@ static void __remove_pin_from_irq(struct irq_cfg *cfg, int apic, int pin)
- 		}
- }
- 
--static void add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
-+static void add_pin_to_irq_node(struct mp_chip_data *data,
-+				int node, int apic, int pin)
- {
--	if (__add_pin_to_irq_node(cfg, node, apic, pin))
-+	if (__add_pin_to_irq_node(data, node, apic, pin))
- 		panic("IO-APIC: failed to add irq-pin. Can not proceed\n");
- }
- 
- /*
-  * Reroute an IRQ to a different pin.
-  */
--static void __init replace_pin_at_irq_node(struct irq_cfg *cfg, int node,
-+static void __init replace_pin_at_irq_node(struct mp_chip_data *data, int node,
- 					   int oldapic, int oldpin,
- 					   int newapic, int newpin)
- {
- 	struct irq_pin_list *entry;
- 
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, data->irq_2_pin) {
- 		if (entry->apic == oldapic && entry->pin == oldpin) {
- 			entry->apic = newapic;
- 			entry->pin = newpin;
-@@ -438,7 +436,7 @@ static void __init replace_pin_at_irq_node(struct irq_cfg *cfg, int node,
- 	}
- 
- 	/* old apic/pin didn't exist, so just add new ones */
--	add_pin_to_irq_node(cfg, node, newapic, newpin);
-+	add_pin_to_irq_node(data, node, newapic, newpin);
- }
- 
- static void __io_apic_modify_irq(struct irq_pin_list *entry,
-@@ -456,13 +454,13 @@ static void __io_apic_modify_irq(struct irq_pin_list *entry,
- 		final(entry);
- }
- 
--static void io_apic_modify_irq(struct irq_cfg *cfg,
-+static void io_apic_modify_irq(struct mp_chip_data *data,
- 			       int mask_and, int mask_or,
- 			       void (*final)(struct irq_pin_list *entry))
- {
- 	struct irq_pin_list *entry;
- 
--	for_each_irq_pin(entry, cfg->irq_2_pin)
-+	for_each_irq_pin(entry, data->irq_2_pin)
- 		__io_apic_modify_irq(entry, mask_and, mask_or, final);
- }
- 
-@@ -478,39 +476,31 @@ static void io_apic_sync(struct irq_pin_list *entry)
- 	readl(&io_apic->data);
- }
- 
--static void mask_ioapic(struct irq_cfg *cfg)
-+static void mask_ioapic_irq(struct irq_data *irq_data)
- {
-+	struct mp_chip_data *data = irq_data->chip_data;
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	io_apic_modify_irq(cfg, ~0, IO_APIC_REDIR_MASKED, &io_apic_sync);
-+	io_apic_modify_irq(data, ~0, IO_APIC_REDIR_MASKED, &io_apic_sync);
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- }
- 
--static void mask_ioapic_irq(struct irq_data *data)
--{
--	mask_ioapic(irqd_cfg(data));
--}
+-static struct irq_domain_ops acpi_irqdomain_ops = {
+-	.alloc = mp_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
+-};
 -
--static void __unmask_ioapic(struct irq_cfg *cfg)
-+static void __unmask_ioapic(struct mp_chip_data *data)
+ static int __init
+ acpi_parse_ioapic(struct acpi_subtable_header * header, const unsigned long end)
  {
--	io_apic_modify_irq(cfg, ~IO_APIC_REDIR_MASKED, 0, NULL);
-+	io_apic_modify_irq(data, ~IO_APIC_REDIR_MASKED, 0, NULL);
- }
+ 	struct acpi_madt_io_apic *ioapic = NULL;
+ 	struct ioapic_domain_cfg cfg = {
+ 		.type = IOAPIC_DOMAIN_DYNAMIC,
+-		.ops = &acpi_irqdomain_ops,
++		.ops = &mp_ioapic_irqdomain_ops,
+ 	};
  
--static void unmask_ioapic(struct irq_cfg *cfg)
-+static void unmask_ioapic_irq(struct irq_data *irq_data)
+ 	ioapic = (struct acpi_madt_io_apic *)header;
+@@ -764,7 +757,7 @@ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ 	u64 addr;
+ 	struct ioapic_domain_cfg cfg = {
+ 		.type = IOAPIC_DOMAIN_DYNAMIC,
+-		.ops = &acpi_irqdomain_ops,
++		.ops = &mp_ioapic_irqdomain_ops,
+ 	};
+ 
+ 	ioapic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index ce7063087f74..1eea1682b01b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -41,13 +41,13 @@
+ #include <linux/acpi.h>
+ #include <linux/module.h>
+ #include <linux/syscore_ops.h>
+-#include <linux/irqdomain.h>
+ #include <linux/freezer.h>
+ #include <linux/kthread.h>
+ #include <linux/jiffies.h>	/* time_after() */
+ #include <linux/slab.h>
+ #include <linux/bootmem.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/idle.h>
+ #include <asm/io.h>
+ #include <asm/smp.h>
+@@ -2995,3 +2995,10 @@ int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
  {
-+	struct mp_chip_data *data = irq_data->chip_data;
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	__unmask_ioapic(cfg);
-+	__unmask_ioapic(data);
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 	return (int)(long)domain->host_data;
  }
- 
--static void unmask_ioapic_irq(struct irq_data *data)
--{
--	unmask_ioapic(irqd_cfg(data));
--}
--
- /*
-  * IO-APIC versions below 0x20 don't support EOI register.
-  * For the record, here is the information about various versions:
-@@ -551,13 +541,13 @@ static void __eoi_ioapic_pin(int apic, int pin, int vector)
- 	}
- }
- 
--void eoi_ioapic_pin(int vector, struct irq_cfg *cfg)
-+void eoi_ioapic_pin(int vector, struct mp_chip_data *data)
- {
- 	unsigned long flags;
- 	struct irq_pin_list *entry;
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	for_each_irq_pin(entry, cfg->irq_2_pin)
-+	for_each_irq_pin(entry, data->irq_2_pin)
- 		__eoi_ioapic_pin(entry->apic, entry->pin, vector);
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- }
-@@ -1068,11 +1058,10 @@ static int alloc_isa_irq_from_domain(struct irq_domain *domain,
- 	 * entry. The IOAPIC entry
- 	 */
- 	if (irq_data && irq_data->parent_data) {
--		struct irq_cfg *cfg = irqd_cfg(irq_data);
--
- 		if (!mp_check_pin_attr(irq, info))
- 			return -EBUSY;
--		if (__add_pin_to_irq_node(cfg, node, ioapic, info->ioapic_pin))
-+		if (__add_pin_to_irq_node(irq_data->chip_data, node, ioapic,
-+					  info->ioapic_pin))
- 			return -ENOMEM;
- 	} else {
- 		irq = __irq_domain_alloc_irqs(domain, irq, 1, node, info, true);
-@@ -1394,9 +1383,7 @@ static void __init print_IO_APIC(int ioapic_idx)
- void __init print_IO_APICs(void)
- {
- 	int ioapic_idx;
--	struct irq_cfg *cfg;
- 	unsigned int irq;
--	struct irq_chip *chip;
- 
- 	printk(KERN_DEBUG "number of MP IRQ sources: %d.\n", mp_irq_entries);
- 	for_each_ioapic(ioapic_idx)
-@@ -1416,18 +1403,20 @@ void __init print_IO_APICs(void)
- 	printk(KERN_DEBUG "IRQ to pin mappings:\n");
- 	for_each_active_irq(irq) {
- 		struct irq_pin_list *entry;
-+		struct irq_chip *chip;
-+		struct mp_chip_data *data;
- 
- 		chip = irq_get_chip(irq);
- 		if (chip != &ioapic_chip && chip != &ioapic_ir_chip)
- 			continue;
--
--		cfg = irq_cfg(irq);
--		if (!cfg)
-+		data = irq_get_chip_data(irq);
-+		if (!data)
- 			continue;
--		if (list_empty(&cfg->irq_2_pin))
-+		if (list_empty(&data->irq_2_pin))
- 			continue;
 +
- 		printk(KERN_DEBUG "IRQ%d ", irq);
--		for_each_irq_pin(entry, cfg->irq_2_pin)
-+		for_each_irq_pin(entry, data->irq_2_pin)
- 			pr_cont("-> %d:%d", entry->apic, entry->pin);
- 		pr_cont("\n");
- 	}
-@@ -1740,7 +1729,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
- 		if (legacy_pic->irq_pending(irq))
- 			was_pending = 1;
- 	}
--	__unmask_ioapic(irqd_cfg(data));
-+	__unmask_ioapic(data->chip_data);
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++const struct irq_domain_ops mp_ioapic_irqdomain_ops = {
++	.alloc		= mp_irqdomain_alloc,
++	.free		= mp_irqdomain_free,
++	.activate	= mp_irqdomain_activate,
++	.deactivate	= mp_irqdomain_deactivate,
++};
+diff --git a/arch/x86/kernel/devicetree.c b/arch/x86/kernel/devicetree.c
+index 9ca73a700912..421375b1efd5 100644
+--- a/arch/x86/kernel/devicetree.c
++++ b/arch/x86/kernel/devicetree.c
+@@ -4,7 +4,6 @@
+ #include <linux/bootmem.h>
+ #include <linux/export.h>
+ #include <linux/io.h>
+-#include <linux/irqdomain.h>
+ #include <linux/interrupt.h>
+ #include <linux/list.h>
+ #include <linux/of.h>
+@@ -17,6 +16,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/initrd.h>
  
- 	return was_pending;
-@@ -1755,13 +1744,15 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
-  * races.
-  */
- 
--static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq_cfg *cfg)
-+static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
-+				 struct mp_chip_data *data)
- {
- 	int apic, pin;
- 	struct irq_pin_list *entry;
- 	u8 vector = cfg->vector;
-+	unsigned int dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
- 
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, data->irq_2_pin) {
- 		unsigned int reg;
- 
- 		apic = entry->apic;
-@@ -1778,13 +1769,13 @@ static void __target_IO_APIC_irq(unsigned int irq, unsigned int dest, struct irq
- atomic_t irq_mis_count;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
--static bool io_apic_level_ack_pending(struct irq_cfg *cfg)
-+static bool io_apic_level_ack_pending(struct mp_chip_data *data)
- {
- 	struct irq_pin_list *entry;
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, data->irq_2_pin) {
- 		unsigned int reg;
- 		int pin;
- 
-@@ -1801,18 +1792,17 @@ static bool io_apic_level_ack_pending(struct irq_cfg *cfg)
- 	return false;
++#include <asm/irqdomain.h>
+ #include <asm/hpet.h>
+ #include <asm/apic.h>
+ #include <asm/pci_x86.h>
+@@ -216,11 +216,11 @@ static int dt_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	return mp_irqdomain_alloc(domain, virq, nr_irqs, &tmp);
  }
  
--static inline bool ioapic_irqd_mask(struct irq_data *data, struct irq_cfg *cfg)
-+static inline bool ioapic_irqd_mask(struct irq_data *data)
- {
- 	/* If we are moving the irq we need to mask it */
- 	if (unlikely(irqd_is_setaffinity_pending(data))) {
--		mask_ioapic(cfg);
-+		mask_ioapic_irq(data);
- 		return true;
- 	}
- 	return false;
+-const struct irq_domain_ops ioapic_irq_domain_ops = {
+-	.alloc = dt_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
++static const struct irq_domain_ops ioapic_irq_domain_ops = {
++	.alloc		= dt_irqdomain_alloc,
++	.free		= mp_irqdomain_free,
++	.activate	= mp_irqdomain_activate,
++	.deactivate	= mp_irqdomain_deactivate,
+ };
+ 
+ static void __init dtb_add_ioapic(struct device_node *dn)
+diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
+index aa4feee74dbe..30ca7607cbbb 100644
+--- a/arch/x86/kernel/mpparse.c
++++ b/arch/x86/kernel/mpparse.c
+@@ -19,8 +19,8 @@
+ #include <linux/module.h>
+ #include <linux/smp.h>
+ #include <linux/pci.h>
+-#include <linux/irqdomain.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/mtrr.h>
+ #include <asm/mpspec.h>
+ #include <asm/pgalloc.h>
+@@ -113,13 +113,6 @@ static void __init MP_bus_info(struct mpc_bus *m)
+ 		pr_warn("Unknown bustype %s - ignoring\n", str);
  }
  
--static inline void ioapic_irqd_unmask(struct irq_data *data,
--				      struct irq_cfg *cfg, bool masked)
-+static inline void ioapic_irqd_unmask(struct irq_data *data, bool masked)
+-static struct irq_domain_ops mp_ioapic_irqdomain_ops = {
+-	.alloc = mp_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
+-};
+-
+ static void __init MP_ioapic_info(struct mpc_ioapic *m)
  {
- 	if (unlikely(masked)) {
- 		/* Only migrate the irq if the ack has been received.
-@@ -1841,31 +1831,30 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
- 		 * accurate and is causing problems then it is a hardware bug
- 		 * and you can go talk to the chipset vendor about it.
- 		 */
--		if (!io_apic_level_ack_pending(cfg))
-+		if (!io_apic_level_ack_pending(data->chip_data))
- 			irq_move_masked_irq(data);
--		unmask_ioapic(cfg);
-+		unmask_ioapic_irq(data);
- 	}
- }
- #else
--static inline bool ioapic_irqd_mask(struct irq_data *data, struct irq_cfg *cfg)
-+static inline bool ioapic_irqd_mask(struct irq_data *data)
+ 	struct ioapic_domain_cfg cfg = {
+diff --git a/arch/x86/platform/sfi/sfi.c b/arch/x86/platform/sfi/sfi.c
+index b66b194f9900..6c7111bbd1e9 100644
+--- a/arch/x86/platform/sfi/sfi.c
++++ b/arch/x86/platform/sfi/sfi.c
+@@ -25,8 +25,8 @@
+ #include <linux/init.h>
+ #include <linux/sfi.h>
+ #include <linux/io.h>
+-#include <linux/irqdomain.h>
+ 
++#include <asm/irqdomain.h>
+ #include <asm/io_apic.h>
+ #include <asm/mpspec.h>
+ #include <asm/setup.h>
+@@ -71,12 +71,6 @@ static int __init sfi_parse_cpus(struct sfi_table_header *table)
+ #endif /* CONFIG_X86_LOCAL_APIC */
+ 
+ #ifdef CONFIG_X86_IO_APIC
+-static struct irq_domain_ops sfi_ioapic_irqdomain_ops = {
+-	.alloc = mp_irqdomain_alloc,
+-	.free = mp_irqdomain_free,
+-	.activate = mp_irqdomain_activate,
+-	.deactivate = mp_irqdomain_deactivate,
+-};
+ 
+ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
  {
- 	return false;
- }
--static inline void ioapic_irqd_unmask(struct irq_data *data,
--				      struct irq_cfg *cfg, bool masked)
-+static inline void ioapic_irqd_unmask(struct irq_data *data, bool masked)
- {
- }
- #endif
+@@ -85,7 +79,7 @@ static int __init sfi_parse_ioapic(struct sfi_table_header *table)
+ 	int i, num;
+ 	struct ioapic_domain_cfg cfg = {
+ 		.type = IOAPIC_DOMAIN_STRICT,
+-		.ops = &sfi_ioapic_irqdomain_ops,
++		.ops = &mp_ioapic_irqdomain_ops,
+ 	};
  
--static void ioapic_ack_level(struct irq_data *data)
-+static void ioapic_ack_level(struct irq_data *irq_data)
- {
--	struct irq_cfg *cfg = irqd_cfg(data);
-+	struct irq_cfg *cfg = irqd_cfg(irq_data);
- 	unsigned long v;
- 	bool masked;
- 	int i;
- 
- 	irq_complete_move(cfg);
--	masked = ioapic_irqd_mask(data, cfg);
-+	masked = ioapic_irqd_mask(irq_data);
- 
- 	/*
- 	 * It appears there is an erratum which affects at least version 0x11
-@@ -1917,10 +1906,10 @@ static void ioapic_ack_level(struct irq_data *data)
- 	 */
- 	if (!(v & (1 << (i & 0x1f)))) {
- 		atomic_inc(&irq_mis_count);
--		eoi_ioapic_pin(cfg->vector, cfg);
-+		eoi_ioapic_pin(cfg->vector, irq_data->chip_data);
- 	}
- 
--	ioapic_irqd_unmask(data, cfg, masked);
-+	ioapic_irqd_unmask(irq_data, masked);
- }
- 
- static void ioapic_ir_ack_level(struct irq_data *irq_data)
-@@ -1934,7 +1923,7 @@ static void ioapic_ir_ack_level(struct irq_data *irq_data)
- 	 * EOI we use the pin number.
- 	 */
- 	ack_APIC_irq();
--	eoi_ioapic_pin(data->entry.vector, irqd_cfg(irq_data));
-+	eoi_ioapic_pin(data->entry.vector, data);
- }
- 
- static int ioapic_set_affinity(struct irq_data *irq_data,
-@@ -1942,7 +1931,6 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
- {
- 	struct irq_data *parent = irq_data->parent_data;
- 	struct mp_chip_data *data = irq_data->chip_data;
--	unsigned int dest, irq = irq_data->irq;
- 	struct irq_cfg *cfg;
- 	unsigned long flags;
- 	int ret;
-@@ -1953,9 +1941,7 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
- 		cfg = irqd_cfg(irq_data);
- 		data->entry.dest = cfg->dest_apicid;
- 		data->entry.vector = cfg->vector;
--		/* Only the high 8 bits are valid. */
--		dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
--		__target_IO_APIC_irq(irq, dest, cfg);
-+		__target_IO_APIC_irq(irq_data->irq, cfg, irq_data->chip_data);
- 	}
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- 
-@@ -2116,10 +2102,11 @@ early_param("disable_timer_pin_1", disable_timer_pin_setup);
- static int mp_alloc_timer_irq(int ioapic, int pin)
- {
- 	int irq = -1;
--	struct irq_alloc_info info;
- 	struct irq_domain *domain = mp_ioapic_irqdomain(ioapic);
- 
- 	if (domain) {
-+		struct irq_alloc_info info;
-+
- 		ioapic_set_alloc_attr(&info, NUMA_NO_NODE, 0, 0);
- 		info.ioapic_id = mpc_ioapic_id(ioapic);
- 		info.ioapic_pin = pin;
-@@ -2141,7 +2128,9 @@ static int mp_alloc_timer_irq(int ioapic, int pin)
-  */
- static inline void __init check_timer(void)
- {
--	struct irq_cfg *cfg = irq_cfg(0);
-+	struct irq_data *irq_data = irq_get_irq_data(0);
-+	struct mp_chip_data *data = irq_data->chip_data;
-+	struct irq_cfg *cfg = irqd_cfg(irq_data);
- 	int node = cpu_to_node(0);
- 	int apic1, pin1, apic2, pin2;
- 	unsigned long flags;
-@@ -2205,9 +2194,9 @@ static inline void __init check_timer(void)
- 			int idx;
- 			idx = find_irq_entry(apic1, pin1, mp_INT);
- 			if (idx != -1 && irq_trigger(idx))
--				unmask_ioapic(cfg);
-+				unmask_ioapic_irq(irq_get_chip_data(0));
- 		}
--		irq_domain_activate_irq(irq_get_irq_data(0));
-+		irq_domain_activate_irq(irq_data);
- 		if (timer_irq_works()) {
- 			if (disable_timer_pin_1 > 0)
- 				clear_IO_APIC_pin(0, pin1);
-@@ -2227,8 +2216,8 @@ static inline void __init check_timer(void)
- 		/*
- 		 * legacy devices should be connected to IO APIC #0
- 		 */
--		replace_pin_at_irq_node(cfg, node, apic1, pin1, apic2, pin2);
--		irq_domain_activate_irq(irq_get_irq_data(0));
-+		replace_pin_at_irq_node(data, node, apic1, pin1, apic2, pin2);
-+		irq_domain_activate_irq(irq_data);
- 		legacy_pic->unmask(0);
- 		if (timer_irq_works()) {
- 			apic_printk(APIC_QUIET, KERN_INFO "....... works.\n");
-@@ -3044,6 +3033,7 @@ int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
- 		return ret;
- 	}
- 
-+	INIT_LIST_HEAD(&data->irq_2_pin);
- 	irq_data->hwirq = info->ioapic_pin;
- 	irq_data->chip = (domain->parent == x86_vector_domain) ?
- 			  &ioapic_chip : &ioapic_ir_chip;
-@@ -3051,7 +3041,7 @@ int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
- 	mp_irqdomain_get_attr(mp_pin_to_gsi(ioapic, pin), data, info);
- 
- 	cfg = irqd_cfg(irq_data);
--	add_pin_to_irq_node(cfg, info->ioapic_node, ioapic, pin);
-+	add_pin_to_irq_node(data, ioapic_alloc_attr_node(info), ioapic, pin);
- 	if (info->ioapic_entry)
- 		mp_setup_entry(cfg, data, info->ioapic_entry);
- 	mp_register_handler(virq, data->trigger);
-@@ -3069,15 +3059,16 @@ int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
- void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
- 		       unsigned int nr_irqs)
- {
--	struct irq_cfg *cfg = irq_cfg(virq);
- 	struct irq_data *irq_data;
-+	struct mp_chip_data *data;
- 
- 	BUG_ON(nr_irqs != 1);
- 	irq_data = irq_domain_get_irq_data(domain, virq);
- 	if (irq_data && irq_data->chip_data) {
--		__remove_pin_from_irq(cfg, mp_irqdomain_ioapic_idx(domain),
-+		data = irq_data->chip_data;
-+		__remove_pin_from_irq(data, mp_irqdomain_ioapic_idx(domain),
- 				      (int)irq_data->hwirq);
--		WARN_ON(!list_empty(&cfg->irq_2_pin));
-+		WARN_ON(!list_empty(&data->irq_2_pin));
- 		kfree(irq_data->chip_data);
- 	}
- 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
-@@ -3089,10 +3080,9 @@ void mp_irqdomain_activate(struct irq_domain *domain,
- 	unsigned long flags;
- 	struct irq_pin_list *entry;
- 	struct mp_chip_data *data = irq_data->chip_data;
--	struct irq_cfg *cfg = irqd_cfg(irq_data);
- 
- 	raw_spin_lock_irqsave(&ioapic_lock, flags);
--	for_each_irq_pin(entry, cfg->irq_2_pin)
-+	for_each_irq_pin(entry, data->irq_2_pin)
- 		__ioapic_write_entry(entry->apic, entry->pin, data->entry);
- 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
- }
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index ca30365507a0..91a89500f88f 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -68,9 +68,6 @@ static struct irq_cfg *alloc_irq_cfg(int node)
- 		goto out_cfg;
- 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
- 		goto out_domain;
--#ifdef	CONFIG_X86_IO_APIC
--	INIT_LIST_HEAD(&cfg->irq_2_pin);
--#endif
- 	return cfg;
- out_domain:
- 	free_cpumask_var(cfg->domain);
+ 	sb = (struct sfi_table_simple *)table;
 -- 
 1.7.10.4
 
