@@ -1,92 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og103.obsmtp.com ([64.18.0.145]:54786 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751322AbbDUSCG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 14:02:06 -0400
-Received: by oign205 with SMTP id n205so159546714oig.2
-        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2015 11:02:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55366A64.6000907@arm.com>
-References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
- <227f8c75e04110e279b78512924742ba7c7fe5fc.1429586144.git.dhdang@apm.com> <55366A64.6000907@arm.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Tue, 21 Apr 2015 11:01:35 -0700
-Message-ID: <CADaLNDkLHfDHOcOPxQ5O+hsC9yS6kTxdtnE5N_73Jvqm85DGnQ@mail.gmail.com>
-Subject: Re: [PATCH v5 2/4] arm64: dts: Add the device tree entry for the APM
- X-Gene PCIe MSI node
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
-	Feng Kan <fkan@apm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jan Beulich <JBeulich@suse.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 27/33] x86/irq: Refine the way to calculate NR_IRQS
+Date: Tue, 14 Apr 2015 10:30:04 +0800
+Message-Id: <1428978610-28986-28-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 21, 2015 at 8:19 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On 21/04/15 05:04, Duc Dang wrote:
->> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
->>
->> Signed-off-by: Duc Dang <dhdang@apm.com>
->> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->> ---
->>  arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
->>  1 file changed, 27 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
->> index f1ad9c2..4b719c9 100644
->> --- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
->> +++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
->> @@ -354,6 +354,28 @@
->>                       };
->>               };
->>
->> +             msi: msi@79000000 {
->> +                     compatible = "apm,xgene1-msi";
->> +                     msi-controller;
->> +                     reg = <0x00 0x79000000 0x0 0x900000>;
->
-> I've been repeatedly puzzled by the size of this region. In patch 1, you
-> say:
->
-> + * X-Gene v1 has 16 groups of MSI termination registers MSInIRx, where
-> + * n is group number (0..F), x is index of registers in each group (0..7)
-> + * The registers layout is like following:
-> + * MSI0IR0                     base_addr
-> + * MSI0IR1                     base_addr +  0x10000
-> + * ...                         ...
-> + * MSI0IR6                     base_addr +  0x60000
-> + * MSI0IR7                     base_addr +  0x70000
-> + * MSI1IR0                     base_addr +  0x80000
-> + * MSI1IR1                     base_addr +  0x90000
-> + * ...                         ...
-> + * MSI1IR7                     base_addr +  0xF0000
-> + * MSI2IR0                     base_addr + 0x100000
-> + * ...                         ...
-> + * MSIFIR0                     base_addr + 0x780000
-> + * MSIFIR1                     base_addr + 0x790000
-> + * ...                         ...
-> + * MSIFIR7                     base_addr + 0x7F0000
->
-> which implies that the size of the region is 0x800000. Or is there
-> something hidden in the last 16 64k pages?
+Now we have made MSI independent of IOAPIC, so we need to refine the
+way to calculate NR_IRQS to support configuration with MSI enabled but
+IOAPIC disabled.
 
-The registers listed in the first patch are termination registers.
->From offset 0x800000 to 0x8f0000, the MSI controller provides status
-registers for software to check if there is pending MSI interrupt in
-each MSI group (in the code we read MSI_INTx registers starting from
-0x800000 to check if there is an MSI interrupt pending).
->
-> Thanks,
->
->         M.
-> --
-> Jazz is not dead. It just smells funny...
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Jan Beulich <JBeulich@suse.com>
+Link: http://lkml.kernel.org/r/1416901802-24211-36-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/irq_vectors.h |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-Regards,
-Duc Dang.
+diff --git a/arch/x86/include/asm/irq_vectors.h b/arch/x86/include/asm/irq_vectors.h
+index 666c89ec4bd7..b26cb124a4f1 100644
+--- a/arch/x86/include/asm/irq_vectors.h
++++ b/arch/x86/include/asm/irq_vectors.h
+@@ -155,18 +155,22 @@ static inline int invalid_vm86_irq(int irq)
+  * static arrays.
+  */
+ 
+-#define NR_IRQS_LEGACY			  16
++#define NR_IRQS_LEGACY			16
+ 
+-#define IO_APIC_VECTOR_LIMIT		( 32 * MAX_IO_APICS )
++#define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
++#define IO_APIC_VECTOR_LIMIT		(32 * MAX_IO_APICS)
+ 
+-#ifdef CONFIG_X86_IO_APIC
+-# define CPU_VECTOR_LIMIT		(64 * NR_CPUS)
+-# define NR_IRQS					\
++#if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_PCI_MSI)
++#define NR_IRQS						\
+ 	(CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT ?	\
+ 		(NR_VECTORS + CPU_VECTOR_LIMIT)  :	\
+ 		(NR_VECTORS + IO_APIC_VECTOR_LIMIT))
+-#else /* !CONFIG_X86_IO_APIC: */
+-# define NR_IRQS			NR_IRQS_LEGACY
++#elif defined(CONFIG_X86_IO_APIC)
++#define	NR_IRQS				(NR_VECTORS + IO_APIC_VECTOR_LIMIT)
++#elif defined(CONFIG_PCI_MSI)
++#define NR_IRQS				(NR_VECTORS + CPU_VECTOR_LIMIT)
++#else
++#define NR_IRQS				NR_IRQS_LEGACY
+ #endif
+ 
+ #endif /* _ASM_X86_IRQ_VECTORS_H */
+-- 
+1.7.10.4
+
