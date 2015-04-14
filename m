@@ -1,44 +1,356 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:49160 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbbDKOu7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2015 10:50:59 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Feng Kan <fkan@apm.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Duc Dang <dhdang@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX termination driver
-Date: Sat, 11 Apr 2015 16:50:47 +0200
-Message-ID: <8653876.C24YDfhd04@wuerfel>
-In-Reply-To: <CAL85gmDmycodMV2WJydmA7u60S+K2w3Ji=BSVPfAg04N6unX0g@mail.gmail.com>
-References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org> <55280665.9020603@arm.com> <CAL85gmDmycodMV2WJydmA7u60S+K2w3Ji=BSVPfAg04N6unX0g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga03.intel.com ([134.134.136.65]:35169 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752908AbbDNCeD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 22:34:03 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 29/33] x86, ioapic: Use proper defines for the entry fields
+Date: Tue, 14 Apr 2015 10:30:06 +0800
+Message-Id: <1428978610-28986-30-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 10 April 2015 17:16:32 Feng Kan wrote:
-> Hi Marc:
-> 
-> Is there any plans to support ACPI for GICv2m MSI? Both this driver and the
-> GICv2m seems to support OF model of discovery for msi controller. X-Gene1
-> uses this driver and X-Gene2 uses GICv2m, there needs to be a way to
-> associate msi controller with the PCIe bus. I haven't
-> found a standard way of doing finding "msi-parent" for ACPI. Do you have
-> any suggestion.
-> 
-> Sorry for top posting.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-Doing gicv2m in ACPI should be straightforward, and the ACPI code can simply
-assume that there is only one GIC instance (whichever version) in the system
-and use that for all standard PCI hosts.
+While looking at the printout issue, I stumbled more than once over
+the various 0/1 assignments which are either commented in strange ways
+or force to lookup the meaning.
 
-	Arnd
+Use proper constants and fix the misleading comments. While at it
+remove pointless 0 assignments in native_disable_io_apic() which have
+no value for understanding the code.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: x86@kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/io_apic.h |   16 +++++--
+ arch/x86/kernel/apic/io_apic.c |  100 ++++++++++++++++++++--------------------
+ 2 files changed, 63 insertions(+), 53 deletions(-)
+
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index cca97c961641..53a70a30b674 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -98,9 +98,19 @@ struct IR_IO_APIC_route_entry {
+ struct irq_alloc_info;
+ struct irq_data;
+ 
+-#define IOAPIC_AUTO     -1
+-#define IOAPIC_EDGE     0
+-#define IOAPIC_LEVEL    1
++#define IOAPIC_AUTO			-1
++#define IOAPIC_EDGE			0
++#define IOAPIC_LEVEL			1
++
++#define IOAPIC_MASKED			1
++#define IOAPIC_UNMASKED			0
++
++#define IOAPIC_POL_HIGH			0
++#define IOAPIC_POL_LOW			1
++
++#define IOAPIC_DEST_MODE_PHYSICAL	0
++#define IOAPIC_DEST_MODE_LOGICAL	1
++
+ #define	IOAPIC_MAP_ALLOC		0x1
+ #define	IOAPIC_MAP_CHECK		0x2
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 71971b89da59..cf42a6adf9c0 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -356,7 +356,7 @@ static void ioapic_write_entry(int apic, int pin, struct IO_APIC_route_entry e)
+ static void ioapic_mask_entry(int apic, int pin)
+ {
+ 	unsigned long flags;
+-	union entry_union eu = { .entry.mask = 1 };
++	union entry_union eu = { .entry.mask = IOAPIC_MASKED };
+ 
+ 	raw_spin_lock_irqsave(&ioapic_lock, flags);
+ 	io_apic_write(apic, 0x10 + 2*pin, eu.w1);
+@@ -517,7 +517,7 @@ static void __eoi_ioapic_pin(int apic, int pin, int vector)
+ 		/*
+ 		 * Mask the entry and change the trigger mode to edge.
+ 		 */
+-		entry1.mask = 1;
++		entry1.mask = IOAPIC_MASKED;
+ 		entry1.trigger = IOAPIC_EDGE;
+ 
+ 		__ioapic_write_entry(apic, pin, entry1);
+@@ -553,8 +553,8 @@ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
+ 	 * Make sure the entry is masked and re-read the contents to check
+ 	 * if it is a level triggered pin and if the remote-IRR is set.
+ 	 */
+-	if (!entry.mask) {
+-		entry.mask = 1;
++	if (entry.mask == IOAPIC_UNMASKED) {
++		entry.mask = IOAPIC_MASKED;
+ 		ioapic_write_entry(apic, pin, entry);
+ 		entry = ioapic_read_entry(apic, pin);
+ 	}
+@@ -567,7 +567,7 @@ static void clear_IO_APIC_pin(unsigned int apic, unsigned int pin)
+ 		 * doesn't clear the remote-IRR if the trigger mode is not
+ 		 * set to level.
+ 		 */
+-		if (!entry.trigger) {
++		if (entry.trigger == IOAPIC_EDGE) {
+ 			entry.trigger = IOAPIC_LEVEL;
+ 			ioapic_write_entry(apic, pin, entry);
+ 		}
+@@ -670,8 +670,8 @@ void mask_ioapic_entries(void)
+ 			struct IO_APIC_route_entry entry;
+ 
+ 			entry = ioapics[apic].saved_registers[pin];
+-			if (!entry.mask) {
+-				entry.mask = 1;
++			if (entry.mask == IOAPIC_UNMASKED) {
++				entry.mask = IOAPIC_MASKED;
+ 				ioapic_write_entry(apic, pin, entry);
+ 			}
+ 		}
+@@ -773,11 +773,11 @@ static int EISA_ELCR(unsigned int irq)
+ 
+ #endif
+ 
+-/* ISA interrupts are always polarity zero edge triggered,
++/* ISA interrupts are always active high edge triggered,
+  * when listed as conforming in the MP table. */
+ 
+-#define default_ISA_trigger(idx)	(0)
+-#define default_ISA_polarity(idx)	(0)
++#define default_ISA_trigger(idx)	(IOAPIC_EDGE)
++#define default_ISA_polarity(idx)	(IOAPIC_POL_HIGH)
+ 
+ /* EISA interrupts are always polarity zero and can be edge or level
+  * trigger depending on the ELCR value.  If an interrupt is listed as
+@@ -787,11 +787,11 @@ static int EISA_ELCR(unsigned int irq)
+ #define default_EISA_trigger(idx)	(EISA_ELCR(mp_irqs[idx].srcbusirq))
+ #define default_EISA_polarity(idx)	default_ISA_polarity(idx)
+ 
+-/* PCI interrupts are always polarity one level triggered,
++/* PCI interrupts are always active low level triggered,
+  * when listed as conforming in the MP table. */
+ 
+-#define default_PCI_trigger(idx)	(1)
+-#define default_PCI_polarity(idx)	(1)
++#define default_PCI_trigger(idx)	(IOAPIC_LEVEL)
++#define default_PCI_polarity(idx)	(IOAPIC_POL_LOW)
+ 
+ static int irq_polarity(int idx)
+ {
+@@ -811,24 +811,24 @@ static int irq_polarity(int idx)
+ 			break;
+ 		case 1: /* high active */
+ 		{
+-			polarity = 0;
++			polarity = IOAPIC_POL_HIGH;
+ 			break;
+ 		}
+ 		case 2: /* reserved */
+ 		{
+ 			pr_warn("broken BIOS!!\n");
+-			polarity = 1;
++			polarity = IOAPIC_POL_LOW;
+ 			break;
+ 		}
+ 		case 3: /* low active */
+ 		{
+-			polarity = 1;
++			polarity = IOAPIC_POL_LOW;
+ 			break;
+ 		}
+ 		default: /* invalid */
+ 		{
+ 			pr_warn("broken BIOS!!\n");
+-			polarity = 1;
++			polarity = IOAPIC_POL_LOW;
+ 			break;
+ 		}
+ 	}
+@@ -870,7 +870,7 @@ static int irq_trigger(int idx)
+ 				default:
+ 				{
+ 					pr_warn("broken BIOS!!\n");
+-					trigger = 1;
++					trigger = IOAPIC_LEVEL;
+ 					break;
+ 				}
+ 			}
+@@ -878,24 +878,24 @@ static int irq_trigger(int idx)
+ 			break;
+ 		case 1: /* edge */
+ 		{
+-			trigger = 0;
++			trigger = IOAPIC_EDGE;
+ 			break;
+ 		}
+ 		case 2: /* reserved */
+ 		{
+ 			pr_warn("broken BIOS!!\n");
+-			trigger = 1;
++			trigger = IOAPIC_LEVEL;
+ 			break;
+ 		}
+ 		case 3: /* level */
+ 		{
+-			trigger = 1;
++			trigger = IOAPIC_LEVEL;
+ 			break;
+ 		}
+ 		default: /* invalid */
+ 		{
+ 			pr_warn("broken BIOS!!\n");
+-			trigger = 0;
++			trigger = IOAPIC_EDGE;
+ 			break;
+ 		}
+ 	}
+@@ -939,11 +939,11 @@ static void ioapic_copy_alloc_attr(struct irq_alloc_info *dst,
+ 			dst->ioapic_polarity = polarity;
+ 		} else {
+ 			/*
+-			 * PCI interrupts are always polarity one level
++			 * PCI interrupts are always active low level
+ 			 * triggered.
+ 			 */
+-			dst->ioapic_trigger = 1;
+-			dst->ioapic_polarity = 1;
++			dst->ioapic_trigger = IOAPIC_LEVEL;
++			dst->ioapic_polarity = IOAPIC_POL_LOW;
+ 		}
+ 	}
+ }
+@@ -1296,9 +1296,10 @@ static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+ 		entry = ioapic_read_entry(apic, i);
+ 		snprintf(buf, sizeof(buf),
+ 			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
+-			 i, entry.mask ? "disabled" : "enabled ",
+-			 entry.trigger ? "level" : "edge ",
+-			 entry.polarity ? "low " : "high",
++			 i,
++			 entry.mask == IOAPIC_MASKED ? "disabled" : "enabled ",
++			 entry.trigger == IOAPIC_LEVEL ? "level" : "edge ",
++			 entry.polarity == IOAPIC_POL_LOW ? "low " : "high",
+ 			 entry.vector, entry.irr, entry.delivery_status);
+ 		if (ir_entry->format)
+ 			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
+@@ -1306,7 +1307,9 @@ static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+ 			       ir_entry->zero);
+ 		else
+ 			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
+-			       buf, entry.dest_mode ? "logical " : "physical",
++			       buf,
++			       entry.dest_mode == IOAPIC_DEST_MODE_LOGICAL ?
++			       "logical " : "physical",
+ 			       entry.dest, entry.delivery_mode);
+ 	}
+ }
+@@ -1476,15 +1479,12 @@ void native_disable_io_apic(void)
+ 		struct IO_APIC_route_entry entry;
+ 
+ 		memset(&entry, 0, sizeof(entry));
+-		entry.mask            = 0; /* Enabled */
+-		entry.trigger         = 0; /* Edge */
+-		entry.irr             = 0;
+-		entry.polarity        = 0; /* High */
+-		entry.delivery_status = 0;
+-		entry.dest_mode       = 0; /* Physical */
+-		entry.delivery_mode   = dest_ExtINT; /* ExtInt */
+-		entry.vector          = 0;
+-		entry.dest            = read_apic_id();
++		entry.mask		= IOAPIC_UNMASKED;
++		entry.trigger		= IOAPIC_EDGE;
++		entry.polarity		= IOAPIC_POL_HIGH;
++		entry.dest_mode		= IOAPIC_DEST_MODE_PHYSICAL;
++		entry.delivery_mode	= dest_ExtINT;
++		entry.dest		= read_apic_id();
+ 
+ 		/*
+ 		 * Add it to the IO-APIC irq-routing table:
+@@ -1494,7 +1494,6 @@ void native_disable_io_apic(void)
+ 
+ 	if (cpu_has_apic || apic_from_smp_config())
+ 		disconnect_bsp_APIC(ioapic_i8259.pin != -1);
+-
+ }
+ 
+ /*
+@@ -2018,12 +2017,12 @@ static inline void __init unlock_ExtINT_logic(void)
+ 
+ 	memset(&entry1, 0, sizeof(entry1));
+ 
+-	entry1.dest_mode = 0;			/* physical delivery */
+-	entry1.mask = 0;			/* unmask IRQ now */
++	entry1.dest_mode = IOAPIC_DEST_MODE_PHYSICAL;
++	entry1.mask = IOAPIC_UNMASKED;
+ 	entry1.dest = hard_smp_processor_id();
+ 	entry1.delivery_mode = dest_ExtINT;
+ 	entry1.polarity = entry0.polarity;
+-	entry1.trigger = 0;
++	entry1.trigger = IOAPIC_EDGE;
+ 	entry1.vector = 0;
+ 
+ 	ioapic_write_entry(apic, pin, entry1);
+@@ -2911,9 +2910,9 @@ static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
+ 		data->polarity = info->ioapic_polarity;
+ 	} else if (acpi_get_override_irq(gsi, &data->trigger,
+ 					 &data->polarity) < 0) {
+-		/* PCI interrupts are always polarity one level triggered. */
+-		data->trigger = 1;
+-		data->polarity = 1;
++		/* PCI interrupts are always active low level triggered. */
++		data->trigger = IOAPIC_LEVEL;
++		data->polarity = IOAPIC_POL_LOW;
+ 	}
+ }
+ 
+@@ -2925,15 +2924,16 @@ static void mp_setup_entry(struct irq_cfg *cfg, struct mp_chip_data *data,
+ 	entry->dest_mode     = apic->irq_dest_mode;
+ 	entry->dest	     = cfg->dest_apicid;
+ 	entry->vector	     = cfg->vector;
+-	entry->mask	     = 0;	/* enable IRQ */
+ 	entry->trigger	     = data->trigger;
+ 	entry->polarity	     = data->polarity;
+ 	/*
+-	 * Mask level triggered irqs.
+-	 * Use IRQ_DELAYED_DISABLE for edge triggered irqs.
++	 * Mask level triggered irqs. Edge triggered irqs are masked
++	 * by the irq core code in case they fire.
+ 	 */
+-	if (data->trigger)
+-		entry->mask = 1;
++	if (data->trigger == IOAPIC_LEVEL)
++		entry->mask = IOAPIC_MASKED;
++	else
++		entry->mask = IOAPIC_UNMASKED;
+ }
+ 
+ int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
+-- 
+1.7.10.4
+
