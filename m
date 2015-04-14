@@ -1,138 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:37109 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbbD0Gi6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:38:58 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:38:55 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8F7692BB0051
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:52 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6ciCL48824370
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:52 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cIff012387
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:19 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 00/21] PowerPC/PowerNV: PCI Slot Management
-Date: Mon, 27 Apr 2015 16:37:32 +1000
-Message-Id: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 02/33] x86/irq: Kill unused struct mp_pin_info
+Date: Tue, 14 Apr 2015 10:29:39 +0800
+Message-Id: <1428978610-28986-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The series of patches intend to support PCI slot for PowerPC PowerNV platform,
-which is running on top of skiboot firmware. The patchset requires corresponding
-changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org for
-review. The PCI slots are exposed by skiboot with device node properties, and
-kernel utilizes those properties to populated PCI slots accordingly.
+Now nobody makes use of struct mp_pin_info, so kill it.
 
-The original PCI infrastructure on PowerNV platform can't support hotplug because
-the PE is assigned during PHB fixup time, which is called for once during system
-boot time. For this, the PCI infrastructure on PowerNV platform has been reworked
-for a lot. After that, the PE and its corresponding resources (IODT, M32DT, M64
-segments, DMA32 and bypass window) are assigned upon updating PCI bridge's
-resources, which might decide PE# assigned to the PE (e.g. M64 resources, on P8
-strictly speaking). Each PE will maintain a reference count, which is (number of
-child PCI devices + 1). That indicates when last child PCI device leaves the PE,
-the PE and its included resources will be relased and put back into free pool
-again. With this design, the PE will be released when EEH PE is released.
-PATCH[1 - 8] are related to this part.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-12-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/kernel/apic/io_apic.c |   30 +++---------------------------
+ 1 file changed, 3 insertions(+), 27 deletions(-)
 
->From skiboot perspective, PCI slot is providing (hot/fundamental/complete) resets
-to EEH. The kernel gets to know if skiboot supports various reset on one particular
-PCI slot through device-tree node. If it does, EEH will utilize the functionality
-provided by skiboot. Besides, the device-tree nodes have to change in order to
-support PCI hotplug. For example, when one PCI adapter inserted to one slot,
-its device-tree node should be added to the system dynamically. Conversely, the
-device-tree node should be removed from the system when the PCI adapter is going
-to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
-they should be added/removed accordingly during PCI hotplug. Patch[9 - 20] are
-doing the related work.
-
-The last patch is the standalone PCI hotplug driver for PowerNV platform. When
-removing PCI adapter from one PCI slot, which is invoked by command in userland,
-the skiboot will power off the slot to save power and remove all device-tree
-nodes for all PCI devices behind the slot. Conversely, the Power to the slot
-is turned on, the PCI devices behind the slot is rescanned, and the device-tree
-nodes for those newly detected PCI devices will be built in skiboot. For both
-of cases, one message will be sent to kernel by skiboot so that the kernel
-can adjust the device-tree accordingly. At the same time, the kernel also have
-to deallocate or allocate PE# and its related resources (PE# and so on) for the
-removed/added PCI devices.
-
-Changelog
-=========
-v3:
-   * Rebased to 4.1.RC0
-   * PowerNV PCI infrasturcture is total refactored in order to support PCI
-     hotplug. The PowerNV hotplug driver is also reworked a lot because of
-     the changes in skiboot in order to support PCI hotplug.
-
-
-Gavin Shan (21):
-  pci: Add pcibios_setup_bridge()
-  powerpc/powernv: Enable M64 on P7IOC
-  powerpc/powernv: M64 support improvement
-  powerpc/powernv: Improve IO and M32 mapping
-  powerpc/powernv: Improve DMA32 segment assignment
-  powerpc/powernv: Create PEs dynamically
-  powerpc/powernv: Release PEs dynamically
-  powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
-  powerpc/eeh: Delay probing EEH device during hotplug
-  powerpc/powernv: Use PCI slot reset infrastructure
-  powerpc/powernv: Fundamental reset for PCI bus reset
-  powerpc/pci: Don't scan empty slot
-  powerpc/pci: Move pcibios_find_pci_bus() around
-  powerpc/powernv: Introduce pnv_pci_poll()
-  powerpc/powernv: Functions to get/reset PCI slot status
-  powerpc/pci: Delay creating pci_dn
-  powerpc/pci: Create eeh_dev while creating pci_dn
-  powerpc/pci: Export traverse_pci_device_nodes()
-  powerpc/pci: Update bridge windows on PCI plugging
-  powerpc/powernv: Select OF_DYNAMIC
-  pci/hotplug: PowerPC PowerNV PCI hotplug driver
-
- arch/powerpc/include/asm/eeh.h                 |    7 +-
- arch/powerpc/include/asm/opal-api.h            |    7 +-
- arch/powerpc/include/asm/opal.h                |    7 +-
- arch/powerpc/include/asm/pci-bridge.h          |    7 +-
- arch/powerpc/include/asm/pnv-pci.h             |    5 +
- arch/powerpc/include/asm/ppc-pci.h             |    7 +-
- arch/powerpc/kernel/eeh.c                      |    7 +
- arch/powerpc/kernel/eeh_dev.c                  |   20 +-
- arch/powerpc/kernel/pci-common.c               |   18 +-
- arch/powerpc/kernel/pci-hotplug.c              |   44 +-
- arch/powerpc/kernel/pci_dn.c                   |  119 +-
- arch/powerpc/platforms/maple/pci.c             |   35 +-
- arch/powerpc/platforms/pasemi/pci.c            |    3 -
- arch/powerpc/platforms/powermac/pci.c          |   39 +-
- arch/powerpc/platforms/powernv/Kconfig         |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c   |  245 ++--
- arch/powerpc/platforms/powernv/opal-wrappers.S |    3 +
- arch/powerpc/platforms/powernv/pci-ioda.c      | 1657 +++++++++++++++---------
- arch/powerpc/platforms/powernv/pci.c           |   64 +-
- arch/powerpc/platforms/powernv/pci.h           |   52 +-
- arch/powerpc/platforms/pseries/msi.c           |    4 +-
- arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
- arch/powerpc/platforms/pseries/setup.c         |    9 +-
- drivers/pci/hotplug/Kconfig                    |   12 +
- drivers/pci/hotplug/Makefile                   |    4 +
- drivers/pci/hotplug/powernv_php.c              |  146 +++
- drivers/pci/hotplug/powernv_php.h              |   78 ++
- drivers/pci/hotplug/powernv_php_slot.c         |  913 +++++++++++++
- drivers/pci/setup-bus.c                        |   12 +-
- include/linux/pci.h                            |    1 +
- 30 files changed, 2623 insertions(+), 935 deletions(-)
- create mode 100644 drivers/pci/hotplug/powernv_php.c
- create mode 100644 drivers/pci/hotplug/powernv_php.h
- create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 523b326d71c2..3506e8aeba91 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -86,13 +86,6 @@ struct mp_chip_data {
+ 	bool isa_irq;
+ };
+ 
+-struct mp_pin_info {
+-	int trigger;
+-	int polarity;
+-	int set;
+-	u32 count;
+-};
+-
+ static struct ioapic {
+ 	/*
+ 	 * # of IRQ routing registers
+@@ -108,7 +101,6 @@ static struct ioapic {
+ 	struct mp_ioapic_gsi  gsi_config;
+ 	struct ioapic_domain_cfg irqdomain_cfg;
+ 	struct irq_domain *irqdomain;
+-	struct mp_pin_info *pin_info;
+ 	struct resource *iomem_res;
+ } ioapics[MAX_IO_APICS];
+ 
+@@ -159,11 +151,6 @@ static inline int mp_init_irq_at_boot(int ioapic, int irq)
+ 	return ioapic == 0 || mp_is_legacy_irq(irq);
+ }
+ 
+-static inline struct mp_pin_info *mp_pin_info(int ioapic_idx, int pin)
+-{
+-	return ioapics[ioapic_idx].pin_info + pin;
+-}
+-
+ static inline struct irq_domain *mp_ioapic_irqdomain(int ioapic)
+ {
+ 	return ioapics[ioapic].irqdomain;
+@@ -2432,7 +2419,6 @@ out:
+ 
+ static int mp_irqdomain_create(int ioapic)
+ {
+-	size_t size;
+ 	struct irq_alloc_info info;
+ 	struct irq_domain *parent;
+ 	int hwirqs = mp_ioapic_pin_count(ioapic);
+@@ -2440,11 +2426,6 @@ static int mp_irqdomain_create(int ioapic)
+ 	struct ioapic_domain_cfg *cfg = &ip->irqdomain_cfg;
+ 	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(ioapic);
+ 
+-	size = sizeof(struct mp_pin_info) * mp_ioapic_pin_count(ioapic);
+-	ip->pin_info = kzalloc(size, GFP_KERNEL);
+-	if (!ip->pin_info)
+-		return -ENOMEM;
+-
+ 	if (cfg->type == IOAPIC_DOMAIN_INVALID)
+ 		return 0;
+ 
+@@ -2457,13 +2438,10 @@ static int mp_irqdomain_create(int ioapic)
+ 
+ 	ip->irqdomain = irq_domain_add_linear(cfg->dev, hwirqs, cfg->ops,
+ 					      (void *)(long)ioapic);
+-	if (ip->irqdomain) {
+-		ip->irqdomain->parent = parent;
+-	} else {
+-		kfree(ip->pin_info);
+-		ip->pin_info = NULL;
++	if (!ip->irqdomain)
+ 		return -ENOMEM;
+-	}
++
++	ip->irqdomain->parent = parent;
+ 
+ 	if (cfg->type == IOAPIC_DOMAIN_LEGACY ||
+ 	    cfg->type == IOAPIC_DOMAIN_STRICT)
+@@ -2479,8 +2457,6 @@ static void ioapic_destroy_irqdomain(int idx)
+ 		irq_domain_remove(ioapics[idx].irqdomain);
+ 		ioapics[idx].irqdomain = NULL;
+ 	}
+-	kfree(ioapics[idx].pin_info);
+-	ioapics[idx].pin_info = NULL;
+ }
+ 
+ void __init setup_IO_APIC(void)
 -- 
-2.1.0
+1.7.10.4
 
