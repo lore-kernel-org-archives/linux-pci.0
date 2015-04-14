@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -22,20 +22,16 @@ Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 19/33] x86/irq: Clean up io_apic.h
-Date: Tue, 14 Apr 2015 10:29:56 +0800
-Message-Id: <1428978610-28986-20-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Patch Part2 v5 20/33] x86/irq: Use cached IOAPIC entry instead of reading from hardware
+Date: Tue, 14 Apr 2015 10:29:57 +0800
+Message-Id: <1428978610-28986-21-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean up io_apic.h by:
-1) moving definition of struct mp_ioapic_gsi into io_apic.c
-2) changing mp_pin_to_gsi() and mp_ioapic_gsi_routing() as static
-3) killing unused MP_MAX_IOAPIC_PIN
-4) killing useless forward declaration
-5) killing useless comments
+Use cached IOAPIC entry instead of reading data from IOAPIC hardware
+registers to improve performance.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
@@ -49,137 +45,144 @@ Cc: Randy Dunlap <rdunlap@infradead.org>
 Cc: Yinghai Lu <yinghai@kernel.org>
 Cc: Borislav Petkov <bp@alien8.de>
 Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-29-git-send-email-jiang.liu@linux.intel.com
+Link: http://lkml.kernel.org/r/1416901802-24211-30-git-send-email-jiang.liu@linux.intel.com
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- arch/x86/include/asm/io_apic.h |   13 ++-----------
- arch/x86/kernel/apic/io_apic.c |   23 ++++++++---------------
- 2 files changed, 10 insertions(+), 26 deletions(-)
+ arch/x86/kernel/apic/io_apic.c |   78 +++++++++++-----------------------------
+ 1 file changed, 21 insertions(+), 57 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index c6486dd44418..67bdb72caeaf 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -113,9 +113,6 @@ extern int nr_ioapics;
- 
- extern int mpc_ioapic_id(int ioapic);
- extern unsigned int mpc_ioapic_addr(int ioapic);
--extern struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic);
--
--#define MP_MAX_IOAPIC_PIN 127
- 
- /* # of MP IRQ source entries */
- extern int mp_irq_entries;
-@@ -135,6 +132,8 @@ extern int noioapicquirk;
- /* -1 if "noapic" boot option passed */
- extern int noioapicreroute;
- 
-+extern u32 gsi_top;
-+
- extern unsigned long io_apic_irqs;
- 
- #define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
-@@ -174,15 +173,8 @@ struct ioapic_domain_cfg {
- 	struct device_node		*dev;
- };
- 
--struct mp_ioapic_gsi{
--	u32 gsi_base;
--	u32 gsi_end;
--};
--extern u32 gsi_top;
--
- extern int mp_find_ioapic(u32 gsi);
- extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
--extern u32 mp_pin_to_gsi(int ioapic, int pin);
- extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
- 			     struct irq_alloc_info *info);
- extern void mp_unmap_irq(int irq);
-@@ -231,7 +223,6 @@ static inline int arch_early_ioapic_init(void) { return 0; }
- static inline void print_IO_APICs(void) {}
- #define gsi_top (NR_IRQS_LEGACY)
- static inline int mp_find_ioapic(u32 gsi) { return 0; }
--static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
- static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
- 				    struct irq_alloc_info *info)
- {
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index d687a10ed3a2..32a8d51975b3 100644
+index 32a8d51975b3..c06f4b531392 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
-@@ -63,7 +63,6 @@
- #define	for_each_ioapic_pin(idx, pin)	\
- 	for_each_ioapic((idx))		\
- 		for_each_pin((idx), (pin))
--
- #define for_each_irq_pin(entry, head) \
+@@ -67,8 +67,13 @@
  	list_for_each_entry(entry, &head, list)
  
-@@ -92,6 +91,11 @@ struct mp_chip_data {
- 	bool isa_irq;
- };
- 
-+struct mp_ioapic_gsi {
-+	u32 gsi_base;
-+	u32 gsi_end;
-+};
-+
- static struct ioapic {
- 	/*
- 	 * # of IRQ routing registers
-@@ -122,7 +126,7 @@ unsigned int mpc_ioapic_addr(int ioapic_idx)
- 	return ioapics[ioapic_idx].mp_config.apicaddr;
- }
- 
--struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
-+static inline struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
- {
- 	return &ioapics[ioapic_idx].gsi_config;
- }
-@@ -134,7 +138,7 @@ static inline int mp_ioapic_pin_count(int ioapic)
- 	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
- }
- 
--u32 mp_pin_to_gsi(int ioapic, int pin)
-+static inline u32 mp_pin_to_gsi(int ioapic, int pin)
- {
- 	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
- }
-@@ -1153,8 +1157,7 @@ static int pin_2_irq(int idx, int ioapic, int pin, unsigned int flags)
- 	return  mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags, NULL);
- }
- 
--int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
--		      struct irq_alloc_info *info)
-+int mp_map_gsi_to_irq(u32 gsi, unsigned int flags, struct irq_alloc_info *info)
- {
- 	int ioapic, pin, idx;
- 
-@@ -1719,7 +1722,6 @@ static int __init timer_irq_works(void)
-  * This is not complete - we should be able to fake
-  * an edge even if it isn't on the 8259A...
+ /*
+- *      Is the SiS APIC rmw bug present ?
++ * Is the SiS APIC rmw bug present ?
+  *      -1 = don't know, 0 = no, 1 = yes
++ * When doing a read-modify-write operation on IOAPIC registers, older SiS APIC
++ * requires we rewrite the index register again where the read already set up
++ * the index register.
++ * The code to make use of sis_apic_bug has been removed, but we don't want to
++ * loss this knowledge.
   */
--
- static unsigned int startup_ioapic_irq(struct irq_data *data)
- {
- 	int was_pending = 0, irq = data->irq;
-@@ -1737,15 +1739,6 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
- 	return was_pending;
+ int sis_apic_bug = -1;
+ 
+@@ -293,22 +298,6 @@ static void io_apic_write(unsigned int apic, unsigned int reg,
+ 	writel(value, &io_apic->data);
  }
  
 -/*
-- * Level and edge triggered IO-APIC interrupts need different handling,
-- * so we use two separate IRQ descriptors. Edge triggered IRQs can be
-- * handled with the level-triggered descriptor, but that one has slightly
-- * more overhead. Level-triggered interrupts cannot be handled with the
-- * edge-triggered handler, without risking IRQ storms and other ugly
-- * races.
+- * Re-write a value: to be used for read-modify-write
+- * cycles where the read already set up the index register.
+- *
+- * Older SiS APIC requires we rewrite the index register
 - */
+-static void io_apic_modify(unsigned int apic, unsigned int reg,
+-			   unsigned int value)
+-{
+-	struct io_apic __iomem *io_apic = io_apic_base(apic);
 -
- static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
- 				 struct mp_chip_data *data)
+-	if (sis_apic_bug)
+-		writel(reg, &io_apic->index);
+-	writel(value, &io_apic->data);
+-}
+-
+ union entry_union {
+ 	struct { u32 w1, w2; };
+ 	struct IO_APIC_route_entry entry;
+@@ -445,29 +434,23 @@ static void __init replace_pin_at_irq_node(struct mp_chip_data *data, int node,
+ 	add_pin_to_irq_node(data, node, newapic, newpin);
+ }
+ 
+-static void __io_apic_modify_irq(struct irq_pin_list *entry,
+-				 int mask_and, int mask_or,
+-				 void (*final)(struct irq_pin_list *entry))
+-{
+-	unsigned int reg, pin;
+-
+-	pin = entry->pin;
+-	reg = io_apic_read(entry->apic, 0x10 + pin * 2);
+-	reg &= mask_and;
+-	reg |= mask_or;
+-	io_apic_modify(entry->apic, 0x10 + pin * 2, reg);
+-	if (final)
+-		final(entry);
+-}
+-
+ static void io_apic_modify_irq(struct mp_chip_data *data,
+ 			       int mask_and, int mask_or,
+ 			       void (*final)(struct irq_pin_list *entry))
  {
++	union entry_union eu;
+ 	struct irq_pin_list *entry;
+ 
+-	for_each_irq_pin(entry, data->irq_2_pin)
+-		__io_apic_modify_irq(entry, mask_and, mask_or, final);
++	eu.entry = data->entry;
++	eu.w1 &= mask_and;
++	eu.w1 |= mask_or;
++	data->entry = eu.entry;
++
++	for_each_irq_pin(entry, data->irq_2_pin) {
++		io_apic_write(entry->apic, 0x10 + 2 * entry->pin, eu.w1);
++		if (final)
++			final(entry);
++	}
+ }
+ 
+ static void io_apic_sync(struct irq_pin_list *entry)
+@@ -1739,28 +1722,6 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ 	return was_pending;
+ }
+ 
+-static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
+-				 struct mp_chip_data *data)
+-{
+-	int apic, pin;
+-	struct irq_pin_list *entry;
+-	u8 vector = cfg->vector;
+-	unsigned int dest = SET_APIC_LOGICAL_ID(cfg->dest_apicid);
+-
+-	for_each_irq_pin(entry, data->irq_2_pin) {
+-		unsigned int reg;
+-
+-		apic = entry->apic;
+-		pin = entry->pin;
+-
+-		io_apic_write(apic, 0x11 + pin*2, dest);
+-		reg = io_apic_read(apic, 0x10 + pin*2);
+-		reg &= ~IO_APIC_REDIR_VECTOR_MASK;
+-		reg |= vector;
+-		io_apic_modify(apic, 0x10 + pin*2, reg);
+-	}
+-}
+-
+ atomic_t irq_mis_count;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+@@ -1926,6 +1887,7 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
+ {
+ 	struct irq_data *parent = irq_data->parent_data;
+ 	struct mp_chip_data *data = irq_data->chip_data;
++	struct irq_pin_list *entry;
+ 	struct irq_cfg *cfg;
+ 	unsigned long flags;
+ 	int ret;
+@@ -1936,7 +1898,9 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
+ 		cfg = irqd_cfg(irq_data);
+ 		data->entry.dest = cfg->dest_apicid;
+ 		data->entry.vector = cfg->vector;
+-		__target_IO_APIC_irq(irq_data->irq, cfg, irq_data->chip_data);
++		for_each_irq_pin(entry, data->irq_2_pin)
++			__ioapic_write_entry(entry->apic, entry->pin,
++					     data->entry);
+ 	}
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 
 -- 
 1.7.10.4
 
