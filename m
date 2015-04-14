@@ -1,98 +1,42 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v8 25/37] x86/MSI: Replace msi_update_msg() with irq_chip_compose_msi_msg()
-Date: Mon, 13 Apr 2015 14:11:47 +0800
-Message-Id: <1428905519-23704-26-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+In-Reply-To: <CA+8MBbJv-RwX_RDzk85X_sHAHUG6cTsCAKd-_iE7wrdQ9wYKsQ@mail.gmail.com>
+References: <20150312173201.1052.28341.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150312173533.1052.46464.stgit@bhelgaas-glaptop2.roam.corp.google.com> <CA+8MBbJv-RwX_RDzk85X_sHAHUG6cTsCAKd-_iE7wrdQ9wYKsQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Apr 2015 18:30:51 -0500
+Message-ID: <CAErSpo6PV7+cZKgDPBA7tDn4oyp_hONqJFegTFxVLz2KaTeK4A@mail.gmail.com>
+Subject: Re: [PATCH v1 2/4] PCI: Mark invalid BARs as unassigned
+To: Tony Luck <tony.luck@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-acpi <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function irq_chip_compose_msi_msg() can achieve the same goal as
-msi_update_msg(), so kill msi_update_msg().
+Hi Tony,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416894816-23245-26-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/kernel/apic/msi.c |   19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
+On Tue, Apr 14, 2015 at 6:14 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> On Thu, Mar 12, 2015 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> If a BAR is not inside any upstream bridge window, or if it conflicts with
+>> another resource, mark it as IORESOURCE_UNSET so we don't try to use it.
+>> We may be able to assign a different address for it.
+>
+> This went into Linux tree - and broke my ia64 box in a weird way. It only
+> sees one of the two disks.  git bisect points to this commit, and reverting
+> it fixes the problem.
+>
+> Attached are serial logs from the "bad" boot (tip of Linus tree = b79013b2449c)
+> and for a "good" boot with this commit reverted.
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 8e8f2435f25e..15429aa112fe 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -53,19 +53,6 @@ static void irq_msi_compose_msg(struct irq_data *data, struct msi_msg *msg)
- 		MSI_DATA_VECTOR(cfg->vector);
- }
- 
--static void msi_update_msg(struct msi_msg *msg, struct irq_data *irq_data)
--{
--	struct irq_cfg *cfg = irqd_cfg(irq_data);
--
--	msg->data &= ~MSI_DATA_VECTOR_MASK;
--	msg->data |= MSI_DATA_VECTOR(cfg->vector);
--	msg->address_lo &= ~MSI_ADDR_DEST_ID_MASK;
--	msg->address_lo |= MSI_ADDR_DEST_ID(cfg->dest_apicid);
--	if (x2apic_enabled())
--		msg->address_hi = MSI_ADDR_BASE_HI |
--				  MSI_ADDR_EXT_DEST_ID(cfg->dest_apicid);
--}
--
- /*
-  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
-  * which implement the MSI or MSI-X Capability Structure.
-@@ -198,8 +185,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	if (ret >= 0) {
--		dmar_msi_read(data->irq, &msg);
--		msi_update_msg(&msg, data);
-+		irq_chip_compose_msi_msg(data, &msg);
- 		dmar_msi_write(data->irq, &msg);
- 	}
- 
-@@ -329,8 +315,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- 
- 	ret = parent->chip->irq_set_affinity(parent, mask, force);
- 	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
--		hpet_msi_read(data->handler_data, &msg);
--		msi_update_msg(&msg, data);
-+		irq_chip_compose_msi_msg(data, &msg);
- 		hpet_msi_write(data->handler_data, &msg);
- 	}
- 
--- 
-1.7.10.4
+Thanks for the report, and sorry for breaking you.  I hate to ask for
+more after all your work already, but would you mind collecting logs
+with "ignore_loglevel"?  We only print the BAR information at
+KERN_DEBUG, so it doesn't make it to the console unless you use
+ignore_loglevel.
 
+I don't really see how the mptsas device at 83:00.0 worked before;
+ACPI didn't tell us about any MMIO apertures in the PCI1 host bridge.
+But I'll look closer.
+
+Bjorn
