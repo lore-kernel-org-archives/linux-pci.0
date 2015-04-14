@@ -1,60 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:34149 "EHLO
-	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755059AbbDKQBy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2015 12:01:54 -0400
-Received: by qkgx75 with SMTP id x75so84883256qkg.1
-        for <linux-pci@vger.kernel.org>; Sat, 11 Apr 2015 09:01:53 -0700 (PDT)
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:34762 "EHLO
+	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101AbbDNWYG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 18:24:06 -0400
+Received: by qkgx75 with SMTP id x75so40499818qkg.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2015 15:24:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150411073031.GA10481@kroah.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225426.20848.45696.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150411073031.GA10481@kroah.com>
+In-Reply-To: <CAEkKNCc37WTu+E=2G2pSjGhW6-6YBVygfTzQoiAVc48-7qVDhA@mail.gmail.com>
+References: <CAEkKNCc9BpCXNCw1RD2gngUhSs13_-P_rtk=w4tVDW+3QaR6xQ@mail.gmail.com>
+ <CAErSpo5K9utm4Bt75L75jTY5HPZO8qTtHfy9OzVqzxjV3FAW4A@mail.gmail.com>
+ <20150414135840.GB19151@google.com> <CAEkKNCc37WTu+E=2G2pSjGhW6-6YBVygfTzQoiAVc48-7qVDhA@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 11 Apr 2015 11:01:33 -0500
-Message-ID: <CAErSpo6o46ZDB+KGCKxUYqJKShnjFnU-7P=YdefmzveEH51Xxg@mail.gmail.com>
-Subject: Re: [PATCH v6 01/10] PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
-To: Greg KH <greg@kroah.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Fam Zheng <famz@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Date: Tue, 14 Apr 2015 17:23:16 -0500
+Message-ID: <CAErSpo6L0JLPnd1=Dc5m6io2GKSDU6joGBxQKJNnCHj9Xo_hFQ@mail.gmail.com>
+Subject: Re: PCI Out of Resources
+To: moussa ba <musaba@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 11, 2015 at 2:30 AM, Greg KH <greg@kroah.com> wrote:
-> On Fri, Apr 10, 2015 at 05:54:26PM -0500, Bjorn Helgaas wrote:
->> From: Michael S. Tsirkin <mst@redhat.com>
->>
->> Rename msi_set_enable() to pci_msi_set_enable() and
->> msix_clear_and_set_ctrl() to pci_msix_clear_and_set_ctrl().
->>
->> No functional change.
->>
->> [bhelgaas: changelog, split into separate patch]
->> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> Reviewed-by: Fam Zheng <famz@redhat.com>
->> CC: stable@vger.kernel.org
->> ---
->>  drivers/pci/msi.c |   28 ++++++++++++++--------------
->>  1 file changed, 14 insertions(+), 14 deletions(-)
+[+cc Yinghai]
+
+On Tue, Apr 14, 2015 at 4:43 PM, moussa ba <musaba@gmail.com> wrote:
+> Bjorn,
 >
-> How does this, and the other patch you marked for stable, relate to the
-> stable_kernel_rules.txt file that dictates what we can take for stable
-> patches?
+> See the bug filed here:
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=96651
+>
+> It was apparently misfiled to go to drivers_pci.  See the text of the
+> bug filing below.  This was tested on 3.10, 3.19 and 4.0
+>
+> 20 PCI drives installed on a 2 Node system via 5 PCI switches. Only 16
+> drives are actually recognized by the Linux.  All 20 drives are
+> visible via lspci. I am unable to find an appropriate address in
+> /proc/iomem to assign these regions to.
+>
+>
+> #setpci -s 0000:90:00.0 BASE_ADDRESS_5=0x.......
+>
+> Not specifying the address because I had no idea where to put it, I
+> would find empty spots in /proc/iomem but thse would fall within the
+> address space of one of the pci bridges...
+>
+> We are missing 4 drives with the following error seen in dmesg for
+> each drive, one given her as an example:
+>
+> [    0.983954] pci 0000:8e:00.0: can't claim BAR 6 [mem
+> 0xffffc000-0xffffffff pref]: no compatible bridge window
+> [    0.984106] pci 0000:02:02.0: BAR 14: no space for [mem size 0x00100000]
+> [    0.984108] pci 0000:02:02.0: BAR 14: failed to assign [mem size 0x00100000]
+> [    0.984110] pci 0000:02:04.0: BAR 14: no space for [mem size 0x00100000]
+> [    0.984111] pci 0000:02:04.0: BAR 14: failed to assign [mem size 0x00100000]
+> [    0.984113] pci 0000:02:02.0: BAR 13: no space for [io  size 0x1000]
+> [    0.984114] pci 0000:02:02.0: BAR 13: failed to assign [io  size 0x1000]
+> [    0.984116] pci 0000:02:04.0: BAR 13: no space for [io  size 0x1000]
+> [    0.984117] pci 0000:02:04.0: BAR 13: failed to assign [io  size 0x1000]
+> [    0.984119] pci 0000:03:00.0: BAR 5: no space for [mem size 0x00002000]
+> [    0.984120] pci 0000:03:00.0: BAR 5: failed to assign [mem size 0x00002000]
+> [    0.984122] pci 0000:03:00.0: BAR 2: no space for [mem size 0x00001000]
+> [    0.984123] pci 0000:03:00.0: BAR 2: failed to assign [mem size 0x00001000]
+> [    0.984124] pci 0000:03:00.0: BAR 3: no space for [mem size 0x00001000]
+> [    0.984125] pci 0000:03:00.0: BAR 3: failed to assign [mem size 0x00001000]
+> [    0.984128] pci 0000:03:00.0: BAR 4: no space for [io  size 0x0010]
+> [    0.984129] pci 0000:03:00.0: BAR 4: failed to assign [io  size 0x0010]
+> [    0.984132] pci 0000:02:02.0: PCI bridge to [bus 03]
+> [    0.984142] pci 0000:02:03.0: PCI bridge to [bus 04]
+> [    0.984154] pci 0000:05:00.0: BAR 5: no space for [mem size 0x00002000]
+> [    0.984155] pci 0000:05:00.0: BAR 5: failed to assign [mem size 0x00002000]
+> [    0.984156] pci 0000:05:00.0: BAR 2: no space for [mem size 0x00001000]
+> [    0.984157] pci 0000:05:00.0: BAR 2: failed to assign [mem size 0x00001000]
+> [    0.984159] pci 0000:05:00.0: BAR 3: no space for [mem size 0x00001000]
+> [    0.984160] pci 0000:05:00.0: BAR 3: failed to assign [mem size 0x00001000]
+> [    0.984161] pci 0000:05:00.0: BAR 4: no space for [io  size 0x0010]
+> [    0.984163] pci 0000:05:00.0: BAR 4: failed to assign [io  size 0x0010]
 
-I fat-fingered the stable email address on the patches with the actual
-bug fixes, so you probably didn't see them.  The candidates for stable
-are patches 1-4 of this series:
-
-      PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
-      PCI/MSI: Export pci_msi_set_enable(), pci_msix_clear_and_set_ctrl()
-      PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI
-      PCI/MSI: Don't disable MSI/MSI-X at shutdown
-
-The first two make no functional difference; the last two are the bug fixes.
+Linux assigns space for endpoint BARs, but it doesn't automatically
+reassign bridge windows to make space for downstream devices.  Does
+booting with "pci=realloc" make any difference?
 
 Bjorn
