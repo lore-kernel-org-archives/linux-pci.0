@@ -1,52 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51548 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755461AbbDIPvp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Apr 2015 11:51:45 -0400
-Subject: [PATCH] PCI: Export pci_probe_reset_function()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org
-Date: Thu, 09 Apr 2015 09:51:43 -0600
-Message-ID: <20150409155100.6891.72838.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v5 12/33] irq_remapping: Clean up unused interfaces
+Date: Tue, 14 Apr 2015 10:29:49 +0800
+Message-Id: <1428978610-28986-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The equivalent bus and slot versions of this are already exported and
-vfio-pci would like a function-probe available so we can expose
-function-level reset capabilities to the user without necessarily
-using it to perform a reset before enabling the device for the user.
+Now we have converted to hierarchy irqdomain, so clean up unused
+interfaces.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-22-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/pci/pci.c   |    1 +
- include/linux/pci.h |    1 +
- 2 files changed, 2 insertions(+)
+ drivers/iommu/irq_remapping.h |   16 ----------------
+ 1 file changed, 16 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..9f3e691 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3524,6 +3524,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
- {
- 	return pci_dev_reset(dev, 1);
- }
-+EXPORT_SYMBOL_GPL(pci_probe_reset_function);
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index 16b7d814e6fe..91d5a119956a 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -24,11 +24,7 @@
  
- /**
-  * pci_reset_function - quiesce and reset a PCI device function
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 211e9da..233d1ae 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -986,6 +986,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
-+int pci_probe_reset_function(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
+ #ifdef CONFIG_IRQ_REMAP
+ 
+-struct IO_APIC_route_entry;
+-struct io_apic_irq_attr;
+ struct irq_data;
+-struct cpumask;
+-struct pci_dev;
+ struct msi_msg;
+ struct irq_domain;
+ struct irq_alloc_info;
+@@ -54,18 +50,6 @@ struct irq_remap_ops {
+ 	/* Enable fault handling */
+ 	int  (*enable_faulting)(void);
+ 
+-	/* IO-APIC setup routine */
+-	int (*setup_ioapic_entry)(int irq, struct IO_APIC_route_entry *,
+-				  unsigned int, int,
+-				  struct io_apic_irq_attr *);
+-
+-	/* Set the CPU affinity of a remapped interrupt */
+-	int (*set_affinity)(struct irq_data *data, const struct cpumask *mask,
+-			    bool force);
+-
+-	/* Free an IRQ */
+-	int (*free_irq)(int);
+-
+ 	/* Get the irqdomain associated the IOMMU device */
+ 	struct irq_domain *(*get_ir_irq_domain)(struct irq_alloc_info *);
+ 
+-- 
+1.7.10.4
 
