@@ -1,69 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:57070 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754995AbbDJJOt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 05:14:49 -0400
-From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
+Received: from mga11.intel.com ([192.55.52.93]:29643 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755356AbbDNCff (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 22:35:35 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Subject: [PATCH v3 1/5] ARM: STi: Kconfig update for PCIe support
-Date: Fri, 10 Apr 2015 11:12:44 +0200
-Message-Id: <1428657168-12495-2-git-send-email-gabriel.fernandez@linaro.org>
-In-Reply-To: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 33/33] x86/irq: Avoid memory allocation in __assign_irq_vector()
+Date: Tue, 14 Apr 2015 10:30:10 +0800
+Message-Id: <1428978610-28986-34-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update Kconfig:
-- MIGHT_HAVE_PCI
-- PCI_DOMAINS
+Function __assign_irq_vector() is protected by vector_lock, so use
+a global temporary cpu_mask to avoid allocating/freeing cpu_mask.
 
-Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/arm/mach-sti/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
+ arch/x86/kernel/apic/vector.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/arch/arm/mach-sti/Kconfig b/arch/arm/mach-sti/Kconfig
-index 3b1ac46..7f9b432 100644
---- a/arch/arm/mach-sti/Kconfig
-+++ b/arch/arm/mach-sti/Kconfig
-@@ -8,6 +8,8 @@ menuconfig ARCH_STI
- 	select ARCH_HAS_RESET_CONTROLLER
- 	select HAVE_ARM_SCU if SMP
- 	select ARCH_REQUIRE_GPIOLIB
-+	select PCI_DOMAINS if PCI
-+	select MIGHT_HAVE_PCI
- 	select ARM_ERRATA_754322
- 	select ARM_ERRATA_764369 if SMP
- 	select ARM_ERRATA_775420
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index f5eb3999383f..4a04b25cdcdf 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -30,6 +30,7 @@ struct apic_chip_data {
+ 
+ struct irq_domain *x86_vector_domain;
+ static DEFINE_RAW_SPINLOCK(vector_lock);
++static cpumask_var_t vector_cpumask;
+ static struct irq_chip lapic_controller;
+ #ifdef	CONFIG_X86_IO_APIC
+ static struct apic_chip_data *legacy_irq_data[NR_IRQS_LEGACY];
+@@ -116,14 +117,10 @@ static int __assign_irq_vector(int irq, struct apic_chip_data *d,
+ 	static int current_vector = FIRST_EXTERNAL_VECTOR + VECTOR_OFFSET_START;
+ 	static int current_offset = VECTOR_OFFSET_START % 16;
+ 	int cpu, err;
+-	cpumask_var_t tmp_mask;
+ 
+ 	if (d->move_in_progress)
+ 		return -EBUSY;
+ 
+-	if (!alloc_cpumask_var(&tmp_mask, GFP_ATOMIC))
+-		return -ENOMEM;
+-
+ 	/* Only try and allocate irqs on cpus that are present */
+ 	err = -ENOSPC;
+ 	cpumask_clear(d->old_domain);
+@@ -131,21 +128,22 @@ static int __assign_irq_vector(int irq, struct apic_chip_data *d,
+ 	while (cpu < nr_cpu_ids) {
+ 		int new_cpu, vector, offset;
+ 
+-		apic->vector_allocation_domain(cpu, tmp_mask, mask);
++		apic->vector_allocation_domain(cpu, vector_cpumask, mask);
+ 
+-		if (cpumask_subset(tmp_mask, d->domain)) {
++		if (cpumask_subset(vector_cpumask, d->domain)) {
+ 			err = 0;
+-			if (cpumask_equal(tmp_mask, d->domain))
++			if (cpumask_equal(vector_cpumask, d->domain))
+ 				break;
+ 			/*
+ 			 * New cpumask using the vector is a proper subset of
+ 			 * the current in use mask. So cleanup the vector
+ 			 * allocation for the members that are not used anymore.
+ 			 */
+-			cpumask_andnot(d->old_domain, d->domain, tmp_mask);
++			cpumask_andnot(d->old_domain, d->domain,
++				       vector_cpumask);
+ 			d->move_in_progress =
+ 			   cpumask_intersects(d->old_domain, cpu_online_mask);
+-			cpumask_and(d->domain, d->domain, tmp_mask);
++			cpumask_and(d->domain, d->domain, vector_cpumask);
+ 			break;
+ 		}
+ 
+@@ -159,16 +157,18 @@ next:
+ 		}
+ 
+ 		if (unlikely(current_vector == vector)) {
+-			cpumask_or(d->old_domain, d->old_domain, tmp_mask);
+-			cpumask_andnot(tmp_mask, mask, d->old_domain);
+-			cpu = cpumask_first_and(tmp_mask, cpu_online_mask);
++			cpumask_or(d->old_domain, d->old_domain,
++				   vector_cpumask);
++			cpumask_andnot(vector_cpumask, mask, d->old_domain);
++			cpu = cpumask_first_and(vector_cpumask,
++						cpu_online_mask);
+ 			continue;
+ 		}
+ 
+ 		if (test_bit(vector, used_vectors))
+ 			goto next;
+ 
+-		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask) {
++		for_each_cpu_and(new_cpu, vector_cpumask, cpu_online_mask) {
+ 			if (per_cpu(vector_irq, new_cpu)[vector] >
+ 			    VECTOR_UNDEFINED)
+ 				goto next;
+@@ -181,14 +181,13 @@ next:
+ 			d->move_in_progress =
+ 			   cpumask_intersects(d->old_domain, cpu_online_mask);
+ 		}
+-		for_each_cpu_and(new_cpu, tmp_mask, cpu_online_mask)
++		for_each_cpu_and(new_cpu, vector_cpumask, cpu_online_mask)
+ 			per_cpu(vector_irq, new_cpu)[vector] = irq;
+ 		d->cfg.vector = vector;
+-		cpumask_copy(d->domain, tmp_mask);
++		cpumask_copy(d->domain, vector_cpumask);
+ 		err = 0;
+ 		break;
+ 	}
+-	free_cpumask_var(tmp_mask);
+ 
+ 	if (!err) {
+ 		/* cache destination APIC IDs into cfg->dest_apicid */
+@@ -397,6 +396,8 @@ int __init arch_early_irq_init(void)
+ 	arch_init_msi_domain(x86_vector_domain);
+ 	arch_init_htirq_domain(x86_vector_domain);
+ 
++	BUG_ON(!alloc_cpumask_var(&vector_cpumask, GFP_KERNEL));
++
+ 	return arch_early_ioapic_init();
+ }
+ 
 -- 
-1.9.1
+1.7.10.4
 
