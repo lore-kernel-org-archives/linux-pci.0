@@ -1,61 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:61149 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbbDBOOG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Apr 2015 10:14:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Daniel Axtens <dja@axtens.net>, wangyijing@huawei.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 04/19] powerpc: Create pci_controller_ops.dma_dev_setup and shim
-Date: Thu, 02 Apr 2015 16:13:52 +0200
-Message-ID: <5500778.Q4t9Fg7Irn@wuerfel>
-In-Reply-To: <1427778057-9505-5-git-send-email-dja@axtens.net>
-References: <1427778057-9505-1-git-send-email-dja@axtens.net> <1427778057-9505-5-git-send-email-dja@axtens.net>
-MIME-Version: 1.0
+Received: from lhrrgout.huawei.com ([194.213.3.17]:23902 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447AbbDNJyg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 05:54:36 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [Query] PORT_LOGIC_SPEED_CHANGE set in PCIe designware driver
+Date: Tue, 14 Apr 2015 09:48:22 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01385C3E@lhreml505-mbx.china.huawei.com>
+References: <552CBFDF.2010905@hisilicon.com>
+In-Reply-To: <552CBFDF.2010905@hisilicon.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 31 March 2015 16:00:42 Daniel Axtens wrote:
-> Introduces the pci_controller_ops structure.
-> Add pci_controller_ops.dma_dev_setup, shadowing ppc_md.pci_dma_dev_setup.
-> Add a shim, and change the callsites to use the shim.
-> 
-> Signed-off-by: Daniel Axtens <dja@axtens.net>
-> 
-> ---
-> 
-> v1 --> v2:
->  - Better commit message
->  - Use phb in favour of hose
->  - Make shim name match ppc_md name, not pci_controller_ops name.
-> ---
->  arch/powerpc/include/asm/pci-bridge.h | 21 +++++++++++++++++++++
->  arch/powerpc/kernel/pci-common.c      |  3 +--
->  2 files changed, 22 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 546d036..347d49d 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -15,6 +15,13 @@
->  struct device_node;
->  
->  /*
-> + * PCI controller operations
-> + */
-> +struct pci_controller_ops {
-> +       void            (*dma_dev_setup)(struct pci_dev *dev);
-> +};
-> +
-> +/*
+Hi All
 
-Please see https://patchwork.ozlabs.org/patch/431333/ for related work.
+Looking at par 3.13 of "Synopsis DesignWare Cores PCI Express Controller Databook" v4.20a (pag 159) I've found:
 
-I think it would be better not to introduce another architecture-specific
-pci host bridge operations structure, but instead consolidate into
-the one that is already there. We are also adding a generic way to set up
-PCI DMA, so it would seems reasonable to hook into that place.
+<<Speed Changing
 
-	Arnd
+When you set the default of the Directed Speed Change field of the Link Width and Speed Change Control
+register (GEN2_CTRL_OFF . DIRECT_SPEED_CHANGE) using the DEFAULT_GEN2_SPEED_CHANGE
+configuration parameter to "1", then the speed change is initiated automatically after link up, and the core
+clears the contents of GEN2_CTRL_OFF . DIRECT_SPEED_CHANGE. If you want to prevent this automatic
+speed change, then write a lower speed value to the Target Link Speed field of the Link Control 2 register
+(LINK_CONTROL2_LINK_STATUS2_REG . PCIE_CAP_TARGET_LINK_SPEED) through the DBI before
+link up.>>
+
+
+So my interpretation would be that at init phase it would be correct to trigger the DIRECT_SPPED_CHANGE before the link is up; that is it seems correct to me to move that part of the code before link up.
+
+Does anybody have any idea about this?
+
+Many Thanks
+
+Gab
+
+
+> -----Original Message-----
+> From: Wangzhou (B)
+> Sent: Tuesday, April 14, 2015 8:21 AM
+> To: linux-pci@vger.kernel.org
+> Cc: zhangjukuo; Gabriele Paoloni; Liguozhu (Kenneth)
+> Subject: [Query] PORT_LOGIC_SPEED_CHANGE set in PCIe designware driver
+> 
+> Hi All,
+> 
+> In pcie-designware.c, it sets the PORT_LOGIC_SPEED_CHANGE bit after
+> linkup
+> finished:
+> 
+> dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val); val |=
+> PORT_LOGIC_SPEED_CHANGE; dw_pcie_wr_own_conf(pp,
+> PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> 
+> As far as I know, it will try to use 5G/8G to communicate after setting
+> this bit. When I used LSI SAS2208 PCIe-RAID card to test PCIe host
+> driver, PCIe3.0 link was unstable and can not read/write PCIe-RAID BAR.
+> When I moved above code before linkup, the process of enumeration was
+> successful.
+> 
+> I wonder if anyone who also use the pcie-designware had met the same
+> problem.
+> Could we move the PORT_LOGIC_SPEED_CHANGE before linkup?
+> 
+> It will be very appreciate if anyone can offer some information.
+> 
+> Thanks,
+> Zhou
+
