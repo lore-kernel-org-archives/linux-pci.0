@@ -1,176 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:41593 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935AbbEAGEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:35 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1C5EA2BB0040
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:34 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164Pl320119676
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:34 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t41640vI000860
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:00 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 14/21] powerpc/powernv: Functions to get/reset PCI slot status
-Date: Fri,  1 May 2015 16:03:01 +1000
-Message-Id: <1430460188-31343-15-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:33905 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbbDNVn3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 17:43:29 -0400
+Received: by iedfl3 with SMTP id fl3so29952163ied.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2015 14:43:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150414135840.GB19151@google.com>
+References: <CAEkKNCc9BpCXNCw1RD2gngUhSs13_-P_rtk=w4tVDW+3QaR6xQ@mail.gmail.com>
+	<CAErSpo5K9utm4Bt75L75jTY5HPZO8qTtHfy9OzVqzxjV3FAW4A@mail.gmail.com>
+	<20150414135840.GB19151@google.com>
+Date: Tue, 14 Apr 2015 14:43:28 -0700
+Message-ID: <CAEkKNCc37WTu+E=2G2pSjGhW6-6YBVygfTzQoiAVc48-7qVDhA@mail.gmail.com>
+Subject: Re: PCI Out of Resources
+From: moussa ba <musaba@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exports 3 functions, which base on corresponding OPAL
-APIs to get or set PCI slot status. Those functions are going to
-be used by PCI hotplug module in subsequent patches:
+Bjorn,
 
-   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
-   pnv_pci_get_power_status()     opal_pci_get_power_status()
-   pnv_pci_set_power_status()     opal_pci_set_power_status()
+See the bug filed here:
 
-Besides, the patch also exports pnv_pci_hotplug_notifier() to allow
-registering PCI hotplug notifier, which will be used to receive PCI
-hotplug message from skiboot firmware.
+https://bugzilla.kernel.org/show_bug.cgi?id=96651
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/opal-api.h            |  7 +++-
- arch/powerpc/include/asm/opal.h                |  3 ++
- arch/powerpc/include/asm/pnv-pci.h             |  5 +++
- arch/powerpc/platforms/powernv/opal-wrappers.S |  3 ++
- arch/powerpc/platforms/powernv/pci.c           | 45 ++++++++++++++++++++++++++
- 5 files changed, 62 insertions(+), 1 deletion(-)
+It was apparently misfiled to go to drivers_pci.  See the text of the
+bug filing below.  This was tested on 3.10, 3.19 and 4.0
 
-diff --git a/arch/powerpc/include/asm/opal-api.h b/arch/powerpc/include/asm/opal-api.h
-index 0321a90..29b407d 100644
---- a/arch/powerpc/include/asm/opal-api.h
-+++ b/arch/powerpc/include/asm/opal-api.h
-@@ -153,7 +153,10 @@
- #define OPAL_FLASH_READ				110
- #define OPAL_FLASH_WRITE			111
- #define OPAL_FLASH_ERASE			112
--#define OPAL_LAST				112
-+#define OPAL_PCI_GET_PRESENCE_STATUS		116
-+#define OPAL_PCI_GET_POWER_STATUS		117
-+#define OPAL_PCI_SET_POWER_STATUS		118
-+#define OPAL_LAST				118
- 
- /* Device tree flags */
- 
-@@ -352,6 +355,8 @@ enum opal_msg_type {
- 	OPAL_MSG_SHUTDOWN,		/* params[0] = 1 reboot, 0 shutdown */
- 	OPAL_MSG_HMI_EVT,
- 	OPAL_MSG_DPO,
-+	OPAL_MSG_PRD,
-+	OPAL_MSG_PCI_HOTPLUG,
- 	OPAL_MSG_TYPE_MAX,
- };
- 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index 6d467df..a0eb206 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -200,6 +200,9 @@ int64_t opal_flash_write(uint64_t id, uint64_t offset, uint64_t buf,
- 		uint64_t size, uint64_t token);
- int64_t opal_flash_erase(uint64_t id, uint64_t offset, uint64_t size,
- 		uint64_t token);
-+int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
-+int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
-+int64_t opal_pci_set_power_status(uint64_t id, uint8_t status);
- 
- /* Internal functions */
- extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index f9b4982..50d92a4 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,11 @@
- #include <linux/pci.h>
- #include <misc/cxl.h>
- 
-+extern int pnv_pci_get_presence_status(uint64_t id, uint8_t *status);
-+extern int pnv_pci_get_power_status(uint64_t id, uint8_t *status);
-+extern int pnv_pci_set_power_status(uint64_t id, uint8_t status);
-+extern int pnv_pci_hotplug_notifier(struct notifier_block *nb, bool enable);
-+
- int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
-diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
-index a7ade94..aa95dcb 100644
---- a/arch/powerpc/platforms/powernv/opal-wrappers.S
-+++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
-@@ -295,3 +295,6 @@ OPAL_CALL(opal_i2c_request,			OPAL_I2C_REQUEST);
- OPAL_CALL(opal_flash_read,			OPAL_FLASH_READ);
- OPAL_CALL(opal_flash_write,			OPAL_FLASH_WRITE);
- OPAL_CALL(opal_flash_erase,			OPAL_FLASH_ERASE);
-+OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
-+OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
-+OPAL_CALL(opal_pci_set_power_status,		OPAL_PCI_SET_POWER_STATUS);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index a2da9a3..60e6d65 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -60,6 +60,51 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
- 	return rval ? -EIO : 0;
- }
- 
-+int pnv_pci_get_presence_status(uint64_t id, uint8_t *status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_presence_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
-+
-+int pnv_pci_get_power_status(uint64_t id, uint8_t *status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_POWER_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_power_status(id, status);
-+	return pnv_pci_poll(id, rc, status);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
-+
-+int pnv_pci_set_power_status(uint64_t id, uint8_t status)
-+{
-+	long rc;
-+
-+	if (!opal_check_token(OPAL_PCI_SET_POWER_STATUS))
-+		return -ENXIO;
-+
-+	rc = opal_pci_set_power_status(id, status);
-+	return pnv_pci_poll(id, rc, NULL);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_set_power_status);
-+
-+int pnv_pci_hotplug_notifier(struct notifier_block *nb, bool enable)
-+{
-+	if (enable)
-+		return opal_message_notifier_register(OPAL_MSG_PCI_HOTPLUG, nb);
-+
-+	return opal_message_notifier_unregister(OPAL_MSG_PCI_HOTPLUG, nb);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_hotplug_notifier);
-+
- #ifdef CONFIG_PCI_MSI
- static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
--- 
-2.1.0
+20 PCI drives installed on a 2 Node system via 5 PCI switches. Only 16
+drives are actually recognized by the Linux.  All 20 drives are
+visible via lspci. I am unable to find an appropriate address in
+/proc/iomem to assign these regions to.
 
+
+#setpci -s 0000:90:00.0 BASE_ADDRESS_5=0x.......
+
+Not specifying the address because I had no idea where to put it, I
+would find empty spots in /proc/iomem but thse would fall within the
+address space of one of the pci bridges...
+
+We are missing 4 drives with the following error seen in dmesg for
+each drive, one given her as an example:
+
+[    0.983954] pci 0000:8e:00.0: can't claim BAR 6 [mem
+0xffffc000-0xffffffff pref]: no compatible bridge window
+[    0.984106] pci 0000:02:02.0: BAR 14: no space for [mem size 0x00100000]
+[    0.984108] pci 0000:02:02.0: BAR 14: failed to assign [mem size 0x00100000]
+[    0.984110] pci 0000:02:04.0: BAR 14: no space for [mem size 0x00100000]
+[    0.984111] pci 0000:02:04.0: BAR 14: failed to assign [mem size 0x00100000]
+[    0.984113] pci 0000:02:02.0: BAR 13: no space for [io  size 0x1000]
+[    0.984114] pci 0000:02:02.0: BAR 13: failed to assign [io  size 0x1000]
+[    0.984116] pci 0000:02:04.0: BAR 13: no space for [io  size 0x1000]
+[    0.984117] pci 0000:02:04.0: BAR 13: failed to assign [io  size 0x1000]
+[    0.984119] pci 0000:03:00.0: BAR 5: no space for [mem size 0x00002000]
+[    0.984120] pci 0000:03:00.0: BAR 5: failed to assign [mem size 0x00002000]
+[    0.984122] pci 0000:03:00.0: BAR 2: no space for [mem size 0x00001000]
+[    0.984123] pci 0000:03:00.0: BAR 2: failed to assign [mem size 0x00001000]
+[    0.984124] pci 0000:03:00.0: BAR 3: no space for [mem size 0x00001000]
+[    0.984125] pci 0000:03:00.0: BAR 3: failed to assign [mem size 0x00001000]
+[    0.984128] pci 0000:03:00.0: BAR 4: no space for [io  size 0x0010]
+[    0.984129] pci 0000:03:00.0: BAR 4: failed to assign [io  size 0x0010]
+[    0.984132] pci 0000:02:02.0: PCI bridge to [bus 03]
+[    0.984142] pci 0000:02:03.0: PCI bridge to [bus 04]
+[    0.984154] pci 0000:05:00.0: BAR 5: no space for [mem size 0x00002000]
+[    0.984155] pci 0000:05:00.0: BAR 5: failed to assign [mem size 0x00002000]
+[    0.984156] pci 0000:05:00.0: BAR 2: no space for [mem size 0x00001000]
+[    0.984157] pci 0000:05:00.0: BAR 2: failed to assign [mem size 0x00001000]
+[    0.984159] pci 0000:05:00.0: BAR 3: no space for [mem size 0x00001000]
+[    0.984160] pci 0000:05:00.0: BAR 3: failed to assign [mem size 0x00001000]
+[    0.984161] pci 0000:05:00.0: BAR 4: no space for [io  size 0x0010]
+[    0.984163] pci 0000:05:00.0: BAR 4: failed to assign [io  size 0x0010]
+
+
+dmesg output
+http://pastebin.com/YaWTRYsp
+
+lspci output
+http://pastebin.com/NHYyS61h
+
+/proc/iomem output
+http://pastebin.com/zpxk9pT3
+
+On Tue, Apr 14, 2015 at 6:58 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Apr 14, 2015 at 08:05:42AM -0500, Bjorn Helgaas wrote:
+>> 2) Please post a complete dmesg log, complete "lspci -vv" output,
+>> contents of /proc/iomem, and a transcript of what you're doing with
+>> setpci (remove vendor/device IDs if they are confidential, ...
+>
+> BTW, here are some sed scripts I've used to sanitize dmesg output
+> in the past.  It's tedious to do this by hand.
+>
+>   dmesg | sed -r 's/(pci ....:..:..\..: \[)....:....(\].*)/\1VVVV:DDDD\2/' | sed -r 's/(DMI:).*/\1 (removed)/' | sed -r 's/(ACPI: [A-Z]{4} [0-9a-fA-F]{16} .*\().*(\).*)/\1...\2/' | sed -r 's/(scsi.*: Direct-Access).*/\1 .../'
