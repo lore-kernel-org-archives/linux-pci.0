@@ -1,277 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60524 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750935AbbEAGEP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:15 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:13 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id D8C423578052
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:09 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t41641vQ26738888
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:09 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163asm009166
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:36 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 04/21] powerpc/powernv: Improve IO and M32 mapping
-Date: Fri,  1 May 2015 16:02:51 +1000
-Message-Id: <1430460188-31343-5-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Grant Likely <grant.likely@linaro.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 19/33] x86/irq: Clean up io_apic.h
+Date: Tue, 14 Apr 2015 10:29:56 +0800
+Message-Id: <1428978610-28986-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PHB's IO or M32 window is divided evenly to segments, each of
-them can be mapped to arbitrary PE# by IODT or M32DT. Current code
-figures out the consumed IO and M32 segments by one particular PE
-from the windows of the PE's upstream bridge. It won't be reliable
-once we extend M64 windows of root port, or the upstream port of
-the PCIE switch behind root port to PHB's IO or M32 window, in order
-to support PCI hotplug in future.
+Clean up io_apic.h by:
+1) moving definition of struct mp_ioapic_gsi into io_apic.c
+2) changing mp_pin_to_gsi() and mp_ioapic_gsi_routing() as static
+3) killing unused MP_MAX_IOAPIC_PIN
+4) killing useless forward declaration
+5) killing useless comments
 
-The patch improves pnv_ioda_setup_pe_seg() to calculate PE's consumed
-IO or M32 segments from its contained devices, no bridge involved any
-more. Also, the logic to mapping IO and M32 segments are combined to
-simplify the code. Besides, it's always worthy to trace the IO and M32
-segments consumed by one PE, which can be released at PCI unplugging
-time.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Grant Likely <grant.likely@linaro.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-29-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 150 ++++++++++++++++--------------
- arch/powerpc/platforms/powernv/pci.h      |  13 +--
- 2 files changed, 85 insertions(+), 78 deletions(-)
+ arch/x86/include/asm/io_apic.h |   13 ++-----------
+ arch/x86/kernel/apic/io_apic.c |   23 ++++++++---------------
+ 2 files changed, 10 insertions(+), 26 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index a994882..7e6e266 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2543,77 +2543,92 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index c6486dd44418..67bdb72caeaf 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -113,9 +113,6 @@ extern int nr_ioapics;
+ 
+ extern int mpc_ioapic_id(int ioapic);
+ extern unsigned int mpc_ioapic_addr(int ioapic);
+-extern struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic);
+-
+-#define MP_MAX_IOAPIC_PIN 127
+ 
+ /* # of MP IRQ source entries */
+ extern int mp_irq_entries;
+@@ -135,6 +132,8 @@ extern int noioapicquirk;
+ /* -1 if "noapic" boot option passed */
+ extern int noioapicreroute;
+ 
++extern u32 gsi_top;
++
+ extern unsigned long io_apic_irqs;
+ 
+ #define IO_APIC_IRQ(x) (((x) >= NR_IRQS_LEGACY) || ((1 << (x)) & io_apic_irqs))
+@@ -174,15 +173,8 @@ struct ioapic_domain_cfg {
+ 	struct device_node		*dev;
+ };
+ 
+-struct mp_ioapic_gsi{
+-	u32 gsi_base;
+-	u32 gsi_end;
+-};
+-extern u32 gsi_top;
+-
+ extern int mp_find_ioapic(u32 gsi);
+ extern int mp_find_ioapic_pin(int ioapic, u32 gsi);
+-extern u32 mp_pin_to_gsi(int ioapic, int pin);
+ extern int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
+ 			     struct irq_alloc_info *info);
+ extern void mp_unmap_irq(int irq);
+@@ -231,7 +223,6 @@ static inline int arch_early_ioapic_init(void) { return 0; }
+ static inline void print_IO_APICs(void) {}
+ #define gsi_top (NR_IRQS_LEGACY)
+ static inline int mp_find_ioapic(u32 gsi) { return 0; }
+-static inline u32 mp_pin_to_gsi(int ioapic, int pin) { return UINT_MAX; }
+ static inline int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
+ 				    struct irq_alloc_info *info)
+ {
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d687a10ed3a2..32a8d51975b3 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -63,7 +63,6 @@
+ #define	for_each_ioapic_pin(idx, pin)	\
+ 	for_each_ioapic((idx))		\
+ 		for_each_pin((idx), (pin))
+-
+ #define for_each_irq_pin(entry, head) \
+ 	list_for_each_entry(entry, &head, list)
+ 
+@@ -92,6 +91,11 @@ struct mp_chip_data {
+ 	bool isa_irq;
+ };
+ 
++struct mp_ioapic_gsi {
++	u32 gsi_base;
++	u32 gsi_end;
++};
++
+ static struct ioapic {
+ 	/*
+ 	 * # of IRQ routing registers
+@@ -122,7 +126,7 @@ unsigned int mpc_ioapic_addr(int ioapic_idx)
+ 	return ioapics[ioapic_idx].mp_config.apicaddr;
  }
- #endif /* CONFIG_PCI_IOV */
+ 
+-struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
++static inline struct mp_ioapic_gsi *mp_ioapic_gsi_routing(int ioapic_idx)
+ {
+ 	return &ioapics[ioapic_idx].gsi_config;
+ }
+@@ -134,7 +138,7 @@ static inline int mp_ioapic_pin_count(int ioapic)
+ 	return gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
+ }
+ 
+-u32 mp_pin_to_gsi(int ioapic, int pin)
++static inline u32 mp_pin_to_gsi(int ioapic, int pin)
+ {
+ 	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
+ }
+@@ -1153,8 +1157,7 @@ static int pin_2_irq(int idx, int ioapic, int pin, unsigned int flags)
+ 	return  mp_map_pin_to_irq(gsi, idx, ioapic, pin, flags, NULL);
+ }
+ 
+-int mp_map_gsi_to_irq(u32 gsi, unsigned int flags,
+-		      struct irq_alloc_info *info)
++int mp_map_gsi_to_irq(u32 gsi, unsigned int flags, struct irq_alloc_info *info)
+ {
+ 	int ioapic, pin, idx;
+ 
+@@ -1719,7 +1722,6 @@ static int __init timer_irq_works(void)
+  * This is not complete - we should be able to fake
+  * an edge even if it isn't on the 8259A...
+  */
+-
+ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ {
+ 	int was_pending = 0, irq = data->irq;
+@@ -1737,15 +1739,6 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+ 	return was_pending;
+ }
  
 -/*
-- * This function is supposed to be called on basis of PE from top
-- * to bottom style. So the the I/O or MMIO segment assigned to
-- * parent PE could be overrided by its child PEs if necessary.
+- * Level and edge triggered IO-APIC interrupts need different handling,
+- * so we use two separate IRQ descriptors. Edge triggered IRQs can be
+- * handled with the level-triggered descriptor, but that one has slightly
+- * more overhead. Level-triggered interrupts cannot be handled with the
+- * edge-triggered handler, without risking IRQ storms and other ugly
+- * races.
 - */
--static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
--				  struct pnv_ioda_pe *pe)
-+static int pnv_ioda_map_pe_one_res(struct pci_controller *hose,
-+				   struct pnv_ioda_pe *pe,
-+				   struct resource *res)
- {
- 	struct pnv_phb *phb = hose->private_data;
- 	struct pci_bus_region region;
--	struct resource *res;
--	int i, index;
--	int rc;
-+	unsigned int segsize, index;
-+	unsigned long *segmap, *pe_segmap;
-+	uint16_t win_type;
-+	int64_t rc;
- 
--	/*
--	 * NOTE: We only care PCI bus based PE for now. For PCI
--	 * device based PE, for example SRIOV sensitive VF should
--	 * be figured out later.
--	 */
--	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
-+	/* Check if we need map the resource */
-+	if (!res->parent || !res->flags ||
-+	    res->start > res->end ||
-+	    pnv_pci_is_mem_pref_64(res->flags))
-+		return 0;
- 
--	pci_bus_for_each_resource(pe->pbus, res, i) {
--		if (!res || !res->flags ||
--		    res->start > res->end)
--			continue;
-+	if (res->flags & IORESOURCE_IO) {
-+		segmap = phb->ioda.io_segmap;
-+		pe_segmap = pe->io_segmap;
-+		region.start = res->start - phb->ioda.io_pci_base;
-+		region.end = res->end - phb->ioda.io_pci_base;
-+		segsize = phb->ioda.io_segsize;
-+		win_type = OPAL_IO_WINDOW_TYPE;
-+	} else {
-+		segmap = phb->ioda.m32_segmap;
-+		pe_segmap = pe->m32_segmap;
-+		region.start = res->start -
-+			       hose->mem_offset[0] -
-+			       phb->ioda.m32_pci_base;
-+		region.end = res->end -
-+			     hose->mem_offset[0] -
-+			     phb->ioda.m32_pci_base;
-+		segsize = phb->ioda.m32_segsize;
-+		win_type = OPAL_M32_WINDOW_TYPE;
-+	}
-+
-+	index = region.start / segsize;
-+	while (index < phb->ioda.total_pe &&
-+	       region.start <= region.end) {
-+		rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+				pe->pe_number, win_type, 0, index);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("%s: Error %lld mapping (%d) seg#%d to PE#%d\n",
-+				__func__, rc, win_type, index, pe->pe_number);
-+			return -EIO;
-+		}
- 
--		if (res->flags & IORESOURCE_IO) {
--			region.start = res->start - phb->ioda.io_pci_base;
--			region.end   = res->end - phb->ioda.io_pci_base;
--			index = region.start / phb->ioda.io_segsize;
-+		set_bit(index, segmap);
-+		set_bit(index, pe_segmap);
-+		region.start += segsize;
-+		index++;
-+	}
- 
--			while (index < phb->ioda.total_pe &&
--			       region.start <= region.end) {
--				phb->ioda.io_segmap[index] = pe->pe_number;
--				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
--					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
--				if (rc != OPAL_SUCCESS) {
--					pr_err("%s: OPAL error %d when mapping IO "
--					       "segment #%d to PE#%d\n",
--					       __func__, rc, index, pe->pe_number);
--					break;
--				}
-+	return 0;
-+}
- 
--				region.start += phb->ioda.io_segsize;
--				index++;
--			}
--		} else if ((res->flags & IORESOURCE_MEM) &&
--			   !pnv_pci_is_mem_pref_64(res->flags)) {
--			region.start = res->start -
--				       hose->mem_offset[0] -
--				       phb->ioda.m32_pci_base;
--			region.end   = res->end -
--				       hose->mem_offset[0] -
--				       phb->ioda.m32_pci_base;
--			index = region.start / phb->ioda.m32_segsize;
 -
--			while (index < phb->ioda.total_pe &&
--			       region.start <= region.end) {
--				phb->ioda.m32_segmap[index] = pe->pe_number;
--				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
--					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
--				if (rc != OPAL_SUCCESS) {
--					pr_err("%s: OPAL error %d when mapping M32 "
--					       "segment#%d to PE#%d",
--					       __func__, rc, index, pe->pe_number);
--					break;
--				}
-+static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
-+				  struct pnv_ioda_pe *pe)
-+{
-+	struct pci_dev *pdev;
-+	struct resource *res;
-+	int i;
- 
--				region.start += phb->ioda.m32_segsize;
--				index++;
--			}
-+	/* This function only works for bus dependent PE */
-+	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
-+
-+	list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
-+		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
-+			res = &pdev->resource[i];
-+			if (pnv_ioda_map_pe_one_res(hose, pe, res))
-+				return;
-+		}
-+
-+		/* If the PE contains all subordinate PCI buses, the
-+		 * resources of the child bridges should be mapped
-+		 * to the PE as well.
-+		 */
-+		if (!(pe->flags & PNV_IODA_PE_BUS_ALL) ||
-+		    (pdev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
-+			continue;
-+
-+		for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
-+			res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
-+			if (pnv_ioda_map_pe_one_res(hose, pe, res))
-+				return;
- 		}
- 	}
- }
-@@ -2780,7 +2795,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ static void __target_IO_APIC_irq(unsigned int irq, struct irq_cfg *cfg,
+ 				 struct mp_chip_data *data)
  {
- 	struct pci_controller *hose;
- 	struct pnv_phb *phb;
--	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
-+	unsigned long size, pemap_off;
- 	const __be64 *prop64;
- 	const __be32 *prop32;
- 	int len;
-@@ -2865,19 +2880,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 
- 	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
- 	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
--	m32map_off = size;
--	size += phb->ioda.total_pe * sizeof(phb->ioda.m32_segmap[0]);
--	if (phb->type == PNV_PHB_IODA1) {
--		iomap_off = size;
--		size += phb->ioda.total_pe * sizeof(phb->ioda.io_segmap[0]);
--	}
- 	pemap_off = size;
- 	size += phb->ioda.total_pe * sizeof(struct pnv_ioda_pe);
- 	aux = memblock_virt_alloc(size, 0);
- 	phb->ioda.pe_alloc = aux;
--	phb->ioda.m32_segmap = aux + m32map_off;
--	if (phb->type == PNV_PHB_IODA1)
--		phb->ioda.io_segmap = aux + iomap_off;
- 	phb->ioda.pe_array = aux + pemap_off;
- 	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 19022cf..f604bb7 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -54,6 +54,8 @@ struct pnv_ioda_pe {
- 	 * by slave PEs will be contributed to the master PE. One
- 	 * PE can own multiple IO and M32 segments.
- 	 */
-+	unsigned long		io_segmap[8];
-+	unsigned long		m32_segmap[8];
- 	unsigned long		m64_segmap[8];
- 
- 	/* "Weight" assigned to the PE for the sake of DMA resource
-@@ -154,16 +156,15 @@ struct pnv_phb {
- 			unsigned int		io_segsize;
- 			unsigned int		io_pci_base;
- 
--			/* PE allocation bitmap */
-+			/* PE allocation */
-+			struct pnv_ioda_pe	*pe_array;
- 			unsigned long		*pe_alloc;
--			/* PE allocation mutex */
- 			struct mutex		pe_alloc_mutex;
- 
--			/* M32 & IO segment maps */
-+			/* IO/M32/M64 segment bitmaps */
-+			unsigned long		io_segmap[8];
-+			unsigned long		m32_segmap[8];
- 			unsigned long		m64_segmap[8];
--			unsigned int		*m32_segmap;
--			unsigned int		*io_segmap;
--			struct pnv_ioda_pe	*pe_array;
- 
- 			/* IRQ chip */
- 			int			irq_chip_init;
 -- 
-2.1.0
+1.7.10.4
 
