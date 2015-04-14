@@ -1,208 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:58661 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbbD0Gi6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:38:58 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:38:56 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 973BD2CE8040
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:53 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6cj9M9568318
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:53 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cJw1008923
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:20 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 02/21] powerpc/powernv: Enable M64 on P7IOC
-Date: Mon, 27 Apr 2015 16:37:34 +1000
-Message-Id: <1430116673-22500-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:33895 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933094AbbDNWyS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 18:54:18 -0400
+Received: by iedfl3 with SMTP id fl3so31227184ied.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2015 15:54:17 -0700 (PDT)
+Received: from google.com ([69.71.1.1])
+        by mx.google.com with ESMTPSA id i198sm1283841ioe.15.2015.04.14.15.54.16
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Tue, 14 Apr 2015 15:54:17 -0700 (PDT)
+Date: Tue, 14 Apr 2015 17:54:15 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Subject: Open PCI issues
+Message-ID: <20150414225414.GC19151@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch enables M64 window on P7IOC, which has been enabled on
-PHB3. Comparing to PHB3, there are 16 M64 BARs and each of them
-are divided to 8 segments. So each PHB can support 128 M64 segments.
-Also, P7IOC has M64DT, which helps mapping one particular M64
-segment# to arbitrary PE#. However, we just provide 128 M64 (16 BARs)
-segments and fixed mapping between PE# and M64 segment# in order
-to keep same logic to support M64 for PHB3 and P7IOC. In turn, we
-just need different phb->init_m64() hooks for P7IOC and PHB3.
+The backlog of PCI regressions and issues seems to be growing.
+Feel free to participate in analyzing and fixing them.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 115 ++++++++++++++++++++++++++----
- 1 file changed, 103 insertions(+), 12 deletions(-)
+Here's a query for open regressions:
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f8bc950..646962f 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -165,6 +165,67 @@ static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
- 	clear_bit(pe, phb->ioda.pe_alloc);
- }
- 
-+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
-+{
-+	struct resource *r;
-+	int seg;
-+	s64 rc;
-+
-+	/* Each PHB supports 16 separate M64 BARs, each of which are
-+	 * divided into 8 segments. So there are number of M64 segments
-+	 * as total PE#, which is 128.
-+	 */
-+	for (seg = 0; seg < phb->ioda.total_pe; seg += 8) {
-+		unsigned long base;
-+
-+		base = phb->ioda.m64_base + seg * phb->ioda.m64_segsize;
-+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-+						 OPAL_M64_WINDOW_TYPE,
-+						 seg / 8,
-+						 base,
-+						 0, /* unused */
-+						 8 * phb->ioda.m64_segsize);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Failure %lld configuring M64 BAR#%d on PHB#%d\n",
-+				rc, seg / 8, phb->hose->global_number);
-+			goto fail;
-+		}
-+
-+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+					      OPAL_M64_WINDOW_TYPE,
-+					      seg / 8,
-+					      OPAL_ENABLE_M64_SPLIT);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Failure %lld enabling M64 BAR#%d on PHB#%d\n",
-+				rc, seg / 8, phb->hose->global_number);
-+			goto fail;
-+		}
-+	}
-+
-+	/* Strip of the segment used by the reserved PE, which
-+	 * is expected to be 0 or last supported PE#
-+	 */
-+	r = &phb->hose->mem_resources[1];
-+	if (phb->ioda.reserved_pe == 0)
-+		r->start += phb->ioda.m64_segsize;
-+	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
-+		r->end -= phb->ioda.m64_segsize;
-+	else
-+		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
-+			phb->ioda.reserved_pe);
-+
-+	return 0;
-+
-+fail:
-+	for ( ; seg >= 0; seg -= 8)
-+		opal_pci_phb_mmio_enable(phb->opal_id,
-+					 OPAL_M64_WINDOW_TYPE,
-+					 seg / 8,
-+					 OPAL_DISABLE_M64);
-+
-+	return -EIO;
-+}
-+
- /* The default M64 BAR is shared by all PEs */
- static int pnv_ioda2_init_m64(struct pnv_phb *phb)
- {
-@@ -222,7 +283,7 @@ fail:
- 	return -EIO;
- }
- 
--static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
-+static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
- {
- 	resource_size_t sgsz = phb->ioda.m64_segsize;
- 	struct pci_dev *pdev;
-@@ -248,8 +309,8 @@ static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
- 	}
- }
- 
--static int pnv_ioda2_pick_m64_pe(struct pnv_phb *phb,
--				 struct pci_bus *bus, int all)
-+static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
-+				struct pci_bus *bus, int all)
- {
- 	resource_size_t segsz = phb->ioda.m64_segsize;
- 	struct pci_dev *pdev;
-@@ -346,6 +407,28 @@ done:
- 			pe->master = master_pe;
- 			list_add_tail(&pe->list, &master_pe->slaves);
- 		}
-+
-+		/* P7IOC supports M64DT, which helps mapping M64 segment
-+		 * to one particular PE#. Unfortunately, PHB3 has fixed
-+		 * mapping between M64 segment and PE#. In order for same
-+		 * logic for P7IOC and PHB3, we enforce fixed mapping
-+		 * between M64 segment and PE# on P7IOC.
-+		 */
-+		if (phb->type == PNV_PHB_IODA1) {
-+			int64_t rc;
-+
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+							 pe->pe_number,
-+							 OPAL_M64_WINDOW_TYPE,
-+							 pe->pe_number / 8,
-+							 pe->pe_number % 8);
-+			if (rc != OPAL_SUCCESS)
-+				pr_warn("%s: Failure %lld mapping "
-+					"M64 for PHB#%d-PE#%d\n",
-+					__func__, rc,
-+					phb->hose->global_number,
-+					pe->pe_number);
-+		}
- 	}
- 
- 	kfree(pe_alloc);
-@@ -360,12 +443,6 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 	const u32 *r;
- 	u64 pci_addr;
- 
--	/* FIXME: Support M64 for P7IOC */
--	if (phb->type != PNV_PHB_IODA2) {
--		pr_info("  Not support M64 window\n");
--		return;
--	}
--
- 	if (!firmware_has_feature(FW_FEATURE_OPALv3)) {
- 		pr_info("  Firmware too old to support M64 window\n");
- 		return;
-@@ -394,9 +471,23 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 
- 	/* Use last M64 BAR to cover M64 window */
- 	phb->ioda.m64_bar_idx = 15;
--	phb->init_m64 = pnv_ioda2_init_m64;
--	phb->reserve_m64_pe = pnv_ioda2_reserve_m64_pe;
--	phb->pick_m64_pe = pnv_ioda2_pick_m64_pe;
-+	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
-+	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		phb->init_m64 = pnv_ioda1_init_m64;
-+		break;
-+	case PNV_PHB_IODA2:
-+		phb->init_m64 = pnv_ioda2_init_m64;
-+		break;
-+	default:
-+		phb->init_m64 = NULL;
-+		phb->reserve_m64_pe = NULL;
-+		phb->pick_m64_pe = NULL;
-+		phb->ioda.m64_size = 0;
-+		phb->ioda.m64_segsize = 0;
-+		phb->ioda.m64_base = 0;
-+	}
- }
- 
- static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
--- 
-2.1.0
+  https://bugzilla.kernel.org/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&cf_regression=Yes&columnlist=assigned_to%2Cbug_status%2Ccf_kernel_version%2Cshort_short_desc&component=PCI&order=bug_id%20DESC
 
+Here's one for open issues in general:
+
+  https://bugzilla.kernel.org/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&columnlist=assigned_to%2Cbug_status%2Ccf_kernel_version%2Cshort_short_desc&component=PCI&order=bug_id%20DESC
