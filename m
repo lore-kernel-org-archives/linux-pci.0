@@ -1,93 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49401 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973AbbDHWQi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Apr 2015 18:16:38 -0400
-Date: Thu, 9 Apr 2015 00:16:34 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [PATCH v5 00/10] pci: fix unhandled interrupt on shutdown
-Message-ID: <20150408164704-mutt-send-email-mst@redhat.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-1-git-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch Part2 v5 24/33] x86/irq: Kill function apic_set_affinity()
+Date: Tue, 14 Apr 2015 10:30:01 +0800
+Message-Id: <1428978610-28986-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 29, 2015 at 05:01:35PM +0200, Michael S. Tsirkin wrote:
-> Fam Zheng noticed that pci shutdown disables msi and msix of a device while
-> device is still active. This was intended to fix kexec with fusion devices but
-> had the unintended effect of breaking even regular shutdown when using virtio.
-> 
-> The same problem would affect any driver which doesn't register
-> a level interrupt handler when using msix.
-> 
-> I think the fix is to avoid touching device on shutdown:
-> we clear bus master anyway, so we won't get any more
-> msi interrupts, and bus reset will clear the msi/msix
-> state eventually anyway.
-> 
-> Patches 1-6 work well for me.
-> Given they affect all pci devices, and the bug has been there since 2.6 times,
-> I think there's no rush: we can merge them for 4.1.
-> 
-> At the same time, once merged, patches 1-4 will likely make a good stable
-> candidate: the problem was actually observed in the field,
-> although the BZ in question isn't public yet.
-> Patches 7-10 compiled only, will need maintainer ack.
+Now there's no user of apic_set_affinity(), so kill it.
+Also rename vector_set_affinity() to apic_set_affinity() for consistency.
 
-Looks like people don't bother to review until it's merged.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Link: http://lkml.kernel.org/r/1416901802-24211-33-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/include/asm/hw_irq.h |    2 --
+ arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
+ 2 files changed, 3 insertions(+), 39 deletions(-)
 
-Bjorn, what do you think about this patchset?
-Could you merge it for 4.1?
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index ea9aebc65ff6..330445236484 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -198,8 +198,6 @@ static inline void irq_complete_move(struct irq_cfg *c) { }
+ #endif
+ 
+ extern void apic_ack_edge(struct irq_data *data);
+-extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-			     unsigned int *dest_id);
+ #else	/*  CONFIG_X86_LOCAL_APIC */
+ static inline void lock_vector_lock(void) {}
+ static inline void unlock_vector_lock(void) {}
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index fba4958b6139..436a3400d9ac 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -463,42 +463,8 @@ void apic_ack_edge(struct irq_data *data)
+ 	ack_APIC_irq();
+ }
+ 
+-/*
+- * Either sets data->affinity to a valid value, and returns
+- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
+- * leaves data->affinity untouched.
+- */
+-int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
+-		      unsigned int *dest_id)
+-{
+-	struct irq_cfg *cfg = irqd_cfg(data);
+-	unsigned int irq = data->irq;
+-	int err;
+-
+-	if (!config_enabled(CONFIG_SMP))
+-		return -EPERM;
+-
+-	if (!cpumask_intersects(mask, cpu_online_mask))
+-		return -EINVAL;
+-
+-	err = assign_irq_vector(irq, cfg, mask);
+-	if (err)
+-		return err;
+-
+-	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
+-	if (err) {
+-		if (assign_irq_vector(irq, cfg, data->affinity))
+-			pr_err("Failed to recover vector for irq %d\n", irq);
+-		return err;
+-	}
+-
+-	cpumask_copy(data->affinity, mask);
+-
+-	return 0;
+-}
+-
+-static int vector_set_affinity(struct irq_data *irq_data,
+-			       const struct cpumask *dest, bool force)
++static int apic_set_affinity(struct irq_data *irq_data,
++			     const struct cpumask *dest, bool force)
+ {
+ 	int err;
+ 	int irq = irq_data->irq;
+@@ -524,7 +490,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
+ 
+ static struct irq_chip lapic_controller = {
+ 	.irq_ack		= apic_ack_edge,
+-	.irq_set_affinity	= vector_set_affinity,
++	.irq_set_affinity	= apic_set_affinity,
+ 	.irq_retrigger		= apic_retrigger_irq,
+ };
+ 
+-- 
+1.7.10.4
 
-
-> 
-> Please review, and consider at least 1-6 for 4.1.
-> 
-> changes from v4:
-> 	Yijing Wang <wangyijing@huawei.com> noted that
-> 	early fixups rely on pci_msi_off.
-> 	Split out the functionality and move off the
-> 	required part to run early during pci_device_setup.
-> Changes from v3:
-> 	fix a copy-and-paste error in
-> 	  pci: drop some duplicate code
-> 	other patches are unchanged
-> 	drop Cc stable for now
-> Changes from v2:
-> 	move code from probe to device enumeration
-> 	add patches to unexport pci_msi_off
-> 
-> Michael S. Tsirkin (10):
->   pci: export functions for msi/msix ctrl
->   pci: move pci_msi_init_pci_dev to pci.c
->   pci: drop some duplicate code
->   pci: don't disable msi/msix at shutdown
->   pci: make msi/msix shutdown functions static
->   virtio_pci: drop msi_off on probe
->   ntb: drop pci_msi_off call on probe
->   mic: drop pci_msi_off call on probe
->   pci: drop pci_msi_off calls from quirks
->   pci: unexport pci_msi_off
-> 
->  drivers/pci/pci.h                  | 25 +++++++++++++++++
->  include/linux/pci.h                |  5 ----
->  drivers/misc/mic/host/mic_intr.c   |  2 --
->  drivers/ntb/ntb_hw.c               |  2 --
->  drivers/pci/msi.c                  | 57 ++++++++------------------------------
->  drivers/pci/pci-driver.c           |  2 --
->  drivers/pci/pci.c                  | 25 ++++-------------
->  drivers/pci/probe.c                | 15 ++++++++++
->  drivers/pci/quirks.c               |  2 --
->  drivers/virtio/virtio_pci_common.c |  3 --
->  10 files changed, 57 insertions(+), 81 deletions(-)
-> 
-> -- 
-> MST
-> 
