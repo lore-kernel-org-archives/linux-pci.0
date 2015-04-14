@@ -1,155 +1,108 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jg1.han@samsung.com>, <bhelgaas@google.com>,
-	<Minghuan.Lian@freescale.com>, <fabrice.gasnier@st.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH v2 2/2] PCI: designware: use iATU0 for cfg and IO, iATU1 for MEM
-Date: Thu, 30 Apr 2015 16:22:29 +0800
-Message-ID: <1430382149-1645-3-git-send-email-jszhang@marvell.com>
-In-Reply-To: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
-References: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:27193 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754775AbbDNCay (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Apr 2015 22:30:54 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [Patch Part2 v5 15/33] irq_remapping/amd: Move struct irq_2_irte into amd_iommu.c
+Date: Tue, 14 Apr 2015 10:29:52 +0800
+Message-Id: <1428978610-28986-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most transactions' type are cfg0 and MEM, so the Current iATU usage is not
-balanced, iATU0 is hot while iATU1 is rarely used. This patch refactors
-the iATU usage: iATU0 for cfg and IO, iATU1 for MEM. This allocation
-ideas comes from Minghuan Lian <Minghuan.Lian@freescale.com>:
+Now only amd_iommu.c access irq_2_irte, so move it from hw_irq.h into
+amd_iommu.c.
 
- http://www.spinics.net/lists/linux-pci/msg40440.html
-
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: iommu@lists.linux-foundation.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Randy Dunlap <rdunlap@infradead.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Joerg Roedel <joro@8bytes.org>
+Link: http://lkml.kernel.org/r/1416901802-24211-25-git-send-email-jiang.liu@linux.intel.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/pci/host/pcie-designware.c | 81 +++++++++++++++++++++-----------------
- 1 file changed, 45 insertions(+), 36 deletions(-)
+ arch/x86/include/asm/hw_irq.h |   13 -------------
+ drivers/iommu/amd_iommu.c     |    5 +++++
+ 2 files changed, 5 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1da1446..40a0db1 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -508,6 +508,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 3520f71f168b..494d541d2aee 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -94,14 +94,6 @@ extern void trace_call_function_single_interrupt(void);
+ #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+ #endif /* CONFIG_TRACING */
  
-+	if (!pp->ops->rd_other_conf)
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+					  pp->mem_bus_addr, pp->mem_size);
+-#ifdef CONFIG_IRQ_REMAP
+-/* AMD specific interrupt remapping information */
+-struct irq_2_irte {
+-	u16 devid; /* Device ID for IRTE table */
+-	u16 index; /* Index into IRTE table*/
+-};
+-#endif	/* CONFIG_IRQ_REMAP */
+-
+ struct irq_domain;
+ 
+ #ifdef	CONFIG_X86_LOCAL_APIC
+@@ -184,11 +176,6 @@ struct irq_cfg {
+ 	unsigned int		dest_apicid;
+ 	u8			vector;
+ 	u8			move_in_progress : 1;
+-#ifdef CONFIG_IRQ_REMAP
+-	union {
+-		struct irq_2_irte  irq_2_irte;
+-	};
+-#endif
+ 	union {
+ #ifdef CONFIG_X86_IO_APIC
+ 		struct {
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index fa26c742bc39..a5a17f50691c 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -3858,6 +3858,11 @@ union irte {
+ 	} fields;
+ };
+ 
++struct irq_2_irte {
++	u16 devid; /* Device ID for IRTE table */
++	u16 index; /* Index into IRTE table*/
++};
 +
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
- 	/* program correct class for RC */
-@@ -533,66 +538,70 @@ int dw_pcie_host_init(struct pcie_port *pp)
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
--	int ret = PCIBIOS_SUCCESSFUL;
--	u32 address, busdev;
-+	int ret, type;
-+	u32 address, busdev, cfg_size;
-+	u64 cpu_addr;
-+	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
--					  busdev, pp->cfg0_size);
--		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
--					  pp->mem_bus_addr, pp->mem_size);
-+		type = PCIE_ATU_TYPE_CFG0;
-+		cpu_addr = pp->cfg0_mod_base;
-+		cfg_size = pp->cfg0_size;
-+		va_cfg_base = pp->va_cfg0_base;
- 	} else {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
--					  busdev, pp->cfg1_size);
--		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
--					  pp->io_bus_addr, pp->io_size);
-+		type = PCIE_ATU_TYPE_CFG1;
-+		cpu_addr = pp->cfg1_mod_base;
-+		cfg_size = pp->cfg1_size;
-+		va_cfg_base = pp->va_cfg1_base;
- 	}
- 
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  type, cpu_addr,
-+				  busdev, cfg_size);
-+	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  pp->io_bus_addr, pp->io_size);
-+
- 	return ret;
- }
- 
- static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 val)
- {
--	int ret = PCIBIOS_SUCCESSFUL;
--	u32 address, busdev;
-+	int ret, type;
-+	u32 address, busdev, cfg_size;
-+	u64 cpu_addr;
-+	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
--					  busdev, pp->cfg0_size);
--		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
--					  pp->mem_bus_addr, pp->mem_size);
-+		type = PCIE_ATU_TYPE_CFG0;
-+		cpu_addr = pp->cfg0_mod_base;
-+		cfg_size = pp->cfg0_size;
-+		va_cfg_base = pp->va_cfg0_base;
- 	} else {
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
--					  busdev, pp->cfg1_size);
--		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
--				val);
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
--					  pp->io_bus_addr, pp->io_size);
-+		type = PCIE_ATU_TYPE_CFG1;
-+		cpu_addr = pp->cfg1_mod_base;
-+		cfg_size = pp->cfg1_size;
-+		va_cfg_base = pp->va_cfg1_base;
- 	}
- 
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  type, cpu_addr,
-+				  busdev, cfg_size);
-+	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+				  pp->io_bus_addr, pp->io_size);
-+
- 	return ret;
- }
- 
+ struct amd_ir_data {
+ 	struct irq_2_irte			irq_2_irte;
+ 	union irte				irte_entry;
 -- 
-2.1.4
+1.7.10.4
 
