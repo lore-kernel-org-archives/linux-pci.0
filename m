@@ -1,69 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33221 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756660AbbDVPQc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 11:16:32 -0400
-Received: by iecrt8 with SMTP id rt8so39712003iec.0
-        for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2015 08:16:32 -0700 (PDT)
-Date: Wed, 22 Apr 2015 10:11:11 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Zhichang Yuan <yuanzhichang@hisilicon.com>
-Cc: grant.likely@linaro.org, linux-pci@vger.kernel.org,
-	gabriele.paoloni@huawei.com, Liviu.Dudau@arm.com
-Subject: Re: [[PATCH v1]] of/pci: fix a bug in function pci_pio_to_address
-Message-ID: <20150422151111.GG20701@google.com>
-References: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49711 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751146AbbDOGsR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Apr 2015 02:48:17 -0400
+Date: Wed, 15 Apr 2015 14:48:03 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150415064803.GF19051@localhost.localdomain>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+ <20150415005731.GC19051@localhost.localdomain>
+ <552DFB56.1070600@hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <552DFB56.1070600@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 22, 2015 at 09:35:59PM +0800, Zhichang Yuan wrote:
-> In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
-> was introduced to retieve the corresponding I/O port by CPU address. But the
-> convertion processing is not correct. It will return a wrong I/O port.
-> This patch will fix it.
-
-Hmmm, this subject and changelog don't seem right.  41f8bba7f555 did add
-pci_pio_to_address(), but that converts an I/O port to a CPU address, and
-this patch doesn't touch that function.
-
-This patch changes pci_address_to_pio(), which does return the I/O port
-corresponding to a CPU physical address.  This function was modified (but
-not added) by 41f8bba7f555.
-
-Please add:
-
-Fixes: 41f8bba7f555 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
-CC: stable@vger.kernel.org	# v3.18+
-
-> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> ---
->  drivers/of/address.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 04/15/15 at 01:47pm, Li, ZhenHua wrote:
+> On 04/15/2015 08:57 AM, Dave Young wrote:
+> >Again, I think it is bad to use old page table, below issues need consider:
+> >1) make sure old page table are reliable across crash
+> >2) do not allow writing oldmem after crash
+> >
+> >Please correct me if I'm wrong, or if above is not doable I think I will vote for
+> >resetting pci bus.
+> >
+> >Thanks
+> >Dave
+> >
+> Hi Dave,
 > 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 78a7dcb..6906a3f 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
->  	spin_lock(&io_range_lock);
->  	list_for_each_entry(res, &io_range_list, list) {
->  		if (address >= res->start && address < res->start + res->size) {
-> -			addr = res->start - address + offset;
-> +			addr = address - res->start + offset;
-
-This looks like it's been broken since v3.18, and it's used by many
-platforms.  I/O port space isn't as common as it used to be, but it's still
-surprising that nobody noticed until now.
-
-This change does look correct to me, but I want to double-check that we're
-actually going to *fix* a bunch of platforms rather than breaking them.
-
->  			break;
->  		}
->  		offset += res->size;
-> -- 
-> 1.9.1
+> When updating the context tables, we have to write their address to root
+> tables, this will cause writing to old mem.
 > 
+> Resetting the pci bus has been discussed, please check this:
+> http://lists.infradead.org/pipermail/kexec/2014-October/012752.html
+> https://lkml.org/lkml/2014/10/21/890
+
+I know one reason to use old pgtable is this looks better because it fixes the
+real problem, but it is not a good way if it introduce more problems because of
+it have to use oldmem. I will be glad if this is not a problem but I have not
+been convinced.
+
+OTOH, there's many types of iommu, intel, amd, a lot of other types. They need
+their own fixes, so it looks not that elegant.
+
+For pci reset, it is not perfect, but it has another advantage, the patch is
+simpler. The problem I see from the old discusssion is, reset bus in 2nd kernel
+is acceptable but it does not fix things on sparc platform. AFAIK current reported
+problems are intel and amd iommu, at least pci reset stuff does not make it worse.
+
+Thanks
+Dave
