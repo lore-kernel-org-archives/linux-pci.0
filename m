@@ -1,141 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57879 "EHLO mx1.redhat.com"
+Received: from foss.arm.com ([217.140.101.70]:36435 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbbDBDwU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Apr 2015 23:52:20 -0400
-Date: Thu, 2 Apr 2015 11:52:17 +0800
-From: Fam Zheng <famz@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [PATCH v5 03/10] pci: drop some duplicate code
-Message-ID: <20150402035217.GF15412@fam-t430.nay.redhat.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
- <1427641227-7574-4-git-send-email-mst@redhat.com>
+	id S933346AbbDOQbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Apr 2015 12:31:12 -0400
+Date: Wed, 15 Apr 2015 17:31:05 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: <linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH] irqchip/gicv3-its: Decrease page size when needed
+Message-ID: <20150415173105.2069df0c@arm.com>
+In-Reply-To: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-4-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 03/29 17:04, Michael S. Tsirkin wrote:
-> pci_msi_setup_pci_dev and pci_msi_off share a lot of code.
-> This used to be justified since pci_msi_setup_pci_dev
-> wasn't compiled in when CONFIG_PCI_MSI is off.
-> Now that it is, let's reuse code.
+On Wed, 15 Apr 2015 17:49:22 +0800
+Minghuan Lian <Minghuan.Lian@freescale.com> wrote:
+
+[adding Jason and Thomas to the party, since they shoud be cc'd the
+first place]
+
+> The default page size of ITS table has been changed to 64KB,
+> but for some platforms the real size of allocate memory which
+> calculated by DEVBITS of register GITS_TYPER may smaller than
+> default size. In this case, psz must be decreased, otherwise,
+> the wrong page number will cause kernel hang.
 > 
-> Since pci_msi_off is used by early quirks, doing this requires calling
-> pci_msi_setup_pci_dev early after device allocation, so move the call to
-> pci_setup_device.
-
-The dropping of duplicated code looks good, but doesn't the moving of
-pci_msi_setup_pci_dev call belong to a separate patch?
-
-Fam
-
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 > ---
->  drivers/pci/pci.c   | 23 ++++-------------------
->  drivers/pci/probe.c | 31 +++++++++++++++----------------
->  2 files changed, 19 insertions(+), 35 deletions(-)
+>  drivers/irqchip/irq-gic-v3-its.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 81f06e8..fcee8ea 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3106,26 +3106,11 @@ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
->   */
->  void pci_msi_off(struct pci_dev *dev)
->  {
-> -	int pos;
-> -	u16 control;
-> +	if (dev->msi_cap)
-> +		pci_msi_set_enable(dev, 0);
+> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+> index 596b0a9..d0374a6 100644
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -844,6 +844,9 @@ static int its_alloc_tables(struct its_node *its)
 >  
-> -	/*
-> -	 * This looks like it could go in msi.c, but we need it even when
-> -	 * CONFIG_PCI_MSI=n.  For the same reason, we can't use
-> -	 * dev->msi_cap or dev->msix_cap here.
-> -	 */
-> -	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -	if (pos) {
-> -		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-> -		control &= ~PCI_MSI_FLAGS_ENABLE;
-> -		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
-> -	}
-> -	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -	if (pos) {
-> -		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
-> -		control &= ~PCI_MSIX_FLAGS_ENABLE;
-> -		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
-> -	}
-> +	if (dev->msix_cap)
-> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  }
->  EXPORT_SYMBOL_GPL(pci_msi_off);
+>  		its->tables[i] = base;
 >  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 50dd934..120772c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1084,6 +1084,18 @@ int pci_cfg_space_size(struct pci_dev *dev)
->  
->  #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
->  
-> +static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-> +{
-> +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> +		while (alloc_size < psz)
+> +			psz = psz >> 1;
 > +
-> +	/* Disable the msi hardware to avoid screaming interrupts
-> +	 * during boot.  This is the power on reset default so
-> +	 * usually this should be a noop.
-> +	 */
-> +	pci_msi_off(dev);
-> +}
-> +
->  /**
->   * pci_setup_device - fill in class and map information of a device
->   * @dev: the device structure to fill
-> @@ -1139,6 +1151,9 @@ int pci_setup_device(struct pci_dev *dev)
->  	/* "Unknown power state" */
->  	dev->current_state = PCI_UNKNOWN;
->  
-> +	/* MSI/MSI-X setup has to be done early since it's used by quirks. */
-> +	pci_msi_setup_pci_dev(dev);
-> +
->  	/* Early fixups, before probing the BARs */
->  	pci_fixup_device(pci_fixup_early, dev);
->  	/* device class may be changed after fixup */
-> @@ -1483,26 +1498,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->  	return dev;
->  }
->  
-> -static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-> -{
-> -	/* Disable the msi hardware to avoid screaming interrupts
-> -	 * during boot.  This is the power on reset default so
-> -	 * usually this should be a noop.
-> -	 */
-> -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -	if (dev->msi_cap)
-> -		pci_msi_set_enable(dev, 0);
-> -
-> -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -	if (dev->msix_cap)
-> -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> -}
-> -
->  static void pci_init_capabilities(struct pci_dev *dev)
->  {
->  	/* MSI/MSI-X list */
->  	pci_msi_init_pci_dev(dev);
-> -	pci_msi_setup_pci_dev(dev);
->  
->  	/* Buffers for saving PCIe and PCI-X capabilities */
->  	pci_allocate_cap_save_buffers(dev);
-> -- 
-> MST
-> 
+>  retry_baser:
+>  		val = (virt_to_phys(base) 				 |
+>  		       (type << GITS_BASER_TYPE_SHIFT)			 |
+
+This doesn't make sense to me. psz is the page size that your HW
+supports, not necessarily something that you can actually change as you
+wish (some, if not most, ITSs only support one page size). Also, you
+now have to psz go via unsupported page sizes (like 32K and 8K), and
+you may end up programming junk in the registers. Good job! ;-)
+
+So making it vary to accommodate your allocation size is slightly
+doomed. If your allocation is smaller than your ITS page size, it is
+the allocation that has to be bumped up, not the page size that has to
+be reduced.
+
+So overall, this is a NAK. Please come up with a better fix.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny.
