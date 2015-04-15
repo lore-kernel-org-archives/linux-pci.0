@@ -1,58 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:41086 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752579AbbD0GjV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:21 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:19 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 953452CE8057
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:18 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dAG129556868
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:18 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cinm009506
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:45 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 12/21] powerpc/pci: Don't scan empty slot
-Date: Mon, 27 Apr 2015 16:37:44 +1000
-Message-Id: <1430116673-22500-13-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45967 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753663AbbDOA6Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Apr 2015 20:58:24 -0400
+Date: Wed, 15 Apr 2015 08:57:31 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150415005731.GC19051@localhost.localdomain>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In hotplug case, function pcibios_add_pci_devices() is called to
-rescan the specified PCI bus, which might not have any child devices.
-Access to the PCI bus's child device node will cause kernel crash
-without exception. The patch adds condition of skipping scanning
-PCI bus without child devices, in order to avoid kernel crash.
+On 04/10/15 at 04:42pm, Li, Zhen-Hua wrote:
+> This patchset is an update of Bill Sumner's patchset, implements a fix for:
+> If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
+> when a panic happens, the kdump kernel will boot with these faults:
+> 
+>     dmar: DRHD: handling fault status reg 102
+>     dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
+>     DMAR:[fault reason 01] Present bit in root entry is clear
+> 
+>     dmar: DRHD: handling fault status reg 2
+>     dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
+>     INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+> 
+> On some system, the interrupt remapping fault will also happen even if the 
+> intel_iommu is not set to on, because the interrupt remapping will be enabled 
+> when x2apic is needed by the system.
+> 
+> The cause of the DMA fault is described in Bill's original version, and the 
+> INTR-Remap fault is caused by a similar reason. In short, the initialization 
+> of vt-d drivers causes the in-flight DMA and interrupt requests get wrong 
+> response.
+> 
+> To fix this problem, we modifies the behaviors of the intel vt-d in the 
+> crashdump kernel:
+> 
+> For DMA Remapping:
+> 1. To accept the vt-d hardware in an active state,
+> 2. Do not disable and re-enable the translation, keep it enabled.
+> 3. Use the old root entry table, do not rewrite the RTA register.
+> 4. Malloc and use new context entry table, copy data from the old ones that
+>    used by the old kernel.
+> 5. Keep using the old page tables before driver is loaded.
+> 6. After device driver is loaded, when it issues the first dma_map command, 
+>    free the dmar_domain structure for this device, and generate a new one, so 
+>    that the device can be assigned a new and empty page table. 
+> 7. When a new context entry table is generated, we also save its address to 
+>    the old root entry table.
+> 
+> For Interrupt Remapping:
+> 1. To accept the vt-d hardware in an active state,
+> 2. Do not disable and re-enable the interrupt remapping, keep it enabled.
+> 3. Use the old interrupt remapping table, do not rewrite the IRTA register.
+> 4. When ioapic entry is setup, the interrupt remapping table is changed, and 
+>    the updated data will be stored to the old interrupt remapping table.
+> 
+> Advantages of this approach:
+> 1. All manipulation of the IO-device is done by the Linux device-driver
+>    for that device.
+> 2. This approach behaves in a manner very similar to operation without an
+>    active iommu.
+> 3. Any activity between the IO-device and its RMRR areas is handled by the
+>    device-driver in the same manner as during a non-kdump boot.
+> 4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+>    This supports the practice of creating a special kdump kernel without
+>    drivers for any devices that are not required for taking a crashdump. 
+> 5. Minimal code-changes among the existing mainline intel vt-d code.
+> 
+> Summary of changes in this patch set:
+> 1. Added some useful function for root entry table in code intel-iommu.c
+> 2. Added new members to struct root_entry and struct irte;
+> 3. Functions to load old root entry table to iommu->root_entry from the memory 
+>    of old kernel.
+> 4. Functions to malloc new context entry table and copy the data from the old
+>    ones to the malloced new ones.
+> 5. Functions to enable support for DMA remapping in kdump kernel.
+> 6. Functions to load old irte data from the old kernel to the kdump kernel.
+> 7. Some code changes that support other behaviours that have been listed.
+> 8. In the new functions, use physical address as "unsigned long" type, not 
+>    pointers.
+> 
+> Original version by Bill Sumner:
+>     https://lkml.org/lkml/2014/1/10/518
+>     https://lkml.org/lkml/2014/4/15/716
+>     https://lkml.org/lkml/2014/4/24/836
+> 
+> Zhenhua's updates:
+>     https://lkml.org/lkml/2014/10/21/134
+>     https://lkml.org/lkml/2014/12/15/121
+>     https://lkml.org/lkml/2014/12/22/53
+>     https://lkml.org/lkml/2015/1/6/1166
+>     https://lkml.org/lkml/2015/1/12/35
+>     https://lkml.org/lkml/2015/3/19/33
+> 
+> Changelog[v10]:
+>     1. Do not use CONFIG_CRASH_DUMP and is_kdump_kernel().
+>        Use one flag which stores the te and ir status in last kernel:
+>            iommu->pre_enabled_trans
+>            iommu->pre_enabled_ir
+> 
+> Changelog[v9]:
+>     1. Add new function iommu_attach_domain_with_id.
+>     2. Do not copy old page tables, keep using the old ones.
+>     3. Remove functions:
+>            intel_iommu_did_to_domain_values_entry
+>            intel_iommu_get_dids_from_old_kernel
+>            device_to_domain_id
+>            copy_page_addr
+>            copy_page_table
+>            copy_context_entry
+>            copy_context_entry_table
+>     4. Add new function device_to_existing_context_entry.
+> 
+> Changelog[v8]:
+>     1. Add a missing __iommu_flush_cache in function copy_page_table.
+> 
+> Changelog[v7]:
+>     1. Use __iommu_flush_cache to flush the data to hardware.
+> 
+> Changelog[v6]:
+>     1. Use "unsigned long" as type of physical address.
+>     2. Use new function unmap_device_dma to unmap the old dma.
+>     3. Some small incorrect bits order for aw shift.
+> 
+> Changelog[v5]:
+>     1. Do not disable and re-enable traslation and interrupt remapping. 
+>     2. Use old root entry table.
+>     3. Use old interrupt remapping table.
+>     4. New functions to copy data from old kernel, and save to old kernel mem.
+>     5. New functions to save updated root entry table and irte table.
+>     6. Use intel_unmap to unmap the old dma;
+>     7. Allocate new pages while driver is being loaded.
+> 
+> Changelog[v4]:
+>     1. Cut off the patches that move some defines and functions to new files.
+>     2. Reduce the numbers of patches to five, make it more easier to read.
+>     3. Changed the name of functions, make them consistent with current context
+>        get/set functions.
+>     4. Add change to function __iommu_attach_domain.
+> 
+> Changelog[v3]:
+>     1. Commented-out "#define DEBUG 1" to eliminate debug messages.
+>     2. Updated the comments about changes in each version.
+>     3. Fixed: one-line added to Copy-Translations patch to initialize the iovad
+>           struct as recommended by Baoquan He [bhe@redhat.com]
+>           init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
+> 
+> Changelog[v2]:
+>     The following series implements a fix for:
+>     A kdump problem about DMA that has been discussed for a long time. That is,
+>     when a kernel panics and boots into the kdump kernel, DMA started by the
+>     panicked kernel is not stopped before the kdump kernel is booted and the
+>     kdump kernel disables the IOMMU while this DMA continues.  This causes the
+>     IOMMU to stop translating the DMA addresses as IOVAs and begin to treat
+>     them as physical memory addresses -- which causes the DMA to either:
+>         (1) generate DMAR errors or 
+>         (2) generate PCI SERR errors or 
+>         (3) transfer data to or from incorrect areas of memory. Often this 
+>             causes the dump to fail.
+> 
+> Changelog[v1]:
+>     The original version.
+> 
+> Changed in this version:
+> 1. Do not disable and re-enable traslation and interrupt remapping. 
+> 2. Use old root entry table.
+> 3. Use old interrupt remapping table.
+> 4. Use "unsigned long" as physical address.
+> 5. Use intel_unmap to unmap the old dma;
+> 
+> Baoquan He <bhe@redhat.com> helps testing this patchset.
+> Takao Indoh <indou.takao@jp.fujitsu.com> gives valuable suggestions.
+> 
+> Li, Zhen-Hua (10):
+>   iommu/vt-d: New function to attach domain with id
+>   iommu/vt-d: Items required for kdump
+>   iommu/vt-d: Function to get old context entry
+>   iommu/vt-d: functions to copy data from old mem
+>   iommu/vt-d: Add functions to load and save old re
+>   iommu/vt-d: datatypes and functions used for kdump
+>   iommu/vt-d: enable kdump support in iommu module
+>   iommu/vt-d: assign new page table for dma_map
+>   iommu/vt-d: Copy functions for irte
+>   iommu/vt-d: Use old irte in kdump kernel
+> 
+>  drivers/iommu/intel-iommu.c         | 518 ++++++++++++++++++++++++++++++++++--
+>  drivers/iommu/intel_irq_remapping.c |  96 ++++++-
+>  include/linux/intel-iommu.h         |  16 ++
+>  3 files changed, 605 insertions(+), 25 deletions(-)
+> 
+> -- 
+> 2.0.0-rc0
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-hotplug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 0040343..651a866a 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -92,7 +92,8 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
- 	if (mode == PCI_PROBE_DEVTREE) {
- 		/* use ofdt-based probe */
- 		of_rescan_bus(dn, bus);
--	} else if (mode == PCI_PROBE_NORMAL) {
-+	} else if (mode == PCI_PROBE_NORMAL &&
-+		   dn->child && PCI_DN(dn->child)) {
- 		/*
- 		 * Use legacy probe. In the partial hotplug case, we
- 		 * probably have grandchildren devices unplugged. So
--- 
-2.1.0
+Again, I think it is bad to use old page table, below issues need consider:
+1) make sure old page table are reliable across crash
+2) do not allow writing oldmem after crash
 
+Please correct me if I'm wrong, or if above is not doable I think I will vote for
+resetting pci bus.
+
+Thanks
+Dave
