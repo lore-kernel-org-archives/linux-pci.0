@@ -1,56 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:35570 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077AbbEAAgF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2015 20:36:05 -0400
-Date: Fri, 1 May 2015 09:36:00 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
-Cc: geert@linux-m68k.org, linux-sh@vger.kernel.org,
-	magnus.damm@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
-	kuninori.morimoto.gx@renesas.com, linus.walleij@linaro.org,
-	devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 15/15] PCI: rcar: document r8a7793 DT bindings
-Message-ID: <20150501003600.GC13754@verge.net.au>
-References: <1430403544-26742-1-git-send-email-ulrich.hecht+renesas@gmail.com>
- <1430403544-26742-16-git-send-email-ulrich.hecht+renesas@gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:36457 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933503AbbDOQhB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Apr 2015 12:37:01 -0400
+Date: Wed, 15 Apr 2015 17:36:54 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+Cc: <linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Message-ID: <20150415173654.431f5d89@arm.com>
+In-Reply-To: <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+	<1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430403544-26742-16-git-send-email-ulrich.hecht+renesas@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[CC Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org ]
+On Wed, 15 Apr 2015 17:49:23 +0800
+Minghuan Lian <Minghuan.Lian@freescale.com> wrote:
 
-On Thu, Apr 30, 2015 at 04:19:04PM +0200, Ulrich Hecht wrote:
-> Signed-off-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
-> Acked-by: Simon Horman <horms+renesas@verge.net.au>
-> Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: devicetree@vger.kernel.org
+> SMMU of some platforms can only isolate limited device ID.
+> This may require that all PCI devices share the same ITS
+> device with the fixed device ID. The patch adds function
+> arch_msi_share_devid_update used for these platforms to update
+> the fixed device ID and maximum MSI interrupts number.
+> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 > ---
->  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
->  1 file changed, 1 insertion(+)
-
-I suppose this one is for the PCI subsystem and thus Bjorn Helgaas (CCed).
-
-> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> index d8ef5bf..8b156fe 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> @@ -8,6 +8,7 @@ OHCI and EHCI controllers.
->  Required properties:
->  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
->  	      "renesas,pci-r8a7791" for the R8A7791 SoC.
-> +	      "renesas,pci-r8a7793" for the R8A7793 SoC.
->  - reg:	A list of physical regions to access the device: the first is
->  	the operational registers for the OHCI/EHCI controllers and the
->  	second is for the bridge configuration and control registers.
-> -- 
-> 2.3.5
+>  drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+> index d0374a6..be78d0a 100644
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -1169,6 +1169,15 @@ static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
+>  	return 0;
+>  }
+>  
+> +void __weak
+> +arch_msi_share_devid_update(struct pci_dev *pdev, u32 *dev_id, u32 *nvesc)
+> +{
+> +	/*
+> +	 * use PCI_DEVID NOT share device ID as default
+> +	 * so nothing need to do
+> +	 */
+> +}
+> +
+
+NAK. On top of being ugly as sin, this breaks any form of multiplatform
+support. No way anything like this is going in. Guys, you really should
+know better.
+
+>  static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
+>  			   int nvec, msi_alloc_info_t *info)
+>  {
+> @@ -1185,6 +1194,8 @@ static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
+>  	dev_alias.count = nvec;
+>  
+>  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+> +	arch_msi_share_devid_update(pdev, &dev_alias.dev_id, &dev_alias.count);
+> +
+
+See the function above? That's where the aliasing should be taken care
+of.
+
+>  	its = domain->parent->host_data;
+>  
+>  	its_dev = its_find_device(its, dev_alias.dev_id);
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny.
