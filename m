@@ -1,73 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44186 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933018AbbDIUL1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Apr 2015 16:11:27 -0400
-Message-ID: <1428610286.5567.606.camel@redhat.com>
-Subject: Re: [PATCH] PCI: Export pci_probe_reset_function()
-From: Alex Williamson <alex.williamson@redhat.com>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:35090 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755009AbbDOAbd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Apr 2015 20:31:33 -0400
+Received: by igbyr2 with SMTP id yr2so53880676igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Apr 2015 17:31:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6L0JLPnd1=Dc5m6io2GKSDU6joGBxQKJNnCHj9Xo_hFQ@mail.gmail.com>
+References: <CAEkKNCc9BpCXNCw1RD2gngUhSs13_-P_rtk=w4tVDW+3QaR6xQ@mail.gmail.com>
+	<CAErSpo5K9utm4Bt75L75jTY5HPZO8qTtHfy9OzVqzxjV3FAW4A@mail.gmail.com>
+	<20150414135840.GB19151@google.com>
+	<CAEkKNCc37WTu+E=2G2pSjGhW6-6YBVygfTzQoiAVc48-7qVDhA@mail.gmail.com>
+	<CAErSpo6L0JLPnd1=Dc5m6io2GKSDU6joGBxQKJNnCHj9Xo_hFQ@mail.gmail.com>
+Date: Tue, 14 Apr 2015 17:31:32 -0700
+Message-ID: <CAEkKNCd9fJC8nS9mZZCvEegxQYVCy4u1f0_Xjs2+jBDPSK6yaA@mail.gmail.com>
+Subject: Re: PCI Out of Resources
+From: moussa ba <musaba@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 09 Apr 2015 14:11:26 -0600
-In-Reply-To: <20150409200048.GM30967@google.com>
-References: <20150409155100.6891.72838.stgit@gimli.home>
-	 <20150409195846.GL30967@google.com> <20150409200048.GM30967@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-04-09 at 15:00 -0500, Bjorn Helgaas wrote:
-> On Thu, Apr 09, 2015 at 02:58:46PM -0500, Bjorn Helgaas wrote:
-> > On Thu, Apr 09, 2015 at 09:51:43AM -0600, Alex Williamson wrote:
-> > > The equivalent bus and slot versions of this are already exported and
-> > > vfio-pci would like a function-probe available so we can expose
-> > > function-level reset capabilities to the user without necessarily
-> > > using it to perform a reset before enabling the device for the user.
-> > > 
-> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > 
-> > Applied to pci/virtualization for v4.1, thanks!
-> 
-> Actually, maybe it makes more sense for you to apply this along with the
-> vfio patch that uses it?  So if you want:
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Yes!!! pci=realloc actually resolves it.  Can you explain what the issue was?
 
-That would be more convenient, I'll take it.  Thanks!
+Moussa
 
-Alex
-
-> > > ---
-> > >  drivers/pci/pci.c   |    1 +
-> > >  include/linux/pci.h |    1 +
-> > >  2 files changed, 2 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 81f06e8..9f3e691 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -3524,6 +3524,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
-> > >  {
-> > >  	return pci_dev_reset(dev, 1);
-> > >  }
-> > > +EXPORT_SYMBOL_GPL(pci_probe_reset_function);
-> > >  
-> > >  /**
-> > >   * pci_reset_function - quiesce and reset a PCI device function
-> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > index 211e9da..233d1ae 100644
-> > > --- a/include/linux/pci.h
-> > > +++ b/include/linux/pci.h
-> > > @@ -986,6 +986,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-> > >  			  enum pcie_link_width *width);
-> > >  int __pci_reset_function(struct pci_dev *dev);
-> > >  int __pci_reset_function_locked(struct pci_dev *dev);
-> > > +int pci_probe_reset_function(struct pci_dev *dev);
-> > >  int pci_reset_function(struct pci_dev *dev);
-> > >  int pci_try_reset_function(struct pci_dev *dev);
-> > >  int pci_probe_reset_slot(struct pci_slot *slot);
-> > > 
-
-
-
+On Tue, Apr 14, 2015 at 3:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Tue, Apr 14, 2015 at 4:43 PM, moussa ba <musaba@gmail.com> wrote:
+>> Bjorn,
+>>
+>> See the bug filed here:
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=96651
+>>
+>> It was apparently misfiled to go to drivers_pci.  See the text of the
+>> bug filing below.  This was tested on 3.10, 3.19 and 4.0
+>>
+>> 20 PCI drives installed on a 2 Node system via 5 PCI switches. Only 16
+>> drives are actually recognized by the Linux.  All 20 drives are
+>> visible via lspci. I am unable to find an appropriate address in
+>> /proc/iomem to assign these regions to.
+>>
+>>
+>> #setpci -s 0000:90:00.0 BASE_ADDRESS_5=0x.......
+>>
+>> Not specifying the address because I had no idea where to put it, I
+>> would find empty spots in /proc/iomem but thse would fall within the
+>> address space of one of the pci bridges...
+>>
+>> We are missing 4 drives with the following error seen in dmesg for
+>> each drive, one given her as an example:
+>>
+>> [    0.983954] pci 0000:8e:00.0: can't claim BAR 6 [mem
+>> 0xffffc000-0xffffffff pref]: no compatible bridge window
+>> [    0.984106] pci 0000:02:02.0: BAR 14: no space for [mem size 0x00100000]
+>> [    0.984108] pci 0000:02:02.0: BAR 14: failed to assign [mem size 0x00100000]
+>> [    0.984110] pci 0000:02:04.0: BAR 14: no space for [mem size 0x00100000]
+>> [    0.984111] pci 0000:02:04.0: BAR 14: failed to assign [mem size 0x00100000]
+>> [    0.984113] pci 0000:02:02.0: BAR 13: no space for [io  size 0x1000]
+>> [    0.984114] pci 0000:02:02.0: BAR 13: failed to assign [io  size 0x1000]
+>> [    0.984116] pci 0000:02:04.0: BAR 13: no space for [io  size 0x1000]
+>> [    0.984117] pci 0000:02:04.0: BAR 13: failed to assign [io  size 0x1000]
+>> [    0.984119] pci 0000:03:00.0: BAR 5: no space for [mem size 0x00002000]
+>> [    0.984120] pci 0000:03:00.0: BAR 5: failed to assign [mem size 0x00002000]
+>> [    0.984122] pci 0000:03:00.0: BAR 2: no space for [mem size 0x00001000]
+>> [    0.984123] pci 0000:03:00.0: BAR 2: failed to assign [mem size 0x00001000]
+>> [    0.984124] pci 0000:03:00.0: BAR 3: no space for [mem size 0x00001000]
+>> [    0.984125] pci 0000:03:00.0: BAR 3: failed to assign [mem size 0x00001000]
+>> [    0.984128] pci 0000:03:00.0: BAR 4: no space for [io  size 0x0010]
+>> [    0.984129] pci 0000:03:00.0: BAR 4: failed to assign [io  size 0x0010]
+>> [    0.984132] pci 0000:02:02.0: PCI bridge to [bus 03]
+>> [    0.984142] pci 0000:02:03.0: PCI bridge to [bus 04]
+>> [    0.984154] pci 0000:05:00.0: BAR 5: no space for [mem size 0x00002000]
+>> [    0.984155] pci 0000:05:00.0: BAR 5: failed to assign [mem size 0x00002000]
+>> [    0.984156] pci 0000:05:00.0: BAR 2: no space for [mem size 0x00001000]
+>> [    0.984157] pci 0000:05:00.0: BAR 2: failed to assign [mem size 0x00001000]
+>> [    0.984159] pci 0000:05:00.0: BAR 3: no space for [mem size 0x00001000]
+>> [    0.984160] pci 0000:05:00.0: BAR 3: failed to assign [mem size 0x00001000]
+>> [    0.984161] pci 0000:05:00.0: BAR 4: no space for [io  size 0x0010]
+>> [    0.984163] pci 0000:05:00.0: BAR 4: failed to assign [io  size 0x0010]
+>
+> Linux assigns space for endpoint BARs, but it doesn't automatically
+> reassign bridge windows to make space for downstream devices.  Does
+> booting with "pci=realloc" make any difference?
+>
+> Bjorn
