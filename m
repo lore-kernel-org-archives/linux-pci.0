@@ -1,83 +1,348 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:36799 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbbDGFXI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 01:23:08 -0400
+Received: from mail-bl2on0143.outbound.protection.outlook.com ([65.55.169.143]:5376
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754256AbbDOKBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Apr 2015 06:01:49 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH v2 3/3] pci/layerscape: Add LS2085A PCIe support
+Date: Wed, 15 Apr 2015 17:48:35 +0800
+Message-ID: <1429091315-31891-4-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6au3nWwNJCQBOLV=9=5Jy5=MKnky4LLjThKf8J7MJfdg@mail.gmail.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-	<1427857069-6789-4-git-send-email-yinghai@kernel.org>
-	<20150406220638.GH10892@google.com>
-	<CAE9FiQWz_VYOmrN+L3nAAmA7OqZdAYawwku2A09RVrNObQn4jQ@mail.gmail.com>
-	<20150406224913.GI10892@google.com>
-	<CAE9FiQWGqjyp9YABc=BvzFSm7Tj7reojOoMPDybQZ1RYXD8XZQ@mail.gmail.com>
-	<CAErSpo6au3nWwNJCQBOLV=9=5Jy5=MKnky4LLjThKf8J7MJfdg@mail.gmail.com>
-Date: Mon, 6 Apr 2015 22:23:06 -0700
-Message-ID: <CAE9FiQVguGRDbYxRW=KNW6ZnUE23ifHJN4WXrf03JZB_P+d21w@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 6, 2015 at 8:43 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 6, 2015 at 8:13 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Mon, Apr 6, 2015 at 3:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> For "[PATCH 1/3] PCI: Introduce pci_bus_addr_t", I'm waiting for an updated
->>> version with Kconfig tweaks so we don't break other arches.
->>
->> I was thinking that you will update it manually.
->
-> I asked you for an updated version, incorporating the documentation
-> updates, to make sure I got everything you intended.  But I did go
-> ahead and do it manually for you.
+LS2085a is based on arm64 architecture, however, currently,
+layerscape PCIe driver based on pci-desginware.c is not
+compatible with arm64 architecture. The patch changes code
+to reuse PCIe Designware Base driver and provides LS2085a
+PCIe support.
 
-Good.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v2:
+1. remove unnecessary code pcie->lut = pp->dbi + PCIE_LUT_BASE
 
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=f70899ff889a38f9697d3c153aaacaed25f501c3
+ drivers/pci/host/Kconfig                |   4 +-
+ drivers/pci/host/pci-layerscape.c       | 184 +++++++++++++++++++-------------
+ drivers/pci/host/pcie-designware-base.h |   3 +
+ 3 files changed, 112 insertions(+), 79 deletions(-)
 
-Please consider to split that into two patches.
-First one include changes in : include/linux/types.h and
-Documentation/DMA-API-HOWTO.txt.
-and you should be author for that.
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 2a697c0a..e59783a 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -99,8 +99,8 @@ config PCI_XGENE
+ 
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+-	depends on OF && ARM
+-	select PCIE_DW
++	depends on OF && (ARM || ARM64)
++	select PCIE_DW_BASE
+ 	select MFD_SYSCON
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 4a6e62f..15c5e47 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -1,7 +1,7 @@
+ /*
+  * PCIe host controller driver for Freescale Layerscape SoCs
+  *
+- * Copyright (C) 2014 Freescale Semiconductor.
++ * Copyright (C) 2014 - 2015 Freescale Semiconductor.
+  *
+   * Author: Minghuan Lian <Minghuan.Lian@freescale.com>
+  *
+@@ -11,20 +11,16 @@
+  */
+ 
+ #include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/interrupt.h>
++#include <linux/mfd/syscon.h>
+ #include <linux/module.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+-#include <linux/of_irq.h>
+-#include <linux/of_address.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+-#include <linux/resource.h>
+-#include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
++#include <linux/resource.h>
+ 
+-#include "pcie-designware.h"
++#include "pcie-designware-base.h"
+ 
+ /* PEX1/2 Misc Ports Status Register */
+ #define SCFG_PEXMSCPORTSR(pex_idx)	(0x94 + (pex_idx) * 4)
+@@ -32,26 +28,29 @@
+ #define LTSSM_STATE_MASK	0x3f
+ #define LTSSM_PCIE_L0		0x11 /* L0 state */
+ 
+-/* Symbol Timer Register and Filter Mask Register 1 */
+-#define PCIE_STRFMR1 0x71c
++/* PEX LUT registers */
++#define PCIE_LUT_BASE		0x80000
++#define PCIE_LUT_DBG		0x7FC /* PEX LUT Debug register */
++
++#define PCIE_ATU_NUM		6
+ 
+ struct ls_pcie {
+-	struct list_head node;
+-	struct device *dev;
+-	struct pci_bus *bus;
+-	void __iomem *dbi;
+-	struct regmap *scfg;
+-	struct pcie_port pp;
+-	int index;
+-	int msi_irq;
++	struct dw_pcie_port	pp;
++	void __iomem		*regs;
++	void __iomem		*lut;
++	struct regmap		*scfg;
++	int			index;
+ };
+ 
+ #define to_ls_pcie(x)	container_of(x, struct ls_pcie, pp)
+ 
+-static int ls_pcie_link_up(struct pcie_port *pp)
++static int ls1_pcie_link_up(struct dw_pcie_port *pp)
+ {
+-	u32 state;
+ 	struct ls_pcie *pcie = to_ls_pcie(pp);
++	u32 state;
++
++	if (!pcie->scfg)
++		return 0;
+ 
+ 	regmap_read(pcie->scfg, SCFG_PEXMSCPORTSR(pcie->index), &state);
+ 	state = (state >> LTSSM_STATE_SHIFT) & LTSSM_STATE_MASK;
+@@ -62,91 +61,128 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+ 	return 1;
+ }
+ 
+-static void ls_pcie_host_init(struct pcie_port *pp)
++static int ls1_pcie_host_init(struct dw_pcie_port *pp)
+ {
+ 	struct ls_pcie *pcie = to_ls_pcie(pp);
+-	int count = 0;
+-	u32 val;
+-
+-	dw_pcie_setup_rc(pp);
++	u32 val, index[2];
++	int ret;
+ 
+-	while (!ls_pcie_link_up(pp)) {
+-		usleep_range(100, 1000);
+-		count++;
+-		if (count >= 200) {
+-			dev_err(pp->dev, "phy link never came up\n");
+-			return;
+-		}
++	pcie->scfg = syscon_regmap_lookup_by_phandle(pp->dev->of_node,
++						     "fsl,pcie-scfg");
++	if (IS_ERR(pcie->scfg)) {
++		dev_err(pp->dev, "No syscfg phandle specified\n");
++		return PTR_ERR(pcie->scfg);
+ 	}
+ 
++	ret = of_property_read_u32_array(pp->dev->of_node,
++					 "fsl,pcie-scfg", index, 2);
++	if (ret)
++		return ret;
++
++	pcie->index = index[1];
++
+ 	/*
+ 	 * LS1021A Workaround for internal TKT228622
+ 	 * to fix the INTx hang issue
+ 	 */
+-	val = ioread32(pcie->dbi + PCIE_STRFMR1);
++	val = dw_pcie_dbi_read(pp, PCIE_SYMBOL_TIMER_1);
+ 	val &= 0xffff;
+-	iowrite32(val, pcie->dbi + PCIE_STRFMR1);
++	dw_pcie_dbi_write(pp, val, PCIE_SYMBOL_TIMER_1);
++
++	/* Fix class value */
++	val = dw_pcie_dbi_read(pp, PCI_CLASS_REVISION);
++	val = (val & 0x0000ffff) | (PCI_CLASS_BRIDGE_PCI << 16);
++	dw_pcie_dbi_write(pp, val, PCI_CLASS_REVISION);
++
++	if (!ls1_pcie_link_up(pp))
++		dev_err(pp->dev, "phy link never came up\n");
++
++	return 0;
+ }
+ 
+-static struct pcie_host_ops ls_pcie_host_ops = {
+-	.link_up = ls_pcie_link_up,
+-	.host_init = ls_pcie_host_init,
++static struct dw_host_ops ls1_dw_host_ops = {
++	.link_up = ls1_pcie_link_up,
++	.host_init = ls1_pcie_host_init,
+ };
+ 
+-static int ls_add_pcie_port(struct ls_pcie *pcie)
++static int ls2_pcie_link_up(struct dw_pcie_port *pp)
+ {
+-	struct pcie_port *pp;
+-	int ret;
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++	u32 state;
+ 
+-	pp = &pcie->pp;
+-	pp->dev = pcie->dev;
+-	pp->dbi_base = pcie->dbi;
+-	pp->root_bus_nr = -1;
+-	pp->ops = &ls_pcie_host_ops;
++	if (!pcie->lut)
++		return 0;
+ 
+-	ret = dw_pcie_host_init(pp);
+-	if (ret) {
+-		dev_err(pp->dev, "failed to initialize host\n");
+-		return ret;
+-	}
++	state = ioread32(pcie->lut + PCIE_LUT_DBG) & LTSSM_STATE_MASK;
++	if (state < LTSSM_PCIE_L0)
++		return 0;
++
++	return 1;
++}
++
++static int ls2_pcie_host_init(struct dw_pcie_port *pp)
++{
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++	u32 val;
++
++	dw_pcie_dbi_write(pp, 1, PCIE_DBI_RO_WR_EN);
++	/* Fix class value */
++	val = dw_pcie_dbi_read(pp, PCI_CLASS_REVISION);
++	val = (val & 0x0000ffff) | (PCI_CLASS_BRIDGE_PCI << 16);
++	dw_pcie_dbi_write(pp, val, PCI_CLASS_REVISION);
++	/* clean multi-func bit */
++	val = dw_pcie_dbi_read(pp, PCI_HEADER_TYPE & ~0x3);
++	val &= ~(1 << 23);
++	dw_pcie_dbi_write(pp, val, PCI_HEADER_TYPE & ~0x3);
++	dw_pcie_dbi_write(pp, 0, PCIE_DBI_RO_WR_EN);
++
++	if (!ls2_pcie_link_up(pp))
++		dev_err(pp->dev, "phy link never came up\n");
+ 
+ 	return 0;
+ }
+ 
++static struct dw_host_ops ls2_dw_host_ops = {
++	.link_up = ls2_pcie_link_up,
++	.host_init = ls2_pcie_host_init,
++};
++
++static const struct of_device_id ls_pcie_of_match[] = {
++	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1_dw_host_ops },
++	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2_dw_host_ops },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
++
+ static int __init ls_pcie_probe(struct platform_device *pdev)
+ {
++	const struct of_device_id *match;
+ 	struct ls_pcie *pcie;
+-	struct resource *dbi_base;
+-	u32 index[2];
++	struct resource *res;
+ 	int ret;
+ 
++	match = of_match_device(ls_pcie_of_match, &pdev->dev);
++	if (!match)
++		return -ENODEV;
++
+ 	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+ 	if (!pcie)
+ 		return -ENOMEM;
+ 
+-	pcie->dev = &pdev->dev;
+-
+-	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
+-	pcie->dbi = devm_ioremap_resource(&pdev->dev, dbi_base);
+-	if (IS_ERR(pcie->dbi)) {
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
++	pcie->regs = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(pcie->regs)) {
+ 		dev_err(&pdev->dev, "missing *regs* space\n");
+-		return PTR_ERR(pcie->dbi);
+-	}
+-
+-	pcie->scfg = syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
+-						     "fsl,pcie-scfg");
+-	if (IS_ERR(pcie->scfg)) {
+-		dev_err(&pdev->dev, "No syscfg phandle specified\n");
+-		return PTR_ERR(pcie->scfg);
++		return PTR_ERR(pcie->regs);
+ 	}
+ 
+-	ret = of_property_read_u32_array(pdev->dev.of_node,
+-					 "fsl,pcie-scfg", index, 2);
+-	if (ret)
+-		return ret;
+-	pcie->index = index[1];
++	pcie->lut = pcie->regs + PCIE_LUT_BASE;
++	pcie->pp.dev = &pdev->dev;
++	pcie->pp.dbi = pcie->regs;
++	pcie->pp.dw_ops = (struct dw_host_ops *)match->data;
++	pcie->pp.atu_num = PCIE_ATU_NUM;
+ 
+-	ret = ls_add_pcie_port(pcie);
++	ret = dw_pcie_port_init(&pcie->pp);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -155,12 +191,6 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static const struct of_device_id ls_pcie_of_match[] = {
+-	{ .compatible = "fsl,ls1021a-pcie" },
+-	{ },
+-};
+-MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
+-
+ static struct platform_driver ls_pcie_driver = {
+ 	.driver = {
+ 		.name = "layerscape-pcie",
+diff --git a/drivers/pci/host/pcie-designware-base.h b/drivers/pci/host/pcie-designware-base.h
+index 60c82de..98b62d6 100644
+--- a/drivers/pci/host/pcie-designware-base.h
++++ b/drivers/pci/host/pcie-designware-base.h
+@@ -10,6 +10,9 @@
+ #define _PCIE_DESIGNWARE_BASE_H
+ 
+ /* Synopsis specific PCIE configuration registers */
++#define PCIE_SYMBOL_TIMER_1		0x71c
++#define PCIE_DBI_RO_WR_EN		0x8bc
++
+ #define PCIE_ATU_VIEWPORT		0x900
+ #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
+ #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
+-- 
+1.9.1
 
-
->
->>> For "[PATCH 2/3] sparc/PCI: Add mem64 resource parsing for root bus", I'm
->>> waiting for a version that fixes the other of_bus_pci_get_flags() and
->>> pci_parse_of_flags() implementations at the same time (or an explanation
->>> about why we should fix only the arch/sparc version).  I don't want to fix
->>> one place and leave the same bug in other places.
->>
->> I don't even know if other arch like powerpc support 64-bit bus address.
->>
->> No one from powerpc reported a problem, why should we mess it up now?
->>
->> I would like to see someone get access those three kinds of machine that support
->> of to unify of support code.
->
-> Of course changes there should be tested on all the affected machines.
-> I opened https://bugzilla.kernel.org/show_bug.cgi?id=96241 and
-> assigned it to you as a reminder that there is nearly identical code
-> in several other places that may have the same issue.
-
-ok, will on that to have three patches cover them.
-
->
-> I pushed these two changes to for-linus.  I'll work on the third
-> tomorrow.  The current changelog is very sparc64-centric, and it needs
-> to be much more explicit about how the change will affect every arch.
-
-Sure. That will affect all platform.
-
-Thanks
-
-Yinghai
