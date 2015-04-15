@@ -1,130 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:52133 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750871AbbD3EjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Apr 2015 00:39:12 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Received: from mail-by2on0104.outbound.protection.outlook.com ([207.46.100.104]:29026
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751549AbbDONSQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 09:18:16 -0400
+From: Varun Sethi <Varun.Sethi@freescale.com>
+To: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Stuart Yoder" <stuart.yoder@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Bugfix v6] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Thu, 30 Apr 2015 12:41:28 +0800
-Message-Id: <1430368888-21402-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <CAErSpo7D_CDM+1mzO0ADdzbAE9xwnwiyJ-dk0WFthr+ReKpidg@mail.gmail.com>
-References: <CAErSpo7D_CDM+1mzO0ADdzbAE9xwnwiyJ-dk0WFthr+ReKpidg@mail.gmail.com>
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <will.deacon@arm.com>
+Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Date: Wed, 15 Apr 2015 13:18:13 +0000
+Message-ID: <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+In-Reply-To: <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An IO port or MMIO resource assigned to a PCI host bridge may be
-consumed by the host bridge itself or available to its child
-bus/devices. The ACPI specification defines a bit (Producer/Consumer)
-to tell whether the resource is consumed by the host bridge itself,
-but firmware hasn't used that bit consistently, so we can't rely on it.
+Hi Minghuan,
+Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if TBU ID would also be forwarded as a part of stream id to GIC. My understanding is that TBU ID is forwarded (as a part of the stream ID) to the TCU in case of a TBU translation miss. In case of the LS2085 PCIe controller you would have to setup the PCIe device ID to stream ID translation table. We may have to restrict the number of entries based on the available number of contexts.
 
-Before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
-interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
-all IO port resources defined by acpi_resource_io and
-acpi_resource_fixed_io to filter out IO ports consumed by the host
-bridge itself.
+Regards
+Varun
 
-Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
-to simplify implementation") started accepting all IO port and MMIO
-resources, which caused a regression that IO port resources consumed
-by the host bridge itself became available to its child devices.
 
-Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
-host bridge itself") ignored resources consumed by the host bridge
-itself by checking the IORESOURCE_WINDOW flag, which accidently removed
-MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
-and acpi_resource_fixed_memory32.
-
-On x86 and IA64 platforms, all IO port and MMIO resources are assumed
-to be available to child bus/devices except one special case:
-    IO port [0xCF8-0xCFF] is consumed by the host bridge itself
-    to access PCI configuration space.
-
-So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF]. This solution
-will also ease the way to consolidate ACPI PCI host bridge common code
-from x86, ia64 and ARM64.
-
-Related ACPI table are archived at:
-https://bugzilla.kernel.org/show_bug.cgi?id=94221
-
-Related discussions at:
-http://patchwork.ozlabs.org/patch/461633/
-https://lkml.org/lkml/2015/3/29/304
-
-Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
-Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: <stable@vger.kernel.org> # 4.0
----
- arch/x86/pci/acpi.c     |   24 ++++++++++++++++++++++--
- drivers/acpi/resource.c |    2 +-
- 2 files changed, 23 insertions(+), 3 deletions(-)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index e4695985f9de..d93963340c3c 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -325,6 +325,26 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 	kfree(info);
- }
- 
-+/*
-+ * An IO port or MMIO resource assigned to a PCI host bridge may be
-+ * consumed by the host bridge itself or available to its child
-+ * bus/devices. The ACPI specification defines a bit (Producer/Consumer)
-+ * to tell whether the resource is consumed by the host bridge itself,
-+ * but firmware hasn't used that bit consistently, so we can't rely on it.
-+ *
-+ * On x86 and IA64 platforms, all IO port and MMIO resources are assumed
-+ * to be available to child bus/devices except one special case:
-+ *     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
-+ *     to access PCI configuration space.
-+ *
-+ * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
-+ */
-+static bool resource_is_pcicfg_ioport(struct resource *res)
-+{
-+	return (res->flags & IORESOURCE_IO) &&
-+		res->start == 0xCF8 && res->end == 0xCFF;
-+}
-+
- static void probe_pci_root_info(struct pci_root_info *info,
- 				struct acpi_device *device,
- 				int busnum, int domain,
-@@ -346,8 +366,8 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			"no IO and memory resources present in _CRS\n");
- 	else
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
--			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
--			    (entry->res->flags & IORESOURCE_DISABLED))
-+			if ((entry->res->flags & IORESOURCE_DISABLED) ||
-+			    resource_is_pcicfg_ioport(entry->res))
- 				resource_list_destroy_entry(entry);
- 			else
- 				entry->res->name = info->name;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5589a6e2a023..8244f013f210 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -573,7 +573,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
-  * @ares: Input ACPI resource object.
-  * @types: Valid resource types of IORESOURCE_XXX
-  *
-- * This is a hepler function to support acpi_dev_get_resources(), which filters
-+ * This is a helper function to support acpi_dev_get_resources(), which filters
-  * ACPI resource objects according to resource types.
-  */
- int acpi_dev_filter_resource_type(struct acpi_resource *ares,
--- 
-1.7.10.4
-
+> -----Original Message-----
+> From: Lian Minghuan-B31939
+> Sent: Wednesday, April 15, 2015 5:08 PM
+> To: Sethi Varun-B16395; linux-pci@vger.kernel.org
+> Cc: Arnd Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-
+> B08248; Bjorn Helgaas; Wood Scott-B07421; linux-arm-
+> kernel@lists.infradead.org
+> Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> 
+> Hi Varun,
+> 
+> Freescale LS2085A SMMU uses in hit/miss mechanism for the concatenation
+> {tbu number,stream_id}. This concatenation is then assigned to a context
+> bank that determines the translation type and form. The Isolation Context
+> Identifier ICID is the main field of stream_id which will be used to hit ITS
+> device. We may look ICID as ITS device ID and PCI device ID. But there are
+> only 64 ICIDs  0 - 63.  If using default PCI_DEVID(bus, devfn)  ((((u16)(bus)) <<
+> 8) | (devfn)), PCI device(bus >=1) ) ID will larger than 63.  SMMU will miss this
+> translation.
+> In addition, because the ICID number  is only 64, all the PCIe device will use
+> the same ICID and share the same ITS device.
+> 
+> Thanks,
+> Minghuan
+> 
+> > -----Original Message-----
+> > From: Sethi Varun-B16395
+> > Sent: Wednesday, April 15, 2015 7:08 PM
+> > To: Lian Minghuan-B31939; linux-pci@vger.kernel.org
+> > Cc: Arnd Bergmann; Lian Minghuan-B31939; Hu Mingkai-B21284; Zang Roy-
+> > R61911; Yoder Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421;
+> > linux-arm- kernel@lists.infradead.org
+> > Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> >
+> > Hi Minghuan,
+> > Not clear what this patch intends to do. Can you please explain the
+> > point about SMMU isolating limited device ID.
+> >
+> > Regards
+> > Varun
+> >
+> > > -----Original Message-----
+> > > From: linux-arm-kernel [mailto:linux-arm-kernel-
+> > > bounces@lists.infradead.org] On Behalf Of Minghuan Lian
+> > > Sent: Wednesday, April 15, 2015 3:19 PM
+> > > To: linux-pci@vger.kernel.org
+> > > Cc: Arnd Bergmann; Lian Minghuan-B31939; Hu Mingkai-B21284; Zang
+> > > Roy- R61911; Yoder Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421;
+> > > linux-arm- kernel@lists.infradead.org
+> > > Subject: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> > >
+> > > SMMU of some platforms can only isolate limited device ID.
+> > > This may require that all PCI devices share the same ITS device with
+> > > the fixed device ID. The patch adds function
+> > > arch_msi_share_devid_update used for these platforms to update the
+> > > fixed device ID and maximum MSI interrupts number.
+> > >
+> > > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> > > ---
+> > >  drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++
+> > >  1 file changed, 11 insertions(+)
+> > >
+> > > diff --git a/drivers/irqchip/irq-gic-v3-its.c
+> > > b/drivers/irqchip/irq-gic-v3-its.c
+> > > index d0374a6..be78d0a 100644
+> > > --- a/drivers/irqchip/irq-gic-v3-its.c
+> > > +++ b/drivers/irqchip/irq-gic-v3-its.c
+> > > @@ -1169,6 +1169,15 @@ static int its_get_pci_alias(struct pci_dev
+> > > *pdev,
+> > > u16 alias, void *data)
+> > >  	return 0;
+> > >  }
+> > >
+> > > +void __weak
+> > > +arch_msi_share_devid_update(struct pci_dev *pdev, u32 *dev_id, u32
+> > > +*nvesc) {
+> > > +	/*
+> > > +	 * use PCI_DEVID NOT share device ID as default
+> > > +	 * so nothing need to do
+> > > +	 */
+> > > +}
+> > > +
+> > >  static int its_msi_prepare(struct irq_domain *domain, struct device
+> *dev,
+> > >  			   int nvec, msi_alloc_info_t *info)  { @@ -1185,6
+> > > +1194,8 @@ static int its_msi_prepare(struct irq_domain *domain,
+> > > +struct
+> > > device *dev,
+> > >  	dev_alias.count = nvec;
+> > >
+> > >  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+> > > +	arch_msi_share_devid_update(pdev, &dev_alias.dev_id,
+> > > +&dev_alias.count);
+> > > +
+> > >  	its = domain->parent->host_data;
+> > >
+> > >  	its_dev = its_find_device(its, dev_alias.dev_id);
+> > > --
+> > > 1.9.1
+> > >
+> > >
+> > > _______________________________________________
+> > > linux-arm-kernel mailing list
+> > > linux-arm-kernel@lists.infradead.org
+> > > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
