@@ -1,208 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47057 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752656AbbDCI22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Apr 2015 04:28:28 -0400
-Date: Fri, 3 Apr 2015 16:28:16 +0800
-From: Dave Young <dyoung@redhat.com>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150403082816.GE22579@dhcp-128-53.nay.redhat.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 15 Apr 2015 18:04:55 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Tony Luck <tony.luck@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-acpi <linux-acpi@vger.kernel.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v1 2/4] PCI: Mark invalid BARs as unassigned
+Message-ID: <20150415230455.GB27352@google.com>
+References: <20150312173201.1052.28341.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150312173533.1052.46464.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <CA+8MBbJv-RwX_RDzk85X_sHAHUG6cTsCAKd-_iE7wrdQ9wYKsQ@mail.gmail.com>
+ <CAErSpo6PV7+cZKgDPBA7tDn4oyp_hONqJFegTFxVLz2KaTeK4A@mail.gmail.com>
+ <CA+8MBbLnFQ2_zWniBFN6=kJMo-3PbBQvdsfPFV+zyApYpN6BQA@mail.gmail.com>
+ <20150415144819.GD19151@google.com>
+ <CA+8MBbJEf9gOyWq_Urw3T5s7jj2-2pHkuQRcn9X3TxSYYUK5ZA@mail.gmail.com>
+ <20150415194226.GA27352@google.com>
+ <CA+8MBb++T5MEtCbcduxym08MPjDF7pCj50Ae2Mvw2U0a-gkb2A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CA+8MBb++T5MEtCbcduxym08MPjDF7pCj50Ae2Mvw2U0a-gkb2A@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/15 at 01:36pm, Li, Zhen-Hua wrote:
-> This patchset is an update of Bill Sumner's patchset, implements a fix for:
-> If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
-> when a panic happens, the kdump kernel will boot with these faults:
+On Wed, Apr 15, 2015 at 02:28:08PM -0700, Tony Luck wrote:
+> On Wed, Apr 15, 2015 at 12:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > I think we're about to conclude that the Producer/Consumer bit is useless
+> > and should be ignored.
+> >
+> > Can you drop the previous debug patch and try this one?
 > 
->     dmar: DRHD: handling fault status reg 102
->     dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
->     DMAR:[fault reason 01] Present bit in root entry is clear
-> 
->     dmar: DRHD: handling fault status reg 2
->     dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
->     INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
-> 
-> On some system, the interrupt remapping fault will also happen even if the 
-> intel_iommu is not set to on, because the interrupt remapping will be enabled 
-> when x2apic is needed by the system.
-> 
-> The cause of the DMA fault is described in Bill's original version, and the 
-> INTR-Remap fault is caused by a similar reason. In short, the initialization 
-> of vt-d drivers causes the in-flight DMA and interrupt requests get wrong 
-> response.
-> 
-> To fix this problem, we modifies the behaviors of the intel vt-d in the 
-> crashdump kernel:
-> 
-> For DMA Remapping:
-> 1. To accept the vt-d hardware in an active state,
-> 2. Do not disable and re-enable the translation, keep it enabled.
-> 3. Use the old root entry table, do not rewrite the RTA register.
-> 4. Malloc and use new context entry table, copy data from the old ones that
->    used by the old kernel.
-> 5. Keep using the old page tables before driver is loaded.
-> 6. After device driver is loaded, when it issues the first dma_map command, 
->    free the dmar_domain structure for this device, and generate a new one, so 
->    that the device can be assigned a new and empty page table. 
-> 7. When a new context entry table is generated, we also save its address to 
->    the old root entry table.
-> 
-> For Interrupt Remapping:
-> 1. To accept the vt-d hardware in an active state,
-> 2. Do not disable and re-enable the interrupt remapping, keep it enabled.
-> 3. Use the old interrupt remapping table, do not rewrite the IRTA register.
-> 4. When ioapic entry is setup, the interrupt remapping table is changed, and 
->    the updated data will be stored to the old interrupt remapping table.
-> 
-> Advantages of this approach:
-> 1. All manipulation of the IO-device is done by the Linux device-driver
->    for that device.
-> 2. This approach behaves in a manner very similar to operation without an
->    active iommu.
-> 3. Any activity between the IO-device and its RMRR areas is handled by the
->    device-driver in the same manner as during a non-kdump boot.
-> 4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
->    This supports the practice of creating a special kdump kernel without
->    drivers for any devices that are not required for taking a crashdump. 
-> 5. Minimal code-changes among the existing mainline intel vt-d code.
-> 
-> Summary of changes in this patch set:
-> 1. Added some useful function for root entry table in code intel-iommu.c
-> 2. Added new members to struct root_entry and struct irte;
-> 3. Functions to load old root entry table to iommu->root_entry from the memory 
->    of old kernel.
-> 4. Functions to malloc new context entry table and copy the data from the old
->    ones to the malloced new ones.
-> 5. Functions to enable support for DMA remapping in kdump kernel.
-> 6. Functions to load old irte data from the old kernel to the kdump kernel.
-> 7. Some code changes that support other behaviours that have been listed.
-> 8. In the new functions, use physical address as "unsigned long" type, not 
->    pointers.
-> 
-> Original version by Bill Sumner:
->     https://lkml.org/lkml/2014/1/10/518
->     https://lkml.org/lkml/2014/4/15/716
->     https://lkml.org/lkml/2014/4/24/836
-> 
-> Zhenhua's updates:
->     https://lkml.org/lkml/2014/10/21/134
->     https://lkml.org/lkml/2014/12/15/121
->     https://lkml.org/lkml/2014/12/22/53
->     https://lkml.org/lkml/2015/1/6/1166
->     https://lkml.org/lkml/2015/1/12/35
-> 
-> Changelog[v9]:
->     1. Add new function iommu_attach_domain_with_id.
->     2. Do not copy old page tables, keep using the old ones.
->     3. Remove functions:
->            intel_iommu_did_to_domain_values_entry
->            intel_iommu_get_dids_from_old_kernel
->            device_to_domain_id
->            copy_page_addr
->            copy_page_table
->            copy_context_entry
->            copy_context_entry_table
->     4. Add new function device_to_existing_context_entry.
-> 
-> Changelog[v8]:
->     1. Add a missing __iommu_flush_cache in function copy_page_table.
-> 
-> Changelog[v7]:
->     1. Use __iommu_flush_cache to flush the data to hardware.
-> 
-> Changelog[v6]:
->     1. Use "unsigned long" as type of physical address.
->     2. Use new function unmap_device_dma to unmap the old dma.
->     3. Some small incorrect bits order for aw shift.
-> 
-> Changelog[v5]:
->     1. Do not disable and re-enable traslation and interrupt remapping. 
->     2. Use old root entry table.
->     3. Use old interrupt remapping table.
->     4. New functions to copy data from old kernel, and save to old kernel mem.
->     5. New functions to save updated root entry table and irte table.
->     6. Use intel_unmap to unmap the old dma;
->     7. Allocate new pages while driver is being loaded.
-> 
-> Changelog[v4]:
->     1. Cut off the patches that move some defines and functions to new files.
->     2. Reduce the numbers of patches to five, make it more easier to read.
->     3. Changed the name of functions, make them consistent with current context
->        get/set functions.
->     4. Add change to function __iommu_attach_domain.
-> 
-> Changelog[v3]:
->     1. Commented-out "#define DEBUG 1" to eliminate debug messages.
->     2. Updated the comments about changes in each version.
->     3. Fixed: one-line added to Copy-Translations patch to initialize the iovad
->           struct as recommended by Baoquan He [bhe@redhat.com]
->           init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
-> 
-> Changelog[v2]:
->     The following series implements a fix for:
->     A kdump problem about DMA that has been discussed for a long time. That is,
->     when a kernel panics and boots into the kdump kernel, DMA started by the
->     panicked kernel is not stopped before the kdump kernel is booted and the
->     kdump kernel disables the IOMMU while this DMA continues.  This causes the
->     IOMMU to stop translating the DMA addresses as IOVAs and begin to treat
->     them as physical memory addresses -- which causes the DMA to either:
->         (1) generate DMAR errors or 
->         (2) generate PCI SERR errors or 
->         (3) transfer data to or from incorrect areas of memory. Often this 
->             causes the dump to fail.
-> 
-> Changelog[v1]:
->     The original version.
-> 
-> Changed in this version:
-> 1. Do not disable and re-enable traslation and interrupt remapping. 
-> 2. Use old root entry table.
-> 3. Use old interrupt remapping table.
-> 4. Use "unsigned long" as physical address.
-> 5. Use intel_unmap to unmap the old dma;
-> 
-> Baoquan He <bhe@redhat.com> helps testing this patchset.
-> Takao Indoh <indou.takao@jp.fujitsu.com> gives valuable suggestions.
-> 
-> Li, Zhen-Hua (10):
->   iommu/vt-d: New function to attach domain with id
->   iommu/vt-d: Items required for kdump
->   iommu/vt-d: Function to get old context entry
->   iommu/vt-d: functions to copy data from old mem
->   iommu/vt-d: Add functions to load and save old re
->   iommu/vt-d: datatypes and functions used for kdump
->   iommu/vt-d: enable kdump support in iommu module
->   iommu/vt-d: assign new page table for dma_map
->   iommu/vt-d: Copy functions for irte
->   iommu/vt-d: Use old irte in kdump kernel
-> 
->  drivers/iommu/intel-iommu.c         | 535 ++++++++++++++++++++++++++++++++++--
->  drivers/iommu/intel_irq_remapping.c | 105 ++++++-
->  include/linux/intel-iommu.h         |  18 ++
->  3 files changed, 628 insertions(+), 30 deletions(-)
-> 
-> -- 
-> 2.0.0-rc0
-> 
+> That producer/consumer thing sounds horribly familiar ... did we venture along
+> this path before many years ago?
 
-Zhenhua,
+463eb297401e ("[IA64] respect ACPI producer/consumer flag for PCI root
+bridges") from 2005 added this check.  There's also been recent discussion
+about Jiang's patches and how to handle that bit in some more generic code
+[1].
 
-I will review the patchset recently, sorry for jumping in late.
+I think if we strictly follow the spec, it is correct to check the
+producer/consumer bit.  If we don't check the bit, we are basically
+assuming that all Address Space Resource Descriptors are windows that are
+forwarded downstream, and I don't think there's a way for a host bridge to
+use those descriptors to describe its own CSR space.
 
-Thanks
-Dave
+But either we haven't figured out how to interpret producer/consumer
+correctly, or BIOSes haven't used it consistently, and we end up with
+problems like this one.  So I suspect we'll have to give up and just
+ignore the producer/consumer bit.
+
+> I applied the new patch on top of Linus latest (from this morning
+> HEAD=6c373ca89399c5a3f7ef210ad8f63dc3437da345) without any
+> reverts.  System booted OK with both disks online and networking
+> functional).
+
+This looks better ... I think.  Here's the change this patch makes:
+
+   ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7f])
+   acpi PNP0A08:00: host bridge window [io  0x0000-0x0cf7]
+   acpi PNP0A08:00: host bridge window [io  0x1000-0x8fff]
+  +acpi PNP0A08:00: host bridge window [mem 0x000a0000-0x000bffff]
+  +acpi PNP0A08:00: host bridge window [mem 0x000c0000-0x000fffff]
+  +acpi PNP0A08:00: host bridge window [mem 0xfec00000-0xfec3ffff]
+  +acpi PNP0A08:00: host bridge window [mem 0xfed1c000-0xfed1c0ff]
+  +acpi PNP0A08:00: host bridge window [mem 0xfed40000-0xfedfffff]
+   acpi PNP0A08:00: host bridge window [mem 0x50000000-0x9fffffff]
+  +acpi PNP0A08:00: host bridge window [mem 0x10000000000-0x100fffffffe]
+  +acpi PNP0A08:00: host bridge window [mem 0x10100000000-0x101fffffffe]
+  +acpi PNP0A08:00: host bridge window [mem 0x10200000000-0x102fffffffe]
+  +acpi PNP0A08:00: host bridge window [mem 0x10300000000-0x103fffffffe]
+
+   ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-ff])
+   acpi PNP0A08:01: host bridge window [io  0x9000-0xfffe]
+  +acpi PNP0A08:01: host bridge window [mem 0xfec40000-0xfec7ffff]
+  +acpi PNP0A08:01: host bridge window [mem 0xa0000000-0xefffffff]
+  +acpi PNP0A08:01: host bridge window [mem 0x10400000000-0x104fffffffe]
+  +acpi PNP0A08:01: host bridge window [mem 0x10500000000-0x105fffffffe]
+  +acpi PNP0A08:01: host bridge window [mem 0x10600000000-0x106fffffffe]
+  +acpi PNP0A08:01: host bridge window [mem 0x10700000000-0x107fffffffe]
+
+The addition of the [mem 0xa0000000-0xefffffff] window for PCI1, which we
+previously ignored, is what makes your igb and mptsas devices work again.
+
+It concerns me a little bit that the BIOS apparently did set the producer
+bit for the PCI0 [mem 0x50000000-0x9fffffff] window, but not for any of
+the other windows, not even the ones that fit in 32 bits.  But maybe that
+inconsistency is just a little BIOS lint that doesn't mean anything.
+
+Anyway, I guess I'll package up this patch and post it.
+
+Bjorn
+
+[1] http://lkml.kernel.org/r/20150404030411.GG10892@google.com
+
