@@ -1,99 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39285 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751122AbbDHDeu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Apr 2015 23:34:50 -0400
-Date: Wed, 8 Apr 2015 11:33:51 +0800
-From: Dave Young <dyoung@redhat.com>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: Baoquan He <bhe@redhat.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150408033351.GI7213@localhost.localdomain>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <551E56F6.60503@hp.com>
- <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
- <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
- <20150407034622.GB7213@localhost.localdomain>
- <20150407090837.GE7213@localhost.localdomain>
- <5523A977.1030707@hp.com>
+Received: from mail-bl2on0111.outbound.protection.outlook.com ([65.55.169.111]:47232
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754435AbbDOLmZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 07:42:25 -0400
+From: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>
+Subject: RE: [PATCH v2 2/3] pci/designware: Add base driver for Designware
+ PCIe
+Date: Wed, 15 Apr 2015 11:42:22 +0000
+Message-ID: <DM2PR0301MB0640C4BA8501EED83F9303F1E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+References: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091315-31891-3-git-send-email-Minghuan.Lian@freescale.com>
+ <2123546.0rhYViPpvy@wuerfel>
+In-Reply-To: <2123546.0rhYViPpvy@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5523A977.1030707@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/15 at 05:55pm, Li, ZhenHua wrote:
-> On 04/07/2015 05:08 PM, Dave Young wrote:
-> >On 04/07/15 at 11:46am, Dave Young wrote:
-> >>On 04/05/15 at 09:54am, Baoquan He wrote:
-> >>>On 04/03/15 at 05:21pm, Dave Young wrote:
-> >>>>On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
-> >>>>>Hi Dave,
-> >>>>>
-> >>>>>There may be some possibilities that the old iommu data is corrupted by
-> >>>>>some other modules. Currently we do not have a better solution for the
-> >>>>>dmar faults.
-> >>>>>
-> >>>>>But I think when this happens, we need to fix the module that corrupted
-> >>>>>the old iommu data. I once met a similar problem in normal kernel, the
-> >>>>>queue used by the qi_* functions was written again by another module.
-> >>>>>The fix was in that module, not in iommu module.
-> >>>>
-> >>>>It is too late, there will be no chance to save vmcore then.
-> >>>>
-> >>>>Also if it is possible to continue corrupt other area of oldmem because
-> >>>>of using old iommu tables then it will cause more problems.
-> >>>>
-> >>>>So I think the tables at least need some verifycation before being used.
-> >>>>
-> >>>
-> >>>Yes, it's a good thinking anout this and verification is also an
-> >>>interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
-> >>>and then verify this again when panic happens in purgatory. This checks
-> >>>whether any code stomps into region reserved for kexec/kernel and corrupt
-> >>>the loaded kernel.
-> >>>
-> >>>If this is decided to do it should be an enhancement to current
-> >>>patchset but not a approach change. Since this patchset is going very
-> >>>close to point as maintainers expected maybe this can be merged firstly,
-> >>>then think about enhancement. After all without this patchset vt-d often
-> >>>raised error message, hung.
-> >>
-> >>It does not convince me, we should do it right at the beginning instead of
-> >>introduce something wrong.
-> >>
-> >>I wonder why the old dma can not be remap to a specific page in kdump kernel
-> >>so that it will not corrupt more memory. But I may missed something, I will
-> >>looking for old threads and catch up.
-> >
-> >I have read the old discussion, above way was dropped because it could corrupt
-> >filesystem. Apologize about late commenting.
-> >
-> >But current solution sounds bad to me because of using old memory which is not
-> >reliable.
-> >
-> >Thanks
-> >Dave
-> >
-> Seems we do not have a better solution for the dmar faults.  But I believe
-> we can find out how to verify the iommu data which is located in old memory.
+Hi Arnd,
 
-That will be great, thanks.
+I do not directly add arm64 support to pcie-designware.c, the
+main reason is that it is hard to port other 5 platform PCIe
+driver based on pcie-designware to the new implementation.
+However, not changing those PCIe driver means the code for
+arm32 must be remained.
 
-So there's two things:
-1) make sure old pg tables are right, this is what we were talking about.
-2) avoid writing old memory, I suppose only dma read could corrupt filesystem,
-right? So how about for any dma writes just create a scratch page in 2nd kernel
-memory. Only using old page table for dma read.
+I add a new file pcie-designware-base.c. Compared with
+pcie-designware.c, there are main 3 differences.
+1. It is a new implementation followed the latest PCIe
+architecture-independent API without any code for specific
+architecture.
+2. There is no MSI chip code, which will be implemented in a 
+separated file.
+3. Improve ATU use - support more than 2 ATUs and use an exclusive
+ATU to translate MEM transaction.
 
-Thanks
-Dave
+After other platform PCIe owner port the driver to pcie-designware-base.c,
+The pcie-designware.c can be removed.
+
+Thanks,
+Minghuan
+
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Wednesday, April 15, 2015 6:37 PM
+> To: linux-arm-kernel@lists.infradead.org
+> Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Jingoo Han; Hu
+> Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-B08248; Bjorn Helgaas;
+> Wood Scott-B07421
+> Subject: Re: [PATCH v2 2/3] pci/designware: Add base driver for Designware
+> PCIe
+> 
+> On Wednesday 15 April 2015 17:48:34 Minghuan Lian wrote:
+> > The Synopsys Designware IP is shared with couples of platforms under
+> > multiple architectures. The patch is to provide basic
+> > architecture-independent Designware PCIe host driver including ATU
+> > initialization and PCI OPS. Currently, which supports arm and arm64
+> > simultaneously.
+> >
+> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> > ---
+> > change log:
+> > v1-v2:
+> > 1. Get MSI chip according to dts property 'msi-parent'
+> > 2. Simplify platform_get_resource_byname() failure checking
+> >
+> >  drivers/pci/host/Kconfig                |   3 +
+> >  drivers/pci/host/Makefile               |   1 +
+> >  drivers/pci/host/pcie-designware-base.c | 293
+> > ++++++++++++++++++++++++++++++++
+> > drivers/pci/host/pcie-designware-base.h |  63 +++++++
+> >
+> 
+> I don't understand this patch at all. What is the relation between this driver
+> and the existing pcie-designware.c? From the description above, they would
+> be the same.
+> 
+> 	Arnd
