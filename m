@@ -1,87 +1,146 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5523DD28.8040702@linux.intel.com>
-Date: Tue, 07 Apr 2015 21:35:36 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0141.outbound.protection.outlook.com ([157.56.111.141]:49388
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754352AbbDOLyo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 07:54:44 -0400
+From: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>
+Subject: RE: [PATCH v2 1/3] arm/pci: Add support architecture-independent PCIe
+ driver
+Date: Wed, 15 Apr 2015 11:54:41 +0000
+Message-ID: <DM2PR0301MB0640CAA1CCA2CEE863E81140E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+References: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091315-31891-2-git-send-email-Minghuan.Lian@freescale.com>
+ <143536414.FRhgn8p3gq@wuerfel>
+In-Reply-To: <143536414.FRhgn8p3gq@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [RFC 0/7] Consolidate common ACPI PCI host bridge code into ACPI
- core
-References: <1428381072-27486-1-git-send-email-jiang.liu@linux.intel.com> <1602543.J47QWOMlgo@vostro.rjw.lan>
-In-Reply-To: <1602543.J47QWOMlgo@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/4/7 19:48, Rafael J. Wysocki wrote:
-> On Tuesday, April 07, 2015 12:31:05 PM Jiang Liu wrote:
->> As suggested by Bjorn, this patch set consolidates common ACPI PCI host
->> bridge code from x86 and IA64 into ACPI core. It may also help to
->> support ACPI PCI host bridge on ARM64 platfrom too in future.
->>
->> It introduces struct acpi_pci_root_ops and acpi_pci_root_create().
->> Arch code only needs to implement struct acpi_pci_root_ops and then
->> invoke acpi_pci_root_create() to parse ACPI resources and create
->> PCI root bus.
->> struct acpi_pci_root_info_common {
->>         struct pci_controller           controller;
->>         struct acpi_pci_root            *root;
->>         struct acpi_device              *bridge;
->>         struct acpi_pci_root_ops        *ops;
->>         struct list_head                resources;
->>         char                            name[16];
->> };
->> struct acpi_pci_root_ops {
->> 	struct pci_ops *pci_ops;
->> 	int (*init_info)(struct acpi_pci_root_info_common *info);
->> 	void (*release_info)(struct acpi_pci_root_info_common *info);
->> 	int (*prepare_resources)(struct acpi_pci_root_info_common *info,
->> 				 int status);
->> };
->> extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->> 					    struct acpi_pci_root_ops *ops,
->> 					    size_t extra_size);
->> It passes Fengguang's 0day test suite and has been tested on 
->> 1) An Intel x86 4 socket platform
->> 2) An Intel IA64 SDV
->> 3) An HP IA64 platform
->>
->> And you may access it at:
->> https://github.com/jiangliu/linux.git acpi_pci_root_v1
->>
->> Thanks!
->> Gerry
->>
->> Jiang Liu (7):
->>   ACPI/PCI: Enhance ACPI core to support sparse IO space
->>   ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
->>     bridge
->>   ia64/PCI: Use common struct resource_entry to replace struct
->>     iospace_resource
->>   x86/PCI: Rename struct pci_sysdata as struct pci_controller
->>   PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
->>   x86/PCI/ACPI: Use common interface to support PCI host bridge
->>   ia64/PCI/ACPI: Use common interface to support PCI host bridge
->>
->>  arch/ia64/include/asm/pci.h   |    5 -
->>  arch/ia64/pci/pci.c           |  360 ++++++++++-------------------------------
->>  arch/x86/include/asm/pci.h    |   12 +-
->>  arch/x86/include/asm/pci_64.h |    4 +-
->>  arch/x86/pci/acpi.c           |  283 +++++++++-----------------------
->>  arch/x86/pci/common.c         |    2 +-
->>  drivers/acpi/pci_root.c       |  215 ++++++++++++++++++++++++
->>  drivers/acpi/resource.c       |    9 +-
->>  include/linux/ioport.h        |    1 +
->>  include/linux/pci-acpi.h      |   24 +++
->>  10 files changed, 409 insertions(+), 506 deletions(-)
+Hi Arnd,
+
+Please see my comments inline.
+ 
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Wednesday, April 15, 2015 6:17 PM
+> To: linux-arm-kernel@lists.infradead.org
+> Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Jingoo Han; Hu
+> Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-B08248; Bjorn Helgaas;
+> Wood Scott-B07421
+> Subject: Re: [PATCH v2 1/3] arm/pci: Add support architecture-independent
+> PCIe driver
 > 
-> That's generally fine by me, but let's fix the resources issue first, shall we?
-Hi Rafael,
-	Absolutely we should fix the bug first. Actually this patch set is
-based on the ACPI resource bugfixing patch. There are too many
-patches pending in my hand, so I send out this patch set earlier,
-hoping we could catch up with v4.2.
-Thanks!
-Gerry
+> On Wednesday 15 April 2015 17:48:33 Minghuan Lian wrote:
+> > PCIe common driver of arm architecture uses private structure
+> > pci_sys_data and hw_pci to associate with specific PCIe controller ops
+> > which results in the PCIe controller driver not compatible with other
+> > architectures. This patch provides another approach to support
+> > architecture-independent PCIe driver which does not need to use
+> > pci_sys_data and hw_pci and call pci_common_init_dev().
+> >
+> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> 
+> This looks ok in principle, but I think we already have plans to fix this up in a
+> better way.
+> 
+> Your code is broken in the theoretical case where you'd have two PCI host
+> bridges, and only one of them uses pci_common_init_dev.
+> 
+[Minghuan] Yes, my method is not really good, it is just a workaround before the better fixup is merged.
+
+> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c index
+> > ab19b7c0..8820ed5 100644
+> > --- a/arch/arm/kernel/bios32.c
+> > +++ b/arch/arm/kernel/bios32.c
+> > @@ -7,6 +7,7 @@
+> >   */
+> >  #include <linux/export.h>
+> >  #include <linux/kernel.h>
+> > +#include <linux/of_pci.h>
+> >  #include <linux/pci.h>
+> >  #include <linux/slab.h>
+> >  #include <linux/init.h>
+> > @@ -17,12 +18,16 @@
+> >  #include <asm/mach/pci.h>
+> >
+> >  static int debug_pci;
+> > +static int pci_commont_init_enable;
+> >
+> >  #ifdef CONFIG_PCI_MSI
+> >  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)  {
+> >  	struct pci_sys_data *sysdata = dev->bus->sysdata;
+> >
+> > +	if (!pci_commont_init_enable)
+> > +		return NULL;
+> > +
+> >  	return sysdata->msi_ctrl;
+> >  }
+> >  #endif
+> > @@ -508,6 +513,8 @@ void pci_common_init_dev(struct device *parent,
+> struct hw_pci *hw)
+> >  	struct pci_sys_data *sys;
+> >  	LIST_HEAD(head);
+> >
+> > +	pci_commont_init_enable = 1;
+> > +
+> >  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+> >  	if (hw->preinit)
+> >  		hw->preinit();
+> 
+> A simpler hack to achieve the same thing is to add an empty pci_sys_data
+> member to the designware pcie_port:
+> 
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -23,6 +23,15 @@
+>  #define MAX_MSI_CTRLS                  (MAX_MSI_IRQS / 32)
+> 
+>  struct pcie_port {
+> +#ifdef CONFIG_ARM
+> +       /*
+> +        * this is a temporary hack to let the driver work on
+> +        * both arm32 and arm64. it can be removed after the
+> +        * arm32 cleanup is complete and bios32.c has stopped
+> +        * referencing host->pci_sys_data.
+> +        */
+> +       struct pci_sys_data     dummy;
+> +#endif
+>         struct device           *dev;
+>         u8                      root_bus_nr;
+>         void __iomem            *dbi_base;
+> 
+> I've just drafted a patch in reply to the hisilicon patch that tries to achieve the
+> same thing as yours, see "Re: [RFC PATCH 1/3] PCI: host:
+> designware: support ARM64".
+> 
+> 
+> > @@ -651,3 +658,13 @@ void __init pci_map_io_early(unsigned long pfn)
+> >  	pci_io_desc.pfn = pfn;
+> >  	iotable_init(&pci_io_desc, 1);
+> >  }
+> > +
+> > +/*
+> > + * Try to assign the IRQ number from DT when adding a new device  */
+> > +int pcibios_add_device(struct pci_dev *dev) {
+> > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > +
+> > +	return 0;
+> > +}
+> 
+> I don't see why this is required here. Doesn't this break platforms that get
+> their IRQ in some other way?
+> 
+[Minghuan] It is for IRQ map to replace sys->map_irq.
+
+> 	Arnd
