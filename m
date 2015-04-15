@@ -1,122 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:58726 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752846AbbD0GjV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:21 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:20 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 9E3CC2BB0047
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:17 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6d9dl40894518
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:17 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6ch7U009444
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:43 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 08/21] powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
-Date: Mon, 27 Apr 2015 16:37:40 +1000
-Message-Id: <1430116673-22500-9-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from inca-roads.misterjones.org ([213.251.177.50]:34397 "EHLO
+	inca-roads.misterjones.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754699AbbDOORO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 10:17:14 -0400
+To: Jason Cooper <jason@lakedaemon.net>,
+	Minghuan Lian <minghuan.lian@freescale.com>
+Subject: Re: [PATCH] irqchip/gicv3-its: Decrease page size when needed
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 15 Apr 2015 15:17:11 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
+	Hu Mingkai-B21284 <b21284@freescale.com>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <20150415115118.GN18660@io.lakedaemon.net>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <20150415115118.GN18660@io.lakedaemon.net>
+Message-ID: <8ba82758f57122dd360b2e6fac8040fc@www.loen.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Nobody is using the this function. The patch drops it.
+On 2015-04-15 12:51, Jason Cooper wrote:
+> Minghuan Lian,
+>
+> On Wed, Apr 15, 2015 at 05:49:22PM +0800, Minghuan Lian wrote:
+>> The default page size of ITS table has been changed to 64KB,
+>> but for some platforms the real size of allocate memory which
+>> calculated by DEVBITS of register GITS_TYPER may smaller than
+>> default size. In this case, psz must be decreased, otherwise,
+>> the wrong page number will cause kernel hang.
+>>
+>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+>> ---
+>>  drivers/irqchip/irq-gic-v3-its.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>
+> Please run scripts/get_maintainer.pl on your patches before sending.  
+> This
+> needs to be sent to myself and Thomas Gleixner for review.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 71 -------------------------------
- 1 file changed, 71 deletions(-)
+Please also CC me on anything that touches GICv3 or the ITS code.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index ef8c216..5cd8298 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1302,77 +1302,6 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- }
- #endif /* CONFIG_PCI_IOV */
- 
--#if 0
--static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	struct pnv_phb *phb = hose->private_data;
--	struct pci_dn *pdn = pci_get_pdn(dev);
--	struct pnv_ioda_pe *pe;
--	int pe_num;
--
--	if (!pdn) {
--		pr_err("%s: Device tree node not associated properly\n",
--			   pci_name(dev));
--		return NULL;
--	}
--	if (pdn->pe_number != IODA_INVALID_PE)
--		return NULL;
--
--	/* PE#0 has been pre-set */
--	if (dev->bus->number == 0)
--		pe_num = 0;
--	else
--		pe_num = pnv_ioda_alloc_pe(phb);
--	if (pe_num == IODA_INVALID_PE) {
--		pr_warning("%s: Not enough PE# available, disabling device\n",
--			   pci_name(dev));
--		return NULL;
--	}
--
--	/* NOTE: We get only one ref to the pci_dev for the pdn, not for the
--	 * pointer in the PE data structure, both should be destroyed at the
--	 * same time. However, this needs to be looked at more closely again
--	 * once we actually start removing things (Hotplug, SR-IOV, ...)
--	 *
--	 * At some point we want to remove the PDN completely anyways
--	 */
--	pe = &phb->ioda.pe_array[pe_num];
--	pci_dev_get(dev);
--	pdn->pcidev = dev;
--	pdn->pe_number = pe_num;
--	pe->pdev = dev;
--	pe->pbus = NULL;
--	pe->tce32_seg = -1;
--	pe->mve_number = -1;
--	pe->rid = dev->bus->number << 8 | pdn->devfn;
--
--	pe_info(pe, "Associated device to PE\n");
--
--	if (pnv_ioda_configure_pe(phb, pe)) {
--		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
--		pdn->pe_number = IODA_INVALID_PE;
--		pe->pdev = NULL;
--		pci_dev_put(dev);
--		return NULL;
--	}
--
--	/* Assign a DMA weight to the device */
--	pe->dma_weight = pnv_ioda_dma_weight(dev);
--	if (pe->dma_weight != 0) {
--		phb->ioda.dma_weight += pe->dma_weight;
--		phb->ioda.dma_pe_count++;
--	}
--
--	/* Link the PE */
--	pnv_ioda_link_pe_by_weight(phb, pe);
--
--	return pe;
--}
--#endif /* Useful for SRIOV case */
--
- static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- {
- 	struct pci_dev *dev;
+Thanks,
+
+         M.
 -- 
-2.1.0
-
+Fast, cheap, reliable. Pick two.
