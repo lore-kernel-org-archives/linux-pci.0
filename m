@@ -1,35 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-Id: <1429025292.3383705.253616133.4A1DF301@webmail.messagingengine.com>
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0142.outbound.protection.outlook.com ([157.56.111.142]:33868
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932201AbbDOJq5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Apr 2015 05:46:57 -0400
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linux-pci@vger.kernel.org>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Hu Mingkai-B21284 <B21284@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Jingoo Han" <jg1.han@samsung.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH v2 1/3] arm/pci: Add support architecture-independent PCIe driver
+Date: Wed, 15 Apr 2015 17:48:33 +0800
+Message-ID: <1429091315-31891-2-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1429091315-31891-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-In-Reply-To: <2001450.KHHLaZsp3O@vostro.rjw.lan>
-References: <2001450.KHHLaZsp3O@vostro.rjw.lan>
-Subject: Re: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to
- parent
-Date: Tue, 14 Apr 2015 12:28:12 -0300
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 13, 2015, at 11:23, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
-> / nouveau: Fix VGA switcheroo problem related to hotplug) to propagate
-> the ignore_hotplug setting of the device to its parent bridge in case
-> hotplug notifications related to the graphics adapter switching are
-> given for the bridge rather than for the device itself (the need to
-> be ignored in both cases).
+PCIe common driver of arm architecture uses private structure
+pci_sys_data and hw_pci to associate with specific PCIe controller
+ops which results in the PCIe controller driver not compatible
+with other architectures. This patch provides another approach
+to support architecture-independent PCIe driver which does not
+need to use pci_sys_data and hw_pci and call pci_common_init_dev().
 
-I do apologise if this is a stupid question, but is there any chance the bridge will be connected to other devices that do require hotplug handling, and not just to the GPU?
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v1-v2: no change
 
+ arch/arm/kernel/bios32.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index ab19b7c0..8820ed5 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -7,6 +7,7 @@
+  */
+ #include <linux/export.h>
+ #include <linux/kernel.h>
++#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+ #include <linux/init.h>
+@@ -17,12 +18,16 @@
+ #include <asm/mach/pci.h>
+ 
+ static int debug_pci;
++static int pci_commont_init_enable;
+ 
+ #ifdef CONFIG_PCI_MSI
+ struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+ {
+ 	struct pci_sys_data *sysdata = dev->bus->sysdata;
+ 
++	if (!pci_commont_init_enable)
++		return NULL;
++
+ 	return sysdata->msi_ctrl;
+ }
+ #endif
+@@ -508,6 +513,8 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 	struct pci_sys_data *sys;
+ 	LIST_HEAD(head);
+ 
++	pci_commont_init_enable = 1;
++
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+ 	if (hw->preinit)
+ 		hw->preinit();
+@@ -597,7 +604,7 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
++	if (pci_commont_init_enable && sys->align_resource)
+ 		return sys->align_resource(dev, res, start, size, align);
+ 
+ 	return start;
+@@ -651,3 +658,13 @@ void __init pci_map_io_early(unsigned long pfn)
+ 	pci_io_desc.pfn = pfn;
+ 	iotable_init(&pci_io_desc, 1);
+ }
++
++/*
++ * Try to assign the IRQ number from DT when adding a new device
++ */
++int pcibios_add_device(struct pci_dev *dev)
++{
++	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++
++	return 0;
++}
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.9.1
+
