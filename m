@@ -1,189 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27280 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752416AbbDVNBw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 09:01:52 -0400
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jg1.han@samsung.com>, <bhelgaas@google.com>,
-	<Minghuan.Lian@freescale.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH 1/2] PCI: designware: consolidate outbound iATU programming functions
-Date: Wed, 22 Apr 2015 20:58:13 +0800
-Message-ID: <1429707494-2732-2-git-send-email-jszhang@marvell.com>
-In-Reply-To: <1429707494-2732-1-git-send-email-jszhang@marvell.com>
-References: <1429707494-2732-1-git-send-email-jszhang@marvell.com>
+Received: from mail-by2on0138.outbound.protection.outlook.com ([207.46.100.138]:20191
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753608AbbDOLW0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 07:22:26 -0400
+From: Varun Sethi <Varun.Sethi@freescale.com>
+To: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Stuart Yoder" <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Date: Wed, 15 Apr 2015 11:08:08 +0000
+Message-ID: <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the outbound iATU programming functions are similar, the only
-difference is index, type, addr and size. This patch tries to consolidate
-these functions into one. One side effect is it saves around 1700 bytes in
-text:
+Hi Minghuan,
+Not clear what this patch intends to do. Can you please explain the point about SMMU isolating limited device ID.
 
-   text	   data	    bss	    dec	    hex	filename
-   9276	    204	      4	   9484	   250c pcie-designware.o-before
-   7532	    204	      4	   7740	   1e3c pcie-designware.o
+Regards
+Varun
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
----
- drivers/pci/host/pcie-designware.c | 109 +++++++++++++------------------------
- 1 file changed, 39 insertions(+), 70 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2e9f84f..1da1446 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -150,6 +150,21 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	return ret;
- }
- 
-+static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
-+		int type, u64 cpu_addr, u64 pci_addr, u32 size)
-+{
-+	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-+			  PCIE_ATU_VIEWPORT);
-+	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-+			  PCIE_ATU_LIMIT);
-+	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
-+	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+}
-+
- static struct irq_chip dw_msi_irq_chip = {
- 	.name = "PCI-MSI",
- 	.irq_enable = pci_msi_unmask_irq,
-@@ -515,68 +530,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
--static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
--{
--	/* Program viewport 0 : OUTBOUND : CFG0 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->cfg0_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG0, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
--static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
--{
--	/* Program viewport 1 : OUTBOUND : CFG1 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg1_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->cfg1_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
--static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
--{
--	/* Program viewport 0 : OUTBOUND : MEM */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->mem_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->mem_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, pp->mem_bus_addr, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_bus_addr),
--			  PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
--static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
--{
--	/* Program viewport 1 : OUTBOUND : IO */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->io_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->io_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, pp->io_bus_addr, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pp->io_bus_addr),
--			  PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
-@@ -588,15 +541,23 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_viewport_cfg0(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
-+					  busdev, pp->cfg0_size);
- 		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+					  pp->mem_bus_addr, pp->mem_size);
- 	} else {
--		dw_pcie_prog_viewport_cfg1(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
-+					  busdev, pp->cfg1_size);
- 		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_io_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+					  pp->io_bus_addr, pp->io_size);
- 	}
- 
- 	return ret;
-@@ -613,15 +574,23 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_viewport_cfg0(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
-+					  busdev, pp->cfg0_size);
- 		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+					  pp->mem_bus_addr, pp->mem_size);
- 	} else {
--		dw_pcie_prog_viewport_cfg1(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
-+					  busdev, pp->cfg1_size);
- 		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_io_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+					  pp->io_bus_addr, pp->io_size);
- 	}
- 
- 	return ret;
--- 
-2.1.4
-
+> -----Original Message-----
+> From: linux-arm-kernel [mailto:linux-arm-kernel-
+> bounces@lists.infradead.org] On Behalf Of Minghuan Lian
+> Sent: Wednesday, April 15, 2015 3:19 PM
+> To: linux-pci@vger.kernel.org
+> Cc: Arnd Bergmann; Lian Minghuan-B31939; Hu Mingkai-B21284; Zang Roy-
+> R61911; Yoder Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421; linux-arm-
+> kernel@lists.infradead.org
+> Subject: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> 
+> SMMU of some platforms can only isolate limited device ID.
+> This may require that all PCI devices share the same ITS device with the fixed
+> device ID. The patch adds function arch_msi_share_devid_update used for
+> these platforms to update the fixed device ID and maximum MSI interrupts
+> number.
+> 
+> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> ---
+>  drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+> index d0374a6..be78d0a 100644
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -1169,6 +1169,15 @@ static int its_get_pci_alias(struct pci_dev *pdev,
+> u16 alias, void *data)
+>  	return 0;
+>  }
+> 
+> +void __weak
+> +arch_msi_share_devid_update(struct pci_dev *pdev, u32 *dev_id, u32
+> +*nvesc) {
+> +	/*
+> +	 * use PCI_DEVID NOT share device ID as default
+> +	 * so nothing need to do
+> +	 */
+> +}
+> +
+>  static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
+>  			   int nvec, msi_alloc_info_t *info)  { @@ -1185,6
+> +1194,8 @@ static int its_msi_prepare(struct irq_domain *domain, struct
+> device *dev,
+>  	dev_alias.count = nvec;
+> 
+>  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+> +	arch_msi_share_devid_update(pdev, &dev_alias.dev_id,
+> +&dev_alias.count);
+> +
+>  	its = domain->parent->host_data;
+> 
+>  	its_dev = its_find_device(its, dev_alias.dev_id);
+> --
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
