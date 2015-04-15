@@ -1,67 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:33951 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933304AbbDIUAv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 16:00:51 -0400
-Received: by obbry2 with SMTP id ry2so31783275obb.1
-        for <linux-pci@vger.kernel.org>; Thu, 09 Apr 2015 13:00:51 -0700 (PDT)
-Date: Thu, 9 Apr 2015 15:00:48 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Export pci_probe_reset_function()
-Message-ID: <20150409200048.GM30967@google.com>
-References: <20150409155100.6891.72838.stgit@gimli.home>
- <20150409195846.GL30967@google.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:28614 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933204AbbDOGEK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 02:04:10 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <xiehaitao@huawei.com>,
+	<liguozhu@hisilicon.com>, <wangzhou.bry@gmail.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [RFC PATCH 1/3] PCI: host: designware: support ARM64
+Date: Wed, 15 Apr 2015 14:04:01 +0800
+Message-ID: <1429077843-184462-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1429077843-184462-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1429077843-184462-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150409195846.GL30967@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 09, 2015 at 02:58:46PM -0500, Bjorn Helgaas wrote:
-> On Thu, Apr 09, 2015 at 09:51:43AM -0600, Alex Williamson wrote:
-> > The equivalent bus and slot versions of this are already exported and
-> > vfio-pci would like a function-probe available so we can expose
-> > function-level reset capabilities to the user without necessarily
-> > using it to perform a reset before enabling the device for the user.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> 
-> Applied to pci/virtualization for v4.1, thanks!
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/host/pcie-designware.c | 44 +++++++++++++++++++++++++++++++++++---
+ 1 file changed, 41 insertions(+), 3 deletions(-)
 
-Actually, maybe it makes more sense for you to apply this along with the
-vfio patch that uses it?  So if you want:
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 17ca986..e88a7d9 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+ #include <linux/types.h>
++#include <asm/hardirq.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -31,6 +32,7 @@
+ #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
+ #define PORT_LINK_MODE_2_LANES		(0x3 << 16)
+ #define PORT_LINK_MODE_4_LANES		(0x7 << 16)
++#define PORT_LINK_MODE_8_LANES		(0xf << 16)
+ 
+ #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
+ #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
+@@ -38,6 +40,7 @@
+ #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
+ #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
+ #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
++#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
+ 
+ #define PCIE_MSI_ADDR_LO		0x820
+ #define PCIE_MSI_ADDR_HI		0x824
+@@ -68,14 +71,19 @@
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
+ static struct hw_pci dw_pci;
++static struct pci_ops dw_pcie_ops;
+ 
+ static unsigned long global_io_offset;
+ 
+-static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
++static inline struct pcie_port *sys_to_pcie(void *sys)
+ {
+-	BUG_ON(!sys->private_data);
++#ifdef CONFIG_ARM
++	pci_sys_data *sys_data = (struct pci_sys_data *)sys;
+ 
+-	return sys->private_data;
++	BUG_ON(!sys->private_data);
++	return sys_data->private_data;
++#endif
++	return (struct pcie_port *)sys;
+ }
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+@@ -502,6 +510,27 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+ 
++#ifdef CONFIG_ARM64
++	struct pci_bus *bus;
++	LIST_HEAD(res);
++
++	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
++	if (ret)
++		return ret;
++
++	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
++				  pp, &res);
++	if (!bus)
++		return -ENOMEM;
++
++	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
++
++	pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_add_devices(bus);
++#endif
++
++#ifdef CONFIG_ARM
+ #ifdef CONFIG_PCI_MSI
+ 	dw_pcie_msi_chip.dev = pp->dev;
+ 	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+@@ -514,6 +543,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ #ifdef CONFIG_PCI_DOMAINS
+ 	dw_pci.domain++;
+ #endif
++#endif
+ 
+ 	return 0;
+ }
+@@ -704,6 +734,7 @@ static struct pci_ops dw_pcie_ops = {
+ 	.write = dw_pcie_wr_conf,
+ };
+ 
++#ifdef CONFIG_ARM
+ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ {
+ 	struct pcie_port *pp;
+@@ -761,6 +792,7 @@ static struct hw_pci dw_pci = {
+ 	.scan		= dw_pcie_scan_bus,
+ 	.map_irq	= dw_pcie_map_irq,
+ };
++#endif
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+@@ -781,6 +813,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	case 4:
+ 		val |= PORT_LINK_MODE_4_LANES;
+ 		break;
++	case 8:
++		val |= PORT_LINK_MODE_8_LANES;
++		break;
+ 	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
+ 
+@@ -797,6 +832,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	case 4:
+ 		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
+ 		break;
++	case 8:
++		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
++		break;
+ 	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 
+-- 
+1.9.1
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> > ---
-> >  drivers/pci/pci.c   |    1 +
-> >  include/linux/pci.h |    1 +
-> >  2 files changed, 2 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 81f06e8..9f3e691 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3524,6 +3524,7 @@ int pci_probe_reset_function(struct pci_dev *dev)
-> >  {
-> >  	return pci_dev_reset(dev, 1);
-> >  }
-> > +EXPORT_SYMBOL_GPL(pci_probe_reset_function);
-> >  
-> >  /**
-> >   * pci_reset_function - quiesce and reset a PCI device function
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 211e9da..233d1ae 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -986,6 +986,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
-> >  			  enum pcie_link_width *width);
-> >  int __pci_reset_function(struct pci_dev *dev);
-> >  int __pci_reset_function_locked(struct pci_dev *dev);
-> > +int pci_probe_reset_function(struct pci_dev *dev);
-> >  int pci_reset_function(struct pci_dev *dev);
-> >  int pci_try_reset_function(struct pci_dev *dev);
-> >  int pci_probe_reset_slot(struct pci_slot *slot);
-> > 
