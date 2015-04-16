@@ -1,95 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0138.outbound.protection.outlook.com ([207.46.100.138]:20191
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0141.outbound.protection.outlook.com ([157.56.110.141]:11624
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753608AbbDOLW0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 07:22:26 -0400
+	id S1753730AbbDPSiD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Apr 2015 14:38:03 -0400
 From: Varun Sethi <Varun.Sethi@freescale.com>
-To: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+CC: Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
 	Roy Zang <tie-fei.zang@freescale.com>,
-	"Stuart Yoder" <stuart.yoder@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>
 Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Wed, 15 Apr 2015 11:08:08 +0000
-Message-ID: <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+Date: Thu, 16 Apr 2015 18:38:01 +0000
+Message-ID: <BN3PR0301MB1219F18B03194B3F4E7A5751EAE40@BN3PR0301MB1219.namprd03.prod.outlook.com>
 References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+	<1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <20150415173654.431f5d89@arm.com>
+ <DM2PR0301MB0640576D29E70392C41444DFE2E40@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <552F8910.9000701@arm.com>
+ <DM2PR0301MB0640C59C08CBEB4F2F392BAEE2E40@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <552FA20E.3060202@arm.com>
+In-Reply-To: <552FA20E.3060202@arm.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 Hi Minghuan,
-Not clear what this patch intends to do. Can you please explain the point about SMMU isolating limited device ID.
-
-Regards
-Varun
 
 > -----Original Message-----
 > From: linux-arm-kernel [mailto:linux-arm-kernel-
-> bounces@lists.infradead.org] On Behalf Of Minghuan Lian
-> Sent: Wednesday, April 15, 2015 3:19 PM
-> To: linux-pci@vger.kernel.org
-> Cc: Arnd Bergmann; Lian Minghuan-B31939; Hu Mingkai-B21284; Zang Roy-
-> R61911; Yoder Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421; linux-arm-
-> kernel@lists.infradead.org
-> Subject: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> bounces@lists.infradead.org] On Behalf Of Marc Zyngier
+> Sent: Thursday, April 16, 2015 5:21 PM
+> To: Lian Minghuan-B31939
+> Cc: Jason Cooper; Arnd Bergmann; linux-pci@vger.kernel.org; Will Deacon;
+> Yoder Stuart-B08248; Wood Scott-B07421; Bjorn Helgaas; Hu Mingkai-B21284;
+> Zang Roy-R61911; Thomas Gleixner; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
 > 
-> SMMU of some platforms can only isolate limited device ID.
-> This may require that all PCI devices share the same ITS device with the fixed
-> device ID. The patch adds function arch_msi_share_devid_update used for
-> these platforms to update the fixed device ID and maximum MSI interrupts
-> number.
+> Minghuan,
 > 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> ---
->  drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
+> On 16/04/15 11:57, Minghuan.Lian@freescale.com wrote:
 > 
-> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-> index d0374a6..be78d0a 100644
-> --- a/drivers/irqchip/irq-gic-v3-its.c
-> +++ b/drivers/irqchip/irq-gic-v3-its.c
-> @@ -1169,6 +1169,15 @@ static int its_get_pci_alias(struct pci_dev *pdev,
-> u16 alias, void *data)
->  	return 0;
->  }
+> Please include the relevant people (Will Deacon for questions about the
+> SMMU), and avoid top posting, it makes it very hard to follow a discussion.
 > 
-> +void __weak
-> +arch_msi_share_devid_update(struct pci_dev *pdev, u32 *dev_id, u32
-> +*nvesc) {
-> +	/*
-> +	 * use PCI_DEVID NOT share device ID as default
-> +	 * so nothing need to do
-> +	 */
-> +}
-> +
->  static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
->  			   int nvec, msi_alloc_info_t *info)  { @@ -1185,6
-> +1194,8 @@ static int its_msi_prepare(struct irq_domain *domain, struct
-> device *dev,
->  	dev_alias.count = nvec;
+> > I still have a couple of questions,
+> > 1. If I add a new flag and all PCI DEVID will be replaced with a fixed
+> > ID,  does SMMU can work correctly? For example, If we insert an
+> > Ethernet card with two ports, a port is assigned to kvm1, another port
+> > is assigned to kvm2. In this case, we should use one or two fixed ID?
 > 
->  	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
-> +	arch_msi_share_devid_update(pdev, &dev_alias.dev_id,
-> +&dev_alias.count);
-> +
->  	its = domain->parent->host_data;
+> That completely depends on what the SMMU sees. If it sees the same ID,
+> you won't be able to perform any form of isolation. But I have no idea how
+> your hardware works, so maybe explaining in details how this is constructed
+> will help.
 > 
->  	its_dev = its_find_device(its, dev_alias.dev_id);
-> --
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+We would need separate stream IDs and iommu groups for endpoints, to assign them to different VMs. We would have to set up the stream ID to device ID translation table during device probe, via add_device callback. While setting the device id for the interrupt translation table, you would have to get streamID corresponding to a given PCIe device ID. Again, I don't think that we should consider the TBUID, while setting the ITT device id.
+
+-Varun
