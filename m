@@ -1,121 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:39934 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751510AbbDHIIa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:08:30 -0400
-Message-ID: <5524E1F9.6030700@free-electrons.com>
-Date: Wed, 08 Apr 2015 10:08:25 +0200
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Received: from foss.arm.com ([217.140.101.70]:37747 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757044AbbDPKEG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Apr 2015 06:04:06 -0400
+Message-ID: <552F8910.9000701@arm.com>
+Date: Thu, 16 Apr 2015 11:04:00 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-ia64@vger.kernel.org,
-	linux-pci@vger.kernel.org, Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Jason Cooper <jason@lakedaemon.net>,
+To: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linux-m68k@lists.linux-m68k.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, dja@axtens.net,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-alpha@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v9 23/30] PCI/mvebu: Use pci_common_init_dev() to simplify
- code
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-25-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-25-git-send-email-wangyijing@huawei.com>
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>	<1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com> <20150415173654.431f5d89@arm.com> <DM2PR0301MB0640576D29E70392C41444DFE2E40@DM2PR0301MB0640.namprd03.prod.outlook.com>
+In-Reply-To: <DM2PR0301MB0640576D29E70392C41444DFE2E40@DM2PR0301MB0640.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yijing,
-
-On 03/04/2015 11:25, Yijing Wang wrote:
-> Mvebu_pcie_scan_bus() is not necessary, we could use
-> pci_common_init_dev() instead of pci_common_init(),
-> and pass the device pointer as the parent. Then
-> pci_scan_root_bus() will be called to scan the pci busses.
+On 16/04/15 03:57, Minghuan.Lian@freescale.com wrote:
+> Hi Marc,
 > 
+> Please see my comments inline
+> 
+>> -----Original Message----- From: Marc Zyngier 
+>> [mailto:marc.zyngier@arm.com] Sent: Thursday, April 16, 2015 12:37
+>>  AM To: Lian Minghuan-B31939 Cc: linux-pci@vger.kernel.org; Arnd 
+>> Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-B08248;
+>>  Bjorn Helgaas; Wood Scott-B07421; linux- 
+>> arm-kernel@lists.infradead.org; Jason Cooper; Thomas Gleixner 
+>> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device 
+>> ID
+>> 
+>> On Wed, 15 Apr 2015 17:49:23 +0800 Minghuan Lian 
+>> <Minghuan.Lian@freescale.com> wrote:
+>> 
+>>> SMMU of some platforms can only isolate limited device ID. This 
+>>> may require that all PCI devices share the same ITS device with 
+>>> the fixed device ID. The patch adds function 
+>>> arch_msi_share_devid_update used for these platforms to update 
+>>> the fixed device ID and maximum MSI interrupts number.
+>>> 
+>>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com> --- 
+>>> drivers/irqchip/irq-gic-v3-its.c | 11 +++++++++++ 1 file changed,
+>>> 11 insertions(+)
+>>> 
+>>> diff --git a/drivers/irqchip/irq-gic-v3-its.c 
+>>> b/drivers/irqchip/irq-gic-v3-its.c index d0374a6..be78d0a 100644 
+>>> --- a/drivers/irqchip/irq-gic-v3-its.c +++ 
+>>> b/drivers/irqchip/irq-gic-v3-its.c @@ -1169,6 +1169,15 @@ static
+>>>  int its_get_pci_alias(struct pci_dev *pdev,
+>> u16 alias, void *data)
+>>> return 0; }
+>>> 
+>>> +void __weak +arch_msi_share_devid_update(struct pci_dev *pdev, 
+>>> u32 *dev_id, u32 +*nvesc) { +	/* +	 * use PCI_DEVID NOT share 
+>>> device ID as default +	 * so nothing need to do +	 */ +} +
+>> 
+>> NAK. On top of being ugly as sin, this breaks any form of 
+>> multiplatform support. No way anything like this is going in. Guys,
+>> you really should know better.
+>> 
+> [Minghuan]  The current ITS MSI will create an individual ITS device 
+> for each PCIe device, and use PCI_DEVID as ITS dev_id However, out 
+> platform only supports  ITS dev_id 0 -63.  A normal PCIe DEVID of 
+> 0000:01:00.0 is 256 bigger than 63. Besides, because of the limited 
+> dev_id number, all the PCIe device will share the same ITS dev. Our 
+> platform provides a hardware module LUT to map PCI DEVID to ITS 
+> dev_id.  So, when creating ITS device, we need to update dev_id and 
+> the nvesc. I may change pci_for_each_dma_alias to add a new flag to 
+> use alias_bus and alias_devfn.
 
-2 months ago, Thomas Petazzoni was concerned about the removal of
-mvebu_pcie_scan_bus(). So I dig the archives of the discussion
-surrounding the pcie-mvebu drive. I found that the main purpose
-of using this function was to allow to pass "struct device *" pointer.
+Yes, that's where you should take care of this hack.
 
-Thanks to the introduction of pci_common_init_dev it was not needed
-anymore. Actually we should have done this change when this function
-had been introduced. So for the point of view of the code it's fine.
-Then I tested your full series on Armada XP, Armada 375 and Armada 38x
-SoCs, and I didn't saw any regression. So you can add my:
+> But I also need to update nvesc which should contains all the PCI 
+> device MSI/MSIX nvesc and PCIe PME, aerdrv interrupts. The main 
+> difference is that we need a ITS device to service multiple PCIe 
+> devices. Could you give me some suggestions how to implement this 
+> requirement.
 
-Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+It you take the time to read the code in its_msi_prepare(), you'll
+quickly notice that we already handle aliasing of multiple PCI devices
+to a single DeviceID. Once you have the aliasing taken care of in
+pci_for_each_dma_alias, the ITS code will automatically adjust the
+number of vectors (using its_get_pci_alias as a callback from
+pci_for_each_dma_alias).
+
+>>> static int its_msi_prepare(struct irq_domain *domain, struct 
+>>> device *dev, int nvec, msi_alloc_info_t *info)  { @@ -1185,6
+>> +1194,8 @@
+>>> static int its_msi_prepare(struct irq_domain *domain, struct 
+>>> device *dev, dev_alias.count = nvec;
+>>> 
+>>> pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias); + 
+>>> arch_msi_share_devid_update(pdev, &dev_alias.dev_id, 
+>>> +&dev_alias.count); +
+>> 
+>> See the function above? That's where the aliasing should be taken 
+>> care of.
+>> 
+> [Minghuan] The alias will use dma_alias_devfn, but it does not 
+> contains alias_bus. I need to translate PCI_DEVID to a fixed ID.
+
+Then add another flag to deal with that. Your hardware is "creative"
+(some might even argue it is broken), so deal with the creativity as a
+quirk, which has no business in the ITS driver (or any other driver).
 
 Thanks,
 
-Gregory
-
-
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> CC: Jason Cooper <jason@lakedaemon.net>
-> ---
->  drivers/pci/host/pci-mvebu.c |   18 +-----------------
->  1 files changed, 1 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 0cfc494..d5a2b70 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -750,21 +750,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
->  	return 1;
->  }
->  
-> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> -{
-> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
-> -	struct pci_bus *bus;
-> -
-> -	bus = pci_create_root_bus(&pcie->pdev->dev, -1, sys->busnr,
-> -				  &mvebu_pcie_ops, sys, &sys->resources);
-> -	if (!bus)
-> -		return NULL;
-> -
-> -	pci_scan_child_bus(bus);
-> -
-> -	return bus;
-> -}
-> -
->  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
->  						 const struct resource *res,
->  						 resource_size_t start,
-> @@ -808,12 +793,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
->  	hw.nr_controllers = 1;
->  	hw.private_data   = (void **)&pcie;
->  	hw.setup          = mvebu_pcie_setup;
-> -	hw.scan           = mvebu_pcie_scan_bus;
->  	hw.map_irq        = of_irq_parse_and_map_pci;
->  	hw.ops            = &mvebu_pcie_ops;
->  	hw.align_resource = mvebu_pcie_align_resource;
->  
-> -	pci_common_init(&hw);
-> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
->  }
->  
->  /*
-> 
-
-
+	M.
 -- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Jazz is not dead. It just smells funny...
