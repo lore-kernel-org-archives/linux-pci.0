@@ -1,101 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36531 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272AbbDHIBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Apr 2015 04:01:52 -0400
-Message-ID: <1428480074.18187.8.camel@kernel.crashing.org>
-Subject: Re: [PATCH] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
- in of parsing
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Miller <davem@davemloft.net>,
+Received: from mailout3.samsung.com ([203.254.224.33]:32442 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbbDPW7r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Apr 2015 18:59:47 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0NMX00HMF97L4I60@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 17 Apr 2015 07:59:46 +0900 (KST)
+Message-id: <55303EE1.1050108@samsung.com>
+Date: Fri, 17 Apr 2015 07:59:45 +0900
+From: Jaehoon Chung <jh80.chung@samsung.com>
+MIME-version: 1.0
+To: Jisheng Zhang <jszhang@marvell.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Wed, 08 Apr 2015 18:01:14 +1000
-In-Reply-To: <CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
-References: <1428452669-24824-1-git-send-email-yinghai@kernel.org>
-	 <1428464944.4947.69.camel@kernel.crashing.org>
-	 <CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, CPGS <cpgs@samsung.com>
+Subject: Re: [query] how to use "ranges" in device tree
+References: <20150416215938.347caa68@xhacker>
+In-reply-to: <20150416215938.347caa68@xhacker>
+Content-type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-04-07 at 22:39 -0700, Yinghai Lu wrote:
-> On Tue, Apr 7, 2015 at 8:49 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> > On Tue, 2015-04-07 at 17:24 -0700, Yinghai Lu wrote:
-> >> For device resource PREF bit setting under bridge 64-bit pref resource,
-> >> we need to make sure only set PREF for 64bit resource, so set IORESOUCE_MEM_64
-> >> for 64bit resource during of device resource flags parsing.
-> >
-> >> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-> >> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-> >
-> > These patches (from the above BZ) aren't right for one thing: You
-> > shouldn't set the IORESOURCE_PREFETCH in the resource itself. This
-> > *will* break stuff.
-> >
-> > You can put the resource in a prefetchable region indeed, if you
-> > are on a PCIe-only path (though we should have some arch flag
-> > to check that the host bridge indeed doesn't do any prefetch,
-> > on powerpc we are good there).
+Hi,
+
+Well, I'm not sure..
+But in my understanding..configuration range might be support both "ranges" and "config" of reg.
+
+On 04/16/2015 10:59 PM, Jisheng Zhang wrote:
+> Hi all,
 > 
-> The patch is at:
+> I didn't fully understand the "ranges" usage, here is one situation which I dunno
+> how to handle.
 > 
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=1a3ec5e7b00dcd9cac24efe3d65bfccf82597ce5
+> In arch/arm/boot/dts/berlin2q.dtsi, we describe the /soc ranges as
 > 
-> and we limit to set pref bit for pcie end devices mmio 64bit resource.
-
-This is still completely wrong. Please revert.
-
-> >
-> > But you can't set the "prefetch" bit on the resource because that would
-> > be losing the indication that this resource has side effects. This bit
-> > is used in some cases to enable store gathering when mmap'ing via sysfs
-> > and can be used for similar uses by drivers.
+> ranges = <0 0xf7000000 0x1000000>;
 > 
-> Any pointer for that?
->
-> >
-> > It's one thing to say "you can put non-prefetch BARs in prefetch windows
-> > on that path", it's another one to completely make the BAR looks like
-> > it's prefetchable when it's not.
+> That's fine. Now there's a pci device based on pcie-designware.c which prefer
+> put "config" space in reg. But the config space starts at 0xe0000000, due to
+> the /soc ranges, the "config" space following pcie node is not correct in fact.
 > 
-> Too hard for me to tell the difference.
+> soc {
+> 	ranges = <0 0xf7000000 0x1000000>;
+> 	...
+> 	pcie: pcie@e40000 {
+> 		compatible = "...";
+> 		reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
+> 		reg-names = "dbi", "pad", "config";
+> 		...
+> 	};
+> 	...
+> };
 
-Fix it. Add a new bit if necessary "CAN_BE_IN_PREFETCH" or whatever but
-you just cannot randomly fuck around with the flag like that.
+According to yours,
 
-You are basically dropping the information that the BAR has side effects
-completely. This is WRONG.
+reg = <0xe40000 0x1000		/* dbi */
+	0xe000000 0x800000	/* pad */
+	0xf7000000 0x1000000>;	/* config ? */
 
-The fact that you can put a non-prefetchable BAR in a prefetchable
-window doesn't make the BAR itself prefetchable. Your patch makes it so.
+If there is not "config" into reg-names, it should be tried to find it into "ranges".
 
-That means that anything that rely on the BAR flag to establish
-prefetchable or write-combining mappings will be fucked. Drivers might
-test that, arch code will, powerpc sysfs mmap will (see our
-implementation of __pci_mmap_set_pgprot), and quite possibly others
-architectures or drivers doing the same thing.
+If my understanding is wrong, let me know, plz.
 
-This is utterly WRONG.
+In my case,
 
-Use a different flag to indicate the BAR policy or temporarily tweak a
-local copy of the resource flag during BAR assignment or whatever you
-prefer to fix the original problem but do *not* change the Linux overall
-view of that BAR to lie about prefetchability.
+	reg = <0x156b0000 0x1000
+		0x15680000 0x1000
+		0x0c000000 0x1000>;
+	reg-names = "elbi", "phy", "config";
 
-Bjorn, please revert this ASAP.
+	ranges = < ..... /* downstream I/O */
+		  ...... /* non-prefetchable memory */
 
-Cheers,
-Ben.
 
+Best Regards,
+Jaehoon Chung	
+
+> 
+> How to define the "config" space in this situation? Did we need to change
+> the /soc ranges as the following?
+> 
+> soc {
+> 	ranges;
+> }
+> 
+> Thanks in advance,
+> Jisheng
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
 
