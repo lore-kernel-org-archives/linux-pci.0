@@ -1,116 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 00/33] Clean up obsoleted x86 interrupt manangement code and interfaces
-Date: Tue, 14 Apr 2015 10:29:37 +0800
-Message-Id: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41350 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754212AbbDPHaX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Apr 2015 03:30:23 -0400
+Date: Thu, 16 Apr 2015 09:30:18 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fam Zheng <famz@redhat.com>, linux-pci@vger.kernel.org,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150416092325-mutt-send-email-mst@redhat.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch set "[Patch Part1 v8 00/37] Convert x86 to hierarchy irqdomain
-and stacked irqchip" at http://www.spinics.net/lists/kernel/msg1967024.html
-has converted x86 interrupt managment to use hierarchy irqdomain and
-stacked irqchip. And this is the following-on patch set to clean up code
-and interfaces obseleted by previous patch set.
+OK, a couple more tweaks to the changelog.
 
-With the these two patch sets combined, we have
-63 files changed, 2430 insertions(+), 2613 deletions(-)
-That's good, the refactor improves code maintanence with less code.
+On Fri, Apr 10, 2015 at 05:54:47PM -0500, Bjorn Helgaas wrote:
+> From: Michael S. Tsirkin <mst@redhat.com>
+> 
+> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
+> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
+> 
+> The problem is that after we disable MSI, the device may assert INTx, and
+> if the driver hasn't registered an interrupt handler for it, the interrupt
+> is never deasserted and causes a kernel hang.
 
-Main changes since last reviewed version:
-1) rebased onto v4.0-rc6
-2) add patch 33 to avoid memory allocation/free when assigning CPU vector 
+I think we should drop "and causes a kernel hang" from this sentence:
+most configurations can work around this by disabling the irq
+line in the apic.
 
-Regards,
-Gerry
+>  In particular, this was
+> observed with virtio.
+> 
+> We now disable MSI/MSI-X for all devices during enumeration regardless of
+> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
+> old one.
+> 
+> Stop disabling MSIs at shutdown to avoid the kernel hang.
 
-Jiang Liu (29):
-  x86/irq: Kill unused old IOAPIC irqdomain interfaces
-  x86/irq: Kill unused struct mp_pin_info
-  x86/irq: Kill x86_io_apic_ops.print_entries and related interfaces
-  x86/irq: Kill x86_io_apic_ops.setup_entry and related interfaces
-  x86/irq: Kill x86_io_apic_ops.set_affinity and related interfaces
-  x86/irq: Kill x86_io_apic_ops.eoi_ioapic_pin and related interfaces
-  x86/irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-  x86/irq: Clean up unused forward declarations in x86_init.h
-  irq_remapping: Clean up unsued code to support IOAPIC
-  irq_remapping/vt-d: Clean up unsued code
-  irq_remapping/amd: Clean up unsued code
-  irq_remapping: Clean up unused interfaces
-  x86/irq: Kill irq_cfg.irq_remapped
-  irq_remapping/vt-d: Move struct irq_2_iommu into
-    intel_irq_remapping.c
-  irq_remapping/amd: Move struct irq_2_irte into amd_iommu.c
-  x86/irq: Move irq_cfg.irq_2_pin into io_apic.c
-  x86/irq: Kill struct io_apic_irq_attr
-  x86/irq: Kill x86_io_apic_ops.write and x86_io_apic_ops.modify
-  x86/irq: Clean up io_apic.h
-  x86/irq: Use cached IOAPIC entry instead of reading from hardware
-  x86/irq: Kill unused alloc_irq_and_cfg_at()
-  x86/irq: Change functions only used in vector.c as static
-  x86/irq: Kill function apic_set_affinity()
-  x86/irq: Move check of cfg->move_in_progress into
-    send_cleanup_vector()
-  x86/irq: Move private data in struct irq_cfg into dedicated data
-    structure
-  x86/irq: Refine the way to calculate NR_IRQS
-  x86/irq, ACPI: Kill private function mp_register_gsi()/
-    mp_unregister_gsi()
-  x86/irq: Move irqdomain specific code into asm/irqdomain.h
-  x86/irq: Avoid memory allocation in __assign_irq_vector()
+And replace this one with:
+  Stop disabling MSIs at shutdown to avoid conflicting with
+  drivers.
 
-Thomas Gleixner (4):
-  x86/irq: Remove sis apic bug workaround
-  x86, ioapic: Use proper defines for the entry fields
-  x86,ioapic: Cleanup irq_trigger/polarity()
-  x86: Cleanup irq_domain ops
 
- arch/x86/Kconfig                     |    1 -
- arch/x86/include/asm/hw_irq.h        |   63 ---
- arch/x86/include/asm/io_apic.h       |  103 +---
- arch/x86/include/asm/irq_remapping.h |   38 +-
- arch/x86/include/asm/irq_vectors.h   |   18 +-
- arch/x86/include/asm/irqdomain.h     |   63 +++
- arch/x86/include/asm/x86_init.h      |   16 -
- arch/x86/kernel/acpi/boot.c          |   70 +--
- arch/x86/kernel/apic/htirq.c         |    2 +-
- arch/x86/kernel/apic/io_apic.c       |  869 +++++++++-------------------------
- arch/x86/kernel/apic/msi.c           |    2 +-
- arch/x86/kernel/apic/vector.c        |  342 ++++++-------
- arch/x86/kernel/devicetree.c         |   12 +-
- arch/x86/kernel/hpet.c               |    2 +-
- arch/x86/kernel/mpparse.c            |    9 +-
- arch/x86/kernel/x86_init.c           |    6 -
- arch/x86/platform/sfi/sfi.c          |   10 +-
- arch/x86/platform/uv/uv_irq.c        |    5 +-
- drivers/iommu/amd_iommu.c            |  153 +-----
- drivers/iommu/intel_irq_remapping.c  |  206 +-------
- drivers/iommu/irq_remapping.c        |   80 ----
- drivers/iommu/irq_remapping.h        |   16 -
- drivers/pci/quirks.c                 |    7 -
- 23 files changed, 491 insertions(+), 1602 deletions(-)
- create mode 100644 arch/x86/include/asm/irqdomain.h
+> XXX bugzilla reference, details about how the hang happens?
 
--- 
-1.7.10.4
+Add:
+See bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=96571
+(that one's for a kernel that lacks
+ 1e77d0a1ed7417d2a5a52a7b8d32aea1833faa6c, so
+ it doesn't recover by disabling the irq line).
 
+> 
+> [bhelgaas: changelog]
+> Reported-by: Fam Zheng <famz@redhat.com>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> CC: Ulrich Obergfell <uobergfe@redhat.com>
+> CC: Rusty Russell <rusty@rustcorp.com.au>
+> ---
+>  drivers/pci/pci-driver.c |    2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3cb2210de553..38a602cb9fb7 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+>  
+>  	if (drv && drv->shutdown)
+>  		drv->shutdown(pci_dev);
+> -	pci_msi_shutdown(pci_dev);
+> -	pci_msix_shutdown(pci_dev);
+>  
+>  #ifdef CONFIG_KEXEC
+>  	/*
