@@ -1,63 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:55414 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047AbbD1HII (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 03:08:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <dja@axtens.net>,
+Received: from mail-by2on0141.outbound.protection.outlook.com ([207.46.100.141]:45037
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933330AbbDQPv2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 11:51:28 -0400
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Varun Sethi <Varun.Sethi@freescale.com>
+CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH Part1 v11 5/5] PCI: iproc: Use pci_scan_root_bus() instead of pci_create_root_bus()
-Date: Tue, 28 Apr 2015 15:01:39 +0800
-Message-ID: <1430204499-19571-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	"Roy Zang" <tie-fei.zang@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Date: Fri, 17 Apr 2015 14:19:08 +0000
+Message-ID: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <20150416104008.GB25640@arm.com>
+In-Reply-To: <20150416104008.GB25640@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
-Now pci_scan_root_bus() == pci_create_root_bus() +
-pci_scan_child_bus() if busn resource is supplied.
-iproc added the busn resource to resources list
-in of_pci_get_host_bridge_resources(). So it should be safe
-to use pci_scan_root_bus() instead.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Ray Jui <rjui@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 329e1b5..9622ebf 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -210,10 +210,10 @@ int iproc_pcie_setup(struct iproc_pcie *pcie)
- 
- 	pcie->sysdata.private_data = pcie;
- 
--	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
-+	bus = pci_scan_root_bus(pcie->dev, 0, &iproc_pcie_ops,
- 				  &pcie->sysdata, pcie->resources);
- 	if (!bus) {
--		dev_err(pcie->dev, "unable to create PCI root bus\n");
-+		dev_err(pcie->dev, "unable to scan PCI root bus\n");
- 		ret = -ENOMEM;
- 		goto err_power_off_phy;
- 	}
-@@ -227,7 +227,6 @@ int iproc_pcie_setup(struct iproc_pcie *pcie)
- 
- 	iproc_pcie_enable(pcie);
- 
--	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 	pci_bus_add_devices(bus);
--- 
-1.7.1
+> -----Original Message-----
+> From: Will Deacon [mailto:will.deacon@arm.com]
+> Sent: Thursday, April 16, 2015 5:40 AM
+> To: Sethi Varun-B16395
+> Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Yoder
+> Stuart-B08248; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> 
+> Hi Varun,
+> 
+> Thanks for adding me to Cc.
+> 
+> On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
+> > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if TBU ID
+> > would also be forwarded as a part of stream id to GIC. My understanding is
+> > that TBU ID is forwarded (as a part of the stream ID) to the TCU in case
+> > of a TBU translation miss. In case of the LS2085 PCIe controller you would
+> > have to setup the PCIe device ID to stream ID translation table. We may
+> > have to restrict the number of entries based on the available number of
+> > contexts.
+> 
+> Unfortunately, I'm having a really hard time parsing this thread (some parts
+> of it simply don't make sense; others use non-architectural terms and
+> overall I don't get a feeling for the problem).
+> 
+> Please could you explain your system design step by step so that I can
+> understand (a) what you've built and (b) why the current design of Linux is
+> causing you problems?
+> 
+> Sorry if I'm just being thick, but it's important that we get this right.
 
+I'll try to summarize some key points about the system...
+
+System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.  There are
+PCI, fsl-mc, and platform devices that do DMA.  Devices on the PCI and
+fsl-mc bus generate message interrupts.
+
+The flow a message interrupt would take is this:
+
+    --------------
+      PCI device
+    --------------
+          |
+          | pcidevid + MSI msg
+          |
+          V
+    --------------
+    PCI controller
+      pcidevid ->
+      streamID
+      mapping
+    --------------
+          |
+          | streamID + MSI msg
+          |
+          V
+    --------------
+        SMMU
+    --------------
+          |
+          | streamID + MSI msg
+          |
+          V
+    --------------
+       CCN-504 (Dickens)
+    --------------
+          |
+          | streamID + MSI msg
+          |
+          V
+    --------------
+      GICv3 ITS    streamID == ITS deviceID
+    --------------
+
+So, the way things work (at least initially) is that each PCI device maps
+to a single streamID, and thus each device has a separate ITT in 
+the ITS.  So, things should be cool.
+
+However, there is an improvement we envision as possible due to 
+the limited number of SMMU contexts (i.e. 64).  If there are
+64 SMMU context registers it means that there is a max of
+64 software contexts where things can be isolated.  But, say I have
+an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
+to a KVM VM.  Those 8 PCI devices could share the same
+streamID/ITS-device-ID since they all share the same isolation
+context.
+
+What would be nice is at the time the 8 VFS are being added
+to the IOMMU domain is for the pcidevid -> streamID mapping
+table to be updated dynamically.  It simply lets us make
+more efficient use of the limited streamIDs we have.
+
+I think it is this improvement that Minghuan had in mind
+in this patch.
+
+Thanks,
+Stuart
