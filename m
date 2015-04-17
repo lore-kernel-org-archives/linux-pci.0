@@ -1,82 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:35153 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbbDUH3M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 03:29:12 -0400
-Date: Tue, 21 Apr 2015 09:29:07 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Sonny Rao <sonnyrao@chromium.org>
-Cc: linux-kernel@vger.kernel.org,
-	Stephane Eranian <eranian@google.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Paul Mackerras <paulus@samba.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2] perf/x86/intel/uncore: add support for Haswell ULT IMC
- uncore
-Message-ID: <20150421072907.GA23549@gmail.com>
-References: <1429569247-16697-1-git-send-email-sonnyrao@chromium.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1429569247-16697-1-git-send-email-sonnyrao@chromium.org>
+Received: from mail-la0-f42.google.com ([209.85.215.42]:35298 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015AbbDQHPu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 03:15:50 -0400
+Received: by labbd9 with SMTP id bd9so73620850lab.2
+        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2015 00:15:49 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org, lorenzo.pieralisi@arm.com
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v5 6/9] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
+Date: Fri, 17 Apr 2015 09:14:55 +0200
+Message-Id: <1429254898-32743-7-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1429254898-32743-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1429254898-32743-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+mmconfig_64.c version is going to be default implementation for arch
+agnostic low-level direct PCI config space accessors for ECAM dirver.
+However, now it initialize raw_pci_ext_ops pointer which is x86 specific
+code only. Moreover, mmconfig_32.c is doing the same thing at the same time.
 
-* Sonny Rao <sonnyrao@chromium.org> wrote:
+Move it to mmconfig_shared.c so it becomes common for both and
+mmconfig_64.c turns out to be purely arch agnostic.
 
-> This uncore is the same as the Haswell desktop part but uses a
-> different PCI ID.
-> 
-> Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
-> ---
->  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-> index 3001015..ca75e70 100644
-> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-> @@ -1,6 +1,9 @@
->  /* Nehalem/SandBridge/Haswell uncore support */
->  #include "perf_event_intel_uncore.h"
->  
-> +/* Uncore IMC PCI Id */
-> +#define PCI_DEVICE_ID_INTEL_HSW_U_IMC	0x0a04
-> +
->  /* SNB event control */
->  #define SNB_UNC_CTL_EV_SEL_MASK			0x000000ff
->  #define SNB_UNC_CTL_UMASK_MASK			0x0000ff00
-> @@ -472,6 +475,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
->  		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
->  		.driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
->  	},
-> +	{ /* IMC */
-> +		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
-> +		.driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
-> +	},
->  	{ /* end: all zeroes */ },
->  };
->  
-> @@ -502,6 +509,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
->  	IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
->  	IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
->  	IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
-> +	IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
->  	{  /* end marker */ }
->  };
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+---
+ arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
+ arch/x86/pci/mmconfig_32.c     | 10 ++--------
+ arch/x86/pci/mmconfig_64.c     | 11 ++---------
+ include/linux/ecam.h           |  5 +++++
+ 4 files changed, 17 insertions(+), 19 deletions(-)
 
-So now it becomes rather inconsistent:
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 0c71640..8d7903a 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -29,6 +29,11 @@
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
+ 
++const struct pci_raw_ops pci_mmcfg = {
++	.read =		pci_mmcfg_read,
++	.write =	pci_mmcfg_write,
++};
++
+ static u32
+ pci_mmconfig_amd_read(int len, void __iomem *addr)
+ {
+@@ -555,9 +560,10 @@ static void __init __pci_mmcfg_init(int early)
+ 		}
+ 	}
+ 
+-	if (pci_mmcfg_arch_init())
++	if (pci_mmcfg_arch_init()) {
++		raw_pci_ext_ops = &pci_mmcfg;
+ 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+-	else {
++	} else {
+ 		free_all_mmcfg();
+ 		pci_mmcfg_arch_init_failed = true;
+ 	}
+diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
+index 5cf6291..7a050cb 100644
+--- a/arch/x86/pci/mmconfig_32.c
++++ b/arch/x86/pci/mmconfig_32.c
+@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
+ 	}
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	unsigned long flags;
+@@ -79,7 +79,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	unsigned long flags;
+@@ -106,15 +106,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ int __init pci_mmcfg_arch_init(void)
+ {
+ 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
+-	raw_pci_ext_ops = &pci_mmcfg;
+ 	return 1;
+ }
+ 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index b62ff18..fd857ea 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
+ 	return NULL;
+ }
+ 
+-static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+ 			  unsigned int devfn, int reg, int len, u32 *value)
+ {
+ 	char __iomem *addr;
+@@ -49,7 +49,7 @@ err:		*value = -1;
+ 	return 0;
+ }
+ 
+-static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 			   unsigned int devfn, int reg, int len, u32 value)
+ {
+ 	char __iomem *addr;
+@@ -71,11 +71,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+ 	return 0;
+ }
+ 
+-const struct pci_raw_ops pci_mmcfg = {
+-	.read =		pci_mmcfg_read,
+-	.write =	pci_mmcfg_write,
+-};
+-
+ static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+ {
+ 	void __iomem *addr;
+@@ -101,8 +96,6 @@ int __init pci_mmcfg_arch_init(void)
+ 			return 0;
+ 		}
+ 
+-	raw_pci_ext_ops = &pci_mmcfg;
+-
+ 	return 1;
+ }
+ 
+diff --git a/include/linux/ecam.h b/include/linux/ecam.h
+index 2387df5..fba5d6b 100644
+--- a/include/linux/ecam.h
++++ b/include/linux/ecam.h
+@@ -47,5 +47,10 @@ extern struct list_head pci_mmcfg_list;
+ 
+ #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+ 
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++		   unsigned int devfn, int reg, int len, u32 *value);
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++		    unsigned int devfn, int reg, int len, u32 value);
++
+ #endif  /* __KERNEL__ */
+ #endif  /* __ECAM_H */
+-- 
+1.9.1
 
-  - PCI_DEVICE_ID_INTEL_HSW_IMC is defined in include/linux/pci_ids.h
-  - PCI_DEVICE_ID_INTEL_HSW_U_IMC is defined in arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-
-Could you please also send a patch on top of this one that moves the 
-other, related PCI IDs as well?
-
-Thanks,
-
-	Ingo
