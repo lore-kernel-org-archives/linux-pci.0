@@ -1,64 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:35823 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932647AbbDISbb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 14:31:31 -0400
-MIME-Version: 1.0
-In-Reply-To: <1428569681.18187.69.camel@kernel.crashing.org>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-	<1427857069-6789-4-git-send-email-yinghai@kernel.org>
-	<20150406220638.GH10892@google.com>
-	<20150406.203533.1356187749826485194.davem@davemloft.net>
-	<CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
-	<20150408154759.GN10892@google.com>
-	<1428527527.18187.28.camel@kernel.crashing.org>
-	<CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
-	<1428549459.18187.56.camel@kernel.crashing.org>
-	<CAErSpo5VwuLjZtQFcJqfpkC=j5TJmLD0oZPQ=6oJpSOthB+BFA@mail.gmail.com>
-	<1428569681.18187.69.camel@kernel.crashing.org>
-Date: Thu, 9 Apr 2015 11:31:30 -0700
-Message-ID: <CAE9FiQWf1kRx2Dx7LzCy7WhDonO54Q3o+5Nu+uxxsCs1unBMtg@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from exprod5og113.obsmtp.com ([64.18.0.26]:50054 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932125AbbDQJvY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 05:51:24 -0400
+Received: by pdea3 with SMTP id a3so123193193pde.3
+        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2015 02:51:23 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 2/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
+Date: Fri, 17 Apr 2015 02:50:08 -0700
+Message-Id: <83de071cede4e15bc094de8e750f3195ed512eec.1429263201.git.dhdang@apm.com>
+In-Reply-To: <cover.1429263201.git.dhdang@apm.com>
+References: <cover.1429263201.git.dhdang@apm.com>
+In-Reply-To: <cover.1429263201.git.dhdang@apm.com>
+References: <20150415091655.02361cdc@arm.com> <cover.1429263201.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 9, 2015 at 1:54 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2015-04-08 at 23:26 -0500, Bjorn Helgaas wrote:
->> I'm not planning to review this until after the merge window opens,
->> but I took a quick glance, and I agree with Ben.  I don't want to add
->> a new IORESOURCE_ flag.  I think a pci_resource_compatible() helper is
->> a great idea.
->
-> So the new resource flag was handy here still regardless of the
-> implementation choice because otherwise, we have to do the whole tree
-> walk to check for "PCI Express only path".
->
-> *But*, this is a property of the device as a whole, not of the resource,
-> so we could instead have a pci_dev flag established at probe time that
-> indicates that the path to a given device is PCIe only.
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-> That way, you avoid the special resource flag alltogether.
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-in the assign path: pci_bus_alloc_resource() does not take dev pointer.
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index f1ad9c2..4b719c9 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -354,6 +354,28 @@
+ 			};
+ 		};
+ 
++		msi: msi@79000000 {
++			compatible = "apm,xgene1-msi";
++			msi-controller;
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		pcie0: pcie@1f2b0000 {
+ 			status = "disabled";
+ 			device_type = "pci";
+@@ -375,6 +397,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie0clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie1: pcie@1f2c0000 {
+@@ -398,6 +421,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie1clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie2: pcie@1f2d0000 {
+@@ -421,6 +445,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie2clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie3: pcie@1f500000 {
+@@ -444,6 +469,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie3clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie4: pcie@1f510000 {
+@@ -467,6 +493,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie4clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+-- 
+1.9.1
 
-should we make
-
-int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
-
-to
-
-int pci_bus_alloc_resource(struct pci_bus *bus, struct pci_dev *dev,
-struct resource *res,
-
-?
