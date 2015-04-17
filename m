@@ -1,89 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 15/30] PCI: Introduce new scan function pci_scan_host_bridge()
-Date: Fri, 3 Apr 2015 17:25:49 +0800
-Message-ID: <1428053164-28277-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37648 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbbDQIiU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 04:38:20 -0400
+Received: by widdi4 with SMTP id di4so12468441wid.0
+        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2015 01:38:19 -0700 (PDT)
+Message-ID: <5530C678.5080702@gmail.com>
+Date: Fri, 17 Apr 2015 10:38:16 +0200
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: Jisheng Zhang <jszhang@marvell.com>,
+	Jaehoon Chung <jh80.chung@samsung.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, CPGS <cpgs@samsung.com>
+Subject: Re: [query] how to use "ranges" in device tree
+References: <20150416215938.347caa68@xhacker> <55303EE1.1050108@samsung.com> <20150417102413.705b1ca0@xhacker> <20150417115016.69857a77@xhacker>
+In-Reply-To: <20150417115016.69857a77@xhacker>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce new scan function pci_scan_host_bridge() to
-support host bridge drivers that need to provide platform
-own pci_host_bridge_ops.
+On 17.04.2015 05:50, Jisheng Zhang wrote:
+> I got the solution, the ranges can define two or more ranges. What I need to do
+> is just add ranges for 0xe0000000 - 0xf0000000 as the following:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   22 ++++++++++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 25 insertions(+), 0 deletions(-)
+Jisheng,
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 36dfee0..b3d9b1b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2064,6 +2064,28 @@ static struct pci_bus *__pci_scan_root_bus(
- 	return b;
- }
- 
-+struct pci_host_bridge *pci_scan_host_bridge(
-+		struct device *parent, int domain, int bus,
-+		void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops)
-+{
-+	struct pci_host_bridge *host;
-+
-+	host = pci_create_host_bridge(parent, domain, bus, sysdata,
-+			resources, ops);
-+	if (!host)
-+		return NULL;
-+
-+	host->bus = __pci_scan_root_bus(host, ops->pci_ops);
-+	if (!host->bus) {
-+		pci_free_host_bridge(host);
-+		return NULL;
-+	}
-+
-+	return host;
-+}
-+EXPORT_SYMBOL(pci_scan_host_bridge);
-+
- struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
- 		int bus, struct pci_ops *ops, void *sysdata,
- 		struct list_head *resources)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2702a51..7f4f182 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -793,6 +793,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
- struct pci_bus *pci_scan_root_bus(struct device *parent, int domain, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+struct pci_host_bridge *pci_scan_host_bridge(struct device *parent, int domain,
-+		int bus, void *sysdata, struct list_head *resources,
-+		struct pci_host_bridge_ops *ops);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
--- 
-1.7.1
+the beauty of ranges property often reminds me of perl code: once you
+stop looking at it, you cannot recall how you did it nor how that
+has ever worked.
+
+What the ranges property does is to map an address range back to the
+address space of the parent node. In this case, the parent node of
+"soc" is the root node with "ranges;", i.e. 1:1 mapping.
+
+> soc {
+> 	ranges = <0 0xf7000000 0x1000000
+
+The line above maps 0x1000000 bytes starting at 0 back to 0xf7000000
+of the parent node's address space. This allows us to leave the 0xf7
+prefix for each of the internal bus nodes below.
+
+> 		  0xe0000000 0xe0000000 0x10000000>;  //add this line
+
+You could have chosen any address as the first value that does not
+interfere with 0x0-0x1000000 of the first range, e.g.
+
+0x20000000 0xe0000000 0x10000000
+
+would allow you to access the pcie memory space at 0x20000000 in nodes
+below that ranges property.
+
+Sebastian
+
+> 	pcie: pcie@e40000 {
+> 		...
+> 		reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
+> 		reg-names = "dbi", "pad", "config";
+> 		...
+> 	};
+> }
+>
+> Now, we can get the config space correctly.
 
