@@ -1,103 +1,147 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 15 Apr 2015 14:42:26 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tony Luck <tony.luck@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-acpi <linux-acpi@vger.kernel.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH v1 2/4] PCI: Mark invalid BARs as unassigned
-Message-ID: <20150415194226.GA27352@google.com>
-References: <20150312173201.1052.28341.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150312173533.1052.46464.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <CA+8MBbJv-RwX_RDzk85X_sHAHUG6cTsCAKd-_iE7wrdQ9wYKsQ@mail.gmail.com>
- <CAErSpo6PV7+cZKgDPBA7tDn4oyp_hONqJFegTFxVLz2KaTeK4A@mail.gmail.com>
- <CA+8MBbLnFQ2_zWniBFN6=kJMo-3PbBQvdsfPFV+zyApYpN6BQA@mail.gmail.com>
- <20150415144819.GD19151@google.com>
- <CA+8MBbJEf9gOyWq_Urw3T5s7jj2-2pHkuQRcn9X3TxSYYUK5ZA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0135.outbound.protection.outlook.com ([207.46.100.135]:29445
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752686AbbDQSNF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 14:13:05 -0400
+From: Varun Sethi <Varun.Sethi@freescale.com>
+To: Stuart Yoder <stuart.yoder@freescale.com>,
+	Will Deacon <will.deacon@arm.com>
+CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	"Roy Zang" <tie-fei.zang@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Scott Wood" <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Date: Fri, 17 Apr 2015 17:57:39 +0000
+Message-ID: <BN3PR0301MB1219C1FEA1B1678D06E17D0AEAE30@BN3PR0301MB1219.namprd03.prod.outlook.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <20150416104008.GB25640@arm.com>
+ <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
+In-Reply-To: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+8MBbJEf9gOyWq_Urw3T5s7jj2-2pHkuQRcn9X3TxSYYUK5ZA@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, Jiang]
+Hi Stuart/Will,
 
-On Wed, Apr 15, 2015 at 09:27:41AM -0700, Tony Luck wrote:
-> > +       /* ACPI_RESOURCE_TYPE_IRQ etc. */
-> > +       printk("host bridge resource %02d length %#02x\n", res->type,
-> > +              res->length);
-> > +       print_hex_dump(KERN_INFO, "  : ", DUMP_PREFIX_OFFSET, 16, 1,
-> > +                      &res->data, res->length, 0);
-> > +
+> -----Original Message-----
+> From: Yoder Stuart-B08248
+> Sent: Friday, April 17, 2015 7:49 PM
+> To: Will Deacon; Sethi Varun-B16395
+> Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu
+> Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-
+> arm-kernel@lists.infradead.org
+> Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
 > 
-> Patch applied to the tree with the offending commit reverted. Serial
-> log attached,
+> 
+> 
+> > -----Original Message-----
+> > From: Will Deacon [mailto:will.deacon@arm.com]
+> > Sent: Thursday, April 16, 2015 5:40 AM
+> > To: Sethi Varun-B16395
+> > Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu
+> > Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-B08248; Bjorn Helgaas;
+> > Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
+> > Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> >
+> > Hi Varun,
+> >
+> > Thanks for adding me to Cc.
+> >
+> > On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
+> > > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if
+> > > TBU ID would also be forwarded as a part of stream id to GIC. My
+> > > understanding is that TBU ID is forwarded (as a part of the stream
+> > > ID) to the TCU in case of a TBU translation miss. In case of the
+> > > LS2085 PCIe controller you would have to setup the PCIe device ID to
+> > > stream ID translation table. We may have to restrict the number of
+> > > entries based on the available number of contexts.
+> >
+> > Unfortunately, I'm having a really hard time parsing this thread (some
+> > parts of it simply don't make sense; others use non-architectural
+> > terms and overall I don't get a feeling for the problem).
+> >
+> > Please could you explain your system design step by step so that I can
+> > understand (a) what you've built and (b) why the current design of
+> > Linux is causing you problems?
+> >
+> > Sorry if I'm just being thick, but it's important that we get this right.
+> 
+> I'll try to summarize some key points about the system...
+> 
+> System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.  There are
+> PCI, fsl-mc, and platform devices that do DMA.  Devices on the PCI and fsl-mc
+> bus generate message interrupts.
+> 
+> The flow a message interrupt would take is this:
+> 
+>     --------------
+>       PCI device
+>     --------------
+>           |
+>           | pcidevid + MSI msg
+>           |
+>           V
+>     --------------
+>     PCI controller
+>       pcidevid ->
+>       streamID
+>       mapping
+>     --------------
+>           |
+>           | streamID + MSI msg
+>           |
+>           V
+>     --------------
+>         SMMU
+>     --------------
+>           |
+>           | streamID + MSI msg
+>           |
+>           V
+>     --------------
+>        CCN-504 (Dickens)
+>     --------------
+>           |
+>           | streamID + MSI msg
+>           |
+>           V
+>     --------------
+>       GICv3 ITS    streamID == ITS deviceID
+>     --------------
+> 
+> So, the way things work (at least initially) is that each PCI device maps to a
+> single streamID, and thus each device has a separate ITT in the ITS.  So, things
+> should be cool.
+> 
+> However, there is an improvement we envision as possible due to the
+> limited number of SMMU contexts (i.e. 64).  If there are
+> 64 SMMU context registers it means that there is a max of
+> 64 software contexts where things can be isolated.  But, say I have an SRIOV
+> card with 64 VFs, and I want to assign 8 of the VFs to a KVM VM.  Those 8 PCI
+> devices could share the same streamID/ITS-device-ID since they all share the
+> same isolation context.
+> 
+> What would be nice is at the time the 8 VFS are being added to the IOMMU
+> domain is for the pcidevid -> streamID mapping table to be updated
+> dynamically.  It simply lets us make more efficient use of the limited
+> streamIDs we have.
+> 
+i.e. we set up a common stream id for PCIe devices while attaching them to a domain. This would require traversal of PCIe bus topology in order to determine the dma alias during attach_device.
+In case of a transparent host bridge we would have to consider the device id corresponding to the bridge.
 
-Thanks.  Your log shows several descriptors that we currently ignore
-because their Producer/Consumer bits are set to "Consumer".   Here's one
-that contains the MMIO area used by these igb and mptsas devices:
+I think it would be better if we can statically restrict number of permissible stream Ids per PCIe controller. We can setup the stream ID to device ID mapping during device probe itself (add_device or of_xlate)
 
-  host bridge resource 12 length 0x38       ACPI_RESOURCE_TYPE_ADDRESS32
-    : 00000000: 00 01 00 01 01 01 00 00 00 00 00 00 00 00 00 00
-    : 00000010: 00 00 00 a0 ff ff ff ef 00 00 00 00 00 00 00 50
-    : 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-    : 00000030: 0d 00 00 00 50 00 00 00
-  [mem 0xa0000000-0xefffffff]
+For the ITS setup, we would have to translate the device id to the associated stream Id. What would happen in case of the transparent host bridge, all the devices behind the bridge would share the same stream ID?
 
-I think we're about to conclude that the Producer/Consumer bit is useless
-and should be ignored.
-
-Can you drop the previous debug patch and try this one?
-
-
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 48cc65705db4..cd96ddc2bc6c 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -240,15 +240,12 @@ static acpi_status resource_to_window(struct acpi_resource *resource,
- 	 * We're only interested in _CRS descriptors that are
- 	 *	- address space descriptors for memory or I/O space
- 	 *	- non-zero size
--	 *	- producers, i.e., the address space is routed downstream,
--	 *	  not consumed by the bridge itself
- 	 */
- 	status = acpi_resource_to_address64(resource, addr);
- 	if (ACPI_SUCCESS(status) &&
- 	    (addr->resource_type == ACPI_MEMORY_RANGE ||
- 	     addr->resource_type == ACPI_IO_RANGE) &&
--	    addr->address.address_length &&
--	    addr->producer_consumer == ACPI_PRODUCER)
-+	    addr->address.address_length)
- 		return AE_OK;
- 
- 	return AE_ERROR;
-@@ -276,6 +273,12 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
- 	unsigned long flags, offset = 0;
- 	struct resource *root;
- 
-+	/* ACPI_RESOURCE_TYPE_IRQ etc. */
-+	printk("host bridge resource %02d length %#02x\n", res->type,
-+	       res->length);
-+	print_hex_dump(KERN_INFO, "  : ", DUMP_PREFIX_OFFSET, 16, 1,
-+		       &res->data, res->length, 0);
-+
- 	/* Return AE_OK for non-window resources to keep scanning for more */
- 	status = resource_to_window(res, &addr);
- 	if (!ACPI_SUCCESS(status))
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 5589a6e2a023..ae5534a6bce7 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -483,6 +483,11 @@ static acpi_status acpi_dev_process_resource(struct acpi_resource *ares,
- 	struct resource *res = &win.res;
- 	int i;
- 
-+	printk("process resource %02d length %#02x\n", ares->type,
-+	       ares->length);
-+	print_hex_dump(KERN_INFO, "  : ", DUMP_PREFIX_OFFSET, 16, 1,
-+		       &ares->data, ares->length, 0);
-+
- 	if (c->preproc) {
- 		int ret;
- 
+-Varun
