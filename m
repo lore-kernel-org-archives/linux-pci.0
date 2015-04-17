@@ -1,82 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28890 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752597AbbDWHvS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 03:51:18 -0400
-Date: Thu, 23 Apr 2015 15:47:00 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Fabrice Gasnier <fabrice.gasnier@st.com>
-CC: "jg1.han@samsung.com" <jg1.han@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+Received: from mout.kundenserver.de ([212.227.126.130]:62483 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753680AbbDQJjU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 05:39:20 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jaehoon Chung <jh80.chung@samsung.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 2/2] PCI: designware: use iATU0 for cfg and IO, iATU1
- for MEM
-Message-ID: <20150423154700.2f2043c3@xhacker>
-In-Reply-To: <5538A0AE.6050005@st.com>
-References: <1429707494-2732-1-git-send-email-jszhang@marvell.com>
-	<1429707494-2732-3-git-send-email-jszhang@marvell.com>
-	<5538A0AE.6050005@st.com>
+	CPGS <cpgs@samsung.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [query] how to use "ranges" in device tree
+Date: Fri, 17 Apr 2015 11:38:45 +0200
+Message-ID: <3074482.0e1L0iyh9V@wuerfel>
+In-Reply-To: <20150417164546.3925eb7c@xhacker>
+References: <20150416215938.347caa68@xhacker> <5862495.WQJXyp7MlL@wuerfel> <20150417164546.3925eb7c@xhacker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fabrice,
-
-On Thu, 23 Apr 2015 00:35:10 -0700
-Fabrice Gasnier <fabrice.gasnier@st.com> wrote:
-
-> Hi Jisheng,
+On Friday 17 April 2015 16:45:46 Jisheng Zhang wrote:
+> > 
+> > A nicer (but a little more complicated) way to do this would be to use
+> > #address-cells=<2> in the parent bus and use that to enumerate the
 > 
-> On 04/22/2015 02:58 PM, Jisheng Zhang wrote:
-> > Most transactions' type are cfg0 and MEM, so the Current iATU usage is not
-> > balanced, iATU0 is hot while iATU1 is rarely used. This patch refactors
-> > the iATU usage: iATU0 for cfg and IO, iATU1 for MEM. This allocation
-> > ideas comes from Minghuan Lian<Minghuan.Lian@freescale.com>:
-> >
-> >   http://www.spinics.net/lists/linux-pci/msg40440.html
-> >
-> > Signed-off-by: Jisheng Zhang<jszhang@marvell.com>
-> > ---
-> >   drivers/pci/host/pcie-designware.c | 83 +++++++++++++++++++++-----------------
-> >   1 file changed, 47 insertions(+), 36 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 1da1446..bb81c8ad 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -508,6 +508,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >   	if (pp->ops->host_init)
-> >   		pp->ops->host_init(pp);
-> >   
-> > +	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-> > +				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-> > +				  pp->io_bus_addr, pp->io_size);
-> > +	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> > +				  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-> > +				  pp->mem_bus_addr, pp->mem_size);
-> > +
-> Some platforms doesn't have support for ATU. I think this is the reason 
-> to have
-> rd_other_conf / wr_other_conf ops in the driver.
+> In this way, we need to change all device nodes' "reg" in arch/arm/boot/dts/berlin2q.dtsi?
 
-oops. Thanks for the information. So what about something like:
+Correct
 
-if (!pp->ops->rd_other_conf) {
-	dw_pcie_prog_outbound_atu(...);
-	dw_pcie_prog_outbound_atu(...);
-}
+> And in arm64 case, we should use #address-cells=<3>?
 
-Thanks,
-Jisheng
+It depends: if any of the address spaces within are 64-bit wide, yes, otherwise
+you can make the virtual spaces just 2-cell wide.
 
-> IMO, this is not suitable to have this in the initialization routine for 
-> all platforms.
-> 
-> Regards,
-> Fabrice
+> If above two answer is yes, setting "ranges = <..>" seems add complexity in my
+> humble opinion. So is it better to use 1:1 mapping by "ranges;" in "/soc" node?
+ 
+I agree, it gets a little awkward at that point. A better solution here would
+be to take the PCI node out of /soc and move it to the root node. This has
+the slight downside that you end up with registers being part of /soc and /pci,
+but that's perfectly legal.
 
+	Arnd
