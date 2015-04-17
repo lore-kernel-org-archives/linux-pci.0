@@ -1,79 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39090 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753495AbbDNKpR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Apr 2015 06:45:17 -0400
-Date: Tue, 14 Apr 2015 18:45:05 +0800
-From: Fam Zheng <famz@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18903 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751392AbbDQC1s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Apr 2015 22:27:48 -0400
+Date: Fri, 17 Apr 2015 10:24:13 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Jaehoon Chung <jh80.chung@samsung.com>
+CC: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
-Message-ID: <20150414104505.GA32015@ad.nay.redhat.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150413093708.GE17059@ad.nay.redhat.com>
- <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
- <20150414114433-mutt-send-email-mst@redhat.com>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, CPGS <cpgs@samsung.com>
+Subject: Re: [query] how to use "ranges" in device tree
+Message-ID: <20150417102413.705b1ca0@xhacker>
+In-Reply-To: <55303EE1.1050108@samsung.com>
+References: <20150416215938.347caa68@xhacker>
+	<55303EE1.1050108@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150414114433-mutt-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 04/14 11:47, Michael S. Tsirkin wrote:
-> I have investigated this, and I at this point I think the hang is basically
-> a non issue. So the commit log should say
+Hi Jaehoon,
+
+On Thu, 16 Apr 2015 15:59:45 -0700
+Jaehoon Chung <jh80.chung@samsung.com> wrote:
+
+> Hi,
 > 
-> 	if the driver hasn't registered an interrupt handler for it, the interrupt
-> 	is never deasserted and causes spurious interrupts, typically
-> 	followed by kernel disabling the irq.
+> Well, I'm not sure..
+> But in my understanding..configuration range might be support both "ranges" and "config" of reg.
+> 
+> On 04/16/2015 10:59 PM, Jisheng Zhang wrote:
+> > Hi all,
+> > 
+> > I didn't fully understand the "ranges" usage, here is one situation which I dunno
+> > how to handle.
+> > 
+> > In arch/arm/boot/dts/berlin2q.dtsi, we describe the /soc ranges as
+> > 
+> > ranges = <0 0xf7000000 0x1000000>;
+> > 
+> > That's fine. Now there's a pci device based on pcie-designware.c which prefer
+> > put "config" space in reg. But the config space starts at 0xe0000000, due to
+> > the /soc ranges, the "config" space following pcie node is not correct in fact.
+> > 
+> > soc {
+> > 	ranges = <0 0xf7000000 0x1000000>;
+> > 	...
+> > 	pcie: pcie@e40000 {
+> > 		compatible = "...";
+> > 		reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
+> > 		reg-names = "dbi", "pad", "config";
+> > 		...
+> > 	};
+> > 	...
+> > };
+> 
+> According to yours,
+> 
+> reg = <0xe40000 0x1000		/* dbi */
+> 	0xe000000 0x800000	/* pad */
+> 	0xf7000000 0x1000000>;	/* config ? */
 
-Or, how about disabling intx immediately too?
+oops, there's no pad at all, dbi starts at 0xf7e40000, config space starts at 0xe0000000
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3cb2210..dd7dcc1 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -452,6 +452,7 @@ static void pci_device_shutdown(struct device *dev)
-                drv->shutdown(pci_dev);
-        pci_msi_shutdown(pci_dev);
-        pci_msix_shutdown(pci_dev);
-+       pci_intx(pci_dev, 0);
+so my pcie in my understanding is
 
- #ifdef CONFIG_KEXEC
-        /*
+pcie: pcie@e40000 {
+	compatible = "...";
+	reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
+	reg-names = "dbi", "config";
+};
+
+But the "/soc" ranges is defined as "<0 0xf7000000 0x1000000>;", so the config space
+in the above dts is not correct.
+
+My solution is change the "/soc" ranges as following:
+
+soc {
+	ranges;
+	...
+};
+
+Is there any elegant solutions for this situation?
 
 > 
+> If there is not "config" into reg-names, it should be tried to find it into "ranges".
+
+The pcie-designware driver prefers users define config space in "reg"
+
+Thanks for your help,
+Jisheng
+
 > 
-> > >> [bhelgaas: changelog]
-> > >> Reported-by: Fam Zheng <famz@redhat.com>
-> > >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> > >> CC: Ulrich Obergfell <uobergfe@redhat.com>
-> > >> CC: Rusty Russell <rusty@rustcorp.com.au>
-> > >> ---
-> > >>  drivers/pci/pci-driver.c |    2 --
-> > >>  1 file changed, 2 deletions(-)
-> > >>
-> > >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > >> index 3cb2210de553..38a602cb9fb7 100644
-> > >> --- a/drivers/pci/pci-driver.c
-> > >> +++ b/drivers/pci/pci-driver.c
-> > >> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
-> > >>
-> > >>       if (drv && drv->shutdown)
-> > >>               drv->shutdown(pci_dev);
-> > >> -     pci_msi_shutdown(pci_dev);
-> > >> -     pci_msix_shutdown(pci_dev);
-> > >>
-> > >>  #ifdef CONFIG_KEXEC
-> > >>       /*
-> > >>
+> If my understanding is wrong, let me know, plz.
+> 
+> In my case,
+> 
+> 	reg = <0x156b0000 0x1000
+> 		0x15680000 0x1000
+> 		0x0c000000 0x1000>;
+> 	reg-names = "elbi", "phy", "config";
+> 
+> 	ranges = < ..... /* downstream I/O */
+> 		  ...... /* non-prefetchable memory */
+> 
+> 
+> Best Regards,
+> Jaehoon Chung	
+> 
+> > 
+> > How to define the "config" space in this situation? Did we need to change
+> > the /soc ranges as the following?
+> > 
+> > soc {
+> > 	ranges;
+> > }
+> > 
+> > Thanks in advance,
+> > Jisheng
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > 
+> 
+
