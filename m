@@ -1,147 +1,339 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0135.outbound.protection.outlook.com ([207.46.100.135]:29445
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752686AbbDQSNF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 14:13:05 -0400
-From: Varun Sethi <Varun.Sethi@freescale.com>
-To: Stuart Yoder <stuart.yoder@freescale.com>,
-	Will Deacon <will.deacon@arm.com>
-CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	"Roy Zang" <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Scott Wood" <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Fri, 17 Apr 2015 17:57:39 +0000
-Message-ID: <BN3PR0301MB1219C1FEA1B1678D06E17D0AEAE30@BN3PR0301MB1219.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
- <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
- <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
- <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
- <20150416104008.GB25640@arm.com>
- <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
-In-Reply-To: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:33210 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbbDQHPx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 03:15:53 -0400
+Received: by lbbzk7 with SMTP id zk7so76063589lbb.0
+        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2015 00:15:51 -0700 (PDT)
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org, lorenzo.pieralisi@arm.com
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v5 7/9] x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM driver.
+Date: Fri, 17 Apr 2015 09:14:56 +0200
+Message-Id: <1429254898-32743-8-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1429254898-32743-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1429254898-32743-1-git-send-email-tomasz.nowicki@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Stuart/Will,
+Host which want to take advantage of ECAM generic goodness
+should select CONFIG_PCI_ECAM_GENERIC. Otherwise, machines like 32bits x86,
+are obligated to provide own low-level ECAM calls.
 
-> -----Original Message-----
-> From: Yoder Stuart-B08248
-> Sent: Friday, April 17, 2015 7:49 PM
-> To: Will Deacon; Sethi Varun-B16395
-> Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu
-> Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-
-> arm-kernel@lists.infradead.org
-> Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: Will Deacon [mailto:will.deacon@arm.com]
-> > Sent: Thursday, April 16, 2015 5:40 AM
-> > To: Sethi Varun-B16395
-> > Cc: Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu
-> > Mingkai-B21284; Zang Roy-R61911; Yoder Stuart-B08248; Bjorn Helgaas;
-> > Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> > Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> >
-> > Hi Varun,
-> >
-> > Thanks for adding me to Cc.
-> >
-> > On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
-> > > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if
-> > > TBU ID would also be forwarded as a part of stream id to GIC. My
-> > > understanding is that TBU ID is forwarded (as a part of the stream
-> > > ID) to the TCU in case of a TBU translation miss. In case of the
-> > > LS2085 PCIe controller you would have to setup the PCIe device ID to
-> > > stream ID translation table. We may have to restrict the number of
-> > > entries based on the available number of contexts.
-> >
-> > Unfortunately, I'm having a really hard time parsing this thread (some
-> > parts of it simply don't make sense; others use non-architectural
-> > terms and overall I don't get a feeling for the problem).
-> >
-> > Please could you explain your system design step by step so that I can
-> > understand (a) what you've built and (b) why the current design of
-> > Linux is causing you problems?
-> >
-> > Sorry if I'm just being thick, but it's important that we get this right.
-> 
-> I'll try to summarize some key points about the system...
-> 
-> System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.  There are
-> PCI, fsl-mc, and platform devices that do DMA.  Devices on the PCI and fsl-mc
-> bus generate message interrupts.
-> 
-> The flow a message interrupt would take is this:
-> 
->     --------------
->       PCI device
->     --------------
->           |
->           | pcidevid + MSI msg
->           |
->           V
->     --------------
->     PCI controller
->       pcidevid ->
->       streamID
->       mapping
->     --------------
->           |
->           | streamID + MSI msg
->           |
->           V
->     --------------
->         SMMU
->     --------------
->           |
->           | streamID + MSI msg
->           |
->           V
->     --------------
->        CCN-504 (Dickens)
->     --------------
->           |
->           | streamID + MSI msg
->           |
->           V
->     --------------
->       GICv3 ITS    streamID == ITS deviceID
->     --------------
-> 
-> So, the way things work (at least initially) is that each PCI device maps to a
-> single streamID, and thus each device has a separate ITT in the ITS.  So, things
-> should be cool.
-> 
-> However, there is an improvement we envision as possible due to the
-> limited number of SMMU contexts (i.e. 64).  If there are
-> 64 SMMU context registers it means that there is a max of
-> 64 software contexts where things can be isolated.  But, say I have an SRIOV
-> card with 64 VFs, and I want to assign 8 of the VFs to a KVM VM.  Those 8 PCI
-> devices could share the same streamID/ITS-device-ID since they all share the
-> same isolation context.
-> 
-> What would be nice is at the time the 8 VFS are being added to the IOMMU
-> domain is for the pcidevid -> streamID mapping table to be updated
-> dynamically.  It simply lets us make more efficient use of the limited
-> streamIDs we have.
-> 
-i.e. we set up a common stream id for PCIe devices while attaching them to a domain. This would require traversal of PCIe bus topology in order to determine the dma alias during attach_device.
-In case of a transparent host bridge we would have to consider the device id corresponding to the bridge.
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+---
+ arch/x86/Kconfig           |   1 +
+ arch/x86/pci/Makefile      |   4 +-
+ arch/x86/pci/mmconfig_64.c | 127 ---------------------------------------------
+ drivers/pci/Kconfig        |   3 ++
+ drivers/pci/ecam.c         | 113 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 120 insertions(+), 128 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
 
-I think it would be better if we can statically restrict number of permissible stream Ids per PCIe controller. We can setup the stream ID to device ID mapping during device probe itself (add_device or of_xlate)
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index aa451bf..3bf1aa5 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -142,6 +142,7 @@ config X86
+ 	select X86_FEATURE_NAMES if PROC_FS
+ 	select SRCU
+ 	select HAVE_PCI_ECAM
++	select GENERIC_PCI_ECAM if X86_64
+ 
+ config INSTRUCTION_DECODER
+ 	def_bool y
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 5c6fc35..efc193d 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -1,7 +1,9 @@
+ obj-y				:= i386.o init.o
+ 
+ obj-$(CONFIG_PCI_BIOS)		+= pcbios.o
+-obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_$(BITS).o direct.o mmconfig-shared.o
++mmconfig-y			:= direct.o mmconfig-shared.o
++mmconfig-$(CONFIG_X86_32)	+= mmconfig_32.o
++obj-$(CONFIG_PCI_MMCONFIG)	+= $(mmconfig-y)
+ obj-$(CONFIG_PCI_DIRECT)	+= direct.o
+ obj-$(CONFIG_PCI_OLPC)		+= olpc.o
+ obj-$(CONFIG_PCI_XEN)		+= xen.o
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+deleted file mode 100644
+index fd857ea..0000000
+--- a/arch/x86/pci/mmconfig_64.c
++++ /dev/null
+@@ -1,127 +0,0 @@
+-/*
+- * mmconfig.c - Low-level direct PCI config space access via MMCONFIG
+- *
+- * This is an 64bit optimized version that always keeps the full mmconfig
+- * space mapped. This allows lockless config space operation.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/init.h>
+-#include <linux/acpi.h>
+-#include <linux/bitmap.h>
+-#include <linux/rcupdate.h>
+-#include <linux/ecam.h>
+-#include <asm/e820.h>
+-#include <asm/pci_x86.h>
+-
+-#define PREFIX "PCI: "
+-
+-static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
+-{
+-	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+-
+-	if (cfg && cfg->virt)
+-		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
+-	return NULL;
+-}
+-
+-int pci_mmcfg_read(unsigned int seg, unsigned int bus,
+-			  unsigned int devfn, int reg, int len, u32 *value)
+-{
+-	char __iomem *addr;
+-
+-	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+-	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
+-err:		*value = -1;
+-		return -EINVAL;
+-	}
+-
+-	rcu_read_lock();
+-	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr) {
+-		rcu_read_unlock();
+-		goto err;
+-	}
+-
+-	*value = pci_mmio_read(len, addr + reg);
+-	rcu_read_unlock();
+-
+-	return 0;
+-}
+-
+-int pci_mmcfg_write(unsigned int seg, unsigned int bus,
+-			   unsigned int devfn, int reg, int len, u32 value)
+-{
+-	char __iomem *addr;
+-
+-	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
+-	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
+-		return -EINVAL;
+-
+-	rcu_read_lock();
+-	addr = pci_dev_base(seg, bus, devfn);
+-	if (!addr) {
+-		rcu_read_unlock();
+-		return -EINVAL;
+-	}
+-
+-	pci_mmio_write(len, addr + reg, value);
+-	rcu_read_unlock();
+-
+-	return 0;
+-}
+-
+-static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+-{
+-	void __iomem *addr;
+-	u64 start, size;
+-	int num_buses;
+-
+-	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+-	num_buses = cfg->end_bus - cfg->start_bus + 1;
+-	size = PCI_MMCFG_BUS_OFFSET(num_buses);
+-	addr = ioremap_nocache(start, size);
+-	if (addr)
+-		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+-	return addr;
+-}
+-
+-int __init pci_mmcfg_arch_init(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		if (pci_mmcfg_arch_map(cfg)) {
+-			pci_mmcfg_arch_free();
+-			return 0;
+-		}
+-
+-	return 1;
+-}
+-
+-void __init pci_mmcfg_arch_free(void)
+-{
+-	struct pci_mmcfg_region *cfg;
+-
+-	list_for_each_entry(cfg, &pci_mmcfg_list, list)
+-		pci_mmcfg_arch_unmap(cfg);
+-}
+-
+-int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
+-{
+-	cfg->virt = mcfg_ioremap(cfg);
+-	if (!cfg->virt) {
+-		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+-void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
+-{
+-	if (cfg && cfg->virt) {
+-		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
+-		cfg->virt = NULL;
+-	}
+-}
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 90a5fb9..fae4aa7 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -29,6 +29,9 @@ config PCI_ECAM
+ config HAVE_PCI_ECAM
+ 	bool
+ 
++config GENERIC_PCI_ECAM
++	bool
++
+ config PCI_DEBUG
+ 	bool "PCI Debugging"
+ 	depends on PCI && DEBUG_KERNEL
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index c588234..796b6e7 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -23,6 +23,119 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
++#ifdef CONFIG_GENERIC_PCI_ECAM
++static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
++				  unsigned int devfn)
++{
++	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
++
++	if (cfg && cfg->virt)
++		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
++	return NULL;
++}
++
++int pci_mmcfg_read(unsigned int seg, unsigned int bus,
++			  unsigned int devfn, int reg, int len, u32 *value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
++err:		*value = -1;
++		return -EINVAL;
++	}
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		goto err;
++	}
++
++	*value = pci_mmio_read(len, addr + reg);
++	rcu_read_unlock();
++
++	return 0;
++}
++
++int pci_mmcfg_write(unsigned int seg, unsigned int bus,
++			   unsigned int devfn, int reg, int len, u32 value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
++		return -EINVAL;
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		return -EINVAL;
++	}
++
++	pci_mmio_write(len, addr + reg, value);
++	rcu_read_unlock();
++
++	return 0;
++}
++
++static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
++{
++	void __iomem *addr;
++	u64 start, size;
++	int num_buses;
++
++	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
++	num_buses = cfg->end_bus - cfg->start_bus + 1;
++	size = PCI_MMCFG_BUS_OFFSET(num_buses);
++	addr = ioremap_nocache(start, size);
++	if (addr)
++		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
++	return addr;
++}
++
++int __init pci_mmcfg_arch_init(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		if (pci_mmcfg_arch_map(cfg)) {
++			pci_mmcfg_arch_free();
++			return 0;
++		}
++
++	return 1;
++}
++
++void __init pci_mmcfg_arch_free(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		pci_mmcfg_arch_unmap(cfg);
++}
++
++int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
++{
++	cfg->virt = mcfg_ioremap(cfg);
++	if (!cfg->virt) {
++		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
++{
++	if (cfg && cfg->virt) {
++		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
++		cfg->virt = NULL;
++	}
++}
++#endif
++
+ static u32
+ pci_mmconfig_generic_read(int len, void __iomem *addr)
+ {
+-- 
+1.9.1
 
-For the ITS setup, we would have to translate the device id to the associated stream Id. What would happen in case of the transparent host bridge, all the devices behind the bridge would share the same stream ID?
-
--Varun
