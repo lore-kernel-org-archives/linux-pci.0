@@ -1,74 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t2354.austin.hp.com ([15.217.128.53]:33902 "EHLO
-	g2t2354.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbbDUBkd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2015 21:40:33 -0400
-Message-ID: <5535AA57.6010404@hp.com>
-Date: Tue, 21 Apr 2015 09:39:35 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:49730 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885AbbDQIcI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 04:32:08 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jisheng Zhang <jszhang@marvell.com>,
+	Jaehoon Chung <jh80.chung@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	CPGS <cpgs@samsung.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [query] how to use "ranges" in device tree
+Date: Fri, 17 Apr 2015 10:32 +0200
+Message-ID: <5862495.WQJXyp7MlL@wuerfel>
+In-Reply-To: <20150417115016.69857a77@xhacker>
+References: <20150416215938.347caa68@xhacker> <20150417102413.705b1ca0@xhacker> <20150417115016.69857a77@xhacker>
 MIME-Version: 1.0
-To: Dave Young <dyoung@redhat.com>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com> <20150415005731.GC19051@localhost.localdomain> <552DFB56.1070600@hp.com> <20150415064803.GF19051@localhost.localdomain>
-In-Reply-To: <20150415064803.GF19051@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dave,
-I found the old mail:
-http://lkml.iu.edu/hypermail/linux/kernel/1410.2/03584.html
+On Friday 17 April 2015 11:50:16 Jisheng Zhang wrote:
+> Hi all,
+> 
+> I got the solution, the ranges can define two or more ranges. What I need to do
+> is just add ranges for 0xe0000000 - 0xf0000000 as the following:
+> 
+> soc {
+>         ranges = <0 0xf7000000 0x1000000
+>                   0xe0000000 0xe0000000 0x10000000>;  //add this line
+>         ...
+>         pcie: pcie@e40000 {
+>                 ...
+>                 reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
+>                 reg-names = "dbi", "pad", "config";
+>                 ...
+>         };
+> }
+> 
+> Now, we can get the config space correctly.
+> 
 
-Please check this and you will find the discussion.
+This will work correctly, but it is not a very clean solution, because
+you define an intermediate address space that has some part of the
+bus mapped to zero, and another part mapped to a high address that
+matches the address the CPU sees.
 
-Regards
-Zhenhua
+A nicer (but a little more complicated) way to do this would be to use
+#address-cells=<2> in the parent bus and use that to enumerate the
+address ranges that get passed through:
 
-On 04/15/2015 02:48 PM, Dave Young wrote:
-> On 04/15/15 at 01:47pm, Li, ZhenHua wrote:
->> On 04/15/2015 08:57 AM, Dave Young wrote:
->>> Again, I think it is bad to use old page table, below issues need consider:
->>> 1) make sure old page table are reliable across crash
->>> 2) do not allow writing oldmem after crash
->>>
->>> Please correct me if I'm wrong, or if above is not doable I think I will vote for
->>> resetting pci bus.
->>>
->>> Thanks
->>> Dave
->>>
->> Hi Dave,
->>
->> When updating the context tables, we have to write their address to root
->> tables, this will cause writing to old mem.
->>
->> Resetting the pci bus has been discussed, please check this:
->> http://lists.infradead.org/pipermail/kexec/2014-October/012752.html
->> https://lkml.org/lkml/2014/10/21/890
->
-> I know one reason to use old pgtable is this looks better because it fixes the
-> real problem, but it is not a good way if it introduce more problems because of
-> it have to use oldmem. I will be glad if this is not a problem but I have not
-> been convinced.
->
-> OTOH, there's many types of iommu, intel, amd, a lot of other types. They need
-> their own fixes, so it looks not that elegant.
->
-> For pci reset, it is not perfect, but it has another advantage, the patch is
-> simpler. The problem I see from the old discusssion is, reset bus in 2nd kernel
-> is acceptable but it does not fix things on sparc platform. AFAIK current reported
-> problems are intel and amd iommu, at least pci reset stuff does not make it worse.
->
-> Thanks
-> Dave
->
+soc {
+	#address-cells=<2>;
+	#size-cells=<1>;
+        ranges = <0 0  0xf7000000  0x1000000>, /* 0: the normal regs */
+		  <1 0  0xe0000000 0x16000000>; /* 1: reallocated registers for PCI */
 
+	pcie@e40000 {
+		#address-cells = <3>;
+		#size-cells = <2>;
+		reg = <0 0xe40000 0x10000>, <1 0 0x8000000>;
+
+		/* memory space at pci address 0xf0000000, cpu address 0xf0000000, 
+		   bus address 0x10000000 */
+		ranges = <0x02000000 0 0xf0000000   0 0x10000000   0 0x06000000>;
+	};
+
+	...
+};
+
+The ranges property inside of the pcie node here should match whatever you program
+into the inbound mapping registers of the PCIe host controller (if any).
+
+	Arnd
