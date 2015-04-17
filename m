@@ -1,97 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55172 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566AbbDCJ3K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:10 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	<linux-parisc@vger.kernel.org>
-Subject: [PATCH v9 22/30] parisc/PCI: Use pci_scan_root_bus() for simplicity
-Date: Fri, 3 Apr 2015 17:25:56 +0800
-Message-ID: <1428053164-28277-24-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from exprod5og115.obsmtp.com ([64.18.0.246]:51639 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753883AbbDQJvA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 05:51:00 -0400
+Received: by paboj16 with SMTP id oj16so120394686pab.0
+        for <linux-pci@vger.kernel.org>; Fri, 17 Apr 2015 02:50:59 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
+Date: Fri, 17 Apr 2015 02:50:06 -0700
+Message-Id: <cover.1429263201.git.dhdang@apm.com>
+In-Reply-To: <20150415091655.02361cdc@arm.com>
+References: <20150415091655.02361cdc@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+to GIC V2M specification for MSI Termination.
 
-Now pci_bus_add_devices() has been ripped out
-from pci_scan_root_bus(), we could use pci_scan_root_bus()
-instead of pci_create_root_bus() + pci_scan_child_bus()
-for simplicity.
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
+block supports 2048 MSI termination ports coalesced into 16 physical HW IRQ lines
+and shared across all 5 PCIe ports.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: "James E.J. Bottomley" <jejb@parisc-linux.org>
-CC: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |    4 ++--
- drivers/parisc/lba_pci.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+v4 changes:
+	1. Remove affinity setting for each MSI
+	2. Add description about register layout, MSI termination address and data
+	3. Correct total number of MSI vectors to 2048
+	4. Clean up error messages
+	5. Remove unused module code
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index f375252..146c3ff 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -985,7 +985,7 @@ static int __init dino_probe(struct parisc_device *dev)
- 	** It's not used to avoid chicken/egg problems
- 	** with configuration accessor functions.
- 	*/
--	dino_dev->hba.hba_bus = bus = pci_create_root_bus(&dev->dev,
-+	dino_dev->hba.hba_bus = bus = pci_scan_root_bus(&dev->dev,
- 			 0, dino_current_bus, &dino_cfg_ops, NULL, &resources);
- 	if (!bus) {
- 		printk(KERN_ERR "ERROR: failed to scan PCI bus on %s (duplicate bus number %d?)\n",
-@@ -996,7 +996,7 @@ static int __init dino_probe(struct parisc_device *dev)
- 		return 0;
- 	}
+v3 changes:
+        1. Implement MSI support using PCI MSI IRQ domain
+        2. Only use msi_controller to store IRQ domain
+v2 changes:
+        1. Use msi_controller structure
+        2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
  
--	max = pci_scan_child_bus(bus);
-+	max = pci_bus_child_max_busnr(bus);
- 	pci_bus_update_busn_res_end(bus, max);
- 
- 	/* This code *depends* on scanning being single threaded
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index 2949030..b630364 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1563,14 +1563,14 @@ lba_driver_probe(struct parisc_device *dev)
- 
- 	dev->dev.platform_data = lba_dev;
- 	lba_bus = lba_dev->hba.hba_bus =
--		pci_create_root_bus(&dev->dev, 0, lba_dev->hba.bus_num.start,
-+		pci_scan_root_bus(&dev->dev, 0, lba_dev->hba.bus_num.start,
- 				    cfg_ops, NULL, &resources);
- 	if (!lba_bus) {
- 		pci_free_resource_list(&resources);
- 		return 0;
- 	}
- 
--	max = pci_scan_child_bus(lba_bus);
-+	max = pci_bus_child_max_busnr(lba_bus);
- 
- 	/* This is in lieu of calling pci_assign_unassigned_resources() */
- 	if (is_pdc_pat()) {
+
+
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      |  63 ++++
+ MAINTAINERS                                        |   8 +
+ arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 ++
+ drivers/pci/host/Kconfig                           |   6 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-xgene-msi.c                   | 410 +++++++++++++++++++++
+ drivers/pci/host/pci-xgene.c                       |  21 ++
+ 7 files changed, 536 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ create mode 100644 drivers/pci/host/pci-xgene-msi.c
+
 -- 
-1.7.1
+1.9.1
 
