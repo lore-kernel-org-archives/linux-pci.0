@@ -1,61 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:36699 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205AbbDHBbU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 21:31:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <1428452680-24861-1-git-send-email-yinghai@kernel.org>
-References: <1428452680-24861-1-git-send-email-yinghai@kernel.org>
-From: Rob Herring <robherring2@gmail.com>
-Date: Tue, 7 Apr 2015 20:30:58 -0500
-Message-ID: <CAL_JsqLx4dB9CG0t0pCV89VxECXVTZyyiGfq=awNJSgfD50Raw@mail.gmail.com>
-Subject: Re: [PATCH] of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37541 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753766AbbDQItU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 04:49:20 -0400
+Date: Fri, 17 Apr 2015 16:45:46 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jaehoon Chung <jh80.chung@samsung.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	CPGS <cpgs@samsung.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [query] how to use "ranges" in device tree
+Message-ID: <20150417164546.3925eb7c@xhacker>
+In-Reply-To: <5862495.WQJXyp7MlL@wuerfel>
+References: <20150416215938.347caa68@xhacker>
+	<20150417102413.705b1ca0@xhacker>
+	<20150417115016.69857a77@xhacker>
+	<5862495.WQJXyp7MlL@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 7, 2015 at 7:24 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> For device resource PREF bit setting under bridge 64-bit pref resource,
-> we need to make sure only set PREF for 64bit resource, so set IORESOUCE_MEM_64
-> for 64bit resource during of device resource flags parsing.
->
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: devicetree@vger.kernel.org
+Dear Arnd,
 
-Acked-by: Rob Herring <robh@kernel.org>
+On Fri, 17 Apr 2015 01:32:00 -0700
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-Bjorn, are you collecting these or should I apply?
+> On Friday 17 April 2015 11:50:16 Jisheng Zhang wrote:
+> > Hi all,
+> > 
+> > I got the solution, the ranges can define two or more ranges. What I need to do
+> > is just add ranges for 0xe0000000 - 0xf0000000 as the following:
+> > 
+> > soc {
+> >         ranges = <0 0xf7000000 0x1000000
+> >                   0xe0000000 0xe0000000 0x10000000>;  //add this line
+> >         ...
+> >         pcie: pcie@e40000 {
+> >                 ...
+> >                 reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
+> >                 reg-names = "dbi", "pad", "config";
+> >                 ...
+> >         };
+> > }
+> > 
+> > Now, we can get the config space correctly.
+> > 
+> 
+> This will work correctly, but it is not a very clean solution, because
+> you define an intermediate address space that has some part of the
+> bus mapped to zero, and another part mapped to a high address that
+> matches the address the CPU sees.
 
-Rob
+Seems I had a better understanding of the "ranges" usage, thanks for
+your explanation. 
 
-> ---
->  drivers/of/address.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> Index: linux-2.6/drivers/of/address.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/of/address.c
-> +++ linux-2.6/drivers/of/address.c
-> @@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags
->                 flags |= IORESOURCE_IO;
->                 break;
->         case 0x02: /* 32 bits */
-> -       case 0x03: /* 64 bits */
->                 flags |= IORESOURCE_MEM;
->                 break;
-> +       case 0x03: /* 64 bits */
-> +               flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-> +               break;
->         }
->         if (w & 0x40000000)
->                 flags |= IORESOURCE_PREFETCH;
+> 
+> A nicer (but a little more complicated) way to do this would be to use
+> #address-cells=<2> in the parent bus and use that to enumerate the
+
+In this way, we need to change all device nodes' "reg" in arch/arm/boot/dts/berlin2q.dtsi?
+And in arm64 case, we should use #address-cells=<3>?
+
+If above two answer is yes, setting "ranges = <..>" seems add complexity in my
+humble opinion. So is it better to use 1:1 mapping by "ranges;" in "/soc" node?
+
+Thanks a lot,
+Jisheng
+
+> address ranges that get passed through:
+> 
+> soc {
+> 	#address-cells=<2>;
+> 	#size-cells=<1>;
+>         ranges = <0 0  0xf7000000  0x1000000>, /* 0: the normal regs */
+> 		  <1 0  0xe0000000 0x16000000>; /* 1: reallocated registers for PCI */
+> 
+> 	pcie@e40000 {
+> 		#address-cells = <3>;
+> 		#size-cells = <2>;
+> 		reg = <0 0xe40000 0x10000>, <1 0 0x8000000>;
+> 
+> 		/* memory space at pci address 0xf0000000, cpu address 0xf0000000, 
+> 		   bus address 0x10000000 */
+> 		ranges = <0x02000000 0 0xf0000000   0 0x10000000   0 0x06000000>;
+> 	};
+> 
+> 	...
+> };
+> 
+> The ranges property inside of the pcie node here should match whatever you program
+> into the inbound mapping registers of the PCIe host controller (if any).
+> 
+> 	Arnd
+
