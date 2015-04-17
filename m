@@ -1,146 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Joerg Roedel <jroedel@suse.de>
-Subject: [Patch Part1 v8 07/37] x86/dmar: Use new irqdomain interfaces to allocate/free IRQ
-Date: Mon, 13 Apr 2015 14:11:29 +0800
-Message-Id: <1428905519-23704-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+To: bhelgaas@google.com, wangyijing@huawei.com, arnd@arndb.de,
+	hanjun.guo@linaro.org, Liviu.Dudau@arm.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, rjw@rjwysocki.net,
+	al.stone@linaro.org, lorenzo.pieralisi@arm.com
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH v5 1/9] x86, pci: Clean up comment about buggy MMIO config space access for AMD Fam10h CPUs.
+Date: Fri, 17 Apr 2015 09:14:50 +0200
+Message-Id: <1429254898-32743-2-git-send-email-tomasz.nowicki@linaro.org>
+In-Reply-To: <1429254898-32743-1-git-send-email-tomasz.nowicki@linaro.org>
+References: <1429254898-32743-1-git-send-email-tomasz.nowicki@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new irqdomain interfaces to allocate/free IRQ for DMAR and interrupt
-remapping, so we could kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ later.
+- fix typo
+- improve explanation
+- add reference to the related document
 
-The private definition of irq_alloc_hwirqs()/irq_free_hwirqs() are
-temporary solution, it will be removed once we have converted interrupt
-remapping driver to use irqdomain framework.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416894816-23245-8-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 ---
- arch/x86/include/asm/irq_remapping.h |    4 ++--
- arch/x86/kernel/apic/msi.c           |   10 ++++++++++
- drivers/iommu/irq_remapping.c        |   17 +++++++++++++++--
- 3 files changed, 27 insertions(+), 4 deletions(-)
+ arch/x86/include/asm/pci_x86.h | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 6224d316c405..86d897bc15dd 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -99,7 +99,7 @@ static inline bool setup_remapped_irq(int irq,
- }
- #endif /* CONFIG_IRQ_REMAP */
- 
--#define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)
--#define dmar_free_hwirq		irq_free_hwirq
-+extern int dmar_alloc_hwirq(void);
-+extern void dmar_free_hwirq(int irq);
- 
- #endif /* __X86_IRQ_REMAPPING_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 76cc2c902176..9be7d6d8a579 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -223,6 +223,16 @@ int arch_setup_dmar_msi(unsigned int irq)
- 				      "edge");
- 	return 0;
- }
-+
-+int dmar_alloc_hwirq(void)
-+{
-+	return irq_domain_alloc_irqs(NULL, 1, NUMA_NO_NODE, NULL);
-+}
-+
-+void dmar_free_hwirq(int irq)
-+{
-+	irq_domain_free_irqs(irq, 1);
-+}
- #endif
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index fa1195d..d024f4d 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -152,10 +152,13 @@ extern struct list_head pci_mmcfg_list;
  
  /*
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 390079ee1350..5617150fd8fb 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -6,6 +6,7 @@
- #include <linux/msi.h>
- #include <linux/irq.h>
- #include <linux/pci.h>
-+#include <linux/irqdomain.h>
- 
- #include <asm/hw_irq.h>
- #include <asm/irq_remapping.h>
-@@ -49,6 +50,18 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
- 
-+#ifndef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-+static unsigned int irq_alloc_hwirqs(int cnt, int node)
-+{
-+	return irq_domain_alloc_irqs(NULL, -1, cnt, node, NULL);
-+}
-+
-+static void irq_free_hwirqs(unsigned int from, int cnt)
-+{
-+	irq_domain_free_irqs(from, cnt);
-+}
-+#endif
-+
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+  * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
+- * on their northbrige except through the * %eax register. As such, you MUST
+- * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
++ * on their northbridge except through the * %eax register. As such, you MUST
++ * NOT use normal IOMEM accesses, you need to only use the magic mmio_config_*
+  * accessor functions.
+- * In fact just use pci_config_*, nothing else please.
++ *
++ * Please refer to the following doc:
++ * "BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h Processors",
++ * rev. 3.48, sec 2.11.1, "MMIO Configuration Coding Requirements".
+  */
+ static inline unsigned char mmio_config_readb(void __iomem *pos)
  {
- 	int ret, sub_handle, nvec_pow2, index = 0;
-@@ -104,7 +117,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 
--		irq = irq_alloc_hwirq(node);
-+		irq = irq_alloc_hwirqs(1, node);
- 		if (irq == 0)
- 			return -1;
- 
-@@ -127,7 +140,7 @@ static int do_setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	return 0;
- 
- error:
--	irq_free_hwirq(irq);
-+	irq_free_hwirqs(irq, 1);
- 	return ret;
- }
- 
 -- 
-1.7.10.4
+1.9.1
 
