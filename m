@@ -1,73 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 1 May 2015 02:20:04 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39928 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752916AbbDQBF2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Apr 2015 21:05:28 -0400
+Date: Fri, 17 Apr 2015 09:05:25 +0800
+From: Fam Zheng <famz@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, mst@redhat.com,
-	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com, airlied@linux.ie,
-	daniel.vetter@intel.com, linux-fbdev@vger.kernel.org,
-	luto@amacapital.net, cocci@systeme.lip6.fr,
-	linux-kernel@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	xen-devel@lists.xensource.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 2/5] lib: devres: add pcim_iomap_wc() variants
-Message-ID: <20150501002004.GA5622@wotan.suse.de>
-References: <1430343372-687-1-git-send-email-mcgrof@do-not-panic.com>
- <1430343372-687-3-git-send-email-mcgrof@do-not-panic.com>
- <20150430162647.GD7888@google.com>
- <20150430172723.GU5622@wotan.suse.de>
- <20150430214638.GE7888@google.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150417010525.GD28705@ad.nay.redhat.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150413093708.GE17059@ad.nay.redhat.com>
+ <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
+ <87twwkugd0.fsf@x220.int.ebiederm.org>
+ <20150416194245.GB20701@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150430214638.GE7888@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150416194245.GB20701@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 30, 2015 at 04:46:38PM -0500, Bjorn Helgaas wrote:
-> On Thu, Apr 30, 2015 at 07:27:23PM +0200, Luis R. Rodriguez wrote:
-> > On Thu, Apr 30, 2015 at 11:26:47AM -0500, Bjorn Helgaas wrote:
-> 
-> > > I don't see users of either pcim_iomap_wc() or pcim_iomap_wc_regions() so
-> > > far.  Did I miss them, or do you just expect them in the near future?
+On Thu, 04/16 14:42, Bjorn Helgaas wrote:
+> On Mon, Apr 13, 2015 at 11:45:31AM -0500, Eric W. Biederman wrote:
+> > ...
+> > The thing is not disabling msi interrupts for the case described in the
+> > buzilla report is the wrong fix.
 > > 
-> > The later, and also I hate seeing folks later add code under EXPORT_SYMBOL()
-> > rather than EXPORT_SYMBOL_GPL() so I figure I'd rather do it first. It happened
-> > recently in my v1 series, someone beat me to a write-combining export symbol
-> > and changed it to EXPORT_SYMBOL(). Feel free to drop this though but I hope
-> > no one out there then tries to just add an EXPORT_SYMBOL() later for this...
+> > The report is about a buggy driver doing the wrong thing.  Until someone
+> > ships a system that is msi native (aka no intx support) disabling msi
+> > interrupts as shutdown is the right thing to do.  If there is something
+> > that handles intx interrupts it is not an msi native system.
+> > 
+> > The real bug is probably disabling bugging interrupt detection on the
+> > kernel command line.
+> > 
+> > Beyond that to handle kexec cleanly something needs to stop the
+> > interrupts and stop the the DMA transfers.   Which in the short term
+> > means someone probably needs to write a shutdown method for the buggy
+> > driver.
+> > 
+> > An interrupt coming in almost always implies a DMA having completed,
+> > and if that DMA completed in the wrong spot the kexec'd kernel will be
+> > toast.
+> > 
+> > We disable interrupts at boot so that a kernel started with
+> > kexec-on-panic (which doesn't shut anything down) can boot.  There are
+> > probably other valid use cases (like native msi interrupts) but I am not
+> > aware of them.  But according to the pci spec shutting down msi
+> > interrupts at boot should be a noop.
+> > 
+> > So in summary not disabling MSI/MSI-X at shutdown is the wrong fix,
+> > and someone needs to fix a buggy driver.
 > 
-> Why do you want them to be EXPORT_SYMBOL_GPL?  I would expect them to be
-> exported the same way pcim_iomap(), pcim_iomap_regions(), and ioremap_wc()
-> are exported, i.e., with EXPORT_SYMBOL.
->> 
-> Per Documentation/DocBook/kernel-hacking.tmpl, EXPORT_SYMBOL_GPL "implies
-> that the function is considered an internal implementation issue, and not
-> really an interface."  I don't think these are internal implementation
-> issues.
+> Are you saying that:
+> 
+>   - pci_device_shutdown() should continue to call pci_msi_shutdown() and
+>     pci_msix_shutdown() as it does today, and
+> 
+>   - virtio_pci_driver should implement a .shutdown method?
+> 
+> I'm missing a lot of the context, and this is really outside my normal
+> sphere, so I'm trying to figure out the scenario we're talking about.
+> Here's my pitiful guess (Michael/Fam, please correct me where I'm wrong):
+> 
+>   qemu emulates machine with virtio device X, e.g., [1af4:1001]
+> 
+>   guest Linux startup
+>     guest virtio-pci driver claims device X
+>       virtio_pci_probe
+> 	register_virtio_device		# adds new device Y on virtio_bus
+> 
+>   guest Linux virtblk_probe		# virtio_driver.probe for device Y
+>     init_vq
+>       ...
+> 	vp_find_vqs
+> 	  vp_try_to_find_vqs
+> 	    vp_request_msix_vectors
+> 	      pci_enable_msix_exact	# enables MSI-X for qemu virtio device X
+> 	      request_irq(..., vp_config_changed, ...)
+> 
+>   guest Linux shutdown
+>     kernel_halt
+>       ...
+> 	pci_device_shutdown		# device X
+> 	  drv->shutdown
+> 	  pci_msi_shutdown
+> 	  pci_msix_shutdown
+> 	    clear PCI_MSIX_FLAGS_ENABLE
+> 
+>   qemu virtio device X generates interrupt
+>     virtio_pci_notify
+>       if (!msix_enabled)		# qemu reads MSIX_ENABLE_MASK
+> 	pci_set_irq
+> 	  pci_irq_handler		# assert INTx in guest
+> 
+>   guest Linux virtio-pci has no ISR for INTx
+> 
+> So now the guest Linux has INTx asserted, but it has no ISR for it, so the
+> CPU receiving the IRQ is stuck calling do_IRQ() endlessly.
 
-What Documentation/DocBook/kernel-hacking.tmpl states over EXPORT_SYMBOL_GPL()
-is old and in no way reflects current trends and reality. For instance, some
-folks believe that if some code has EXPORT_SYMBOL() declared that they can use
-it on proprietary modules. This is terribly incorrect, quite a few developers
-do not in any way stand by this as a "needed" clarification on their code [0].
-I'm one of them, but to be even more clear on this I simply *always* use
-EXPORT_SYMBOL_GPL() to remove any possible doubt over this on any symbols
-that I export. Heck, even tons of driver library code uses EXPORT_SYMBOL_GPL().
+Exactly.
 
-[0] https://lkml.org/lkml/2012/4/20/402
-
-  Luis
+Fam
