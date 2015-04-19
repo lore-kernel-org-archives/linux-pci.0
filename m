@@ -1,153 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:12271 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336AbbDMGL3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 02:11:29 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Joerg Roedel <joro@8bytes.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part1 v8 09/37] irq_remapping/vt-d: Change prototypes to prepare for enabling hierarchy irqdomain
-Date: Mon, 13 Apr 2015 14:11:31 +0800
-Message-Id: <1428905519-23704-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:57396 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbbDSTzr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Apr 2015 15:55:47 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Duc Dang <dhdang@apm.com>, Feng Kan <fkan@apm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-kernel@vger.kernel.org,
+	Grant Likely <grant.likely@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v4 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX termination driver
+Date: Sun, 19 Apr 2015 21:55:41 +0200
+Message-ID: <3188893.aaXgNln69B@wuerfel>
+In-Reply-To: <CADaLNDn_U_VKBg-ve+X_Ovvzi7TZZJkPotCTKiWjfvANXqsSPQ@mail.gmail.com>
+References: <cover.1429263201.git.dhdang@apm.com> <2306642.JeuMKoBEGq@wuerfel> <CADaLNDn_U_VKBg-ve+X_Ovvzi7TZZJkPotCTKiWjfvANXqsSPQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare for support hierarchy irqdomain by changing function prototypes,
-should be no function changes.
+On Sunday 19 April 2015 11:40:09 Duc Dang wrote:
+> On Fri, Apr 17, 2015 at 7:10 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Friday 17 April 2015 02:50:07 Duc Dang wrote:
+> >> +
+> >> +       /*
+> >> +        * MSIINTn (n is 0..F) indicates if there is a pending MSI interrupt
+> >> +        * If bit x of this register is set (x is 0..7), one or more interupts
+> >> +        * corresponding to MSInIRx is set.
+> >> +        */
+> >> +       grp_select = readl(xgene_msi->msi_regs + MSI_INT0 + (msi_grp << 16));
+> >> +       while (grp_select) {
+> >> +               msir_index = ffs(grp_select) - 1;
+> >> +               /*
+> >> +                * Calculate MSInIRx address to read to check for interrupts
+> >> +                * (refer to termination address and data assignment
+> >> +                * described in xgene_compose_msi_msg function)
+> >> +                */
+> >> +               msir_reg = (msi_grp << 19) + (msir_index << 16);
+> >> +               msir_val = readl(xgene_msi->msi_regs + MSI_IR0 + msir_reg);
+> >> +               while (msir_val) {
+> >> +                       intr_index = ffs(msir_val) - 1;
+> >> +                       /*
+> >> +                        * Calculate MSI vector number (refer to the termination
+> >> +                        * address and data assignment described in
+> >> +                        * xgene_compose_msi_msg function)
+> >> +                        */
+> >> +                       hw_irq = (((msir_index * IRQS_PER_IDX) + intr_index) *
+> >> +                                NR_HW_IRQS) + msi_grp;
+> >> +                       virq = irq_find_mapping(xgene_msi->domain, hw_irq);
+> >> +                       if (virq != 0)
+> >> +                               generic_handle_irq(virq);
+> >> +                       msir_val &= ~(1 << intr_index);
+> >> +                       processed++;
+> >> +               }
+> >> +               grp_select &= ~(1 << msir_index);
+> >> +       }
+> >>
+> >
+> > As the MSI is forwarded to the GIC here, how do you maintain ordering
+> > between DMA data getting forwarded from the PCI host bridge to RAM
+> > with regard to the MSI handler getting entered from this code?
+> 
+> When device perform a DMA transfer, the order of PCIE inbound requests
+> will be like this:
+> 1. DMA data get transferred via PCIe inbound request
+> 2. After devices issue DMA transfer request, the device fires an MSI
+> interrupt by issuing another inbound write to write MSI data to MSI
+> termination address.
+> 
+> As these 2 requests are transferred via PCIe bus in order, the DMA
+> data will be all in DDR before the MSI data hit the termination
+> address to trigger the MSI handler in interrupt handler code.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Link: http://lkml.kernel.org/r/1416894816-23245-10-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- drivers/iommu/intel_irq_remapping.c |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Obviously they appear on the PCI host bridge in order, because that
+is a how PCI works. My question was about what happens then. On a lot
+of SoCs, there is something like an AXI bus that uses posted
+transactions between PCI and RAM, so you have a do a full manual
+syncronization of ongoing PIC DMAs when the MSI catcher signals the
+top-level interrupt. Do you have a bus between PCI and RAM that does
+not require this, or does the MSI catcher have logic to flush all DMAs?
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 14de1ab223c8..d3adaf32b3ec 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -82,10 +82,10 @@ static int get_irte(int irq, struct irte *entry)
- 	return 0;
- }
- 
--static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
-+static int alloc_irte(struct intel_iommu *iommu, int irq,
-+		      struct irq_2_iommu *irq_iommu, u16 count)
- {
- 	struct ir_table *table = iommu->ir_table;
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct irq_cfg *cfg = irq_cfg(irq);
- 	unsigned int mask = 0;
- 	unsigned long flags;
-@@ -173,9 +173,9 @@ static int set_irte_irq(int irq, struct intel_iommu *iommu, u16 index, u16 subha
- 	return 0;
- }
- 
--static int modify_irte(int irq, struct irte *irte_modified)
-+static int modify_irte(struct irq_2_iommu *irq_iommu,
-+		       struct irte *irte_modified)
- {
--	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	struct intel_iommu *iommu;
- 	unsigned long flags;
- 	struct irte *irte;
-@@ -242,7 +242,7 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		return 0;
- 
- 	iommu = irq_iommu->iommu;
--	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-+	index = irq_iommu->irte_index;
- 
- 	start = iommu->ir_table->base + index;
- 	end = start + (1 << irq_iommu->irte_mask);
-@@ -986,7 +986,7 @@ static int intel_setup_ioapic_entry(int irq,
- 		pr_warn("No mapping iommu for ioapic %d\n", ioapic_id);
- 		index = -ENODEV;
- 	} else {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index < 0) {
- 			pr_warn("Failed to allocate IRTE for ioapic %d\n",
- 				ioapic_id);
-@@ -1002,7 +1002,7 @@ static int intel_setup_ioapic_entry(int irq,
- 	/* Set source-id of interrupt request */
- 	set_ioapic_sid(&irte, ioapic_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
- 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
-@@ -1089,7 +1089,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	 * Atomically updates the IRTE with the new destination, vector
- 	 * and flushes the interrupt entry cache.
- 	 */
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	/*
- 	 * After this point, all the interrupts will start arriving
-@@ -1125,7 +1125,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
- 	else
- 		set_hpet_sid(&irte, hpet_id);
- 
--	modify_irte(irq, &irte);
-+	modify_irte(irq_2_iommu(irq), &irte);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
- 	msg->data = sub_handle;
-@@ -1152,7 +1152,7 @@ static int intel_msi_alloc_irq(struct pci_dev *dev, int irq, int nvec)
- 		       "Unable to map PCI %s to iommu\n", pci_name(dev));
- 		index = -ENOENT;
- 	} else {
--		index = alloc_irte(iommu, irq, nvec);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), nvec);
- 		if (index < 0) {
- 			printk(KERN_ERR
- 			       "Unable to allocate %d IRTE for PCI %s\n",
-@@ -1196,7 +1196,7 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	down_read(&dmar_global_lock);
- 	iommu = map_hpet_to_ir(id);
- 	if (iommu) {
--		index = alloc_irte(iommu, irq, 1);
-+		index = alloc_irte(iommu, irq, irq_2_iommu(irq), 1);
- 		if (index >= 0)
- 			ret = 0;
- 	}
--- 
-1.7.10.4
-
+	Arnd
