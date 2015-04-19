@@ -1,141 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Apr 2015 10:59:17 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: mst@redhat.com, plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, daniel.vetter@intel.com,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	cocci@systeme.lip6.fr, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	xen-devel@lists.xensource.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/5] pci: add pci_iomap_wc() variants
-Message-ID: <20150430155917.GC7888@google.com>
-References: <1430343372-687-1-git-send-email-mcgrof@do-not-panic.com>
- <1430343372-687-2-git-send-email-mcgrof@do-not-panic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og116.obsmtp.com ([64.18.0.147]:37654 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751623AbbDSSkl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Apr 2015 14:40:41 -0400
+Received: by obbeb7 with SMTP id eb7so103785057obb.3
+        for <linux-pci@vger.kernel.org>; Sun, 19 Apr 2015 11:40:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430343372-687-2-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <2306642.JeuMKoBEGq@wuerfel>
+References: <cover.1429263201.git.dhdang@apm.com> <5160bc222361ff36cc6e72ca14358c5dee8c7548.1429263201.git.dhdang@apm.com>
+ <2306642.JeuMKoBEGq@wuerfel>
+From: Duc Dang <dhdang@apm.com>
+Date: Sun, 19 Apr 2015 11:40:09 -0700
+Message-ID: <CADaLNDn_U_VKBg-ve+X_Ovvzi7TZZJkPotCTKiWjfvANXqsSPQ@mail.gmail.com>
+Subject: Re: [PATCH v4 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On Fri, Apr 17, 2015 at 7:10 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 17 April 2015 02:50:07 Duc Dang wrote:
+>> +
+>> +       /*
+>> +        * MSIINTn (n is 0..F) indicates if there is a pending MSI interrupt
+>> +        * If bit x of this register is set (x is 0..7), one or more interupts
+>> +        * corresponding to MSInIRx is set.
+>> +        */
+>> +       grp_select = readl(xgene_msi->msi_regs + MSI_INT0 + (msi_grp << 16));
+>> +       while (grp_select) {
+>> +               msir_index = ffs(grp_select) - 1;
+>> +               /*
+>> +                * Calculate MSInIRx address to read to check for interrupts
+>> +                * (refer to termination address and data assignment
+>> +                * described in xgene_compose_msi_msg function)
+>> +                */
+>> +               msir_reg = (msi_grp << 19) + (msir_index << 16);
+>> +               msir_val = readl(xgene_msi->msi_regs + MSI_IR0 + msir_reg);
+>> +               while (msir_val) {
+>> +                       intr_index = ffs(msir_val) - 1;
+>> +                       /*
+>> +                        * Calculate MSI vector number (refer to the termination
+>> +                        * address and data assignment described in
+>> +                        * xgene_compose_msi_msg function)
+>> +                        */
+>> +                       hw_irq = (((msir_index * IRQS_PER_IDX) + intr_index) *
+>> +                                NR_HW_IRQS) + msi_grp;
+>> +                       virq = irq_find_mapping(xgene_msi->domain, hw_irq);
+>> +                       if (virq != 0)
+>> +                               generic_handle_irq(virq);
+>> +                       msir_val &= ~(1 << intr_index);
+>> +                       processed++;
+>> +               }
+>> +               grp_select &= ~(1 << msir_index);
+>> +       }
+>>
+>
+> As the MSI is forwarded to the GIC here, how do you maintain ordering
+> between DMA data getting forwarded from the PCI host bridge to RAM
+> with regard to the MSI handler getting entered from this code?
 
-Hi Luis,
+When device perform a DMA transfer, the order of PCIE inbound requests
+will be like this:
+1. DMA data get transferred via PCIe inbound request
+2. After devices issue DMA transfer request, the device fires an MSI
+interrupt by issuing another inbound write to write MSI data to MSI
+termination address.
 
-On Wed, Apr 29, 2015 at 02:36:08PM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> This allows drivers to take advantage of write-combining
-> when possible. Ideally we'd have pci_read_bases() just
-> peg an IORESOURCE_WC flag for us 
-
-This makes it sound like pci_read_bases() could do a better job
-if we just tried harder, but I don't think that's the case.  All
-pci_read_bases() can do is look at the bits in the BAR.  For
-memory BARs, there's a "prefetchable" bit and a "64-bit" bit.
-
-If you just want to complain that the PCI spec didn't define a
-way for software to discover whether a BAR can be mapped with WC,
-that's fine, but it's misleading to suggest that pci_read_bases()
-could figure out WC without some help from the spec.
-
-> but where exactly
-> video devices memory lie varies *largely* and at times things
-> are mixed with MMIO registers, sometimes we can address
-> the changes in drivers, other times the change requires
-> intrusive changes.
-> 
-> Although there is also arch_phys_wc_add() that makes use of
-> architecture specific write-combining alternatives (MTRR on
-> x86 when a system does not have PAT) we void polluting
-> pci_iomap() space with it and force drivers and subsystems
-> that want to use it to be explicit.
-
-I'm not quite sure I understand the point you're making here
-about not polluting pci_iomap_wc() with arch_phys_wc_add().  I
-think the choice is for a driver to do either this:
-
-  info->screen_base = pci_iomap_wc(dev, 0, 0);
-
-or this:
-
-  info->screen_base = pci_iomap_wc(dev, 0, 0);
-  par->wc_cookie = arch_phys_wc_add(pci_resource_start(dev, 0),
-				    pci_resource_len(dev, 0));
-
-The driver is *already* being explicit because it calls
-pci_iomap_wc() instead of pci_iomap().
-
-It seems like it would be ideal if ioremap_wc() could call
-arch_phys_wc_add() internally.  Doesn't any caller of
-arch_phys_wc_add() have to also do some sort of ioremap()
-beforehand?  I assume there's some reason for separating them,
-and I see that the current arch_phys_wc_add() requires the caller
-to store a handle, but doing both seems confusing.
-
-> There are a few motivations for this:
-> 
-> a) Take advantage of PAT when available
-> 
-> b) Help bury MTRR code away, MTRR is architecture specific and on
->    x86 its replaced by PAT
-> 
-> c) Help with the goal of eventually using _PAGE_CACHE_UC over
->    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
->    de33c442e titled "x86 PAT: fix performance drop for glx,
->    use UC minus for ioremap(), ioremap_nocache() and
->    pci_mmap_page_range()")
-
-I think these are now _PAGE_CACHE_MODE_UC and
-_PAGE_CACHE_MODE_UC_MINUS, right? 
-
-> ...
-
-> +void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-> +				 int bar,
-> +				 unsigned long offset,
-> +				 unsigned long maxlen)
-> +{
-> +	resource_size_t start = pci_resource_start(dev, bar);
-> +	resource_size_t len = pci_resource_len(dev, bar);
-> +	unsigned long flags = pci_resource_flags(dev, bar);
-> +
-> +	if (len <= offset || !start)
-> +		return NULL;
-> +	len -= offset;
-> +	start += offset;
-> +	if (maxlen && len > maxlen)
-> +		len = maxlen;
-> +	if (flags & IORESOURCE_IO)
-> +		return __pci_ioport_map(dev, start, len);
-
-Is there any point in checking for IORESOURCE_IO?  If a driver
-calls pci_iomap_wc_range(), I assume it already knows this is an
-IORESOURCE_MEM BAR, so if we see IORESOURCE_IO here we should
-just return an error, i.e., NULL.
-
-> +	if (flags & IORESOURCE_MEM)
-> +		return ioremap_wc(start, len);
-> +	/* What? */
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
-
-Bjorn
+As these 2 requests are transferred via PCIe bus in order, the DMA
+data will be all in DDR before the MSI data hit the termination
+address to trigger the MSI handler in interrupt handler code.
+>
+>         Arnd
+Regards,
+Duc Dang.
