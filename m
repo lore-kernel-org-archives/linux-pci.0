@@ -1,93 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:34942 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbbDGAbm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Apr 2015 20:31:42 -0400
-Received: by pddn5 with SMTP id n5so60481731pdd.2
-        for <linux-pci@vger.kernel.org>; Mon, 06 Apr 2015 17:31:41 -0700 (PDT)
-Message-ID: <1428366696.22268.28.camel@axtens.net>
-Subject: Re: [PATCH v2 04/19] powerpc: Create
- pci_controller_ops.dma_dev_setup and shim
-From: Daniel Axtens <dja@axtens.net>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linuxppc-dev@lists.ozlabs.org, wangyijing@huawei.com,
-	linux-pci@vger.kernel.org
-Date: Tue, 07 Apr 2015 10:31:36 +1000
-In-Reply-To: <5500778.Q4t9Fg7Irn@wuerfel>
-References: <1427778057-9505-1-git-send-email-dja@axtens.net>
-	 <1427778057-9505-5-git-send-email-dja@axtens.net>
-	 <5500778.Q4t9Fg7Irn@wuerfel>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-TVh8S7fVsFWscyQVZw4D"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAPz6YkUYU_hSSeU+EyLF3HXuep23t2fc-qtZL41RR6iOWj-CEA@mail.gmail.com>
+References: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
+ <CAErSpo7TkdZ7nHHwFzwqhyTA3X_09x0ywbAmW+m2D-Or1AhyYw@mail.gmail.com>
+ <CABPqkBSuQmGD=ho8vJvDw=r2CdW+_gqpapy5sYyzZrPXg0mWfg@mail.gmail.com>
+ <CAErSpo7iQgigqV6dhUQsWqzob-3Kwh4-YNPqBBtDMHCOvhtOnQ@mail.gmail.com> <CAPz6YkUYU_hSSeU+EyLF3HXuep23t2fc-qtZL41RR6iOWj-CEA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 Apr 2015 15:20:09 -0500
+Message-ID: <CAErSpo4g6PRxTeb-4MGhU=bnC84_LRdvGwVc8TU3Fe8HRYuzWg@mail.gmail.com>
+Subject: Re: [PATCH] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
+To: Sonny Rao <sonnyrao@chromium.org>
+Cc: Stephane Eranian <eranian@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Paul Mackerras <paulus@samba.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Apr 20, 2015 at 2:43 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
+> On Mon, Apr 20, 2015 at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Apr 20, 2015 at 1:58 PM, Stephane Eranian <eranian@google.com> wrote:
+>>> On Mon, Apr 20, 2015 at 11:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>
+>>>> On Mon, Apr 20, 2015 at 1:42 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
+>>>> > This uncore is the same as the Haswell desktop part but uses a
+>>>> > different PCI ID.
+>>>> >
+>>>> > Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
+>>>> > ---
+>>>> >  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 5 +++++
+>>>> >  include/linux/pci_ids.h                           | 1 +
+>>>> >  2 files changed, 6 insertions(+)
+>>>> >
+>>>> > diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+>>>> > index 3001015..0bda6fc 100644
+>>>> > --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+>>>> > +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+>>>> > @@ -472,6 +472,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
+>>>> >                 PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
+>>>> >                 .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+>>>> >         },
+>>>> > +       { /* IMC */
+>>>> > +               PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
+>>>> > +               .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+>>>> > +       },
+>>>> >         { /* end: all zeroes */ },
+>>>> >  };
+>>>> >
+>>>> > @@ -502,6 +506,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
+>>>> >         IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
+>>>> >         IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
+>>>> >         IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
+>>>> > +       IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
+>>>> >         {  /* end marker */ }
+>>>> >  };
+>>>> >
+>>>> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>>>> > index 38cff8f..e5ae042 100644
+>>>> > --- a/include/linux/pci_ids.h
+>>>> > +++ b/include/linux/pci_ids.h
+>>>> > @@ -2545,6 +2545,7 @@
+>>>> >  #define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
+>>>> >  #define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
+>>>> >  #define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
+>>>> > +#define PCI_DEVICE_ID_INTEL_HSW_U_IMC  0x0a04
+>>>>
+>>>> Please either use the 0x0a04 constant directly in
+>>>> perf_event_intel_uncore_snb.c, or explain why the #define should be
+>>>> here, e.g., maybe it will be used in multiple places.  See the comment
+>>>> at the top of pci_ids.h.
+>>>>
+>>> But then, the same reasoning would apply to the other 3 IMC defines,
+>>> wouldn't it?
+>>
+>> Yes.  But if we made a mistake in the past, that doesn't mean we
+>> should repeat it today.
+>
+> Shall I post a patch moving the others as well?
 
---=-TVh8S7fVsFWscyQVZw4D
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'm not pushing for that, since they're already there and we haven't
+tried to apply that policy retroactively.
 
-> Please see https://patchwork.ozlabs.org/patch/431333/ for related work.
->=20
-I'm familiar with that patch series - I've been helping Yijing get it up
-to speed on PowerPC.
-
-
-> I think it would be better not to introduce another architecture-specific
-> pci host bridge operations structure, but instead consolidate into
-> the one that is already there. We are also adding a generic way to set up
-> PCI DMA, so it would seems reasonable to hook into that place.
-I see what you're getting at, and I agree that we want to move towards
-generic operations.=20
-
-However, I think this should go in as is at this point, for two main
-reasons:
-
-1) This is a good midpoint that makes it easier to move to a generic
-structure. Our arch specific stuff is quirky and difficult. This patch
-series does a lot to reduce the complexity, and would make it very easy
-to move these ops into a generic structure at some future point.=20
-
-2) Trying to go generic at this point risks making the change set so
-complex and wide ranging that it will really struggle to get in. For
-example, Yijing's patch set, despite not changing any of the quirky
-stuff in PowerPC, is already quite long, and will require agreement from
-a lot of people before it can go in.
-
-Much as I would like to have everything as generic as possible, if we
-were to try to do the whole job in one go, it'd become a big, difficult,
-messy patch set, and would be less likely to happen than if we were to
-do it in two steps.
-
-Regards,
-Daniel
-
-
-
---=-TVh8S7fVsFWscyQVZw4D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAABCAAGBQJVIyVoAAoJEPC3R3P2I92FTlwP/3Qk6njMhm/gy6E4+DVQ39Az
-JiXZQwdZ1ltTJDiDqSHLm3wPwRk/i/r4kGzX+dPCTVapMZTeyx4uKFGYqAkO5hnU
-bdsoL8GXS9zHFwItRUewoXAQOti7lQ4Zn4BKw4G0ir6dp3q1wlh1twc6d9jZ6c30
-4OLTpnvvO0BXnLoDjSse64pKO/YlKPgSM2oXE2Nec9Pm6zG+JKUgcGiD+6vbfh+h
-RqRg42Epw8RMWSF099Mc3UGxwrWz/SJkIiXRUq9MOgcLZjolKx+UE160YUAHC/Ni
-8PUE62k+wTYiqejTROVcgEwTth717j0UNy4sr0THBztghmH7Xf3qOGMhlL9GbFhf
-5qpglbnNj+NfTS1sBycY8KguZsJ58Zj3eA9cq7InSso6+mfE46nYXlD55RmdwgHB
-aez4RfkLLzZ8GebzEPsmXX2KYnYqEtOYMba/Tx79r3FXjOj2xZCqtVursDZgb00y
-0X0iNogP2YBDCKIfYflu783W4Nn3asxojehVOzGDr5Fg+ZCQMIKalrfdsKHVjLv1
-PpKROQ5ITcVooyvwdPdwfK30iyV4axpn5wblMOXuDptLt1AF1pLHUI4a8RQJfVP/
-EGvu+lIVneJqhMMeaCVLqOq0R+5Qy3CO+OFeBOxmBMgyAxPlVuSiV5WWvpgpdeP+
-KD4XPEjZ5H5rQemoTUN6
-=kHEb
------END PGP SIGNATURE-----
-
---=-TVh8S7fVsFWscyQVZw4D--
-
+>>>> >  #define PCI_DEVICE_ID_INTEL_PXHD_0     0x0320
+>>>> >  #define PCI_DEVICE_ID_INTEL_PXHD_1     0x0321
+>>>> >  #define PCI_DEVICE_ID_INTEL_PXH_0      0x0329
+>>>> > --
+>>>> > 2.1.2
+>>>> >
