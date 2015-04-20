@@ -1,52 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38502 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752579AbbD0Gjp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:45 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:43 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5F49C3578047
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:41 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dXFF9437622
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:41 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6d63T013559
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:07 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 20/21] powerpc/powernv: Select OF_DYNAMIC
-Date: Mon, 27 Apr 2015 16:37:52 +1000
-Message-Id: <1430116673-22500-21-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:34649 "EHLO
+	mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753803AbbDTS45 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2015 14:56:57 -0400
+Received: by qkgx75 with SMTP id x75so187565082qkg.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 11:56:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
+References: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 Apr 2015 13:56:36 -0500
+Message-ID: <CAErSpo7TkdZ7nHHwFzwqhyTA3X_09x0ywbAmW+m2D-Or1AhyYw@mail.gmail.com>
+Subject: Re: [PATCH] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
+To: Sonny Rao <sonnyrao@chromium.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Stephane Eranian <eranian@google.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Paul Mackerras <paulus@samba.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The device tree nodes will be changed dynamically on PCI hotplug
-events on PowerNV platform. The patch selects OF_DYNAMIC on the
-platform to support PCI hotplug.
+On Mon, Apr 20, 2015 at 1:42 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
+> This uncore is the same as the Haswell desktop part but uses a
+> different PCI ID.
+>
+> Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
+> ---
+>  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 5 +++++
+>  include/linux/pci_ids.h                           | 1 +
+>  2 files changed, 6 insertions(+)
+>
+> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+> index 3001015..0bda6fc 100644
+> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+> @@ -472,6 +472,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
+>                 PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
+>                 .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+>         },
+> +       { /* IMC */
+> +               PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
+> +               .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+> +       },
+>         { /* end: all zeroes */ },
+>  };
+>
+> @@ -502,6 +506,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
+>         IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
+>         IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
+>         IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
+> +       IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
+>         {  /* end marker */ }
+>  };
+>
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 38cff8f..e5ae042 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2545,6 +2545,7 @@
+>  #define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
+>  #define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
+>  #define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
+> +#define PCI_DEVICE_ID_INTEL_HSW_U_IMC  0x0a04
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Please either use the 0x0a04 constant directly in
+perf_event_intel_uncore_snb.c, or explain why the #define should be
+here, e.g., maybe it will be used in multiple places.  See the comment
+at the top of pci_ids.h.
 
-diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
-index 4b044d8..9c62631 100644
---- a/arch/powerpc/platforms/powernv/Kconfig
-+++ b/arch/powerpc/platforms/powernv/Kconfig
-@@ -18,4 +18,5 @@ config PPC_POWERNV
- 	select CPU_FREQ_GOV_ONDEMAND
- 	select CPU_FREQ_GOV_CONSERVATIVE
- 	select PPC_DOORBELL
-+	select OF_DYNAMIC
- 	default y
--- 
-2.1.0
-
+>  #define PCI_DEVICE_ID_INTEL_PXHD_0     0x0320
+>  #define PCI_DEVICE_ID_INTEL_PXHD_1     0x0321
+>  #define PCI_DEVICE_ID_INTEL_PXH_0      0x0329
+> --
+> 2.1.2
+>
