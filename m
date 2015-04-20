@@ -1,109 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:33938 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998AbbDTToL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2015 15:44:11 -0400
+Received: by qgfi89 with SMTP id i89so58067919qgf.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 12:44:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7iQgigqV6dhUQsWqzob-3Kwh4-YNPqBBtDMHCOvhtOnQ@mail.gmail.com>
+References: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
+ <CAErSpo7TkdZ7nHHwFzwqhyTA3X_09x0ywbAmW+m2D-Or1AhyYw@mail.gmail.com>
+ <CABPqkBSuQmGD=ho8vJvDw=r2CdW+_gqpapy5sYyzZrPXg0mWfg@mail.gmail.com> <CAErSpo7iQgigqV6dhUQsWqzob-3Kwh4-YNPqBBtDMHCOvhtOnQ@mail.gmail.com>
+From: Sonny Rao <sonnyrao@chromium.org>
+Date: Mon, 20 Apr 2015 12:43:50 -0700
+Message-ID: <CAPz6YkUYU_hSSeU+EyLF3HXuep23t2fc-qtZL41RR6iOWj-CEA@mail.gmail.com>
+Subject: Re: [PATCH] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephane Eranian <eranian@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Paul Mackerras <paulus@samba.org>,
 	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 23/33] x86/irq: Change functions only used in vector.c as static
-Date: Tue, 14 Apr 2015 10:30:00 +0800
-Message-Id: <1428978610-28986-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function {assign|clear}_irq_vector() and apic_retrigger_irq() are only
-used in file vector.c, so change them as static.
+On Mon, Apr 20, 2015 at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Apr 20, 2015 at 1:58 PM, Stephane Eranian <eranian@google.com> wrote:
+>> On Mon, Apr 20, 2015 at 11:56 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>> On Mon, Apr 20, 2015 at 1:42 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
+>>> > This uncore is the same as the Haswell desktop part but uses a
+>>> > different PCI ID.
+>>> >
+>>> > Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
+>>> > ---
+>>> >  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 5 +++++
+>>> >  include/linux/pci_ids.h                           | 1 +
+>>> >  2 files changed, 6 insertions(+)
+>>> >
+>>> > diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+>>> > index 3001015..0bda6fc 100644
+>>> > --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+>>> > +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+>>> > @@ -472,6 +472,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
+>>> >                 PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
+>>> >                 .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+>>> >         },
+>>> > +       { /* IMC */
+>>> > +               PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
+>>> > +               .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+>>> > +       },
+>>> >         { /* end: all zeroes */ },
+>>> >  };
+>>> >
+>>> > @@ -502,6 +506,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
+>>> >         IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
+>>> >         IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
+>>> >         IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
+>>> > +       IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
+>>> >         {  /* end marker */ }
+>>> >  };
+>>> >
+>>> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>>> > index 38cff8f..e5ae042 100644
+>>> > --- a/include/linux/pci_ids.h
+>>> > +++ b/include/linux/pci_ids.h
+>>> > @@ -2545,6 +2545,7 @@
+>>> >  #define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
+>>> >  #define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
+>>> >  #define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
+>>> > +#define PCI_DEVICE_ID_INTEL_HSW_U_IMC  0x0a04
+>>>
+>>> Please either use the 0x0a04 constant directly in
+>>> perf_event_intel_uncore_snb.c, or explain why the #define should be
+>>> here, e.g., maybe it will be used in multiple places.  See the comment
+>>> at the top of pci_ids.h.
+>>>
+>> But then, the same reasoning would apply to the other 3 IMC defines,
+>> wouldn't it?
+>
+> Yes.  But if we made a mistake in the past, that doesn't mean we
+> should repeat it today.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416901802-24211-32-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/include/asm/hw_irq.h |    3 ---
- arch/x86/kernel/apic/vector.c |    7 ++++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+Shall I post a patch moving the others as well?
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index a88f5b325bf2..ea9aebc65ff6 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -188,8 +188,6 @@ extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void lock_vector_lock(void);
- extern void unlock_vector_lock(void);
--extern int assign_irq_vector(int, struct irq_cfg *, const struct cpumask *);
--extern void clear_irq_vector(int irq, struct irq_cfg *cfg);
- extern void setup_vector_irq(int cpu);
- #ifdef CONFIG_SMP
- extern void send_cleanup_vector(struct irq_cfg *);
-@@ -199,7 +197,6 @@ static inline void send_cleanup_vector(struct irq_cfg *c) { }
- static inline void irq_complete_move(struct irq_cfg *c) { }
- #endif
- 
--extern int apic_retrigger_irq(struct irq_data *data);
- extern void apic_ack_edge(struct irq_data *data);
- extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 			     unsigned int *dest_id);
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 8467ca47bd4a..fba4958b6139 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -185,7 +185,8 @@ next:
- 	return err;
- }
- 
--int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
-+static int assign_irq_vector(int irq, struct irq_cfg *cfg,
-+			     const struct cpumask *mask)
- {
- 	int err;
- 	unsigned long flags;
-@@ -196,7 +197,7 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
- 	return err;
- }
- 
--void clear_irq_vector(int irq, struct irq_cfg *cfg)
-+static void clear_irq_vector(int irq, struct irq_cfg *cfg)
- {
- 	int cpu, vector;
- 	unsigned long flags;
-@@ -441,7 +442,7 @@ void setup_vector_irq(int cpu)
- 	__setup_vector_irq(cpu);
- }
- 
--int apic_retrigger_irq(struct irq_data *data)
-+static int apic_retrigger_irq(struct irq_data *data)
- {
- 	struct irq_cfg *cfg = irqd_cfg(data);
- 	unsigned long flags;
--- 
-1.7.10.4
-
+>
+>>> >  #define PCI_DEVICE_ID_INTEL_PXHD_0     0x0320
+>>> >  #define PCI_DEVICE_ID_INTEL_PXHD_1     0x0321
+>>> >  #define PCI_DEVICE_ID_INTEL_PXH_0      0x0329
+>>> > --
+>>> > 2.1.2
+>>> >
