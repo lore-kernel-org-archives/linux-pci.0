@@ -1,43 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:50160 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753086AbbDBLLf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Apr 2015 07:11:35 -0400
-Date: Thu, 2 Apr 2015 13:11:33 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150402111133.GM4441@8bytes.org>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sonny Rao <sonnyrao@chromium.org>
+To: linux-kernel@vger.kernel.org
+Cc: Stephane Eranian <eranian@google.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Paul Mackerras <paulus@samba.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Sonny Rao <sonnyrao@chromium.org>
+Subject: [PATCHv2] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
+Date: Mon, 20 Apr 2015 15:34:07 -0700
+Message-Id: <1429569247-16697-1-git-send-email-sonnyrao@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Zhen-Hua,
+This uncore is the same as the Haswell desktop part but uses a
+different PCI ID.
 
-On Thu, Mar 19, 2015 at 01:36:18PM +0800, Li, Zhen-Hua wrote:
-> This patchset is an update of Bill Sumner's patchset, implements a fix for:
-> If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
-> when a panic happens, the kdump kernel will boot with these faults:
+Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
+---
+ arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-I reviewed this patch-set and it is getting closer to a point where it
-could be merged. I found a few white-space errors in the review, please
-do a check_patch run on the next round and fix these. Besides that and
-given some third-party testing and reviews I think we can look forward
-to merge it early after the merge-window for v4.1, to give it enough
-testing in -next too.
-
-
-	Joerg
+diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+index 3001015..ca75e70 100644
+--- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
++++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+@@ -1,6 +1,9 @@
+ /* Nehalem/SandBridge/Haswell uncore support */
+ #include "perf_event_intel_uncore.h"
+ 
++/* Uncore IMC PCI Id */
++#define PCI_DEVICE_ID_INTEL_HSW_U_IMC	0x0a04
++
+ /* SNB event control */
+ #define SNB_UNC_CTL_EV_SEL_MASK			0x000000ff
+ #define SNB_UNC_CTL_UMASK_MASK			0x0000ff00
+@@ -472,6 +475,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
+ 		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
+ 		.driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
+ 	},
++	{ /* IMC */
++		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
++		.driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
++	},
+ 	{ /* end: all zeroes */ },
+ };
+ 
+@@ -502,6 +509,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
+ 	IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
+ 	IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
+ 	IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
++	IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
+ 	{  /* end marker */ }
+ };
+ 
+-- 
+2.1.2
 
