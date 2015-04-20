@@ -1,56 +1,141 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Apr 2015 16:25:28 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Baoquan He <bhe@redhat.com>
-Cc: "Li, ZhenHua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150424082528.GA23912@dhcp-128-91.nay.redhat.com>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
- <20150415005731.GC19051@localhost.localdomain>
- <552DFB56.1070600@hp.com>
- <20150415064803.GF19051@localhost.localdomain>
- <20150424080147.GC4458@dhcp-16-116.nay.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150424080147.GC4458@dhcp-16-116.nay.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:62389 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751386AbbDTDGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Apr 2015 23:06:47 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Mon, 20 Apr 2015 11:08:58 +0800
+Message-Id: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Baoquan
+An IO port or MMIO resource assigned to a PCI host bridge may be
+consumed by the host bridge itself or available to its child
+bus/devices. On x86 and IA64 platforms, all IO port and MMIO
+resources are assumed to be available to child bus/devices
+except one special case:
+    IO port [0xCF8-0xCFF] is consumed by the host bridge itself
+    to access PCI configuration space.
 
-> I support this patchset.
-> 
-> We should not fear oldmem since reserved crashkernel region is similar.
-> No one can guarantee that any crazy code won't step into crashkernel
-> region just because 1st kernel says it's reversed for kdump kernel. Here
-> the root table and context tables are also not built to allow legal code
-> to danamge. Both of them has the risk to be corrupted, for trying our
-> best to get a dumped vmcore the risk is worth being taken.
+But the ACPI and PCI Firmware specifications haven't provided a method
+to tell whether a resource is consumed by the host bridge itself.
+So before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
+all IO port resources defined by acpi_resource_io and
+acpi_resource_fixed_io to filter out IO ports consumed by the host
+bridge itself.
 
-old mem is mapped in 1st kernel so compare with the reserved crashkernel
-they are more likely to be corrupted. they are totally different. 
+Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
+to simplify implementation")started accepting all IO port and MMIO
+resources, which caused a regression that IO port resources consumed
+by the host bridge itself became available to its child devices.
 
-> 
-> And the resetting pci way has been NACKed by David Woodhouse, the
-> maintainer of intel iommu. Because the place calling the resetting pci
-> code is ugly before kdump kernel or in kdump kernel. And as he said a
-> certain device made mistakes why we blame on all devices. We should fix
-> that device who made mistakes. 
+Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
+host bridge itself") ignored resources consumed by the host bridge
+itself by checking the IORESOURCE_WINDOW flag, which accidently removed
+MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
+and acpi_resource_fixed_memory32.
 
-Resetting pci bus is not ugly than fixing a problem with risk and to fix
-the problem it introduced in the future.
+So revert to the behavior before v3.19 to fix the regression.
 
-I know it is late to speak out, but sorry I still object and have to NACK this
-oldmem approach from my point.
+There is also a discussion about ignoring the Producer/Consumer flag on
+IA64 platforms at:
+http://patchwork.ozlabs.org/patch/461633/
 
-Thanks
-Dave
+Related ACPI table are archived at:
+https://bugzilla.kernel.org/show_bug.cgi?id=94221
+
+Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
+ drivers/acpi/resource.c |    6 +++++-
+ 2 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index e4695985f9de..fc2da98985c3 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ {
+ 	int ret;
+ 	struct resource_entry *entry, *tmp;
++	unsigned long res_flags;
+ 
+ 	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+ 	info->bridge = device;
++
++	/*
++	 * An IO or MMIO resource assigned to PCI host bridge may be consumed
++	 * by the host bridge itself or available to its child bus/devices.
++	 * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
++	 * be available to child bus/devices except one special case:
++	 *	IO port [0xCF8-0xCFF] is consumed by host bridge itself to
++	 *	access PCI configuration space.
++	 *
++	 * Due to lack of specification to define resources consumed by host
++	 * bridge itself, all IO port resources defined by acpi_resource_io
++	 * and acpi_resource_fixed_io are ignored to filter out IO
++	 * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
++	 * it's not perfect.
++	 *
++	 * Another possible solution is to explicitly filter out IO
++	 * port[0xCF8-0xCFF].
++	 */
++	res_flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_IO_FIXED;
+ 	ret = acpi_dev_get_resources(device, list,
+ 				     acpi_dev_filter_resource_type_cb,
+-				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
++				     (void *)res_flags);
+ 	if (ret < 0)
+ 		dev_warn(&device->dev,
+ 			 "failed to parse _CRS method, error code %d\n", ret);
+@@ -346,8 +366,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+ 			"no IO and memory resources present in _CRS\n");
+ 	else
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
+-			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+-			    (entry->res->flags & IORESOURCE_DISABLED))
++			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+ 			else
+ 				entry->res->name = info->name;
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 5589a6e2a023..79b6d3b5ffd2 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -575,6 +575,9 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+  *
+  * This is a hepler function to support acpi_dev_get_resources(), which filters
+  * ACPI resource objects according to resource types.
++ *
++ * Flag IORESOURCE_IO_FIXED is used to opt out io and fixed_io resource
++ * descriptors for ACPI host bridges on x86 and IA64 platforms.
+  */
+ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+ 				  unsigned long types)
+@@ -589,7 +592,8 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_IO:
+ 	case ACPI_RESOURCE_TYPE_FIXED_IO:
+-		type = IORESOURCE_IO;
++		if ((types & IORESOURCE_IO_FIXED) == 0)
++			type = IORESOURCE_IO;
+ 		break;
+ 	case ACPI_RESOURCE_TYPE_IRQ:
+ 	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+-- 
+1.7.10.4
+
