@@ -1,51 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37482 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751239AbbDBLPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Apr 2015 07:15:33 -0400
-Subject: Re: [PATCH 00/86] pci: export pci_ids.h and related cleanups
-From: Jean Delvare <jdelvare@suse.de>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Jones <davej@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-In-Reply-To: <20150402120711-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
-	 <20150402094424.0de6c990@endymion.delvare>
-	 <20150402094608-mutt-send-email-mst@redhat.com>
-	 <20150402082306.GA24610@infradead.org>
-	 <1427965456.4063.1272.camel@chaos.site>
-	 <20150402120711-mutt-send-email-mst@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Apr 2015 13:15:30 +0200
-Message-ID: <1427973330.4063.1410.camel@chaos.site>
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH] ia64/PCI: Treat all host bridge Address Space Descriptors
+ (even consumers) as windows
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
+	linux-ia64@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>
+Date: Mon, 20 Apr 2015 18:30:55 -0500
+Message-ID: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Le Thursday 02 April 2015 à 12:09 +0200, Michael S. Tsirkin a écrit :
-> On Thu, Apr 02, 2015 at 11:04:16AM +0200, Jean Delvare wrote:
-> > Le Thursday 02 April 2015 à 01:23 -0700, Christoph Hellwig a écrit :
-> > > The class ids are a hardware defintion, not a kernel API.  Just use the
-> > > definitions from libpci, or copy over the kernel header if you prefer
-> > > it over the libpci definutions.
-> > 
-> > I agree with Christoph, such defines would better come from
-> > pciutils-devel, not the kernel.
-> 
-> This just leads to code duplication.  Projects that don't link with
-> pciutils don't want to depend on it.
+Prior to c770cb4cb505 ("PCI: Mark invalid BARs as unassigned"), if we tried
+to claim a PCI BAR but could not find an upstream bridge window that
+matched it, we complained but still allowed the device to be enabled.
 
-Well, they don't have to depend on anything then, they can keep defining
-their own named IDs.
+c770cb4cb505 broke devices that previously worked (mptsas and igb in the
+case Tony reported, but it could be any devices) because it marks those
+BARs as IORESOURCE_UNSET, which makes pci_enable_device() complain and
+return failure:
 
-Please realize that 1* code duplication is impossible to avoid
-completely and 2* this hardly qualifies as code duplication in the first
-place (giving symbolic names to constants is not actual programming.)
+  igb 0000:81:00.0: can't enable device: BAR 0 [mem size 0x00020000] not assigned
+  igb: probe of 0000:81:00.0 failed with error -22
 
--- 
-Jean Delvare
-SUSE L3 Support
+The underlying cause is an ACPI Address Space Descriptor for a PCI host
+bridge window that is marked as "consumer".  This is a firmware defect:
+resources that are produced on the downstream side of a bridge should be
+marked "producer".  But rejecting these BARs that we previously allowed is
+a functionality regression, and firmware has not used the producer/consumer
+bit consistently, so we can't rely on it anyway.
+
+Stop checking the producer/consumer bit, and assume all bridge Address
+Space Descriptors are for bridge windows.
+
+Note that this change does not affect I/O Port or Fixed Location I/O Port
+Descriptors, which are commonly used for the [io 0x0cf8-0x0cff] config
+access range.  That range is a "consumer" range and should not be treated
+as a window.
+
+Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96961
+Reported-and-tested-by: Tony Luck <tony.luck@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/ia64/pci/pci.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 48cc65705db4..d4e162d35b34 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -240,15 +240,12 @@ static acpi_status resource_to_window(struct acpi_resource *resource,
+ 	 * We're only interested in _CRS descriptors that are
+ 	 *	- address space descriptors for memory or I/O space
+ 	 *	- non-zero size
+-	 *	- producers, i.e., the address space is routed downstream,
+-	 *	  not consumed by the bridge itself
+ 	 */
+ 	status = acpi_resource_to_address64(resource, addr);
+ 	if (ACPI_SUCCESS(status) &&
+ 	    (addr->resource_type == ACPI_MEMORY_RANGE ||
+ 	     addr->resource_type == ACPI_IO_RANGE) &&
+-	    addr->address.address_length &&
+-	    addr->producer_consumer == ACPI_PRODUCER)
++	    addr->address.address_length)
+ 		return AE_OK;
+ 
+ 	return AE_ERROR;
 
