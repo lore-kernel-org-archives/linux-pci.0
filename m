@@ -1,108 +1,310 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:38635 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756440AbbDJWyf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:54:35 -0400
-Received: by igbqf9 with SMTP id qf9so9442400igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:54:35 -0700 (PDT)
-Subject: [PATCH v6 02/10] PCI/MSI: Export pci_msi_set_enable(),
- pci_msix_clear_and_set_ctrl()
-To: "Michael S. Tsirkin" <mst@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fam Zheng <famz@redhat.com>, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 10 Apr 2015 17:54:33 -0500
-Message-ID: <20150410225433.20848.65505.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:16395 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755050AbbDULio (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:44 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 29/29] PCI: Remove pci_bus_assign_domain_nr()
+Date: Tue, 21 Apr 2015 19:34:48 +0800
+Message-ID: <1429616088-10249-30-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Michael S. Tsirkin <mst@redhat.com>
+Now we save the domain number in pci_host_bridge,
+we could remove pci_bus_assign_domain_nr() and
+clean the domain member in pci_bus. Also move
+pci_host_assign_domain_nr() to drivers/pci/host-bridge.c
+for simplicity.
 
-Move pci_msi_set_enable() and pci_msix_clear_and_set_ctrl() to
-drivers/pci/pci.h so they're available even when MSI isn't configured
-into the kernel.
-
-No functional change.
-
-[bhelgaas: changelog, split into separate patch]
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Fam Zheng <famz@redhat.com>
-CC: stable@vger.kernel.org
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/msi.c |   21 ---------------------
- drivers/pci/pci.h |   21 +++++++++++++++++++++
- 2 files changed, 21 insertions(+), 21 deletions(-)
+ drivers/pci/host-bridge.c |   68 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c         |   72 ---------------------------------------------
+ drivers/pci/pci.h         |    9 -----
+ drivers/pci/probe.c       |   11 ++-----
+ include/linux/pci.h       |    3 --
+ 5 files changed, 71 insertions(+), 92 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 6cd366058ec4..9942f6827a4a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -185,27 +185,6 @@ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
- 	return default_restore_msi_irqs(dev);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5ae9ab8..1b5b27d 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -5,12 +5,80 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_pci.h>
+ 
+ #include "pci.h"
+ 
+ static LIST_HEAD(pci_host_bridge_list);
+ static DEFINE_MUTEX(pci_host_mutex);
+ 
++#ifdef CONFIG_PCI_DOMAINS
++static atomic_t __domain_nr = ATOMIC_INIT(-1);
++
++int pci_get_new_domain_nr(void)
++{
++	return atomic_inc_return(&__domain_nr);
++}
++
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++static int pci_assign_domain_nr(struct device *dev)
++{
++	static int use_dt_domains = -1;
++	int domain = of_get_pci_domain_nr(dev->of_node);
++
++	/*
++	 * Check DT domain and use_dt_domains values.
++	 *
++	 * If DT domain property is valid (domain >= 0) and
++	 * use_dt_domains != 0, the DT assignment is valid since this means
++	 * we have not previously allocated a domain number by using
++	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
++	 * 1, to indicate that we have just assigned a domain number from
++	 * DT.
++	 *
++	 * If DT domain property value is not valid (ie domain < 0), and we
++	 * have not previously assigned a domain number from DT
++	 * (use_dt_domains != 1) we should assign a domain number by
++	 * using the:
++	 *
++	 * pci_get_new_domain_nr()
++	 *
++	 * API and update the use_dt_domains value to keep track of method we
++	 * are using to assign domain numbers (use_dt_domains = 0).
++	 *
++	 * All other combinations imply we have a platform that is trying
++	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
++	 * which is a recipe for domain mishandling and it is prevented by
++	 * invalidating the domain value (domain = -1) and printing a
++	 * corresponding error.
++	 */
++	if (domain >= 0 && use_dt_domains) {
++		use_dt_domains = 1;
++	} else if (domain < 0 && use_dt_domains != 1) {
++		use_dt_domains = 0;
++		domain = pci_get_new_domain_nr();
++	} else {
++		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++			dev->of_node->full_name);
++		domain = -1;
++	}
++
++	return domain;
++}
++#endif
++#endif
++
++static void pci_host_assign_domain_nr(struct pci_host_bridge *host,
++		int domain)
++{
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	host->domain = pci_assign_domain_nr(host->dev.parent);
++#else
++	host->domain = domain;
++#endif
++}
++
+ static void pci_release_host_bridge_dev(struct device *dev)
+ {
+ 	struct resource_entry *entry;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d5cbea8..1538a74 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -10,8 +10,6 @@
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+-#include <linux/of.h>
+-#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pm.h>
+ #include <linux/slab.h>
+@@ -4520,76 +4518,6 @@ static void pci_no_domains(void)
+ #endif
  }
  
--static void pci_msi_set_enable(struct pci_dev *dev, int enable)
--{
--	u16 control;
+-#ifdef CONFIG_PCI_DOMAINS
+-static atomic_t __domain_nr = ATOMIC_INIT(-1);
 -
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
--	control &= ~PCI_MSI_FLAGS_ENABLE;
--	if (enable)
--		control |= PCI_MSI_FLAGS_ENABLE;
--	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+-int pci_get_new_domain_nr(void)
+-{
+-	return atomic_inc_return(&__domain_nr);
 -}
 -
--static void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-static int pci_assign_domain_nr(struct device *dev)
 -{
--	u16 ctrl;
+-	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(dev->of_node);
 -
--	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
--	ctrl &= ~clear;
--	ctrl |= set;
--	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
+-	/*
+-	 * Check DT domain and use_dt_domains values.
+-	 *
+-	 * If DT domain property is valid (domain >= 0) and
+-	 * use_dt_domains != 0, the DT assignment is valid since this means
+-	 * we have not previously allocated a domain number by using
+-	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
+-	 * 1, to indicate that we have just assigned a domain number from
+-	 * DT.
+-	 *
+-	 * If DT domain property value is not valid (ie domain < 0), and we
+-	 * have not previously assigned a domain number from DT
+-	 * (use_dt_domains != 1) we should assign a domain number by
+-	 * using the:
+-	 *
+-	 * pci_get_new_domain_nr()
+-	 *
+-	 * API and update the use_dt_domains value to keep track of method we
+-	 * are using to assign domain numbers (use_dt_domains = 0).
+-	 *
+-	 * All other combinations imply we have a platform that is trying
+-	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+-	 * which is a recipe for domain mishandling and it is prevented by
+-	 * invalidating the domain value (domain = -1) and printing a
+-	 * corresponding error.
+-	 */
+-	if (domain >= 0 && use_dt_domains) {
+-		use_dt_domains = 1;
+-	} else if (domain < 0 && use_dt_domains != 1) {
+-		use_dt_domains = 0;
+-		domain = pci_get_new_domain_nr();
+-	} else {
+-		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			dev->of_node->full_name);
+-		domain = -1;
+-	}
+-
+-	return domain;
 -}
 -
- static inline __attribute_const__ u32 msi_mask(unsigned x)
- {
- 	/* Don't shift by >= width of type */
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+-{
+-	bus->domain_nr = pci_assign_domain_nr(parent);
+-}
+-#endif
+-#endif
+-
+-void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
+-{
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	host->domain = pci_assign_domain_nr(host->dev.parent);
+-#else
+-	host->domain = domain;
+-#endif
+-}
+-
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4091f82239cd..17f213d494de 100644
+index 0432889..e279147 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -146,6 +146,27 @@ static inline void pci_no_msi(void) { }
- static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
- #endif
+@@ -323,16 +323,7 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
  
-+static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
-+{
-+	u16 control;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-+	control &= ~PCI_MSI_FLAGS_ENABLE;
-+	if (enable)
-+		control |= PCI_MSI_FLAGS_ENABLE;
-+	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-+}
-+
-+static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
-+{
-+	u16 ctrl;
-+
-+	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
-+	ctrl &= ~clear;
-+	ctrl |= set;
-+	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
-+}
-+
- void pci_realloc_get_opt(char *);
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
  
- static inline int pci_no_d1d2(struct pci_dev *dev)
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+-#else
+-static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-					struct device *parent)
+-{
+-}
+-#endif
+ struct resource_entry *pci_busn_resource(struct list_head *resources);
+-void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
+ struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+ 		int domain, void *sysdata, struct list_head *resources,
+ 		struct pci_host_bridge_ops *ops);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c9bee34..164225e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -485,7 +485,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
++static struct pci_bus *pci_alloc_bus(void)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -500,10 +500,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	if (parent)
+-		b->domain_nr = parent->domain_nr;
+-#endif
+ 	return b;
+ }
+ 
+@@ -650,7 +646,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus(parent);
++	child = pci_alloc_bus();
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1875,14 +1871,13 @@ static struct pci_bus *pci_create_root_bus(
+ 		return NULL;
+ 	bus = busn_res->res->start;
+ 	parent = bridge->dev.parent;
+-	b = pci_alloc_bus(NULL);
++	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+-	pci_bus_assign_domain_nr(b, parent);
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1ea69c7..c167503 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -469,9 +469,6 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	int		domain_nr;
+-#endif
+ 
+ 	char		name[48];
+ 
+-- 
+1.7.1
 
