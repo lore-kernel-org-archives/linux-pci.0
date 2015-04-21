@@ -1,71 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:37240 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722AbbDTSmK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2015 14:42:10 -0400
-Received: by igblo3 with SMTP id lo3so68191787igb.0
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 11:42:08 -0700 (PDT)
-From: Sonny Rao <sonnyrao@chromium.org>
-To: linux-kernel@vger.kernel.org
-Cc: Stephane Eranian <eranian@google.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Paul Mackerras <paulus@samba.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Sonny Rao <sonnyrao@chromium.org>
-Subject: [PATCH] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
-Date: Mon, 20 Apr 2015 11:42:03 -0700
-Message-Id: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15502 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754742AbbDULiU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:20 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 13/29] PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
+Date: Tue, 21 Apr 2015 19:34:32 +0800
+Message-ID: <1429616088-10249-14-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This uncore is the same as the Haswell desktop part but uses a
-different PCI ID.
+Move pcibios_root_bridge_prepare() to pci_create_host_bridge().
 
-Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 5 +++++
- include/linux/pci_ids.h                           | 1 +
- 2 files changed, 6 insertions(+)
+ drivers/pci/host-bridge.c |   16 +++++++++++++---
+ drivers/pci/probe.c       |    3 ---
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-index 3001015..0bda6fc 100644
---- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-+++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-@@ -472,6 +472,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
- 		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
- 		.driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
- 	},
-+	{ /* IMC */
-+		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
-+		.driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
-+	},
- 	{ /* end: all zeroes */ },
- };
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index b1cc6ef..6309970 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -109,9 +109,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 		if (tmp->domain == host->domain
+ 			  && pci_host_busn_res_check(host, tmp)) {
+ 			mutex_unlock(&pci_host_mutex);
+-			pci_free_resource_list(&host->windows);
+-			kfree(host);
+-			return NULL;
++			goto free_res;
+ 		}
+ 	}
+ 	list_add_tail(&host->list, &pci_host_bridge_list);
+@@ -122,6 +120,10 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
  
-@@ -502,6 +506,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
- 	IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
- 	IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
- 	IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
-+	IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
- 	{  /* end marker */ }
- };
++	error = pcibios_root_bridge_prepare(host);
++	if (error)
++		goto list_del;
++
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+@@ -129,6 +131,14 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	}
  
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 38cff8f..e5ae042 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2545,6 +2545,7 @@
- #define PCI_DEVICE_ID_INTEL_IVB_IMC	0x0154
- #define PCI_DEVICE_ID_INTEL_IVB_E3_IMC	0x0150
- #define PCI_DEVICE_ID_INTEL_HSW_IMC	0x0c00
-+#define PCI_DEVICE_ID_INTEL_HSW_U_IMC	0x0a04
- #define PCI_DEVICE_ID_INTEL_PXHD_0	0x0320
- #define PCI_DEVICE_ID_INTEL_PXHD_1	0x0321
- #define PCI_DEVICE_ID_INTEL_PXH_0	0x0329
+ 	return host;
++list_del:
++	mutex_lock(&pci_host_mutex);
++	list_del(&host->list);
++	mutex_unlock(&pci_host_mutex);
++free_res:
++	pci_free_resource_list(&host->windows);
++	kfree(host);
++	return NULL;
+ }
+ 
+ void pci_free_host_bridge(struct pci_host_bridge *host)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3c53fe7..e75b27c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1902,9 +1902,6 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	bridge->bus = b;
+ 	b->bridge = get_device(&bridge->dev);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error)
+-		goto put_bridge;
+ 
+ 	pcibios_set_root_bus_speed(bridge);
+ 	device_enable_async_suspend(b->bridge);
 -- 
-2.1.2
+1.7.1
 
