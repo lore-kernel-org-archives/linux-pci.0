@@ -1,99 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15502 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742AbbDULiU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:20 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v10 13/29] PCI: Move pcibios_root_bridge_prepare() to pci_create_host_bridge()
-Date: Tue, 21 Apr 2015 19:34:32 +0800
-Message-ID: <1429616088-10249-14-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+Received: from foss.arm.com ([217.140.101.70]:46086 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751586AbbDUIcp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Apr 2015 04:32:45 -0400
+Message-ID: <55360B28.1060703@arm.com>
+Date: Tue, 21 Apr 2015 09:32:40 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Feng Kan <fkan@apm.com>
+CC: Duc Dang <dhdang@apm.com>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>	<cover.1428564115.git.dhdang@apm.com>	<7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>	<55280665.9020603@arm.com>	<CADaLNDkrqwnEOX1HgQ7V3-1o4cDJnG4dW1=U4ujod7fUW_PQ0w@mail.gmail.com>	<7a739a984c1b849ae92cb3bb3edc92f2@www.loen.fr>	<CADaLNDmxrpJ-t6fR=DVBzB1q_jp58H94oZnRrxZYtCvDCWJpog@mail.gmail.com>	<20150415091655.02361cdc@arm.com>	<CADaLNDkuXpMVanyPD1oMOK-uvdt+vK2+UabgUxvaK9bBZDmdKg@mail.gmail.com>	<5530DD9D.9020808@arm.com>	<CADaLNDkAu4o6YQkw528+1npWAa_CeX-ZfFED0zWRsz+WAfwf6A@mail.gmail.com>	<55310050.7000003@arm.com> <CAL85gmBFpKU7q31Utr+L_iHDM259kxmsL-0X=7WLB4k5xw65CA@mail.gmail.com>
+In-Reply-To: <CAL85gmBFpKU7q31Utr+L_iHDM259kxmsL-0X=7WLB4k5xw65CA@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move pcibios_root_bridge_prepare() to pci_create_host_bridge().
+On 20/04/15 19:51, Feng Kan wrote:
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   16 +++++++++++++---
- drivers/pci/probe.c       |    3 ---
- 2 files changed, 13 insertions(+), 6 deletions(-)
+> Is it possible to use the pci_msi_create_default_irq_domain for the X-Gene MSI
+> driver. Or is this going to be removed in the future. Thanks
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index b1cc6ef..6309970 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -109,9 +109,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 		if (tmp->domain == host->domain
- 			  && pci_host_busn_res_check(host, tmp)) {
- 			mutex_unlock(&pci_host_mutex);
--			pci_free_resource_list(&host->windows);
--			kfree(host);
--			return NULL;
-+			goto free_res;
- 		}
- 	}
- 	list_add_tail(&host->list, &pci_host_bridge_list);
-@@ -122,6 +120,10 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	dev_set_name(&host->dev, "pci%04x:%02x",
- 			host->domain, bus);
- 
-+	error = pcibios_root_bridge_prepare(host);
-+	if (error)
-+		goto list_del;
-+
- 	error = device_register(&host->dev);
- 	if (error) {
- 		put_device(&host->dev);
-@@ -129,6 +131,14 @@ struct pci_host_bridge *pci_create_host_bridge(
- 	}
- 
- 	return host;
-+list_del:
-+	mutex_lock(&pci_host_mutex);
-+	list_del(&host->list);
-+	mutex_unlock(&pci_host_mutex);
-+free_res:
-+	pci_free_resource_list(&host->windows);
-+	kfree(host);
-+	return NULL;
- }
- 
- void pci_free_host_bridge(struct pci_host_bridge *host)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3c53fe7..e75b27c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1902,9 +1902,6 @@ static struct pci_bus *__pci_create_root_bus(
- 
- 	bridge->bus = b;
- 	b->bridge = get_device(&bridge->dev);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto put_bridge;
- 
- 	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
+This is not the preferred way. pci_msi_create_default_irq_domain is only
+there for legacy purposes, so that we can lookup an MSI without
+specifying the domain. New code shouldn't have to rely on it.
+
+Thanks,
+
+	M.
 -- 
-1.7.1
-
+Jazz is not dead. It just smells funny...
