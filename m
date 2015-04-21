@@ -1,112 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:55459 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853AbbDCJ33 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:29 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 17/30] x86/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Fri, 3 Apr 2015 17:25:51 +0800
-Message-ID: <1428053164-28277-19-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:33389 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932305AbbDUQHq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 12:07:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
+References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
+Date: Tue, 21 Apr 2015 09:07:45 -0700
+Message-ID: <CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+Subject: Re: git pull] drm for v4.1-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Dave Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	intel-gfx <intel-gfx@lists.freedesktop.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Thomas Gleixner <tglx@linutronix.de>
-CC: x86@kernel.org
----
- arch/x86/pci/acpi.c |   37 +++++++++++++++++++++----------------
- 1 files changed, 21 insertions(+), 16 deletions(-)
+Hmm. The odd Intel PCI resource mess is back.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index d2655d5..877acaf 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -349,6 +349,19 @@ static void probe_pci_root_info(struct pci_root_info *info,
- 			entry->res->name = info->name;
- }
- 
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
-+
-+	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops pci_host_ops = {
-+	.pci_ops = &pci_root_ops,
-+	.prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -359,6 +372,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	LIST_HEAD(crs_res);
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *host = NULL;
- 	struct pci_sysdata *sd;
- 	int node;
- 
-@@ -425,14 +439,13 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
- 				    (u8)root->secondary.end, root->mcfg_addr))
--			bus = pci_create_root_bus(NULL, domain, busnum,
--					&pci_root_ops, sd, &resources);
--
--		if (bus) {
--			pci_scan_child_bus(bus);
--			pci_set_host_bridge_release(
--				to_pci_host_bridge(bus->bridge),
--				release_pci_root_info, info);
-+			host = pci_scan_host_bridge(NULL, domain, busnum, sd,
-+					&resources, &pci_host_ops);
-+
-+		if (host) {
-+			bus = host->bus;
-+			pci_set_host_bridge_release(host,
-+					release_pci_root_info, info);
- 		} else {
- 			resource_list_free(&resources);
- 			teardown_mcfg_map(info);
-@@ -455,14 +468,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	return bus;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	struct pci_sysdata *sd = bridge->bus->sysdata;
--
--	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
--	return 0;
--}
--
- int __init pci_acpi_init(void)
- {
- 	struct pci_dev *dev = NULL;
--- 
-1.7.1
+Or maybe it never went away.
 
+I get these when suspending. Things *work*, but it's really spamming
+my logs a fair bit:
+
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  pci_bus 0000:01: Allocating resources
+  pci_bus 0000:02: Allocating resources
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+  i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+
+That resource is complete garbage. "flags 0x2" is not even a valid
+flag value. I'm *guessing* it might be IORESOURCE_ROM_SHADOW, but if
+that is valid, then it should also have have had the IORESOURCE_MEM
+bit, and it doesn't.
+
+(The low 8 bits of the resource flags depend on the high bits, which
+is why I say that I'm "guessing" at that ROM_SHADOW bit. It could be
+something else, like a IORESOURCE_MEM_CACHEABLE PnP bit - but that
+should not show up for PCI, and "BAR 6" is normally the ROM resource,
+so the ROM_SHADOW bit makes some sense.
+
+The only place that sets IORESOURCE_ROM_SHADOW that I find is the x86
+pci_fixup_video() function. That one checks for PCI_COMMAND_IO |
+PCI_COMMAND_MEMORY in the PCI command word, though. Why are the other
+bits not set?
+
+Both i915/dri people and PCI people on the Cc. This warning does *not*
+happen at bootup, but only at suspend time. So my suspicion is that
+somebody messes with the PCI ROM resource, and disables it or
+something, but the IORESOURCE_ROM_SHADOW never gets cleared. And then
+because res->flags is non-zero, the PCI scanning code doesn't ignore
+the resource.
+
+Just before the whole bogus alignment check, the PCI code does
+
+                if (!(r->flags) || r->parent)
+                        continue;
+
+(don't ask me about the odd parenthesis) which *should* have
+triggered, but that IORESOURCE_ROM_SHADOW bit screws things up.
+
+Anybody?
+
+            Linus
