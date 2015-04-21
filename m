@@ -1,52 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:34686 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753341AbbEAGEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:35 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3183C2BB005A
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:32 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164OCo52166792
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:32 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163vb2009600
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:58 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 20/21] powerpc/powernv: Select OF_DYNAMIC
-Date: Fri,  1 May 2015 16:03:07 +1000
-Message-Id: <1430460188-31343-21-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from exprod5og120.obsmtp.com ([64.18.0.137]:45063 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751430AbbDUEFj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 00:05:39 -0400
+Received: by pabsx10 with SMTP id sx10so228204214pab.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 21:05:38 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 3/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node
+Date: Mon, 20 Apr 2015 21:04:23 -0700
+Message-Id: <cfdb95a38689836bac693df6edb8c09829ea61cd.1429586144.git.dhdang@apm.com>
+In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
+References: <cover.1429586144.git.dhdang@apm.com>
+In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
+References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The device tree nodes will be changed dynamically on PCI hotplug
-events on PowerNV platform. The patch selects OF_DYNAMIC on the
-platform to support PCI hotplug.
+The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- arch/powerpc/platforms/powernv/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      | 63 ++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
 
-diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
-index 4b044d8..9c62631 100644
---- a/arch/powerpc/platforms/powernv/Kconfig
-+++ b/arch/powerpc/platforms/powernv/Kconfig
-@@ -18,4 +18,5 @@ config PPC_POWERNV
- 	select CPU_FREQ_GOV_ONDEMAND
- 	select CPU_FREQ_GOV_CONSERVATIVE
- 	select PPC_DOORBELL
-+	select OF_DYNAMIC
- 	default y
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+new file mode 100644
+index 0000000..0ffdcb3
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+@@ -0,0 +1,63 @@
++* AppliedMicro X-Gene PCIe MSI interface
++
++Required properties:
++
++- compatible: should contain "apm,xgene1-msi" to identify the core.
++- msi-controller: indicates that this is X-Gene1 PCIe MSI controller node
++- reg: A list of physical base address and length for each set of controller
++       registers.
++- interrupts: A list of interrupt outputs of the controller.
++
++Each PCIe node needs to have property msi-parent that points to msi controller node
++
++Examples:
++
++SoC DTSI:
++
++	+ MSI node:
++	msi@79000000 {
++		compatible = "apm,xgene1-msi";
++		msi-controller;
++		reg = <0x00 0x79000000 0x0 0x900000>;
++		interrupts = <  0x0 0x10 0x4
++				0x0 0x11 0x4
++				0x0 0x12 0x4
++				0x0 0x13 0x4
++				0x0 0x14 0x4
++				0x0 0x15 0x4
++				0x0 0x16 0x4
++				0x0 0x17 0x4
++				0x0 0x18 0x4
++				0x0 0x19 0x4
++				0x0 0x1a 0x4
++				0x0 0x1b 0x4
++				0x0 0x1c 0x4
++				0x0 0x1d 0x4
++				0x0 0x1e 0x4
++				0x0 0x1f 0x4>;
++	};
++
++	+ PCIe controller node with msi-parent property pointing to MSI node:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		dma-coherent;
++		clocks = <&pcie0clk 0>;
++		msi-parent= <&msi>;
++	};
 -- 
-2.1.0
+1.9.1
 
