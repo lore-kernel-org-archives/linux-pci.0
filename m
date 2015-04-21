@@ -1,100 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:4527 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbbDULiE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:04 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v8 1/3] PCI: Export symbols of PCI functions
-Date: Wed, 8 Apr 2015 11:21:33 -0700
-Message-ID: <1428517295-12825-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
-References: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: [PATCH v10 01/29] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+Date: Tue, 21 Apr 2015 19:34:20 +0800
+Message-ID: <1429616088-10249-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Export symbols of the following PCI functions so they can be referenced
-by a PCI driver compiled as a kernel loadable module:
+From: Arnd Bergmann <arnd@arndb.de>
 
-pci_common_swizzle
-pci_create_root_bus
-pci_stop_root_bus
-pci_remove_root_bus
-pci_assign_unassigned_bus_resources
-pci_fixup_irqs
+Use pci_scan_root_bus() instead of deprecated function
+pci_scan_bus_parented().
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: xen-devel@lists.xenproject.org
 ---
- drivers/pci/pci.c       |    1 +
- drivers/pci/probe.c     |    1 +
- drivers/pci/remove.c    |    2 ++
- drivers/pci/setup-bus.c |    1 +
- drivers/pci/setup-irq.c |    1 +
- 5 files changed, 6 insertions(+)
+ drivers/pci/xen-pcifront.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81f06e8..14e7f3c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2492,6 +2492,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp)
- 	*pinp = pin;
- 	return PCI_SLOT(dev->devfn);
- }
-+EXPORT_SYMBOL_GPL(pci_common_swizzle);
- 
- /**
-  *	pci_release_region - Release a PCI bar
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8d2f400..f13a78a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1993,6 +1993,7 @@ err_out:
- 	kfree(b);
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(pci_create_root_bus);
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index b1ffebe..a69e529 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 				 unsigned int domain, unsigned int bus)
  {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8bd76c9..8a280e9 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -139,6 +139,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
- 	/* stop the host bridge */
- 	device_release_driver(&host_bridge->dev);
- }
-+EXPORT_SYMBOL_GPL(pci_stop_root_bus);
+ 	struct pci_bus *b;
++	LIST_HEAD(resources);
+ 	struct pcifront_sd *sd = NULL;
+ 	struct pci_bus_entry *bus_entry = NULL;
+ 	int err = 0;
++	static struct resource busn_res = {
++		.start = 0,
++		.end = 255,
++		.flags = IORESOURCE_BUS,
++	};
  
- void pci_remove_root_bus(struct pci_bus *bus)
- {
-@@ -158,3 +159,4 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	/* remove the host bridge */
- 	device_unregister(&host_bridge->dev);
- }
-+EXPORT_SYMBOL_GPL(pci_remove_root_bus);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e3e17f3..8169597 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1750,3 +1750,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
- }
-+EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 4e2d595..95c225b 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -65,3 +65,4 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	for_each_pci_dev(dev)
- 		pdev_fixup_irq(dev, swizzle, map_irq);
- }
-+EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+ #ifndef CONFIG_PCI_DOMAINS
+ 	if (domain != 0) {
+@@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &busn_res);
+ 	pcifront_init_sd(sd, domain, bus, pdev);
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++				  &pcifront_bus_ops, sd, &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+ 		err = -ENOMEM;
+ 		pci_unlock_rescan_remove();
++		pci_free_resource_list(&resources);
+ 		goto err_out;
+ 	}
+ 
+@@ -488,7 +498,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	list_add(&bus_entry->list, &pdev->root_buses);
+ 
+-	/* pci_scan_bus_parented skips devices which do not have a have
++	/* pci_scan_root_bus skips devices which do not have a
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+ 	err = pcifront_scan_bus(pdev, domain, bus, b);
+ 
 -- 
-1.7.9.5
+1.7.1
 
