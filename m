@@ -1,68 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu-smtp-delivery-143.mimecast.com ([207.82.80.143]:34022 "EHLO
-	eu-smtp-delivery-143.mimecast.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932556AbbDVOGL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Apr 2015 10:06:11 -0400
-Date: Wed, 22 Apr 2015 15:06:01 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Zhichang Yuan <yuanzhichang@hisilicon.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>
-Subject: Re: [[PATCH v1]] of/pci: fix a bug in function pci_pio_to_address
-Message-ID: <20150422140601.GK932@e106497-lin.cambridge.arm.com>
-References: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:32926 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932564AbbDUVMz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 17:12:55 -0400
+Received: by qgdy78 with SMTP id y78so74472315qgd.0
+        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2015 14:12:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie> <CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 Apr 2015 16:12:34 -0500
+Message-ID: <CAErSpo4NrgeaXrS-RMGQhB2p9aOzfYDkQmKHqyFbTRfPoMnLrQ@mail.gmail.com>
+Subject: Re: git pull] drm for v4.1-rc1
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	intel-gfx <intel-gfx@lists.freedesktop.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 22, 2015 at 02:35:59PM +0100, Zhichang Yuan wrote:
-> In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
-> was introduced to retieve the corresponding I/O port by CPU address. But the
-> convertion processing is not correct. It will return a wrong I/O port.
-> This patch will fix it.
-> 
-> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+On Tue, Apr 21, 2015 at 11:07 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> Hmm. The odd Intel PCI resource mess is back.
+>
+> Or maybe it never went away.
+>
+> I get these when suspending. Things *work*, but it's really spamming
+> my logs a fair bit:
+>
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   pci_bus 0000:01: Allocating resources
+>   pci_bus 0000:02: Allocating resources
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>
+> That resource is complete garbage. "flags 0x2" is not even a valid
+> flag value. I'm *guessing* it might be IORESOURCE_ROM_SHADOW, but if
+> that is valid, then it should also have have had the IORESOURCE_MEM
+> bit, and it doesn't.
+>
+> (The low 8 bits of the resource flags depend on the high bits, which
+> is why I say that I'm "guessing" at that ROM_SHADOW bit. It could be
+> something else, like a IORESOURCE_MEM_CACHEABLE PnP bit - but that
+> should not show up for PCI, and "BAR 6" is normally the ROM resource,
+> so the ROM_SHADOW bit makes some sense.
+>
+> The only place that sets IORESOURCE_ROM_SHADOW that I find is the x86
+> pci_fixup_video() function. That one checks for PCI_COMMAND_IO |
+> PCI_COMMAND_MEMORY in the PCI command word, though. Why are the other
+> bits not set?
+>
+> Both i915/dri people and PCI people on the Cc. This warning does *not*
+> happen at bootup, but only at suspend time. So my suspicion is that
+> somebody messes with the PCI ROM resource, and disables it or
+> something, but the IORESOURCE_ROM_SHADOW never gets cleared. And then
+> because res->flags is non-zero, the PCI scanning code doesn't ignore
+> the resource.
+>
+> Just before the whole bogus alignment check, the PCI code does
+>
+>                 if (!(r->flags) || r->parent)
+>                         continue;
+>
+> (don't ask me about the odd parenthesis) which *should* have
+> triggered, but that IORESOURCE_ROM_SHADOW bit screws things up.
+>
+> Anybody?
 
-Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
+I'll look into this.  It's been around a long time, but hasn't
+percolated to the top of my list until now.
 
-Zhichang, you might want to Cc Greg KH for inclusion into stable.
+https://bugzilla.kernel.org/show_bug.cgi?id=16063 says "echo 1
+>/sys/bus/pci/rescan" is also a reproducer.
 
-Best regards,
-Liviu
-
-> ---
->  drivers/of/address.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 78a7dcb..6906a3f 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
->  	spin_lock(&io_range_lock);
->  	list_for_each_entry(res, &io_range_list, list) {
->  		if (address >= res->start && address < res->start + res->size) {
-> -			addr = res->start - address + offset;
-> +			addr = address - res->start + offset;
->  			break;
->  		}
->  		offset += res->size;
-> -- 
-> 1.9.1
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Bjorn
