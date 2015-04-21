@@ -1,91 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:36160 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753666AbbDGTrA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 15:47:00 -0400
-Received: by qcgx3 with SMTP id x3so26287901qcg.3
-        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 12:46:59 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15055 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272AbbDULiL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:11 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 12/29] powerpc/PCI: Rename pcibios_root_bridge_prepare() to pcibios_set_root_bus_speed()
+Date: Tue, 21 Apr 2015 19:34:31 +0800
+Message-ID: <1429616088-10249-13-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6ryiajzYAW+SJkJ-9ETpUe1+VDt99yKw9C39u_Na2q2kTQ@mail.gmail.com>
-References: <CACna6ryiajzYAW+SJkJ-9ETpUe1+VDt99yKw9C39u_Na2q2kTQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 Apr 2015 14:46:38 -0500
-Message-ID: <CAErSpo6wObVZUwkBoUfi3bqfJ-BtQwX0=WEkWqoTsNXhs5dHVA@mail.gmail.com>
-Subject: Re: Preventing PCI from assigning mem (for MMIO) to bridge device
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Alex Henrie <alexhenrie24@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafał,
+pcibios_root_bridge_prepare() in powerpc set
+root bus speed, it's not the preparation for
+pci host bridge. Rename it for better readability,
+and we could move pcibios_root_bridge_prepare()
+to pci_create_host_bridge(), in which root bus
+is not created. We will clean up these weak functions,
+and add pci_host_bridge_ops to do the same thing
+in later patch.
 
-On Tue, Apr 7, 2015 at 4:51 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> Hello,
->
-> I own a home router Linksys WRT300N v1.0 with CardBus slot on PCB and
-> wireless card attached.
->
-> This is MIPS SoC BCM4704 using following code for PCI controller:
-> 1) register_pci_controller
-> http://lxr.free-electrons.com/source/arch/mips/pci/pci.c?v=3.18#L167
-> 2) ssb_pcicore_init_hostmode
-> http://lxr.free-electrons.com/source/drivers/ssb/driver_pcicore.c?v=3.18#L317
->
-> There are two PCI devices discoverable:
-> 1) 0000:00:00.0 (bridge)
-> 14e4:472d / class 0x068000 / hdr_type 0
-> 2) 0000:00:01.0 (wireless device)
-> 14e4:4329 / class 0x028000 / hdr_type 0
->
-> My problem is that PCI subsystem assigns memory to the bridge device:
-> pci 0000:00:00.0: BAR 1: assigned [mem 0x40000000-0x47ffffff pref]
-> pci 0000:00:01.0: BAR 0: assigned [mem 0x48000000-0x48003fff]
-> pci 0000:00:00.0: BAR 0: assigned [mem 0x48004000-0x48005fff]
->
-> This ancient & simple PCI controller allows assigning resources to the
-> wireless device only (slot 1). Trying to assign resources to the
-> bridge device (writing to slot 0 to registers PCI_BASE_ADDRESS_[0-5])
-> results in overwriting wireless device (slot 0) configuration!
-> As you can guess from the above log, the last assignment (targeting
-> slot 0) will break (overwrite) wireless device (slot 1) configuration.
-> Trying to access any MMIO register of wireless device will cause "Data
-> bus error".
-> For more details please see my comment in OpenWrt Trac:
-> https://dev.openwrt.org/ticket/12682#comment:11 (there is a nice
-> configuration dump after every assignment).
->
-> So I'm looking for a way to stop PCI subsystem from assigning any
-> memory to the bridge device (slot 0). I still need it to assign memory
-> for wireless device (slot 1) as its driver requires MMIO access.
->
-> I'm wondering what is the best way to achieve that?
->
-> MIPS arch code seems to respect PCI_PROBE_ONLY but this will stop
-> assigning memory to wireless device (slot 1) too.
->
-> I was considering modifying my "struct pci_ops" write callback to
-> include something like this:
-> if (extpci_core->cardbusmode && dev == 0 &&
->     off >= PCI_BASE_ADDRESS_0 &&
->     off <= PCI_BASE_ADDRESS_5)
->         return -ENOTSUPP;
-> It seems to be working fine, all I get with above change is:
-> pci 0000:00:01.0: BAR 0: assigned [mem 0x40000000-0x40003fff]
-> , but I need an opinion if this is a correct solution.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |    8 +++-----
+ arch/powerpc/platforms/pseries/pci.c     |    8 ++++----
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ drivers/pci/probe.c                      |    5 +++++
+ 6 files changed, 15 insertions(+), 12 deletions(-)
 
-I'd have to understand the problem better to give you a good opinion.
-It sounds like you think there's a hardware defect in the bridge?  If
-that's the case, we can often write a quirk to work around it.
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index c8175a3..b811d12 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -129,7 +129,7 @@ struct machdep_calls {
+ 	void		(*pcibios_fixup)(void);
+ 	int		(*pci_probe_mode)(struct pci_bus *);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
++	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
+ 				*bridge);
+ 
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 9acc08d..630cac6 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -767,12 +767,10 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+-	if (ppc_md.pcibios_root_bridge_prepare)
+-		return ppc_md.pcibios_root_bridge_prepare(bridge);
+-
+-	return 0;
++	if (ppc_md.pcibios_set_root_bus_speed)
++		return ppc_md.pcibios_set_root_bus_speed(bridge);
+ }
+ 
+ /* This header fixup will do the resource fixup for all devices as they are
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index fe16a50..89ff79c 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+@@ -121,7 +121,7 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 
+ 	dn = pcibios_get_phb_of_node(bus);
+ 	if (!dn)
+-		return 0;
++		return;
+ 
+ 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
+ 		rc = of_property_read_u32_array(pdn,
+@@ -135,7 +135,7 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 
+ 	if (rc) {
+ 		pr_debug("no ibm,pcie-link-speed-stats property\n");
+-		return 0;
++		return;
+ 	}
+ 
+ 	switch (pcie_link_speed_stats[0]) {
+@@ -168,5 +168,5 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 		break;
+ 	}
+ 
+-	return 0;
++	return;
+ }
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 1796c54..9aa9c13 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
++void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
+ 
+ unsigned long pseries_memory_block_size(void);
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index e445b67..b196c0d 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
+ 	}
+ 
+-	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
++	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
+ 
+ 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
+ 		long rc;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cba3474..3c53fe7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1862,6 +1862,10 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	return 0;
+ }
+ 
++void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
++{
++}
++
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1902,6 +1906,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (error)
+ 		goto put_bridge;
+ 
++	pcibios_set_root_bus_speed(bridge);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+-- 
+1.7.1
 
-Could you open a report at bugzilla.kernel.org against drivers/PCI,
-and attach a complete dmesg log and output of "lspci -vv"?  The newer
-the kernel you can try, the better.
-
-Bjorn
