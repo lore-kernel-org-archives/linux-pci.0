@@ -1,159 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:28614 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933204AbbDOGEK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Apr 2015 02:04:10 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15650 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754808AbbDULiX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:23 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
-	<zhangjukuo@huawei.com>, <xiehaitao@huawei.com>,
-	<liguozhu@hisilicon.com>, <wangzhou.bry@gmail.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [RFC PATCH 1/3] PCI: host: designware: support ARM64
-Date: Wed, 15 Apr 2015 14:04:01 +0800
-Message-ID: <1429077843-184462-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1429077843-184462-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1429077843-184462-1-git-send-email-wangzhou1@hisilicon.com>
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 20/29] PCI: Remove pcibios_root_bridge_prepare() and pcibos_set_root_bus_speed()
+Date: Tue, 21 Apr 2015 19:34:39 +0800
+Message-ID: <1429616088-10249-21-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/host/pcie-designware.c | 44 +++++++++++++++++++++++++++++++++++---
- 1 file changed, 41 insertions(+), 3 deletions(-)
+Now no one use weak pcibios_root_bridge_prepare() and
+pcibios_set_root_bus_speed, we could clean up them.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 17ca986..e88a7d9 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -22,6 +22,7 @@
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
- #include <linux/types.h>
-+#include <asm/hardirq.h>
- 
- #include "pcie-designware.h"
- 
-@@ -31,6 +32,7 @@
- #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
- #define PORT_LINK_MODE_2_LANES		(0x3 << 16)
- #define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-+#define PORT_LINK_MODE_8_LANES		(0xf << 16)
- 
- #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
- #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-@@ -38,6 +40,7 @@
- #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
- #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
- #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
-+#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
- 
- #define PCIE_MSI_ADDR_LO		0x820
- #define PCIE_MSI_ADDR_HI		0x824
-@@ -68,14 +71,19 @@
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
- static struct hw_pci dw_pci;
-+static struct pci_ops dw_pcie_ops;
- 
- static unsigned long global_io_offset;
- 
--static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-+static inline struct pcie_port *sys_to_pcie(void *sys)
- {
--	BUG_ON(!sys->private_data);
-+#ifdef CONFIG_ARM
-+	pci_sys_data *sys_data = (struct pci_sys_data *)sys;
- 
--	return sys->private_data;
-+	BUG_ON(!sys->private_data);
-+	return sys_data->private_data;
-+#endif
-+	return (struct pcie_port *)sys;
- }
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
-@@ -502,6 +510,27 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
- 
-+#ifdef CONFIG_ARM64
-+	struct pci_bus *bus;
-+	LIST_HEAD(res);
-+
-+	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
-+	if (ret)
-+		return ret;
-+
-+	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
-+				  pp, &res);
-+	if (!bus)
-+		return -ENOMEM;
-+
-+	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
-+
-+	pci_scan_child_bus(bus);
-+	pci_assign_unassigned_bus_resources(bus);
-+	pci_bus_add_devices(bus);
-+#endif
-+
-+#ifdef CONFIG_ARM
- #ifdef CONFIG_PCI_MSI
- 	dw_pcie_msi_chip.dev = pp->dev;
- 	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
-@@ -514,6 +543,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- #ifdef CONFIG_PCI_DOMAINS
- 	dw_pci.domain++;
- #endif
-+#endif
- 
- 	return 0;
- }
-@@ -704,6 +734,7 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
-+#ifdef CONFIG_ARM
- static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct pcie_port *pp;
-@@ -761,6 +792,7 @@ static struct hw_pci dw_pci = {
- 	.scan		= dw_pcie_scan_bus,
- 	.map_irq	= dw_pcie_map_irq,
- };
-+#endif
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
-@@ -781,6 +813,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	case 4:
- 		val |= PORT_LINK_MODE_4_LANES;
- 		break;
-+	case 8:
-+		val |= PORT_LINK_MODE_8_LANES;
-+		break;
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/host-bridge.c |    4 ----
+ drivers/pci/probe.c       |   18 +-----------------
+ include/linux/pci.h       |    2 --
+ 3 files changed, 1 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 7e25f53..af539c4 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -127,10 +127,6 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 			goto list_del;
  	}
- 	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
  
-@@ -797,6 +832,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	case 4:
- 		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
- 		break;
-+	case 8:
-+		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
-+		break;
- 	}
- 	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	error = pcibios_root_bridge_prepare(host);
+-	if (error)
+-		goto list_del;
+-
+ 	error = device_register(&host->dev);
+ 	if (error) {
+ 		put_device(&host->dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 708bcf1..2ba6754 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1850,22 +1850,6 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pci_scan_child_bus);
  
+-/**
+- * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
+- * @bridge: Host bridge to set up.
+- *
+- * Default empty implementation.  Replace with an architecture-specific setup
+- * routine, if necessary.
+- */
+-int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	return 0;
+-}
+-
+-void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
+-{
+-}
+-
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1905,7 +1889,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 
+ 	if (bridge->ops && bridge->ops->set_root_bus_speed)
+ 		bridge->ops->set_root_bus_speed(bridge);
+-	pcibios_set_root_bus_speed(bridge);
++
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a82595a..41eb672 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -426,8 +426,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+-
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
 -- 
-1.9.1
+1.7.1
 
