@@ -1,249 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18387 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752795AbbDNCfX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 22:35:23 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	Andy Lutomirski <luto@amacapital.net>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 32/33] x86/irq: Move irqdomain specific code into asm/irqdomain.h
-Date: Tue, 14 Apr 2015 10:30:09 +0800
-Message-Id: <1428978610-28986-33-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from exprod5og110.obsmtp.com ([64.18.0.20]:60869 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751538AbbDUEFm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 00:05:42 -0400
+Received: by pabsx10 with SMTP id sx10so228205403pab.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 21:05:41 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 4/4] PCI: X-Gene: Add the MAINTAINERS entry for APM X-Gene v1 PCIe MSI driver
+Date: Mon, 20 Apr 2015 21:04:24 -0700
+Message-Id: <dca02025f662816becd6f85a269da78c521952e4.1429586144.git.dhdang@apm.com>
+In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
+References: <cover.1429586144.git.dhdang@apm.com>
+In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
+References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have dedicated asm/irqdomain.h, so move irqdomain specific
-code into it.
+This patch adds information of maintainers for APM X-Gene v1 PCIe
+MSI/MSIX termination driver
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- arch/x86/include/asm/hw_irq.h        |   24 -----------------------
- arch/x86/include/asm/irq_remapping.h |    2 +-
- arch/x86/include/asm/irqdomain.h     |   35 +++++++++++++++++++++++++++++++---
- arch/x86/kernel/apic/htirq.c         |    2 +-
- arch/x86/kernel/apic/msi.c           |    2 +-
- arch/x86/kernel/apic/vector.c        |    2 +-
- arch/x86/kernel/hpet.c               |    2 +-
- arch/x86/platform/uv/uv_irq.c        |    2 +-
- 8 files changed, 38 insertions(+), 33 deletions(-)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index e7ae6eb84934..f671d4331e7e 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -94,8 +94,6 @@ extern void trace_call_function_single_interrupt(void);
- #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
- #endif /* CONFIG_TRACING */
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ddc5a8c..a1b119b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7490,6 +7490,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
--struct irq_domain;
--
- #ifdef	CONFIG_X86_LOCAL_APIC
- struct irq_data;
- struct pci_dev;
-@@ -165,22 +163,11 @@ struct irq_alloc_info {
- 	};
- };
- 
--enum {
--	/* Allocate contigious CPU vectors */
--	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
--};
--
- struct irq_cfg {
- 	unsigned int		dest_apicid;
- 	u8			vector;
- };
- 
--extern struct irq_domain *x86_vector_domain;
--
--extern void init_irq_alloc_info(struct irq_alloc_info *info,
--				const struct cpumask *mask);
--extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
--				struct irq_alloc_info *src);
- extern struct irq_cfg *irq_cfg(unsigned int irq);
- extern struct irq_cfg *irqd_cfg(struct irq_data *irq_data);
- extern void lock_vector_lock(void);
-@@ -200,17 +187,6 @@ static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
- #endif	/* CONFIG_X86_LOCAL_APIC */
- 
--#ifdef	CONFIG_PCI_MSI
--extern void arch_init_msi_domain(struct irq_domain *domain);
--#else
--static inline void arch_init_msi_domain(struct irq_domain *domain) { }
--#endif
--#ifdef	CONFIG_HT_IRQ
--extern void arch_init_htirq_domain(struct irq_domain *domain);
--#else
--static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
--#endif
--
- /* Statistics */
- extern atomic_t irq_err_count;
- extern atomic_t irq_mis_count;
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 09efa358c831..78974fbc33b4 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -22,7 +22,7 @@
- #ifndef __X86_IRQ_REMAPPING_H
- #define __X86_IRQ_REMAPPING_H
- 
--#include <linux/irqdomain.h>
-+#include <asm/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/io_apic.h>
- 
-diff --git a/arch/x86/include/asm/irqdomain.h b/arch/x86/include/asm/irqdomain.h
-index fe0d4c6636ec..ae941c3f8c51 100644
---- a/arch/x86/include/asm/irqdomain.h
-+++ b/arch/x86/include/asm/irqdomain.h
-@@ -2,6 +2,25 @@
- #define _ASM_IRQDOMAIN_H
- 
- #include <linux/irqdomain.h>
-+#include <asm/hw_irq.h>
++PCI MSI DRIVER FOR APPLIEDMICRO XGENE
++M:	Duc Dang <dhdang@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
++F:	drivers/pci/host/pci-xgene-msi.c
 +
-+#ifdef CONFIG_X86_LOCAL_APIC
-+enum {
-+	/* Allocate contigious CPU vectors */
-+	X86_IRQ_ALLOC_CONTIGOUS_VECTORS		= 0x1,
-+};
-+
-+extern struct irq_domain *x86_vector_domain;
-+
-+extern void init_irq_alloc_info(struct irq_alloc_info *info,
-+				const struct cpumask *mask);
-+extern void copy_irq_alloc_info(struct irq_alloc_info *dst,
-+				struct irq_alloc_info *src);
-+#endif /* CONFIG_X86_LOCAL_APIC */
-+
-+#ifdef CONFIG_X86_IO_APIC
-+struct device_node;
-+struct irq_data;
- 
- enum ioapic_domain_type {
- 	IOAPIC_DOMAIN_INVALID,
-@@ -10,9 +29,6 @@ enum ioapic_domain_type {
- 	IOAPIC_DOMAIN_DYNAMIC,
- };
- 
--struct device_node;
--struct irq_data;
--
- struct ioapic_domain_cfg {
- 	enum ioapic_domain_type		type;
- 	const struct irq_domain_ops	*ops;
-@@ -30,5 +46,18 @@ extern void mp_irqdomain_activate(struct irq_domain *domain,
- extern void mp_irqdomain_deactivate(struct irq_domain *domain,
- 				    struct irq_data *irq_data);
- extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
-+#endif /* CONFIG_X86_IO_APIC */
-+
-+#ifdef CONFIG_PCI_MSI
-+extern void arch_init_msi_domain(struct irq_domain *domain);
-+#else
-+static inline void arch_init_msi_domain(struct irq_domain *domain) { }
-+#endif
-+
-+#ifdef CONFIG_HT_IRQ
-+extern void arch_init_htirq_domain(struct irq_domain *domain);
-+#else
-+static inline void arch_init_htirq_domain(struct irq_domain *domain) { }
-+#endif
- 
- #endif
-diff --git a/arch/x86/kernel/apic/htirq.c b/arch/x86/kernel/apic/htirq.c
-index 4ba6b3ae7a95..94bca925bf7d 100644
---- a/arch/x86/kernel/apic/htirq.c
-+++ b/arch/x86/kernel/apic/htirq.c
-@@ -16,7 +16,7 @@
- #include <linux/device.h>
- #include <linux/pci.h>
- #include <linux/htirq.h>
--#include <linux/irqdomain.h>
-+#include <asm/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/hypertransport.h>
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index da163da5fdee..4ca80bbcd632 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -16,7 +16,7 @@
- #include <linux/dmar.h>
- #include <linux/hpet.h>
- #include <linux/msi.h>
--#include <linux/irqdomain.h>
-+#include <asm/irqdomain.h>
- #include <asm/msidef.h>
- #include <asm/hpet.h>
- #include <asm/hw_irq.h>
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 0e7c39beefed..f5eb3999383f 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -13,8 +13,8 @@
- #include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/compiler.h>
--#include <linux/irqdomain.h>
- #include <linux/slab.h>
-+#include <asm/irqdomain.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
- #include <asm/i8259.h>
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index e3bc18080052..e2449cf38b06 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -11,8 +11,8 @@
- #include <linux/cpu.h>
- #include <linux/pm.h>
- #include <linux/io.h>
--#include <linux/irqdomain.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/fixmap.h>
- #include <asm/hpet.h>
- #include <asm/time.h>
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index 091b36ac44c4..cdf86cd3fd97 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -12,8 +12,8 @@
- #include <linux/rbtree.h>
- #include <linux/slab.h>
- #include <linux/irq.h>
--#include <linux/irqdomain.h>
- 
-+#include <asm/irqdomain.h>
- #include <asm/apic.h>
- #include <asm/uv/uv_irq.h>
- #include <asm/uv/uv_hub.h>
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.7.10.4
+1.9.1
 
