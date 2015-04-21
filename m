@@ -1,50 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:33495 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbbDHTd1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 15:33:27 -0400
-Received: by oblw8 with SMTP id w8so104401177obl.0
-        for <linux-pci@vger.kernel.org>; Wed, 08 Apr 2015 12:33:26 -0700 (PDT)
-Date: Wed, 8 Apr 2015 14:33:24 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
-	Liviu.Dudau@arm.com, cpgs@samsung.com
-Subject: Re: [PATCH] pci: pci-exynos: fixed the sentence error
-Message-ID: <20150408193324.GE30967@google.com>
-References: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427260392-4186-1-git-send-email-jh80.chung@samsung.com>
+Received: from smtprelay0232.hostedemail.com ([216.40.44.232]:45156 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932142AbbDUUBY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 16:01:24 -0400
+Message-ID: <1429646479.31675.6.camel@perches.com>
+Subject: Re: [PATCH] MAINTAINERS: Remove Mohit Kumar (email bounces)
+From: Joe Perches <joe@perches.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, linux-kernel@vger.kernel.org,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>
+Date: Tue, 21 Apr 2015 13:01:19 -0700
+In-Reply-To: <20150421194625.4792.69968.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150421194625.4792.69968.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 25, 2015 at 02:13:12PM +0900, Jaehoon Chung wrote:
-> There is the sentence error.
-> Changed the semicolon instead of comma.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+On Tue, 2015-04-21 at 14:46 -0500, Bjorn Helgaas wrote:
+> Email to Mohit Kumar <mohit.kumar@st.com> has been bouncing, so remove the
+> address from MAINTAINERS.  Let me know if you have an updated address or a
+> replacement.
 
-Applied to pci/host-exynos for v4.1.  Jingoo, speak up if you object, but
-this looks like a pretty obvious error.
+It'd be nice to add a CREDITS entry if Mohit has
+really disappeared.
 
-> ---
->  drivers/pci/host/pci-exynos.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index d202b37..c139237 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -396,7 +396,7 @@ static void exynos_pcie_enable_irq_pulse(struct pcie_port *pp)
->  
->  	/* enable INTX interrupt */
->  	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
-> -		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT,
-> +		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
->  	exynos_elb_writel(exynos_pcie, val, PCIE_IRQ_EN_PULSE);
->  }
->  
-> -- 
-> 1.9.1
-> 
+Either that or CREDITS should be deprecated or
+deleted now that git log information is pretty
+comprehensive and contains 10+ years of data.
+
+> diff --git a/MAINTAINERS b/MAINTAINERS
+[]
+>  PCI DRIVER FOR SYNOPSIS DESIGNWARE
+> -M:	Mohit Kumar <mohit.kumar@st.com>
+[]
+>  PCIE DRIVER FOR ST SPEAR13XX
+> -M:	Mohit Kumar <mohit.kumar@st.com>
+>  L:	linux-pci@vger.kernel.org
+> -S:	Maintained
+> +S:	Orphan
+>  F:	drivers/pci/host/*spear*
+
+
