@@ -1,95 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:48467 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753482AbbDHSSk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 14:18:40 -0400
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v8 0/3] pci: iproc: Add Broadcom iProc PCIe support
-Date: Wed, 8 Apr 2015 11:21:32 -0700
-Message-ID: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 15/29] PCI: Introduce new scan function pci_scan_host_bridge()
+Date: Tue, 21 Apr 2015 19:34:34 +0800
+Message-ID: <1429616088-10249-16-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds the support for Broadcom iProc PCIe controller
+Introduce new scan function pci_scan_host_bridge() to
+support host bridge drivers that need to provide platform
+own pci_host_bridge_ops.
 
-pcie-iproc.c servers as the common core driver, and front-end bus
-interface needs to be added to support different bus interfaces
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   23 +++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-pcie-iproc-pltfm.c contains the support for the platform bus interface
-
-Changes from v7:
- - Consolidate iProc PCIe patches and rebase to v4.0-rc1 per request
-   from Bjorn
- - Restrict CONFIG_PCIE_IPROC to ARM based platforms
- - Spell out 'pltfm' as 'platform'
-
-Changes from v6:
- - Fix print formatting
- - Fix section mismatch warning by removing __init from the probe function
- - Fix Kconfig to force it only compiling for ARM based platforms
-
-Changes from v5:
- - Sync code base to v4.0-rc2
- - Change export symbols of common PCI functions to GPL only
- - Add comment to describe how configuration register access are protected
-   at the higher layer through 'pci_lock'
- - Use generic PCI functions for configuration register access and implement
-   'map_bus' callback to support it
- - Move 'pci_fixup_irqs' to before devices are added to the bus
- - Remove 'extern' from function prototype declared in the header
-
-Changes from v4:
- - iProc PCIe driver module support was not included in patch series v4.
-   This patch series (v5) fixes it
-
-Changes from v3:
- - Export symbols of several PCI functions so they can be used by drivers
-   compiled as kernel module
- - Add additional support to the Broadcom iProc PCIe driver so it can be
-   installed/uninstalled as kernel loadable module
-
-Changes from v2:
- - Major rework of the PCIe driver to factor out common generic code from
-   front-end bus interface. Support for generic platform bus interface is
-   also added
- - Adapt to several new PCI APIs that have been introduced lately
-
-Changes from v1:
- - Add standard PCI interrupt DT properties "#interrupt-cells",
-   "interrupt-map-mask" and "interrupt-map" so legacy INTx interrupts can be
-   supported by using standard PCI OF IRQ parsing function
- - Get rid of custom IRQ mapping function in the driver. Use
-   of_irq_parse_and_map_pci instead
-
-Ray Jui (3):
-  PCI: Export symbols of PCI functions
-  PCI: iproc: Add DT docs for Broadcom iProc PCIe driver
-  pci: iproc: Add Broadcom iProc PCIe support
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 +++++
- drivers/pci/host/Kconfig                           |   19 ++
- drivers/pci/host/Makefile                          |    2 +
- drivers/pci/host/pcie-iproc-platform.c             |  108 ++++++++
- drivers/pci/host/pcie-iproc.c                      |  268 ++++++++++++++++++++
- drivers/pci/host/pcie-iproc.h                      |   42 +++
- drivers/pci/pci.c                                  |    1 +
- drivers/pci/probe.c                                |    1 +
- drivers/pci/remove.c                               |    2 +
- drivers/pci/setup-bus.c                            |    1 +
- drivers/pci/setup-irq.c                            |    1 +
- 11 files changed, 508 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
- create mode 100644 drivers/pci/host/pcie-iproc-platform.c
- create mode 100644 drivers/pci/host/pcie-iproc.c
- create mode 100644 drivers/pci/host/pcie-iproc.h
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 83cf7c6..708bcf1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2064,6 +2064,29 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
++struct pci_host_bridge *pci_scan_host_bridge(
++		struct device *parent, int domain,
++		void *sysdata, struct list_head *resources,
++		struct pci_host_bridge_ops *ops)
++{
++	struct pci_host_bridge *host;
++
++	host = pci_create_host_bridge(parent, domain, sysdata,
++			resources, ops);
++	if (!host)
++		return NULL;
++
++	host->bus = __pci_create_root_bus(host, ops->pci_ops);
++	if (!host->bus) {
++		pci_free_host_bridge(host);
++		return NULL;
++	}
++
++	pci_scan_child_bus(host->bus);
++	return host;
++}
++EXPORT_SYMBOL(pci_scan_host_bridge);
++
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 		int bus, struct pci_ops *ops, void *sysdata,
+ 		struct list_head *resources)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 91fde6a..13edbf1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -796,6 +796,9 @@ void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
++struct pci_host_bridge *pci_scan_host_bridge(struct device *parent,
++		int domain, void *sysdata, struct list_head *resources,
++		struct pci_host_bridge_ops *ops);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+ void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
 -- 
-1.7.9.5
+1.7.1
 
