@@ -1,129 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 27/30] PCI: Rename __pci_create_root_bus() to pci_create_root_bus()
-Date: Fri, 3 Apr 2015 17:26:01 +0800
-Message-ID: <1428053164-28277-29-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150420233055.20866.87460.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 Apr 2015 18:00:41 -0500
+Message-ID: <CAErSpo6P-rr1sdp-d2zairPEKWr1q4E=8f=wRoaP56LDU8bcfw@mail.gmail.com>
+Subject: Re: [PATCH] ia64/PCI: Treat all host bridge Address Space Descriptors
+ (even consumers) as windows
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now no one use pci_create_root_bus(), we could remove it
-and rename __pci_create_root_bus() to pci_create_root_bus().
+On Mon, Apr 20, 2015 at 6:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Prior to c770cb4cb505 ("PCI: Mark invalid BARs as unassigned"), if we tried
+> to claim a PCI BAR but could not find an upstream bridge window that
+> matched it, we complained but still allowed the device to be enabled.
+>
+> c770cb4cb505 broke devices that previously worked (mptsas and igb in the
+> case Tony reported, but it could be any devices) because it marks those
+> BARs as IORESOURCE_UNSET, which makes pci_enable_device() complain and
+> return failure:
+>
+>   igb 0000:81:00.0: can't enable device: BAR 0 [mem size 0x00020000] not assigned
+>   igb: probe of 0000:81:00.0 failed with error -22
+>
+> The underlying cause is an ACPI Address Space Descriptor for a PCI host
+> bridge window that is marked as "consumer".  This is a firmware defect:
+> resources that are produced on the downstream side of a bridge should be
+> marked "producer".  But rejecting these BARs that we previously allowed is
+> a functionality regression, and firmware has not used the producer/consumer
+> bit consistently, so we can't rely on it anyway.
+>
+> Stop checking the producer/consumer bit, and assume all bridge Address
+> Space Descriptors are for bridge windows.
+>
+> Note that this change does not affect I/O Port or Fixed Location I/O Port
+> Descriptors, which are commonly used for the [io 0x0cf8-0x0cff] config
+> access range.  That range is a "consumer" range and should not be treated
+> as a window.
+>
+> Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96961
+> Reported-and-tested-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: wangyijing@huawei.com
----
- drivers/pci/probe.c |   35 +++++++++--------------------------
- include/linux/pci.h |    3 ---
- 2 files changed, 9 insertions(+), 29 deletions(-)
+I applied this with Rafael's ack to for-linus for v4.1-rc1.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7796bf8..cb0237f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1852,7 +1852,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--static struct pci_bus *__pci_create_root_bus(
-+static struct pci_bus *pci_create_root_bus(
- 		struct pci_host_bridge *bridge, struct pci_ops *ops)
- {
- 	int error;
-@@ -1937,24 +1937,6 @@ put_dev:
- 	return NULL;
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent,
--		int domain, int bus, struct pci_ops *ops, void *sysdata,
--		struct list_head *resources)
--{
--	struct pci_host_bridge *host;
--
--	host = pci_create_host_bridge(parent, domain, bus,
--			sysdata, resources, NULL);
--	if (!host)
--		return NULL;
--
--	host->bus = __pci_create_root_bus(host, ops);
--	if (!host->bus)
--		pci_free_host_bridge(host);
--
--	return host->bus;
--}
--
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2030,7 +2012,7 @@ static struct pci_bus *__pci_scan_root_bus(
- 	struct pci_bus *b;
- 	int max;
- 
--	b = __pci_create_root_bus(host, ops);
-+	b = pci_create_root_bus(host, ops);
- 	if (!b)
- 		return NULL;
- 
-@@ -2093,19 +2075,20 @@ struct pci_bus *pci_scan_bus(int domain, int bus,
- 		struct pci_ops *ops, void *sysdata)
- {
- 	LIST_HEAD(resources);
--	struct pci_bus *b;
-+	struct pci_host_bridge *host;
- 
- 	pci_add_resource(&resources, &ioport_resource);
- 	pci_add_resource(&resources, &iomem_resource);
- 	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(NULL, domain, bus, ops, sysdata,
--			&resources);
--	if (b) {
--		pci_scan_child_bus(b);
-+	host = pci_create_host_bridge(NULL, domain, bus, sysdata,
-+			&resources, NULL);
-+	if (host) {
-+		__pci_scan_root_bus(host, ops);
-+		return host->bus;
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
--	return b;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_scan_bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 61e0853..62333ff 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -782,9 +782,6 @@ struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
- struct pci_bus *pci_scan_bus(int domain, int bus, struct pci_ops *ops,
- 					void *sysdata);
--struct pci_bus *pci_create_root_bus(struct device *parent, int domain, int bus,
--				    struct pci_ops *ops, void *sysdata,
--				    struct list_head *resources);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-1.7.1
-
+> ---
+>  arch/ia64/pci/pci.c |    5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+>
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index 48cc65705db4..d4e162d35b34 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -240,15 +240,12 @@ static acpi_status resource_to_window(struct acpi_resource *resource,
+>          * We're only interested in _CRS descriptors that are
+>          *      - address space descriptors for memory or I/O space
+>          *      - non-zero size
+> -        *      - producers, i.e., the address space is routed downstream,
+> -        *        not consumed by the bridge itself
+>          */
+>         status = acpi_resource_to_address64(resource, addr);
+>         if (ACPI_SUCCESS(status) &&
+>             (addr->resource_type == ACPI_MEMORY_RANGE ||
+>              addr->resource_type == ACPI_IO_RANGE) &&
+> -           addr->address.address_length &&
+> -           addr->producer_consumer == ACPI_PRODUCER)
+> +           addr->address.address_length)
+>                 return AE_OK;
+>
+>         return AE_ERROR;
+>
