@@ -1,72 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:33082 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425AbbDNBAw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2015 21:00:52 -0400
-Received: by igbpi8 with SMTP id pi8so37868294igb.0
-        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2015 18:00:52 -0700 (PDT)
+Received: from exprod5og124.obsmtp.com ([64.18.0.212]:43275 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752005AbbDURiN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 13:38:13 -0400
+Received: by oift201 with SMTP id t201so160331656oif.3
+        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2015 10:38:12 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 13 Apr 2015 18:00:52 -0700
-Message-ID: <CAEkKNCc9BpCXNCw1RD2gngUhSs13_-P_rtk=w4tVDW+3QaR6xQ@mail.gmail.com>
-Subject: PCI Out of Resources
-From: moussa ba <musaba@gmail.com>
-To: linux-pci@vger.kernel.org
+In-Reply-To: <20150421154225.GC10164@leverpostej>
+References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
+ <cfdb95a38689836bac693df6edb8c09829ea61cd.1429586144.git.dhdang@apm.com> <20150421154225.GC10164@leverpostej>
+From: Duc Dang <dhdang@apm.com>
+Date: Tue, 21 Apr 2015 10:37:42 -0700
+Message-ID: <CADaLND=GdSK3Swj5meya0hnw7zfObvajkHPt0z_H3p6nsXdgtA@mail.gmail.com>
+Subject: Re: [PATCH v5 3/4] documentation: dts: Add the device tree binding
+ for APM X-Gene v1 PCIe MSI device tree node
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>, Feng Kan <fkan@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Loc Ho <lho@apm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am working on a system that has 20 PCie cards conencted via a series
-of PCi-Switches. While booting, the BIOS complains after 11 cards that
-it ran out of resources. Despite that, we are able to properly see all
-devices up to 16 devices once the OS boots.
+On Tue, Apr 21, 2015 at 8:42 AM, Mark Rutland <mark.rutland@arm.com> wrote:
+>
+> On Tue, Apr 21, 2015 at 05:04:23AM +0100, Duc Dang wrote:
+> > The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+>
+> Please provide a bit of description of what this device is, and please
+> place the binding patch _before_ the driver and DTS patches.
 
-I am running centos 7 with a 3.10 kernel.
+I will add in next version of the patch.
+>
+>
+> > Signed-off-by: Duc Dang <dhdang@apm.com>
+> > Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> > ---
+> >  .../devicetree/bindings/pci/xgene-pci-msi.txt      | 63 ++++++++++++++++++++++
+> >  1 file changed, 63 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+> > new file mode 100644
+> > index 0000000..0ffdcb3
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+> > @@ -0,0 +1,63 @@
+> > +* AppliedMicro X-Gene PCIe MSI interface
+> > +
+> > +Required properties:
+> > +
+> > +- compatible: should contain "apm,xgene1-msi" to identify the core.
+>
+> What does the core have to do with the MSI controller?
 
-Interestingly enough, we are able to see all devices under lspci, but
-the 4 missing devices have no memory allocated to any of the BAR
-spaces.
+'core' here is the MSI controller block. I will use different word to
+avoid confusion with CPU core.
+>
+> > +- msi-controller: indicates that this is X-Gene1 PCIe MSI controller node
+> > +- reg: A list of physical base address and length for each set of controller
+> > +       registers.
+>
+> How many? Which ones? In which order? Do you need reg-names?
 
-My understanding is that we can allocate that memory via setpci.
+I will add these details in next version of the patch.
+>
+> > +- interrupts: A list of interrupt outputs of the controller.
 
-A working device looks as follows under lspci:
+I will add these details in next version of the patch.
+>
+> How many? Which ones? In which order? Do you need interrupt-names?
 
-9a:00.0 Mass storage controller: *******
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Interrupt: pin A routed to IRQ 139
-Region 2: Memory at fbb02000 (32-bit, non-prefetchable) [size=4K]
-Region 3: Memory at fbb03000 (32-bit, non-prefetchable) [size=4K]
-Region 4: I/O ports at c000 [size=16]
-Region 5: Memory at fbb00000 (32-bit, non-prefetchable) [size=8K]
-Capabilities: [40] Express (v2) Endpoint, MSI 00
-DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+I will add these details in next version of the patch.
+>
+> You need to define these for *this particular binding*, in order for
+> them to actually define the contract. An abstract definition is
+> completely useless for writing or parsing a DT, and as such this
+> document is just noise.
+>
+> Please think about the purpose of this document, and write something
+> appropriate.
+>
+> [...]
+>
+> > +             interrupts = <  0x0 0x10 0x4
+> > +                             0x0 0x11 0x4
+> > +                             0x0 0x12 0x4
+> > +                             0x0 0x13 0x4
+> > +                             0x0 0x14 0x4
+> > +                             0x0 0x15 0x4
+> > +                             0x0 0x16 0x4
+> > +                             0x0 0x17 0x4
+> > +                             0x0 0x18 0x4
+> > +                             0x0 0x19 0x4
+> > +                             0x0 0x1a 0x4
+> > +                             0x0 0x1b 0x4
+> > +                             0x0 0x1c 0x4
+> > +                             0x0 0x1d 0x4
+> > +                             0x0 0x1e 0x4
+> > +                             0x0 0x1f 0x4>;
+>
+> Nit: please bracket list entries individually.
 
+Thanks for your comment, I will address them on next version of the patch.
 
+>
+> Mark.
 
-
-A missing device looks as follows:
-
-05:00.0 Mass storage controller: *******
-        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 26
-        Region 4: I/O ports at 0000
-        Capabilities: [40] Express (v2) Endpoint, MSI 00
-
-
-
-
-I was going to simply use:
-#setpci -s 0000:05:00.0 BASE_MEMORY_ADDRESS_2=0x..........
-
-Unfortunately I end up with a <ignored> message under lspci.  How do I
-determine the appropriate address to use to properly assign the
-resources (I have been looking at /proc/iomem)
-
-
-Thank you
+Regards,
+Duc Dang.
