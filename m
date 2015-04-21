@@ -1,109 +1,62 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	"Fenghua Yu" <fenghua.yu@intel.com>
-Subject: [PATCH v9 18/30] ia64/PCI: Refine pci_acpi_scan_root() with generic pci_host_bridge
-Date: Fri, 3 Apr 2015 17:25:52 +0800
-Message-ID: <1428053164-28277-20-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Sonny Rao <sonnyrao@chromium.org>
+To: linux-kernel@vger.kernel.org
+Cc: Stephane Eranian <eranian@google.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Paul Mackerras <paulus@samba.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Sonny Rao <sonnyrao@chromium.org>
+Subject: [PATCH] perf/x86/intel/uncore: Move PCI IDs for IMC to uncore driver
+Date: Tue, 21 Apr 2015 12:09:55 -0700
+Message-Id: <1429643395-25411-1-git-send-email-sonnyrao@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing0307@gmail.com>
+This keeps all the related PCI IDs together in the driver where they
+are used.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-CC: Tony Luck <tony.luck@intel.com>
-CC: Fenghua Yu <fenghua.yu@intel.com>
-CC: linux-ia64@vger.kernel.org
+Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
 ---
- arch/ia64/pci/pci.c |   34 +++++++++++++++++++---------------
- 1 files changed, 19 insertions(+), 15 deletions(-)
+ arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 6 +++++-
+ include/linux/pci_ids.h                           | 4 ----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index c642bc8..95dc43b 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -420,6 +420,19 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
- 	return 0;
- }
+diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+index ca75e70..02c1a13 100644
+--- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
++++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
+@@ -1,7 +1,11 @@
+ /* Nehalem/SandBridge/Haswell uncore support */
+ #include "perf_event_intel_uncore.h"
  
-+static int pci_host_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *controller = bridge->bus->sysdata;
-+
-+	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-+	return 0;
-+}
-+
-+static struct pci_host_bridge_ops pci_host_ops = {
-+	.pci_ops = &pci_root_ops,
-+	.prepare = pci_host_bridge_prepare,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -428,7 +441,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_controller *controller;
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
--	struct pci_bus *pbus;
-+	struct pci_host_bridge *host;
- 	int ret;
+-/* Uncore IMC PCI Id */
++/* Uncore IMC PCI Ids */
++#define PCI_DEVICE_ID_INTEL_SNB_IMC	0x0100
++#define PCI_DEVICE_ID_INTEL_IVB_IMC	0x0154
++#define PCI_DEVICE_ID_INTEL_IVB_E3_IMC	0x0150
++#define PCI_DEVICE_ID_INTEL_HSW_IMC	0x0c00
+ #define PCI_DEVICE_ID_INTEL_HSW_U_IMC	0x0a04
  
- 	controller = alloc_pci_controller(domain);
-@@ -465,26 +478,17 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * should handle the case here, but it appears that IA64 hasn't
- 	 * such quirk. So we just ignore the case now.
- 	 */
--	pbus = pci_create_root_bus(NULL, domain, bus, &pci_root_ops,
--			controller, &info->resources);
--	if (!pbus) {
-+	host = pci_scan_host_bridge(NULL, domain, bus, controller,
-+			&info->resources, &pci_host_ops);
-+	if (!host) {
- 		pci_free_resource_list(&info->resources);
- 		__release_pci_root_info(info);
- 		return NULL;
- 	}
+ /* SNB event control */
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 38cff8f..2f7b9a4 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2541,10 +2541,6 @@
  
--	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
-+	pci_set_host_bridge_release(host,
- 			release_pci_root_info, info);
--	pci_scan_child_bus(pbus);
--	return pbus;
--}
--
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	struct pci_controller *controller = bridge->bus->sysdata;
--
--	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
--	return 0;
-+	return host->bus;
- }
- 
- void pcibios_fixup_device_resources(struct pci_dev *dev)
+ #define PCI_VENDOR_ID_INTEL		0x8086
+ #define PCI_DEVICE_ID_INTEL_EESSC	0x0008
+-#define PCI_DEVICE_ID_INTEL_SNB_IMC	0x0100
+-#define PCI_DEVICE_ID_INTEL_IVB_IMC	0x0154
+-#define PCI_DEVICE_ID_INTEL_IVB_E3_IMC	0x0150
+-#define PCI_DEVICE_ID_INTEL_HSW_IMC	0x0c00
+ #define PCI_DEVICE_ID_INTEL_PXHD_0	0x0320
+ #define PCI_DEVICE_ID_INTEL_PXHD_1	0x0321
+ #define PCI_DEVICE_ID_INTEL_PXH_0	0x0329
 -- 
-1.7.1
+2.1.2
 
