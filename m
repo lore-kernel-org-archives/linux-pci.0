@@ -1,30 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:48968 "EHLO
-	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392AbbDIOh3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 10:37:29 -0400
-Date: Thu, 9 Apr 2015 16:37:26 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Felix Janda <felix.janda@posteo.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH pciutils] pread.h: Remove support for libc5
-Message-ID: <mj+md-20150409.143708.45807.nikam@ucw.cz>
-References: <20150329085931.GA8259@euler>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-tegra@vger.kernel.org>
+Subject: [PATCH v10 24/29] PCI/tegra: Remove redundant tegra_pcie_scan_bus()
+Date: Tue, 21 Apr 2015 19:34:43 +0800
+Message-ID: <1429616088-10249-25-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150329085931.GA8259@euler>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+Now pci_scan_root_bus() is almost similar to
+pci_create_root_bus() + pci_scan_child_bus().
+So we could use common pci_scan_root_bus() in
+pci_common_init_dev() to scan pci busses.
+tegra_pcie_scan_bus() is redundant, remove it.
 
-> The support code for libc5 breaks building on linux i386 with
-> other libcs that don't define __GLIBC__.
+Tested-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: linux-tegra@vger.kernel.org
+---
+ drivers/pci/host/pci-tegra.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-Thanks, applied.  I will release pciutils-3.3.1 in a couple of minutes.
-
-				Have a nice fortnight
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 3e45142..10c0571 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -630,21 +630,6 @@ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ 	return irq;
+ }
+ 
+-static struct pci_bus *tegra_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct tegra_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	bus = pci_create_root_bus(pcie->dev, -1, &tegra_pcie_ops,
+-			sys, &sys->resources);
+-	if (!bus)
+-		return NULL;
+-
+-	pci_scan_child_bus(bus);
+-
+-	return bus;
+-}
+-
+ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+ {
+ 	const char *err_msg[] = {
+@@ -1831,7 +1816,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
+ 	hw.private_data = (void **)&pcie;
+ 	hw.setup = tegra_pcie_setup;
+ 	hw.map_irq = tegra_pcie_map_irq;
+-	hw.scan = tegra_pcie_scan_bus;
+ 	hw.ops = &tegra_pcie_ops;
+ 
+ 	pci_common_init_dev(pcie->dev, &hw);
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Immanuel doesn't pun, he Kant.
+1.7.1
+
