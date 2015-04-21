@@ -1,103 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150423213015.GA7888@google.com>
-References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
-	<CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
-	<20150423213015.GA7888@google.com>
-Date: Thu, 23 Apr 2015 20:55:59 -0400
-Message-ID: <CADnq5_PPaFdbVVyMPMDi1NXcTVtDR6YQo68rema0vuR_tyNb0A@mail.gmail.com>
-Subject: Re: git pull] drm for v4.1-rc1
-From: Alex Deucher <alexdeucher@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:4565 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491AbbDULiM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:12 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	intel-gfx <intel-gfx@lists.freedesktop.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	Matthew Garrett <mjg59@coreos.com>,
-	Daniel Vetter <daniel.vetter@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 08/29] PCI: Introduce pci_host_assign_domain_nr() to assign domain
+Date: Tue, 21 Apr 2015 19:34:27 +0800
+Message-ID: <1429616088-10249-9-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 23, 2015 at 5:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Matthew]
->
-> On Tue, Apr 21, 2015 at 09:07:45AM -0700, Linus Torvalds wrote:
->> Hmm. The odd Intel PCI resource mess is back.
->>
->> Or maybe it never went away.
->>
->> I get these when suspending. Things *work*, but it's really spamming
->> my logs a fair bit:
->>
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>   pci_bus 0000:01: Allocating resources
->>   pci_bus 0000:02: Allocating resources
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
->>
->> That resource is complete garbage. "flags 0x2" is not even a valid
->> flag value. I'm *guessing* it might be IORESOURCE_ROM_SHADOW, but if
->> that is valid, then it should also have have had the IORESOURCE_MEM
->> bit, and it doesn't.
->
-> Your i915 does not have a ROM BAR in hardware.  If the default video
-> device has no ROM BAR, pci_fixup_video() sets IORESOURCE_ROM_SHADOW
-> even though the resource flags are zero because the BAR itself doesn't
-> exist.
->
-> If IORESOURCE_ROM_SHADOW is set, pci_map_rom() assumes there's a
-> shadow ROM image at 0xC0000.  Is there a shadow image even if the
-> device itself doesn't have a ROM BAR?
+Introduce pci_host_assign_domain_nr() to assign domain
+number for pci_host_bridge. In the later patch, we would
+assign domain in pci_create_host_bridge, clean up the
+pci_bus_assign_domain_nr() and move this function into
+drivers/pci/host-bridge.c.
 
-Very likely yes.  With integrated APUs and mobile dGPUs, the vbios
-image is often stored as part of the system rom rather than as a
-dedicated rom for the GPU.  The vbios image is then copied to the
-shadow location during sbios init to provide OS access to the rom.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c |   24 +++++++++++++++++++-----
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
-Alex
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index acc4b6e..95ea445 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4506,10 +4506,10 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int pci_assign_domain_nr(struct device *dev)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain = of_get_pci_domain_nr(dev->of_node);
+ 
+ 	/*
+ 	 * Check DT domain and use_dt_domains values.
+@@ -4543,16 +4543,30 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+ 	} else {
+-		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node->full_name);
++		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++			dev->of_node->full_name);
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = pci_assign_domain_nr(parent);
+ }
+ #endif
+ #endif
+ 
++void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
++{
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	host->domain = pci_assign_domain_nr(host->dev.parent);
++#else
++	host->domain = domain;
++#endif
++}
++
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index dbf1ac0..1e291e4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -332,4 +332,5 @@ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+ }
+ #endif
+ 
++void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
+ #endif /* DRIVERS_PCI_H */
+-- 
+1.7.1
 
->
-> We could fabricate a resource even if the BAR doesn't exist, e.g.,
-> "flags = IORESOURCE_MEM | ... | IORESOURCE_ROM_SHADOW", but that
-> would be ugly and error-prone in other places that use the ROM.
->
-> Matthew added dev->rom for ROM images supplied by the platform
-> (84c1b80e3263 ("PCI: Add support for non-BAR ROMs")).  A shadow
-> image seems like a similar thing.  I think it would be cleaner to get
-> rid of IORESOURCE_ROM_SHADOW altogether and instead set "dev->rom =
-> 0xC0000" if there's a shadow image, e.g.:
->
->   int pcibios_add_device(struct pci_dev *dev)
->   {
->     if (dev-is-default-vga-device) {
->       dev->rom = 0xC0000;
->       dev->romlen = 0x20000;
->     }
->
->     pa_data = boot_params.hdr.setup_data;
->     while (pa_data) {
->       ...
->       if (data->type == SETUP_PCI) {
->         rom = (struct pci_setup_rom *)data;
->
->         if (dev-is-rom-dev) {
->           dev->rom = ...
->           dev->romlen = rom->pcilen;
->         }
->       }
->     }
->
-> But the rules for figuring out which image to use seem ...
-> complicated.
->
-> Bjorn
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
