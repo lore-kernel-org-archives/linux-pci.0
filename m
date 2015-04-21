@@ -1,192 +1,209 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54332 "EHLO foss.arm.com"
+Received: from cantor2.suse.de ([195.135.220.15]:39756 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754880AbbDYKjo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 25 Apr 2015 06:39:44 -0400
-Date: Sat, 25 Apr 2015 11:39:30 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Stuart Yoder <stuart.yoder@freescale.com>
-Cc: Will Deacon <Will.Deacon@arm.com>,
-	Varun Sethi <Varun.Sethi@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	id S1756064AbbDURwz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Apr 2015 13:52:55 -0400
+Date: Tue, 21 Apr 2015 19:52:49 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arndatarndb.de@suse.de>,
+	Linus Walleij <linus.walleijatlinaro.org@suse.de>,
+	Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Peter Senna Tschudin <peter.senna@gmail.com>,
+	Sarah Sharp <sarah.a.sharp@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, jgross@suse.com,
+	Jan Beulich <JBeulich@suse.com>, Borislav Petkov <bp@suse.de>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	venkatesh.pallipadi@intel.com, Dave Airlie <airlied@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-fbdev@vger.kernel.org, "x86@kernel.org" <x86@kernel.org>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Message-ID: <20150425113930.7386a42a@arm.com>
-In-Reply-To: <CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
-	<1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
-	<BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
-	<DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
-	<BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
-	<20150416104008.GB25640@arm.com>
-	<CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
-	<20150422170718.GG13019@arm.com>
-	<CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
-	<20150424161818.GC7313@arm.com>
-	<553A72D4.7000801@arm.com>
-	<CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+	Benjamin Poirier <bpoirier@suse.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1 05/47] pci: add pci_iomap_wc() variants
+Message-ID: <20150421175249.GN5622@wotan.suse.de>
+References: <1426893517-2511-1-git-send-email-mcgrof@do-not-panic.com>
+ <1426893517-2511-6-git-send-email-mcgrof@do-not-panic.com>
+ <CAErSpo5LfgTM879jmt58yLrXD6e7spsaX1wNDcc2ppU9JrMXOg@mail.gmail.com>
+ <20150326030054.GA5622@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150326030054.GA5622@wotan.suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 24 Apr 2015 19:18:44 +0100
-Stuart Yoder <stuart.yoder@freescale.com> wrote:
-
-Hi Stuart,
-
-> 
-> 
-> > -----Original Message-----
-> > From: Marc Zyngier [mailto:marc.zyngier@arm.com]
-> > Sent: Friday, April 24, 2015 11:44 AM
-> > To: Will Deacon; Yoder Stuart-B08248
-> > Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284;
-> > Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> > Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+On Thu, Mar 26, 2015 at 04:00:54AM +0100, Luis R. Rodriguez wrote:
+> On Mon, Mar 23, 2015 at 12:20:47PM -0500, Bjorn Helgaas wrote:
+> > Hi Luis,
 > > 
-> > On 24/04/15 17:18, Will Deacon wrote:
-> > > On Wed, Apr 22, 2015 at 08:41:02PM +0100, Stuart Yoder wrote:
-> > >>>> However, there is an improvement we envision as possible due to
-> > >>>> the limited number of SMMU contexts (i.e. 64).  If there are
-> > >>>> 64 SMMU context registers it means that there is a max of
-> > >>>> 64 software contexts where things can be isolated.  But, say I have
-> > >>>> an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
-> > >>>> to a KVM VM.  Those 8 PCI devices could share the same
-> > >>>> streamID/ITS-device-ID since they all share the same isolation
-> > >>>> context.
-> > >>>>
-> > >>>> What would be nice is at the time the 8 VFS are being added
-> > >>>> to the IOMMU domain is for the pcidevid -> streamID mapping
-> > >>>> table to be updated dynamically.  It simply lets us make
-> > >>>> more efficient use of the limited streamIDs we have.
-> > >>>>
-> > >>>> I think it is this improvement that Minghuan had in mind
-> > >>>> in this patch.
-> > >>>
-> > >>> Ok, but in this case it should be possible to use a single context bank for
-> > >>> all of the VF streamIDs by configuring the appropriate SMR, no?
-> > >>
-> > >> Yes, but there are limited SMRs.  In our case there are only
-> > >> 128 SMRs in SMMU-500 and we have potentially way more masters than
-> > >> that.
-> > >
-> > > Right, but you still only have 64 context banks at the end of the day, so do
-> > > you really anticipate having more than 128 masters concurrently using the
-> > > SMMU? If so, then we have devices sharing context banks so we could consider
-> > > reusing SMRs across masters, but historically that's not been something that
-> > > we've managed to solve.
-> > >
-> > >>> Wouldn't
-> > >>> that sort of thing be preferable to dynamic StreamID assignment? It would
-> > >>> certainly make life easier for the MSIs.
-> > >>
-> > >> It would be preferable, but given only 128 total stream IDS and
-> > >> 64 context registers it's potentially an issue.  On our LS2085 SoC it is
-> > >> PCI and the fsl-mc bus (see description here:
-> > >> https://lkml.org/lkml/2015/3/5/795) that potentially have way
-> > >> more masters than streamIDS. So, for those busses we would essentially
-> > >> view a streamID as a "context ID"-- each SMR is associated with
-> > >> 1 context bank register.
-> > >>
-> > >> For PCI we have a programmable "PCI req ID"-to-"stream ID"
-> > >> mapping table in the PCI controller that is dynamically
-> > >> programmable.
-> > >>
-> > >> Looking at it like that means that we could have
-> > >> any number of masters but only 64 "contexts"
-> > >> and since the masters all all programmable it's
-> > >> seems feasbile to envision doing some bus/vendor
-> > >> specific set up when a device is added to an
-> > >> IOMMU domain.   One thing that would need to be conveyed
-> > >> to the SMMU driver if doing dynamic streamID setup
-> > >> is what streamIDs are available to be used.
-> > >
-> > > Ok, but this is going to make life difficult for the MSI people, I suspect.
-> > >
-> > > Marc...?
+> > This seems OK to me, 
+> 
+> Great.
+> 
+> > but I'm curious about a few things.
 > > 
-> > We're really facing two conflicting requirements: in order to minimize
-> > SMR usage, we want to alias multiple ReqIDs to a single StreamID
-> 
-> Another reason could be the isolation characteristics of the
-> hardware...see comment below about PCI bridges.
-> 
-> > but in
-> > order to efficiently deal with MSIs, we want to see discrete DeviceIDs
-> > (the actual ReqIDs). I don't easily see how we reconcile the two.
+> > On Fri, Mar 20, 2015 at 6:17 PM, Luis R. Rodriguez
+> > <mcgrof@do-not-panic.com> wrote:
+> > > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> > >
+> > > This allows drivers to take advantage of write-combining
+> > > when possible. Ideally we'd have pci_read_bases() just
+> > > peg an IORESOURCE_WC flag for us
 > > 
-> > We can deal with the aliasing, provided that we extend the level of
-> > quirkiness that pci_for_each_dma_alias can deal with. But that
-> > doesn't solve any form of hotplug/SR-IOV behaviour.
+> > We do set IORESOURCE_PREFETCH.  Do you mean something different?
+> 
+> I did not think we had a WC IORESOURCE flag. Are you saying that we can use
+> IORESOURCE_PREFETCH for that purpose? If so then great.  As I read a PCI BAR
+> can have PCI_BASE_ADDRESS_MEM_PREFETCH and when that's the case we peg
+> IORESOURCE_PREFETCH. That seems to be what I want indeed. Questions below.
+> 
+> > >  but where exactly
+> > > video devices memory lie varies *largely* and at times things
+> > > are mixed with MMIO registers, sometimes we can address
+> > > the changes in drivers, other times the change requires
+> > > intrusive changes.
 > > 
-> > Somehow, we're going to end-up with grossly oversized ITTs, just to
-> > accommodate for the fact that we have no idea how many MSIs we're
-> > going to end-up needing. I'm not thrilled with that prospect.
+> > What does a video device address have to do with this?  I do see that
+> > if a BAR maps only a frame buffer, the device might be able to mark it
+> > prefetchable, while if the BAR mapped both a frame buffer and some
+> > registers, it might not be able to make it prefetchable.  But that
+> > doesn't seem like it depends on the *address*.
 > 
-> How can we avoid that in the face of hotplug?
-
-Fortunately, hotplug is not always synonymous of aliasing. The ITS is
-built around the hypothesis that aliasing doesn't happen, and that you
-know upfront how many LPIs the device will be allowed to generate.
-
-> And what are we really worried about regarding over-sized ITTs...bytes
-> of memory saved?
-
-That's one thing, yes. But more fundamentally, how do you size your MSI
-capacity for a single alias? Do you evenly split your LPI space among
-all possible aliases? Assuming 64 aliases and 16 bits of interrupt ID
-space, you end up with 10 bit per alias. Is that always enough? Or do
-you need something more fine-grained?
-
-> A fundamental thing built into the IOMMU subsystem in Linux is
-> representing iommu groups that can represent things like
-> multiple PCI devices that for hardware reasons cannot
-> be isolated (and the example I've seen given relates to 
-> devices behind PCI bridges).
+> I meant the offsets for each of those, either registers or framebuffer,
+> and that typically they are mixed (primarily on older devices), so indeed your
+> summary of the problem is what I meant. Let's remember that we are trying to
+> take advantage of PAT here when available and avoid MTRR in that case, do we
+> know that the same PCI BARs that have always historically used MTRRs had
+> IORESOURCE_PREFETCH set, is that a fair assumption ? I realize they are
+> different things -- but its precisely why I ask.
 > 
-> So, I think the thing we are facing here is that while the
-> IOMMU subsystem has accounted for reprsenting the isolation
-> characteristics of a system with iommu groups, there is
-> no corresponding "msi group" concept.
+> > pci_iomap_range() already makes a cacheable mapping if
+> > IORESOURCE_CACHEABLE; I'm guessing that you would like it to
+> > automatically use WC if the BAR if IORESOURCE_PREFETCH, e.g.,
+> > 
+> >   if (flags & IORESOURCE_CACHEABLE)
+> >     return ioremap(start, len);
+> >   if (flags & IORESOURCE_PREFETCH)
+> >     return ioremap_wc(start, len);
+> >   return ioremap_nocache(start, len);
 > 
-> In the SMMU/GIC-500-ITS world the iommu isolation
-> ID (the stream ID) and the GIC-ITS device ID are in
-> fact the same ID.
+> Indeed, that's exactly what I think we should strive towards.
+> 
+> > Is there a reason not to do that?
+> 
+> This depends on the exact defintion of IORESOURCE_PREFETCH and
+> PCI_BASE_ADDRESS_MEM_PREFETCH and how they are used all over and
+> accross *all devices*. This didn't look promising for starters:
+> 
+> include/uapi/linux/pci_regs.h:#define  PCI_BASE_ADDRESS_MEM_PREFETCH    0x08    /* prefetchable? */
+> 
+> PCI_BASE_ADDRESS_MEM_PREFETCH seems to be BAR specific, so a few questions:
+> 
+> 1) Can we rest assured for instance that if we check for
+> PCI_BASE_ADDRESS_MEM_PREFETCH and if set that it will *only* be set on a full
+> PCI BAR if the full PCI BAR does want WC? If not this can regress
+> functionality. That seems risky. It however would not be risky if we used
+> another API that did look for IORESOURCE_PREFETCH and if so use ioremap_wc() --
+> that way only drivers we know that do use the full PCI bar would use this API.
+> There's a bit of a problem with this though:
+> 
+> 2) Do we know that if a *full PCI BAR* is used for WC that
+> PCI_BASE_ADDRESS_MEM_PREFETCH *was* definitely set for the PCI BAR? If so then
+> the API usage would be restricted only to devices that we know *do* adhere to
+> this. That reduces the possible uses for older drivers and can create
+> regressions if used loosely without verification... but..
+> 
+> 3) If from now on we get folks to commit to uset PCI_BASE_ADDRESS_MEM_PREFETCH
+> for full PCI BARs that do want WC perhaps newer devices / drivers will use
+> this very consistently ? Can we bank on that and is it worth it ?
+> 
+> 4) If a PCI BAR *does not* have PCI_BASE_ADDRESS_MEM_PREFETCH do we know it
+> must not never want WC ?
+> 
+> If we don't have certainty on any of the above I'm afraid we can't do much
+> right now but perhaps we can push towards better use of PCI_BASE_ADDRESS_MEM_PREFETCH
+> and hope folks will only use this for the full PCI BAR only if WC is desired.
+> 
+> Thoughts?
 
-The DeviceID is the "MSI group" you mention. This is what provides
-isolation at the ITS level.
+Bjorn, now that you're done schooling me on English, any thoughts on the above?
 
-> Is there some way we could sanely correlate IOMMU group creation
-> (which establishes isolation granularity) with the creation
-> of an ITT for the GIC-ITS?
+> > > Although there is also arch_phys_wc_add() that makes use of
+> > > architecture specific write-combinging alternatives (MTRR on
+> > > x86 when a system does not have PAT) we void polluting
+> > > pci_iomap() space with it and force drivers and subsystems
+> > > that want to use it to be explicit.
+> > >
+> > > There are a few motivations for this:
+> > >
+> > > a) Take advantage of PAT when available
+> > >
+> > > b) Help bury MTRR code away, MTRR is architecture specific and on
+> > >    x86 its replaced by PAT
+> > >
+> > > c) Help with the goal of eventually using _PAGE_CACHE_UC over
+> > >    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (de33c442e)
+> > > ...
+> > 
+> > > +void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
+> > > +                                int bar,
+> > > +                                unsigned long offset,
+> > > +                                unsigned long maxlen)
+> > > +{
+> > > +       resource_size_t start = pci_resource_start(dev, bar);
+> > > +       resource_size_t len = pci_resource_len(dev, bar);
+> > > +       unsigned long flags = pci_resource_flags(dev, bar);
+> > > +
+> > > +       if (len <= offset || !start)
+> > > +               return NULL;
+> > > +       len -= offset;
+> > > +       start += offset;
+> > > +       if (maxlen && len > maxlen)
+> > > +               len = maxlen;
+> > > +       if (flags & IORESOURCE_IO)
+> > > +               return __pci_ioport_map(dev, start, len);
+> > > +       if (flags & IORESOURCE_MEM)
+> > 
+> > Should we log a note in dmesg if the BAR is *not* IORESOURCE_PREFETCH?
+> >  I know the driver might know it's safe even if the device didn't mark
+> > the BAR as prefetchable, but it does seem like an easy way for a
+> > driver to shoot itself in the foot.
+> 
+> You tell me. I would fear this may not be consistent and we'd end up
+> having bug reports open for something that has historically been a
+> non-issue. The above questions can help us gauge the risk of this.
 
-The problem you have is that your ITT already exists before you start
-"hotpluging" new devices. Take the following (made up) example:
+Now, I'll tell you what I *think* but these are just guestimates (TM):
 
-System boots, device X is discovered, claims 64 MSIs. An ITT for device
-X is allocated, and sized for 64 LPIs. SR-IOV kick is, creates a new X'
-function that is aliased to X, claiming another 64 MSIs. Fail.
+  * Likely PCI_BASE_ADDRESS_MEM_PREFETCH can implate IORESOURCE_PREFETCH
+    and use of ioremap_wc() on a full PCI BAR only, but this strict
+    definition likely cannot be 100% guaranteed and could break some
+    devices. We need something a bit more concrete and well known so
+    that next generation industry standards embrace and let us in
+    the kernel automatically detect specific ranges and their respective
+    page attribute requirements. Might be good to address here x86 and
+    ARM families
 
-What do we do here? The ITT is live (X is generating interrupts), and
-there is no provision to resize it (I've come up with a horrible
-scheme, but that could fail as well). The only sane option would be to
-guess how many MSIs a given alias could possibly use. How wrong is this
-guess going to be?
+Curious: Sarah, how does USB address these different different page attribute
+needs on USB 3.0?
 
-The problem we have is that IOMMU groups are dynamic, while ITT
-allocation is completely static for a given DeviceID. The architecture
-doesn't give you any mechanism to resize it, and I have the ugly
-feeling that static allocation of the ID space to aliases is too
-rigid...
-
-	M.
--- 
-Jazz is not dead. It just smells funny.
+  Luis
