@@ -1,155 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:32226 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbbDCJ3N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Apr 2015 05:29:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v9 07/30] PCI: Add default bus resource in pci_host_bridge
-Date: Fri, 3 Apr 2015 17:25:41 +0800
-Message-ID: <1428053164-28277-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
+Received: from foss.arm.com ([217.140.101.70]:47298 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752606AbbDUPTJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Apr 2015 11:19:09 -0400
+Message-ID: <55366A64.6000907@arm.com>
+Date: Tue, 21 Apr 2015 16:19:00 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH v5 2/4] arm64: dts: Add the device tree entry for the
+ APM X-Gene PCIe MSI node
+References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com> <227f8c75e04110e279b78512924742ba7c7fe5fc.1429586144.git.dhdang@apm.com>
+In-Reply-To: <227f8c75e04110e279b78512924742ba7c7fe5fc.1429586144.git.dhdang@apm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If there is no busn resource provided for pci_scan_root_bus(),
-we would insert a default bus resource (root_bus_number, 255)
-in root bus, and update the max bus number we found after
-pci_scan_child_bus(). We also need to hold the default bus
-resource in pci_host_bridge, then we could identify whether
-the new pci host bridge conflict with existing one.
+On 21/04/15 05:04, Duc Dang wrote:
+> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+> 
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+>  1 file changed, 27 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+> index f1ad9c2..4b719c9 100644
+> --- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
+> +++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+> @@ -354,6 +354,28 @@
+>  			};
+>  		};
+>  
+> +		msi: msi@79000000 {
+> +			compatible = "apm,xgene1-msi";
+> +			msi-controller;
+> +			reg = <0x00 0x79000000 0x0 0x900000>;
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/host-bridge.c |   20 ++++++++++++++++++++
- drivers/pci/probe.c       |   26 ++++++++++----------------
- include/linux/pci.h       |    2 ++
- 3 files changed, 32 insertions(+), 16 deletions(-)
+I've been repeatedly puzzled by the size of this region. In patch 1, you
+say:
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 7d52a0a..ecc1a7c 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -19,6 +19,25 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
-+static void pci_host_update_busn_res(
-+		struct pci_host_bridge *host, int bus,
-+		struct list_head *resources)
-+{
-+	struct resource_entry *window;
-+
-+	resource_list_for_each_entry(window, resources)
-+		if (window->res->flags & IORESOURCE_BUS)
-+			return;
-+
-+	pr_info(
-+	 "No busn resource found for pci%04x:%02x, will use [bus %02x-ff]\n",
-+		host->domain, bus, bus);
-+	host->busn_res.flags = IORESOURCE_BUS;
-+	host->busn_res.start = bus;
-+	host->busn_res.end = 255;
-+	pci_add_resource(resources, &host->busn_res);
-+}
-+
- struct pci_host_bridge *pci_create_host_bridge(
- 		struct device *parent, int domain, int bus,
- 		struct list_head *resources)
-@@ -33,6 +52,7 @@ struct pci_host_bridge *pci_create_host_bridge(
- 
- 	host->dev.parent = parent;
- 	INIT_LIST_HEAD(&host->windows);
-+	pci_host_update_busn_res(host, bus, resources);
- 	resource_list_for_each_entry_safe(window, n, resources)
- 		list_move_tail(&window->node, &host->windows);
- 	/*
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9bc4784..d5a12d9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2022,6 +2022,12 @@ int pci_bus_update_busn_res_end(struct pci_bus *b, int bus_max)
- 	return ret;
- }
- 
-+static void pci_host_update_busn_res_end(
-+		struct pci_host_bridge *host, int max)
-+{
-+	host->busn_res.end = max;
-+}
-+
- void pci_bus_release_busn_res(struct pci_bus *b)
- {
- 	struct resource *res = &b->busn_res;
-@@ -2040,32 +2046,20 @@ static struct pci_bus *__pci_scan_root_bus(int bus,
- 		struct pci_host_bridge *host, struct pci_ops *ops,
- 		void *sysdata)
- {
--	struct resource_entry *window;
--	bool found = false;
- 	struct pci_bus *b;
- 	int max;
- 
--	resource_list_for_each_entry(window, &host->windows)
--		if (window->res->flags & IORESOURCE_BUS) {
--			found = true;
--			break;
--		}
--
- 	b = __pci_create_root_bus(bus, host, ops, sysdata);
- 	if (!b)
- 		return NULL;
- 
--	if (!found) {
--		dev_info(&b->dev,
--		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
--			bus);
--		pci_bus_insert_busn_res(b, bus, 255);
--	}
--
- 	max = pci_scan_child_bus(b);
- 
--	if (!found)
-+	/* If default busn resource used, update the max bus number */
-+	if (host->busn_res.flags & IORESOURCE_BUS) {
-+		pci_host_update_busn_res_end(host, max);
- 		pci_bus_update_busn_res_end(b, max);
-+	}
- 
- 	return b;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1542df8..f189dfb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -404,6 +404,8 @@ struct pci_host_bridge {
- 	int domain;
- 	struct device dev;
- 	struct pci_bus *bus;		/* root bus */
-+	/* we use default bus resource if no bus resource provided */
-+	struct resource busn_res;
- 	struct list_head windows;	/* resource_entry */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
++ * X-Gene v1 has 16 groups of MSI termination registers MSInIRx, where
++ * n is group number (0..F), x is index of registers in each group (0..7)
++ * The registers layout is like following:
++ * MSI0IR0                     base_addr
++ * MSI0IR1                     base_addr +  0x10000
++ * ...                         ...
++ * MSI0IR6                     base_addr +  0x60000
++ * MSI0IR7                     base_addr +  0x70000
++ * MSI1IR0                     base_addr +  0x80000
++ * MSI1IR1                     base_addr +  0x90000
++ * ...                         ...
++ * MSI1IR7                     base_addr +  0xF0000
++ * MSI2IR0                     base_addr + 0x100000
++ * ...                         ...
++ * MSIFIR0                     base_addr + 0x780000
++ * MSIFIR1                     base_addr + 0x790000
++ * ...                         ...
++ * MSIFIR7                     base_addr + 0x7F0000
+
+which implies that the size of the region is 0x800000. Or is there
+something hidden in the last 16 64k pages?
+
+Thanks,
+
+	M.
 -- 
-1.7.1
-
+Jazz is not dead. It just smells funny...
