@@ -1,113 +1,105 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 07/33] x86/irq: Kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-Date: Tue, 14 Apr 2015 10:29:44 +0800
-Message-Id: <1428978610-28986-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47891 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750998AbbDUCyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Apr 2015 22:54:17 -0400
+Date: Tue, 21 Apr 2015 10:53:17 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150421025317.GA14720@dhcp-128-82.nay.redhat.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+ <20150415005731.GC19051@localhost.localdomain>
+ <552DFB56.1070600@hp.com>
+ <20150415064803.GF19051@localhost.localdomain>
+ <5535AA57.6010404@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5535AA57.6010404@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no user of irq_alloc_hwirqs(), irq_alloc_hwirq(), irq_free_hwirqs()
-and irq_free_hwirq() anymore, so kill GENERIC_IRQ_LEGACY_ALLOC_HWIRQ and
-related code.
+Hi,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416901802-24211-17-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/Kconfig              |    1 -
- arch/x86/kernel/apic/vector.c |   34 ----------------------------------
- 2 files changed, 35 deletions(-)
+On 04/21/15 at 09:39am, Li, ZhenHua wrote:
+> Hi Dave,
+> I found the old mail:
+> http://lkml.iu.edu/hypermail/linux/kernel/1410.2/03584.html
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index fecb8b7d74bd..69b4e925968c 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -921,7 +921,6 @@ config X86_UP_IOAPIC
- config X86_LOCAL_APIC
- 	def_bool y
- 	depends on X86_64 || SMP || X86_32_NON_STANDARD || X86_UP_APIC || PCI_MSI
--	select GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
- 	select IRQ_DOMAIN_HIERARCHY
- 	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 4b8fad9aa685..31dc4a871673 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -660,40 +660,6 @@ void irq_force_complete_move(int irq)
- }
- #endif
- 
--/*
-- * Dynamic irq allocate and deallocation. Should be replaced by irq domains!
-- */
--int arch_setup_hwirq(unsigned int irq, int node)
--{
--	struct irq_cfg *cfg;
--	unsigned long flags;
--	int ret;
--
--	cfg = alloc_irq_cfg(node);
--	if (!cfg)
--		return -ENOMEM;
--
--	raw_spin_lock_irqsave(&vector_lock, flags);
--	ret = __assign_irq_vector(irq, cfg, apic->target_cpus());
--	raw_spin_unlock_irqrestore(&vector_lock, flags);
--
--	if (!ret)
--		irq_set_chip_data(irq, cfg);
--	else
--		free_irq_cfg(cfg);
--	return ret;
--}
--
--void arch_teardown_hwirq(unsigned int irq)
--{
--	struct irq_cfg *cfg = irq_cfg(irq);
--
--	free_remapped_irq(irq);
--	clear_irq_vector(irq, cfg);
--	irq_set_chip_data(irq, NULL);
--	free_irq_cfg(cfg);
--}
--
- static void __init print_APIC_field(int base)
- {
- 	int i;
--- 
-1.7.10.4
+I know and I have read it before.
 
+==================  quote  ===================
+> > > So with this in mind I would prefer initially taking over the
+> > > page-tables from the old kernel before the device drivers re-initialize
+> > > the devices.
+> >
+> > This makes the dump kernel more dependent on data from the old kernel,
+> > which we obviously want to avoid when possible.
+
+> Sure, but this is not really possible here (unless we have a generic and
+> reliable way to reset all PCI endpoint devices and cancel all in-flight
+> DMA before we disable the IOMMU in the kdump kernel).
+> Otherwise we always risk data corruption somewhere, in system memory or
+> on disk.
+=================  quote  ====================
+
+What I understand above is it is not really possible to avoid the problem.
+
+But IMHO we should avoid it or we will have problems in the future, if we
+really cannot avoid it I would say switching to pci reset way is better.
+
+> 
+> Please check this and you will find the discussion.
+> 
+> Regards
+> Zhenhua
+> 
+> On 04/15/2015 02:48 PM, Dave Young wrote:
+> >On 04/15/15 at 01:47pm, Li, ZhenHua wrote:
+> >>On 04/15/2015 08:57 AM, Dave Young wrote:
+> >>>Again, I think it is bad to use old page table, below issues need consider:
+> >>>1) make sure old page table are reliable across crash
+> >>>2) do not allow writing oldmem after crash
+> >>>
+> >>>Please correct me if I'm wrong, or if above is not doable I think I will vote for
+> >>>resetting pci bus.
+> >>>
+> >>>Thanks
+> >>>Dave
+> >>>
+> >>Hi Dave,
+> >>
+> >>When updating the context tables, we have to write their address to root
+> >>tables, this will cause writing to old mem.
+> >>
+> >>Resetting the pci bus has been discussed, please check this:
+> >>http://lists.infradead.org/pipermail/kexec/2014-October/012752.html
+> >>https://lkml.org/lkml/2014/10/21/890
+> >
+> >I know one reason to use old pgtable is this looks better because it fixes the
+> >real problem, but it is not a good way if it introduce more problems because of
+> >it have to use oldmem. I will be glad if this is not a problem but I have not
+> >been convinced.
+> >
+> >OTOH, there's many types of iommu, intel, amd, a lot of other types. They need
+> >their own fixes, so it looks not that elegant.
+> >
+> >For pci reset, it is not perfect, but it has another advantage, the patch is
+> >simpler. The problem I see from the old discusssion is, reset bus in 2nd kernel
+> >is acceptable but it does not fix things on sparc platform. AFAIK current reported
+> >problems are intel and amd iommu, at least pci reset stuff does not make it worse.
+> >
+> >Thanks
+> >Dave
+> >
+> 
