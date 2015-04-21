@@ -1,74 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:36361 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932398AbbDJInc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 04:43:32 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v10 03/10] iommu/vt-d: Function to get old context entry
-Date: Fri, 10 Apr 2015 16:42:06 +0800
-Message-Id: <1428655333-19504-4-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:15505 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743AbbDULiU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:20 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
+	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Yijing Wang" <wangyijing@huawei.com>
+Subject: [PATCH v10 11/29] PCI: Save sysdata in pci_host_bridge drvdata
+Date: Tue, 21 Apr 2015 19:34:30 +0800
+Message-ID: <1429616088-10249-12-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Interface for when a new domain in the crashdump kernel needs some
-values from the panicked kernel's context entries.
+Save platform specific sysdata in pci_host_bridge
+drvdata, host bridge specific operation need to
+access it before the pci bus creation.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/iommu/intel-iommu.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/pci/host-bridge.c |    3 ++-
+ drivers/pci/pci.h         |    2 +-
+ drivers/pci/probe.c       |   13 ++++++-------
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 735e28f..ff5ac04 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -369,6 +369,10 @@ static inline int first_pte_in_page(struct dma_pte *pte)
-  */
- 
- 
-+static struct context_entry *device_to_existing_context_entry(
-+				struct intel_iommu *iommu,
-+				u8 bus, u8 devfn);
-+
- 
- /*
-  * This domain is a statically identity mapping domain.
-@@ -4793,3 +4797,23 @@ static void __init check_tylersburg_isoch(void)
- 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
- 	       vtisochctrl);
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index e05d8fc..b1cc6ef 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -81,7 +81,7 @@ static int pci_host_busn_res_check(
  }
-+
-+static struct context_entry *device_to_existing_context_entry(
-+				struct intel_iommu *iommu,
-+				u8 bus, u8 devfn)
-+{
-+	struct root_entry *root;
-+	struct context_entry *context;
-+	struct context_entry *ret;
-+	unsigned long flags;
-+
-+	ret = NULL;
-+	spin_lock_irqsave(&iommu->lock, flags);
-+	root = &iommu->root_entry[bus];
-+	context = get_context_addr_from_root(root);
-+	if (context && context_present(context+devfn))
-+		ret = &context[devfn];
-+	spin_unlock_irqrestore(&iommu->lock, flags);
-+	return ret;
-+}
-+
+ 
+ struct pci_host_bridge *pci_create_host_bridge(
+-		struct device *parent, int domain,
++		struct device *parent, int domain, void *sysdata,
+ 		struct list_head *resources)
+ {
+ 	int error, bus;
+@@ -118,6 +118,7 @@ struct pci_host_bridge *pci_create_host_bridge(
+ 	mutex_unlock(&pci_host_mutex);
+ 
+ 	host->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&host->dev, sysdata);
+ 	dev_set_name(&host->dev, "pci%04x:%02x",
+ 			host->domain, bus);
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 947c05a..3d6f455 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -334,6 +334,6 @@ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+ struct resource_entry *pci_busn_resource(struct list_head *resources);
+ void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
+ struct pci_host_bridge *pci_create_host_bridge(struct device *parent,
+-		int domain, struct list_head *resources);
++		int domain, void *sysdata, struct list_head *resources);
+ void pci_free_host_bridge(struct pci_host_bridge *host);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index d8c4da8..cba3474 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1871,8 +1871,7 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ }
+ 
+ static struct pci_bus *__pci_create_root_bus(
+-		struct pci_host_bridge *bridge, struct pci_ops *ops,
+-		void *sysdata)
++		struct pci_host_bridge *bridge, struct pci_ops *ops)
+ {
+ 	int error, bus;
+ 	struct pci_bus *b;
+@@ -1892,7 +1891,7 @@ static struct pci_bus *__pci_create_root_bus(
+ 	if (!b)
+ 		return NULL;
+ 
+-	b->sysdata = sysdata;
++	b->sysdata = dev_get_drvdata(&bridge->dev);
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+ 	pci_bus_assign_domain_nr(b, parent);
+@@ -1973,11 +1972,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent,
+ 		return NULL;
+ 	}
+ 
+-	host = pci_create_host_bridge(parent, domain, resources);
++	host = pci_create_host_bridge(parent, domain, sysdata, resources);
+ 	if (!host)
+ 		return NULL;
+ 
+-	host->bus = __pci_create_root_bus(host, ops, sysdata);
++	host->bus = __pci_create_root_bus(host, ops);
+ 	if (!host->bus) {
+ 		pci_free_host_bridge(host);
+ 		return NULL;
+@@ -2083,7 +2082,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 			bus);
+ 	}
+ 
+-	host = pci_create_host_bridge(parent, domain, resources);
++	host = pci_create_host_bridge(parent, domain, sysdata, resources);
+ 	if (!host) {
+ 		kfree(busn_resource);
+ 		return NULL;
+@@ -2092,7 +2091,7 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int domain,
+ 	if (busn_resource)
+ 		host->dynamic_busn = true;
+ 
+-	host->bus = __pci_create_root_bus(host, ops, sysdata);
++	host->bus = __pci_create_root_bus(host, ops);
+ 	if (!host->bus) {
+ 		pci_free_host_bridge(host);
+ 		return NULL;
 -- 
-2.0.0-rc0
+1.7.1
 
