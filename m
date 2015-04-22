@@ -1,175 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:15055 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272AbbDULiL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:11 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v10 12/29] powerpc/PCI: Rename pcibios_root_bridge_prepare() to pcibios_set_root_bus_speed()
-Date: Tue, 21 Apr 2015 19:34:31 +0800
-Message-ID: <1429616088-10249-13-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33178 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754267AbbDVDCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Apr 2015 23:02:32 -0400
+Message-ID: <55370F45.2030809@jonmasters.org>
+Date: Tue, 21 Apr 2015 23:02:29 -0400
+From: Jon Masters <jonathan@jonmasters.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH v5 0/4]PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination
+ driver
+References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
+In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcibios_root_bridge_prepare() in powerpc set
-root bus speed, it's not the preparation for
-pci host bridge. Rename it for better readability,
-and we could move pcibios_root_bridge_prepare()
-to pci_create_host_bridge(), in which root bus
-is not created. We will clean up these weak functions,
-and add pci_host_bridge_ops to do the same thing
-in later patch.
+On 04/21/2015 12:04 AM, Duc Dang wrote:
+> This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+> APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+> to GIC V2M specification for MSI Termination.
+> 
+> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
+> block supports 2048 MSI termination ports coalesced into 16 physical HW IRQ lines
+> and shared across all 5 PCIe ports. As the version 5 of this patch, the total MSI
+> vectors this driver supports is reduced to 256 to maintain the correct set_affinity 
+> behavior for each MSI.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |    8 +++-----
- arch/powerpc/platforms/pseries/pci.c     |    8 ++++----
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- drivers/pci/probe.c                      |    5 +++++
- 6 files changed, 15 insertions(+), 12 deletions(-)
+Quick note that I have tested the previous several versions of this
+patch series on several platforms and will test v6 once available with
+the pending feedback addressed.
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index c8175a3..b811d12 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -129,7 +129,7 @@ struct machdep_calls {
- 	void		(*pcibios_fixup)(void);
- 	int		(*pci_probe_mode)(struct pci_bus *);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
-+	void		(*pcibios_set_root_bus_speed)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 9acc08d..630cac6 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -767,12 +767,10 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+void pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
--	if (ppc_md.pcibios_root_bridge_prepare)
--		return ppc_md.pcibios_root_bridge_prepare(bridge);
--
--	return 0;
-+	if (ppc_md.pcibios_set_root_bus_speed)
-+		return ppc_md.pcibios_set_root_bus_speed(bridge);
- }
- 
- /* This header fixup will do the resource fixup for all devices as they are
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index fe16a50..89ff79c 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge)
- {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-@@ -121,7 +121,7 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
- 
- 	dn = pcibios_get_phb_of_node(bus);
- 	if (!dn)
--		return 0;
-+		return;
- 
- 	for (pdn = dn; pdn != NULL; pdn = of_get_next_parent(pdn)) {
- 		rc = of_property_read_u32_array(pdn,
-@@ -135,7 +135,7 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
- 
- 	if (rc) {
- 		pr_debug("no ibm,pcie-link-speed-stats property\n");
--		return 0;
-+		return;
- 	}
- 
- 	switch (pcie_link_speed_stats[0]) {
-@@ -168,5 +168,5 @@ int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
- 		break;
- 	}
- 
--	return 0;
-+	return;
- }
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 1796c54..9aa9c13 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -63,7 +63,7 @@ extern int dlpar_detach_node(struct device_node *);
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
-+void pseries_set_root_bus_speed(struct pci_host_bridge *bridge);
- 
- unsigned long pseries_memory_block_size(void);
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index e445b67..b196c0d 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -496,7 +496,7 @@ static void __init pSeries_setup_arch(void)
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
- 	}
- 
--	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
-+	ppc_md.pcibios_set_root_bus_speed = pseries_set_root_bus_speed;
- 
- 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
- 		long rc;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cba3474..3c53fe7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1862,6 +1862,10 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
- 
-+void __weak pcibios_set_root_bus_speed(struct pci_host_bridge *bridge)
-+{
-+}
-+
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
- }
-@@ -1902,6 +1906,7 @@ static struct pci_bus *__pci_create_root_bus(
- 	if (error)
- 		goto put_bridge;
- 
-+	pcibios_set_root_bus_speed(bridge);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
- 
--- 
-1.7.1
+Jon.
 
