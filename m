@@ -1,127 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 24/33] x86/irq: Kill function apic_set_affinity()
-Date: Tue, 14 Apr 2015 10:30:01 +0800
-Message-Id: <1428978610-28986-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og114.obsmtp.com ([64.18.0.28]:37013 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757751AbbDVGQZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 02:16:25 -0400
+Received: by pdbnk13 with SMTP id nk13so264730993pdb.0
+        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2015 23:16:24 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v6 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
+Date: Tue, 21 Apr 2015 23:15:10 -0700
+Message-Id: <8a6f663274866c38d74b5c36f3b0efb50c537c66.1429677787.git.dhdang@apm.com>
+In-Reply-To: <cover.1429677787.git.dhdang@apm.com>
+References: <cover.1429677787.git.dhdang@apm.com>
+In-Reply-To: <cover.1429677787.git.dhdang@apm.com>
+References: <553667FD.9090806@arm.com> <cover.1429677787.git.dhdang@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there's no user of apic_set_affinity(), so kill it.
-Also rename vector_set_affinity() to apic_set_affinity() for consistency.
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Link: http://lkml.kernel.org/r/1416901802-24211-33-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- arch/x86/include/asm/hw_irq.h |    2 --
- arch/x86/kernel/apic/vector.c |   40 +++-------------------------------------
- 2 files changed, 3 insertions(+), 39 deletions(-)
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index ea9aebc65ff6..330445236484 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -198,8 +198,6 @@ static inline void irq_complete_move(struct irq_cfg *c) { }
- #endif
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index f1ad9c2..4b719c9 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -354,6 +354,28 @@
+ 			};
+ 		};
  
- extern void apic_ack_edge(struct irq_data *data);
--extern int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--			     unsigned int *dest_id);
- #else	/*  CONFIG_X86_LOCAL_APIC */
- static inline void lock_vector_lock(void) {}
- static inline void unlock_vector_lock(void) {}
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index fba4958b6139..436a3400d9ac 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -463,42 +463,8 @@ void apic_ack_edge(struct irq_data *data)
- 	ack_APIC_irq();
- }
++		msi: msi@79000000 {
++			compatible = "apm,xgene1-msi";
++			msi-controller;
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		pcie0: pcie@1f2b0000 {
+ 			status = "disabled";
+ 			device_type = "pci";
+@@ -375,6 +397,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie0clk 0>;
++			msi-parent = <&msi>;
+ 		};
  
--/*
-- * Either sets data->affinity to a valid value, and returns
-- * ->cpu_mask_to_apicid of that in dest_id, or returns -1 and
-- * leaves data->affinity untouched.
-- */
--int apic_set_affinity(struct irq_data *data, const struct cpumask *mask,
--		      unsigned int *dest_id)
--{
--	struct irq_cfg *cfg = irqd_cfg(data);
--	unsigned int irq = data->irq;
--	int err;
--
--	if (!config_enabled(CONFIG_SMP))
--		return -EPERM;
--
--	if (!cpumask_intersects(mask, cpu_online_mask))
--		return -EINVAL;
--
--	err = assign_irq_vector(irq, cfg, mask);
--	if (err)
--		return err;
--
--	err = apic->cpu_mask_to_apicid_and(mask, cfg->domain, dest_id);
--	if (err) {
--		if (assign_irq_vector(irq, cfg, data->affinity))
--			pr_err("Failed to recover vector for irq %d\n", irq);
--		return err;
--	}
--
--	cpumask_copy(data->affinity, mask);
--
--	return 0;
--}
--
--static int vector_set_affinity(struct irq_data *irq_data,
--			       const struct cpumask *dest, bool force)
-+static int apic_set_affinity(struct irq_data *irq_data,
-+			     const struct cpumask *dest, bool force)
- {
- 	int err;
- 	int irq = irq_data->irq;
-@@ -524,7 +490,7 @@ static int vector_set_affinity(struct irq_data *irq_data,
+ 		pcie1: pcie@1f2c0000 {
+@@ -398,6 +421,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie1clk 0>;
++			msi-parent = <&msi>;
+ 		};
  
- static struct irq_chip lapic_controller = {
- 	.irq_ack		= apic_ack_edge,
--	.irq_set_affinity	= vector_set_affinity,
-+	.irq_set_affinity	= apic_set_affinity,
- 	.irq_retrigger		= apic_retrigger_irq,
- };
+ 		pcie2: pcie@1f2d0000 {
+@@ -421,6 +445,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie2clk 0>;
++			msi-parent = <&msi>;
+ 		};
  
+ 		pcie3: pcie@1f500000 {
+@@ -444,6 +469,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie3clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie4: pcie@1f510000 {
+@@ -467,6 +493,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie4clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
 -- 
-1.7.10.4
+1.9.1
 
