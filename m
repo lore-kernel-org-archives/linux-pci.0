@@ -1,65 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:57120 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbbDHIgm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:36:42 -0400
-Message-ID: <5524E79B.5020304@huawei.com>
-Date: Wed, 8 Apr 2015 16:32:27 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-ia64@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Russell King <linux@arm.linux.org.uk>, <x86@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:28282
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751928AbbDVSkh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 14:40:37 -0400
+From: Varun Sethi <Varun.Sethi@freescale.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>
+CC: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rusty Russell" <rusty@rustcorp.com.au>,
-	<linux-m68k@lists.linux-m68k.org>,
-	"Thomas Gleixner" <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <dja@axtens.net>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	<linux-alpha@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v9 03/30] PCI: Save domain in pci_host_bridge
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-5-git-send-email-wangyijing@huawei.com> <5524E248.9010509@free-electrons.com>
-In-Reply-To: <5524E248.9010509@free-electrons.com>
-Content-Type: text/plain; charset="windows-1252"
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	"Roy Zang" <tie-fei.zang@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Date: Wed, 22 Apr 2015 18:40:33 +0000
+Message-ID: <BN3PR0301MB121901C218955F709AE892F3EAEE0@BN3PR0301MB1219.namprd03.prod.outlook.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <20150416104008.GB25640@arm.com>
+ <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
+ <20150422170718.GG13019@arm.com>
+In-Reply-To: <20150422170718.GG13019@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/4/8 16:09, Gregory CLEMENT wrote:
-> Hi Yijing,
+Hi Will,
+
+> -----Original Message-----
+> From: Will Deacon [mailto:will.deacon@arm.com]
+> Sent: Wednesday, April 22, 2015 10:37 PM
+> To: Yoder Stuart-B08248
+> Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org;
+> Arnd Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood
+> Scott-B07421; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
 > 
-> On 03/04/2015 11:25, Yijing Wang wrote:
->> Save domain in pci_host_bridge, so we could get domain
->> from pci_host_bridge, and at the end of series, we could
->> clean up the arch specific pci_domain_nr(). For arm,
->> we pass -1 as the domain number, we would update the
->> domain number in core by pci_bus_assign_domain_nr().
->>
-> For the mvebu part I tested on Armada XP, Armada 375 and Armada 38x
-> SoCs, and I didn't saw any regression. So you can add my:
+> Hi Stuart,
 > 
-> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-
-Thanks a lot for your test!
-
-Thanks!
-Yijing.
-
-
->>
+> First of, thanks for taking the time to explain this in more detail.
+> Comments inline.
+> 
+> On Fri, Apr 17, 2015 at 03:19:08PM +0100, Stuart Yoder wrote:
+> > > On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
+> > > > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if
+> > > > TBU ID would also be forwarded as a part of stream id to GIC. My
+> > > > understanding is that TBU ID is forwarded (as a part of the stream
+> > > > ID) to the TCU in case of a TBU translation miss. In case of the
+> > > > LS2085 PCIe controller you would have to setup the PCIe device ID
+> > > > to stream ID translation table. We may have to restrict the number
+> > > > of entries based on the available number of contexts.
+> > >
+> > > Unfortunately, I'm having a really hard time parsing this thread
+> > > (some parts of it simply don't make sense; others use
+> > > non-architectural terms and overall I don't get a feeling for the problem).
+> > >
+> > > Please could you explain your system design step by step so that I
+> > > can understand (a) what you've built and (b) why the current design
+> > > of Linux is causing you problems?
+> > >
+> > > Sorry if I'm just being thick, but it's important that we get this right.
+> >
+> > I'll try to summarize some key points about the system...
+> >
+> > System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.
+> > There are PCI, fsl-mc, and platform devices that do DMA.  Devices on
+> > the PCI and fsl-mc bus generate message interrupts.
+> 
+> Ah cool, so you have multiple buses sharing a single SMMU? That's going to
+> necessitate some ID remapping in the device-tree. Perhaps you could
+> comment on Mark Rutland's proposal if it does/doesn't work for you:
+> 
+>   http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
+> March/333199.html
 > 
 > 
+> > The flow a message interrupt would take is this:
+> >
+> >     --------------
+> >       PCI device
+> >     --------------
+> >           |
+> >           | pcidevid + MSI msg
+> >           |
+> >           V
+> >     --------------
+> >     PCI controller
+> >       pcidevid ->
+> >       streamID
+> >       mapping
+> >     --------------
+> >           |
+> >           | streamID + MSI msg
+> >           |
+> >           V
+> >     --------------
+> >         SMMU
+> >     --------------
+> >           |
+> >           | streamID + MSI msg
+> >           |
+> >           V
+> >     --------------
+> >        CCN-504 (Dickens)
+> >     --------------
+> >           |
+> >           | streamID + MSI msg
+> >           |
+> >           V
+> 
+> The streamID here as the same as the one coming out of the SMMU, right?
+> (just trying to out why you have the CCN-504 in the picture).
+> 
+> >     --------------
+> >       GICv3 ITS    streamID == ITS deviceID
+> >     --------------
+> >
+> > So, the way things work (at least initially) is that each PCI device
+> > maps to a single streamID, and thus each device has a separate ITT in
+> > the ITS.  So, things should be cool.
+> >
+> > However, there is an improvement we envision as possible due to the
+> > limited number of SMMU contexts (i.e. 64).  If there are
+> > 64 SMMU context registers it means that there is a max of
+> > 64 software contexts where things can be isolated.  But, say I have an
+> > SRIOV card with 64 VFs, and I want to assign 8 of the VFs to a KVM VM.
+> > Those 8 PCI devices could share the same streamID/ITS-device-ID since
+> > they all share the same isolation context.
+> >
+> > What would be nice is at the time the 8 VFS are being added to the
+> > IOMMU domain is for the pcidevid -> streamID mapping table to be
+> > updated dynamically.  It simply lets us make more efficient use of the
+> > limited streamIDs we have.
+> >
+> > I think it is this improvement that Minghuan had in mind in this
+> > patch.
+> 
+> Ok, but in this case it should be possible to use a single context bank for all of
+> the VF streamIDs by configuring the appropriate SMR, no? Wouldn't that sort
+> of thing be preferable to dynamic StreamID assignment? It would certainly
+> make life easier for the MSIs.
+> 
+Yes, that would happen when the all the VFs are attached to the same domain. But it would be an issue if we have to attach devices to different domains.
 
-
--- 
-Thanks!
-Yijing
-
+-Varun
