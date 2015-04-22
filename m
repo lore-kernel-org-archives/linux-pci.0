@@ -1,81 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>, Liviu Dudau <liviu.dudau@arm.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Subject: [PATCH v3 0/5] PCI: st: provide support for dw pcie
-Date: Fri, 10 Apr 2015 11:12:43 +0200
-Message-Id: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:33221 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756660AbbDVPQc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 11:16:32 -0400
+Received: by iecrt8 with SMTP id rt8so39712003iec.0
+        for <linux-pci@vger.kernel.org>; Wed, 22 Apr 2015 08:16:32 -0700 (PDT)
+Date: Wed, 22 Apr 2015 10:11:11 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Cc: grant.likely@linaro.org, linux-pci@vger.kernel.org,
+	gabriele.paoloni@huawei.com, Liviu.Dudau@arm.com
+Subject: Re: [[PATCH v1]] of/pci: fix a bug in function pci_pio_to_address
+Message-ID: <20150422151111.GG20701@google.com>
+References: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v3:
- - Remove power management functions (was not fully tested)
- - Remove configuration space range from dt binding
- - Remove pci_common_init_dev() call in pcie-designware.c to avoid 
-   default IO space declaration. 
+On Wed, Apr 22, 2015 at 09:35:59PM +0800, Zhichang Yuan wrote:
+> In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
+> was introduced to retieve the corresponding I/O port by CPU address. But the
+> convertion processing is not correct. It will return a wrong I/O port.
+> This patch will fix it.
 
-Changes in v2:
- - comestic corrections in device tree binding
- - add pci-st.c into MAINTAINERS
- - remove st_pcie_ops structure to avoid another level of indirection
- - remove nasty busy-loop
- - remove useless test using virt_to_phys()
- - move disable io support into dw-pcie driver
+Hmmm, this subject and changelog don't seem right.  41f8bba7f555 did add
+pci_pio_to_address(), but that converts an I/O port to a CPU address, and
+this patch doesn't touch that function.
 
-I don't change the st_pcie_abort_handler() function because abort handling
-is masked during boot.
+This patch changes pci_address_to_pio(), which does return the I/O port
+corresponding to a CPU physical address.  This function was modified (but
+not added) by 41f8bba7f555.
 
+Please add:
 
-This patch-set introduces a STMicroelectronics PCIe controller.
-It's based on designware PCIe driver.
+Fixes: 41f8bba7f555 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
+CC: stable@vger.kernel.org	# v3.18+
 
-Gabriel Fernandez (5):
-  ARM: STi: Kconfig update for PCIe support
-  PCI: st: Add Device Tree bindings for sti pcie
-  PCI: st: Provide support for the sti PCIe controller
-  pci: designware: remove pci_common_init_dev()
-  MAINTAINERS: Add pci-st.c to ARCH/STI architecture
+> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> ---
+>  drivers/of/address.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 78a7dcb..6906a3f 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  	spin_lock(&io_range_lock);
+>  	list_for_each_entry(res, &io_range_list, list) {
+>  		if (address >= res->start && address < res->start + res->size) {
+> -			addr = res->start - address + offset;
+> +			addr = address - res->start + offset;
 
- Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
- MAINTAINERS                                       |   1 +
- arch/arm/mach-sti/Kconfig                         |   2 +
- drivers/pci/host/Kconfig                          |   9 +
- drivers/pci/host/Makefile                         |   1 +
- drivers/pci/host/pci-st.c                         | 583 ++++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                |  62 +--
- drivers/pci/host/pcie-designware.h                |   1 +
- 8 files changed, 682 insertions(+), 30 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
- create mode 100644 drivers/pci/host/pci-st.c
+This looks like it's been broken since v3.18, and it's used by many
+platforms.  I/O port space isn't as common as it used to be, but it's still
+surprising that nobody noticed until now.
 
--- 
-1.9.1
+This change does look correct to me, but I want to double-check that we're
+actually going to *fix* a bunch of platforms rather than breaking them.
 
+>  			break;
+>  		}
+>  		offset += res->size;
+> -- 
+> 1.9.1
+> 
