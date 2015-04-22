@@ -1,66 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from inca-roads.misterjones.org ([213.251.177.50]:43560 "EHLO
-	inca-roads.misterjones.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752035AbbDKMSq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Apr 2015 08:18:46 -0400
-To: Feng Kan <fkan@apm.com>
-Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX  termination driver
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Sat, 11 Apr 2015 13:18:43 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
-	Duc Dang <dhdang@apm.com>, Liviu Dudau <liviu.dudau@arm.com>,
-	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
+Received: from foss.arm.com ([217.140.101.70]:49660 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933271AbbDVRHW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Apr 2015 13:07:22 -0400
+Date: Wed, 22 Apr 2015 18:07:18 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Stuart Yoder <stuart.yoder@freescale.com>
+Cc: Varun Sethi <Varun.Sethi@freescale.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-arm-kernel@lists.infradead.org>, Loc Ho <lho@apm.com>
-In-Reply-To: <CAL85gmDmycodMV2WJydmA7u60S+K2w3Ji=BSVPfAg04N6unX0g@mail.gmail.com>
-References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
- <cover.1428564115.git.dhdang@apm.com>
- <7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>
- <55280665.9020603@arm.com>
- <CAL85gmDmycodMV2WJydmA7u60S+K2w3Ji=BSVPfAg04N6unX0g@mail.gmail.com>
-Message-ID: <bb00880b6d37fff304797d0c3e4e670d@www.loen.fr>
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Message-ID: <20150422170718.GG13019@arm.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <20150416104008.GB25640@arm.com>
+ <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Feng,
+Hi Stuart,
 
-On 2015-04-11 01:16, Feng Kan wrote:
+First of, thanks for taking the time to explain this in more detail.
+Comments inline.
 
-> Is there any plans to support ACPI for GICv2m MSI? Both this driver 
-> and the
-> GICv2m seems to support OF model of discovery for msi controller. 
-> X-Gene1
-> uses this driver and X-Gene2 uses GICv2m, there needs to be a way to
-> associate msi controller with the PCIe bus. I haven't
-> found a standard way of doing finding "msi-parent" for ACPI. Do you 
-> have
-> any suggestion.
+On Fri, Apr 17, 2015 at 03:19:08PM +0100, Stuart Yoder wrote:
+> > On Wed, Apr 15, 2015 at 02:18:13PM +0100, Varun Sethi wrote:
+> > > Yes, deviceid=stream id (i.e. ICID + other bits). I am not sure if TBU ID
+> > > would also be forwarded as a part of stream id to GIC. My understanding is
+> > > that TBU ID is forwarded (as a part of the stream ID) to the TCU in case
+> > > of a TBU translation miss. In case of the LS2085 PCIe controller you would
+> > > have to setup the PCIe device ID to stream ID translation table. We may
+> > > have to restrict the number of entries based on the available number of
+> > > contexts.
+> > 
+> > Unfortunately, I'm having a really hard time parsing this thread (some parts
+> > of it simply don't make sense; others use non-architectural terms and
+> > overall I don't get a feeling for the problem).
+> > 
+> > Please could you explain your system design step by step so that I can
+> > understand (a) what you've built and (b) why the current design of Linux is
+> > causing you problems?
+> > 
+> > Sorry if I'm just being thick, but it's important that we get this right.
+> 
+> I'll try to summarize some key points about the system...
+> 
+> System is using a single SMMU-500 (1 TCU, 6 TBUs) and GICv3-ITS.  There are
+> PCI, fsl-mc, and platform devices that do DMA.  Devices on the PCI and
+> fsl-mc bus generate message interrupts.
 
-This is remarkably off topic! ;-)
+Ah cool, so you have multiple buses sharing a single SMMU? That's going to
+necessitate some ID remapping in the device-tree. Perhaps you could comment
+on Mark Rutland's proposal if it does/doesn't work for you:
 
-ACPI only provides information for GICv2m and GICv3. No other interrupt 
-controller,
-MSI widget or fairy dust provider will be supported on arm64 with ACPI. 
-So this driver
-will be DT only.
+  http://lists.infradead.org/pipermail/linux-arm-kernel/2015-March/333199.html
 
-GICv2m, being described in the ACPI spec, is growing some support. My 
-understanding is
-that this is done by AMD (Suravee Suthikulpanit) using my 
-irq/msi-domain branch as a
-base (I know that Suravee is looking at expanding the irqdomain 
-matching code to
-accept a pointer to an ACPI table instead of a device node to match the 
-target
-domain).
 
-Hope this helps,
+> The flow a message interrupt would take is this:
+> 
+>     --------------
+>       PCI device
+>     --------------
+>           |
+>           | pcidevid + MSI msg
+>           |
+>           V
+>     --------------
+>     PCI controller
+>       pcidevid ->
+>       streamID
+>       mapping
+>     --------------
+>           |
+>           | streamID + MSI msg
+>           |
+>           V
+>     --------------
+>         SMMU
+>     --------------
+>           |
+>           | streamID + MSI msg
+>           |
+>           V
+>     --------------
+>        CCN-504 (Dickens)
+>     --------------
+>           |
+>           | streamID + MSI msg
+>           |
+>           V
 
-         M.
--- 
-Fast, cheap, reliable. Pick two.
+The streamID here as the same as the one coming out of the SMMU, right?
+(just trying to out why you have the CCN-504 in the picture).
+
+>     --------------
+>       GICv3 ITS    streamID == ITS deviceID
+>     --------------
+> 
+> So, the way things work (at least initially) is that each PCI device maps
+> to a single streamID, and thus each device has a separate ITT in 
+> the ITS.  So, things should be cool.
+> 
+> However, there is an improvement we envision as possible due to 
+> the limited number of SMMU contexts (i.e. 64).  If there are
+> 64 SMMU context registers it means that there is a max of
+> 64 software contexts where things can be isolated.  But, say I have
+> an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
+> to a KVM VM.  Those 8 PCI devices could share the same
+> streamID/ITS-device-ID since they all share the same isolation
+> context.
+> 
+> What would be nice is at the time the 8 VFS are being added
+> to the IOMMU domain is for the pcidevid -> streamID mapping
+> table to be updated dynamically.  It simply lets us make
+> more efficient use of the limited streamIDs we have.
+> 
+> I think it is this improvement that Minghuan had in mind
+> in this patch.
+
+Ok, but in this case it should be possible to use a single context bank for
+all of the VF streamIDs by configuring the appropriate SMR, no? Wouldn't
+that sort of thing be preferable to dynamic StreamID assignment? It would
+certainly make life easier for the MSIs.
+
+Will
