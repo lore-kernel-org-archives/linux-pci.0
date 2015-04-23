@@ -1,113 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:57657 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753270AbbDMGRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 02:17:16 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v8 35/37] x86/irq: Simplify the way to print IOAPIC entry
-Date: Mon, 13 Apr 2015 14:11:57 +0800
-Message-Id: <1428905519-23704-36-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:33369 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618AbbDWVaT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 17:30:19 -0400
+Received: by oblw8 with SMTP id w8so24082405obl.0
+        for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2015 14:30:18 -0700 (PDT)
+Date: Thu, 23 Apr 2015 16:30:15 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	intel-gfx <intel-gfx@lists.freedesktop.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg59@coreos.com>
+Subject: Re: git pull] drm for v4.1-rc1
+Message-ID: <20150423213015.GA7888@google.com>
+References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
+ <CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify the way to print IOAPIC entry content, so we could kill
-native_io_apic_print_entries(), intel_ir_io_apic_print_entries()
-and x86_io_apic_ops.print_entries() later.
+[+cc Matthew]
 
-Folded a patch from Thomas to fix errors in printed pin attributes,
-http://www.spinics.net/lists/linux-tip-commits/msg26108.html
+On Tue, Apr 21, 2015 at 09:07:45AM -0700, Linus Torvalds wrote:
+> Hmm. The odd Intel PCI resource mess is back.
+> 
+> Or maybe it never went away.
+> 
+> I get these when suspending. Things *work*, but it's really spamming
+> my logs a fair bit:
+> 
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   pci_bus 0000:01: Allocating resources
+>   pci_bus 0000:02: Allocating resources
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+> 
+> That resource is complete garbage. "flags 0x2" is not even a valid
+> flag value. I'm *guessing* it might be IORESOURCE_ROM_SHADOW, but if
+> that is valid, then it should also have have had the IORESOURCE_MEM
+> bit, and it doesn't.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-8-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/io_apic.c |   30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+Your i915 does not have a ROM BAR in hardware.  If the default video
+device has no ROM BAR, pci_fixup_video() sets IORESOURCE_ROM_SHADOW
+even though the resource flags are zero because the BAR itself doesn't
+exist.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 16d4ba3ac844..3c6609617306 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1424,6 +1424,33 @@ void ioapic_zap_locks(void)
- 	raw_spin_lock_init(&ioapic_lock);
- }
- 
-+static void io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
-+{
-+	int i;
-+	char buf[256];
-+	struct IO_APIC_route_entry entry;
-+	struct IR_IO_APIC_route_entry *ir_entry = (void *)&entry;
-+
-+	printk(KERN_DEBUG "IOAPIC %d:\n", apic);
-+	for (i = 0; i <= nr_entries; i++) {
-+		entry = ioapic_read_entry(apic, i);
-+		snprintf(buf, sizeof(buf),
-+			 " pin%02x, %s, %s, %s, V(%02X), IRR(%1d), S(%1d)",
-+			 i, entry.mask ? "disabled" : "enabled ",
-+			 entry.trigger ? "level" : "edge ",
-+			 entry.polarity ? "low " : "high",
-+			 entry.vector, entry.irr, entry.delivery_status);
-+		if (ir_entry->format)
-+			printk(KERN_DEBUG "%s, remapped, I(%04X),  Z(%X)\n",
-+			       buf, (ir_entry->index << 15) | ir_entry->index,
-+			       ir_entry->zero);
-+		else
-+			printk(KERN_DEBUG "%s, %s, D(%02X), M(%1d)\n",
-+			       buf, entry.dest_mode ? "logical " : "physical",
-+			       entry.dest, entry.delivery_mode);
-+	}
-+}
-+
- static void __init print_IO_APIC(int ioapic_idx)
- {
- 	union IO_APIC_reg_00 reg_00;
-@@ -1477,8 +1504,7 @@ static void __init print_IO_APIC(int ioapic_idx)
- 	}
- 
- 	printk(KERN_DEBUG ".... IRQ redirection table:\n");
--
--	x86_io_apic_ops.print_entries(ioapic_idx, reg_01.bits.entries);
-+	io_apic_print_entries(ioapic_idx, reg_01.bits.entries);
- }
- 
- void __init print_IO_APICs(void)
--- 
-1.7.10.4
+If IORESOURCE_ROM_SHADOW is set, pci_map_rom() assumes there's a
+shadow ROM image at 0xC0000.  Is there a shadow image even if the
+device itself doesn't have a ROM BAR?
 
+We could fabricate a resource even if the BAR doesn't exist, e.g.,
+"flags = IORESOURCE_MEM | ... | IORESOURCE_ROM_SHADOW", but that
+would be ugly and error-prone in other places that use the ROM.
+
+Matthew added dev->rom for ROM images supplied by the platform
+(84c1b80e3263 ("PCI: Add support for non-BAR ROMs")).  A shadow
+image seems like a similar thing.  I think it would be cleaner to get
+rid of IORESOURCE_ROM_SHADOW altogether and instead set "dev->rom =
+0xC0000" if there's a shadow image, e.g.:
+
+  int pcibios_add_device(struct pci_dev *dev)
+  {
+    if (dev-is-default-vga-device) {
+      dev->rom = 0xC0000;
+      dev->romlen = 0x20000;
+    }
+
+    pa_data = boot_params.hdr.setup_data;
+    while (pa_data) {
+      ...
+      if (data->type == SETUP_PCI) {
+        rom = (struct pci_setup_rom *)data;
+
+        if (dev-is-rom-dev) {
+          dev->rom = ...
+          dev->romlen = rom->pcilen;
+        }
+      }
+    }
+
+But the rules for figuring out which image to use seem ...
+complicated.
+
+Bjorn
