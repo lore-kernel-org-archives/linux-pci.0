@@ -1,92 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36024 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109AbbDGHEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Apr 2015 03:04:37 -0400
-Received: by pabsx10 with SMTP id sx10so69321628pab.3
-        for <linux-pci@vger.kernel.org>; Tue, 07 Apr 2015 00:04:36 -0700 (PDT)
-Message-ID: <1428390266.14169.1.camel@axtens.net>
-Subject: Re: [PATCH v9 14/30] PCI: Introduce pci_host_bridge_ops to support
- host specific operations
-From: Daniel Axtens <dja@axtens.net>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>, x86@kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, linux-ia64@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, linux-alpha@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 07 Apr 2015 17:04:26 +1000
-In-Reply-To: <1428053164-28277-16-git-send-email-wangyijing@huawei.com>
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com>
-	 <1428053164-28277-16-git-send-email-wangyijing@huawei.com>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-+p8vPjV/hW23nWb2qOTV"
-Mime-Version: 1.0
+Received: from [119.145.14.66] ([119.145.14.66]:28380 "EHLO
+	szxga03-in.huawei.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S932189AbbDWHqC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 03:46:02 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
+	<rwhite@pobox.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: Fix NULL pointer when find parent pcie_link_state
+Date: Thu, 23 Apr 2015 15:41:56 +0800
+Message-ID: <1429774916-24920-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
+NULL Pointer in pcie_aspm_init_link_state(), Some platform
+like ATCA may has strange PCIe topology:
+E.g.
+---root port---downstream port---upstream port
+                              |--downstream port
+                              |--downstream port
 
---=-+p8vPjV/hW23nWb2qOTV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+When we try to alloc pcie_link_state, we assumed downstream port
+always has a upstream port, in this case, NULL pointer would
+be triggered when try to find the parent pci_link_state,
+because downstream port connects to root port directly.
 
-On Fri, 2015-04-03 at 17:25 +0800, Yijing Wang wrote:
-> Now we have weak functions like pcibios_root_bridge_prepare()
-> to setup pci host bridge, We could introduce pci_host_bridge_ops
-> which contain host bridge specific ops to setup pci_host_bridge.
-> Then host bridge driver could add pci_host_bridge_ops hooks
-> intead of weak function to setup pci_host_bridge.
-> This patch add following pci_host_bridge_ops hooks:
->=20
-> pci_host_bridge_ops {
-> 	struct pci_ops *ops;
-Trivial nit, but this is 'struct pci_ops *pci_ops' in the code below.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aspm.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-> +struct pci_host_bridge;
-> +struct pci_host_bridge_ops {
-> +	struct pci_ops *pci_ops;
-> +	int (*prepare)(struct pci_host_bridge *host);
-> +	void (*set_root_bus_speed)(struct pci_host_bridge *host);
-> +	int (*scan_bus)(struct pci_host_bridge *host);
-> +};
-> +
-
-Regards,
-Daniel
-
---=-+p8vPjV/hW23nWb2qOTV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-Comment: GPGTools - https://gpgtools.org
-
-iQIcBAABCAAGBQJVI4F6AAoJEPC3R3P2I92FjZwQAJw/0Bh3rRl6fwPkYFP66J+c
-2ZnbAeR25jp8VwFrHLBjTOLB/FYNkYnc1rOa6lrLi2Tzl9JupQ4Qr0GqkrUlU6tU
-z5mIxlBYbXGxquDSKlriq4Jh/7hP7Jsbztbo+WWz2oEH5QMD4bPcnAlXp26Y+h/D
-3kbiMiKQ9nbp9/AaME1PReUSVd1ZMvvu2Mb9IZaf0g+XR0QWBQTLuxI8KESdlozp
-wFY3sr9GtjcHLbjneeM4oiknWgnabIbcksBnBcajUItz/N8ik/56ofMevx+fMG6I
-TduJRjJdObe7vfnuPVQu9aOhgIOtGuqmzAUy9fpOkC967f7+nv0yn8CjVLhsSEYj
-DCyZfkEQ0YthVFUc/yBrYI89VBceyLxq0yCv8nOpWYRXHV2NZd+T5iahKZr0skHA
-Gu7WVC/mED3UOxRempwGFlDgMOakOYHjZVFRnjAnVzD3cCS9cCCfHhFfjAzR3CJG
-78QxuZxiV1nGH0AAvoGpVqQk8wbNrHa2ARPsku9Obf/tOp/GUC7zmDJj+1uNVlIt
-tLP6MVpv2y2nk2j6NK8HeTX1rdDontaBUIQk3wtPC8xGZuaDifgXPnEA5K6zpmzD
-SmcBfxXW4gA2Eh49XAA37poVZg/B/LbfuBXemqPhkdqO1HwZVRi4aVKp78C0dEnI
-ibpvlkMwd4AhMN4hcj4g
-=8gut
------END PGP SIGNATURE-----
-
---=-+p8vPjV/hW23nWb2qOTV--
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 7d4fcdc..f295824 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -526,8 +526,17 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&link->link);
+ 	link->pdev = pdev;
+ 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+-		struct pcie_link_state *parent;
+-		parent = pdev->bus->parent->self->link_state;
++		struct pci_bus *pbus = pdev->bus;
++		struct pcie_link_state *parent = NULL;
++
++		while (pbus) {
++			if (pbus->self) {
++				parent = pbus->self->link_state;
++				if (parent)
++					break;
++			}
++			pbus = pbus->parent;
++		}
+ 		if (!parent) {
+ 			kfree(link);
+ 			return NULL;
+-- 
+1.7.1
 
