@@ -1,104 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20633 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754223AbbDHSSm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 14:18:42 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v8 2/3] PCI: iproc: Add DT docs for Broadcom iProc PCIe driver
-Date: Wed, 8 Apr 2015 11:21:34 -0700
-Message-ID: <1428517295-12825-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
-References: <1428517295-12825-1-git-send-email-rjui@broadcom.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:36736 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753648AbbDWWrM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 18:47:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAPeXnHsrQrkeJ3QQ6ds6yhY0C31DKqnR2uHSm9rcXdGEHBDDAg@mail.gmail.com>
+References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
+	<CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+	<20150423213015.GA7888@google.com>
+	<CAPeXnHsrQrkeJ3QQ6ds6yhY0C31DKqnR2uHSm9rcXdGEHBDDAg@mail.gmail.com>
+Date: Thu, 23 Apr 2015 15:47:10 -0700
+Message-ID: <CA+55aFwC+sH+62b4rDuy5PWAPEc9Xr3tWcCAQXOED+2Jk9C65A@mail.gmail.com>
+Subject: Re: git pull] drm for v4.1-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Matthew Garrett <matthew.garrett@coreos.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	intel-gfx <intel-gfx@lists.freedesktop.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg59@coreos.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document the Broadcom iProc PCIe platform interface device tree binding
+On Thu, Apr 23, 2015 at 2:56 PM, Matthew Garrett
+<matthew.garrett@coreos.com> wrote:
+> On Thu, Apr 23, 2015 at 2:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>>   int pcibios_add_device(struct pci_dev *dev)
+>>   {
+>>     if (dev-is-default-vga-device) {
+>>       dev->rom = 0xC0000;
+>>       dev->romlen = 0x20000;
+>>     }
+>
+> I don't know what we want to do here. This is, at some level,
+> fundamentally wrong - however, it also wouldn't surprise me if this is
+> also the only copy of the video ROM we have on some UEFI systems,
+> especially since I believe that Windows 7 still required that there be
+> a legacy ROM it could use for bootloader modesetting on UEFI
+> platforms. So simply making this conditional on BIOS may break
+> existing machines. But if there *is* a ROM there then we should be
+> able to id it from the usual video ROM signature?
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |   63 ++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+I'm not sure why we want that IORESOURCE_ROM_SHADOW thing at all, but
+yes, if what this is all about is the magic video ROM at 0xc0000, then
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-new file mode 100644
-index 0000000..f7ce50e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -0,0 +1,63 @@
-+* Broadcom iProc PCIe controller with the platform bus interface
-+
-+Required properties:
-+- compatible: Must be "brcm,iproc-pcie"
-+- reg: base address and length of the PCIe controller I/O register space
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+  mapping of the PCIe interface to interrupt numbers
-+- linux,pci-domain: PCI domain ID. Should be unique for each host controller
-+- bus-range: PCI bus numbers covered
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
-+
-+Optional properties:
-+- phys: phandle of the PCIe PHY device
-+- phy-names: must be "pcie-phy"
-+
-+Example:
-+	pcie0: pcie@18012000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18012000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <0>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x28000000 0 0x00010000
-+			  0x82000000 0 0x20000000 0x20000000 0 0x04000000>;
-+
-+		phys = <&phy 0 5>;
-+		phy-names = "pcie-phy";
-+	};
-+
-+	pcie1: pcie@18013000 {
-+		compatible = "brcm,iproc-pcie";
-+		reg = <0x18013000 0x1000>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 106 IRQ_TYPE_NONE>;
-+
-+		linux,pci-domain = <1>;
-+
-+		bus-range = <0x00 0xff>;
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0	  0x48000000 0 0x00010000
-+			  0x82000000 0 0x40000000 0x40000000 0 0x04000000>;
-+
-+		phys = <&phy 1 6>;
-+		phy-names = "pcie-phy";
-+	};
--- 
-1.7.9.5
+ (a) it should have nothing what-so-ever to do with the actual PCI
+BAR, since it's been *ages* since people actually had an expansion rom
+like that, and it's much more common that the video ROM comes as part
+of the system BIOS on laptops etc.
 
+ (b) yes, the sane thing to do would be to just look for the ROM
+signature, 0x55 0xaa at 2kB incrementing headers (and checking the
+proper checksum too).
+
+There is no way to see that from the PCI device state, because as
+mentioned, quite often the "ROM" is entirely fake, and is not just
+some shadowed copy of a real underlying hardware ROM, but is
+fundamentally just a RAM image decompressed from some other source and
+then marked read-only.
+
+                   Linus
