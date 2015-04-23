@@ -1,83 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:34649 "EHLO
-	mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753803AbbDTS45 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Apr 2015 14:56:57 -0400
-Received: by qkgx75 with SMTP id x75so187565082qkg.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 11:56:56 -0700 (PDT)
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:35921 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423AbbDWW7v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 18:59:51 -0400
+Received: by wgen6 with SMTP id n6so33488510wge.3
+        for <linux-pci@vger.kernel.org>; Thu, 23 Apr 2015 15:59:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
-References: <1429555323-11127-1-git-send-email-sonnyrao@chromium.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 Apr 2015 13:56:36 -0500
-Message-ID: <CAErSpo7TkdZ7nHHwFzwqhyTA3X_09x0ywbAmW+m2D-Or1AhyYw@mail.gmail.com>
-Subject: Re: [PATCH] perf/x86/intel/uncore: add support for Haswell ULT IMC uncore
-To: Sonny Rao <sonnyrao@chromium.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Stephane Eranian <eranian@google.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Paul Mackerras <paulus@samba.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Arnaldo Carvalho de Melo <acme@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <CA+55aFwC+sH+62b4rDuy5PWAPEc9Xr3tWcCAQXOED+2Jk9C65A@mail.gmail.com>
+References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
+	<CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+	<20150423213015.GA7888@google.com>
+	<CAPeXnHsrQrkeJ3QQ6ds6yhY0C31DKqnR2uHSm9rcXdGEHBDDAg@mail.gmail.com>
+	<CA+55aFwC+sH+62b4rDuy5PWAPEc9Xr3tWcCAQXOED+2Jk9C65A@mail.gmail.com>
+Date: Thu, 23 Apr 2015 15:59:50 -0700
+Message-ID: <CAPeXnHv8nmaC8S96pP6oV_y4CvFSoFNWBt0CfB4M9gdTowGJyA@mail.gmail.com>
+Subject: Re: git pull] drm for v4.1-rc1
+From: Matthew Garrett <matthew.garrett@coreos.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	intel-gfx <intel-gfx@lists.freedesktop.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg59@coreos.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 20, 2015 at 1:42 PM, Sonny Rao <sonnyrao@chromium.org> wrote:
-> This uncore is the same as the Haswell desktop part but uses a
-> different PCI ID.
->
-> Signed-off-by: Sonny Rao <sonnyrao@chromium.org>
-> ---
->  arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c | 5 +++++
->  include/linux/pci_ids.h                           | 1 +
->  2 files changed, 6 insertions(+)
->
-> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-> index 3001015..0bda6fc 100644
-> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore_snb.c
-> @@ -472,6 +472,10 @@ static const struct pci_device_id hsw_uncore_pci_ids[] = {
->                 PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_IMC),
->                 .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
->         },
-> +       { /* IMC */
-> +               PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_HSW_U_IMC),
-> +               .driver_data = UNCORE_PCI_DEV_DATA(SNB_PCI_UNCORE_IMC, 0),
-> +       },
->         { /* end: all zeroes */ },
->  };
->
-> @@ -502,6 +506,7 @@ static const struct imc_uncore_pci_dev desktop_imc_pci_ids[] = {
->         IMC_DEV(IVB_IMC, &ivb_uncore_pci_driver),    /* 3rd Gen Core processor */
->         IMC_DEV(IVB_E3_IMC, &ivb_uncore_pci_driver), /* Xeon E3-1200 v2/3rd Gen Core processor */
->         IMC_DEV(HSW_IMC, &hsw_uncore_pci_driver),    /* 4th Gen Core Processor */
-> +       IMC_DEV(HSW_U_IMC, &hsw_uncore_pci_driver),  /* 4th Gen Core ULT Mobile Processor */
->         {  /* end marker */ }
->  };
->
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 38cff8f..e5ae042 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2545,6 +2545,7 @@
->  #define PCI_DEVICE_ID_INTEL_IVB_IMC    0x0154
->  #define PCI_DEVICE_ID_INTEL_IVB_E3_IMC 0x0150
->  #define PCI_DEVICE_ID_INTEL_HSW_IMC    0x0c00
-> +#define PCI_DEVICE_ID_INTEL_HSW_U_IMC  0x0a04
+On Thu, Apr 23, 2015 at 3:47 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 
-Please either use the 0x0a04 constant directly in
-perf_event_intel_uncore_snb.c, or explain why the #define should be
-here, e.g., maybe it will be used in multiple places.  See the comment
-at the top of pci_ids.h.
+> I'm not sure why we want that IORESOURCE_ROM_SHADOW thing at all, but
+> yes, if what this is all about is the magic video ROM at 0xc0000, then
 
->  #define PCI_DEVICE_ID_INTEL_PXHD_0     0x0320
->  #define PCI_DEVICE_ID_INTEL_PXHD_1     0x0321
->  #define PCI_DEVICE_ID_INTEL_PXH_0      0x0329
-> --
-> 2.1.2
->
+It's used in the PCI layer to say "Read from 0xc0000 rather than the
+ROM BAR" and then ends up as a shorthand for "Was this the boot video
+device" in various places because we're bad at software.
+
+> There is no way to see that from the PCI device state, because as
+> mentioned, quite often the "ROM" is entirely fake, and is not just
+> some shadowed copy of a real underlying hardware ROM, but is
+> fundamentally just a RAM image decompressed from some other source and
+> then marked read-only.
+
+If only - nvidias used to rewrite their image at runtime.
+
+-- 
+Matthew Garrett | matthew.garrett@coreos.com
