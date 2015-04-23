@@ -1,76 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53052 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933043AbbD1Jf4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 05:35:56 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: <xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>,
-	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH Part2 v11 2/2] PCI: Remove deprecated pci_scan_bus_parented()
-Date: Tue, 28 Apr 2015 17:32:34 +0800
-Message-ID: <1430213554-9107-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1430213554-9107-1-git-send-email-wangyijing@huawei.com>
-References: <1430213554-9107-1-git-send-email-wangyijing@huawei.com>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:42162 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756405AbbDWHgO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Apr 2015 03:36:14 -0400
+Message-ID: <5538A0AE.6050005@st.com>
+Date: Thu, 23 Apr 2015 09:35:10 +0200
+From: Fabrice Gasnier <fabrice.gasnier@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jisheng Zhang <jszhang@marvell.com>, <jg1.han@samsung.com>,
+	<bhelgaas@google.com>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 2/2] PCI: designware: use iATU0 for cfg and IO, iATU1
+ for MEM
+References: <1429707494-2732-1-git-send-email-jszhang@marvell.com> <1429707494-2732-3-git-send-email-jszhang@marvell.com>
+In-Reply-To: <1429707494-2732-3-git-send-email-jszhang@marvell.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No one uses pci_scan_bus_parented() any more,
-remove it.
+Hi Jisheng,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   19 -------------------
- include/linux/pci.h |    2 --
- 2 files changed, 0 insertions(+), 21 deletions(-)
+On 04/22/2015 02:58 PM, Jisheng Zhang wrote:
+> Most transactions' type are cfg0 and MEM, so the Current iATU usage is not
+> balanced, iATU0 is hot while iATU1 is rarely used. This patch refactors
+> the iATU usage: iATU0 for cfg and IO, iATU1 for MEM. This allocation
+> ideas comes from Minghuan Lian<Minghuan.Lian@freescale.com>:
+>
+>   http://www.spinics.net/lists/linux-pci/msg40440.html
+>
+> Signed-off-by: Jisheng Zhang<jszhang@marvell.com>
+> ---
+>   drivers/pci/host/pcie-designware.c | 83 +++++++++++++++++++++-----------------
+>   1 file changed, 47 insertions(+), 36 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 1da1446..bb81c8ad 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -508,6 +508,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>   	if (pp->ops->host_init)
+>   		pp->ops->host_init(pp);
+>   
+> +	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> +				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+> +				  pp->io_bus_addr, pp->io_size);
+> +	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> +				  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
+> +				  pp->mem_bus_addr, pp->mem_size);
+> +
+Some platforms doesn't have support for ATU. I think this is the reason 
+to have
+rd_other_conf / wr_other_conf ops in the driver.
+IMO, this is not suitable to have this in the initialization routine for 
+all platforms.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6675a7a..7d6a61c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2094,25 +2094,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 					void *sysdata)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..1ec0d5d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -773,8 +773,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--- 
-1.7.1
-
+Regards,
+Fabrice
