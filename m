@@ -1,170 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1154 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754110AbbDMGQ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 02:16:57 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part1 v8 34/37] x86/irq: Refine the way to allocate irq_cfg for legacy IRQs
-Date: Mon, 13 Apr 2015 14:11:56 +0800
-Message-Id: <1428905519-23704-35-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:54315 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755415AbbDWBwn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 21:52:43 -0400
+Message-ID: <55385039.6010100@hisilicon.com>
+Date: Thu, 23 Apr 2015 09:51:53 +0800
+From: yuanzhichang <yuanzhichang@hisilicon.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <grant.likely@linaro.org>, <linux-pci@vger.kernel.org>,
+	<gabriele.paoloni@huawei.com>, <Liviu.Dudau@arm.com>
+Subject: Re: [[PATCH v1]] of/pci: fix a bug in function pci_pio_to_address
+References: <1429709759-79006-1-git-send-email-yuanzhichang@hisilicon.com> <20150422151111.GG20701@google.com>
+In-Reply-To: <20150422151111.GG20701@google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support legacy ISA IRQs, we need to preallocate irq_cfg structures
-for legacy ISA IRQs. Refine the way to allocate irq_cfg for legacy ISA
-IRQs, so it's more friend to hierarchy irqdomain implementation.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-7-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/kernel/apic/io_apic.c |   13 +------------
- arch/x86/kernel/apic/vector.c  |   42 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 42 insertions(+), 13 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 3406dbec1570..16d4ba3ac844 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -254,8 +254,7 @@ static void free_ioapic_saved_registers(int idx)
- 
- int __init arch_early_ioapic_init(void)
- {
--	struct irq_cfg *cfg;
--	int i, node = cpu_to_node(0);
-+	int i;
- 
- 	if (!nr_legacy_irqs())
- 		io_apic_irqs = ~0UL;
-@@ -263,16 +262,6 @@ int __init arch_early_ioapic_init(void)
- 	for_each_ioapic(i)
- 		alloc_ioapic_saved_registers(i);
- 
--	/*
--	 * For legacy IRQ's, start with assigning irq0 to irq15 to
--	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--	 */
--	for (i = 0; i < nr_legacy_irqs(); i++) {
--		cfg = alloc_irq_and_cfg_at(i, node);
--		cfg->vector = IRQ0_VECTOR + i;
--		cpumask_setall(cfg->domain);
--	}
--
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 609db1910fd3..4b8fad9aa685 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -24,6 +24,9 @@
- struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static struct irq_chip lapic_controller;
-+#ifdef	CONFIG_X86_IO_APIC
-+static struct irq_cfg *legacy_irq_cfgs[NR_IRQS_LEGACY];
-+#endif
- 
- void lock_vector_lock(void)
- {
-@@ -283,6 +286,10 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
- 			free_remapped_irq(virq);
- 			clear_irq_vector(virq + i, irq_data->chip_data);
- 			free_irq_cfg(irq_data->chip_data);
-+#ifdef	CONFIG_X86_IO_APIC
-+			if (virq + i < nr_legacy_irqs())
-+				legacy_irq_cfgs[virq + i] = NULL;
-+#endif
- 			irq_domain_reset_irq_data(irq_data);
- 		}
- 	}
-@@ -308,7 +315,12 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
--		cfg = alloc_irq_cfg(irq_data->node);
-+#ifdef	CONFIG_X86_IO_APIC
-+		if (virq + i < nr_legacy_irqs() && legacy_irq_cfgs[virq + i])
-+			cfg = legacy_irq_cfgs[virq + i];
-+		else
-+#endif
-+			cfg = alloc_irq_cfg(irq_data->node);
- 		if (!cfg) {
- 			err = -ENOMEM;
- 			goto error;
-@@ -357,8 +369,36 @@ int __init arch_probe_nr_irqs(void)
- 	return nr_legacy_irqs();
- }
- 
-+#ifdef	CONFIG_X86_IO_APIC
-+static void init_legacy_irqs(void)
-+{
-+	int i, node = cpu_to_node(0);
-+	struct irq_cfg *cfg;
-+
-+	/*
-+	 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+	 */
-+	for (i = 0; i < nr_legacy_irqs(); i++) {
-+		cfg = legacy_irq_cfgs[i] = alloc_irq_cfg(node);
-+		BUG_ON(!cfg);
-+		/*
-+		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+		 */
-+		cfg->vector = IRQ0_VECTOR + i;
-+		cpumask_setall(cfg->domain);
-+		irq_set_chip_data(i, cfg);
-+	}
-+}
-+#else
-+static void init_legacy_irqs(void) { }
-+#endif
-+
- int __init arch_early_irq_init(void)
- {
-+	init_legacy_irqs();
-+
- 	x86_vector_domain = irq_domain_add_tree(NULL, &x86_vector_domain_ops,
- 						NULL);
- 	BUG_ON(x86_vector_domain == NULL);
--- 
-1.7.10.4
+On 2015/4/22 23:11, Bjorn Helgaas wrote:
+> On Wed, Apr 22, 2015 at 09:35:59PM +0800, Zhichang Yuan wrote:
+>> In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
+>> was introduced to retieve the corresponding I/O port by CPU address. But the
+>> convertion processing is not correct. It will return a wrong I/O port.
+>> This patch will fix it.
+>
+> Hmmm, this subject and changelog don't seem right.  41f8bba7f555 did add
+> pci_pio_to_address(), but that converts an I/O port to a CPU address, and
+> this patch doesn't touch that function.
+>
+> This patch changes pci_address_to_pio(), which does return the I/O port
+> corresponding to a CPU physical address.  This function was modified (but
+> not added) by 41f8bba7f555.
+>
+> Please add:
+>
+> Fixes: 41f8bba7f555 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
+> CC: stable@vger.kernel.org	# v3.18+
+>
+Ok. I will update the log and submit the v2.
+>> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+>> ---
+>>   drivers/of/address.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> index 78a7dcb..6906a3f 100644
+>> --- a/drivers/of/address.c
+>> +++ b/drivers/of/address.c
+>> @@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>>   	spin_lock(&io_range_lock);
+>>   	list_for_each_entry(res, &io_range_list, list) {
+>>   		if (address >= res->start && address < res->start + res->size) {
+>> -			addr = res->start - address + offset;
+>> +			addr = address - res->start + offset;
+>
+> This looks like it's been broken since v3.18, and it's used by many
+> platforms.  I/O port space isn't as common as it used to be, but it's still
+> surprising that nobody noticed until now.
+>
+> This change does look correct to me, but I want to double-check that we're
+> actually going to *fix* a bunch of platforms rather than breaking them.
+>
+>>   			break;
+>>   		}
+>>   		offset += res->size;
+>> --
+>> 1.9.1
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
