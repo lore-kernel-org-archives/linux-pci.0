@@ -1,130 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:33985 "EHLO foss.arm.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56195 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966370AbbD2RoA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Apr 2015 13:44:00 -0400
-Date: Wed, 29 Apr 2015 18:43:57 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
-Message-ID: <20150429174356.GA20947@red-moon>
-References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
- <6662179.AoBfCMOsxD@wuerfel>
+	id S932434AbbDXIuO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Apr 2015 04:50:14 -0400
+Date: Fri, 24 Apr 2015 16:49:57 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Baoquan He <bhe@redhat.com>
+Cc: "Li, ZhenHua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150424084957.GC23912@dhcp-128-91.nay.redhat.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+ <20150415005731.GC19051@localhost.localdomain>
+ <552DFB56.1070600@hp.com>
+ <20150415064803.GF19051@localhost.localdomain>
+ <20150424080147.GC4458@dhcp-16-116.nay.redhat.com>
+ <20150424082528.GA23912@dhcp-128-91.nay.redhat.com>
+ <20150424083530.GD4458@dhcp-16-116.nay.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6662179.AoBfCMOsxD@wuerfel>
+In-Reply-To: <20150424083530.GD4458@dhcp-16-116.nay.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 29, 2015 at 01:34:20PM +0100, Arnd Bergmann wrote:
-> On Wednesday 29 April 2015 17:09:58 Jayachandran C wrote:
-> > The current code in pci-host-generic.c uses pci_common_init_dev()
-> > from the arch/arm/ to do a part of the PCI initialization, and this
-> > prevents it from being used on arm64.
+On 04/24/15 at 04:35pm, Baoquan He wrote:
+> On 04/24/15 at 04:25pm, Dave Young wrote:
+> > Hi, Baoquan
 > > 
-> > The initialization done by pci_common_init_dev() that is really
-> > needed by pci-host-generic.c can be done in the same file without
-> > using the hw_pci API of ARM.
+> > > I support this patchset.
+> > > 
+> > > We should not fear oldmem since reserved crashkernel region is similar.
+> > > No one can guarantee that any crazy code won't step into crashkernel
+> > > region just because 1st kernel says it's reversed for kdump kernel. Here
+> > > the root table and context tables are also not built to allow legal code
+> > > to danamge. Both of them has the risk to be corrupted, for trying our
+> > > best to get a dumped vmcore the risk is worth being taken.
 > > 
-> > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
-> > this is be handled by setting up 'struct gen_pci' to embed a
-> > pci_sys_data variable as the first element on the ARM platform.
+> > old mem is mapped in 1st kernel so compare with the reserved crashkernel
+> > they are more likely to be corrupted. they are totally different. 
+> 
+> Could you tell how and why they are different? Wrong code will choose
+> root tables and context tables to danamge when they totally lose
+> control?
+
+iommu will map io address to system ram, right? not to reserved ram, but
+yes I'm assuming the page table is right, but I was worrying they are corrupted
+while kernel panic is happening.
+
+> 
 > > 
-> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > > 
+> > > And the resetting pci way has been NACKed by David Woodhouse, the
+> > > maintainer of intel iommu. Because the place calling the resetting pci
+> > > code is ugly before kdump kernel or in kdump kernel. And as he said a
+> > > certain device made mistakes why we blame on all devices. We should fix
+> > > that device who made mistakes. 
+> > 
+> > Resetting pci bus is not ugly than fixing a problem with risk and to fix
+> > the problem it introduced in the future.
 > 
-> This seems very useful
+> There's a problem, we fix the problem. If that's uglier, I need redefine
+> the 'ugly' in my personal dict. You mean the problem it could introduce
+> is wrong code will damage root table and context tables, why don't we
+> fix that wrong code, but blame innocent context tables? So you mean
+> these tables should deserve being damaged by wrong code?
 
-Yes, it is getting less awful, waiting for pci_sys_data to disappear.
+I'm more than happy to see this issue can be fixed in the patchset, I do not
+agree to add the code there with such problems. OTOH, for now seems there's
+no way to fix it.
 
-> > -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> > +static int gen_pci_init(struct device *dev, struct gen_pci *pci)
-> >  {
-> > -	struct gen_pci *pci = sys->private_data;
-> > -	list_splice_init(&pci->resources, &sys->resources);
-> > -	return 1;
-> > +	struct pci_bus *bus;
-> > +
-> > +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
 > 
-> Do we want to set that flag unconditionally? At least for servers,
-> the resources should get assigned by firmware, and things might
-> go wrong if Linux tries to reassign them. This is probably the
-> case on kvmtool as well.
-
-I will give it a go on kvmtool, but at first glance concern is
-shared.
-
-> > +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
-> > +	if (!bus) {
-> > +		dev_err(dev, "Scanning rootbus failed");
-> > +		return -ENODEV;
-> > +	}
-> > +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> 
-> I thought this was done by default now. If it is not, can
-> we make the of_irq swizzling the default?
-
-Possibly yes.
-
-> > +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> > +		pci_bus_size_bridges(bus);
-> > +		pci_bus_assign_resources(bus);
-> > +	}
-> > +	pci_bus_add_devices(bus);
-> > +
-> > +	/* Configure PCI Express settings */
-> > +	if (pci_has_flag(PCI_PROBE_ONLY)) {
-> > +		struct pci_bus *child;
-> > +
-> > +		list_for_each_entry(child, &bus->children, node)
-> > +			pcie_bus_configure_settings(child);
-> > +	}
-> > +	return 0;
-> >  }
-> 
-> We should also try to come up wtih a way to make that
-> pcie_bus_configure_settings() automatic if it's required here.
-> 
-> >  static int gen_pci_probe(struct platform_device *pdev)
-> > @@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
-> >  	struct device *dev = &pdev->dev;
-> >  	struct device_node *np = dev->of_node;
-> >  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> > -	struct hw_pci hw = {
-> > -		.nr_controllers	= 1,
-> > -		.private_data	= (void **)&pci,
-> > -		.setup		= gen_pci_setup,
-> > -		.map_irq	= of_irq_parse_and_map_pci,
-> > -		.ops		= &gen_pci_ops,
-> > -	};
-> >  
-> >  	if (!pci)
-> >  		return -ENOMEM;
-> > @@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> >  		return err;
-> >  	}
-> >  
-> > -	pci_common_init_dev(dev, &hw);
-> > -	return 0;
-> > +	return gen_pci_init(dev, pci);
-> 
-> How about moving the new code right into the probe() function?
-
-+1.
-
-I suspect the PCI_PROBE_ONLY case was not tested on arm64, since we
-still need a patch to prevent resources enablement there (in the
-pcibios_enable_device call - actually the check for PCI_PROBE_ONLY
-should be moved to the default pcibios_enable_device function in
-drivers/pci/pci.c).
-
-The other bit missing is MSI handling, that should still be implemented.
-
-Lorenzo
+> > 
+> > I know it is late to speak out, but sorry I still object and have to NACK this
+> > oldmem approach from my point.
+> > 
+> > Thanks
+> > Dave
