@@ -1,298 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:54658 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830AbbD0GjV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:21 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:19 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id DBFC53578058
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:16 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6d8IQ12845342
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:16 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6chaH016106
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:43 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 16/21] powerpc/pci: Delay creating pci_dn
-Date: Mon, 27 Apr 2015 16:37:48 +1000
-Message-Id: <1430116673-22500-17-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150423213015.GA7888@google.com>
+References: <alpine.DEB.2.00.1504200432000.1232@skynet.skynet.ie>
+	<CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com>
+	<20150423213015.GA7888@google.com>
+Date: Thu, 23 Apr 2015 20:55:59 -0400
+Message-ID: <CADnq5_PPaFdbVVyMPMDi1NXcTVtDR6YQo68rema0vuR_tyNb0A@mail.gmail.com>
+Subject: Re: git pull] drm for v4.1-rc1
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	intel-gfx <intel-gfx@lists.freedesktop.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Matthew Garrett <mjg59@coreos.com>,
+	Daniel Vetter <daniel.vetter@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_dn instances are allocated from memblock or bootmem when
-creating PCI controller (hoses) in setup_arch(). The PCI hotplug,
-which will be supported by proceeding patches, will release PCI
-device nodes and their corresponding pci_dn on unplugging event.
-The pci_dn instance memory chunks alloed from memblock or bootmem
-are hard to reused after being released.
+On Thu, Apr 23, 2015 at 5:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Matthew]
+>
+> On Tue, Apr 21, 2015 at 09:07:45AM -0700, Linus Torvalds wrote:
+>> Hmm. The odd Intel PCI resource mess is back.
+>>
+>> Or maybe it never went away.
+>>
+>> I get these when suspending. Things *work*, but it's really spamming
+>> my logs a fair bit:
+>>
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>   pci_bus 0000:01: Allocating resources
+>>   pci_bus 0000:02: Allocating resources
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>   i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+>>
+>> That resource is complete garbage. "flags 0x2" is not even a valid
+>> flag value. I'm *guessing* it might be IORESOURCE_ROM_SHADOW, but if
+>> that is valid, then it should also have have had the IORESOURCE_MEM
+>> bit, and it doesn't.
+>
+> Your i915 does not have a ROM BAR in hardware.  If the default video
+> device has no ROM BAR, pci_fixup_video() sets IORESOURCE_ROM_SHADOW
+> even though the resource flags are zero because the BAR itself doesn't
+> exist.
+>
+> If IORESOURCE_ROM_SHADOW is set, pci_map_rom() assumes there's a
+> shadow ROM image at 0xC0000.  Is there a shadow image even if the
+> device itself doesn't have a ROM BAR?
 
-The patch delay creating pci_dn so that they can be allocated from
-slab. In turn, the memory chunks for them can be reused after being
-released without problem. The creation of eeh_dev instances, which
-depends on pci_dn, is delayed a bit as well.
+Very likely yes.  With integrated APUs and mobile dGPUs, the vbios
+image is often stored as part of the system rom rather than as a
+dedicated rom for the GPU.  The vbios image is then copied to the
+shadow location during sbios init to provide OS access to the rom.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/ppc-pci.h     |  1 -
- arch/powerpc/kernel/eeh_dev.c          |  2 +-
- arch/powerpc/kernel/pci_dn.c           | 40 +++++++++++++++++++---------------
- arch/powerpc/platforms/maple/pci.c     | 35 +++++++++++++++++------------
- arch/powerpc/platforms/pasemi/pci.c    |  3 ---
- arch/powerpc/platforms/powermac/pci.c  | 39 ++++++++++++++++++++-------------
- arch/powerpc/platforms/powernv/pci.c   |  3 ---
- arch/powerpc/platforms/pseries/setup.c |  1 -
- 8 files changed, 68 insertions(+), 56 deletions(-)
+Alex
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index 4122a86..7388316 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -40,7 +40,6 @@ void *traverse_pci_dn(struct pci_dn *root,
- 		      void *(*fn)(struct pci_dn *, void *),
- 		      void *data);
- 
--extern void pci_devs_phb_init(void);
- extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
- 
- /* From rtas_pci.h */
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index aabba94..f33ce5b 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -110,4 +110,4 @@ static int __init eeh_dev_phb_init(void)
- 	return 0;
- }
- 
--core_initcall(eeh_dev_phb_init);
-+core_initcall_sync(eeh_dev_phb_init);
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..d3833af 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -277,7 +277,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
- 
--	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
-+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (pdn == NULL)
- 		return NULL;
- 	dn->data = pdn;
-@@ -442,33 +442,37 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	traverse_pci_devices(dn, update_dn_pci_info, phb);
- }
- 
--/** 
-+static void pci_dev_pdn_setup(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn;
-+
-+	if (pdev->dev.archdata.pci_data)
-+		return;
-+
-+	/* Setup the fast path */
-+	pdn = pci_get_pdn(pdev);
-+	pdev->dev.archdata.pci_data = pdn;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-+
-+/*
-  * pci_devs_phb_init - Initialize phbs and pci devs under them.
-- * 
-- * This routine walks over all phb's (pci-host bridges) on the
-- * system, and sets up assorted pci-related structures 
-+ *
-+ * This routine walks over all phb's (pci-host bridges) on
-+ * the system, and sets up assorted pci-related structures
-  * (including pci info in the device node structs) for each
-  * pci device found underneath.  This routine runs once,
-  * early in the boot sequence.
-  */
--void __init pci_devs_phb_init(void)
-+static int __init pci_devs_phb_init(void)
- {
- 	struct pci_controller *phb, *tmp;
- 
- 	/* This must be done first so the device nodes have valid pci info! */
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		pci_devs_phb_init_dynamic(phb);
--}
--
--static void pci_dev_pdn_setup(struct pci_dev *pdev)
--{
--	struct pci_dn *pdn;
- 
--	if (pdev->dev.archdata.pci_data)
--		return;
--
--	/* Setup the fast path */
--	pdn = pci_get_pdn(pdev);
--	pdev->dev.archdata.pci_data = pdn;
-+	return 0;
- }
--DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-+
-+core_initcall(pci_devs_phb_init);
-diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
-index a923230..04a69a8 100644
---- a/arch/powerpc/platforms/maple/pci.c
-+++ b/arch/powerpc/platforms/maple/pci.c
-@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
- 	DBG(" <- maple_pci_irq_fixup\n");
- }
- 
-+static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
-+	struct device_node *np, *child;
-+
-+	if (hose != u3_agp)
-+		return 0;
-+
-+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
-+	 * assume there is no P2P bridge on the AGP bus, which should be a
-+	 * safe assumptions hopefully.
-+	 */
-+	np = hose->dn;
-+	PCI_DN(np)->busno = 0xf0;
-+	for_each_child_of_node(np, child)
-+		PCI_DN(child)->busno = 0xf0;
-+
-+	return 0;
-+}
-+
- void __init maple_pci_init(void)
- {
- 	struct device_node *np, *root;
-@@ -605,20 +625,7 @@ void __init maple_pci_init(void)
- 	if (ht && maple_add_bridge(ht) != 0)
- 		of_node_put(ht);
- 
--	/* Setup the linkage between OF nodes and PHBs */ 
--	pci_devs_phb_init();
--
--	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
--	 * assume there is no P2P bridge on the AGP bus, which should be a
--	 * safe assumptions hopefully.
--	 */
--	if (u3_agp) {
--		struct device_node *np = u3_agp->dn;
--		PCI_DN(np)->busno = 0xf0;
--		for (np = np->child; np; np = np->sibling)
--			PCI_DN(np)->busno = 0xf0;
--	}
--
-+	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
- 	/* Tell pci.c to not change any resource allocations.  */
- 	pci_add_flags(PCI_PROBE_ONLY);
- }
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
-index f3a68a0..10c4e8f 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
- 			of_node_get(np);
- 
- 	of_node_put(root);
--
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
- }
- 
- void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
-diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
-index 59ab16f..368716f 100644
---- a/arch/powerpc/platforms/powermac/pci.c
-+++ b/arch/powerpc/platforms/powermac/pci.c
-@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
- #endif /* CONFIG_PPC32 */
- }
- 
-+#ifdef CONFIG_PPC64
-+static int pmac_pci_root_bridge_prepare(struct pci_hot_bridge *bridge)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
-+	struct device_node *np, *child;
-+
-+	if (hose != u3_agp)
-+		return 0;
-+
-+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
-+	 * assume there is no P2P bridge on the AGP bus, which should be a
-+	 * safe assumptions for now. We should do something better in the
-+	 * future though
-+	 */
-+	np = hose->dn;
-+	PCI_DN(np)->busno = 0xf0;
-+	for_each_child_of_node(np, child)
-+		PCI_DN(child)->busno = 0xf0;
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PPC64 */
-+
- void __init pmac_pci_init(void)
- {
- 	struct device_node *np, *root;
-@@ -914,22 +937,8 @@ void __init pmac_pci_init(void)
- 	if (ht && pmac_add_bridge(ht) != 0)
- 		of_node_put(ht);
- 
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
--
--	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
--	 * assume there is no P2P bridge on the AGP bus, which should be a
--	 * safe assumptions for now. We should do something better in the
--	 * future though
--	 */
--	if (u3_agp) {
--		struct device_node *np = u3_agp->dn;
--		PCI_DN(np)->busno = 0xf0;
--		for (np = np->child; np; np = np->sibling)
--			PCI_DN(np)->busno = 0xf0;
--	}
- 	/* pmac_check_ht_link(); */
--
-+	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
- #else /* CONFIG_PPC64 */
- 	init_p2pbridge();
- 	init_second_ohare();
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 60e6d65..21a4eb3 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -819,9 +819,6 @@ void __init pnv_pci_init(void)
- 	for_each_compatible_node(np, NULL, "ibm,ioda2-phb")
- 		pnv_pci_init_ioda2_phb(np);
- 
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
--
- 	/* Configure IOMMU DMA hooks */
- 	ppc_md.tce_build = pnv_tce_build_vm;
- 	ppc_md.tce_free = pnv_tce_free_vm;
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..5f80758 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -482,7 +482,6 @@ static void __init find_and_init_phbs(void)
- 	}
- 
- 	of_node_put(root);
--	pci_devs_phb_init();
- 
- 	/*
- 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
--- 
-2.1.0
-
+>
+> We could fabricate a resource even if the BAR doesn't exist, e.g.,
+> "flags = IORESOURCE_MEM | ... | IORESOURCE_ROM_SHADOW", but that
+> would be ugly and error-prone in other places that use the ROM.
+>
+> Matthew added dev->rom for ROM images supplied by the platform
+> (84c1b80e3263 ("PCI: Add support for non-BAR ROMs")).  A shadow
+> image seems like a similar thing.  I think it would be cleaner to get
+> rid of IORESOURCE_ROM_SHADOW altogether and instead set "dev->rom =
+> 0xC0000" if there's a shadow image, e.g.:
+>
+>   int pcibios_add_device(struct pci_dev *dev)
+>   {
+>     if (dev-is-default-vga-device) {
+>       dev->rom = 0xC0000;
+>       dev->romlen = 0x20000;
+>     }
+>
+>     pa_data = boot_params.hdr.setup_data;
+>     while (pa_data) {
+>       ...
+>       if (data->type == SETUP_PCI) {
+>         rom = (struct pci_setup_rom *)data;
+>
+>         if (dev-is-rom-dev) {
+>           dev->rom = ...
+>           dev->romlen = rom->pcilen;
+>         }
+>       }
+>     }
+>
+> But the rules for figuring out which image to use seem ...
+> complicated.
+>
+> Bjorn
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
