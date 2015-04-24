@@ -1,116 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-Date: Thu, 09 Apr 2015 23:37:42 +0200
-Message-ID: <3369608.UAniFEi9kX@vostro.rjw.lan>
-In-Reply-To: <5525E8DA.601@linux.intel.com>
-References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com> <1859870.HzuzAL1ZiX@vostro.rjw.lan> <5525E8DA.601@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27878 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754677AbbDXGNT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Apr 2015 02:13:19 -0400
+Message-ID: <5539DEDF.3050503@huawei.com>
+Date: Fri, 24 Apr 2015 14:12:47 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
+	<rwhite@pobox.com>, <alex.williamson@redhat.com>
+Subject: Re: [PATCH] PCI: Fix NULL pointer when find parent pcie_link_state
+References: <1429774916-24920-1-git-send-email-wangyijing@huawei.com> <20150423142407.GL20701@google.com>
+In-Reply-To: <20150423142407.GL20701@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, April 09, 2015 10:50:02 AM Jiang Liu wrote:
-> On 2015/4/9 7:44, Rafael J. Wysocki wrote:
-> > On Wednesday, April 08, 2015 01:48:46 PM Jiang Liu wrote:
-> >> On 2015/4/7 8:28, Rafael J. Wysocki wrote:
-> >>> On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
-> >>>> Hi Jiang,
-> >> <snip>
-> >>>>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
-> >>>>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
-> >>>>
-> >>>> We should assume it will eventually be used for all ACPI devices,
-> >>>> shouldn't we?
-> >>>
-> >>> I'm not sure about that, really.  In fact, I'd restrict its use to devices
-> >>> types that actually can "produce" resources (ie. do not require the resources
-> >>> to be provided by their ancestors or to be available from a global pool).
-> >>>
-> >>> Otherwise we're pretty much guaranteed to get into trouble.
-> >>>
-> >>> And all of the above rules need to be documented in the kernel source tree
-> >>> or people will get confused.
-> >> Hi Rafael,
-> >>     How about following comments for acpi_dev_filter_resource_type()?
-> >> Thanks!
-> >> Gerry
-> >> --------------------------------------------------------------------
-> >> /**
-> >>  * According to ACPI specifications, Consumer/Producer flag in ACPI resource
-> >>  * descriptor means:
-> >>  *      1(CONSUMER): This device consumes this resource
-> >>  *      0(PRODUCER): This device produces and consumes this resource
-> >>  * But for ACPI PCI host bridge, it is interpreted in another way:
-> > 
-> > So first of all, this leads to a question: Why is it interpreted for ACPI PCI
-> > host bridges differently?
-> > 
-> > Is it something we've figured out from experience, or is there a standard
-> > mandating that? 
-> Hi Rafael,
-> 	I think we got this knowledge by experiences. PCI FW spec only
-> states _CRS reports resources assigned to the host bridge by firmware.
-> There's no statement about whether the resource is consumed by host
-> bridge itself or provided to it's child bus/devices. On x86/IA64 side,
-> the main resource consumed by PCI host bridge is IOPORT 0xCF8-0xCFF,
-> but not sure about ARM64 side. So how about:
-
-This:
-
-> PCI Firmware specification states that _CRS reports resources
-> assigned to the host bridge, but there's no way to tell whether
-> the resource is consumed by host bridge itself or provided to
-> its child bus/devices.
-
-looks OK to me, but I'd replace the below with something like:
-
-"However, experience shows, that in the PCI host bridge case firmware writers
- expect the resource to be provided to devices on the bus (below the bridge) for
- consumption entirely if its Consumer/Producer flag is clear.  That expectation
- is reflected by the code in this routine as follows:".
- 
-
-> So according to experiences, PCI host bridge
-> interprets Consumer/Producer flag as below to tell whether the resource
-> is consumed by host bridge itself.
+On 2015/4/23 22:24, Bjorn Helgaas wrote:
+> [+cc Alex]
 > 
-> > 
-> >>  *      1(CONSUMER): PCI host bridge itself consumes the resource, such as
-> >>  *                   IOPORT 0xCF8-0xCFF to access PCI configuraiton space.
-> >>  *      0(PRODUCER): PCI host bridge provides this resource to its child
-> >>  *                   bus and devices.
-> >>  *
-> >>  * So this is a specially designed helper function to support ACPI PCI host
-> >>  * bridge and ACPI IOAPIC, and its usage should be limited to those specific
-> > 
-> > And this will make the reader wonder why the IOAPIC should be treated the same
-> > way as a PCI host bridge in that respect.
+> Hi Yijing,
+> 
+> Thanks for picking this up and working on it!
+> 
+> On Thu, Apr 23, 2015 at 03:41:56PM +0800, Yijing Wang wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
+>> NULL Pointer in pcie_aspm_init_link_state(), Some platform
+>> like ATCA may has strange PCIe topology:
+>> E.g.
+>> ---root port---downstream port---upstream port
+>>                               |--downstream port
+>>                               |--downstream port
+> 
+> I agree that this is "strange" in the sense that it's not the typical PC
+> topology.  However, I can't find anything in the spec that prohibits it.
+> As far as I can tell, it is legal, so the PCI core shouldn't treat it as
+> an exception.
+> 
+> PCI bridges (including PCIe switch ports) are symmetric: anything in the
+> bridge windows will be transferred from the primary interface to the
+> secondary, and anything outside the windows will be transferred from
+> secondary to primary.  That applies to both address-routed transactions
+> (using the I/O port, memory, and prefetchable memory windows) and
+> ID-routed transactions (using the bus number windows).  And it applies
+> to both Upstream and Downstream Ports, so from a routing perspective, I
+> think Upstream and Downstream Ports are mostly interchangeable.
+> 
+> There are some wrinkles that might be issues:
+> 
+>   - PCIe spec r3.0, sec 7.3.3 says propagation of config requests from
+>     Downstream to Upstream is unsupported.  I think that means we
+>     wouldn't be able to discover anything on the other side of the
+>     Upstream Port in the above topology.
+> 
+>   - Sec 7.5.1.7 says primary side Error Control/Status registers apply
+>     to the link for Upstream Ports and to the internal logic for
+>     Downstream Ports.  For this ATCA topology that means the primary
+>     side registers of a Downstream Port really refer to the *secondary*
+>     interface.
+> 
+>   - Sec 7.16 (ACS) might have issues similar to this ASPM one.
+> 
+> If this topology is legal, the NULL pointer is a hint that the code uses
+> an incorrect assumption, and I'd rather fix the incorrect assumption
+> than apply a point fix for the NULL pointer.
+> 
+> In this case, the code incorrectly assumes that a Downstream Port is
+> always on the upstream end of a link.  I think it's safe to assume that
+> a *Root Port* is always on the upstream end of a link.  Maybe we can
+> start from there and deduce where the links are, without relying on
+> whether a Port is an Upstream or Downstream Port.  The levels of the
+> hierarchy should alternate between links and internal switch logic,
 
-Your responses would be easier to follow if they were clearly separate from the
-original message text (ie. add an empty line between the paragraph you're
-responding to and the response).
+I agree with this assumption, there should be no adjacent links or internal buses.
 
-> If a hot-pluggable IOAPIC is represented as an ACPI device, its _CRS
-> reports MMIO address assigned to the IOAPIC. And an IOAPIC device
-> won't produce MMIO resources by itself. So we could reuse
-> acpi_dev_filter_resource_type() here.
-> How about:
->   * So this is a specially designed helper function to support:
->   * 1) ACPI PCI host bridge, as explained above
->   * 2) ACPI IOAPIC, its _CRS reports only one MMIO resource and
->   *    it won't produce MMIO resources by itself.
+Thanks!
+Yijing.
 
-OK, so I'd like to see how the code would look like if those two cases had their
-own "filter" routines, if that's not a problem.
 
-Rafael
+> e.g.:
+> 
+>   RP -link- endpoint
+>   RP -link- UP -int-bus- DP -link- endpoint
+>   RP -link- UP -int-bus- DP -link- UP -int-bus- DP -link- endpoint
+>   RP -link- DP -int-bus- DP -link- endpoint
+>   RP -link- DP -int-bus- DP -link- UP -int-bus- DP -link- endpoint
+> 
+>> When we try to alloc pcie_link_state, we assumed downstream port
+>> always has a upstream port, in this case, NULL pointer would
+>> be triggered when try to find the parent pci_link_state,
+>> because downstream port connects to root port directly.
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/pcie/aspm.c |   13 +++++++++++--
+>>  1 files changed, 11 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>> index 7d4fcdc..f295824 100644
+>> --- a/drivers/pci/pcie/aspm.c
+>> +++ b/drivers/pci/pcie/aspm.c
+>> @@ -526,8 +526,17 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>>  	INIT_LIST_HEAD(&link->link);
+>>  	link->pdev = pdev;
+>>  	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+>> -		struct pcie_link_state *parent;
+>> -		parent = pdev->bus->parent->self->link_state;
+>> +		struct pci_bus *pbus = pdev->bus;
+>> +		struct pcie_link_state *parent = NULL;
+>> +
+>> +		while (pbus) {
+>> +			if (pbus->self) {
+>> +				parent = pbus->self->link_state;
+>> +				if (parent)
+>> +					break;
+>> +			}
+>> +			pbus = pbus->parent;
+>> +		}
+>>  		if (!parent) {
+>>  			kfree(link);
+>>  			return NULL;
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
