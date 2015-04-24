@@ -1,99 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37541 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753766AbbDQItU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 04:49:20 -0400
-Date: Fri, 17 Apr 2015 16:45:46 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jaehoon Chung <jh80.chung@samsung.com>,
+Received: from mail-bn1on0111.outbound.protection.outlook.com ([157.56.110.111]:10683
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932921AbbDXT5r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Apr 2015 15:57:47 -0400
+From: Stuart Yoder <stuart.yoder@freescale.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Will Deacon <will.deacon@arm.com>
+CC: Varun Sethi <Varun.Sethi@freescale.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	CPGS <cpgs@samsung.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [query] how to use "ranges" in device tree
-Message-ID: <20150417164546.3925eb7c@xhacker>
-In-Reply-To: <5862495.WQJXyp7MlL@wuerfel>
-References: <20150416215938.347caa68@xhacker>
-	<20150417102413.705b1ca0@xhacker>
-	<20150417115016.69857a77@xhacker>
-	<5862495.WQJXyp7MlL@wuerfel>
+	Arnd Bergmann <arnd@arndb.de>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+Date: Fri, 24 Apr 2015 19:24:35 +0000
+Message-ID: <CY1PR0301MB0748607620CC4BDCE43130EA87EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
+ <1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
+ <BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
+ <BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
+ <20150416104008.GB25640@arm.com>
+ <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
+ <20150422170718.GG13019@arm.com>
+ <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
+ <20150424161818.GC7313@arm.com> <553A72D4.7000801@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd,
++Alex W
 
-On Fri, 17 Apr 2015 01:32:00 -0700
-Arnd Bergmann <arnd@arndb.de> wrote:
-
-> On Friday 17 April 2015 11:50:16 Jisheng Zhang wrote:
-> > Hi all,
-> > 
-> > I got the solution, the ranges can define two or more ranges. What I need to do
-> > is just add ranges for 0xe0000000 - 0xf0000000 as the following:
-> > 
-> > soc {
-> >         ranges = <0 0xf7000000 0x1000000
-> >                   0xe0000000 0xe0000000 0x10000000>;  //add this line
-> >         ...
-> >         pcie: pcie@e40000 {
-> >                 ...
-> >                 reg = <0xe40000 0x10000>, <0xe0000000 0x8000000>;
-> >                 reg-names = "dbi", "pad", "config";
-> >                 ...
-> >         };
-> > }
-> > 
-> > Now, we can get the config space correctly.
-> > 
+> -----Original Message-----
+> From: Yoder Stuart-B08248
+> Sent: Friday, April 24, 2015 1:19 PM
+> To: 'Marc Zyngier'; Will Deacon
+> Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284;
+> Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
+> Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
 > 
-> This will work correctly, but it is not a very clean solution, because
-> you define an intermediate address space that has some part of the
-> bus mapped to zero, and another part mapped to a high address that
-> matches the address the CPU sees.
-
-Seems I had a better understanding of the "ranges" usage, thanks for
-your explanation. 
-
 > 
-> A nicer (but a little more complicated) way to do this would be to use
-> #address-cells=<2> in the parent bus and use that to enumerate the
+> 
+> > -----Original Message-----
+> > From: Marc Zyngier [mailto:marc.zyngier@arm.com]
+> > Sent: Friday, April 24, 2015 11:44 AM
+> > To: Will Deacon; Yoder Stuart-B08248
+> > Cc: Sethi Varun-B16395; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284;
+> > Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
+> > Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+> >
+> > On 24/04/15 17:18, Will Deacon wrote:
+> > > On Wed, Apr 22, 2015 at 08:41:02PM +0100, Stuart Yoder wrote:
+> > >>>> However, there is an improvement we envision as possible due to
+> > >>>> the limited number of SMMU contexts (i.e. 64).  If there are
+> > >>>> 64 SMMU context registers it means that there is a max of
+> > >>>> 64 software contexts where things can be isolated.  But, say I have
+> > >>>> an SRIOV card with 64 VFs, and I want to assign 8 of the VFs
+> > >>>> to a KVM VM.  Those 8 PCI devices could share the same
+> > >>>> streamID/ITS-device-ID since they all share the same isolation
+> > >>>> context.
+> > >>>>
+> > >>>> What would be nice is at the time the 8 VFS are being added
+> > >>>> to the IOMMU domain is for the pcidevid -> streamID mapping
+> > >>>> table to be updated dynamically.  It simply lets us make
+> > >>>> more efficient use of the limited streamIDs we have.
+> > >>>>
+> > >>>> I think it is this improvement that Minghuan had in mind
+> > >>>> in this patch.
+> > >>>
+> > >>> Ok, but in this case it should be possible to use a single context bank for
+> > >>> all of the VF streamIDs by configuring the appropriate SMR, no?
+> > >>
+> > >> Yes, but there are limited SMRs.  In our case there are only
+> > >> 128 SMRs in SMMU-500 and we have potentially way more masters than
+> > >> that.
+> > >
+> > > Right, but you still only have 64 context banks at the end of the day, so do
+> > > you really anticipate having more than 128 masters concurrently using the
+> > > SMMU? If so, then we have devices sharing context banks so we could consider
+> > > reusing SMRs across masters, but historically that's not been something that
+> > > we've managed to solve.
+> > >
+> > >>> Wouldn't
+> > >>> that sort of thing be preferable to dynamic StreamID assignment? It would
+> > >>> certainly make life easier for the MSIs.
+> > >>
+> > >> It would be preferable, but given only 128 total stream IDS and
+> > >> 64 context registers it's potentially an issue.  On our LS2085 SoC it is
+> > >> PCI and the fsl-mc bus (see description here:
+> > >> https://lkml.org/lkml/2015/3/5/795) that potentially have way
+> > >> more masters than streamIDS. So, for those busses we would essentially
+> > >> view a streamID as a "context ID"-- each SMR is associated with
+> > >> 1 context bank register.
+> > >>
+> > >> For PCI we have a programmable "PCI req ID"-to-"stream ID"
+> > >> mapping table in the PCI controller that is dynamically
+> > >> programmable.
+> > >>
+> > >> Looking at it like that means that we could have
+> > >> any number of masters but only 64 "contexts"
+> > >> and since the masters all all programmable it's
+> > >> seems feasbile to envision doing some bus/vendor
+> > >> specific set up when a device is added to an
+> > >> IOMMU domain.   One thing that would need to be conveyed
+> > >> to the SMMU driver if doing dynamic streamID setup
+> > >> is what streamIDs are available to be used.
+> > >
+> > > Ok, but this is going to make life difficult for the MSI people, I suspect.
+> > >
+> > > Marc...?
+> >
+> > We're really facing two conflicting requirements: in order to minimize
+> > SMR usage, we want to alias multiple ReqIDs to a single StreamID
+> 
+> Another reason could be the isolation characteristics of the
+> hardware...see comment below about PCI bridges.
+> 
+> > but in
+> > order to efficiently deal with MSIs, we want to see discrete DeviceIDs
+> > (the actual ReqIDs). I don't easily see how we reconcile the two.
+> >
+> > We can deal with the aliasing, provided that we extend the level of
+> > quirkiness that pci_for_each_dma_alias can deal with. But that doesn't
+> > solve any form of hotplug/SR-IOV behaviour.
+> >
+> > Somehow, we're going to end-up with grossly oversized ITTs, just to
+> > accommodate for the fact that we have no idea how many MSIs we're going
+> > to end-up needing. I'm not thrilled with that prospect.
+> 
+> How can we avoid that in the face of hotplug?
+> 
+> And what are we really worried about regarding over-sized ITTs...bytes
+> of memory saved?
+> 
+> A fundamental thing built into the IOMMU subsystem in Linux is
+> representing iommu groups that can represent things like
+> multiple PCI devices that for hardware reasons cannot
+> be isolated (and the example I've seen given relates to
+> devices behind PCI bridges).
+> 
+> So, I think the thing we are facing here is that while the
+> IOMMU subsystem has accounted for reprsenting the isolation
+> characteristics of a system with iommu groups, there is
+> no corresponding "msi group" concept.
+> 
+> In the SMMU/GIC-500-ITS world the iommu isolation
+> ID (the stream ID) and the GIC-ITS device ID are in
+> fact the same ID.
+> 
+> Is there some way we could sanely correlate IOMMU group creation
+> (which establishes isolation granularity) with the creation
+> of an ITT for the GIC-ITS?
+> 
+> (I don't have a good feel for how device IDs work on x86,
+> I know there is an interrupt remapping table in the
+> x86 IOMMUs that is distinct from the memory isolation
+> page tables)
 
-In this way, we need to change all device nodes' "reg" in arch/arm/boot/dts/berlin2q.dtsi?
-And in arm64 case, we should use #address-cells=<3>?
+For reference see Alex Williamson's description of IOMMU
+isolation scenarios in Documentation/vfio.txt:
 
-If above two answer is yes, setting "ranges = <..>" seems add complexity in my
-humble opinion. So is it better to use 1:1 mapping by "ranges;" in "/soc" node?
+   ...
+   This isolation is not always at the granularity of a single device
+   though.  Even when an IOMMU is capable of this, properties of devices,
+   interconnects, and IOMMU topologies can each reduce this isolation.
+   For instance, an individual device may be part of a larger multi-
+   function enclosure.  While the IOMMU may be able to distinguish
+   between devices within the enclosure, the enclosure may not require
+   transactions between devices to reach the IOMMU.  Examples of this
+   could be anything from a multi-function PCI device with backdoors
+   between functions to a non-PCI-ACS (Access Control Services) capable
+   bridge allowing redirection without reaching the IOMMU.  Topology
+   can also play a factor in terms of hiding devices.  A PCIe-to-PCI
+   bridge masks the devices behind it, making transaction appear as if
+   from the bridge itself.  Obviously IOMMU design plays a major factor
+   as well.
 
-Thanks a lot,
-Jisheng
+   Therefore, while for the most part an IOMMU may have device level
+   granularity, any system is susceptible to reduced granularity.  The
+   IOMMU API therefore supports a notion of IOMMU groups.  A group is
+   a set of devices which is isolatable from all other devices in the
+   system.  Groups are therefore the unit of ownership used by VFIO.
+   ...
 
-> address ranges that get passed through:
-> 
-> soc {
-> 	#address-cells=<2>;
-> 	#size-cells=<1>;
->         ranges = <0 0  0xf7000000  0x1000000>, /* 0: the normal regs */
-> 		  <1 0  0xe0000000 0x16000000>; /* 1: reallocated registers for PCI */
-> 
-> 	pcie@e40000 {
-> 		#address-cells = <3>;
-> 		#size-cells = <2>;
-> 		reg = <0 0xe40000 0x10000>, <1 0 0x8000000>;
-> 
-> 		/* memory space at pci address 0xf0000000, cpu address 0xf0000000, 
-> 		   bus address 0x10000000 */
-> 		ranges = <0x02000000 0 0xf0000000   0 0x10000000   0 0x06000000>;
-> 	};
-> 
-> 	...
-> };
-> 
-> The ranges property inside of the pcie node here should match whatever you program
-> into the inbound mapping registers of the PCIe host controller (if any).
-> 
-> 	Arnd
+The isolation granularity issues he raises are going to impact how
+we deal with MSIs with GIC ITS because again, isolation ID and 
+GIC ITS device ID are the same.
 
+Stuart
