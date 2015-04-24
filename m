@@ -1,66 +1,28 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38137 "EHLO gate.crashing.org"
+Received: from plane.gmane.org ([80.91.229.3]:59620 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932866AbbDIKF5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Apr 2015 06:05:57 -0400
-Message-ID: <1428569681.18187.69.camel@kernel.crashing.org>
-Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Date: Thu, 09 Apr 2015 18:54:41 +1000
-In-Reply-To: <CAErSpo5VwuLjZtQFcJqfpkC=j5TJmLD0oZPQ=6oJpSOthB+BFA@mail.gmail.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-	 <1427857069-6789-4-git-send-email-yinghai@kernel.org>
-	 <20150406220638.GH10892@google.com>
-	 <20150406.203533.1356187749826485194.davem@davemloft.net>
-	 <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
-	 <20150408154759.GN10892@google.com>
-	 <1428527527.18187.28.camel@kernel.crashing.org>
-	 <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
-	 <1428549459.18187.56.camel@kernel.crashing.org>
-	 <CAErSpo5VwuLjZtQFcJqfpkC=j5TJmLD0oZPQ=6oJpSOthB+BFA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	id S1753208AbbDXFPH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Apr 2015 01:15:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1YlVxA-0003rH-8C
+	for linux-pci@vger.kernel.org; Fri, 24 Apr 2015 07:15:04 +0200
+Received: from 104.153.31.46 ([104.153.31.46])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2015 07:15:04 +0200
+Received: from msander by 104.153.31.46 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Fri, 24 Apr 2015 07:15:04 +0200
+To: linux-pci@vger.kernel.org
+From: Michael Sander <msander@appliedlogix.com>
+Subject: Rescan and devices behind a bridge
+Date: Fri, 24 Apr 2015 05:10:02 +0000 (UTC)
+Message-ID: <loom.20150424T070626-449@post.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-04-08 at 23:26 -0500, Bjorn Helgaas wrote:
-> I'm not planning to review this until after the merge window opens,
-> but I took a quick glance, and I agree with Ben.  I don't want to add
-> a new IORESOURCE_ flag.  I think a pci_resource_compatible() helper is
-> a great idea.
-
-So the new resource flag was handy here still regardless of the
-implementation choice because otherwise, we have to do the whole tree
-walk to check for "PCI Express only path".
-
-*But*, this is a property of the device as a whole, not of the resource,
-so we could instead have a pci_dev flag established at probe time that
-indicates that the path to a given device is PCIe only.
-
-The cool thing is that can be very easily done by simply propagating
-from the parent. If the parent has it and the device is PCIe, then set
-it, the only break would happen on PCIe to PCI bridges, which is exactly
-what we are after.
-
-That way, you avoid the special resource flag alltogether.
-
-> I am absolutely not in favor of "minimally intrusive" as a goal.
-> "Minimally intrusive" sounds good but it is often used to justify
-> clever hacks which end up being an anti-maintainer strategy in the
-> long term.  "Maximum readability" is what I'm looking for.
-
-Yup, I agree. The code is too hard to understand already which makes it
-bug prone in the long run.
-
-Cheers,
-Ben.
-
+4oCcL3N5cy9idXMvcGNpL3Jlc2NhbuKAnSBpcyBub3QgZmluZGluZyBkZXZpY2VzIGNvbm5lY3RlZCB0byBhIGJyaWRnZS4gCgpXZSBoYXZlIGEgc2VydmVyIHJ1bm5pbmcgQ2VudE9TIDcuMCBhbmQgYSBjdXN0b20gUENJZSBjYXJkIHdpdGggMiBQQ0llIApleHRlbmRlciBjYWJsZXMgZ29pbmcgdG8gYSBjdXN0b20gYm9hcmQgd2l0aCAzIFBDSWUgZGV2aWNlcy4gVGhpcyBib2FyZCBoYXMgCmEgc2VwYXJhdGUgcG93ZXIgc3VwcGx5LiAoQWxsIGV4YW1wbGVzIHNob3cgYSBzaW5nbGUgZXh0ZW5kZXIgYmVpbmcgdXNlZC4pIAoKSWYgd2UgcG93ZXIgdGhlIGJvYXJkIG9uIGZpcnN0LCB0aGVuIHRoZSBzZXJ2ZXIsIHRoZSBkZXZpY2VzIGFyZSBhbGwgCmRpc2NvdmVyZWQuIEhlcmUgaXMgd2hhdCDigJxsc3BjaSAtdHbigJ0gc2hvd3M6CgogfCAgICAgICAgICAgXC0xMy42ICBJbnRlbCBDb3Jwb3JhdGlvbiBYZW9uIEU1L0NvcmUgaTcgUmluZyB0byBRdWlja1BhdGggCkludGVyY29ubmVjdCBMaW5rIDEgUGVyZm9ybWFuY2UgTW9uaXRvcgogXC1bMDAwMDowMF0tKy0wMC4wICBJbnRlbCBDb3Jwb3JhdGlvbiBYZW9uIEU1L0NvcmUgaTcgRE1JMgogICAgICAgICAgICAgKy0wMS4wLVswMV0tLQogICAgICAgICAgICAgKy0wMS4xLVswMl0tLSstMDAuMCAgTlZJRElBIENvcnBvcmF0aW9uIEdUMjE4IFtJT05dCiAgICAgICAgICAgICB8ICAgICAgICAgICAgXC0wMC4xICBOVklESUEgQ29ycG9yYXRpb24gSGlnaCBEZWZpbml0aW9uIEF1ZGlvIApDb250cm9sbGVyCiAgICAgICAgICAgICArLTAyLjAtWzAzLTBiXS0tLS0wMC4wLVswNC0wYl0tLSstMDguMC1bMDUtMGFdLS0tLTAwLjAtWzA2LTBhXS0KLSstMDQuMC1bMDddLS0tLTAwLjAgIFhpbGlueCBDb3Jwb3JhdGlvbiBEZXZpY2UgMDY0YwogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAorLTA1LjAtWzA4XS0tLS0wMC4wICBYaWxpbnggQ29ycG9yYXRpb24gRGV2aWNlIDA2NGMKICAgICAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKKy0wNi4wLVswOV0tLS0tMDAuMCAgWGlsaW54IENvcnBvcmF0aW9uIERldmljZSAwNjRjCiAgICAgICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgClwtMDcuMC1bMGFdLS0tLTAwLjAgIFhpbGlueCBDb3Jwb3JhdGlvbiBEZXZpY2UgMDY0YwogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTEwLjAtWzBiXS0tCiAgICAgICAgICAgICArLTAzLjAtWzBjXS0tCgpJZiB3ZSBwb3dlciB0aGUgc2VydmVyIG9uIGZpcnN0LCB0aGVuIHRoZSBib2FyZCAsIG5laXRoZXIgdGhlIGRldmljZXMgYXJlIApub3QgZGlzY292ZXJlZC4gSGVyZSBpcyB3aGF0IOKAnGxzcGNpIC10duKAnSBzaG93czoKCiB8ICAgICAgICAgICBcLTEzLjYgIEludGVsIENvcnBvcmF0aW9uIFhlb24gRTUvQ29yZSBpNyBSaW5nIHRvIFF1aWNrUGF0aCAKSW50ZXJjb25uZWN0IExpbmsgMSBQZXJmb3JtYW5jZSBNb25pdG9yCiBcLVswMDAwOjAwXS0rLTAwLjAgIEludGVsIENvcnBvcmF0aW9uIFhlb24gRTUvQ29yZSBpNyBETUkyCiAgICAgICAgICAgICArLTAxLjAtWzAxXS0tCiAgICAgICAgICAgICArLTAxLjEtWzAyXS0tKy0wMC4wICBOVklESUEgQ29ycG9yYXRpb24gR1QyMTggW0lPTl0KICAgICAgICAgICAgIHwgICAgICAgICAgICBcLTAwLjEgIE5WSURJQSBDb3Jwb3JhdGlvbiBIaWdoIERlZmluaXRpb24gQXVkaW8gCkNvbnRyb2xsZXIKICAgICAgICAgICAgICstMDIuMC1bMDMtMDZdLS0tLTAwLjAtWzA0LTA2XS0tKy0wOC4wLVswNV0tLQogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTEwLjAtWzA2XS0tCiAgICAgICAgICAgICArLTAzLjAtWzA3XS0tCgpBZnRlciBydW5uaW5nIOKAnGVjaG8gMSA+IC9zeXMvYnVzL3BjaS9yZXNjYW7igJ0gdGhlIGRvd25zdHJlYW0gZW5kIG9mIHRoZSBQQ0llIApleHRlbmRlciBpcyBmb3VuZCwgYnV0IG5vbmUgb2YgdGhlIGRldmljZXMgY29ubmVjdGVkIHRvIGl0LiAKCnwgICAgICAgICAgIFwtMTMuNiAgSW50ZWwgQ29ycG9yYXRpb24gWGVvbiBFNS9Db3JlIGk3IFJpbmcgdG8gUXVpY2tQYXRoIApJbnRlcmNvbm5lY3QgTGluayAxIFBlcmZvcm1hbmNlIE1vbml0b3IKIFwtWzAwMDA6MDBdLSstMDAuMCAgSW50ZWwgQ29ycG9yYXRpb24gWGVvbiBFNS9Db3JlIGk3IERNSTIKICAgICAgICAgICAgICstMDEuMC1bMDFdLS0KICAgICAgICAgICAgICstMDEuMS1bMDJdLS0rLTAwLjAgIE5WSURJQSBDb3Jwb3JhdGlvbiBHVDIxOCBbSU9OXQogICAgICAgICAgICAgfCAgICAgICAgICAgIFwtMDAuMSAgTlZJRElBIENvcnBvcmF0aW9uIEhpZ2ggRGVmaW5pdGlvbiBBdWRpbyAKQ29udHJvbGxlcgogICAgICAgICAgICAgKy0wMi4wLVswMy0wNl0tLS0tMDAuMC1bMDQtMDZdLS0rLTA4LjAtWzA1XS0tLS0wMC4wLVswMF0tLQogICAgICAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcLTEwLjAtWzA2XS0tCiAgICAgICAgICAgICArLTAzLjAtWzA3XS0tCgpUaGUg4oCccmVzY2Fu4oCdIGRvZXMgcHJvZHVjZSBzb21lIGludGVyZXN0aW5nIGRtZXNnIG91dHB1dDoKClsgIDMzNC4wODU3NTRdIHBjaSAwMDAwOjA1OjAwLjA6IFsxMGI1Ojg2MzJdIHR5cGUgMDEgY2xhc3MgMHgwNjA0MDAKWyAgMzM0LjA4NTc3N10gcGNpIDAwMDA6MDU6MDAuMDogcmVnIDB4MTA6IFttZW0gMHgwMDAwMDAwMC0weDAwMDFmZmZmXQpbICAzMzQuMDg1OTc4XSBwY2kgMDAwMDowNTowMC4wOiBQTUUjIHN1cHBvcnRlZCBmcm9tIEQwIEQzaG90IEQzY29sZApbICAzMzQuMDg3ODgwXSBwY2kgMDAwMDowNTowMC4wOiBicmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksIApyZWNvbmZpZ3VyaW5nClsgIDMzNC4wODc4OThdIHBjaSAwMDAwOjA1OjAwLjA6IGNhbid0IGFsbG9jYXRlIGNoaWxkIGJ1cyAwNSBmcm9tIFtidXMgMDVdClsgIDMzNC4wODgyMTBdIHBjaWVwb3J0IDAwMDA6MDM6MDAuMDogQkFSIDE0OiBjYW4ndCBhc3NpZ24gbWVtIChzaXplIAoweDEwMDAwMCkKWyAgMzM0LjA4ODIxN10gcGNpZXBvcnQgMDAwMDowNDowOC4wOiBCQVIgMTQ6IGNhbid0IGFzc2lnbiBtZW0gKHNpemUgCjB4MTAwMDAwKQpbICAzMzQuMDg4MjIxXSBwY2kgMDAwMDowNTowMC4wOiBCQVIgMDogY2FuJ3QgYXNzaWduIG1lbSAoc2l6ZSAweDIwMDAwKQpbICAzMzQuMDg4MjI3XSBwY2kgMDAwMDowMDoxZS4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMGRdClsgIDMzNC4wODgyODddIHBjaWVwb3J0IDAwMDA6MDU6MDAuMDogZGV2aWNlIFsxMGI1Ojg2MzJdIGhhcyBpbnZhbGlkIElSUTsgCmNoZWNrIHZlbmRvciBCSU9TClsgIDMzNC4wODg0MjhdIHBjaWVwb3J0IDAwMDA6MDU6MDAuMDogaXJxIDExMCBmb3IgTVNJL01TSS1YCgpJIGhhdmUgdHJpZWQgdGhlIOKAnHJlbW92ZeKAnSBjb21tYW5kIGF0IHZhcmlvdXMgUENJIGxldmVscywgbGlrZSDigJxlY2hvIDEgPiAKL3N5cy9idXMvcGNpL2RldmljZXMvMDAwMFw6MDBcOjAyLjAvcmVtb3Zl4oCdLiB3aXRob3V0IGFueSBpbXByb3ZlbWVudC4KCklzIHRoZXJlIHNvbWV0aGluZyBlbHNlIEkgY2FuIGRvIHRvIGRpc2NvdmVyIGhvdC1wbHVnIFBDSSBkZXZpY2VzPwoKdGhhbmtzLAo=
 
