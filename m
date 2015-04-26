@@ -1,185 +1,162 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v3 1/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX  termination driver
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60172 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751199AbbDZGuP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 26 Apr 2015 02:50:15 -0400
+Date: Sun, 26 Apr 2015 08:50:06 +0200
+From: "Michael S. Tsirkin" <mst@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
+Message-ID: <20150426084739-mutt-send-email-mst@kernel.org>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Sat, 11 Apr 2015 13:06:46 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Feng Kan <fkan@apm.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-pci@vger.kernel.org>, Liviu Dudau <liviu.dudau@arm.com>,
-	<linux-kernel@vger.kernel.org>, <grant.likely@linaro.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-arm-kernel@lists.infradead.org>, Loc Ho <lho@apm.com>
-In-Reply-To: <CADaLNDkrqwnEOX1HgQ7V3-1o4cDJnG4dW1=U4ujod7fUW_PQ0w@mail.gmail.com>
-References: <20150408084448.5f0793b7@why.wild-wind.fr.eu.org>
- <cover.1428564115.git.dhdang@apm.com>
- <7923ef6ffd60a7c3de3c8c04fe746bbd3c15b5ac.1428564115.git.dhdang@apm.com>
- <55280665.9020603@arm.com>
- <CADaLNDkrqwnEOX1HgQ7V3-1o4cDJnG4dW1=U4ujod7fUW_PQ0w@mail.gmail.com>
-Message-ID: <7a739a984c1b849ae92cb3bb3edc92f2@www.loen.fr>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015-04-11 00:42, Duc Dang wrote:
-> On Fri, Apr 10, 2015 at 10:20 AM, Marc Zyngier <marc.zyngier@arm.com> 
-> wrote:
->> On 09/04/15 18:05, Duc Dang wrote:
->>> X-Gene v1 SoC supports total 2688 MSI/MSIX vectors coalesced into
->>> 16 HW IRQ lines.
->>>
->>> Signed-off-by: Duc Dang <dhdang@apm.com>
->>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->>> ---
->>>  drivers/pci/host/Kconfig         |   6 +
->>>  drivers/pci/host/Makefile        |   1 +
->>>  drivers/pci/host/pci-xgene-msi.c | 407 
->>> +++++++++++++++++++++++++++++++++++++++
->>>  drivers/pci/host/pci-xgene.c     |  21 ++
->>>  4 files changed, 435 insertions(+)
->>>  create mode 100644 drivers/pci/host/pci-xgene-msi.c
->>>
->>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->>> index 7b892a9..c9b61fa 100644
->>> --- a/drivers/pci/host/Kconfig
->>> +++ b/drivers/pci/host/Kconfig
->>> @@ -89,11 +89,17 @@ config PCI_XGENE
->>>         depends on ARCH_XGENE
->>>         depends on OF
->>>         select PCIEPORTBUS
->>> +       select PCI_MSI_IRQ_DOMAIN if PCI_MSI
->>> +       select PCI_XGENE_MSI if PCI_MSI
->>>         help
->>>           Say Y here if you want internal PCI support on APM X-Gene 
->>> SoC.
->>>           There are 5 internal PCIe ports available. Each port is 
->>> GEN3 capable
->>>           and have varied lanes from x1 to x8.
->>>
->>> +config PCI_XGENE_MSI
->>> +       bool "X-Gene v1 PCIe MSI feature"
->>> +       depends on PCI_XGENE && PCI_MSI
->>> +
->>>  config PCI_LAYERSCAPE
->>>         bool "Freescale Layerscape PCIe controller"
->>>         depends on OF && ARM
->>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->>> index e61d91c..f39bde3 100644
->>> --- a/drivers/pci/host/Makefile
->>> +++ b/drivers/pci/host/Makefile
->>> @@ -11,5 +11,6 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
->>>  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
->>>  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
->>>  obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
->>> +obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
->>>  obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
->>>  obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
->>> diff --git a/drivers/pci/host/pci-xgene-msi.c 
->>> b/drivers/pci/host/pci-xgene-msi.c
->>> new file mode 100644
->>> index 0000000..4f0ff42
->>> --- /dev/null
->>> +++ b/drivers/pci/host/pci-xgene-msi.c
->>> @@ -0,0 +1,407 @@
->>> +/*
->>> + * APM X-Gene MSI Driver
->>> + *
->>> + * Copyright (c) 2014, Applied Micro Circuits Corporation
->>> + * Author: Tanmay Inamdar <tinamdar@apm.com>
->>> + *        Duc Dang <dhdang@apm.com>
->>> + *
->>> + * This program is free software; you can redistribute  it and/or 
->>> modify it
->>> + * under  the terms of  the GNU General  Public License as 
->>> published by the
->>> + * Free Software Foundation;  either version 2 of the  License, or 
->>> (at your
->>> + * option) any later version.
->>> + *
->>> + * This program is distributed in the hope that it will be useful,
->>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>> + * GNU General Public License for more details.
->>> + */
->>> +#include <linux/interrupt.h>
->>> +#include <linux/module.h>
->>> +#include <linux/msi.h>
->>> +#include <linux/of_irq.h>
->>> +#include <linux/pci.h>
->>> +#include <linux/platform_device.h>
->>> +#include <linux/of_pci.h>
->>> +
->>> +#define MSI_INDEX0             0x000000
->>> +#define MSI_INT0               0x800000
->>> +
->>> +struct xgene_msi_settings {
->>> +       u32     index_per_group;
->>> +       u32     irqs_per_index;
->>> +       u32     nr_msi_vec;
->>> +       u32     nr_hw_irqs;
->>> +};
->>> +
->>> +struct xgene_msi {
->>> +       struct device_node              *node;
->>> +       struct msi_controller           mchip;
->>> +       struct irq_domain               *domain;
->>> +       struct xgene_msi_settings       *settings;
->>> +       u32                             msi_addr_lo;
->>> +       u32                             msi_addr_hi;
->>
->> I'd rather see the mailbox address directly, and only do the split 
->> when
->> assigning it to the message (you seem to play all kind of tricks on 
->> the
->> address anyway).
->
-> msi_addr_lo and msi_addr_hi store the physical base address of MSI
-> controller registers. I will add comment to clarify this.
+On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
+> Hi Michael,
+> 
+> I put your patches on my pci/msi branch and I hope to merge them for v4.1.
+> I didn't apply the acks from Fam and Eric because I made changes to those
+> patches that weren't completely trivial.  I think the end result is
+> equivalent, though.  The diff attached to this cover letter is the
+> difference between your v5 series and this v6 series.
+> 
+> As far as I'm concerned, this is ready to go except that I would like a
+> little more info about the virtio kernel hang to include in the changelog
+> for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
 
-What I mean is that there is no point in keeping this around as a pair
-of 32bit variables. You'd better keep it as a single 64bit, and do the
-split when assigning it the the MSI message.
 
-[...]
+Hi Bjorn,
+do you have eveything you need to merge this?
 
->>> +static int xgene_msi_set_affinity(struct irq_data *irq_data,
->>> +                                 const struct cpumask *mask, bool 
->>> force)
->>> +{
->>> +       struct xgene_msi *msi = 
->>> irq_data_get_irq_chip_data(irq_data);
->>> +       unsigned int gic_irq;
->>> +       int ret;
->>> +
->>> +       gic_irq = msi->msi_virqs[irq_data->hwirq % 
->>> msi->settings->nr_hw_irqs];
->>> +       ret = irq_set_affinity(gic_irq, mask);
->>
->> Erm... This as the effect of moving *all* the MSIs hanging off this
->> interrupt to another CPU. I'm not sure that's an acceptable 
->> effect...
->> What if another MSI requires a different affinity?
->
-> We have 16 'real' hardware IRQs. Each of these has multiple MSIs
-> attached to it.
-> So this will move all MSIs handing off this interrupt to another CPU;
-> and we don't support different affinity settings for different MSIs
-> that are attached to the same hardware IRQ.
-
-Well, that's a significant departure from the expected behaviour. In 
-other
-words, I wonder how useful this is. Could you instead reconfigure the 
-MSI
-itself to hit the right CPU (assuming you don't have more than 16 CPUs 
-and if
-that's only for XGene-1, this will only be 8 at most)? This would 
-reduce
-your number of possible MSIs, but at least the semantics of set_afinity
-would be preserved.
-
-Thanks,
-
-         M.
--- 
-Fast, cheap, reliable. Pick two.
+> Changes from v5:
+> 	Edit summaries and changelogs for consistency
+> 	Split msi_set_enable() rename/export for reviewability
+> 	Move pci_msi_setup_pci_dev() to its ultimate location to avoid
+> 	    unnecessary diffs in subsequent patch
+> 	Call pci_msi_setup_pci_dev() from its ultimate location to avoid
+> 	    unnecessary diffs in subsequent patch
+> 	Skip pci_msi_off() duplicate code removal since we can remove
+> 	    it completely later
+> 	Remove pci_msi_off() completely
+> 
+> v5 posting: http://lkml.kernel.org/r/1427641227-7574-1-git-send-email-mst@redhat.com
+> 
+> Bjorn
+>     
+> ---
+> 
+> Bjorn Helgaas (1):
+>       PCI/MSI: Remove unused pci_msi_off()
+> 
+> Michael S. Tsirkin (9):
+>       PCI/MSI: Rename msi_set_enable(), msix_clear_and_set_ctrl()
+>       PCI/MSI: Export pci_msi_set_enable(), pci_msix_clear_and_set_ctrl()
+>       PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI
+>       PCI/MSI: Don't disable MSI/MSI-X at shutdown
+>       PCI/MSI: Make pci_msi_shutdown(), pci_msix_shutdown() static
+>       virtio_pci: drop pci_msi_off() call during probe
+>       ntb: Drop pci_msi_off() call during probe
+>       mic: Drop pci_msi_off() call during probe
+>       PCI/MSI: Drop pci_msi_off() calls from quirks
+> 
+> 
+>  drivers/misc/mic/host/mic_intr.c   |    2 -
+>  drivers/ntb/ntb_hw.c               |    2 -
+>  drivers/pci/msi.c                  |   57 ++++++++----------------------------
+>  drivers/pci/pci-driver.c           |    2 -
+>  drivers/pci/pci.c                  |   33 ---------------------
+>  drivers/pci/pci.h                  |   21 +++++++++++++
+>  drivers/pci/probe.c                |   18 +++++++++++
+>  drivers/pci/quirks.c               |    2 -
+>  drivers/virtio/virtio_pci_common.c |    3 --
+>  include/linux/pci.h                |    5 ---
+>  10 files changed, 51 insertions(+), 94 deletions(-)
+> 
+> 
+> --- This is "git diff v5 v6":
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 54cefb442d19..3d938a7d3b04 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3096,24 +3096,6 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
+>  
+> -/**
+> - * pci_msi_off - disables any MSI or MSI-X capabilities
+> - * @dev: the PCI device to operate on
+> - *
+> - * If you want to use MSI, see pci_enable_msi() and friends.
+> - * This is a lower-level primitive that allows us to disable
+> - * MSI operation at the device level.
+> - * Not for use by drivers.
+> - */
+> -void pci_msi_off(struct pci_dev *dev)
+> -{
+> -	if (dev->msi_cap)
+> -		pci_msi_set_enable(dev, 0);
+> -
+> -	if (dev->msix_cap)
+> -		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+> -}
+> -
+>  int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
+>  {
+>  	return dma_set_max_seg_size(&dev->dev, size);
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 620fcad1935d..17f213d494de 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -146,8 +146,6 @@ static inline void pci_no_msi(void) { }
+>  static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
+>  #endif
+>  
+> -void pci_msi_off(struct pci_dev *dev);
+> -
+>  static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
+>  {
+>  	u16 control;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 120772c219c7..740113b70ade 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1086,14 +1086,18 @@ int pci_cfg_space_size(struct pci_dev *dev)
+>  
+>  static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+>  {
+> -	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> -	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> -
+> -	/* Disable the msi hardware to avoid screaming interrupts
+> +	/*
+> +	 * Disable the MSI hardware to avoid screaming interrupts
+>  	 * during boot.  This is the power on reset default so
+>  	 * usually this should be a noop.
+>  	 */
+> -	pci_msi_off(dev);
+> +	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> +	if (dev->msi_cap)
+> +		pci_msi_set_enable(dev, 0);
+> +
+> +	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+> +	if (dev->msix_cap)
+> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+>  }
+>  
+>  /**
+> @@ -1151,7 +1155,6 @@ int pci_setup_device(struct pci_dev *dev)
+>  	/* "Unknown power state" */
+>  	dev->current_state = PCI_UNKNOWN;
+>  
+> -	/* MSI/MSI-X setup has to be done early since it's used by quirks. */
+>  	pci_msi_setup_pci_dev(dev);
+>  
+>  	/* Early fixups, before probing the BARs */
