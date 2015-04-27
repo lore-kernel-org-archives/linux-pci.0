@@ -1,108 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Yinghai Lu <yinghai@kernel.org>, Lv Zheng <lv.zheng@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-ia64@vger.kernel.org
-Subject: [RFC 3/7] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
-Date: Tue,  7 Apr 2015 12:31:08 +0800
-Message-Id: <1428381072-27486-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428381072-27486-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428381072-27486-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:50910 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964964AbbD0U11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Apr 2015 16:27:27 -0400
+Message-ID: <553E9B9A.5090000@ti.com>
+Date: Mon, 27 Apr 2015 16:27:06 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	KISHON VIJAY <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [RFC] PCI: designware: missing *config* reg space
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common struct resource_entry to replace private struct iospace_resource.
+All,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/ia64/include/asm/pci.h |    5 -----
- arch/ia64/pci/pci.c         |   17 ++++++++---------
- 2 files changed, 8 insertions(+), 14 deletions(-)
+I would like to take action to resolve the following print message 
+thrown by PCI designware core driver when kernel boots up on Keystone.
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed9f60b..5c10e0ec48d4 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
--struct iospace_resource {
--	struct list_head list;
--	struct resource res;
--};
--
- struct pci_controller {
- 	struct acpi_device *companion;
- 	void *iommu;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index cafe8e47afb2..c5630dd5e181 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
- static int add_io_space(struct device *dev, struct pci_root_info *info,
- 			struct resource_entry *entry)
- {
--	struct iospace_resource *iospace;
-+	struct resource_entry *iospace;
- 	struct resource *resource, *res = entry->res;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
- 	len = strlen(info->name) + 32;
--	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	iospace = resource_list_create_entry(NULL, len);
- 	if (!iospace) {
- 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
- 			info->name);
-@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
--	resource = &iospace->res;
-+	resource = iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
-@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	entry->offset = base_port;
- 	res->start = min + base_port;
- 	res->end = max + base_port;
--	list_add_tail(&iospace->list, &info->io_resources);
-+	resource_list_add_tail(iospace, &info->io_resources);
- 
- 	return 0;
- 
- free_resource:
--	kfree(iospace);
-+	resource_list_free_entry(iospace);
- 	return -ENOSPC;
- }
- 
-@@ -348,12 +348,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
- static void __release_pci_root_info(struct pci_root_info *info)
- {
- 	struct resource *res;
--	struct iospace_resource *iospace, *tmp;
- 	struct resource_entry *entry, *tentry;
- 
--	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
--		release_resource(&iospace->res);
--		kfree(iospace);
-+	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
-+		release_resource(entry->res);
-+		resource_list_destroy_entry(entry);
- 	}
- 
- 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
+[    0.415778] keystone-pcie 21801000.pcie: missing *config* reg space
+
+As per DT documentation introduced by commit 
+4dd964df36d0e548e1806ec2ec275b62d4dc46e8 "PCI: designware: Look for 
+configuration space in 'reg', not 'ranges'
+
+This is introduced to stop abusing the range property for defining 
+resource for config space. However if the device binding doesn't have
+reg-name = "config" defined, this throws out an unnecessary log message
+at boot which seems to me not right. AFAIK, reg-names is not mandatory.
+config space address in Keystone case is defined using index. So for
+keystone this needs to be fixed.
+
+I propose to add the following check in the designware code to address
+this. Keystone uses an older version of the Designware IP and doesn't 
+have the ATU support. So va_cfg0_base and va_cfg1_base are already set 
+up in ks_dw_pcie_host_init() before calling dw_pcie_host_init() and 
+points to the remote config space address (both same for keystone). I 
+think for other DW drivers, these variables are NULL. So add a check and 
+avoid this error message for Keystone. Any comments?
+
+
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -348,7 +348,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+         struct platform_device *pdev = to_platform_device(pp->dev);
+         struct of_pci_range range;
+         struct of_pci_range_parser parser;
+-       struct resource *cfg_res;
++       struct resource *cfg_res = NULL;
+         u32 val, na, ns;
+         const __be32 *addrp;
+         int i, index, ret;
+@@ -359,7 +359,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+         of_property_read_u32(np, "#address-cells", &na);
+         ns = of_n_size_cells(np);
+
+-       cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, 
+"config");
++       if (!pp->va_cfg0_base && !pp->va_cfg0_base)
++               cfg_res = platform_get_resource_byname(pdev,
++                                                      IORESOURCE_MEM,
++                                                      "config");
++
+         if (cfg_res) {
+                 pp->cfg0_size = resource_size(cfg_res)/2;
+                 pp->cfg1_size = resource_size(cfg_res)/2;
+@@ -372,7 +376,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+                 pp->cfg0_mod_base = of_read_number(addrp, ns);
+                 pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
+         } else {
+-               dev_err(pp->dev, "missing *config* reg space\n");
++               if (!pp->va_cfg0_base && !pp->va_cfg1_base)
++                       dev_err(pp->dev, "missing *config* reg space\n");
+         }
+
+
+
 -- 
-1.7.10.4
-
+Murali Karicheri
+Linux Kernel, Texas Instruments
