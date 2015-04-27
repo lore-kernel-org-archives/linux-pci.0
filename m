@@ -1,110 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og123.obsmtp.com ([64.18.0.198]:59496 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751186AbbDUEFh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 00:05:37 -0400
-Received: by pdbqa5 with SMTP id qa5so228765126pdb.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Apr 2015 21:05:36 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v5 2/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
-Date: Mon, 20 Apr 2015 21:04:22 -0700
-Message-Id: <227f8c75e04110e279b78512924742ba7c7fe5fc.1429586144.git.dhdang@apm.com>
-In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
-References: <cover.1429586144.git.dhdang@apm.com>
-In-Reply-To: <cover.1429586144.git.dhdang@apm.com>
-References: <55310050.7000003@arm.com> <cover.1429586144.git.dhdang@apm.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38457 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752842AbbD0GjW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:22 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:39:21 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 7FD572CE8056
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:18 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dA8144171284
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:18 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6ciSe009505
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:45 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 11/21] powerpc/powernv: Fundamental reset for PCI bus reset
+Date: Mon, 27 Apr 2015 16:37:43 +1000
+Message-Id: <1430116673-22500-12-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+Function pnv_pci_reset_secondary_bus() is used to reset specified
+PCI bus, which is leaded by root complex or PCI bridge. That means
+the function shouldn't be called on PCI root bus and the patch
+removes the logic for that case.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Also, some adapters beneath the indicated PCI bus may require
+fundamental reset in order to successfully reload their firmwares
+after the reset. The patch translates hot reset to fundamental reset
+for that case.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index f1ad9c2..4b719c9 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -354,6 +354,28 @@
- 			};
- 		};
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 3c01095..58e4dcf 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+ }
  
-+		msi: msi@79000000 {
-+			compatible = "apm,xgene1-msi";
-+			msi-controller;
-+			reg = <0x00 0x79000000 0x0 0x900000>;
-+			interrupts = <  0x0 0x10 0x4
-+					0x0 0x11 0x4
-+					0x0 0x12 0x4
-+					0x0 0x13 0x4
-+					0x0 0x14 0x4
-+					0x0 0x15 0x4
-+					0x0 0x16 0x4
-+					0x0 0x17 0x4
-+					0x0 0x18 0x4
-+					0x0 0x19 0x4
-+					0x0 0x1a 0x4
-+					0x0 0x1b 0x4
-+					0x0 0x1c 0x4
-+					0x0 0x1d 0x4
-+					0x0 0x1e 0x4
-+					0x0 0x1f 0x4>;
-+		};
+-void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
++static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+ {
+-	struct pci_controller *hose;
++	int *freset = data;
+ 
+-	if (pci_is_root_bus(dev->bus)) {
+-		hose = pci_bus_to_host(dev->bus);
+-		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
+-		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
+-	} else {
+-		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+-		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
++	/*
++	 * Stop the iteration immediately if there is any
++	 * one PCI device requesting fundamental reset
++	 */
++	*freset |= pdev->needs_freset;
++	return *freset;
++}
 +
- 		pcie0: pcie@1f2b0000 {
- 			status = "disabled";
- 			device_type = "pci";
-@@ -375,6 +397,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie0clk 0>;
-+			msi-parent = <&msi>;
- 		};
++void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
++{
++	int option = EEH_RESET_HOT;
++	int freset = 0;
++
++	/* Check if there're any PCI devices asking for fundamental reset */
++	if (pdev->subordinate) {
++		pci_walk_bus(pdev->subordinate,
++			     pnv_pci_dev_reset_type,
++			     &freset);
++		if (freset)
++			option = EEH_RESET_FUNDAMENTAL;
+ 	}
++
++	/* Issue the requested type of reset */
++	pnv_eeh_bridge_reset(pdev, option);
++	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
+ }
  
- 		pcie1: pcie@1f2c0000 {
-@@ -398,6 +421,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie1clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie2: pcie@1f2d0000 {
-@@ -421,6 +445,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie2clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie3: pcie@1f500000 {
-@@ -444,6 +469,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie3clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie4: pcie@1f510000 {
-@@ -467,6 +493,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie4clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		serial0: serial@1c020000 {
+ /**
 -- 
-1.9.1
+2.1.0
 
