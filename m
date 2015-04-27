@@ -1,123 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57278 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932844AbbD0RRP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Apr 2015 13:17:15 -0400
-Message-ID: <553E6F17.3060602@arm.com>
-Date: Mon, 27 Apr 2015 18:17:11 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Varun Sethi <Varun.Sethi@freescale.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>
-CC: Will Deacon <Will.Deacon@arm.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>	<BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>	<DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>	<BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>	<20150416104008.GB25640@arm.com>	<CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>	<20150422170718.GG13019@arm.com>	<CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>	<20150424161818.GC7313@arm.com>	<553A72D4.7000801@arm.com>	<CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com> <20150425113930.7386a42a@arm.com> <BN1PR0301MB06276181976E880432B8C49AEAEA0@BN1PR0301MB0627.namprd03.prod.outlook.com> <553DEC20.3010400@arm.com> <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
-In-Reply-To: <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:58661 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752649AbbD0Gi6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:38:58 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:38:56 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 973BD2CE8040
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:53 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6cj9M9568318
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:53 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cJw1008923
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:20 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 02/21] powerpc/powernv: Enable M64 on P7IOC
+Date: Mon, 27 Apr 2015 16:37:34 +1000
+Message-Id: <1430116673-22500-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/04/15 14:08, Varun Sethi wrote:
-> Hi Marc,
-> 
->> -----Original Message-----
->> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
->> Sent: Monday, April 27, 2015 1:28 PM
->> To: Sethi Varun-B16395; Yoder Stuart-B08248
->> Cc: Will Deacon; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd
->> Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood Scott-
->> B07421; linux-arm-kernel@lists.infradead.org
->> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
->>
->> Hi Varun,
->>
->> On 26/04/15 19:20, Varun Sethi wrote:
->>> Hi Marc,
->>>
->>>>>> We can deal with the aliasing, provided that we extend the level of
->>>>>> quirkiness that pci_for_each_dma_alias can deal with. But that
->>>>>> doesn't solve any form of hotplug/SR-IOV behaviour.
->>>>>>
->>> [varun] Can you please elaborate on "extending the quirkiness of
->>> pci_for_each_dma_alias". How do you see the case for transparent host
->>> bridege being handled? We would see a device ID corresponding to the
->>> host bridge for masters behind that bridge.
->>
->> The PCI code already has code to deal with aliases, and can deal with them in
->> a number of cases.
->>
->> At the moment, this aliasing code can only deal with aliases that belong to
->> the same PCI bus (or aliasing with the bus itself). Given the way the problem
->> has been described, I understand that you can have devices sitting on
->> different buses that will end up with the same DeviceID. This is where
->> expanding the "quirkiness" of pci_for_each_dma_alias comes into play. You
->> need to teach it about this kind of topology.
->>
-> [varun] Agreed, in our case the PCIe controller maintains a stream ID to device ID  translation table. So, we can actually avoid this problem by setting up unique stream IDs across PCIe controllers. We would need a layer to allow translation from device id to stream ID.
-> 
->>>>>> Somehow, we're going to end-up with grossly oversized ITTs, just to
->>>>>> accommodate for the fact that we have no idea how many MSIs we're
->>>>>> going to end-up needing. I'm not thrilled with that prospect.
->>>>>
->>>>> How can we avoid that in the face of hotplug?
->>>>
->>>> Fortunately, hotplug is not always synonymous of aliasing. The ITS is
->>>> built around the hypothesis that aliasing doesn't happen, and that
->>>> you know upfront how many LPIs the device will be allowed to generate.
->>>>
->>>>> And what are we really worried about regarding over-sized
->>>>> ITTs...bytes of memory saved?
->>>>
->>>> That's one thing, yes. But more fundamentally, how do you size your
->>>> MSI capacity for a single alias? Do you evenly split your LPI space
->>>> among all possible aliases? Assuming 64 aliases and 16 bits of
->>>> interrupt ID space, you end up with 10 bit per alias. Is that always
->>>> enough? Or do you need something more fine-grained?
->>>>
->>>>> A fundamental thing built into the IOMMU subsystem in Linux is
->>>>> representing iommu groups that can represent things like multiple
->>>>> PCI devices that for hardware reasons cannot be isolated (and the
->>>>> example I've seen given relates to devices behind PCI bridges).
->>>>>
->>>>> So, I think the thing we are facing here is that while the IOMMU
->>>>> subsystem has accounted for reprsenting the isolation
->>>>> characteristics of a system with iommu groups, there is no corresponding
->> "msi group"
->>>>> concept.
->>>>>
->>>>> In the SMMU/GIC-500-ITS world the iommu isolation ID (the stream ID)
->>>>> and the GIC-ITS device ID are in fact the same ID.
->>>>
->>>> The DeviceID is the "MSI group" you mention. This is what provides
->>>> isolation at the ITS level.
->>>>
->>> [varun] True, in case of a transparent host bridge device Id won't
->>> provide the necessary isolation.
->>
->> Well, it depends how you look at it. How necessary is this isolation, since
->> we've already established that you couldn't distinguish between these
->> devices at the IOMMU level?
->>
-> [varun] Yes, the devices would fall in the same IOMMU group. So,
-> devices would end up sharing the interrupt?
+The patch enables M64 window on P7IOC, which has been enabled on
+PHB3. Comparing to PHB3, there are 16 M64 BARs and each of them
+are divided to 8 segments. So each PHB can support 128 M64 segments.
+Also, P7IOC has M64DT, which helps mapping one particular M64
+segment# to arbitrary PE#. However, we just provide 128 M64 (16 BARs)
+segments and fixed mapping between PE# and M64 segment# in order
+to keep same logic to support M64 for PHB3 and P7IOC. In turn, we
+just need different phb->init_m64() hooks for P7IOC and PHB3.
 
-No, they would end-up sharing an Interrupt Translation Table (ITT),
-Basically the equivalent of your page IOMMU page tables, but for
-interrupts. Basically, all the devices in this group would have their
-own set of interrupts, but would also be able to spoof interrupts for
-each others. Probably not a big deal isolation wise, but problematic
-from an allocation point of view (given the current way the ITS driver
-is architected).
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 115 ++++++++++++++++++++++++++----
+ 1 file changed, 103 insertions(+), 12 deletions(-)
 
-	M.
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index f8bc950..646962f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -165,6 +165,67 @@ static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
+ 	clear_bit(pe, phb->ioda.pe_alloc);
+ }
+ 
++static int pnv_ioda1_init_m64(struct pnv_phb *phb)
++{
++	struct resource *r;
++	int seg;
++	s64 rc;
++
++	/* Each PHB supports 16 separate M64 BARs, each of which are
++	 * divided into 8 segments. So there are number of M64 segments
++	 * as total PE#, which is 128.
++	 */
++	for (seg = 0; seg < phb->ioda.total_pe; seg += 8) {
++		unsigned long base;
++
++		base = phb->ioda.m64_base + seg * phb->ioda.m64_segsize;
++		rc = opal_pci_set_phb_mem_window(phb->opal_id,
++						 OPAL_M64_WINDOW_TYPE,
++						 seg / 8,
++						 base,
++						 0, /* unused */
++						 8 * phb->ioda.m64_segsize);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("  Failure %lld configuring M64 BAR#%d on PHB#%d\n",
++				rc, seg / 8, phb->hose->global_number);
++			goto fail;
++		}
++
++		rc = opal_pci_phb_mmio_enable(phb->opal_id,
++					      OPAL_M64_WINDOW_TYPE,
++					      seg / 8,
++					      OPAL_ENABLE_M64_SPLIT);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("  Failure %lld enabling M64 BAR#%d on PHB#%d\n",
++				rc, seg / 8, phb->hose->global_number);
++			goto fail;
++		}
++	}
++
++	/* Strip of the segment used by the reserved PE, which
++	 * is expected to be 0 or last supported PE#
++	 */
++	r = &phb->hose->mem_resources[1];
++	if (phb->ioda.reserved_pe == 0)
++		r->start += phb->ioda.m64_segsize;
++	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
++		r->end -= phb->ioda.m64_segsize;
++	else
++		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
++			phb->ioda.reserved_pe);
++
++	return 0;
++
++fail:
++	for ( ; seg >= 0; seg -= 8)
++		opal_pci_phb_mmio_enable(phb->opal_id,
++					 OPAL_M64_WINDOW_TYPE,
++					 seg / 8,
++					 OPAL_DISABLE_M64);
++
++	return -EIO;
++}
++
+ /* The default M64 BAR is shared by all PEs */
+ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+ {
+@@ -222,7 +283,7 @@ fail:
+ 	return -EIO;
+ }
+ 
+-static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
++static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
+ {
+ 	resource_size_t sgsz = phb->ioda.m64_segsize;
+ 	struct pci_dev *pdev;
+@@ -248,8 +309,8 @@ static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
+ 	}
+ }
+ 
+-static int pnv_ioda2_pick_m64_pe(struct pnv_phb *phb,
+-				 struct pci_bus *bus, int all)
++static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
++				struct pci_bus *bus, int all)
+ {
+ 	resource_size_t segsz = phb->ioda.m64_segsize;
+ 	struct pci_dev *pdev;
+@@ -346,6 +407,28 @@ done:
+ 			pe->master = master_pe;
+ 			list_add_tail(&pe->list, &master_pe->slaves);
+ 		}
++
++		/* P7IOC supports M64DT, which helps mapping M64 segment
++		 * to one particular PE#. Unfortunately, PHB3 has fixed
++		 * mapping between M64 segment and PE#. In order for same
++		 * logic for P7IOC and PHB3, we enforce fixed mapping
++		 * between M64 segment and PE# on P7IOC.
++		 */
++		if (phb->type == PNV_PHB_IODA1) {
++			int64_t rc;
++
++			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++							 pe->pe_number,
++							 OPAL_M64_WINDOW_TYPE,
++							 pe->pe_number / 8,
++							 pe->pe_number % 8);
++			if (rc != OPAL_SUCCESS)
++				pr_warn("%s: Failure %lld mapping "
++					"M64 for PHB#%d-PE#%d\n",
++					__func__, rc,
++					phb->hose->global_number,
++					pe->pe_number);
++		}
+ 	}
+ 
+ 	kfree(pe_alloc);
+@@ -360,12 +443,6 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 	const u32 *r;
+ 	u64 pci_addr;
+ 
+-	/* FIXME: Support M64 for P7IOC */
+-	if (phb->type != PNV_PHB_IODA2) {
+-		pr_info("  Not support M64 window\n");
+-		return;
+-	}
+-
+ 	if (!firmware_has_feature(FW_FEATURE_OPALv3)) {
+ 		pr_info("  Firmware too old to support M64 window\n");
+ 		return;
+@@ -394,9 +471,23 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 
+ 	/* Use last M64 BAR to cover M64 window */
+ 	phb->ioda.m64_bar_idx = 15;
+-	phb->init_m64 = pnv_ioda2_init_m64;
+-	phb->reserve_m64_pe = pnv_ioda2_reserve_m64_pe;
+-	phb->pick_m64_pe = pnv_ioda2_pick_m64_pe;
++	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
++	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
++	switch (phb->type) {
++	case PNV_PHB_IODA1:
++		phb->init_m64 = pnv_ioda1_init_m64;
++		break;
++	case PNV_PHB_IODA2:
++		phb->init_m64 = pnv_ioda2_init_m64;
++		break;
++	default:
++		phb->init_m64 = NULL;
++		phb->reserve_m64_pe = NULL;
++		phb->pick_m64_pe = NULL;
++		phb->ioda.m64_size = 0;
++		phb->ioda.m64_segsize = 0;
++		phb->ioda.m64_base = 0;
++	}
+ }
+ 
+ static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
 -- 
-Jazz is not dead. It just smells funny...
+2.1.0
+
