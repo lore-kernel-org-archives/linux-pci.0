@@ -1,105 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47891 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750998AbbDUCyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Apr 2015 22:54:17 -0400
-Date: Tue, 21 Apr 2015 10:53:17 +0800
-From: Dave Young <dyoung@redhat.com>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150421025317.GA14720@dhcp-128-82.nay.redhat.com>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
- <20150415005731.GC19051@localhost.localdomain>
- <552DFB56.1070600@hp.com>
- <20150415064803.GF19051@localhost.localdomain>
- <5535AA57.6010404@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5535AA57.6010404@hp.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:37109 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbbD0Gi6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:38:58 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:38:55 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8F7692BB0051
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:52 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6ciCL48824370
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:52 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cIff012387
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:19 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 00/21] PowerPC/PowerNV: PCI Slot Management
+Date: Mon, 27 Apr 2015 16:37:32 +1000
+Message-Id: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+The series of patches intend to support PCI slot for PowerPC PowerNV platform,
+which is running on top of skiboot firmware. The patchset requires corresponding
+changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org for
+review. The PCI slots are exposed by skiboot with device node properties, and
+kernel utilizes those properties to populated PCI slots accordingly.
 
-On 04/21/15 at 09:39am, Li, ZhenHua wrote:
-> Hi Dave,
-> I found the old mail:
-> http://lkml.iu.edu/hypermail/linux/kernel/1410.2/03584.html
+The original PCI infrastructure on PowerNV platform can't support hotplug because
+the PE is assigned during PHB fixup time, which is called for once during system
+boot time. For this, the PCI infrastructure on PowerNV platform has been reworked
+for a lot. After that, the PE and its corresponding resources (IODT, M32DT, M64
+segments, DMA32 and bypass window) are assigned upon updating PCI bridge's
+resources, which might decide PE# assigned to the PE (e.g. M64 resources, on P8
+strictly speaking). Each PE will maintain a reference count, which is (number of
+child PCI devices + 1). That indicates when last child PCI device leaves the PE,
+the PE and its included resources will be relased and put back into free pool
+again. With this design, the PE will be released when EEH PE is released.
+PATCH[1 - 8] are related to this part.
 
-I know and I have read it before.
+>From skiboot perspective, PCI slot is providing (hot/fundamental/complete) resets
+to EEH. The kernel gets to know if skiboot supports various reset on one particular
+PCI slot through device-tree node. If it does, EEH will utilize the functionality
+provided by skiboot. Besides, the device-tree nodes have to change in order to
+support PCI hotplug. For example, when one PCI adapter inserted to one slot,
+its device-tree node should be added to the system dynamically. Conversely, the
+device-tree node should be removed from the system when the PCI adapter is going
+to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
+they should be added/removed accordingly during PCI hotplug. Patch[9 - 20] are
+doing the related work.
 
-==================  quote  ===================
-> > > So with this in mind I would prefer initially taking over the
-> > > page-tables from the old kernel before the device drivers re-initialize
-> > > the devices.
-> >
-> > This makes the dump kernel more dependent on data from the old kernel,
-> > which we obviously want to avoid when possible.
+The last patch is the standalone PCI hotplug driver for PowerNV platform. When
+removing PCI adapter from one PCI slot, which is invoked by command in userland,
+the skiboot will power off the slot to save power and remove all device-tree
+nodes for all PCI devices behind the slot. Conversely, the Power to the slot
+is turned on, the PCI devices behind the slot is rescanned, and the device-tree
+nodes for those newly detected PCI devices will be built in skiboot. For both
+of cases, one message will be sent to kernel by skiboot so that the kernel
+can adjust the device-tree accordingly. At the same time, the kernel also have
+to deallocate or allocate PE# and its related resources (PE# and so on) for the
+removed/added PCI devices.
 
-> Sure, but this is not really possible here (unless we have a generic and
-> reliable way to reset all PCI endpoint devices and cancel all in-flight
-> DMA before we disable the IOMMU in the kdump kernel).
-> Otherwise we always risk data corruption somewhere, in system memory or
-> on disk.
-=================  quote  ====================
+Changelog
+=========
+v3:
+   * Rebased to 4.1.RC0
+   * PowerNV PCI infrasturcture is total refactored in order to support PCI
+     hotplug. The PowerNV hotplug driver is also reworked a lot because of
+     the changes in skiboot in order to support PCI hotplug.
 
-What I understand above is it is not really possible to avoid the problem.
 
-But IMHO we should avoid it or we will have problems in the future, if we
-really cannot avoid it I would say switching to pci reset way is better.
+Gavin Shan (21):
+  pci: Add pcibios_setup_bridge()
+  powerpc/powernv: Enable M64 on P7IOC
+  powerpc/powernv: M64 support improvement
+  powerpc/powernv: Improve IO and M32 mapping
+  powerpc/powernv: Improve DMA32 segment assignment
+  powerpc/powernv: Create PEs dynamically
+  powerpc/powernv: Release PEs dynamically
+  powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
+  powerpc/eeh: Delay probing EEH device during hotplug
+  powerpc/powernv: Use PCI slot reset infrastructure
+  powerpc/powernv: Fundamental reset for PCI bus reset
+  powerpc/pci: Don't scan empty slot
+  powerpc/pci: Move pcibios_find_pci_bus() around
+  powerpc/powernv: Introduce pnv_pci_poll()
+  powerpc/powernv: Functions to get/reset PCI slot status
+  powerpc/pci: Delay creating pci_dn
+  powerpc/pci: Create eeh_dev while creating pci_dn
+  powerpc/pci: Export traverse_pci_device_nodes()
+  powerpc/pci: Update bridge windows on PCI plugging
+  powerpc/powernv: Select OF_DYNAMIC
+  pci/hotplug: PowerPC PowerNV PCI hotplug driver
 
-> 
-> Please check this and you will find the discussion.
-> 
-> Regards
-> Zhenhua
-> 
-> On 04/15/2015 02:48 PM, Dave Young wrote:
-> >On 04/15/15 at 01:47pm, Li, ZhenHua wrote:
-> >>On 04/15/2015 08:57 AM, Dave Young wrote:
-> >>>Again, I think it is bad to use old page table, below issues need consider:
-> >>>1) make sure old page table are reliable across crash
-> >>>2) do not allow writing oldmem after crash
-> >>>
-> >>>Please correct me if I'm wrong, or if above is not doable I think I will vote for
-> >>>resetting pci bus.
-> >>>
-> >>>Thanks
-> >>>Dave
-> >>>
-> >>Hi Dave,
-> >>
-> >>When updating the context tables, we have to write their address to root
-> >>tables, this will cause writing to old mem.
-> >>
-> >>Resetting the pci bus has been discussed, please check this:
-> >>http://lists.infradead.org/pipermail/kexec/2014-October/012752.html
-> >>https://lkml.org/lkml/2014/10/21/890
-> >
-> >I know one reason to use old pgtable is this looks better because it fixes the
-> >real problem, but it is not a good way if it introduce more problems because of
-> >it have to use oldmem. I will be glad if this is not a problem but I have not
-> >been convinced.
-> >
-> >OTOH, there's many types of iommu, intel, amd, a lot of other types. They need
-> >their own fixes, so it looks not that elegant.
-> >
-> >For pci reset, it is not perfect, but it has another advantage, the patch is
-> >simpler. The problem I see from the old discusssion is, reset bus in 2nd kernel
-> >is acceptable but it does not fix things on sparc platform. AFAIK current reported
-> >problems are intel and amd iommu, at least pci reset stuff does not make it worse.
-> >
-> >Thanks
-> >Dave
-> >
-> 
+ arch/powerpc/include/asm/eeh.h                 |    7 +-
+ arch/powerpc/include/asm/opal-api.h            |    7 +-
+ arch/powerpc/include/asm/opal.h                |    7 +-
+ arch/powerpc/include/asm/pci-bridge.h          |    7 +-
+ arch/powerpc/include/asm/pnv-pci.h             |    5 +
+ arch/powerpc/include/asm/ppc-pci.h             |    7 +-
+ arch/powerpc/kernel/eeh.c                      |    7 +
+ arch/powerpc/kernel/eeh_dev.c                  |   20 +-
+ arch/powerpc/kernel/pci-common.c               |   18 +-
+ arch/powerpc/kernel/pci-hotplug.c              |   44 +-
+ arch/powerpc/kernel/pci_dn.c                   |  119 +-
+ arch/powerpc/platforms/maple/pci.c             |   35 +-
+ arch/powerpc/platforms/pasemi/pci.c            |    3 -
+ arch/powerpc/platforms/powermac/pci.c          |   39 +-
+ arch/powerpc/platforms/powernv/Kconfig         |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c   |  245 ++--
+ arch/powerpc/platforms/powernv/opal-wrappers.S |    3 +
+ arch/powerpc/platforms/powernv/pci-ioda.c      | 1657 +++++++++++++++---------
+ arch/powerpc/platforms/powernv/pci.c           |   64 +-
+ arch/powerpc/platforms/powernv/pci.h           |   52 +-
+ arch/powerpc/platforms/pseries/msi.c           |    4 +-
+ arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
+ arch/powerpc/platforms/pseries/setup.c         |    9 +-
+ drivers/pci/hotplug/Kconfig                    |   12 +
+ drivers/pci/hotplug/Makefile                   |    4 +
+ drivers/pci/hotplug/powernv_php.c              |  146 +++
+ drivers/pci/hotplug/powernv_php.h              |   78 ++
+ drivers/pci/hotplug/powernv_php_slot.c         |  913 +++++++++++++
+ drivers/pci/setup-bus.c                        |   12 +-
+ include/linux/pci.h                            |    1 +
+ 30 files changed, 2623 insertions(+), 935 deletions(-)
+ create mode 100644 drivers/pci/hotplug/powernv_php.c
+ create mode 100644 drivers/pci/hotplug/powernv_php.h
+ create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
+
+-- 
+2.1.0
+
