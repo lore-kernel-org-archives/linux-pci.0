@@ -1,110 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og114.obsmtp.com ([64.18.0.28]:37013 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757751AbbDVGQZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Apr 2015 02:16:25 -0400
-Received: by pdbnk13 with SMTP id nk13so264730993pdb.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Apr 2015 23:16:24 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v6 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
-Date: Tue, 21 Apr 2015 23:15:10 -0700
-Message-Id: <8a6f663274866c38d74b5c36f3b0efb50c537c66.1429677787.git.dhdang@apm.com>
-In-Reply-To: <cover.1429677787.git.dhdang@apm.com>
-References: <cover.1429677787.git.dhdang@apm.com>
-In-Reply-To: <cover.1429677787.git.dhdang@apm.com>
-References: <553667FD.9090806@arm.com> <cover.1429677787.git.dhdang@apm.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38502 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579AbbD0Gjp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:45 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:39:43 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5F49C3578047
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:41 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dXFF9437622
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:41 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6d63T013559
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:07 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 20/21] powerpc/powernv: Select OF_DYNAMIC
+Date: Mon, 27 Apr 2015 16:37:52 +1000
+Message-Id: <1430116673-22500-21-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+The device tree nodes will be changed dynamically on PCI hotplug
+events on PowerNV platform. The patch selects OF_DYNAMIC on the
+platform to support PCI hotplug.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ arch/powerpc/platforms/powernv/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index f1ad9c2..4b719c9 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -354,6 +354,28 @@
- 			};
- 		};
- 
-+		msi: msi@79000000 {
-+			compatible = "apm,xgene1-msi";
-+			msi-controller;
-+			reg = <0x00 0x79000000 0x0 0x900000>;
-+			interrupts = <  0x0 0x10 0x4
-+					0x0 0x11 0x4
-+					0x0 0x12 0x4
-+					0x0 0x13 0x4
-+					0x0 0x14 0x4
-+					0x0 0x15 0x4
-+					0x0 0x16 0x4
-+					0x0 0x17 0x4
-+					0x0 0x18 0x4
-+					0x0 0x19 0x4
-+					0x0 0x1a 0x4
-+					0x0 0x1b 0x4
-+					0x0 0x1c 0x4
-+					0x0 0x1d 0x4
-+					0x0 0x1e 0x4
-+					0x0 0x1f 0x4>;
-+		};
-+
- 		pcie0: pcie@1f2b0000 {
- 			status = "disabled";
- 			device_type = "pci";
-@@ -375,6 +397,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie0clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie1: pcie@1f2c0000 {
-@@ -398,6 +421,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie1clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie2: pcie@1f2d0000 {
-@@ -421,6 +445,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie2clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie3: pcie@1f500000 {
-@@ -444,6 +469,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie3clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie4: pcie@1f510000 {
-@@ -467,6 +493,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie4clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		serial0: serial@1c020000 {
+diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
+index 4b044d8..9c62631 100644
+--- a/arch/powerpc/platforms/powernv/Kconfig
++++ b/arch/powerpc/platforms/powernv/Kconfig
+@@ -18,4 +18,5 @@ config PPC_POWERNV
+ 	select CPU_FREQ_GOV_ONDEMAND
+ 	select CPU_FREQ_GOV_CONSERVATIVE
+ 	select PPC_DOORBELL
++	select OF_DYNAMIC
+ 	default y
 -- 
-1.9.1
+2.1.0
 
