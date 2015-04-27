@@ -1,174 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:58768 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752833AbbD0Gjn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:43 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 27 Apr 2015 16:39:42 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id BAD6C2BB004D
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:40 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dWfq35192860
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:40 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6d6nw029857
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:07 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v3 17/21] powerpc/pci: Create eeh_dev while creating pci_dn
-Date: Mon, 27 Apr 2015 16:37:49 +1000
-Message-Id: <1430116673-22500-18-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from foss.arm.com ([217.140.101.70]:57278 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932844AbbD0RRP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Apr 2015 13:17:15 -0400
+Message-ID: <553E6F17.3060602@arm.com>
+Date: Mon, 27 Apr 2015 18:17:11 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Varun Sethi <Varun.Sethi@freescale.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>
+CC: Will Deacon <Will.Deacon@arm.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>	<BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>	<DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>	<BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>	<20150416104008.GB25640@arm.com>	<CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>	<20150422170718.GG13019@arm.com>	<CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>	<20150424161818.GC7313@arm.com>	<553A72D4.7000801@arm.com>	<CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com> <20150425113930.7386a42a@arm.com> <BN1PR0301MB06276181976E880432B8C49AEAEA0@BN1PR0301MB0627.namprd03.prod.outlook.com> <553DEC20.3010400@arm.com> <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
+In-Reply-To: <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The eeh_dev is always created based on pci_dn, but with initcall
-supported by core_initcall_sync(). The patch creates eeh_dev
-when pci_dn is created, indicating they have same life cycle.
+On 27/04/15 14:08, Varun Sethi wrote:
+> Hi Marc,
+> 
+>> -----Original Message-----
+>> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
+>> Sent: Monday, April 27, 2015 1:28 PM
+>> To: Sethi Varun-B16395; Yoder Stuart-B08248
+>> Cc: Will Deacon; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd
+>> Bergmann; Hu Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood Scott-
+>> B07421; linux-arm-kernel@lists.infradead.org
+>> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
+>>
+>> Hi Varun,
+>>
+>> On 26/04/15 19:20, Varun Sethi wrote:
+>>> Hi Marc,
+>>>
+>>>>>> We can deal with the aliasing, provided that we extend the level of
+>>>>>> quirkiness that pci_for_each_dma_alias can deal with. But that
+>>>>>> doesn't solve any form of hotplug/SR-IOV behaviour.
+>>>>>>
+>>> [varun] Can you please elaborate on "extending the quirkiness of
+>>> pci_for_each_dma_alias". How do you see the case for transparent host
+>>> bridege being handled? We would see a device ID corresponding to the
+>>> host bridge for masters behind that bridge.
+>>
+>> The PCI code already has code to deal with aliases, and can deal with them in
+>> a number of cases.
+>>
+>> At the moment, this aliasing code can only deal with aliases that belong to
+>> the same PCI bus (or aliasing with the bus itself). Given the way the problem
+>> has been described, I understand that you can have devices sitting on
+>> different buses that will end up with the same DeviceID. This is where
+>> expanding the "quirkiness" of pci_for_each_dma_alias comes into play. You
+>> need to teach it about this kind of topology.
+>>
+> [varun] Agreed, in our case the PCIe controller maintains a stream ID to device ID  translation table. So, we can actually avoid this problem by setting up unique stream IDs across PCIe controllers. We would need a layer to allow translation from device id to stream ID.
+> 
+>>>>>> Somehow, we're going to end-up with grossly oversized ITTs, just to
+>>>>>> accommodate for the fact that we have no idea how many MSIs we're
+>>>>>> going to end-up needing. I'm not thrilled with that prospect.
+>>>>>
+>>>>> How can we avoid that in the face of hotplug?
+>>>>
+>>>> Fortunately, hotplug is not always synonymous of aliasing. The ITS is
+>>>> built around the hypothesis that aliasing doesn't happen, and that
+>>>> you know upfront how many LPIs the device will be allowed to generate.
+>>>>
+>>>>> And what are we really worried about regarding over-sized
+>>>>> ITTs...bytes of memory saved?
+>>>>
+>>>> That's one thing, yes. But more fundamentally, how do you size your
+>>>> MSI capacity for a single alias? Do you evenly split your LPI space
+>>>> among all possible aliases? Assuming 64 aliases and 16 bits of
+>>>> interrupt ID space, you end up with 10 bit per alias. Is that always
+>>>> enough? Or do you need something more fine-grained?
+>>>>
+>>>>> A fundamental thing built into the IOMMU subsystem in Linux is
+>>>>> representing iommu groups that can represent things like multiple
+>>>>> PCI devices that for hardware reasons cannot be isolated (and the
+>>>>> example I've seen given relates to devices behind PCI bridges).
+>>>>>
+>>>>> So, I think the thing we are facing here is that while the IOMMU
+>>>>> subsystem has accounted for reprsenting the isolation
+>>>>> characteristics of a system with iommu groups, there is no corresponding
+>> "msi group"
+>>>>> concept.
+>>>>>
+>>>>> In the SMMU/GIC-500-ITS world the iommu isolation ID (the stream ID)
+>>>>> and the GIC-ITS device ID are in fact the same ID.
+>>>>
+>>>> The DeviceID is the "MSI group" you mention. This is what provides
+>>>> isolation at the ITS level.
+>>>>
+>>> [varun] True, in case of a transparent host bridge device Id won't
+>>> provide the necessary isolation.
+>>
+>> Well, it depends how you look at it. How necessary is this isolation, since
+>> we've already established that you couldn't distinguish between these
+>> devices at the IOMMU level?
+>>
+> [varun] Yes, the devices would fall in the same IOMMU group. So,
+> devices would end up sharing the interrupt?
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h         |  6 ++++--
- arch/powerpc/kernel/eeh_dev.c          | 18 ++++--------------
- arch/powerpc/kernel/pci_dn.c           | 12 ++++++++++++
- arch/powerpc/platforms/pseries/setup.c |  6 +-----
- 4 files changed, 21 insertions(+), 21 deletions(-)
+No, they would end-up sharing an Interrupt Translation Table (ITT),
+Basically the equivalent of your page IOMMU page tables, but for
+interrupts. Basically, all the devices in this group would have their
+own set of interrupts, but would also be able to spoof interrupts for
+each others. Probably not a big deal isolation wise, but problematic
+from an allocation point of view (given the current way the ITS driver
+is architected).
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 2793d24..4ed88f6 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -269,7 +269,8 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
- const char *eeh_pe_loc_get(struct eeh_pe *pe);
- struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
- 
--void *eeh_dev_init(struct pci_dn *pdn, void *data);
-+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+			     struct pci_controller *phb);
- void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
- int eeh_init(void);
- int __init eeh_ops_register(struct eeh_ops *ops);
-@@ -322,7 +323,8 @@ static inline int eeh_init(void)
- 	return 0;
- }
- 
--static inline void *eeh_dev_init(struct pci_dn *pdn, void *data)
-+static inline struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+					   struct pci_controller *phb)
- {
- 	return NULL;
- }
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index f33ce5b..7486932 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -44,14 +44,14 @@
- /**
-  * eeh_dev_init - Create EEH device according to OF node
-  * @pdn: PCI device node
-- * @data: PHB
-+ * @phb: PCI controller
-  *
-  * It will create EEH device according to the given OF node. The function
-  * might be called by PCI emunation, DR, PHB hotplug.
-  */
--void *eeh_dev_init(struct pci_dn *pdn, void *data)
-+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+			     struct pci_controller *phb)
- {
--	struct pci_controller *phb = data;
- 	struct eeh_dev *edev;
- 
- 	/* Allocate EEH device */
-@@ -68,7 +68,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
- 	edev->phb = phb;
- 	INIT_LIST_HEAD(&edev->list);
- 
--	return NULL;
-+	return edev;
- }
- 
- /**
-@@ -80,16 +80,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
-  */
- void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
- {
--	struct pci_dn *root = phb->pci_data;
--
- 	/* EEH PE for PHB */
- 	eeh_phb_pe_create(phb);
--
--	/* EEH device for PHB */
--	eeh_dev_init(root, phb);
--
--	/* EEH devices for children OF nodes */
--	traverse_pci_dn(root, eeh_dev_init, phb);
- }
- 
- /**
-@@ -105,8 +97,6 @@ static int __init eeh_dev_phb_init(void)
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		eeh_dev_phb_init_dynamic(phb);
- 
--	pr_info("EEH: devices created\n");
--
- 	return 0;
- }
- 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index d3833af..abc81fa 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -276,6 +276,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	const __be32 *regs;
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
-+#ifdef CONFIG_EEH
-+	struct eeh_dev *edev;
-+#endif
- 
- 	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (pdn == NULL)
-@@ -306,6 +309,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	/* Extended config space */
- 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
- 
-+	/* Initialize EEH device */
-+#ifdef CONFIG_EEH
-+	edev = eeh_dev_init(pdn, phb);
-+	if (!edev) {
-+		kfree(pdn);
-+		return NULL;
-+	}
-+#endif
-+
- 	/* Attach to parent node */
- 	INIT_LIST_HEAD(&pdn->child_list);
- 	INIT_LIST_HEAD(&pdn->list);
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 5f80758..92974aa 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -261,12 +261,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
- 	switch (action) {
- 	case OF_RECONFIG_ATTACH_NODE:
- 		pci = np->parent->data;
--		if (pci) {
-+		if (pci)
- 			update_dn_pci_info(np, pci->phb);
--
--			/* Create EEH device for the OF node */
--			eeh_dev_init(PCI_DN(np), pci->phb);
--		}
- 		break;
- 	default:
- 		err = NOTIFY_DONE;
+	M.
 -- 
-2.1.0
-
+Jazz is not dead. It just smells funny...
