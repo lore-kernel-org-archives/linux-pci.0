@@ -1,185 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jg1.han@samsung.com>, <bhelgaas@google.com>,
-	<Minghuan.Lian@freescale.com>, <fabrice.gasnier@st.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH v2 1/2] PCI: designware: consolidate outbound iATU programming functions
-Date: Thu, 30 Apr 2015 16:22:28 +0800
-Message-ID: <1430382149-1645-2-git-send-email-jszhang@marvell.com>
-In-Reply-To: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
-References: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:41082 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932067AbbD0GjU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:20 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:39:18 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 19CE42CE805C
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:17 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6d8CA38535192
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:16 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cgIe013059
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:43 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 19/21] powerpc/pci: Update bridge windows on PCI plugging
+Date: Mon, 27 Apr 2015 16:37:51 +1000
+Message-Id: <1430116673-22500-20-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the outbound iATU programming functions are similar, the only
-difference is index, type, addr and size. This patch tries to consolidate
-these functions into one. One side effect is it saves around 1700 bytes in
-text:
+During the PCI plugging event, the PCI devices are rescanned and
+their IO and MMIO resources are reassigned. However, the PowerNV
+platform will assign PE# based on that, which depends on updating
+to window of bridge of the PE's primary bus.
 
-   text	   data	    bss	    dec	    hex	filename
-   9276	    204	      4	   9484	   250c pcie-designware.o-before
-   7532	    204	      4	   7740	   1e3c pcie-designware.o
+The patch updates the windows of bridge of PE's primary bus if
+we have valid bridge. Otherwise, we assume it's root bus or SRIOV
+virtual bus and PE won't be assigned during PCI plugging time.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pcie-designware.c | 109 +++++++++++++------------------------
- 1 file changed, 39 insertions(+), 70 deletions(-)
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2e9f84f..1da1446 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -150,6 +150,21 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	return ret;
- }
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 01d2a84..cb0bb3f 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1473,8 +1473,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
  
-+static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
-+		int type, u64 cpu_addr, u64 pci_addr, u32 size)
-+{
-+	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-+			  PCIE_ATU_VIEWPORT);
-+	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
-+	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
-+	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-+			  PCIE_ATU_LIMIT);
-+	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
-+	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+}
-+
- static struct irq_chip dw_msi_irq_chip = {
- 	.name = "PCI-MSI",
- 	.irq_enable = pci_msi_unmask_irq,
-@@ -515,68 +530,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
--static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
--{
--	/* Program viewport 0 : OUTBOUND : CFG0 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, pp->cfg0_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg0_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg0_mod_base + pp->cfg0_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG0, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
--static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
--{
--	/* Program viewport 1 : OUTBOUND : CFG1 */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->cfg1_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->cfg1_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->cfg1_mod_base + pp->cfg1_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
--static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
--{
--	/* Program viewport 0 : OUTBOUND : MEM */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->mem_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->mem_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->mem_mod_base + pp->mem_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, pp->mem_bus_addr, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pp->mem_bus_addr),
--			  PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
--static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
--{
--	/* Program viewport 1 : OUTBOUND : IO */
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, pp->io_mod_base, PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, (pp->io_mod_base >> 32), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, pp->io_mod_base + pp->io_size - 1,
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, pp->io_bus_addr, PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pp->io_bus_addr),
--			  PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
--}
--
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
-@@ -588,15 +541,23 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_viewport_cfg0(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
-+					  busdev, pp->cfg0_size);
- 		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+					  pp->mem_bus_addr, pp->mem_size);
- 	} else {
--		dw_pcie_prog_viewport_cfg1(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
-+					  busdev, pp->cfg1_size);
- 		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_io_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+					  pp->io_bus_addr, pp->io_size);
- 	}
- 
- 	return ret;
-@@ -613,15 +574,23 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
--		dw_pcie_prog_viewport_cfg0(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
-+					  busdev, pp->cfg0_size);
- 		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_mem_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
-+					  pp->mem_bus_addr, pp->mem_size);
- 	} else {
--		dw_pcie_prog_viewport_cfg1(pp, busdev);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
-+					  busdev, pp->cfg1_size);
- 		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
- 				val);
--		dw_pcie_prog_viewport_io_outbound(pp);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
-+					  pp->io_bus_addr, pp->io_size);
- 	}
- 
- 	return ret;
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
 -- 
-2.1.4
+2.1.0
 
