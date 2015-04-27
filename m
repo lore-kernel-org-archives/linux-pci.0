@@ -1,506 +1,244 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: [Patch Part1 v8 10/37] irq_remapping/vt-d: Enhance Intel IR driver to support hierarchy irqdomain
-Date: Mon, 13 Apr 2015 14:11:32 +0800
-Message-Id: <1428905519-23704-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:48681 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752833AbbD0Gjp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:45 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:39:43 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3ADFB2BB0040
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:41 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dXsV23068858
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:41 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6d6hj013556
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:07 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 18/21] powerpc/pci: Export traverse_pci_device_nodes()
+Date: Mon, 27 Apr 2015 16:37:50 +1000
+Message-Id: <1430116673-22500-19-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance Intel interrupt remapping driver to support hierarchy irqdomain,
-it will simplify the code eventually. It also implements intel_ir_chip
-to support stacked irq_chip.
+The patch exports following functions, which are derived from their
+original implementation, so that the PCI hotplug logic can reuse
+the functions to add or remove pci_dn for all device nodes under
+specified PCI slot.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: iommu@lists.linux-foundation.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Link: http://lkml.kernel.org/r/1416894816-23245-11-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+   traverse_pci_device_nodes()     traverse_pci_devices()
+   add_pci_device_node_info()      update_dn_pci_info()
+   remove_pci_device_node_info()   newly added
+
+The patch also releases eeh_dev when its corresponding pci_dn
+is released, indicating they have same life cycle.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/iommu/intel_irq_remapping.c |  337 ++++++++++++++++++++++++++++++++++-
- include/linux/intel-iommu.h         |    4 +
- 2 files changed, 333 insertions(+), 8 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h  |  3 +-
+ arch/powerpc/include/asm/ppc-pci.h     |  6 +--
+ arch/powerpc/kernel/pci_dn.c           | 67 +++++++++++++++++++++++++++++-----
+ arch/powerpc/platforms/pseries/msi.c   |  4 +-
+ arch/powerpc/platforms/pseries/setup.c |  2 +-
+ 5 files changed, 65 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index d3adaf32b3ec..f2dbb0d54d17 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -8,6 +8,7 @@
- #include <linux/irq.h>
- #include <linux/intel-iommu.h>
- #include <linux/acpi.h>
-+#include <linux/irqdomain.h>
- #include <asm/io_apic.h>
- #include <asm/smp.h>
- #include <asm/cpu.h>
-@@ -31,6 +32,14 @@ struct hpet_scope {
- 	unsigned int devfn;
- };
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index a6ad4b1..e0cb114 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -222,7 +222,8 @@ extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
+ extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
+ extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
+ extern void remove_dev_pci_data(struct pci_dev *pdev);
+-extern void *update_dn_pci_info(struct device_node *dn, void *data);
++extern void *add_pci_device_node_info(struct device_node *dn, void *data);
++extern void remove_pci_device_node_info(struct device_node *dn);
  
-+struct intel_ir_data {
-+	struct irq_2_iommu			irq_2_iommu;
-+	struct irte				irte_entry;
-+	union {
-+		struct msi_msg			msi_entry;
-+	};
-+};
-+
- #define IR_X2APIC_MODE(mode) (mode ? (1 << 11) : 0)
- #define IRTE_DEST(dest) ((eim_mode) ? dest : dest << 8)
+ static inline int pci_device_from_OF_node(struct device_node *np,
+ 					  u8 *bus, u8 *devfn)
+diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+index 7388316..3f0874e 100644
+--- a/arch/powerpc/include/asm/ppc-pci.h
++++ b/arch/powerpc/include/asm/ppc-pci.h
+@@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
+ struct device_node;
+ struct pci_dn;
  
-@@ -50,6 +59,7 @@ static struct hpet_scope ir_hpet[MAX_HPET_TBS];
-  * the dmar_global_lock.
+-typedef void *(*traverse_func)(struct device_node *me, void *data);
+-void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+-		void *data);
++void *traverse_pci_device_nodes(struct device_node *start,
++				void *(*fn)(struct device_node *, void *),
++				void *data);
+ void *traverse_pci_dn(struct pci_dn *root,
+ 		      void *(*fn)(struct pci_dn *, void *),
+ 		      void *data);
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index abc81fa..6bd9d8c 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -265,11 +265,15 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+ #endif /* CONFIG_PCI_IOV */
+ }
+ 
+-/*
+- * Traverse_func that inits the PCI fields of the device node.
+- * NOTE: this *must* be done before read/write config to the device.
++/**
++ * add_pci_device_node_info - Add pci_dn for PCI device node
++ * @dn: PCI device node
++ * @data: additonal argument
++ *
++ * Add pci_dn for the indicated PCI device node. The newly created
++ * pci_dn will be put into that one of the parent device node.
   */
- static DEFINE_RAW_SPINLOCK(irq_2_ir_lock);
-+static struct irq_domain_ops intel_ir_domain_ops;
+-void *update_dn_pci_info(struct device_node *dn, void *data)
++void *add_pci_device_node_info(struct device_node *dn, void *data)
+ {
+ 	struct pci_controller *phb = data;
+ 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
+@@ -328,8 +332,48 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
  
- static int __init parse_ioapics_under_ir(void);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(add_pci_device_node_info);
  
-@@ -263,7 +273,7 @@ static int free_irte(int irq)
- 	unsigned long flags;
- 	int rc;
+-/*
++/**
++ * remove_pci_device_node_info - Remove pci_dn from PCI device node
++ * @dn: PCI device node
++ *
++ * Remove pci_dn from PCI device node. The pci_dn is also removed
++ * from the child list of the parent pci_dn.
++ */
++void remove_pci_device_node_info(struct device_node *np)
++{
++	struct pci_dn *pdn = np ? PCI_DN(np) : NULL;
++#ifdef CONFIG_EEH
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++#endif
++
++	if (!pdn)
++		return;
++
++#ifdef CONFIG_EEH
++	if (edev) {
++		pdn->edev = NULL;
++		kfree(edev);
++	}
++#endif
++
++	BUG_ON(!list_empty(&pdn->child_list));
++	list_del(&pdn->list);
++	if (pdn->parent)
++		of_node_put(pdn->parent->node);
++
++	np->data = NULL;
++	kfree(pdn);
++}
++EXPORT_SYMBOL(remove_pci_device_node_info);
++
++/**
++ * traverse_pci_device_nodes - Traverse children of indicated device node
++ * @start: indicated device node
++ * @pre: callback
++ * @data: additional parameter to the callback
++ *
+  * Traverse a device tree stopping each PCI device in the tree.
+  * This is done depth first.  As each node is processed, a "pre"
+  * function is called and the children are processed recursively.
+@@ -347,8 +391,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+  * one of these nodes we also assume its siblings are non-pci for
+  * performance.
+  */
+-void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+-		void *data)
++void *traverse_pci_device_nodes(struct device_node *start,
++				void *(*fn)(struct device_node *, void *data),
++				void *data)
+ {
+ 	struct device_node *dn, *nextdn;
+ 	void *ret;
+@@ -363,7 +408,7 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+ 		if (classp)
+ 			class = of_read_number(classp, 1);
  
--	if (!irq_iommu)
-+	if (!irq_iommu || irq_iommu->iommu == NULL)
- 		return -1;
+-		if (pre && ((ret = pre(dn, data)) != NULL))
++		if (fn && ((ret = fn(dn, data)) != NULL))
+ 			return ret;
  
- 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
-@@ -488,7 +498,6 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+ 		/* If we are a PCI bridge, go down */
+@@ -384,8 +429,10 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+ 			nextdn = dn->sibling;
+ 		}
+ 	}
++
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(traverse_pci_device_nodes);
  
- 	pages = alloc_pages_node(iommu->node, GFP_KERNEL | __GFP_ZERO,
- 				 INTR_REMAP_PAGE_ORDER);
--
- 	if (!pages) {
- 		pr_err("IR%d: failed to allocate pages of order %d\n",
- 		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
-@@ -502,11 +511,23 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu)
- 		goto out_free_pages;
+ static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
+ 				      struct pci_dn *pdn)
+@@ -441,7 +488,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	struct pci_dn *pdn;
+ 
+ 	/* PHB nodes themselves must not match */
+-	update_dn_pci_info(dn, phb);
++	add_pci_device_node_info(dn, phb);
+ 	pdn = dn->data;
+ 	if (pdn) {
+ 		pdn->devfn = pdn->busno = -1;
+@@ -451,7 +498,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
  	}
  
-+	iommu->ir_domain = irq_domain_add_hierarchy(arch_get_ir_parent_domain(),
-+						    0, INTR_REMAP_TABLE_ENTRIES,
-+						    NULL, &intel_ir_domain_ops,
-+						    iommu);
-+	if (!iommu->ir_domain) {
-+		pr_err("IR%d: failed to allocate irqdomain\n", iommu->seq_id);
-+		goto out_free_bitmap;
-+	}
-+	iommu->ir_msi_domain = arch_create_msi_irq_domain(iommu->ir_domain);
-+
- 	ir_table->base = page_address(pages);
- 	ir_table->bitmap = bitmap;
- 	iommu->ir_table = ir_table;
- 	return 0;
- 
-+out_free_bitmap:
-+	kfree(bitmap);
- out_free_pages:
- 	__free_pages(pages, INTR_REMAP_PAGE_ORDER);
- out_free_table:
-@@ -517,6 +538,14 @@ out_free_table:
- static void intel_teardown_irq_remapping(struct intel_iommu *iommu)
- {
- 	if (iommu && iommu->ir_table) {
-+		if (iommu->ir_msi_domain) {
-+			irq_domain_remove(iommu->ir_msi_domain);
-+			iommu->ir_msi_domain = NULL;
-+		}
-+		if (iommu->ir_domain) {
-+			irq_domain_remove(iommu->ir_domain);
-+			iommu->ir_domain = NULL;
-+		}
- 		free_pages((unsigned long)iommu->ir_table->base,
- 			   INTR_REMAP_PAGE_ORDER);
- 		kfree(iommu->ir_table->bitmap);
-@@ -1062,12 +1091,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	struct irte irte;
- 	int err;
- 
--	if (!config_enabled(CONFIG_SMP))
--		return -EINVAL;
--
--	if (!cpumask_intersects(mask, cpu_online_mask))
--		return -EINVAL;
--
- 	if (get_irte(irq, &irte))
- 		return -EBUSY;
- 
-@@ -1100,6 +1123,7 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 		send_cleanup_vector(cfg);
- 
- 	cpumask_copy(data->affinity, mask);
-+
- 	return 0;
+ 	/* Update dn->phb ptrs for new phb and children devices */
+-	traverse_pci_devices(dn, update_dn_pci_info, phb);
++	traverse_pci_device_nodes(dn, add_pci_device_node_info, phb);
  }
  
-@@ -1205,6 +1229,53 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
- 	return ret;
- }
+ static void pci_dev_pdn_setup(struct pci_dev *pdev)
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index c8d24f9..9ebbd19 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -303,7 +303,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+ 	memset(&counts, 0, sizeof(struct msi_counts));
  
-+static struct irq_domain *intel_get_ir_irq_domain(struct irq_alloc_info *info)
-+{
-+	struct intel_iommu *iommu = NULL;
-+
-+	if (!info)
-+		return NULL;
-+
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_IOAPIC:
-+		iommu = map_ioapic_to_ir(info->ioapic_id);
-+		break;
-+	case X86_IRQ_ALLOC_TYPE_HPET:
-+		iommu = map_hpet_to_ir(info->hpet_id);
-+		break;
-+	case X86_IRQ_ALLOC_TYPE_MSI:
-+	case X86_IRQ_ALLOC_TYPE_MSIX:
-+		iommu = map_dev_to_ir(info->msi_dev);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+
-+	return iommu ? iommu->ir_domain : NULL;
-+}
-+
-+static struct irq_domain *intel_get_irq_domain(struct irq_alloc_info *info)
-+{
-+	struct intel_iommu *iommu;
-+
-+	if (!info)
-+		return NULL;
-+
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_MSI:
-+	case X86_IRQ_ALLOC_TYPE_MSIX:
-+		iommu = map_dev_to_ir(info->msi_dev);
-+		if (iommu)
-+			return iommu->ir_msi_domain;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return NULL;
-+}
-+
- struct irq_remap_ops intel_irq_remap_ops = {
- 	.prepare		= intel_prepare_irq_remapping,
- 	.enable			= intel_enable_irq_remapping,
-@@ -1218,6 +1289,256 @@ struct irq_remap_ops intel_irq_remap_ops = {
- 	.msi_alloc_irq		= intel_msi_alloc_irq,
- 	.msi_setup_irq		= intel_msi_setup_irq,
- 	.alloc_hpet_msi		= intel_alloc_hpet_msi,
-+	.get_ir_irq_domain	= intel_get_ir_irq_domain,
-+	.get_irq_domain		= intel_get_irq_domain,
-+};
-+
-+/*
-+ * Migrate the IO-APIC irq in the presence of intr-remapping.
-+ *
-+ * For both level and edge triggered, irq migration is a simple atomic
-+ * update(of vector and cpu destination) of IRTE and flush the hardware cache.
-+ *
-+ * For level triggered, we eliminate the io-apic RTE modification (with the
-+ * updated vector information), by using a virtual vector (io-apic pin number).
-+ * Real vector that is used for interrupting cpu will be coming from
-+ * the interrupt-remapping table entry.
-+ *
-+ * As the migration is a simple atomic update of IRTE, the same mechanism
-+ * is used to migrate MSI irq's in the presence of interrupt-remapping.
-+ */
-+static int
-+intel_ir_set_affinity(struct irq_data *data, const struct cpumask *mask,
-+		      bool force)
-+{
-+	struct intel_ir_data *ir_data = data->chip_data;
-+	struct irte *irte = &ir_data->irte_entry;
-+	struct irq_cfg *cfg = irqd_cfg(data);
-+	struct irq_data *parent = data->parent_data;
-+	int ret;
-+
-+	ret = parent->chip->irq_set_affinity(parent, mask, force);
-+	if (ret < 0 || ret == IRQ_SET_MASK_OK_DONE)
-+		return ret;
-+
-+	/*
-+	 * Atomically updates the IRTE with the new destination, vector
-+	 * and flushes the interrupt entry cache.
-+	 */
-+	irte->vector = cfg->vector;
-+	irte->dest_id = IRTE_DEST(cfg->dest_apicid);
-+	modify_irte(&ir_data->irq_2_iommu, irte);
-+
-+	/*
-+	 * After this point, all the interrupts will start arriving
-+	 * at the new destination. So, time to cleanup the previous
-+	 * vector allocation.
-+	 */
-+	if (cfg->move_in_progress)
-+		send_cleanup_vector(cfg);
-+
-+	return IRQ_SET_MASK_OK_DONE;
-+}
-+
-+static void intel_ir_compose_msi_msg(struct irq_data *irq_data,
-+				     struct msi_msg *msg)
-+{
-+	struct intel_ir_data *ir_data = irq_data->chip_data;
-+
-+	*msg = ir_data->msi_entry;
-+}
-+
-+static struct irq_chip intel_ir_chip = {
-+	.irq_ack = ir_ack_apic_edge,
-+	.irq_set_affinity = intel_ir_set_affinity,
-+	.irq_compose_msi_msg = intel_ir_compose_msi_msg,
-+};
-+
-+static void intel_irq_remapping_prepare_irte(struct intel_ir_data *data,
-+					     struct irq_cfg *irq_cfg,
-+					     struct irq_alloc_info *info,
-+					     int index, int sub_handle)
-+{
-+	struct IR_IO_APIC_route_entry *entry;
-+	struct irte *irte = &data->irte_entry;
-+	struct msi_msg *msg = &data->msi_entry;
-+
-+	prepare_irte(irte, irq_cfg->vector, irq_cfg->dest_apicid);
-+	switch (info->type) {
-+	case X86_IRQ_ALLOC_TYPE_IOAPIC:
-+		/* Set source-id of interrupt request */
-+		set_ioapic_sid(irte, info->ioapic_id);
-+		apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: Set IRTE entry (P:%d FPD:%d Dst_Mode:%d Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X Avail:%X Vector:%02X Dest:%08X SID:%04X SQ:%X SVT:%X)\n",
-+			info->ioapic_id, irte->present, irte->fpd,
-+			irte->dst_mode, irte->redir_hint,
-+			irte->trigger_mode, irte->dlvry_mode,
-+			irte->avail, irte->vector, irte->dest_id,
-+			irte->sid, irte->sq, irte->svt);
-+
-+		entry = (struct IR_IO_APIC_route_entry *)info->ioapic_entry;
-+		info->ioapic_entry = NULL;
-+		memset(entry, 0, sizeof(*entry));
-+		entry->index2	= (index >> 15) & 0x1;
-+		entry->zero	= 0;
-+		entry->format	= 1;
-+		entry->index	= (index & 0x7fff);
-+		/*
-+		 * IO-APIC RTE will be configured with virtual vector.
-+		 * irq handler will do the explicit EOI to the io-apic.
-+		 */
-+		entry->vector	= info->ioapic_pin;
-+		entry->mask	= 0;			/* enable IRQ */
-+		entry->trigger	= info->ioapic_trigger;
-+		entry->polarity	= info->ioapic_polarity;
-+		if (info->ioapic_trigger)
-+			entry->mask = 1; /* Mask level triggered irqs. */
-+		break;
-+
-+	case X86_IRQ_ALLOC_TYPE_HPET:
-+	case X86_IRQ_ALLOC_TYPE_MSI:
-+	case X86_IRQ_ALLOC_TYPE_MSIX:
-+		if (info->type == X86_IRQ_ALLOC_TYPE_HPET)
-+			set_hpet_sid(irte, info->hpet_id);
-+		else
-+			set_msi_sid(irte, info->msi_dev);
-+
-+		msg->address_hi = MSI_ADDR_BASE_HI;
-+		msg->data = sub_handle;
-+		msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_IR_EXT_INT |
-+				  MSI_ADDR_IR_SHV |
-+				  MSI_ADDR_IR_INDEX1(index) |
-+				  MSI_ADDR_IR_INDEX2(index);
-+		break;
-+
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+}
-+
-+static void intel_free_irq_resources(struct irq_domain *domain,
-+				     unsigned int virq, unsigned int nr_irqs)
-+{
-+	struct irq_data *irq_data;
-+	struct intel_ir_data *data;
-+	struct irq_2_iommu *irq_iommu;
-+	unsigned long flags;
-+	int i;
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(domain, virq  + i);
-+		if (irq_data && irq_data->chip_data) {
-+			data = irq_data->chip_data;
-+			irq_iommu = &data->irq_2_iommu;
-+			raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
-+			clear_entries(irq_iommu);
-+			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
-+			irq_domain_reset_irq_data(irq_data);
-+			kfree(data);
-+		}
-+	}
-+}
-+
-+static int intel_irq_remapping_alloc(struct irq_domain *domain,
-+				     unsigned int virq, unsigned int nr_irqs,
-+				     void *arg)
-+{
-+	struct intel_iommu *iommu = domain->host_data;
-+	struct irq_alloc_info *info = arg;
-+	struct intel_ir_data *data;
-+	struct irq_data *irq_data;
-+	struct irq_cfg *irq_cfg;
-+	int i, ret, index;
-+
-+	if (!info || !iommu)
-+		return -EINVAL;
-+	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_MSI &&
-+	    info->type != X86_IRQ_ALLOC_TYPE_MSIX)
-+		return -EINVAL;
-+
-+	/*
-+	 * With IRQ remapping enabled, don't need contigious CPU vectors
-+	 * to support multiple MSI interrupts.
-+	 */
-+	if (info->type == X86_IRQ_ALLOC_TYPE_MSI)
-+		info->flags &= ~X86_IRQ_ALLOC_CONTIGOUS_VECTORS;
-+
-+	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = -ENOMEM;
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		goto out_free_parent;
-+
-+	down_read(&dmar_global_lock);
-+	index = alloc_irte(iommu, virq, &data->irq_2_iommu, nr_irqs);
-+	up_read(&dmar_global_lock);
-+	if (index < 0) {
-+		pr_warn("Failed to allocate IRTE\n");
-+		kfree(data);
-+		goto out_free_parent;
-+	}
-+
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_data = irq_domain_get_irq_data(domain, virq + i);
-+		irq_cfg = irqd_cfg(irq_data);
-+		if (!irq_data || !irq_cfg) {
-+			ret = -EINVAL;
-+			goto out_free_data;
-+		}
-+
-+		if (i > 0) {
-+			data = kzalloc(sizeof(*data), GFP_KERNEL);
-+			if (!data)
-+				goto out_free_data;
-+		}
-+		irq_data->hwirq = (index << 16) + i;
-+		irq_data->chip_data = data;
-+		irq_data->chip = &intel_ir_chip;
-+		intel_irq_remapping_prepare_irte(data, irq_cfg, info, index, i);
-+		irq_set_status_flags(virq + i, IRQ_MOVE_PCNTXT);
-+	}
-+	return 0;
-+
-+out_free_data:
-+	intel_free_irq_resources(domain, virq, i);
-+out_free_parent:
-+	irq_domain_free_irqs_common(domain, virq, nr_irqs);
-+	return ret;
-+}
-+
-+static void intel_irq_remapping_free(struct irq_domain *domain,
-+				     unsigned int virq, unsigned int nr_irqs)
-+{
-+	intel_free_irq_resources(domain, virq, nr_irqs);
-+	irq_domain_free_irqs_common(domain, virq, nr_irqs);
-+}
-+
-+static void intel_irq_remapping_activate(struct irq_domain *domain,
-+					 struct irq_data *irq_data)
-+{
-+	struct intel_ir_data *data = irq_data->chip_data;
-+
-+	modify_irte(&data->irq_2_iommu, &data->irte_entry);
-+}
-+
-+static void intel_irq_remapping_deactivate(struct irq_domain *domain,
-+					   struct irq_data *irq_data)
-+{
-+	struct intel_ir_data *data = irq_data->chip_data;
-+	struct irte entry;
-+
-+	memset(&entry, 0, sizeof(entry));
-+	modify_irte(&data->irq_2_iommu, &entry);
-+}
-+
-+static struct irq_domain_ops intel_ir_domain_ops = {
-+	.alloc = intel_irq_remapping_alloc,
-+	.free = intel_irq_remapping_free,
-+	.activate = intel_irq_remapping_activate,
-+	.deactivate = intel_irq_remapping_deactivate,
- };
+ 	/* Work out how many devices we have below this PE */
+-	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
++	traverse_pci_device_nodes(pe_dn, count_non_bridge_devices, &counts);
  
- /*
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index a65208a8fe18..ecaf3a937845 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -286,6 +286,8 @@ struct q_inval {
+ 	if (counts.num_devices == 0) {
+ 		pr_err("rtas_msi: found 0 devices under PE for %s\n",
+@@ -318,7 +318,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+ 	/* else, we have some more calculating to do */
+ 	counts.requestor = pci_device_to_OF_node(dev);
+ 	counts.request = request;
+-	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
++	traverse_pci_device_nodes(pe_dn, count_spare_msis, &counts);
  
- #define INTR_REMAP_TABLE_ENTRIES	65536
- 
-+struct irq_domain;
-+
- struct ir_table {
- 	struct irte *base;
- 	unsigned long *bitmap;
-@@ -335,6 +337,8 @@ struct intel_iommu {
- 
- #ifdef CONFIG_IRQ_REMAP
- 	struct ir_table *ir_table;	/* Interrupt remapping info */
-+	struct irq_domain *ir_domain;
-+	struct irq_domain *ir_msi_domain;
- #endif
- 	struct device	*iommu_dev; /* IOMMU-sysfs device */
- 	int		node;
+ 	/* If the quota isn't an integer multiple of the total, we can
+ 	 * use the remainder as spare MSIs for anyone that wants them. */
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 92974aa..ed8c894 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -262,7 +262,7 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+ 	case OF_RECONFIG_ATTACH_NODE:
+ 		pci = np->parent->data;
+ 		if (pci)
+-			update_dn_pci_info(np, pci->phb);
++			add_pci_device_node_info(np, pci->phb);
+ 		break;
+ 	default:
+ 		err = NOTIFY_DONE;
 -- 
-1.7.10.4
+2.1.0
 
