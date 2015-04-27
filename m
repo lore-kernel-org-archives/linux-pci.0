@@ -1,210 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0101.outbound.protection.outlook.com ([157.56.111.101]:31328
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751160AbbDZSU5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Apr 2015 14:20:57 -0400
-From: Varun Sethi <Varun.Sethi@freescale.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>
-CC: Will Deacon <Will.Deacon@arm.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Sun, 26 Apr 2015 18:20:52 +0000
-Message-ID: <BN1PR0301MB06276181976E880432B8C49AEAEA0@BN1PR0301MB0627.namprd03.prod.outlook.com>
-References: <1429091364-31939-1-git-send-email-Minghuan.Lian@freescale.com>
-	<1429091364-31939-2-git-send-email-Minghuan.Lian@freescale.com>
-	<BN3PR0301MB1219110247416097623B4A7CEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
-	<DM2PR0301MB06402A7F6BF42B9A84669D94E2E50@DM2PR0301MB0640.namprd03.prod.outlook.com>
-	<BN3PR0301MB121987D3E12F25B79E8C51EFEAE50@BN3PR0301MB1219.namprd03.prod.outlook.com>
-	<20150416104008.GB25640@arm.com>
-	<CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
-	<20150422170718.GG13019@arm.com>
-	<CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
-	<20150424161818.GC7313@arm.com>	<553A72D4.7000801@arm.com>
-	<CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150425113930.7386a42a@arm.com>
-In-Reply-To: <20150425113930.7386a42a@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:58729 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752869AbbD0GjW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 02:39:22 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 27 Apr 2015 16:39:21 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1CF962BB0055
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:19 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t3R6dBx322937766
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:39:19 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t3R6cj2g016175
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2015 16:38:45 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v3 14/21] powerpc/powernv: Introduce pnv_pci_poll()
+Date: Mon, 27 Apr 2015 16:37:46 +1000
+Message-Id: <1430116673-22500-15-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430116673-22500-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+We might not get some PCI slot information (e.g. power status)
+immediately by OPAL API. Instead, opal_pci_poll() need to be called
+for the required information.
 
-> -----Original Message-----
-> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
-> Sent: Saturday, April 25, 2015 4:10 PM
-> To: Yoder Stuart-B08248
-> Cc: Will Deacon; Sethi Varun-B16395; Lian Minghuan-B31939; linux-
-> pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284; Zang Roy-R61911;
-> Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> 
-> On Fri, 24 Apr 2015 19:18:44 +0100
-> Stuart Yoder <stuart.yoder@freescale.com> wrote:
-> 
-> Hi Stuart,
-> 
-> >
-> >
-> > > -----Original Message-----
-> > > From: Marc Zyngier [mailto:marc.zyngier@arm.com]
-> > > Sent: Friday, April 24, 2015 11:44 AM
-> > > To: Will Deacon; Yoder Stuart-B08248
-> > > Cc: Sethi Varun-B16395; Lian Minghuan-B31939;
-> > > linux-pci@vger.kernel.org; Arnd Bergmann; Hu Mingkai-B21284; Zang
-> > > Roy-R61911; Bjorn Helgaas; Wood Scott-B07421;
-> > > linux-arm-kernel@lists.infradead.org
-> > > Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> > >
-> > > On 24/04/15 17:18, Will Deacon wrote:
-> > > > On Wed, Apr 22, 2015 at 08:41:02PM +0100, Stuart Yoder wrote:
-> > > >>>> However, there is an improvement we envision as possible due to
-> > > >>>> the limited number of SMMU contexts (i.e. 64).  If there are
-> > > >>>> 64 SMMU context registers it means that there is a max of
-> > > >>>> 64 software contexts where things can be isolated.  But, say I
-> > > >>>> have an SRIOV card with 64 VFs, and I want to assign 8 of the
-> > > >>>> VFs to a KVM VM.  Those 8 PCI devices could share the same
-> > > >>>> streamID/ITS-device-ID since they all share the same isolation
-> > > >>>> context.
-> > > >>>>
-> > > >>>> What would be nice is at the time the 8 VFS are being added to
-> > > >>>> the IOMMU domain is for the pcidevid -> streamID mapping table
-> > > >>>> to be updated dynamically.  It simply lets us make more
-> > > >>>> efficient use of the limited streamIDs we have.
-> > > >>>>
-> > > >>>> I think it is this improvement that Minghuan had in mind in
-> > > >>>> this patch.
-> > > >>>
-> > > >>> Ok, but in this case it should be possible to use a single
-> > > >>> context bank for all of the VF streamIDs by configuring the
-> appropriate SMR, no?
-> > > >>
-> > > >> Yes, but there are limited SMRs.  In our case there are only
-> > > >> 128 SMRs in SMMU-500 and we have potentially way more masters
-> > > >> than that.
-> > > >
-> > > > Right, but you still only have 64 context banks at the end of the
-> > > > day, so do you really anticipate having more than 128 masters
-> > > > concurrently using the SMMU? If so, then we have devices sharing
-> > > > context banks so we could consider reusing SMRs across masters,
-> > > > but historically that's not been something that we've managed to solve.
-> > > >
-> > > >>> Wouldn't
-> > > >>> that sort of thing be preferable to dynamic StreamID assignment?
-> > > >>> It would certainly make life easier for the MSIs.
-> > > >>
-> > > >> It would be preferable, but given only 128 total stream IDS and
-> > > >> 64 context registers it's potentially an issue.  On our LS2085
-> > > >> SoC it is PCI and the fsl-mc bus (see description here:
-> > > >> https://lkml.org/lkml/2015/3/5/795) that potentially have way
-> > > >> more masters than streamIDS. So, for those busses we would
-> > > >> essentially view a streamID as a "context ID"-- each SMR is
-> > > >> associated with
-> > > >> 1 context bank register.
-> > > >>
-> > > >> For PCI we have a programmable "PCI req ID"-to-"stream ID"
-> > > >> mapping table in the PCI controller that is dynamically
-> > > >> programmable.
-> > > >>
-> > > >> Looking at it like that means that we could have any number of
-> > > >> masters but only 64 "contexts"
-> > > >> and since the masters all all programmable it's seems feasbile to
-> > > >> envision doing some bus/vendor specific set up when a device is
-> > > >> added to an
-> > > >> IOMMU domain.   One thing that would need to be conveyed
-> > > >> to the SMMU driver if doing dynamic streamID setup is what
-> > > >> streamIDs are available to be used.
-> > > >
-> > > > Ok, but this is going to make life difficult for the MSI people, I suspect.
-> > > >
-> > > > Marc...?
-> > >
-> > > We're really facing two conflicting requirements: in order to
-> > > minimize SMR usage, we want to alias multiple ReqIDs to a single
-> > > StreamID
-> >
-> > Another reason could be the isolation characteristics of the
-> > hardware...see comment below about PCI bridges.
-> >
-> > > but in
-> > > order to efficiently deal with MSIs, we want to see discrete
-> > > DeviceIDs (the actual ReqIDs). I don't easily see how we reconcile the
-> two.
-> > >
-> > > We can deal with the aliasing, provided that we extend the level of
-> > > quirkiness that pci_for_each_dma_alias can deal with. But that
-> > > doesn't solve any form of hotplug/SR-IOV behaviour.
-> > >
-[varun] Can you please elaborate on "extending the quirkiness of pci_for_each_dma_alias". How do you see the case for transparent host bridege being handled? We would see a device ID corresponding to the host bridge for masters behind that bridge.
+The patch introduces pnv_pci_poll(), which bases on original
+pnv_eeh_poll(), to cover the above case
 
-> > > Somehow, we're going to end-up with grossly oversized ITTs, just to
-> > > accommodate for the fact that we have no idea how many MSIs we're
-> > > going to end-up needing. I'm not thrilled with that prospect.
-> >
-> > How can we avoid that in the face of hotplug?
-> 
-> Fortunately, hotplug is not always synonymous of aliasing. The ITS is built
-> around the hypothesis that aliasing doesn't happen, and that you know
-> upfront how many LPIs the device will be allowed to generate.
-> 
-> > And what are we really worried about regarding over-sized ITTs...bytes
-> > of memory saved?
-> 
-> That's one thing, yes. But more fundamentally, how do you size your MSI
-> capacity for a single alias? Do you evenly split your LPI space among all
-> possible aliases? Assuming 64 aliases and 16 bits of interrupt ID space, you
-> end up with 10 bit per alias. Is that always enough? Or do you need
-> something more fine-grained?
-> 
-> > A fundamental thing built into the IOMMU subsystem in Linux is
-> > representing iommu groups that can represent things like multiple PCI
-> > devices that for hardware reasons cannot be isolated (and the example
-> > I've seen given relates to devices behind PCI bridges).
-> >
-> > So, I think the thing we are facing here is that while the IOMMU
-> > subsystem has accounted for reprsenting the isolation characteristics
-> > of a system with iommu groups, there is no corresponding "msi group"
-> > concept.
-> >
-> > In the SMMU/GIC-500-ITS world the iommu isolation ID (the stream ID)
-> > and the GIC-ITS device ID are in fact the same ID.
-> 
-> The DeviceID is the "MSI group" you mention. This is what provides isolation
-> at the ITS level.
-> 
-[varun] True, in case of a transparent host bridge device Id won't provide the necessary isolation.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 28 ++--------------------------
+ arch/powerpc/platforms/powernv/pci.c         | 16 ++++++++++++++++
+ arch/powerpc/platforms/powernv/pci.h         |  1 +
+ 3 files changed, 19 insertions(+), 26 deletions(-)
 
-> > Is there some way we could sanely correlate IOMMU group creation
-> > (which establishes isolation granularity) with the creation of an ITT
-> > for the GIC-ITS?
-> 
-> The problem you have is that your ITT already exists before you start
-> "hotpluging" new devices. Take the following (made up) example:
-> 
-> System boots, device X is discovered, claims 64 MSIs. An ITT for device X is
-> allocated, and sized for 64 LPIs. SR-IOV kick is, creates a new X'
-> function that is aliased to X, claiming another 64 MSIs. Fail.
-> 
-> What do we do here? The ITT is live (X is generating interrupts), and there is
-> no provision to resize it (I've come up with a horrible scheme, but that could
-> fail as well). The only sane option would be to guess how many MSIs a given
-> alias could possibly use. How wrong is this guess going to be?
-> 
-> The problem we have is that IOMMU groups are dynamic, while ITT allocation
-> is completely static for a given DeviceID. The architecture doesn't give you
-> any mechanism to resize it, and I have the ugly feeling that static allocation of
-> the ID space to aliases is too rigid...
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 58e4dcf..9253b9e 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -742,24 +742,6 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+ 	return ret;
+ }
+ 
+-static s64 pnv_eeh_poll(uint64_t id)
+-{
+-	s64 rc = OPAL_HARDWARE;
+-
+-	while (1) {
+-		rc = opal_pci_poll(id, NULL);
+-		if (rc <= 0)
+-			break;
+-
+-		if (system_state < SYSTEM_RUNNING)
+-			udelay(1000 * rc);
+-		else
+-			msleep(rc);
+-	}
+-
+-	return rc;
+-}
+-
+ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ {
+ 	struct pnv_phb *phb = hose->private_data;
+@@ -788,10 +770,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ 
+ 	/* Issue reset and poll until it's completed */
+ 	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
+-	if (rc > 0)
+-		rc = pnv_eeh_poll(phb->opal_id);
+-
+-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++	return pnv_pci_poll(phb->opal_id, rc, NULL);
+ }
+ 
+ static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+@@ -882,10 +861,7 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	phb = hose->private_data;
+ 	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
+ 	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+-	if (rc > 0)
+-		rc = pnv_eeh_poll(id);
+-
+-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++	return pnv_pci_poll(id, rc, NULL);
+ }
+ 
+ static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index bca2aeb..a2da9a3 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -44,6 +44,22 @@
+ #define cfg_dbg(fmt...)	do { } while(0)
+ //#define cfg_dbg(fmt...)	printk(fmt)
+ 
++int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
++{
++	while (rval > 0) {
++		if (system_state < SYSTEM_RUNNING)
++			udelay(1000 * rval);
++		else
++			msleep(rval);
++
++		rval = opal_pci_poll(id, pval);
++		if (rval == OPAL_SUCCESS && pval)
++			rval = opal_pci_poll(id, pval);
++	}
++
++	return rval ? -EIO : 0;
++}
++
+ #ifdef CONFIG_PCI_MSI
+ static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 8b10f01..82c5539 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -202,6 +202,7 @@ struct pnv_phb {
+ 
+ extern struct pci_ops pnv_pci_ops;
+ 
++int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
+ void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+ 				unsigned char *log_buff);
+ int pnv_pci_cfg_read(struct pci_dn *pdn,
+-- 
+2.1.0
 
-[varun] One way would be to restrict the number of stream Ids(device Ids) per PCIe controller. In our scheme we have a device id -> stream ID translation table, we can restrict the number of entries in the table. This would restrict number of virtual functions.
-
--Varun
