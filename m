@@ -1,35 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f44.google.com ([209.85.216.44]:40786 "EHLO
-	mail-vn0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920AbbD0Fuf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Apr 2015 01:50:35 -0400
+Received: from szxga02-in.huawei.com ([119.145.14.65]:53056 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933144AbbD1Jf4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 05:35:56 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: <xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH Part2 v11 1/2] xen/PCI: Don't use deprecated function pci_scan_bus_parented()
+Date: Tue, 28 Apr 2015 17:32:33 +0800
+Message-ID: <1430213554-9107-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOh2x=kQ0nNO-ZU6G2KG7kYqcQqS6=jy1a-=xHZAnr5B=tSOFA@mail.gmail.com>
-References: <20150421194625.4792.69968.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150421202807.7963.2088.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<CAOh2x=kQ0nNO-ZU6G2KG7kYqcQqS6=jy1a-=xHZAnr5B=tSOFA@mail.gmail.com>
-Date: Mon, 27 Apr 2015 11:20:34 +0530
-Message-ID: <CAOh2x==SeT795fO4ua7L2cnTmyWxbqLax7wwLWpT-wa4YVgUGw@mail.gmail.com>
-Subject: Re: [PATCH v2] MAINTAINERS: Remove Mohit Kumar (email bounces)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Joe Perches <joe@perches.com>,
-	Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	Mohit Kumar <mohit.kumar.dhaka@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 27, 2015 at 11:13 AM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
-> Anyway, please hold on this patch and I will update it for them.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Ahh, its already gone. :)
+Use pci_scan_root_bus() instead of deprecated function
+pci_scan_bus_parented().
 
-Okay, I will let them handle it now. Guys please fix your email-ids in kernel.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: xen-devel@lists.xenproject.org
+---
+ drivers/pci/xen-pcifront.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 7cfd2db..240f388 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 				 unsigned int domain, unsigned int bus)
+ {
+ 	struct pci_bus *b;
++	LIST_HEAD(resources);
+ 	struct pcifront_sd *sd = NULL;
+ 	struct pci_bus_entry *bus_entry = NULL;
+ 	int err = 0;
++	static struct resource busn_res = {
++		.start = 0,
++		.end = 255,
++		.flags = IORESOURCE_BUS,
++	};
+ 
+ #ifndef CONFIG_PCI_DOMAINS
+ 	if (domain != 0) {
+@@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
++	pci_add_resource(&resources, &ioport_resource);
++	pci_add_resource(&resources, &iomem_resource);
++	pci_add_resource(&resources, &busn_res);
+ 	pcifront_init_sd(sd, domain, bus, pdev);
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+-				  &pcifront_bus_ops, sd);
++	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
++				  &pcifront_bus_ops, sd, &resources);
+ 	if (!b) {
+ 		dev_err(&pdev->xdev->dev,
+ 			"Error creating PCI Frontend Bus!\n");
+ 		err = -ENOMEM;
+ 		pci_unlock_rescan_remove();
++		pci_free_resource_list(&resources);
+ 		goto err_out;
+ 	}
+ 
+@@ -488,7 +498,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+ 
+ 	list_add(&bus_entry->list, &pdev->root_buses);
+ 
+-	/* pci_scan_bus_parented skips devices which do not have a have
++	/* pci_scan_root_bus skips devices which do not have a
+ 	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+ 	err = pcifront_scan_bus(pdev, domain, bus, b);
+ 
+-- 
+1.7.1
+
