@@ -1,49 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42815 "EHLO
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:58375 "EHLO
 	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754014AbbDJJkR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 05:40:17 -0400
-Message-ID: <1428658811.2796.2.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: layerscape: Simplify
- platform_get_resource_byname() failure checking
+	with ESMTP id S1751967AbbD1IPV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 04:15:21 -0400
+Message-ID: <1430208910.3428.15.camel@pengutronix.de>
+Subject: Re: [PATCH Part1 v11 3/5] PCI: designware: Use pci_scan_root_bus()
+ for simplicity
 From: Lucas Stach <l.stach@pengutronix.de>
-To: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Fri, 10 Apr 2015 11:40:11 +0200
-In-Reply-To: <DM2PR0301MB064005C336CD164FD8C0A061E2FA0@DM2PR0301MB0640.namprd03.prod.outlook.com>
-References: <20150409194923.19293.96454.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	 <DM2PR0301MB064005C336CD164FD8C0A061E2FA0@DM2PR0301MB0640.namprd03.prod.outlook.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	linux-arm-kernel@lists.infradead.org, dja@axtens.net
+Date: Tue, 28 Apr 2015 10:15:10 +0200
+In-Reply-To: <1430204499-19571-4-git-send-email-wangyijing@huawei.com>
+References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+	 <1430204499-19571-4-git-send-email-wangyijing@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 10.04.2015, 02:08 +0000 schrieb
-Minghuan.Lian@freescale.com:
-> Hi Bjorn,
+Am Dienstag, den 28.04.2015, 15:01 +0800 schrieb Yijing Wang:
+> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
+> Now pci_scan_root_bus() == pci_create_root_bus() +
+> pci_scan_child_bus() if busn resource is supplied.
+> Designware added the busn resource to resources list
+> in dw_pcie_setup(). So it should be safe to use
+> pci_scan_root_bus() instead.
 > 
-> Thanks for your improvement.
-> I notice my new patches to add support arm32 and arm64 for designware
-> and layerscape also have the similar issues, I will fix and submit
-> them v2 .
-> Could you tell me whether it is acceptable that I add a new file
-> pcie-designware-base.c  to re-implement designware PCIe driver for
-> compatible with arm32 and arm64.  The benefit  is that  the new
-> implementation is simple clear and platform-independent. In addition,
-> MSI driver will be split to a separate file. But we may need to push
-> other platform PCIe maintainer to port the driver based on
-> pcie-designware-base.c .
-> 
-In that case you probably should have put the other maintainers of
-designware based PCI drivers on CC for your patches. You will not gain
-momentum for such a radical change if you fail to address the right
-people.
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Mohit Kumar <mohit.kumar@st.com>
+> CC: Jingoo Han <jg1.han@samsung.com>
 
-Regards,
-Lucas
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
+> ---
+>  drivers/pci/host/pcie-designware.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2e9f84f..8c80f38 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -728,13 +728,11 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>  	struct pcie_port *pp = sys_to_pcie(sys);
+>  
+>  	pp->root_bus_nr = sys->busnr;
+> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> +	bus = pci_scan_root_bus(pp->dev, sys->busnr,
+>  				  &dw_pcie_ops, sys, &sys->resources);
+>  	if (!bus)
+>  		return NULL;
+>  
+> -	pci_scan_child_bus(bus);
+> -
+>  	if (bus && pp->ops->scan_bus)
+>  		pp->ops->scan_bus(pp);
+>  
 
 -- 
 Pengutronix e.K.             | Lucas Stach                 |
