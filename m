@@ -1,61 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0145.outbound.protection.outlook.com ([157.56.110.145]:30485
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751510AbbDJCYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Apr 2015 22:24:19 -0400
-From: "Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] PCI: layerscape: Simplify platform_get_resource_byname()
- failure checking
-Date: Fri, 10 Apr 2015 02:08:21 +0000
-Message-ID: <DM2PR0301MB064005C336CD164FD8C0A061E2FA0@DM2PR0301MB0640.namprd03.prod.outlook.com>
-References: <20150409194923.19293.96454.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150409194923.19293.96454.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:36419 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932417AbbD1JB0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 05:01:26 -0400
+Message-ID: <553F4C2C.30707@hp.com>
+Date: Tue, 28 Apr 2015 17:00:28 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
+To: Baoquan He <bhe@redhat.com>
+CC: Dave Young <dyoung@redhat.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com> <20150415005731.GC19051@localhost.localdomain> <552DFB56.1070600@hp.com> <20150415064803.GF19051@localhost.localdomain> <20150424080147.GC4458@dhcp-16-116.nay.redhat.com> <20150424082528.GA23912@dhcp-128-91.nay.redhat.com> <20150424083530.GD4458@dhcp-16-116.nay.redhat.com> <20150424084957.GC23912@dhcp-128-91.nay.redhat.com> <20150428085441.GI15033@dhcp-16-116.nay.redhat.com>
+In-Reply-To: <20150428085441.GI15033@dhcp-16-116.nay.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBmb3IgeW91ciBpbXByb3ZlbWVudC4NCkkgbm90aWNlIG15IG5l
-dyBwYXRjaGVzIHRvIGFkZCBzdXBwb3J0IGFybTMyIGFuZCBhcm02NCBmb3IgZGVzaWdud2FyZSBh
-bmQgbGF5ZXJzY2FwZSBhbHNvIGhhdmUgdGhlIHNpbWlsYXIgaXNzdWVzLCBJIHdpbGwgZml4IGFu
-ZCBzdWJtaXQgIHRoZW0gdjIgLg0KQ291bGQgeW91IHRlbGwgbWUgd2hldGhlciBpdCBpcyBhY2Nl
-cHRhYmxlIHRoYXQgSSBhZGQgYSBuZXcgZmlsZSBwY2llLWRlc2lnbndhcmUtYmFzZS5jICB0byBy
-ZS1pbXBsZW1lbnQgZGVzaWdud2FyZSBQQ0llIGRyaXZlciBmb3IgY29tcGF0aWJsZSB3aXRoIGFy
-bTMyIGFuZCBhcm02NC4gIFRoZSBiZW5lZml0ICBpcyB0aGF0ICB0aGUgbmV3IGltcGxlbWVudGF0
-aW9uIGlzIHNpbXBsZSBjbGVhciBhbmQgcGxhdGZvcm0taW5kZXBlbmRlbnQuIEluIGFkZGl0aW9u
-LCBNU0kgZHJpdmVyIHdpbGwgYmUgc3BsaXQgdG8gYSBzZXBhcmF0ZSBmaWxlLiBCdXQgd2UgbWF5
-IG5lZWQgdG8gcHVzaCBvdGhlciBwbGF0Zm9ybSBQQ0llIG1haW50YWluZXIgdG8gcG9ydCB0aGUg
-ZHJpdmVyIGJhc2VkIG9uIHBjaWUtZGVzaWdud2FyZS1iYXNlLmMgLg0KDQpUaGFua3MsDQpNaW5n
-aHVhbg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVs
-Z2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IEZyaWRheSwgQXByaWwg
-MTAsIDIwMTUgMzo0OSBBTQ0KPiBUbzogTGlhbiBNaW5naHVhbi1CMzE5Mzk7IEh1IE1pbmdrYWkt
-QjIxMjg0OyBaYW5nIFJveS1SNjE5MTENCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcN
-Cj4gU3ViamVjdDogW1BBVENIXSBQQ0k6IGxheWVyc2NhcGU6IFNpbXBsaWZ5IHBsYXRmb3JtX2dl
-dF9yZXNvdXJjZV9ieW5hbWUoKQ0KPiBmYWlsdXJlIGNoZWNraW5nDQo+IA0KPiBkZXZtX2lvcmVt
-YXBfcmVzb3VyY2UoKSB2YWxpZGF0ZXMgdGhlIHJlc291cmNlIGl0IHJlY2VpdmVzLCBzbyBpZiB3
-ZSBjaGVjaw0KPiBmb3IgZGV2bV9pb3JlbWFwX3Jlc291cmNlKCkgZmFpbHVyZSwgd2UgbmVlZCBu
-b3QgY2hlY2sgZm9yIGZhaWx1cmUgb2YgdGhlDQo+IHByZWNlZGluZyBwbGF0Zm9ybV9nZXRfcmVz
-b3VyY2UoKS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdv
-b2dsZS5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2ktbGF5ZXJzY2FwZS5jIHwg
-ICAgOSArKystLS0tLS0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDYgZGVs
-ZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktbGF5ZXJz
-Y2FwZS5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktDQo+IGxheWVyc2NhcGUuYw0KPiBpbmRleCA2
-OGM5ZTVlOWIwYTguLjRhNmU2MmY2NzU3OSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG9z
-dC9wY2ktbGF5ZXJzY2FwZS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWxheWVyc2Nh
-cGUuYw0KPiBAQCAtMTI3LDE0ICsxMjcsMTEgQEAgc3RhdGljIGludCBfX2luaXQgbHNfcGNpZV9w
-cm9iZShzdHJ1Y3QNCj4gcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiAgCXBjaWUtPmRldiA9ICZw
-ZGV2LT5kZXY7DQo+IA0KPiAgCWRiaV9iYXNlID0gcGxhdGZvcm1fZ2V0X3Jlc291cmNlX2J5bmFt
-ZShwZGV2LA0KPiBJT1JFU09VUkNFX01FTSwgInJlZ3MiKTsNCj4gLQlpZiAoIWRiaV9iYXNlKSB7
-DQo+IC0JCWRldl9lcnIoJnBkZXYtPmRldiwgIm1pc3NpbmcgKnJlZ3MqIHNwYWNlXG4iKTsNCj4g
-LQkJcmV0dXJuIC1FTk9ERVY7DQo+IC0JfQ0KPiAtDQo+ICAJcGNpZS0+ZGJpID0gZGV2bV9pb3Jl
-bWFwX3Jlc291cmNlKCZwZGV2LT5kZXYsIGRiaV9iYXNlKTsNCj4gLQlpZiAoSVNfRVJSKHBjaWUt
-PmRiaSkpDQo+ICsJaWYgKElTX0VSUihwY2llLT5kYmkpKSB7DQo+ICsJCWRldl9lcnIoJnBkZXYt
-PmRldiwgIm1pc3NpbmcgKnJlZ3MqIHNwYWNlXG4iKTsNCj4gIAkJcmV0dXJuIFBUUl9FUlIocGNp
-ZS0+ZGJpKTsNCj4gKwl9DQo+IA0KPiAgCXBjaWUtPnNjZmcgPSBzeXNjb25fcmVnbWFwX2xvb2t1
-cF9ieV9waGFuZGxlKHBkZXYtDQo+ID5kZXYub2Zfbm9kZSwNCj4gIAkJCQkJCSAgICAgImZzbCxw
-Y2llLXNjZmciKTsNCg0K
+Hi Baoquan,
+
+If old tables are corrupted, we will see the DMAR faults or INTR faults
+(which we have seen), or some other error messages. Most of these
+messages are from hardware. This means, hardware will do some check when 
+running. But I don't think hardware will completely check the
+tables.
+
+Till now, I do not have a good idea to do the check in kdump kernel.
+
+
+Thanks
+Zhenhua
+
+
+On 04/28/2015 04:54 PM, Baoquan He wrote:
+> On 04/24/15 at 04:49pm, Dave Young wrote:
+>> On 04/24/15 at 04:35pm, Baoquan He wrote:
+>>> On 04/24/15 at 04:25pm, Dave Young wrote:
+>>>> Hi, Baoquan
+>>>>
+>>>>> I support this patchset.
+>>>>>
+>>>>> We should not fear oldmem since reserved crashkernel region is similar.
+>>>>> No one can guarantee that any crazy code won't step into crashkernel
+>>>>> region just because 1st kernel says it's reversed for kdump kernel. Here
+>>>>> the root table and context tables are also not built to allow legal code
+>>>>> to danamge. Both of them has the risk to be corrupted, for trying our
+>>>>> best to get a dumped vmcore the risk is worth being taken.
+>>>>
+>>>> old mem is mapped in 1st kernel so compare with the reserved crashkernel
+>>>> they are more likely to be corrupted. they are totally different.
+>>>
+>>> Could you tell how and why they are different? Wrong code will choose
+>>> root tables and context tables to danamge when they totally lose
+>>> control?
+>>
+>> iommu will map io address to system ram, right? not to reserved ram, but
+>> yes I'm assuming the page table is right, but I was worrying they are corrupted
+>> while kernel panic is happening.
+>
+> OK, I think we may need to think more about the old context tables
+> reuse. Currently dmar faults will cause error or warning message,
+> occasionally will cause system with iommu hang in kdump kernel. I don't
+> know what will happen if old root tables or context tables are corrupted
+> by evil code. For kdump kernel which use the similar mechanism there's a
+> verification. When load kdump kernel into reserved crashkernel region a
+> sha256 sum is calculated, then verify it when jump into kdump kernel
+> after panic. If corrupted context tables will bring worse result, then
+> we need consider giving it up and change back to the old way and try
+> to dump though there's error message.
+>
+> Hi Zhenhua,
+>
+> I don't know what's your plan about verification whether old root tables
+> or old context tables are corrupted. Or have you experimented that what
+> will happen if old tables are corrupted on purpose.
+>
+> I am fine if you just put this in a TODO list since that's truly in a
+> rare case. But it maybe necessary to tell it in patch log.
+>
+> Thanks
+> Baoquan
+>
+
