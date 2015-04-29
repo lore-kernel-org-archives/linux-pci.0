@@ -1,45 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5540DD9C.9030707@linux.intel.com>
-References: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com>
- <3492366.RzMG5dcPfN@vostro.rjw.lan> <CAErSpo4zBFUBwSJjF1CuB8w06CDwYx+ZZaL1X71Joi0uMCObbg@mail.gmail.com>
- <5540DD9C.9030707@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 29 Apr 2015 08:37:03 -0500
-Message-ID: <CAErSpo7D_CDM+1mzO0ADdzbAE9xwnwiyJ-dk0WFthr+ReKpidg@mail.gmail.com>
-Subject: Re: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:33985 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966370AbbD2RoA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Apr 2015 13:44:00 -0400
+Date: Wed, 29 Apr 2015 18:43:57 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150429174356.GA20947@red-moon>
+References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
+ <6662179.AoBfCMOsxD@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6662179.AoBfCMOsxD@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 29, 2015 at 8:33 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> On 2015/4/29 21:20, Bjorn Helgaas wrote:
->> On Tue, Apr 28, 2015 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>> On Monday, April 20, 2015 11:08:58 AM Jiang Liu wrote:
+On Wed, Apr 29, 2015 at 01:34:20PM +0100, Arnd Bergmann wrote:
+> On Wednesday 29 April 2015 17:09:58 Jayachandran C wrote:
+> > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > from the arch/arm/ to do a part of the PCI initialization, and this
+> > prevents it from being used on arm64.
+> > 
+> > The initialization done by pci_common_init_dev() that is really
+> > needed by pci-host-generic.c can be done in the same file without
+> > using the hw_pci API of ARM.
+> > 
+> > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > this is be handled by setting up 'struct gen_pci' to embed a
+> > pci_sys_data variable as the first element on the ARM platform.
+> > 
+> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> 
+> This seems very useful
 
->>>> +      *
->>>> +      * Another possible solution is to explicitly filter out IO
->>>> +      * port[0xCF8-0xCFF].
->>>> +      */
->>>> +     res_flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_IO_FIXED;
->>
->> 2) The usage of IORESOURCE_IO_FIXED here seems like a hack.  It's not
->> related to other existing use of IORESOURCE_IO_FIXED, and it's not
->> intuitive that supplying IORESOURCE_MEM means "I want all the
->> memory-type resources," but supplying IORESOURCE_IO_FIXED means "I
->> *don't* want the fixed I/O-type resources."
->
-> Yes, the IORESOURCE_IO_FIXED is a hack here. Then how about explicitly
-> filtering IOPORT [0xCF8-0xCFF] so we could avoid such a hack.
+Yes, it is getting less awful, waiting for pci_sys_data to disappear.
 
-I'm OK with that, although it should be in an arch-specific hook or something.
+> > -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> > +static int gen_pci_init(struct device *dev, struct gen_pci *pci)
+> >  {
+> > -	struct gen_pci *pci = sys->private_data;
+> > -	list_splice_init(&pci->resources, &sys->resources);
+> > -	return 1;
+> > +	struct pci_bus *bus;
+> > +
+> > +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+> 
+> Do we want to set that flag unconditionally? At least for servers,
+> the resources should get assigned by firmware, and things might
+> go wrong if Linux tries to reassign them. This is probably the
+> case on kvmtool as well.
+
+I will give it a go on kvmtool, but at first glance concern is
+shared.
+
+> > +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
+> > +	if (!bus) {
+> > +		dev_err(dev, "Scanning rootbus failed");
+> > +		return -ENODEV;
+> > +	}
+> > +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> 
+> I thought this was done by default now. If it is not, can
+> we make the of_irq swizzling the default?
+
+Possibly yes.
+
+> > +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> > +		pci_bus_size_bridges(bus);
+> > +		pci_bus_assign_resources(bus);
+> > +	}
+> > +	pci_bus_add_devices(bus);
+> > +
+> > +	/* Configure PCI Express settings */
+> > +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> > +		struct pci_bus *child;
+> > +
+> > +		list_for_each_entry(child, &bus->children, node)
+> > +			pcie_bus_configure_settings(child);
+> > +	}
+> > +	return 0;
+> >  }
+> 
+> We should also try to come up wtih a way to make that
+> pcie_bus_configure_settings() automatic if it's required here.
+> 
+> >  static int gen_pci_probe(struct platform_device *pdev)
+> > @@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+> >  	struct device *dev = &pdev->dev;
+> >  	struct device_node *np = dev->of_node;
+> >  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > -	struct hw_pci hw = {
+> > -		.nr_controllers	= 1,
+> > -		.private_data	= (void **)&pci,
+> > -		.setup		= gen_pci_setup,
+> > -		.map_irq	= of_irq_parse_and_map_pci,
+> > -		.ops		= &gen_pci_ops,
+> > -	};
+> >  
+> >  	if (!pci)
+> >  		return -ENOMEM;
+> > @@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> >  		return err;
+> >  	}
+> >  
+> > -	pci_common_init_dev(dev, &hw);
+> > -	return 0;
+> > +	return gen_pci_init(dev, pci);
+> 
+> How about moving the new code right into the probe() function?
+
++1.
+
+I suspect the PCI_PROBE_ONLY case was not tested on arm64, since we
+still need a patch to prevent resources enablement there (in the
+pcibios_enable_device call - actually the check for PCI_PROBE_ONLY
+should be moved to the default pcibios_enable_device function in
+drivers/pci/pci.c).
+
+The other bit missing is MSI handling, that should still be implemented.
+
+Lorenzo
