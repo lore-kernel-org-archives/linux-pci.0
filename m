@@ -1,76 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3901 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754975AbbDILMc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Apr 2015 07:12:32 -0400
-Message-ID: <55265E8E.7070509@huawei.com>
-Date: Thu, 9 Apr 2015 19:12:14 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5540E259.4040105@linux.intel.com>
+Date: Wed, 29 Apr 2015 21:53:29 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	PCI <linux-pci@vger.kernel.org>,
-	"Herui (Ray)" <Ray.herui@huawei.com>
-Subject: Re: Assign mem resource fail after remove and rescan
-References: <55167C1C.6010001@huawei.com>	<CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com>	<551A40E8.4080708@huawei.com> <CAE9FiQUQ_Kz8sNzu9RmOfoe4xEwfZ3atGcfQ39UAp4dRz2rRFA@mail.gmail.com>
-In-Reply-To: <CAE9FiQUQ_Kz8sNzu9RmOfoe4xEwfZ3atGcfQ39UAp4dRz2rRFA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+References: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4zBFUBwSJjF1CuB8w06CDwYx+ZZaL1X71Joi0uMCObbg@mail.gmail.com> <5540DD9C.9030707@linux.intel.com> <2290160.KqiWSgJfFU@vostro.rjw.lan>
+In-Reply-To: <2290160.KqiWSgJfFU@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/4/2 6:21, Yinghai Lu wrote:
-> On Mon, Mar 30, 2015 at 11:38 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> On 2015/3/29 14:18, Yinghai Lu wrote:
->>> On Sat, Mar 28, 2015 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> ...
+
+
+On 2015/4/29 22:15, Rafael J. Wysocki wrote:
+> On Wednesday, April 29, 2015 09:33:16 PM Jiang Liu wrote:
+>> On 2015/4/29 21:20, Bjorn Helgaas wrote:
+>>> On Tue, Apr 28, 2015 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>>> On Monday, April 20, 2015 11:08:58 AM Jiang Liu wrote:
+>>>>> An IO port or MMIO resource assigned to a PCI host bridge may be
+>>>>> consumed by the host bridge itself or available to its child
+>>>>> bus/devices. On x86 and IA64 platforms, all IO port and MMIO
+>>>>> resources are assumed to be available to child bus/devices
+>>>>> except one special case:
+>>>>>     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
+>>>>>     to access PCI configuration space.
+>>>>>
+>>>>> But the ACPI and PCI Firmware specifications haven't provided a method
+>>>>> to tell whether a resource is consumed by the host bridge itself.
+>>>>> So before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+>>>>> interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
+>>>>> all IO port resources defined by acpi_resource_io and
+>>>>> acpi_resource_fixed_io to filter out IO ports consumed by the host
+>>>>> bridge itself.
+>>>>>
+>>>>> Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
+>>>>> to simplify implementation")started accepting all IO port and MMIO
+>>>>> resources, which caused a regression that IO port resources consumed
+>>>>> by the host bridge itself became available to its child devices.
+>>>>>
+>>>>> Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
+>>>>> host bridge itself") ignored resources consumed by the host bridge
+>>>>> itself by checking the IORESOURCE_WINDOW flag, which accidently removed
+>>>>> MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
+>>>>> and acpi_resource_fixed_memory32.
+>>>>>
+>>>>> So revert to the behavior before v3.19 to fix the regression.
+>>>>>
+>>>>> There is also a discussion about ignoring the Producer/Consumer flag on
+>>>>> IA64 platforms at:
+>>>>> http://patchwork.ozlabs.org/patch/461633/
+>>>>>
+>>>>> Related ACPI table are archived at:
+>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>>>>>
+>>>>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+>>>>> Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+>>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 >>>>
->>>> I compared above log and found after we did remove and rescan, the bridge requested resource size extended to 0x06000000,
->>>> and when system boot up, it requested only 0x4800000.
->>>>
->>    I tested it, remove and rescan 05:19.0 device is ok now, but
->> if do the operations for the parent device of 05:19.0, the result is
->> still fail.
+>>>> Bjorn, Ingo, is anyone looking at this?  We're still having a regression in
+>>>> this area ...
+>>>
+>>>>> ---
+>>>>>  arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
+>>>>>  drivers/acpi/resource.c |    6 +++++-
+>>>>>  2 files changed, 27 insertions(+), 4 deletions(-)
+>>>>>
+>>>>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>>>>> index e4695985f9de..fc2da98985c3 100644
+>>>>> --- a/arch/x86/pci/acpi.c
+>>>>> +++ b/arch/x86/pci/acpi.c
+>>>>> @@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>>>>>  {
+>>>>>       int ret;
+>>>>>       struct resource_entry *entry, *tmp;
+>>>>> +     unsigned long res_flags;
+>>>>>
+>>>>>       sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+>>>>>       info->bridge = device;
+>>>>> +
+>>>>> +     /*
+>>>>> +      * An IO or MMIO resource assigned to PCI host bridge may be consumed
+>>>>> +      * by the host bridge itself or available to its child bus/devices.
+>>>>> +      * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
+>>>>> +      * be available to child bus/devices except one special case:
+>>>>> +      *      IO port [0xCF8-0xCFF] is consumed by host bridge itself to
+>>>>> +      *      access PCI configuration space.
+>>>>> +      *
+>>>>> +      * Due to lack of specification to define resources consumed by host
+>>>>> +      * bridge itself, all IO port resources defined by acpi_resource_io
+>>>>> +      * and acpi_resource_fixed_io are ignored to filter out IO
+>>>>> +      * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
+>>>>> +      * it's not perfect.
+>>>
+>>> 1) I think it's misleading to say "the specs haven't provided a
+>>> method."  As far as I can tell, the Producer/Consumer bit is intended
+>>> precisely to distinguish resources consumed by a bridge from those
+>>> forwarded to downstream devices.  It would be more accurate to say
+>>> "the spec defines a bit, but firmware hasn't used that bit
+>>> consistently, so we can't rely on it."
+>>
+>> Hi Bjorn,
+>> 	Thanks for review, I will refine the words as suggested by you.
+>>
+>>> If you want to say "it's not perfect," it would be useful to mention
+>>> the ways in which it is not perfect.  This code is still a candidate
+>>> for unification with ia64 and arm64, so we should avoid x86-specific
+>>> things here as much as possible.
+>>
+>> Yes, I have another pending patch set to consolidate IA64 and x86 code
+>> for ACPI PCI root.
 > 
-> Found the problem, attached patch should fix the problem.
+> That's OK, but can we please fix the regression first before doing that
+> unification?  Like to make life easier for the "stable" people and
+> whoever wants to backport the fix?
 
-
-Hi Yinghai, sorry for the delay reply, this fix works, dmesg info:
-
-...
-[  181.567872] pci_bus 0000:06: busn_res: [bus 06-ff] end is updated to 12
-[  181.567886] pci_bus 0000:05: busn_res: [bus 05-ff] end is updated to 12
-[  181.567899] pci_bus 0000:04: busn_res: [bus 04-12] end is updated to 12
-[  181.567928] pci_bus 0000:13: busn_res: [bus 13] end is updated to 13
-[  181.568177] pci_bus 0000:16: busn_res: [bus 16] end is updated to 16
-[  181.568233] pci_bus 0000:17: busn_res: [bus 17] end is updated to 17
-[  181.568263] pci_bus 0000:18: busn_res: [bus 18-20] end is updated to 20
-[  181.568274] pci_bus 0000:15: busn_res: [bus 15-20] end is updated to 20
-[  181.568286] pci_bus 0000:14: busn_res: [bus 14-20] end is updated to 20
-[  181.568313] pci_bus 0000:21: busn_res: [bus 21] end is updated to 21
-[  181.568323] pci_bus 0000:03: busn_res: [bus 03-21] end is updated to 21
-[  181.568333] pci_bus 0000:02: busn_res: [bus 02-21] end is updated to 21
-[  181.568355] pci_bus 0000:22: busn_res: [bus 22] end is updated to 22
-[  181.568545] pci_bus 0000:24: busn_res: [bus 24] end is updated to 24
-[  181.568558] pci_bus 0000:23: busn_res: [bus 23-24] end is updated to 24
-[  181.574379] pci 0000:04:00.0: BAR 14: assigned [mem 0xe4000000-0xe87fffff]
-[  181.574390] pci 0000:05:19.0: BAR 14: assigned [mem 0xe4000000-0xe87fffff]
-[  181.574398] pci 0000:06:00.0: BAR 2: assigned [mem 0xe4000000-0xe7ffffff 64bit]
-[  181.574429] pci 0000:06:00.0: BAR 0: assigned [mem 0xe8000000-0xe87fffff]
-[  181.574441] pci 0000:05:19.0: PCI bridge to [bus 06-12]
-[  181.574456] pci 0000:05:19.0:   bridge window [mem 0xe4000000-0xe87fffff]
-[  181.574482] pci 0000:04:00.0: PCI bridge to [bus 05-12]
-[  181.574496] pci 0000:04:00.0:   bridge window [mem 0xe4000000-0xe87fffff]
-[  181.574528] pci 0000:23:00.0: PCI bridge to [bus 24]
-...
-
-> 
-> Thanks
-> 
-> Yinghai
-> 
-
-
--- 
+Hi Rafael,
+	Yes, I will fix the regression first before sending out the
+pending patch set.
 Thanks!
-Yijing
-
+Gerry
