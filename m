@@ -1,199 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5524C13E.3060101@linux.intel.com>
-Date: Wed, 08 Apr 2015 13:48:46 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:9471 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422668AbbD2LhD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Apr 2015 07:37:03 -0400
+From: Jayachandran C <jchandra@broadcom.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Arnd Bergmann" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Jayachandran C <jchandra@broadcom.com>
+Subject: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Date: Wed, 29 Apr 2015 17:09:58 +0530
+Message-ID: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [Bugfix v3] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
-References: <1427683243-14355-1-git-send-email-jiang.liu@linux.intel.com> <20150404030411.GG10892@google.com> <1832914.AK2bZGkVxq@vostro.rjw.lan>
-In-Reply-To: <1832914.AK2bZGkVxq@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/4/7 8:28, Rafael J. Wysocki wrote:
-> On Friday, April 03, 2015 10:04:11 PM Bjorn Helgaas wrote:
->> Hi Jiang,
-<snip>
->>> Currently acpi_dev_filter_resource_type() is only used by ACPI pci
->>> host bridge and IOAPIC driver, so it shouldn't affect other drivers.
->>
->> We should assume it will eventually be used for all ACPI devices,
->> shouldn't we?
-> 
-> I'm not sure about that, really.  In fact, I'd restrict its use to devices
-> types that actually can "produce" resources (ie. do not require the resources
-> to be provided by their ancestors or to be available from a global pool).
-> 
-> Otherwise we're pretty much guaranteed to get into trouble.
-> 
-> And all of the above rules need to be documented in the kernel source tree
-> or people will get confused.
-Hi Rafael,
-    How about following comments for acpi_dev_filter_resource_type()?
-Thanks!
-Gerry
---------------------------------------------------------------------
-/**
- * According to ACPI specifications, Consumer/Producer flag in ACPI resource
- * descriptor means:
- *      1(CONSUMER): This device consumes this resource
- *      0(PRODUCER): This device produces and consumes this resource
- * But for ACPI PCI host bridge, it is interpreted in another way:
- *      1(CONSUMER): PCI host bridge itself consumes the resource, such as
- *                   IOPORT 0xCF8-0xCFF to access PCI configuraiton space.
- *      0(PRODUCER): PCI host bridge provides this resource to its child
- *                   bus and devices.
- *
- * So this is a specially designed helper function to support ACPI PCI host
- * bridge and ACPI IOAPIC, and its usage should be limited to those specific
- * scenarioso only. It filters ACPI resource descriptors as below:
- * 1) If flag IORESOURCE_WINDOW is not specified, it's querying resources
- *    consumed by device. That is to return:
- *      a) ACPI resources without producer_consumer flag
- *      b) ACPI resources with producer_consumer flag setting to CONSUMER.
- * 2) If flag IORESOURCE_WINDOW is specified, it's querying resources
-provided
- *    by device. That is to return:
- *      a) ACPI resources with producer_consumer flag setting to PRODUCER.
- * 3) But there's an exception. Some platforms, such as PC Engines APU.1C,
- *    report PCI host bridge resource provision by Memory32Fixed().
- *    Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=94221
- *    So a special flag IORESOURCE_MEM_8AND16BIT is used to work around this
- *    BIOS issue.
- */
+The current code in pci-host-generic.c uses pci_common_init_dev()
+from the arch/arm/ to do a part of the PCI initialization, and this
+prevents it from being used on arm64.
 
-> 
->>> Another possible fix is to only ignore IO resource consumed by host
->>> bridge and keep IOMEM resource consumed by host bridge, please refer to:
->>> http://www.spinics.net/lists/linux-pci/msg39706.html
->>>
->>> Sample ACPI table are archived at:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=94221
->>>
->>> V2->V3:
->>> Refine function acpi_dev_match_producer_consumer() as suggested by Rafael
->>>
->>> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
->>> Reported-and-Tested-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> ---
->>>  arch/x86/pci/acpi.c     |    5 ++---
->>>  drivers/acpi/resource.c |   33 +++++++++++++++++++++++++++++----
->>>  2 files changed, 31 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->>> index e4695985f9de..8c4b1201f340 100644
->>> --- a/arch/x86/pci/acpi.c
->>> +++ b/arch/x86/pci/acpi.c
->>> @@ -337,7 +337,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
->>>  	info->bridge = device;
->>>  	ret = acpi_dev_get_resources(device, list,
->>>  				     acpi_dev_filter_resource_type_cb,
->>> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
->>> +				     (void *)(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_WINDOW));
->>>  	if (ret < 0)
->>>  		dev_warn(&device->dev,
->>>  			 "failed to parse _CRS method, error code %d\n", ret);
->>> @@ -346,8 +346,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
->>>  			"no IO and memory resources present in _CRS\n");
->>>  	else
->>>  		resource_list_for_each_entry_safe(entry, tmp, list) {
->>> -			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
->>> -			    (entry->res->flags & IORESOURCE_DISABLED))
->>> +			if (entry->res->flags & IORESOURCE_DISABLED)
->>>  				resource_list_destroy_entry(entry);
->>>  			else
->>>  				entry->res->name = info->name;
->>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->>> index 5589a6e2a023..e761a868bdba 100644
->>> --- a/drivers/acpi/resource.c
->>> +++ b/drivers/acpi/resource.c
->>> @@ -567,6 +567,12 @@ int acpi_dev_get_resources(struct acpi_device *adev, struct list_head *list,
->>>  }
->>>  EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
->>>  
->>> +static bool acpi_dev_match_producer_consumer(unsigned long types, int producer)
->>> +{
->>> +	return ((types & IORESOURCE_WINDOW) && producer == ACPI_PRODUCER) ||
->>> +		((types & IORESOURCE_WINDOW) == 0 && producer == ACPI_CONSUMER);
->>> +}
->>> +
->>>  /**
->>>   * acpi_dev_filter_resource_type - Filter ACPI resource according to resource
->>>   *				   types
->>> @@ -585,27 +591,46 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
->>>  	case ACPI_RESOURCE_TYPE_MEMORY24:
->>>  	case ACPI_RESOURCE_TYPE_MEMORY32:
->>>  	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
->>> +		/*
->>> +		 * These types of resource descriptor should be used to
->>> +		 * describe resource consumption instead of resource provision.
->>> +		 * But some platforms, such as PC Engines APU.1C, reports
->>> +		 * resource provision by Memory32Fixed(). Please refer to:
->>> +		 * https://bugzilla.kernel.org/show_bug.cgi?id=94221
->>> +		 * So accept it no matter IORESOURCE_WINDOW is specified or not.
->>> +		 */
->>>  		type = IORESOURCE_MEM;
->>
->> I think this means these resources will be accepted regardless of whether
->> the caller is looking for Consumer or Producer resources.  To preserve the
->> behavior I added with 66528fdd45b0, we might be forced to do that for PCI
->> host bridges (or maybe we could just add a quirk for the PC Engines BIOS).
->>
->> But I don't think it matches the ACPI spec intent, so I'm not sure it's
->> right to do it for all devices.
-> 
-> No, it isn't, which is why acpi_dev_filter_resource_type() should not be used
-> for all devices.
-> 
->>>  		break;
->>>  	case ACPI_RESOURCE_TYPE_IO:
->>>  	case ACPI_RESOURCE_TYPE_FIXED_IO:
->>> -		type = IORESOURCE_IO;
->>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
->>> +			type = IORESOURCE_IO;
->>>  		break;
->>>  	case ACPI_RESOURCE_TYPE_IRQ:
->>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
->>> +			type = IORESOURCE_IRQ;
->>> +		break;
->>>  	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
->>> -		type = IORESOURCE_IRQ;
->>> +		if (acpi_dev_match_producer_consumer(types,
->>> +				ares->data.extended_irq.producer_consumer))
->>> +			type = IORESOURCE_IRQ;
->>>  		break;
->>>  	case ACPI_RESOURCE_TYPE_DMA:
->>>  	case ACPI_RESOURCE_TYPE_FIXED_DMA:
->>> -		type = IORESOURCE_DMA;
->>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
->>> +			type = IORESOURCE_DMA;
->>>  		break;
->>>  	case ACPI_RESOURCE_TYPE_GENERIC_REGISTER:
->>> -		type = IORESOURCE_REG;
->>> +		if (acpi_dev_match_producer_consumer(types, ACPI_CONSUMER))
->>> +			type = IORESOURCE_REG;
->>>  		break;
->>>  	case ACPI_RESOURCE_TYPE_ADDRESS16:
->>>  	case ACPI_RESOURCE_TYPE_ADDRESS32:
->>>  	case ACPI_RESOURCE_TYPE_ADDRESS64:
->>>  	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
->>> +		if (!acpi_dev_match_producer_consumer(types,
->>> +				ares->data.address.producer_consumer))
->>> +			break;
->>>  		if (ares->data.address.resource_type == ACPI_MEMORY_RANGE)
->>>  			type = IORESOURCE_MEM;
->>>  		else if (ares->data.address.resource_type == ACPI_IO_RANGE)
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The initialization done by pci_common_init_dev() that is really
+needed by pci-host-generic.c can be done in the same file without
+using the hw_pci API of ARM.
+
+The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+this is be handled by setting up 'struct gen_pci' to embed a
+pci_sys_data variable as the first element on the ARM platform.
+
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+
+Notes:
+ - passing a zeroed out pci_sys_data for ARM looks ok, but I haven't
+   tested it on ARM.
+ - tested it on ARM64 fast model
+ - Any information on how this can be tested on arm is welcome.
+ - There is only one ifdef, and that can be removed when arm64 gets
+   a sysdata, or when arm loses its sysdata.
+
+ drivers/pci/host/pci-host-generic.c | 49 ++++++++++++++++++++++++-------------
+ 1 file changed, 32 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index ba46e58..1631d34 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -39,6 +39,9 @@ struct gen_pci_cfg_windows {
+ };
+ 
+ struct gen_pci {
++#ifdef CONFIG_ARM
++	struct pci_sys_data			sys;
++#endif
+ 	struct pci_host_bridge			host;
+ 	struct gen_pci_cfg_windows		cfg;
+ 	struct list_head			resources;
+@@ -48,8 +51,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+ 					     int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus->sysdata;
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 8) | where);
+@@ -64,8 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+ 					      unsigned int devfn,
+ 					      int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus->sysdata;
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 12) | where);
+@@ -198,11 +199,33 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	return 0;
+ }
+ 
+-static int gen_pci_setup(int nr, struct pci_sys_data *sys)
++static int gen_pci_init(struct device *dev, struct gen_pci *pci)
+ {
+-	struct gen_pci *pci = sys->private_data;
+-	list_splice_init(&pci->resources, &sys->resources);
+-	return 1;
++	struct pci_bus *bus;
++
++	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
++
++	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
++	if (!bus) {
++		dev_err(dev, "Scanning rootbus failed");
++		return -ENODEV;
++	}
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++	}
++	pci_bus_add_devices(bus);
++
++	/* Configure PCI Express settings */
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		struct pci_bus *child;
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++	return 0;
+ }
+ 
+ static int gen_pci_probe(struct platform_device *pdev)
+@@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-	struct hw_pci hw = {
+-		.nr_controllers	= 1,
+-		.private_data	= (void **)&pci,
+-		.setup		= gen_pci_setup,
+-		.map_irq	= of_irq_parse_and_map_pci,
+-		.ops		= &gen_pci_ops,
+-	};
+ 
+ 	if (!pci)
+ 		return -ENOMEM;
+@@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
+-	pci_common_init_dev(dev, &hw);
+-	return 0;
++	return gen_pci_init(dev, pci);
+ }
+ 
+ static struct platform_driver gen_pci_driver = {
+-- 
+1.9.1
+
