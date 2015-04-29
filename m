@@ -1,156 +1,146 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Fengguang Wu <fengguang.wu@intel.com>
-Subject: [PATCH v10 16/29] PCI: Introduce pci_bus_child_max_busnr()
-Date: Tue, 21 Apr 2015 19:34:35 +0800
-Message-ID: <1429616088-10249-17-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Bugfix v5] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+Date: Wed, 29 Apr 2015 02:40:07 +0200
+Message-ID: <3492366.RzMG5dcPfN@vostro.rjw.lan>
+In-Reply-To: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1429499338-16967-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes, we want to know the highest reserved
-busnr for children bus. Because parent's bus->busn_res
-may have padding in it. For example, some host drivers
-don't know the bus end, so they supply the bus
-resource (root_bus, 255), they want to update the
-max bus number after pci scan complete. But pci scan
-functions won't return the actual max bus number.
-So we could use pci_bus_child_max_busnr() to find
-that.
+On Monday, April 20, 2015 11:08:58 AM Jiang Liu wrote:
+> An IO port or MMIO resource assigned to a PCI host bridge may be
+> consumed by the host bridge itself or available to its child
+> bus/devices. On x86 and IA64 platforms, all IO port and MMIO
+> resources are assumed to be available to child bus/devices
+> except one special case:
+>     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
+>     to access PCI configuration space.
+> 
+> But the ACPI and PCI Firmware specifications haven't provided a method
+> to tell whether a resource is consumed by the host bridge itself.
+> So before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+> interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
+> all IO port resources defined by acpi_resource_io and
+> acpi_resource_fixed_io to filter out IO ports consumed by the host
+> bridge itself.
+> 
+> Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
+> to simplify implementation")started accepting all IO port and MMIO
+> resources, which caused a regression that IO port resources consumed
+> by the host bridge itself became available to its child devices.
+> 
+> Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
+> host bridge itself") ignored resources consumed by the host bridge
+> itself by checking the IORESOURCE_WINDOW flag, which accidently removed
+> MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
+> and acpi_resource_fixed_memory32.
+> 
+> So revert to the behavior before v3.19 to fix the regression.
+> 
+> There is also a discussion about ignoring the Producer/Consumer flag on
+> IA64 platforms at:
+> http://patchwork.ozlabs.org/patch/461633/
+> 
+> Related ACPI table are archived at:
+> https://bugzilla.kernel.org/show_bug.cgi?id=94221
+> 
+> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+> Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   29 +----------------------------
- drivers/pci/pci.c                  |   27 +++++++++++++++++++++++++--
- include/linux/pci.h                |    2 +-
- 3 files changed, 27 insertions(+), 31 deletions(-)
+Bjorn, Ingo, is anyone looking at this?  We're still having a regression in
+this area ...
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index bcb90e4..84f2584 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -397,33 +397,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 	acpi_unlock_hp_context();
- }
- 
--/**
-- * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
-- * @bus: bus to start search with
-- */
--static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
--{
--	struct pci_bus *tmp;
--	unsigned char max, n;
--
--	/*
--	 * pci_bus_max_busnr will return the highest
--	 * reserved busnr for all these children.
--	 * that is equivalent to the bus->subordinate
--	 * value.  We don't want to use the parent's
--	 * bus->subordinate value because it could have
--	 * padding in it.
--	 */
--	max = bus->busn_res.start;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		n = pci_bus_max_busnr(tmp);
--		if (n > max)
--			max = n;
--	}
--	return max;
--}
--
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
-@@ -489,7 +462,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	LIST_HEAD(add_list);
- 
- 	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
-+	max = pci_bus_child_max_busnr(bus);
- 	for (pass = 0; pass < 2; pass++) {
- 		list_for_each_entry(dev, &bus->devices, bus_list) {
- 			if (PCI_SLOT(dev->devfn) != slot->device)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 95ea445..d5cbea8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -108,7 +108,7 @@ static bool pcie_ari_disabled;
-  * Given a PCI bus, returns the highest PCI bus number present in the set
-  * including the given PCI bus and its list of child PCI buses.
-  */
--unsigned char pci_bus_max_busnr(struct pci_bus *bus)
-+static unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- {
- 	struct pci_bus *tmp;
- 	unsigned char max, n;
-@@ -121,7 +121,30 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus)
- 	}
- 	return max;
- }
--EXPORT_SYMBOL_GPL(pci_bus_max_busnr);
-+
-+unsigned char pci_bus_child_max_busnr(struct pci_bus *bus)
-+{
-+	struct pci_bus *tmp;
-+	unsigned char max, n;
-+
-+	/*
-+	 * pci_bus_max_busnr will return the highest
-+	 * reserved busnr for all these children.
-+	 * that is equivalent to the bus->subordinate
-+	 * value.  We don't want to use the parent's
-+	 * bus->subordinate value because it could have
-+	 * padding in it.
-+	 */
-+	max = bus->busn_res.start;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		n = pci_bus_max_busnr(tmp);
-+		if (n > max)
-+			max = n;
-+	}
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_bus_child_max_busnr);
- 
- #ifdef CONFIG_HAS_IOMEM
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 13edbf1..a82595a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1188,7 +1188,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
- int pci_cfg_space_size(struct pci_dev *dev);
--unsigned char pci_bus_max_busnr(struct pci_bus *bus);
-+unsigned char pci_bus_child_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
- resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 					 unsigned long type);
+> ---
+>  arch/x86/pci/acpi.c     |   25 ++++++++++++++++++++++---
+>  drivers/acpi/resource.c |    6 +++++-
+>  2 files changed, 27 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index e4695985f9de..fc2da98985c3 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -332,12 +332,32 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>  {
+>  	int ret;
+>  	struct resource_entry *entry, *tmp;
+> +	unsigned long res_flags;
+>  
+>  	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
+>  	info->bridge = device;
+> +
+> +	/*
+> +	 * An IO or MMIO resource assigned to PCI host bridge may be consumed
+> +	 * by the host bridge itself or available to its child bus/devices.
+> +	 * On x86 and IA64 platforms, all IO and MMIO resources are assumed to
+> +	 * be available to child bus/devices except one special case:
+> +	 *	IO port [0xCF8-0xCFF] is consumed by host bridge itself to
+> +	 *	access PCI configuration space.
+> +	 *
+> +	 * Due to lack of specification to define resources consumed by host
+> +	 * bridge itself, all IO port resources defined by acpi_resource_io
+> +	 * and acpi_resource_fixed_io are ignored to filter out IO
+> +	 * port[0xCF8-0xCFF]. Seems this solution works with all BIOSes, though
+> +	 * it's not perfect.
+> +	 *
+> +	 * Another possible solution is to explicitly filter out IO
+> +	 * port[0xCF8-0xCFF].
+> +	 */
+> +	res_flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_IO_FIXED;
+>  	ret = acpi_dev_get_resources(device, list,
+>  				     acpi_dev_filter_resource_type_cb,
+> -				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
+> +				     (void *)res_flags);
+>  	if (ret < 0)
+>  		dev_warn(&device->dev,
+>  			 "failed to parse _CRS method, error code %d\n", ret);
+> @@ -346,8 +366,7 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>  			"no IO and memory resources present in _CRS\n");
+>  	else
+>  		resource_list_for_each_entry_safe(entry, tmp, list) {
+> -			if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+> -			    (entry->res->flags & IORESOURCE_DISABLED))
+> +			if (entry->res->flags & IORESOURCE_DISABLED)
+>  				resource_list_destroy_entry(entry);
+>  			else
+>  				entry->res->name = info->name;
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 5589a6e2a023..79b6d3b5ffd2 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -575,6 +575,9 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+>   *
+>   * This is a hepler function to support acpi_dev_get_resources(), which filters
+>   * ACPI resource objects according to resource types.
+> + *
+> + * Flag IORESOURCE_IO_FIXED is used to opt out io and fixed_io resource
+> + * descriptors for ACPI host bridges on x86 and IA64 platforms.
+>   */
+>  int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+>  				  unsigned long types)
+> @@ -589,7 +592,8 @@ int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+>  		break;
+>  	case ACPI_RESOURCE_TYPE_IO:
+>  	case ACPI_RESOURCE_TYPE_FIXED_IO:
+> -		type = IORESOURCE_IO;
+> +		if ((types & IORESOURCE_IO_FIXED) == 0)
+> +			type = IORESOURCE_IO;
+>  		break;
+>  	case ACPI_RESOURCE_TYPE_IRQ:
+>  	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+> 
+
 -- 
-1.7.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
