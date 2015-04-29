@@ -1,96 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f46.google.com ([209.85.216.46]:37938 "EHLO
-	mail-vn0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932101AbbDMPln (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Apr 2015 11:41:43 -0400
-Received: by vnbf1 with SMTP id f1so20920128vnb.5
-        for <linux-pci@vger.kernel.org>; Mon, 13 Apr 2015 08:41:42 -0700 (PDT)
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:33991 "EHLO
+	mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbbD2WCv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Apr 2015 18:02:51 -0400
+Received: by qkgx75 with SMTP id x75so23665400qkg.1
+        for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2015 15:02:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150413093708.GE17059@ad.nay.redhat.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150413093708.GE17059@ad.nay.redhat.com>
+In-Reply-To: <CABLseQ7Vog4YgCwhrVhqmp-8h84f2qbTog=nPYKzc4ZE8pvHhw@mail.gmail.com>
+References: <CABLseQ7Vog4YgCwhrVhqmp-8h84f2qbTog=nPYKzc4ZE8pvHhw@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 13 Apr 2015 10:41:22 -0500
-Message-ID: <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
-Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
-To: Fam Zheng <famz@redhat.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
+Date: Wed, 29 Apr 2015 17:02:30 -0500
+Message-ID: <CAErSpo5JqouUgXw+9YWkk5BjAbTRUeoNYrmfPD4NQRh40jhkNA@mail.gmail.com>
+Subject: Re: Endpoint-to-Endpoint communication - Handshake Problem Enumeration
+To: Barry Grussling <barry@grussling.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 13, 2015 at 4:37 AM, Fam Zheng <famz@redhat.com> wrote:
-> Hi Bjorn,
+Hi Barry,
+
+On Mon, Apr 27, 2015 at 1:22 PM, Barry Grussling <barry@grussling.com> wrote:
+> Hello Everyone,
 >
-> On Fri, 04/10 17:54, Bjorn Helgaas wrote:
->> From: Michael S. Tsirkin <mst@redhat.com>
->>
->> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
->> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
->>
->> The problem is that after we disable MSI, the device may assert INTx, and
->> if the driver hasn't registered an interrupt handler for it, the interrupt
->> is never deasserted and causes a kernel hang.  In particular, this was
->> observed with virtio.
->>
->> We now disable MSI/MSI-X for all devices during enumeration regardless of
->> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
->> old one.
->>
->> Stop disabling MSIs at shutdown to avoid the kernel hang.
->>
->> XXX bugzilla reference, details about how the hang happens?
+> I am working on a device with a PLX PCIe switch and multiple
+> PCIe endpoints enumerated off an ARM RP.  I am playing with
+> endpoint-to-endpoint communications.  I have verified after
+> the PCIe bus is enumerated that I can send TLPs from
+> one endpoint to an enumerated BAR on another endpoint
+> and the TLP is directed to the other endpoint.  I have further
+> verified that the RP receivies nothing as desired.
+
+I think this is what we've referred to as "peer-to-peer" traffic.
+Linux has no real infrastructure for supporting that, and there may be
+assumptions that devices don't do it, e.g., when configuring MPS or
+elsewhere.  I don't *know* of problems; it's just mostly uncharted
+territory.
+
+> The issue I am looking for some advice on is how to tell
+> each endpoint what all the other endpoints BAR address is.
+> For the sake of argument, lets say I have N modules and
+> each module needs to know the enumerated endpoint
+> address of the other N-1 modules Bar0 address.
 >
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=96571
+> The brute force/prototype method I have been testing is
+> scrape /proc/iomem after enumeration and write to each
+> card's registers via /dev/mem the address of all other
+> cards.  This works, but is not something I would put
+> on my resume.  I am now trying to "do it right".  This
+> scraping also assumes bus addresses and host addresses
+> are the same.  This seems to be true on my architecture.
+
+If you can get hold of struct pci_dev pointers for all the devices,
+you can use pci_resource_start() to get CPU physical addresses for the
+BARs.  You can use pci_bus_address() to get the bus address.  Bus
+addresses and CPU physical addresses are the same on some
+architectures, but certainly not all.
+
+A bus address is only meaningful to other devices under the same host
+bridge, but I'm guessing all the devices you're interested in are in
+the same hierarchy.
+
+> My preliminary driver design has a common base layer
+> that each endpoint's driver registers with when it is probed.
+> After the BAR addresses are assigned the endpoint driver
+> tells the common base layer its assigned address and
+> the base layer writes that into registers in all the
+> other registered endpoints via their respective drivers.
+
+All BARs should be assigned before a driver sees the device.  After
+the PCI core calls the driver's probe function, the core should not
+modify anything the driver uses.
+
+> Before I go off boldly and and completely re-invent the
+> wheel I was wondering if something like this had
+> been contemplated or created yet, perhaps via
+> callback hooks or some other PCIe framework
+> thingy I am not aware of.  Or is there another way
+> to achieve the same goal?
 >
-> Please let me know if you need any further information in the bug.
-
-Please attach a complete dmesg log.  The bugzilla doesn't really have
-any new information other than that you see a soft lockup.  I'm trying
-to connect more of the dots between a spurious interrupt and a hang or
-soft lockup.
-
-It doesn't seem right that a spurious interrupt could cause a hang or
-soft lockup.  I would think Linux would emit a message about the
-unexpected interrupt, but would otherwise be relatively unconcerned.
-So I'm trying to figure out why my assumption is wrong.  Probably this
-is just because I don't know much about Linux IRQ handling.
-
-Having more details, e.g., a stacktrace fragment from a soft lockup,
-can also help people connect a problem they're seeing with the
-solution.  It's pretty hard to google for "kernel hang," but if you
-can google for a soft lockup in a specific function, that can be much
-more useful.
-
->> [bhelgaas: changelog]
->> Reported-by: Fam Zheng <famz@redhat.com>
->> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
->> CC: Ulrich Obergfell <uobergfe@redhat.com>
->> CC: Rusty Russell <rusty@rustcorp.com.au>
->> ---
->>  drivers/pci/pci-driver.c |    2 --
->>  1 file changed, 2 deletions(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 3cb2210de553..38a602cb9fb7 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
->>
->>       if (drv && drv->shutdown)
->>               drv->shutdown(pci_dev);
->> -     pci_msi_shutdown(pci_dev);
->> -     pci_msix_shutdown(pci_dev);
->>
->>  #ifdef CONFIG_KEXEC
->>       /*
->>
+> Anyone have any feedback?
+>
+> Thanks for your time!
+>
+> Barry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
