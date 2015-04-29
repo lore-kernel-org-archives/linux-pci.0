@@ -1,88 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:4573 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753951AbbDULiQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Apr 2015 07:38:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Yijing Wang" <wangyijing@huawei.com>
-Subject: [PATCH v10 02/29] PCI: Remove deprecated pci_scan_bus_parented()
-Date: Tue, 21 Apr 2015 19:34:21 +0800
-Message-ID: <1429616088-10249-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
-References: <1429616088-10249-1-git-send-email-wangyijing@huawei.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:61736 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031715AbbD2OmK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Apr 2015 10:42:10 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Jayachandran C. " <jchandra@broadcom.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Date: Wed, 29 Apr 2015 16:42:01 +0200
+Message-ID: <2265507.Ss5WpSD2vL@wuerfel>
+In-Reply-To: <20150429142554.GI2992@jayachandranc.netlogicmicro.com>
+References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com> <6662179.AoBfCMOsxD@wuerfel> <20150429142554.GI2992@jayachandranc.netlogicmicro.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No one uses pci_scan_bus_parented() any more,
-remove it.
+On Wednesday 29 April 2015 19:55:55 Jayachandran C. wrote:
+> On Wed, Apr 29, 2015 at 02:34:20PM +0200, Arnd Bergmann wrote:
+> > On Wednesday 29 April 2015 17:09:58 Jayachandran C wrote:
+> > > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > > from the arch/arm/ to do a part of the PCI initialization, and this
+> > > prevents it from being used on arm64.
+> > > 
+> > > The initialization done by pci_common_init_dev() that is really
+> > > needed by pci-host-generic.c can be done in the same file without
+> > > using the hw_pci API of ARM.
+> > > 
+> > > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > > this is be handled by setting up 'struct gen_pci' to embed a
+> > > pci_sys_data variable as the first element on the ARM platform.
+> > > 
+> > > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > 
+> > This seems very useful
+> 
+> I have tried to ensure that the new code is as much as possible
+> functionally equivalent to the call to pci_common_init_dev on ARM.
+> 
+> I should have added this as a note to the patch.
+> 
+> Ideally, I would like this patch to be functionally equivalent
+> to the existing code, and make further improvements with follow up
+> patches, but I can make the changes you suggest if it is needed.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   19 -------------------
- include/linux/pci.h |    2 --
- 2 files changed, 0 insertions(+), 21 deletions(-)
+I believe the driver is only used in virtual machines at the moment,
+so it should be easy enough to test the relevant cases on arm32
+and make it as simple as possible.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6675a7a..7d6a61c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2094,25 +2094,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 					void *sysdata)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e63112f..f0b4f7b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -773,8 +773,6 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--- 
-1.7.1
+For bisection purposes, it could however be better to start with your
+current patch and then follow it up with a second patch that removes
+the unnecessary parts again immediately.
 
+	Arnd
