@@ -1,78 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:34300 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756092AbbDJSdI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 14:33:08 -0400
-Received: by iget9 with SMTP id t9so19278390ige.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 11:33:07 -0700 (PDT)
-Date: Fri, 10 Apr 2015 13:33:04 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH v5 04/10] pci: don't disable msi/msix at shutdown
-Message-ID: <20150410183304.GA28348@google.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
- <1427641227-7574-5-git-send-email-mst@redhat.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:53075 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423010AbbD2Me2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Apr 2015 08:34:28 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Date: Wed, 29 Apr 2015 14:34:20 +0200
+Message-ID: <6662179.AoBfCMOsxD@wuerfel>
+In-Reply-To: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
+References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-5-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michael,
-
-On Sun, Mar 29, 2015 at 05:04:11PM +0200, Michael S. Tsirkin wrote:
-> This partially reverts commit d52877c7b1afb8c37ebe17e2005040b79cb618b0:
-> 	"pci/irq: let pci_device_shutdown to call pci_msi_shutdown v2"
+On Wednesday 29 April 2015 17:09:58 Jayachandran C wrote:
+> The current code in pci-host-generic.c uses pci_common_init_dev()
+> from the arch/arm/ to do a part of the PCI initialization, and this
+> prevents it from being used on arm64.
 > 
-> It's un-necessary now that we disable msi at start, and it actually
-> turns out to cause problems: some device drivers don't register a level
-> interrupt handler when they detect msi/msix capability, switching off
-> msi while device is going causes device to assert a level interrupt
-> which is never de-asserted, causing a kernel hang.
+> The initialization done by pci_common_init_dev() that is really
+> needed by pci-host-generic.c can be done in the same file without
+> using the hw_pci API of ARM.
 > 
-> In particular, this was observed with virtio.
-
-I'm not questioning that this hang happens, but would you mind outlining
-*how* it happens in a little more detail?  I'm not an IRQ expert, so I
-expected an "irq %d: nobody cared" message or something similar.  It seems
-like a kernel hang is a pretty severe way to deal with an unexpected
-interrupt.
-
-Is virtio the only way the hang could happen, or is it just coincidence
-that it was involved?
-
-It'd be really nice if we could reference the bug report here.  I think you
-said the original report was private.  Can we open a kernel.org bugzilla
-that contains just the public information?
-
-> Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
-> Cc: Ulrich Obergfell <uobergfe@redhat.com>
-> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> Reported-by: Fam Zheng <famz@redhat.com>
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/pci/pci-driver.c | 2 --
->  1 file changed, 2 deletions(-)
+> The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> this is be handled by setting up 'struct gen_pci' to embed a
+> pci_sys_data variable as the first element on the ARM platform.
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3cb2210..38a602c 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+
+This seems very useful
+
 >  
->  	if (drv && drv->shutdown)
->  		drv->shutdown(pci_dev);
-> -	pci_msi_shutdown(pci_dev);
-> -	pci_msix_shutdown(pci_dev);
+> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> +static int gen_pci_init(struct device *dev, struct gen_pci *pci)
+>  {
+> -	struct gen_pci *pci = sys->private_data;
+> -	list_splice_init(&pci->resources, &sys->resources);
+> -	return 1;
+> +	struct pci_bus *bus;
+> +
+> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+
+Do we want to set that flag unconditionally? At least for servers,
+the resources should get assigned by firmware, and things might
+go wrong if Linux tries to reassign them. This is probably the
+case on kvmtool as well.
+
+> +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
+> +	if (!bus) {
+> +		dev_err(dev, "Scanning rootbus failed");
+> +		return -ENODEV;
+> +	}
+> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+
+I thought this was done by default now. If it is not, can
+we make the of_irq swizzling the default?
+
+> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> +		pci_bus_size_bridges(bus);
+> +		pci_bus_assign_resources(bus);
+> +	}
+> +	pci_bus_add_devices(bus);
+> +
+> +	/* Configure PCI Express settings */
+> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> +		struct pci_bus *child;
+> +
+> +		list_for_each_entry(child, &bus->children, node)
+> +			pcie_bus_configure_settings(child);
+> +	}
+> +	return 0;
+>  }
+
+We should also try to come up wtih a way to make that
+pcie_bus_configure_settings() automatic if it's required here.
+
+>  static int gen_pci_probe(struct platform_device *pdev)
+> @@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+>  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> -	struct hw_pci hw = {
+> -		.nr_controllers	= 1,
+> -		.private_data	= (void **)&pci,
+> -		.setup		= gen_pci_setup,
+> -		.map_irq	= of_irq_parse_and_map_pci,
+> -		.ops		= &gen_pci_ops,
+> -	};
 >  
->  #ifdef CONFIG_KEXEC
->  	/*
-> -- 
-> MST
-> 
+>  	if (!pci)
+>  		return -ENOMEM;
+> @@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  		return err;
+>  	}
+>  
+> -	pci_common_init_dev(dev, &hw);
+> -	return 0;
+> +	return gen_pci_init(dev, pci);
+
+How about moving the new code right into the probe() function?
+
+	Arnd
