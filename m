@@ -1,100 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:33929 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878AbbDDMrI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Apr 2015 08:47:08 -0400
-Received: by qcyk17 with SMTP id k17so3647047qcy.1
-        for <linux-pci@vger.kernel.org>; Sat, 04 Apr 2015 05:47:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
- <1427857069-6789-2-git-send-email-yinghai@kernel.org> <20150403193234.GD10892@google.com>
- <20150403205201.GF10892@google.com> <CAE9FiQVqAEvoLDRZMcNFki0gLMQiyQd2VYivjAh1teRGeuNwBw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 4 Apr 2015 07:46:47 -0500
-Message-ID: <CAErSpo55rpO6SNeY57zZ8ah0PJ3eY+-L92vUJwYiRn4tCfLtJg@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI: Introduce pci_bus_addr_t
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
+Received: from foss.arm.com ([217.140.101.70]:32959 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422673AbbD2MOV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Apr 2015 08:14:21 -0400
+Date: Wed, 29 Apr 2015 13:14:17 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	Russell King <linux@arm.linux.org.uk>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"the arch/x86 maintainers" <x86@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, lorenzo.pieralisi@arm.com
+Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150429121417.GB9918@arm.com>
+References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 3, 2015 at 10:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Apr 3, 2015 at 1:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Sam (commented on previous versions), Russell, linux-arm-kernel, Ralf,
->> linux-mips, Ben, linuxppc-dev, x86]
->>
->> On Fri, Apr 03, 2015 at 02:32:34PM -0500, Bjorn Helgaas wrote:
->>> On Tue, Mar 31, 2015 at 07:57:47PM -0700, Yinghai Lu wrote:
->>> > David Ahern found commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
->>> > to fit in upstream windows") broke booting on sparc/T5-8.
->>> >
->>> > In the boot log, there is
->>> >   pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address
->>> >   0x110204000)
->>> > but that only could happen when dma_addr_t is 32-bit.
->>> >
->>> > According to David Miller, all DMA occurs behind an IOMMU and these
->>> > IOMMUs only support 32-bit addressing, therefore dma_addr_t is
->>> > 32-bit on sparc64.
->>> >
->>> > Let's introduce pci_bus_addr_t instead of using dma_addr_t,
->>> > and pci_bus_addr_t will be 64-bit on 64-bit platform or X86_PAE.
->>> >
->>> > Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
->>> > Fixes: commit 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
->>> > Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
->>> > Reported-by: David Ahern <david.ahern@oracle.com>
->>> > Tested-by: David Ahern <david.ahern@oracle.com>
->>> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> > Cc: <stable@vger.kernel.org> #3.19
->>> > ---
->>> >  drivers/pci/Kconfig |  4 ++++
->>> >  drivers/pci/bus.c   | 10 +++++-----
->>> >  drivers/pci/probe.c | 12 ++++++------
->>> >  include/linux/pci.h | 12 +++++++++---
->>> >  4 files changed, 24 insertions(+), 14 deletions(-)
->>> >
->>> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->>> > index 7a8f1c5..6a5a269 100644
->>> > --- a/drivers/pci/Kconfig
->>> > +++ b/drivers/pci/Kconfig
->>> > @@ -1,6 +1,10 @@
->>> >  #
->>> >  # PCI configuration
->>> >  #
->>> > +config PCI_BUS_ADDR_T_64BIT
->>> > +   def_bool y if (64BIT || X86_PAE)
->>> > +   depends on PCI
->>>
->>> We're going to use pci_bus_addr_t in some places where we previously used
->>> dma_addr_t, which means pci_bus_addr_t should be at least as large as
->>> dma_addr_t.  Can you enforce that directly, e.g., with something like this?
->>>
->>>     def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT || X86_PAE)
->
-> then should use
->
-> def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+Hi Jayachandran,
 
-OK, would you mind updating this series, incorporating the doc
-updates, and reposting it?
+On Wed, Apr 29, 2015 at 12:39:58PM +0100, Jayachandran C wrote:
+> The current code in pci-host-generic.c uses pci_common_init_dev()
+> from the arch/arm/ to do a part of the PCI initialization, and this
+> prevents it from being used on arm64.
+> 
+> The initialization done by pci_common_init_dev() that is really
+> needed by pci-host-generic.c can be done in the same file without
+> using the hw_pci API of ARM.
+> 
+> The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> this is be handled by setting up 'struct gen_pci' to embed a
+> pci_sys_data variable as the first element on the ARM platform.
+> 
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> ---
+> 
+> Notes:
+>  - passing a zeroed out pci_sys_data for ARM looks ok, but I haven't
+>    tested it on ARM.
+>  - tested it on ARM64 fast model
+>  - Any information on how this can be tested on arm is welcome.
 
-I think there's still an unresolved question about the OF parsing code.
+You should be able to test using a 32-bit guest under KVM.
 
-Bjorn
+>  - There is only one ifdef, and that can be removed when arm64 gets
+>    a sysdata, or when arm loses its sysdata.
+
+Anyway, I believe Lorenzo (CC'd) has already been working on this so I'll
+let him comment here.
+
+Will
+
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index ba46e58..1631d34 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -39,6 +39,9 @@ struct gen_pci_cfg_windows {
+>  };
+>  
+>  struct gen_pci {
+> +#ifdef CONFIG_ARM
+> +	struct pci_sys_data			sys;
+> +#endif
+>  	struct pci_host_bridge			host;
+>  	struct gen_pci_cfg_windows		cfg;
+>  	struct list_head			resources;
+> @@ -48,8 +51,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+>  					     unsigned int devfn,
+>  					     int where)
+>  {
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct gen_pci *pci = sys->private_data;
+> +	struct gen_pci *pci = bus->sysdata;
+>  	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+>  
+>  	return pci->cfg.win[idx] + ((devfn << 8) | where);
+> @@ -64,8 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+>  					      unsigned int devfn,
+>  					      int where)
+>  {
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct gen_pci *pci = sys->private_data;
+> +	struct gen_pci *pci = bus->sysdata;
+>  	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+>  
+>  	return pci->cfg.win[idx] + ((devfn << 12) | where);
+> @@ -198,11 +199,33 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  	return 0;
+>  }
+>  
+> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> +static int gen_pci_init(struct device *dev, struct gen_pci *pci)
+>  {
+> -	struct gen_pci *pci = sys->private_data;
+> -	list_splice_init(&pci->resources, &sys->resources);
+> -	return 1;
+> +	struct pci_bus *bus;
+> +
+> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+> +
+> +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
+> +	if (!bus) {
+> +		dev_err(dev, "Scanning rootbus failed");
+> +		return -ENODEV;
+> +	}
+> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +
+> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> +		pci_bus_size_bridges(bus);
+> +		pci_bus_assign_resources(bus);
+> +	}
+> +	pci_bus_add_devices(bus);
+> +
+> +	/* Configure PCI Express settings */
+> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> +		struct pci_bus *child;
+> +
+> +		list_for_each_entry(child, &bus->children, node)
+> +			pcie_bus_configure_settings(child);
+> +	}
+> +	return 0;
+>  }
+>  
+>  static int gen_pci_probe(struct platform_device *pdev)
+> @@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+>  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> -	struct hw_pci hw = {
+> -		.nr_controllers	= 1,
+> -		.private_data	= (void **)&pci,
+> -		.setup		= gen_pci_setup,
+> -		.map_irq	= of_irq_parse_and_map_pci,
+> -		.ops		= &gen_pci_ops,
+> -	};
+>  
+>  	if (!pci)
+>  		return -ENOMEM;
+> @@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  		return err;
+>  	}
+>  
+> -	pci_common_init_dev(dev, &hw);
+> -	return 0;
+> +	return gen_pci_init(dev, pci);
+>  }
+>  
+>  static struct platform_driver gen_pci_driver = {
+> -- 
+> 1.9.1
+> 
