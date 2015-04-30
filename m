@@ -1,171 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59135 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751382AbbDMGPu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Apr 2015 02:15:50 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1430368888-21402-1-git-send-email-jiang.liu@linux.intel.com>
+References: <CAErSpo7D_CDM+1mzO0ADdzbAE9xwnwiyJ-dk0WFthr+ReKpidg@mail.gmail.com>
+ <1430368888-21402-1-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 30 Apr 2015 08:28:17 -0500
+Message-ID: <CAErSpo4XrOx4DmR-xUzy45UxS6iErANJbojC_X1JVdjsAzL8WQ@mail.gmail.com>
+Subject: Re: [Bugfix v6] x86/PCI/ACPI: Fix regression caused by commit 63f1789ec716
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "H. Peter Anvin" <hpa@linux.intel.com>,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [Patch Part1 v8 29/37] x86/intel-mid: Delay initialization of APB timer
-Date: Mon, 13 Apr 2015 14:11:51 +0800
-Message-Id: <1428905519-23704-30-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428905519-23704-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"x86@kernel.org" <x86@kernel.org>, Len Brown <lenb@kernel.org>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Wed, Apr 29, 2015 at 11:41 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> An IO port or MMIO resource assigned to a PCI host bridge may be
+> consumed by the host bridge itself or available to its child
+> bus/devices. The ACPI specification defines a bit (Producer/Consumer)
+> to tell whether the resource is consumed by the host bridge itself,
+> but firmware hasn't used that bit consistently, so we can't rely on it.
+>
+> Before commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+> interfaces to simplify implementation"), arch/x86/pci/acpi.c ignored
+> all IO port resources defined by acpi_resource_io and
+> acpi_resource_fixed_io to filter out IO ports consumed by the host
+> bridge itself.
+>
+> Commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces
+> to simplify implementation") started accepting all IO port and MMIO
+> resources, which caused a regression that IO port resources consumed
+> by the host bridge itself became available to its child devices.
+>
+> Then commit 63f1789ec716 ("x86/PCI/ACPI: Ignore resources consumed by
+> host bridge itself") ignored resources consumed by the host bridge
+> itself by checking the IORESOURCE_WINDOW flag, which accidently removed
+> MMIO resources defined by acpi_resource_memory24, acpi_resource_memory32
+> and acpi_resource_fixed_memory32.
+>
+> On x86 and IA64 platforms, all IO port and MMIO resources are assumed
+> to be available to child bus/devices except one special case:
+>     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
+>     to access PCI configuration space.
+>
+> So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF]. This solution
+> will also ease the way to consolidate ACPI PCI host bridge common code
+> from x86, ia64 and ARM64.
+>
+> Related ACPI table are archived at:
+> https://bugzilla.kernel.org/show_bug.cgi?id=94221
+>
+> Related discussions at:
+> http://patchwork.ozlabs.org/patch/461633/
+> https://lkml.org/lkml/2015/3/29/304
+>
+> Fixes: 63f1789ec716("Ignore resources consumed by host bridge itself")
+> Reported-by: Bernhard Thaler <bernhard.thaler@wvnet.at>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: <stable@vger.kernel.org> # 4.0
+> ---
+>  arch/x86/pci/acpi.c     |   24 ++++++++++++++++++++++--
+>  drivers/acpi/resource.c |    2 +-
+>  2 files changed, 23 insertions(+), 3 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index e4695985f9de..d93963340c3c 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -325,6 +325,26 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+>         kfree(info);
+>  }
+>
+> +/*
+> + * An IO port or MMIO resource assigned to a PCI host bridge may be
+> + * consumed by the host bridge itself or available to its child
+> + * bus/devices. The ACPI specification defines a bit (Producer/Consumer)
+> + * to tell whether the resource is consumed by the host bridge itself,
+> + * but firmware hasn't used that bit consistently, so we can't rely on it.
+> + *
+> + * On x86 and IA64 platforms, all IO port and MMIO resources are assumed
+> + * to be available to child bus/devices except one special case:
+> + *     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
+> + *     to access PCI configuration space.
+> + *
+> + * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
+> + */
+> +static bool resource_is_pcicfg_ioport(struct resource *res)
+> +{
+> +       return (res->flags & IORESOURCE_IO) &&
+> +               res->start == 0xCF8 && res->end == 0xCFF;
+> +}
+> +
+>  static void probe_pci_root_info(struct pci_root_info *info,
+>                                 struct acpi_device *device,
+>                                 int busnum, int domain,
+> @@ -346,8 +366,8 @@ static void probe_pci_root_info(struct pci_root_info *info,
+>                         "no IO and memory resources present in _CRS\n");
+>         else
+>                 resource_list_for_each_entry_safe(entry, tmp, list) {
+> -                       if ((entry->res->flags & IORESOURCE_WINDOW) == 0 ||
+> -                           (entry->res->flags & IORESOURCE_DISABLED))
+> +                       if ((entry->res->flags & IORESOURCE_DISABLED) ||
+> +                           resource_is_pcicfg_ioport(entry->res))
 
-MID has no PIC, but depending on the platform it requires the
-abt_timer, which is connected to irq0. The timer is set up at
-late_time_init().
+Hey, I can understand this code!  This is *way* better that what you
+had before.  Thanks for persevering.
 
-But, looking at the MID code it seems, that there is no reason to do
-so. The only code which might need the timer working is the TSC
-calibration code, but thats a non issue on MID as that is using its
-own empty calibration function. And check_timer() is not invoked
-either because MID has no PIC and therefor no legacy irqs.
+My only remaining comment is that the subject line ("Fix regression
+caused by commit ...") doesn't really describe the code.  It should
+say something specific, like maybe "x86/PCI/ACPI: Make all resources
+except [io 0xcf8-0xcff] available on PCI bus".
 
-So if you look at intel_mid_time_init() then you'll see that in the
-ARAT case the timer setup is skipped already. So until the point where
-x86_init.timers.setup_percpu_clockev() is called for the boot cpu
-nothing really needs a timer on MID.
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
-According to the MID code the apbt horror is only used for moorestown.
-Medfield and later use the local apic timer without the apbt nonsense.
-
-The best thing we can do is to drop moorestown support and get rid of
-that apbt nonsense alltogether.
-
-I don't think anyone deeply cares about it not being supported from
-3.18 on. The number of devices which sport a moorestown should be
-pretty limited and the only relevant use case of those is to act as a
-pocket heater with short battery life time. Its pretty pointless to
-update kernels on pocket heaters except for bragging reasons.
-
-If someone at Intel really thinks that we need to keep moorestown
-alive for other than documentary and sentimental reasons, then we can
-move the apbt setup to x86_init.timers.setup_percpu_clockev(). At that
-point the IOAPIC is setup already, so it should just work.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: H. Peter Anvin <hpa@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: David Cohen <david.a.cohen@linux.intel.com>
-Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Link: http://lkml.kernel.org/r/1416901802-24211-2-git-send-email-jiang.liu@linux.intel.com
-Tested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/kernel/apb_timer.c             |    4 ----
- arch/x86/platform/intel-mid/intel-mid.c |   18 +++++++++++++-----
- arch/x86/platform/intel-mid/sfi.c       |    2 --
- 3 files changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/arch/x86/kernel/apb_timer.c b/arch/x86/kernel/apb_timer.c
-index 6a7c23ff21d3..ede92c3364d3 100644
---- a/arch/x86/kernel/apb_timer.c
-+++ b/arch/x86/kernel/apb_timer.c
-@@ -171,10 +171,6 @@ static int __init apbt_clockevent_register(void)
- 
- static void apbt_setup_irq(struct apbt_dev *adev)
- {
--	/* timer0 irq has been setup early */
--	if (adev->irq == 0)
--		return;
--
- 	irq_modify_status(adev->irq, 0, IRQ_MOVE_PCNTXT);
- 	irq_set_affinity(adev->irq, cpumask_of(adev->cpu));
- }
-diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
-index 3005f0c89f2e..01d54ea766c1 100644
---- a/arch/x86/platform/intel-mid/intel-mid.c
-+++ b/arch/x86/platform/intel-mid/intel-mid.c
-@@ -81,26 +81,34 @@ static unsigned long __init intel_mid_calibrate_tsc(void)
- 	return 0;
- }
- 
-+static void __init intel_mid_setup_bp_timer(void)
-+{
-+	apbt_time_init();
-+	setup_boot_APIC_clock();
-+}
-+
- static void __init intel_mid_time_init(void)
- {
- 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
-+
- 	switch (intel_mid_timer_options) {
- 	case INTEL_MID_TIMER_APBT_ONLY:
- 		break;
- 	case INTEL_MID_TIMER_LAPIC_APBT:
--		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
-+		/* Use apbt and local apic */
-+		x86_init.timers.setup_percpu_clockev = intel_mid_setup_bp_timer;
- 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
--		break;
-+		return;
- 	default:
- 		if (!boot_cpu_has(X86_FEATURE_ARAT))
- 			break;
-+		/* Lapic only, no apbt */
- 		x86_init.timers.setup_percpu_clockev = setup_boot_APIC_clock;
- 		x86_cpuinit.setup_percpu_clockev = setup_secondary_APIC_clock;
- 		return;
- 	}
--	/* we need at least one APB timer */
--	pre_init_apic_IRQ0();
--	apbt_time_init();
-+
-+	x86_init.timers.setup_percpu_clockev = apbt_time_init;
- }
- 
- static void intel_mid_arch_setup(void)
-diff --git a/arch/x86/platform/intel-mid/sfi.c b/arch/x86/platform/intel-mid/sfi.c
-index c14ad34776c4..aa59f88868f8 100644
---- a/arch/x86/platform/intel-mid/sfi.c
-+++ b/arch/x86/platform/intel-mid/sfi.c
-@@ -95,8 +95,6 @@ int __init sfi_parse_mtmr(struct sfi_table_header *table)
- 		pr_debug("timer[%d]: paddr = 0x%08x, freq = %dHz, irq = %d\n",
- 			totallen, (u32)pentry->phys_addr,
- 			pentry->freq_hz, pentry->irq);
--			if (!pentry->irq)
--				continue;
- 			mp_irq.type = MP_INTSRC;
- 			mp_irq.irqtype = mp_INT;
- /* triggering mode edge bit 2-3, active high polarity bit 0-1 */
--- 
-1.7.10.4
-
+>                                 resource_list_destroy_entry(entry);
+>                         else
+>                                 entry->res->name = info->name;
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 5589a6e2a023..8244f013f210 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -573,7 +573,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_get_resources);
+>   * @ares: Input ACPI resource object.
+>   * @types: Valid resource types of IORESOURCE_XXX
+>   *
+> - * This is a hepler function to support acpi_dev_get_resources(), which filters
+> + * This is a helper function to support acpi_dev_get_resources(), which filters
+>   * ACPI resource objects according to resource types.
+>   */
+>  int acpi_dev_filter_resource_type(struct acpi_resource *ares,
+> --
+> 1.7.10.4
+>
