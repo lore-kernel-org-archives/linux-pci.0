@@ -1,351 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60551 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320AbbEAGEg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:36 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 May 2015 16:04:34 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D72052CE8052
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:32 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164OLO58196036
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:32 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163wBN009660
-	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v4 09/21] powerpc/powernv: Use PCI slot reset infrastructure
-Date: Fri,  1 May 2015 16:02:56 +1000
-Message-Id: <1430460188-31343-10-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150430165238.GS5622@wotan.suse.de>
+References: <1430343372-687-1-git-send-email-mcgrof@do-not-panic.com>
+ <1430343372-687-2-git-send-email-mcgrof@do-not-panic.com> <20150430155917.GC7888@google.com>
+ <20150430165238.GS5622@wotan.suse.de>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 30 Apr 2015 10:03:18 -0700
+Message-ID: <CALCETrXWBWq-az=AMgrV5t5BHwmPd-NHY31vC7eEsxpmrhhRQQ@mail.gmail.com>
+Subject: Re: [PATCH v4 1/5] pci: add pci_iomap_wc() variants
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	David Airlie <airlied@linux.ie>, daniel.vetter@intel.com,
+	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+	cocci@systeme.lip6.fr,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	ville.syrjala@linux.intel.com,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+	xen-devel@lists.xensource.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For PowerNV platform, running on top of skiboot, all PE level reset
-should be routed to firmware if the bridge of the PE primary bus has
-device-node property "ibm,reset-by-firmware". Otherwise, the kernel
-has to issue hot reset on PE's primary bus despite the requested reset
-types, which is the behaviour before the firmware supports PCI slot
-reset. So the changes don't depend on the PCI slot reset capability
-exposed from the firmware.
+On Thu, Apr 30, 2015 at 9:52 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Thu, Apr 30, 2015 at 10:59:17AM -0500, Bjorn Helgaas wrote:
+>> [+cc linux-pci]
+>>
+>> Hi Luis,
+>>
+>> On Wed, Apr 29, 2015 at 02:36:08PM -0700, Luis R. Rodriguez wrote:
+>> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
+>> >
+>> > This allows drivers to take advantage of write-combining
+>> > when possible. Ideally we'd have pci_read_bases() just
+>> > peg an IORESOURCE_WC flag for us
+>>
+>> This makes it sound like pci_read_bases() could do a better job
+>> if we just tried harder, but I don't think that's the case.  All
+>> pci_read_bases() can do is look at the bits in the BAR.  For
+>> memory BARs, there's a "prefetchable" bit and a "64-bit" bit.
+>>
+>> If you just want to complain that the PCI spec didn't define a
+>> way for software to discover whether a BAR can be mapped with WC,
+>> that's fine, but it's misleading to suggest that pci_read_bases()
+>> could figure out WC without some help from the spec.
+>
+> You're right sorry about that, in my original patch this was more
+> of a question and I did not have a full answer for but mst had
+> clarified before the spec doesn't allow for this [0] and you are
+> confirming this now as well.
+>
+> [0] https://lkml.org/lkml/2015/4/21/714
+>
+> I'll update the patch and at least document we did think about
+> this and that its a shortcoming of the spec.
+>
+>> > but where exactly
+>> > video devices memory lie varies *largely* and at times things
+>> > are mixed with MMIO registers, sometimes we can address
+>> > the changes in drivers, other times the change requires
+>> > intrusive changes.
+>> >
+>> > Although there is also arch_phys_wc_add() that makes use of
+>> > architecture specific write-combining alternatives (MTRR on
+>> > x86 when a system does not have PAT) we void polluting
+>> > pci_iomap() space with it and force drivers and subsystems
+>> > that want to use it to be explicit.
+>>
+>> I'm not quite sure I understand the point you're making here
+>> about not polluting pci_iomap_wc() with arch_phys_wc_add().  I
+>> think the choice is for a driver to do either this:
+>>
+>>   info->screen_base = pci_iomap_wc(dev, 0, 0);
+>>
+>> or this:
+>>
+>>   info->screen_base = pci_iomap_wc(dev, 0, 0);
+>>   par->wc_cookie = arch_phys_wc_add(pci_resource_start(dev, 0),
+>>                                   pci_resource_len(dev, 0));
+>>
+>> The driver is *already* being explicit because it calls
+>> pci_iomap_wc() instead of pci_iomap().
+>>
+>> It seems like it would be ideal if ioremap_wc() could call
+>> arch_phys_wc_add() internally.
+>
+> Indeed, that's what I was alluding to.
+>
+>> Doesn't any caller of
+>> arch_phys_wc_add() have to also do some sort of ioremap()
+>> beforehand?
+>
+> This is not a requirement as the physical address is used,
+> not the virtual address.
+>
+>> I assume there's some reason for separating them,
+>
+> Well a full sweep to change to arch_phys_wc_add() was never done,
+> consider this part of the last effort to do so. In retrospect now
+> that I've covered all other drivers in 12 different series of patches
+> I think its perhaps best to not mesh them together as we're phasing
+> out MTRR and the only reason to have arch_phys_wc_add() is for MTRR
+> which is legacy.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |   1 +
- arch/powerpc/include/asm/opal.h              |   4 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c | 206 +++++++++++++--------------
- 3 files changed, 102 insertions(+), 109 deletions(-)
+I would say it much more strongly.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index c5eb86f..2793d24 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -190,6 +190,7 @@ enum {
- #define EEH_RESET_DEACTIVATE	0	/* Deactivate the PE reset	*/
- #define EEH_RESET_HOT		1	/* Hot reset			*/
- #define EEH_RESET_FUNDAMENTAL	3	/* Fundamental reset		*/
-+#define EEH_RESET_COMPLETE	4	/* PHB complete reset           */
- #define EEH_LOG_TEMP		1	/* EEH temporary error log	*/
- #define EEH_LOG_PERM		2	/* EEH permanent error log	*/
- 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index 042af1a..6d467df 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -129,7 +129,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
- int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
- 					uint16_t dma_window_number, uint64_t pci_start_addr,
- 					uint64_t pci_mem_size);
--int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
-+int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
- 
- int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
- 				   uint64_t diag_buffer_len);
-@@ -145,7 +145,7 @@ int64_t opal_get_epow_status(__be64 *status);
- int64_t opal_set_system_attention_led(uint8_t led_action);
- int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
- 			    __be16 *pci_error_type, __be16 *severity);
--int64_t opal_pci_poll(uint64_t phb_id);
-+int64_t opal_pci_poll(uint64_t id, uint8_t *val);
- int64_t opal_return_cpu(void);
- int64_t opal_check_token(uint64_t token);
- int64_t opal_reinit_cpus(uint64_t flags);
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index ce738ab..3c01095 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -742,12 +742,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
- 	return ret;
- }
- 
--static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
-+static s64 pnv_eeh_poll(uint64_t id)
- {
- 	s64 rc = OPAL_HARDWARE;
- 
- 	while (1) {
--		rc = opal_pci_poll(phb->opal_id);
-+		rc = opal_pci_poll(id, NULL);
- 		if (rc <= 0)
- 			break;
- 
-@@ -763,84 +763,38 @@ static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
- int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
- {
- 	struct pnv_phb *phb = hose->private_data;
-+	uint8_t scope;
- 	s64 rc = OPAL_HARDWARE;
- 
- 	pr_debug("%s: Reset PHB#%x, option=%d\n",
- 		 __func__, hose->global_number, option);
--
--	/* Issue PHB complete reset request */
--	if (option == EEH_RESET_FUNDAMENTAL ||
--	    option == EEH_RESET_HOT)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PHB_COMPLETE,
--				    OPAL_ASSERT_RESET);
--	else if (option == EEH_RESET_DEACTIVATE)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PHB_COMPLETE,
--				    OPAL_DEASSERT_RESET);
--	if (rc < 0)
--		goto out;
--
--	/*
--	 * Poll state of the PHB until the request is done
--	 * successfully. The PHB reset is usually PHB complete
--	 * reset followed by hot reset on root bus. So we also
--	 * need the PCI bus settlement delay.
--	 */
--	rc = pnv_eeh_phb_poll(phb);
--	if (option == EEH_RESET_DEACTIVATE) {
--		if (system_state < SYSTEM_RUNNING)
--			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
--		else
--			msleep(EEH_PE_RST_SETTLE_TIME);
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+		scope = OPAL_RESET_PCI_HOT;
-+		break;
-+	case EEH_RESET_FUNDAMENTAL:
-+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-+		break;
-+	case EEH_RESET_COMPLETE:
-+		scope = OPAL_RESET_PHB_COMPLETE;
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		return 0;
-+	default:
-+		pr_warn("%s: Unsupported option %d\n",
-+			__func__, option);
-+		return -EINVAL;
- 	}
--out:
--	if (rc != OPAL_SUCCESS)
--		return -EIO;
- 
--	return 0;
--}
--
--static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
--{
--	struct pnv_phb *phb = hose->private_data;
--	s64 rc = OPAL_HARDWARE;
-+	/* Issue reset and poll until it's completed */
-+	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
-+	if (rc > 0)
-+		rc = pnv_eeh_poll(phb->opal_id);
- 
--	pr_debug("%s: Reset PHB#%x, option=%d\n",
--		 __func__, hose->global_number, option);
--
--	/*
--	 * During the reset deassert time, we needn't care
--	 * the reset scope because the firmware does nothing
--	 * for fundamental or hot reset during deassert phase.
--	 */
--	if (option == EEH_RESET_FUNDAMENTAL)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PCI_FUNDAMENTAL,
--				    OPAL_ASSERT_RESET);
--	else if (option == EEH_RESET_HOT)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PCI_HOT,
--				    OPAL_ASSERT_RESET);
--	else if (option == EEH_RESET_DEACTIVATE)
--		rc = opal_pci_reset(phb->opal_id,
--				    OPAL_RESET_PCI_HOT,
--				    OPAL_DEASSERT_RESET);
--	if (rc < 0)
--		goto out;
--
--	/* Poll state of the PHB until the request is done */
--	rc = pnv_eeh_phb_poll(phb);
--	if (option == EEH_RESET_DEACTIVATE)
--		msleep(EEH_PE_RST_SETTLE_TIME);
--out:
--	if (rc != OPAL_SUCCESS)
--		return -EIO;
--
--	return 0;
-+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
- }
- 
--static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- {
- 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -891,14 +845,57 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct device_node *dn = dev ? pci_device_to_OF_node(dev) : NULL;
-+	uint64_t id = (0x1ul << 60);
-+	uint8_t scope;
-+	s64 rc;
-+
-+	/*
-+	 * If the firmware can't handle it, we will issue hot reset
-+	 * on the secondary bus despite the requested reset type
-+	 */
-+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
-+		return __pnv_eeh_bridge_reset(dev, option);
-+
-+	/* The firmware can handle the request */
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+		scope = OPAL_RESET_PCI_HOT;
-+		break;
-+	case EEH_RESET_FUNDAMENTAL:
-+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		return 0;
-+	case EEH_RESET_COMPLETE:
-+	default:
-+		pr_warn("%s: Unsupported option %d on device %s\n",
-+			__func__, option, pci_name(dev));
-+		return -EINVAL;
-+	}
-+
-+	hose = pci_bus_to_host(dev->bus);
-+	phb = hose->private_data;
-+	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
-+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-+	if (rc > 0)
-+		rc = pnv_eeh_poll(id);
-+
-+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-+}
-+
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	struct pci_controller *hose;
- 
- 	if (pci_is_root_bus(dev->bus)) {
- 		hose = pci_bus_to_host(dev->bus);
--		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
--		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
-+		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
-+		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
- 	} else {
- 		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
- 		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
-@@ -920,8 +917,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- {
- 	struct pci_controller *hose = pe->phb;
-+	struct pnv_phb *phb;
- 	struct pci_bus *bus;
--	int ret;
-+	s64 rc;
- 
- 	/*
- 	 * For PHB reset, we always have complete reset. For those PEs whose
-@@ -937,43 +935,37 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 	 * reset. The side effect is that EEH core has to clear the frozen
- 	 * state explicitly after BAR restore.
- 	 */
--	if (pe->type & EEH_PE_PHB) {
--		ret = pnv_eeh_phb_reset(hose, option);
--	} else {
--		struct pnv_phb *phb;
--		s64 rc;
-+	if (pe->type & EEH_PE_PHB)
-+		return pnv_eeh_phb_reset(hose, EEH_RESET_COMPLETE);
- 
--		/*
--		 * The frozen PE might be caused by PAPR error injection
--		 * registers, which are expected to be cleared after hitting
--		 * frozen PE as stated in the hardware spec. Unfortunately,
--		 * that's not true on P7IOC. So we have to clear it manually
--		 * to avoid recursive EEH errors during recovery.
--		 */
--		phb = hose->private_data;
--		if (phb->model == PNV_PHB_MODEL_P7IOC &&
--		    (option == EEH_RESET_HOT ||
--		    option == EEH_RESET_FUNDAMENTAL)) {
--			rc = opal_pci_reset(phb->opal_id,
--					    OPAL_RESET_PHB_ERROR,
--					    OPAL_ASSERT_RESET);
--			if (rc != OPAL_SUCCESS) {
--				pr_warn("%s: Failure %lld clearing "
--					"error injection registers\n",
--					__func__, rc);
--				return -EIO;
--			}
-+	/*
-+	 * The frozen PE might be caused by PAPR error injection
-+	 * registers, which are expected to be cleared after hitting
-+	 * frozen PE as stated in the hardware spec. Unfortunately,
-+	 * that's not true on P7IOC. So we have to clear it manually
-+	 * to avoid recursive EEH errors during recovery.
-+	 */
-+	phb = hose->private_data;
-+	if (phb->model == PNV_PHB_MODEL_P7IOC &&
-+	    (option == EEH_RESET_HOT ||
-+	    option == EEH_RESET_FUNDAMENTAL)) {
-+		rc = opal_pci_reset(phb->opal_id,
-+				    OPAL_RESET_PHB_ERROR,
-+				    OPAL_ASSERT_RESET);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("%s: Failure %lld clearing error "
-+				"injection registers on PHB#%d\n",
-+				__func__, rc, hose->global_number);
-+			return -EIO;
- 		}
--
--		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
--			pci_is_root_bus(bus->parent))
--			ret = pnv_eeh_root_reset(hose, option);
--		else
--			ret = pnv_eeh_bridge_reset(bus->self, option);
- 	}
- 
--	return ret;
-+	/* Route the reset request to PHB or upstream bridge */
-+	bus = eeh_pe_bus_get(pe);
-+	if (pci_is_root_bus(bus))
-+		return pnv_eeh_phb_reset(hose, option);
-+
-+	return pnv_eeh_bridge_reset(bus->self, option);
- }
- 
- /**
--- 
-2.1.0
+Drivers for new hardware SHOULD NOT call arch_phys_wc_add, directly or
+otherwise.  MTRRs are crap.  They have nasty alignment requirements,
+they are a very limited and unpredictable resource, and the interact
+poorly with BIOS.  They should really only be used for old video
+framebuffers and such.
 
+Anything new should use PAT (it's been available for a long time) and
+possibly streaming memory writes.  Even fancy server gear (myri10ge,
+for example) should stay far away from MTRRs and such: it's very easy
+to put enough devices in a server board that you simply run out of
+MTRRs and arch_phys_wc_add will stop working.
+
+If we make ioremap_wc and similar start automatically adding MTRRs,
+then performance will vary wildly with the order of driver loading,
+because we'll run out of MTRRs part-way through bootup.
+
+ioremap_wc via PAT, on the other hand, is 100% reliable on newer hardware.
+
+Maybe I should have called it arch_phys_wc_add_awful_legacy_hack.
+
+--Andy
