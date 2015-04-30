@@ -1,59 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48758 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933539AbbDII5L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Apr 2015 04:57:11 -0400
-Message-ID: <1428569815.18187.71.camel@kernel.crashing.org>
-Subject: Re: [PATCH 3/3] PCI: Set pref for mem64 resource of pcie device
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Date: Thu, 09 Apr 2015 18:56:55 +1000
-In-Reply-To: <CAE9FiQUnpKmQmeHvBpk1t-NSAPuWAC9tX7LXeGpVR1w78i658g@mail.gmail.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-	 <1427857069-6789-4-git-send-email-yinghai@kernel.org>
-	 <20150406220638.GH10892@google.com>
-	 <20150406.203533.1356187749826485194.davem@davemloft.net>
-	 <CAErSpo7zvqft2frrwCd5AKMSO1LB7=7Ys9stKsj7OGzkQv4K1Q@mail.gmail.com>
-	 <20150408154759.GN10892@google.com>
-	 <1428527527.18187.28.camel@kernel.crashing.org>
-	 <CAE9FiQXQN-VqN3ynLEhHh5WUYE+8tLR8ubKKMeHZ3h=BQ0rA9A@mail.gmail.com>
-	 <1428549459.18187.56.camel@kernel.crashing.org>
-	 <CAE9FiQUnpKmQmeHvBpk1t-NSAPuWAC9tX7LXeGpVR1w78i658g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <jg1.han@samsung.com>, <bhelgaas@google.com>,
+	<Minghuan.Lian@freescale.com>, <fabrice.gasnier@st.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH v2 2/2] PCI: designware: use iATU0 for cfg and IO, iATU1 for MEM
+Date: Thu, 30 Apr 2015 16:22:29 +0800
+Message-ID: <1430382149-1645-3-git-send-email-jszhang@marvell.com>
+In-Reply-To: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
+References: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-04-08 at 21:11 -0700, Yinghai Lu wrote:
-> That way should be more intrusive to current code, as we are using
-> type_mask checking to share the code among
-> parent(pref)/child(pref), parent(no-pref)/child(pref), and
-> parent(no-pref)/child(pref)
+Most transactions' type are cfg0 and MEM, so the Current iATU usage is not
+balanced, iATU0 is hot while iATU1 is rarely used. This patch refactors
+the iATU usage: iATU0 for cfg and IO, iATU1 for MEM. This allocation
+ideas comes from Minghuan Lian <Minghuan.Lian@freescale.com>:
 
-That's fine, as long as the helper knows which one is the parent and
-which one is the child.
+ http://www.spinics.net/lists/linux-pci/msg40440.html
 
-In fact, as "cute" as the mask trick is, I think it would generally make
-the code more self explanatory if it explicitly tested for the
-combinations that are supported, ie something like
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+ drivers/pci/host/pcie-designware.c | 81 +++++++++++++++++++++-----------------
+ 1 file changed, 45 insertions(+), 36 deletions(-)
 
-	if (parent_is_pref && !child_is_pref && child->pcie_only)
-		...
-	else if (!parent_is_pref)
-		...
-etc...
-
-The impact in performance would be in the noise and the logic of the
-algorithm a LOT more explicit.
-
-Cheers,
-Ben.
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1da1446..40a0db1 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -508,6 +508,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
++	if (!pp->ops->rd_other_conf)
++		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
++					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
++					  pp->mem_bus_addr, pp->mem_size);
++
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
+ 	/* program correct class for RC */
+@@ -533,66 +538,70 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 *val)
+ {
+-	int ret = PCIBIOS_SUCCESSFUL;
+-	u32 address, busdev;
++	int ret, type;
++	u32 address, busdev, cfg_size;
++	u64 cpu_addr;
++	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+ 	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+-					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
+-					  busdev, pp->cfg0_size);
+-		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
+-				val);
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+-					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
+-					  pp->mem_bus_addr, pp->mem_size);
++		type = PCIE_ATU_TYPE_CFG0;
++		cpu_addr = pp->cfg0_mod_base;
++		cfg_size = pp->cfg0_size;
++		va_cfg_base = pp->va_cfg0_base;
+ 	} else {
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+-					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
+-					  busdev, pp->cfg1_size);
+-		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
+-				val);
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+-					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+-					  pp->io_bus_addr, pp->io_size);
++		type = PCIE_ATU_TYPE_CFG1;
++		cpu_addr = pp->cfg1_mod_base;
++		cfg_size = pp->cfg1_size;
++		va_cfg_base = pp->va_cfg1_base;
+ 	}
+ 
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++				  type, cpu_addr,
++				  busdev, cfg_size);
++	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
++				  pp->io_bus_addr, pp->io_size);
++
+ 	return ret;
+ }
+ 
+ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 val)
+ {
+-	int ret = PCIBIOS_SUCCESSFUL;
+-	u32 address, busdev;
++	int ret, type;
++	u32 address, busdev, cfg_size;
++	u64 cpu_addr;
++	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+ 	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+-					  PCIE_ATU_TYPE_CFG0, pp->cfg0_mod_base,
+-					  busdev, pp->cfg0_size);
+-		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
+-				val);
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+-					  PCIE_ATU_TYPE_MEM, pp->mem_mod_base,
+-					  pp->mem_bus_addr, pp->mem_size);
++		type = PCIE_ATU_TYPE_CFG0;
++		cpu_addr = pp->cfg0_mod_base;
++		cfg_size = pp->cfg0_size;
++		va_cfg_base = pp->va_cfg0_base;
+ 	} else {
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+-					  PCIE_ATU_TYPE_CFG1, pp->cfg1_mod_base,
+-					  busdev, pp->cfg1_size);
+-		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
+-				val);
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+-					  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+-					  pp->io_bus_addr, pp->io_size);
++		type = PCIE_ATU_TYPE_CFG1;
++		cpu_addr = pp->cfg1_mod_base;
++		cfg_size = pp->cfg1_size;
++		va_cfg_base = pp->va_cfg1_base;
+ 	}
+ 
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++				  type, cpu_addr,
++				  busdev, cfg_size);
++	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
++				  pp->io_bus_addr, pp->io_size);
++
+ 	return ret;
+ }
+ 
+-- 
+2.1.4
 
