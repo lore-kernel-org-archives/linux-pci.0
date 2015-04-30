@@ -1,209 +1,243 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50290 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751210AbbDBDbU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Apr 2015 23:31:20 -0400
-Date: Thu, 2 Apr 2015 11:31:12 +0800
-From: Fam Zheng <famz@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [PATCH v5 01/10] pci: export functions for msi/msix ctrl
-Message-ID: <20150402033112.GD15412@fam-t430.nay.redhat.com>
-References: <1427641227-7574-1-git-send-email-mst@redhat.com>
- <1427641227-7574-2-git-send-email-mst@redhat.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33711 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752357AbbD3RiT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2015 13:38:19 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: bhelgaas@google.com, mst@redhat.com, plagnioj@jcrosoft.com,
+	tomi.valkeinen@ti.com, airlied@linux.ie, daniel.vetter@intel.com
+Cc: linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	cocci@systeme.lip6.fr, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
+	david.vrabel@citrix.com, jbeulich@suse.com,
+	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+	xen-devel@lists.xensource.com
+Subject: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
+Date: Thu, 30 Apr 2015 10:36:04 -0700
+Message-Id: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427641227-7574-2-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 03/29 17:04, Michael S. Tsirkin wrote:
-> move pci_msi_set_enable and pci_msix_clear_and_set_ctrl out of msi.c, so
-> we can use them will be used which MSI isn't configured in kernel.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-if
+This allows drivers to take advantage of write-combining
+when possible. The PCI specification does not allow for us
+to automatically identify a memory region which needs
+write-combining so drivers have to identify these areas
+on their own. There is IORESOURCE_PREFETCH but as clarified
+by Michael and confirmed later by Bjorn, PCI prefetch bit
+merely means bridges can combine writes and prefetch reads.
+Prefetch does not affect ordering rules and does not allow
+writes to be collapsed [0]. WC is stronger, it allows collapsing
+and changes ordering rules. WC can also hurt latency as small
+writes are buffered. Because of all this drivers needs to
+know what they are doing, we can't set a write-combining
+preference flag in the pci core automatically for drivers.
 
-s/will be used which/when/
+Lastly although there is also arch_phys_wc_add() this makes
+use of architecture specific write-combining *hacks* and
+the only one currently defined and used is MTRR for x86.
+MTRRs are legacy, limited in number, have restrictive size
+constraints, and are known to interact pooly with the BIOS.
+MTRRs should only really be considered on old video framebuffer
+drivers. If we made ioremap_wc() and similar calls start
+automatically adding MTRRs, then performance will vary wildly
+with the order of driver loading because we'll run out of MTRRs
+part-way through bootup.
 
-then
+There are a few motivations for phasing out of MTRR and
+helping driver change over to use write-combining with PAT:
 
-Reviewed-by: Fam Zheng <famz@redhat.com>
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/pci/pci.h | 21 +++++++++++++++++++++
->  drivers/pci/msi.c | 45 ++++++++++++---------------------------------
->  2 files changed, 33 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4091f82..17f213d 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -146,6 +146,27 @@ static inline void pci_no_msi(void) { }
->  static inline void pci_msi_init_pci_dev(struct pci_dev *dev) { }
->  #endif
->  
-> +static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
-> +{
-> +	u16 control;
-> +
-> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> +	control &= ~PCI_MSI_FLAGS_ENABLE;
-> +	if (enable)
-> +		control |= PCI_MSI_FLAGS_ENABLE;
-> +	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-> +}
-> +
-> +static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
-> +{
-> +	u16 ctrl;
-> +
-> +	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
-> +	ctrl &= ~clear;
-> +	ctrl |= set;
-> +	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
-> +}
-> +
->  void pci_realloc_get_opt(char *);
->  
->  static inline int pci_no_d1d2(struct pci_dev *dev)
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c3e7dfc..9942f68 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -185,27 +185,6 @@ void __weak arch_restore_msi_irqs(struct pci_dev *dev)
->  	return default_restore_msi_irqs(dev);
->  }
->  
-> -static void msi_set_enable(struct pci_dev *dev, int enable)
-> -{
-> -	u16 control;
-> -
-> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> -	control &= ~PCI_MSI_FLAGS_ENABLE;
-> -	if (enable)
-> -		control |= PCI_MSI_FLAGS_ENABLE;
-> -	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
-> -}
-> -
-> -static void msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u16 set)
-> -{
-> -	u16 ctrl;
-> -
-> -	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
-> -	ctrl &= ~clear;
-> -	ctrl |= set;
-> -	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
-> -}
-> -
->  static inline __attribute_const__ u32 msi_mask(unsigned x)
->  {
->  	/* Don't shift by >= width of type */
-> @@ -452,7 +431,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
->  	entry = irq_get_msi_desc(dev->irq);
->  
->  	pci_intx_for_msi(dev, 0);
-> -	msi_set_enable(dev, 0);
-> +	pci_msi_set_enable(dev, 0);
->  	arch_restore_msi_irqs(dev);
->  
->  	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
-> @@ -473,14 +452,14 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
->  
->  	/* route the table */
->  	pci_intx_for_msi(dev, 0);
-> -	msix_clear_and_set_ctrl(dev, 0,
-> +	pci_msix_clear_and_set_ctrl(dev, 0,
->  				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
->  
->  	arch_restore_msi_irqs(dev);
->  	list_for_each_entry(entry, &dev->msi_list, list)
->  		msix_mask_irq(entry, entry->masked);
->  
-> -	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
-> +	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
->  }
->  
->  void pci_restore_msi_state(struct pci_dev *dev)
-> @@ -647,7 +626,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->  	int ret;
->  	unsigned mask;
->  
-> -	msi_set_enable(dev, 0);	/* Disable MSI during set up */
-> +	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
->  
->  	entry = msi_setup_entry(dev, nvec);
->  	if (!entry)
-> @@ -683,7 +662,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->  
->  	/* Set MSI enabled bits	 */
->  	pci_intx_for_msi(dev, 0);
-> -	msi_set_enable(dev, 1);
-> +	pci_msi_set_enable(dev, 1);
->  	dev->msi_enabled = 1;
->  
->  	dev->irq = entry->irq;
-> @@ -775,7 +754,7 @@ static int msix_capability_init(struct pci_dev *dev,
->  	void __iomem *base;
->  
->  	/* Ensure MSI-X is disabled while it is set up */
-> -	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> +	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  
->  	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
->  	/* Request & Map MSI-X table region */
-> @@ -801,7 +780,7 @@ static int msix_capability_init(struct pci_dev *dev,
->  	 * MSI-X registers.  We need to mask all the vectors to prevent
->  	 * interrupts coming in before they're fully set up.
->  	 */
-> -	msix_clear_and_set_ctrl(dev, 0,
-> +	pci_msix_clear_and_set_ctrl(dev, 0,
->  				PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
->  
->  	msix_program_entries(dev, entries);
-> @@ -814,7 +793,7 @@ static int msix_capability_init(struct pci_dev *dev,
->  	pci_intx_for_msi(dev, 0);
->  	dev->msix_enabled = 1;
->  
-> -	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
-> +	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
->  
->  	return 0;
->  
-> @@ -919,7 +898,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
->  	BUG_ON(list_empty(&dev->msi_list));
->  	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
->  
-> -	msi_set_enable(dev, 0);
-> +	pci_msi_set_enable(dev, 0);
->  	pci_intx_for_msi(dev, 1);
->  	dev->msi_enabled = 0;
->  
-> @@ -1027,7 +1006,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
->  		__pci_msix_desc_mask_irq(entry, 1);
->  	}
->  
-> -	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> +	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  	pci_intx_for_msi(dev, 1);
->  	dev->msix_enabled = 0;
->  }
-> @@ -1069,11 +1048,11 @@ void pci_msi_init_pci_dev(struct pci_dev *dev)
->  	 */
->  	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
->  	if (dev->msi_cap)
-> -		msi_set_enable(dev, 0);
-> +		pci_msi_set_enable(dev, 0);
->  
->  	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
->  	if (dev->msix_cap)
-> -		msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> +		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  }
->  
->  /**
-> -- 
-> MST
-> 
+a) Take advantage of PAT when available
+
+b) Help bury MTRR code away, MTRR is architecture specific and on
+   x86 its replaced by PAT
+
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()")
+
+[0] https://lkml.org/lkml/2015/4/21/714
+
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: venkatesh.pallipadi@intel.com
+Cc: Stefan Bader <stefan.bader@canonical.com>
+Cc: Ville Syrjälä <syrjala@sci.fi>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Davidlohr Bueso <dbueso@suse.de>
+Cc: konrad.wilk@oracle.com
+Cc: ville.syrjala@linux.intel.com
+Cc: david.vrabel@citrix.com
+Cc: jbeulich@suse.com
+Cc: Roger Pau Monné <roger.pau@citrix.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: xen-devel@lists.xensource.com
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+
+This v5 makes the code return NULL for IORESOURCE_IO and fixes the commit
+log to clarify the conclusions reached for MTRR and our review of
+IORESOURCE_PREFETCH.
+
+ include/asm-generic/pci_iomap.h | 14 ++++++++++
+ lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 75 insertions(+)
+
+diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
+index 7389c87..b1e17fc 100644
+--- a/include/asm-generic/pci_iomap.h
++++ b/include/asm-generic/pci_iomap.h
+@@ -15,9 +15,13 @@ struct pci_dev;
+ #ifdef CONFIG_PCI
+ /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
+ extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
++extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
+ extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
+ 				     unsigned long offset,
+ 				     unsigned long maxlen);
++extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
++					unsigned long offset,
++					unsigned long maxlen);
+ /* Create a virtual mapping cookie for a port on a given PCI device.
+  * Do not call this directly, it exists to make it easier for architectures
+  * to override */
+@@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
+ 	return NULL;
+ }
+ 
++static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
++{
++	return NULL;
++}
+ static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
+ 					    unsigned long offset,
+ 					    unsigned long maxlen)
+ {
+ 	return NULL;
+ }
++static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
++					       unsigned long offset,
++					       unsigned long maxlen)
++{
++	return NULL;
++}
+ #endif
+ 
+ #endif /* __ASM_GENERIC_IO_H */
+diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
+index bcce5f1..9604dcb 100644
+--- a/lib/pci_iomap.c
++++ b/lib/pci_iomap.c
+@@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
+ EXPORT_SYMBOL(pci_iomap_range);
+ 
+ /**
++ * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
++ * @dev: PCI device that owns the BAR
++ * @bar: BAR number
++ * @offset: map memory at the given offset in BAR
++ * @maxlen: max length of the memory to map
++ *
++ * Using this function you will get a __iomem address to your device BAR.
++ * You can access it using ioread*() and iowrite*(). These functions hide
++ * the details if this is a MMIO or PIO address space and will just do what
++ * you expect from them in the correct way. When possible write combining
++ * is used.
++ *
++ * @maxlen specifies the maximum length to map. If you want to get access to
++ * the complete BAR from offset to the end, pass %0 here.
++ * */
++void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
++				 int bar,
++				 unsigned long offset,
++				 unsigned long maxlen)
++{
++	resource_size_t start = pci_resource_start(dev, bar);
++	resource_size_t len = pci_resource_len(dev, bar);
++	unsigned long flags = pci_resource_flags(dev, bar);
++
++	if (len <= offset || !start)
++		return NULL;
++	len -= offset;
++	start += offset;
++	if (maxlen && len > maxlen)
++		len = maxlen;
++	if (flags & IORESOURCE_IO)
++		return NULL;
++	if (flags & IORESOURCE_MEM)
++		return ioremap_wc(start, len);
++	/* What? */
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
++
++/**
+  * pci_iomap - create a virtual mapping cookie for a PCI BAR
+  * @dev: PCI device that owns the BAR
+  * @bar: BAR number
+@@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+ 	return pci_iomap_range(dev, bar, 0, maxlen);
+ }
+ EXPORT_SYMBOL(pci_iomap);
++
++/**
++ * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
++ * @dev: PCI device that owns the BAR
++ * @bar: BAR number
++ * @maxlen: length of the memory to map
++ *
++ * Using this function you will get a __iomem address to your device BAR.
++ * You can access it using ioread*() and iowrite*(). These functions hide
++ * the details if this is a MMIO or PIO address space and will just do what
++ * you expect from them in the correct way. When possible write combining
++ * is used.
++ *
++ * @maxlen specifies the maximum length to map. If you want to get access to
++ * the complete BAR without checking for its length first, pass %0 here.
++ * */
++void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
++{
++	return pci_iomap_wc_range(dev, bar, 0, maxlen);
++}
++EXPORT_SYMBOL_GPL(pci_iomap_wc);
+ #endif /* CONFIG_PCI */
+-- 
+2.3.2.209.gd67f9d5.dirty
+
