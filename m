@@ -1,91 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:36419 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932417AbbD1JB0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Apr 2015 05:01:26 -0400
-Message-ID: <553F4C2C.30707@hp.com>
-Date: Tue, 28 Apr 2015 17:00:28 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from mout.kundenserver.de ([212.227.17.24]:60100 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902AbbD3HzJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2015 03:55:09 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Pavel Fedin <p.fedin@samsung.com>
+Cc: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+	'Jayachandran C' <jchandra@broadcom.com>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, 'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Sergey Dyasly' <s.dyasly@samsung.com>
+Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Date: Thu, 30 Apr 2015 09:55 +0200
+Message-ID: <2123326.va7nY6tTq7@wuerfel>
+In-Reply-To: <"00b001d08310$82022b40$860681c0$@fedin"@samsung.com>
+References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com> <20150429174356.GA20947@red-moon> <"00b001d08310$82022b40$860681c0$@fedin"@samsung.com>
 MIME-Version: 1.0
-To: Baoquan He <bhe@redhat.com>
-CC: Dave Young <dyoung@redhat.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com> <20150415005731.GC19051@localhost.localdomain> <552DFB56.1070600@hp.com> <20150415064803.GF19051@localhost.localdomain> <20150424080147.GC4458@dhcp-16-116.nay.redhat.com> <20150424082528.GA23912@dhcp-128-91.nay.redhat.com> <20150424083530.GD4458@dhcp-16-116.nay.redhat.com> <20150424084957.GC23912@dhcp-128-91.nay.redhat.com> <20150428085441.GI15033@dhcp-16-116.nay.redhat.com>
-In-Reply-To: <20150428085441.GI15033@dhcp-16-116.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Baoquan,
+On Thursday 30 April 2015 09:40:10 Pavel Fedin wrote:
+> > The other bit missing is MSI handling, that should still be implemented.
+> 
+>  Hello! I decided to have a voice here.
+>  I am currently working on a virtualization project, and i have made some
+> experimental additions to PCI-Generic code which enable PCI-X support. I
+> wanted to upstream this, but as far as i can see, you are refactoring
+> everything here.
+>  Personally i think that pci_common_init_dev() is a good thing and it should
+> not be removed. Even more, perhaps it needs to be expanded with PCI-X
+> support. My current code adds a piece very similar to
+> mvebu_pcie_msi_enable(), which reads "msi-parent" property and then calls
+> of_pci_find_msi_chip_by_node().
+>  MVEBU driver then fills in hw.msi_ctrl with the obtained pointer and calls
+> pci_common_init(), which is the same as pci_common_init_dev(NULL, hw). My
+> modified Generic driver now does the same. So, the question is - may be we
+> should extract "msi-parent" handling from MVEBU and move it into
+> pci_common_init_dev() ?
+>  Just IMHO copy-pasting this function over and over again in all drivers is
+> a bad idea.
+> 
+>  And one more. pci_common_init_dev() currently does not assign bus->msi,
+> therefore IRQ domain operations do not work. I have fixed this too, but
+> perhaps it's another story...
 
-If old tables are corrupted, we will see the DMAR faults or INTR faults
-(which we have seen), or some other error messages. Most of these
-messages are from hardware. This means, hardware will do some check when 
-running. But I don't think hardware will completely check the
-tables.
+Hi Pavel,
 
-Till now, I do not have a good idea to do the check in kdump kernel.
+There are a few problems with pci_common_init_dev() that we are solving
+by not calling it:
 
+- The interface is ARM specific, and not easily extended to other
+  architectures that have requirements it does not handle today, and
+  we definitely want to share host drivers between arm, arm64, mips
+  and microblaze at least, probably most others in the long run.
 
-Thanks
-Zhenhua
+- The lack of return code and error handling means it is not good for
+  pci host drivers in loadable modules.
 
+- The way that the interface registers multiple host bridges at the
+  same time means that implementing that error handling is not possible
+  without major changes.
 
-On 04/28/2015 04:54 PM, Baoquan He wrote:
-> On 04/24/15 at 04:49pm, Dave Young wrote:
->> On 04/24/15 at 04:35pm, Baoquan He wrote:
->>> On 04/24/15 at 04:25pm, Dave Young wrote:
->>>> Hi, Baoquan
->>>>
->>>>> I support this patchset.
->>>>>
->>>>> We should not fear oldmem since reserved crashkernel region is similar.
->>>>> No one can guarantee that any crazy code won't step into crashkernel
->>>>> region just because 1st kernel says it's reversed for kdump kernel. Here
->>>>> the root table and context tables are also not built to allow legal code
->>>>> to danamge. Both of them has the risk to be corrupted, for trying our
->>>>> best to get a dumped vmcore the risk is worth being taken.
->>>>
->>>> old mem is mapped in 1st kernel so compare with the reserved crashkernel
->>>> they are more likely to be corrupted. they are totally different.
->>>
->>> Could you tell how and why they are different? Wrong code will choose
->>> root tables and context tables to danamge when they totally lose
->>> control?
->>
->> iommu will map io address to system ram, right? not to reserved ram, but
->> yes I'm assuming the page table is right, but I was worrying they are corrupted
->> while kernel panic is happening.
->
-> OK, I think we may need to think more about the old context tables
-> reuse. Currently dmar faults will cause error or warning message,
-> occasionally will cause system with iommu hang in kdump kernel. I don't
-> know what will happen if old root tables or context tables are corrupted
-> by evil code. For kdump kernel which use the similar mechanism there's a
-> verification. When load kdump kernel into reserved crashkernel region a
-> sha256 sum is calculated, then verify it when jump into kdump kernel
-> after panic. If corrupted context tables will bring worse result, then
-> we need consider giving it up and change back to the old way and try
-> to dump though there's error message.
->
-> Hi Zhenhua,
->
-> I don't know what's your plan about verification whether old root tables
-> or old context tables are corrupted. Or have you experimented that what
-> will happen if old tables are corrupted on purpose.
->
-> I am fine if you just put this in a TODO list since that's truly in a
-> rare case. But it maybe necessary to tell it in patch log.
->
-> Thanks
-> Baoquan
->
+The plan forward at this point is to move over all drivers in
+drivers/pci/host to one of the architecture-independent interfaces.
 
+There is a lot of work going on at the moment to improve those interfaces
+to reduce code duplication and to make it as easy as possible to bring
+up a PCI host controller though, and there are probably more things that
+could be included there. 
+
+	Arnd
