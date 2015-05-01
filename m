@@ -1,48 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:37387 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932205AbbDJWzQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Apr 2015 18:55:16 -0400
-Received: by igblo3 with SMTP id lo3so9501632igb.0
-        for <linux-pci@vger.kernel.org>; Fri, 10 Apr 2015 15:55:15 -0700 (PDT)
-Subject: [PATCH v6 08/10] mic: Drop pci_msi_off() call during probe
-To: "Michael S. Tsirkin" <mst@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Date: Fri, 10 Apr 2015 17:55:14 -0500
-Message-ID: <20150410225514.20848.44500.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:34090 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753349AbbEAGEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:36 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 82FA12BB0051
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:32 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164OCQ36700190
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:32 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163weW000654
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:58 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 08/21] powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
+Date: Fri,  1 May 2015 16:02:55 +1000
+Message-Id: <1430460188-31343-9-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Michael S. Tsirkin <mst@redhat.com>
+Nobody is using the this function. The patch drops it.
 
-The PCI core now disables MSI and MSI-X for all devices during enumeration
-regardless of CONFIG_PCI_MSI.  Remove device-specific code to disable
-MSI/MSI-X.
-
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/misc/mic/host/mic_intr.c |    2 --
- 1 file changed, 2 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 71 -------------------------------
+ 1 file changed, 71 deletions(-)
 
-diff --git a/drivers/misc/mic/host/mic_intr.c b/drivers/misc/mic/host/mic_intr.c
-index d686f2846ac7..b4ca6c884d19 100644
---- a/drivers/misc/mic/host/mic_intr.c
-+++ b/drivers/misc/mic/host/mic_intr.c
-@@ -363,8 +363,6 @@ static int mic_setup_intx(struct mic_device *mdev, struct pci_dev *pdev)
- {
- 	int rc;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index ef8c216..5cd8298 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1302,77 +1302,6 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+ }
+ #endif /* CONFIG_PCI_IOV */
  
--	pci_msi_off(pdev);
+-#if 0
+-static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	struct pnv_phb *phb = hose->private_data;
+-	struct pci_dn *pdn = pci_get_pdn(dev);
+-	struct pnv_ioda_pe *pe;
+-	int pe_num;
 -
- 	/* Enable intx */
- 	pci_intx(pdev, 1);
- 	rc = mic_setup_callbacks(mdev);
+-	if (!pdn) {
+-		pr_err("%s: Device tree node not associated properly\n",
+-			   pci_name(dev));
+-		return NULL;
+-	}
+-	if (pdn->pe_number != IODA_INVALID_PE)
+-		return NULL;
+-
+-	/* PE#0 has been pre-set */
+-	if (dev->bus->number == 0)
+-		pe_num = 0;
+-	else
+-		pe_num = pnv_ioda_alloc_pe(phb);
+-	if (pe_num == IODA_INVALID_PE) {
+-		pr_warning("%s: Not enough PE# available, disabling device\n",
+-			   pci_name(dev));
+-		return NULL;
+-	}
+-
+-	/* NOTE: We get only one ref to the pci_dev for the pdn, not for the
+-	 * pointer in the PE data structure, both should be destroyed at the
+-	 * same time. However, this needs to be looked at more closely again
+-	 * once we actually start removing things (Hotplug, SR-IOV, ...)
+-	 *
+-	 * At some point we want to remove the PDN completely anyways
+-	 */
+-	pe = &phb->ioda.pe_array[pe_num];
+-	pci_dev_get(dev);
+-	pdn->pcidev = dev;
+-	pdn->pe_number = pe_num;
+-	pe->pdev = dev;
+-	pe->pbus = NULL;
+-	pe->tce32_seg = -1;
+-	pe->mve_number = -1;
+-	pe->rid = dev->bus->number << 8 | pdn->devfn;
+-
+-	pe_info(pe, "Associated device to PE\n");
+-
+-	if (pnv_ioda_configure_pe(phb, pe)) {
+-		/* XXX What do we do here ? */
+-		if (pe_num)
+-			pnv_ioda_free_pe(phb, pe_num);
+-		pdn->pe_number = IODA_INVALID_PE;
+-		pe->pdev = NULL;
+-		pci_dev_put(dev);
+-		return NULL;
+-	}
+-
+-	/* Assign a DMA weight to the device */
+-	pe->dma_weight = pnv_ioda_dma_weight(dev);
+-	if (pe->dma_weight != 0) {
+-		phb->ioda.dma_weight += pe->dma_weight;
+-		phb->ioda.dma_pe_count++;
+-	}
+-
+-	/* Link the PE */
+-	pnv_ioda_link_pe_by_weight(phb, pe);
+-
+-	return pe;
+-}
+-#endif /* Useful for SRIOV case */
+-
+ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ {
+ 	struct pci_dev *dev;
+-- 
+2.1.0
 
