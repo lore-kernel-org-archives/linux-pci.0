@@ -1,112 +1,367 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:47708 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934105AbbEONie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:38:34 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 23:38:31 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id EF3572CE8050
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:38:29 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDcLXu45678812
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:38:29 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDbvt6010401
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:37:57 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V5 01/10] pci/iov: rename and export virtfn_add/virtfn_remove
-Date: Fri, 15 May 2015 21:36:55 +0800
-Message-Id: <1431697024-5710-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-yh0-f50.google.com ([209.85.213.50]:33791 "EHLO
+	mail-yh0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbbEAMyY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 08:54:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 1 May 2015 07:54:03 -0500
+Message-ID: <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During the EEH recovery, when a device's driver is not EEH aware or no
-driver is bound with a device, EEH core would do hotplug on this device.
-While it isn't feasible for a VF with usual hotplug procedure. During
-removal of a VF, virtual bus should be removed if necessary. During the
-re-creation, the pci_scan_slot() doesn't work on a VF.
++dt list
 
-This patch exports two functions to handle the hotplug case for VF
-properly. They will be invoked when the EEH core does the hotplug case for
-VFs.
+On Fri, May 1, 2015 at 1:03 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> The requirement is raised when developing the PCI hotplug feature
+> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
+> When plugging PCI adapter to one PCI slot, the firmware rescans the
+> slot and build FDT (Flat Device Tree) blob, which is sent to the
+> PowerNV PCI hotplug driver for processing. The new constructed device
+> nodes from the FDT blob are expected to be attached to the device
+> node of the PCI slot. Unfortunately, it seems we don't have a API
+> to support the scenario. The patch intends to support it by newly
+> introduced function of_fdt_add_subtree(), the design behind it is
+> shown as below:
+>
+>    * When the sub-tree FDT blob, which is owned by firmware, is
+>      received by kernel. It's copied over to the blob, which is
+>      dynamically allocated. Since then, the FDT blob owned by
+>      firmware isn't touched.
+>    * Rework unflatten_dt_node() so that the device nodes in current
+>      and deeper depth have been constructed from the FDT blob. All
+>      device nodes are marked with flag OF_DYNAMIC_HYBIRD, which is
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   10 +++++-----
- include/linux/pci.h |    2 ++
- 2 files changed, 7 insertions(+), 5 deletions(-)
+Perhaps you meant HYBRID?
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 47daf2f..f353e6f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -106,7 +106,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -181,7 +181,7 @@ failed:
- 	return rc;
- }
- 
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	struct pci_dev *virtfn;
- 
-@@ -302,7 +302,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -314,7 +314,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -343,7 +343,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
- 
- 	pcibios_sriov_disable(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..94bacfa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
--- 
-1.7.9.5
+>      similar to OF_DYNAMIC. However, device node with the flag set
+>      can be free'd, but in the way other than that for OF_DYNAMIC
+>      device nodes.
 
+The difference seems to be whether you allocate space or just point to
+the FDT for various strings/data. Is that right?
+
+>    * of_fdt_add_subtree() is the introduced API to do the work.
+
+Have you looked at overlays and if so why do they not work for your purposes?
+
+Why do you need to do this with the flattened tree?
+
+Rob
+
+>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/of/dynamic.c   |  19 +++++--
+>  drivers/of/fdt.c       | 133 ++++++++++++++++++++++++++++++++++++++++---------
+>  include/linux/of.h     |   2 +
+>  include/linux/of_fdt.h |   1 +
+>  4 files changed, 127 insertions(+), 28 deletions(-)
+>
+> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+> index 3351ef4..f562080 100644
+> --- a/drivers/of/dynamic.c
+> +++ b/drivers/of/dynamic.c
+> @@ -330,13 +330,22 @@ void of_node_release(struct kobject *kobj)
+>                 return;
+>         }
+>
+> -       if (!of_node_check_flag(node, OF_DYNAMIC))
+> +       /* Release the subtree */
+> +       if (node->subtree) {
+> +               kfree(node->subtree);
+> +               node->subtree = NULL;
+> +       }
+> +
+> +       if (!of_node_check_flag(node, OF_DYNAMIC) &&
+> +           !of_node_check_flag(node, OF_DYNAMIC_HYBIRD))
+>                 return;
+>
+>         while (prop) {
+>                 struct property *next = prop->next;
+> -               kfree(prop->name);
+> -               kfree(prop->value);
+> +               if (of_node_check_flag(node, OF_DYNAMIC)) {
+> +                       kfree(prop->name);
+> +                       kfree(prop->value);
+> +               }
+>                 kfree(prop);
+>                 prop = next;
+>
+> @@ -345,7 +354,9 @@ void of_node_release(struct kobject *kobj)
+>                         node->deadprops = NULL;
+>                 }
+>         }
+> -       kfree(node->full_name);
+> +
+> +       if (of_node_check_flag(node, OF_DYNAMIC))
+> +               kfree(node->full_name);
+>         kfree(node->data);
+>         kfree(node);
+>  }
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index cde35c5d01..7659560 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -28,6 +28,10 @@
+>  #include <asm/setup.h>  /* for COMMAND_LINE_SIZE */
+>  #include <asm/page.h>
+>
+> +#include "of_private.h"
+> +
+> +static int cur_node_depth;
+> +
+>  /*
+>   * of_fdt_limit_memory - limit the number of regions in the /memory node
+>   * @limit: maximum entries
+> @@ -168,20 +172,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+>   * @dad: Parent struct device_node
+>   * @fpsize: Size of the node path up at the current depth.
+>   */
+> -static void * unflatten_dt_node(void *blob,
+> -                               void *mem,
+> -                               int *poffset,
+> -                               struct device_node *dad,
+> -                               struct device_node **nodepp,
+> -                               unsigned long fpsize,
+> -                               bool dryrun)
+> +static void *unflatten_dt_node(void *blob,
+> +                              void *mem,
+> +                              int *poffset,
+> +                              struct device_node *dad,
+> +                              struct device_node **nodepp,
+> +                              unsigned long fpsize,
+> +                              bool dryrun,
+> +                              bool dynamic)
+>  {
+>         const __be32 *p;
+>         struct device_node *np;
+>         struct property *pp, **prev_pp = NULL;
+>         const char *pathp;
+>         unsigned int l, allocl;
+> -       static int depth = 0;
+>         int old_depth;
+>         int offset;
+>         int has_name = 0;
+> @@ -219,12 +223,18 @@ static void * unflatten_dt_node(void *blob,
+>                 }
+>         }
+>
+> -       np = unflatten_dt_alloc(&mem, sizeof(struct device_node) + allocl,
+> +       if (dynamic)
+> +               np = kzalloc(sizeof(struct device_node) + allocl, GFP_KERNEL);
+> +       else
+> +               np = unflatten_dt_alloc(&mem,
+> +                               sizeof(struct device_node) + allocl,
+>                                 __alignof__(struct device_node));
+>         if (!dryrun) {
+>                 char *fn;
+>                 of_node_init(np);
+>                 np->full_name = fn = ((char *)np) + sizeof(*np);
+> +               if (dynamic)
+> +                       of_node_set_flag(np, OF_DYNAMIC_HYBIRD);
+>                 if (new_format) {
+>                         /* rebuild full path for new format */
+>                         if (dad && dad->parent) {
+> @@ -267,8 +277,12 @@ static void * unflatten_dt_node(void *blob,
+>                 }
+>                 if (strcmp(pname, "name") == 0)
+>                         has_name = 1;
+> -               pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+> -                                       __alignof__(struct property));
+> +
+> +               if (dynamic)
+> +                       pp = kzalloc(sizeof(struct property), GFP_KERNEL);
+> +               else
+> +                       pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+> +                                               __alignof__(struct property));
+>                 if (!dryrun) {
+>                         /* We accept flattened tree phandles either in
+>                          * ePAPR-style "phandle" properties, or the
+> @@ -309,8 +323,13 @@ static void * unflatten_dt_node(void *blob,
+>                 if (pa < ps)
+>                         pa = p1;
+>                 sz = (pa - ps) + 1;
+> -               pp = unflatten_dt_alloc(&mem, sizeof(struct property) + sz,
+> -                                       __alignof__(struct property));
+> +
+> +               if (dynamic)
+> +                       pp = kzalloc(sizeof(struct property) + sz, GFP_KERNEL);
+> +               else
+> +                       pp = unflatten_dt_alloc(&mem,
+> +                                               sizeof(struct property) + sz,
+> +                                               __alignof__(struct property));
+>                 if (!dryrun) {
+>                         pp->name = "name";
+>                         pp->length = sz;
+> @@ -334,13 +353,21 @@ static void * unflatten_dt_node(void *blob,
+>                         np->type = "<NULL>";
+>         }
+>
+> -       old_depth = depth;
+> -       *poffset = fdt_next_node(blob, *poffset, &depth);
+> -       if (depth < 0)
+> -               depth = 0;
+> -       while (*poffset > 0 && depth > old_depth)
+> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+> -                                       fpsize, dryrun);
+> +       old_depth = cur_node_depth;
+> +       *poffset = fdt_next_node(blob, *poffset, &cur_node_depth);
+> +       while (*poffset > 0) {
+> +               if (cur_node_depth < old_depth)
+> +                       break;
+> +
+> +               if (cur_node_depth == old_depth)
+> +                       mem = unflatten_dt_node(blob, mem, poffset,
+> +                                               dad, NULL, fpsize,
+> +                                               dryrun, dynamic);
+> +               else if (cur_node_depth > old_depth)
+> +                       mem = unflatten_dt_node(blob, mem, poffset,
+> +                                               np, NULL, fpsize,
+> +                                               dryrun, dynamic);
+> +       }
+>
+>         if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+>                 pr_err("unflatten: error %d processing FDT\n", *poffset);
+> @@ -379,8 +406,8 @@ static void * unflatten_dt_node(void *blob,
+>   * for the resulting tree
+>   */
+>  static void __unflatten_device_tree(void *blob,
+> -                            struct device_node **mynodes,
+> -                            void * (*dt_alloc)(u64 size, u64 align))
+> +                               struct device_node **mynodes,
+> +                               void * (*dt_alloc)(u64 size, u64 align))
+>  {
+>         unsigned long size;
+>         int start;
+> @@ -405,7 +432,9 @@ static void __unflatten_device_tree(void *blob,
+>
+>         /* First pass, scan for size */
+>         start = 0;
+> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+> +       cur_node_depth = 1;
+> +       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL,
+> +                                               NULL, 0, true, false);
+>         size = ALIGN(size, 4);
+>
+>         pr_debug("  size is %lx, allocating...\n", size);
+> @@ -420,7 +449,8 @@ static void __unflatten_device_tree(void *blob,
+>
+>         /* Second pass, do actual unflattening */
+>         start = 0;
+> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+> +       cur_node_depth = 1;
+> +       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false, false);
+>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>                 pr_warning("End of tree marker overwritten: %08x\n",
+>                            be32_to_cpup(mem + size));
+> @@ -448,6 +478,61 @@ void of_fdt_unflatten_tree(unsigned long *blob,
+>  }
+>  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+>
+> +static void populate_sysfs_for_child_nodes(struct device_node *parent)
+> +{
+> +       struct device_node *child;
+> +
+> +       for_each_child_of_node(parent, child) {
+> +               __of_attach_node_sysfs(child);
+> +               populate_sysfs_for_child_nodes(child);
+> +       }
+> +}
+> +
+> +/**
+> + * of_fdt_add_substree - Create sub-tree of device nodes
+> + * @parent: parent device node to which the sub-tree will attach
+> + * @blob: flat device tree blob representing the sub-tree
+> + *
+> + * Copy over the FDT blob, which passed from firmware, and then
+> + * unflatten the sub-tree.
+> + */
+> +void of_fdt_add_subtree(struct device_node *parent, void *blob)
+> +{
+> +       int start = 0;
+> +
+> +       /* Validate the header */
+> +       if (!blob || fdt_check_header(blob)) {
+> +               pr_err("%s: Invalid device-tree blob header at 0x%p\n",
+> +                      __func__, blob);
+> +               return;
+> +       }
+> +
+> +       /* Free the flat blob for last time lazily */
+> +       if (parent->subtree) {
+> +               kfree(parent->subtree);
+> +               parent->subtree = NULL;
+> +       }
+> +
+> +       /* Copy over the flat blob */
+> +       parent->subtree = kzalloc(fdt_totalsize(blob), GFP_KERNEL);
+> +       if (!parent->subtree) {
+> +               pr_err("%s: Cannot copy over device-tree blob\n",
+> +                      __func__);
+> +               return;
+> +       }
+> +
+> +       memcpy(parent->subtree, blob, fdt_totalsize(blob));
+> +
+> +       /* Unflatten it */
+> +       mutex_lock(&of_mutex);
+> +       cur_node_depth = 1;
+> +       unflatten_dt_node(parent->subtree, NULL, &start, parent, NULL,
+> +                         strlen(parent->full_name), false, true);
+> +       populate_sysfs_for_child_nodes(parent);
+> +       mutex_unlock(&of_mutex);
+> +}
+> +EXPORT_SYMBOL(of_fdt_add_subtree);
+> +
+>  /* Everything below here references initial_boot_params directly. */
+>  int __initdata dt_root_addr_cells;
+>  int __initdata dt_root_size_cells;
+> diff --git a/include/linux/of.h b/include/linux/of.h
+> index ddeaae6..ac50b02 100644
+> --- a/include/linux/of.h
+> +++ b/include/linux/of.h
+> @@ -60,6 +60,7 @@ struct device_node {
+>         struct  device_node *sibling;
+>         struct  kobject kobj;
+>         unsigned long _flags;
+> +       void    *subtree;
+>         void    *data;
+>  #if defined(CONFIG_SPARC)
+>         const char *path_component_name;
+> @@ -222,6 +223,7 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
+>  #define OF_DETACHED    2 /* node has been detached from the device tree */
+>  #define OF_POPULATED   3 /* device already created for the node */
+>  #define OF_POPULATED_BUS       4 /* of_platform_populate recursed to children of this node */
+> +#define OF_DYNAMIC_HYBIRD      5 /* similar to OF_DYNAMIC, but partially */
+>
+>  #define OF_IS_DYNAMIC(x) test_bit(OF_DYNAMIC, &x->_flags)
+>  #define OF_MARK_DYNAMIC(x) set_bit(OF_DYNAMIC, &x->_flags)
+> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+> index 587ee50..1fb47d7 100644
+> --- a/include/linux/of_fdt.h
+> +++ b/include/linux/of_fdt.h
+> @@ -39,6 +39,7 @@ extern int of_fdt_match(const void *blob, unsigned long node,
+>                         const char *const *compat);
+>  extern void of_fdt_unflatten_tree(unsigned long *blob,
+>                                struct device_node **mynodes);
+> +extern void of_fdt_add_subtree(struct device_node *parent, void *blob);
+>
+>  /* TBD: Temporary export of fdt globals - remove when code fully merged */
+>  extern int __initdata dt_root_addr_cells;
+> --
+> 2.1.0
+>
