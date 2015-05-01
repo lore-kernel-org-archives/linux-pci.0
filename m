@@ -1,46 +1,97 @@
-Return-Path: <davem@davemloft.net>
-Date: Fri, 03 Apr 2015 12:48:55 -0400 (EDT)
-Message-Id: <20150403.124855.96516097693494126.davem@davemloft.net>
-To: bhelgaas@google.com
-Cc: bjorn@helgaas.com, bjorn.helgaas@gmail.com, sparclinux@vger.kernel.org,
- linux-pci@vger.kernel.org, yinghai@kernel.org, david.ahern@oracle.com,
- linux-kernel@vger.kernel.org
-Subject: Re: d63e2e1f3df breaks sparc/T5-8
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20150403154526.GB10892@google.com>
-References: <CABhMZUVqgsYdT4wn2H8hsrh4f=6hT0G+sg=wwYSt33+jtvBS9A@mail.gmail.com>
-	<20150329.113250.2136683943336875789.davem@davemloft.net>
-	<20150403154526.GB10892@google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:56860 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753355AbbEAGEi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:38 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:36 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 142B02BB0040
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:33 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164O6H43974742
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:33 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163wFD000678
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:59 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 10/21] powerpc/powernv: Fundamental reset for PCI bus reset
+Date: Fri,  1 May 2015 16:02:57 +1000
+Message-Id: <1430460188-31343-11-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 3 Apr 2015 10:45:26 -0500
+Function pnv_pci_reset_secondary_bus() is used to reset specified
+PCI bus, which is leaded by root complex or PCI bridge. That means
+the function shouldn't be called on PCI root bus and the patch
+removes the logic for that case.
 
-> On Sun, Mar 29, 2015 at 11:32:50AM -0700, David Miller wrote:
->> From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
->> Date: Sun, 29 Mar 2015 08:30:40 -0500
->> 
->> > Help me understand the sparc64 situation: are you saying that BAR
->> > addresses, i.e., MMIO transactions from a CPU or a peer-to-peer DMA can be
->> > 64 bits, but a DMA to main memory can only be 32 bits?
->> > 
->> > I assume this would work if we made dma_addr_t 64 bits on sparc64.  What
->> > would be the cost of doing that?
->> 
->> The cost is 4 extra bytes in every datastructure, kernel wide, that
->> stores DMA addresses.
-> 
-> That much is fairly obvious.  What I don't know is how much difference this
-> makes in the end.
+Also, some adapters beneath the indicated PCI bus may require
+fundamental reset in order to successfully reload their firmwares
+after the reset. The patch translates hot reset to fundamental reset
+for that case.
 
-Networking drivers, and perhaps block drivers too, have a data
-structure for each entry in the send/receive rings for the device and
-these can be huge.  And each ring entry stores one or more DMA
-addresses.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
-Larger types mean more memory, but also more capacity cache misses in
-critical code paths.
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 3c01095..58e4dcf 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+ }
+ 
+-void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
++static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+ {
+-	struct pci_controller *hose;
++	int *freset = data;
+ 
+-	if (pci_is_root_bus(dev->bus)) {
+-		hose = pci_bus_to_host(dev->bus);
+-		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
+-		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
+-	} else {
+-		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+-		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
++	/*
++	 * Stop the iteration immediately if there is any
++	 * one PCI device requesting fundamental reset
++	 */
++	*freset |= pdev->needs_freset;
++	return *freset;
++}
++
++void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
++{
++	int option = EEH_RESET_HOT;
++	int freset = 0;
++
++	/* Check if there're any PCI devices asking for fundamental reset */
++	if (pdev->subordinate) {
++		pci_walk_bus(pdev->subordinate,
++			     pnv_pci_dev_reset_type,
++			     &freset);
++		if (freset)
++			option = EEH_RESET_FUNDAMENTAL;
+ 	}
++
++	/* Issue the requested type of reset */
++	pnv_eeh_bridge_reset(pdev, option);
++	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
+ }
+ 
+ /**
+-- 
+2.1.0
 
-I'm really sorry if this isn't painfully obvious to you.
