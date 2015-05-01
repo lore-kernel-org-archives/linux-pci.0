@@ -1,85 +1,148 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <551E825F.9060304@linaro.org>
-Date: Fri, 03 Apr 2015 14:06:55 +0200
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-MIME-Version: 1.0
-To: bhelgaas@google.com
-CC: wangyijing@huawei.com, arnd@arndb.de, hanjun.guo@linaro.org,
-	Liviu.Dudau@arm.com, tglx@linutronix.de, mingo@redhat.com,
-	hpa@zytor.com, rjw@rjwysocki.net, al.stone@linaro.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH v4 0/9] PCI: MMCONFIG clean up
-References: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
-In-Reply-To: <1426083169-8698-1-git-send-email-tomasz.nowicki@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:51623 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935AbbEAGEL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:11 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:09 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7906C357804F
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:07 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4163xpA29950014
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:07 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163Xnn000445
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:34 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 00/21] PowerPC/PowerNV: PCI Slot Management
+Date: Fri,  1 May 2015 16:02:47 +1000
+Message-Id: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The series of patches intend to support PCI slot for PowerPC PowerNV platform,
+which is running on top of skiboot firmware. The patchset requires corresponding
+changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
+for review. The PCI slots are exposed by skiboot with device node properties,
+and kernel utilizes those properties to populated PCI slots accordingly.
 
-Any comments before I post next version ?
+The original PCI infrastructure on PowerNV platform can't support hotplug 
+because the PE is assigned during PHB fixup time, which is called for once
+during system boot time. For this, the PCI infrastructure on PowerNV platform
+has been reworked for a lot. After that, the PE and its corresponding resources
+(IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
+PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
+resources, on P8 strictly speaking). Each PE will maintain a reference count,
+which is (number of child PCI devices + 1). That indicates when last child PCI
+device leaves the PE, the PE and its included resources will be relased and put
+back into free pool again. With this design, the PE will be released when EEH PE
+is released. PATCH[1 - 8] are related to this part.
 
-Regards,
-Tomasz
+>From skiboot perspective, PCI slot is providing (hot/fundamental/complete) 
+resets to EEH. The kernel gets to know if skiboot supports various reset on one 
+particular PCI slot through device-tree node. If it does, EEH will utilize the 
+functionality provided by skiboot. Besides, the device-tree nodes have to change
+in order to support PCI hotplug. For example, when one PCI adapter inserted to
+one slot, its device-tree node should be added to the system dynamically. Conversely,
+the device-tree node should be removed from the system when the PCI adapter is going
+to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
+they should be added/removed accordingly during PCI hotplug. Patch[9 - 20] are
+doing the related work.
 
-On 11.03.2015 15:12, Tomasz Nowicki wrote:
-> MCFG ACPI table and PCI ECAM standard have no arch dependencies so it can be
-> used across all architectures. Currently MMCONFIG related code resides in
-> arch/x86 directories. This patch set is going to isolate non-architecture
-> specific code and make it accessible for all architectures.
->
-> v3 -> v4 changes:
-> - bug fixes after kbuild test robot report
->      - add asm/io.h header for ecam.c
->      - rename mmcfg -> ecam for drivers/xen/pci.c and arch/x86/pci/numachip.c
-> - rework Kconfig logic
->
-> v2 -> v3 changes:
-> - rebase patch set v2 to v4.0-rc1
->
-> v1 -> v2 changes:
-> - use generic readb/readw etc. accessors instead of AMD Fam10h workaround
-> - separate ACPI and ECAM code
-> - improve ECAM code naming
->
-> Tomasz Nowicki (9):
->    x86, pci: Clean up comment about buggy MMIO config space access for
->      AMD Fam10h CPUs.
->    x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
->      exclusively.
->    x86, pci: Reorder logic of pci_mmconfig_insert() function
->    x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
->      out of arch/x86/ directory
->    pci, acpi, mcfg: Provide generic implementation of MCFG code
->      initialization.
->    x86, pci: mmconfig_{32,64}.c code refactoring - remove code
->      duplication.
->    x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
->      driver.
->    pci, acpi, mcfg: Share ACPI PCI config space accessors.
->    pci, ecam: Improve naming for ecam.c content and areas where it is
->      used.
->
->   arch/x86/Kconfig               |   4 +
->   arch/x86/include/asm/pci_x86.h |  34 +---
->   arch/x86/pci/Makefile          |   5 +-
->   arch/x86/pci/acpi.c            |   3 +-
->   arch/x86/pci/mmconfig-shared.c | 346 +++++++++++----------------------------
->   arch/x86/pci/mmconfig_32.c     |  47 ++----
->   arch/x86/pci/mmconfig_64.c     | 153 ------------------
->   arch/x86/pci/numachip.c        |  29 +---
->   drivers/acpi/Makefile          |   1 +
->   drivers/acpi/mcfg.c            | 121 ++++++++++++++
->   drivers/pci/Kconfig            |  10 ++
->   drivers/pci/Makefile           |   5 +
->   drivers/pci/ecam.c             | 358 +++++++++++++++++++++++++++++++++++++++++
->   drivers/xen/pci.c              |   7 +-
->   include/linux/ecam.h           |  56 +++++++
->   15 files changed, 679 insertions(+), 500 deletions(-)
->   delete mode 100644 arch/x86/pci/mmconfig_64.c
->   create mode 100644 drivers/acpi/mcfg.c
->   create mode 100644 drivers/pci/ecam.c
->   create mode 100644 include/linux/ecam.h
->
+The last patch is the standalone PCI hotplug driver for PowerNV platform. When
+removing PCI adapter from one PCI slot, which is invoked by command in userland,
+the skiboot will power off the slot to save power and remove all device-tree
+nodes for all PCI devices behind the slot. Conversely, the Power to the slot
+is turned on, the PCI devices behind the slot is rescanned, and the device-tree
+nodes for those newly detected PCI devices will be built in skiboot. For both
+of cases, one message will be sent to kernel by skiboot so that the kernel
+can adjust the device-tree accordingly. At the same time, the kernel also have
+to deallocate or allocate PE# and its related resources (PE# and so on) for the
+removed/added PCI devices.
+
+Changelog
+=========
+v4:
+   * Rebased to 4.1.RC1
+   * Added API to unflatten FDT blob to device node sub-tree, which is attached
+     the indicated parent device node. The original mechanism based on formatted
+     string stream has been dropped.
+   * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
+     was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
+     Support" depends on that.
+v3:
+   * Rebased to 4.1.RC0
+   * PowerNV PCI infrasturcture is total refactored in order to support PCI
+     hotplug. The PowerNV hotplug driver is also reworked a lot because of
+     the changes in skiboot in order to support PCI hotplug.
+
+Gavin Shan (21):
+  pci: Add pcibios_setup_bridge()
+  powerpc/powernv: Enable M64 on P7IOC
+  powerpc/powernv: M64 support improvement
+  powerpc/powernv: Improve IO and M32 mapping
+  powerpc/powernv: Improve DMA32 segment assignment
+  powerpc/powernv: Create PEs dynamically
+  powerpc/powernv: Release PEs dynamically
+  powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
+  powerpc/powernv: Use PCI slot reset infrastructure
+  powerpc/powernv: Fundamental reset for PCI bus reset
+  powerpc/pci: Don't scan empty slot
+  powerpc/pci: Move pcibios_find_pci_bus() around
+  powerpc/powernv: Introduce pnv_pci_poll()
+  powerpc/powernv: Functions to get/reset PCI slot status
+  powerpc/pci: Delay creating pci_dn
+  powerpc/pci: Create eeh_dev while creating pci_dn
+  powerpc/pci: Export traverse_pci_device_nodes()
+  powerpc/pci: Update bridge windows on PCI plugging
+  drivers/of: Support adding sub-tree
+  powerpc/powernv: Select OF_DYNAMIC
+  pci/hotplug: PowerPC PowerNV PCI hotplug driver
+
+ arch/powerpc/include/asm/eeh.h                 |    7 +-
+ arch/powerpc/include/asm/opal-api.h            |    7 +-
+ arch/powerpc/include/asm/opal.h                |    7 +-
+ arch/powerpc/include/asm/pci-bridge.h          |    7 +-
+ arch/powerpc/include/asm/pnv-pci.h             |    5 +
+ arch/powerpc/include/asm/ppc-pci.h             |    7 +-
+ arch/powerpc/kernel/eeh_dev.c                  |   20 +-
+ arch/powerpc/kernel/pci-common.c               |   18 +-
+ arch/powerpc/kernel/pci-hotplug.c              |   44 +-
+ arch/powerpc/kernel/pci_dn.c                   |  119 +-
+ arch/powerpc/platforms/maple/pci.c             |   35 +-
+ arch/powerpc/platforms/pasemi/pci.c            |    3 -
+ arch/powerpc/platforms/powermac/pci.c          |   39 +-
+ arch/powerpc/platforms/powernv/Kconfig         |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c   |  245 ++--
+ arch/powerpc/platforms/powernv/opal-wrappers.S |    3 +
+ arch/powerpc/platforms/powernv/pci-ioda.c      | 1657 +++++++++++++++---------
+ arch/powerpc/platforms/powernv/pci.c           |   64 +-
+ arch/powerpc/platforms/powernv/pci.h           |   52 +-
+ arch/powerpc/platforms/pseries/msi.c           |    4 +-
+ arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
+ arch/powerpc/platforms/pseries/setup.c         |    9 +-
+ drivers/of/dynamic.c                           |   19 +-
+ drivers/of/fdt.c                               |  133 +-
+ drivers/pci/hotplug/Kconfig                    |   12 +
+ drivers/pci/hotplug/Makefile                   |    4 +
+ drivers/pci/hotplug/powernv_php.c              |  146 +++
+ drivers/pci/hotplug/powernv_php.h              |   78 ++
+ drivers/pci/hotplug/powernv_php_slot.c         |  643 +++++++++
+ drivers/pci/setup-bus.c                        |   12 +-
+ include/linux/of.h                             |    2 +
+ include/linux/of_fdt.h                         |    1 +
+ include/linux/pci.h                            |    1 +
+ 33 files changed, 2473 insertions(+), 963 deletions(-)
+ create mode 100644 drivers/pci/hotplug/powernv_php.c
+ create mode 100644 drivers/pci/hotplug/powernv_php.h
+ create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
+
+-- 
+2.1.0
+
