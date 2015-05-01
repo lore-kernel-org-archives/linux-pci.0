@@ -1,72 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45776 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751468AbbE0UEJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 May 2015 16:04:09 -0400
-Date: Wed, 27 May 2015 22:04:02 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	tomi.valkeinen@ti.com, airlied@linux.ie,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com, Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
-Subject: Re: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
-Message-ID: <20150527200402.GS23057@wotan.suse.de>
-References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
- <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
- <20150521223321.GG32152@google.com>
- <20150522002341.GM23057@wotan.suse.de>
- <20150526174008.GN32152@google.com>
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:32829 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751580AbbEASrF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 14:47:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150526174008.GN32152@google.com>
+In-Reply-To: <1430493730.7979.58.camel@kernel.crashing.org>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 1 May 2015 13:46:44 -0500
+Message-ID: <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 12:40:08PM -0500, Bjorn Helgaas wrote:
-> On Fri, May 22, 2015 at 02:23:41AM +0200, Luis R. Rodriguez wrote:
-> > On Thu, May 21, 2015 at 05:33:21PM -0500, Bjorn Helgaas wrote:
-> > > 
-> > > I tentatively put this (and the rest of the series) on a pci/resource
-> > > branch.  I'm hoping you'll propose some clarification about
-> > > EXPORT_SYMBOL_GPL().
-> > 
-> > EXPORT_SYMBOL_GPL() also serves to ensure only GPL modules can
-> > only run that code. So for instance although we have "Dual BSD/GPL"
-> > tags for modules pure "BSD" tags do not exist for module tags and
-> > cannot run EXPORT_SYMBOL_GPL() code [0]. Also there is some folks
-> > who do believe tha at run time all kernel modules are GPL [1] [2].
-> > And to be precise even though the FSF may claim a list of licenses
-> > are GPL-compatible we cannot rely on this list alone for our own
-> > goals and if folks want to use our EXPORT_SYMBOL_GPL()s they must
-> > discuss this on lkml [2].
-> 
-> By "propose some clarification," I meant that I hoped you would propose a
-> patch to Documentation/ that would give maintainers some guidance.
+On Fri, May 1, 2015 at 10:22 AM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2015-05-01 at 07:54 -0500, Rob Herring wrote:
+>
+>> The difference seems to be whether you allocate space or just point to
+>> the FDT for various strings/data. Is that right?
+>>
+>> >    * of_fdt_add_subtree() is the introduced API to do the work.
+>>
+>> Have you looked at overlays and if so why do they not work for your purposes?
+>>
+>> Why do you need to do this with the flattened tree?
+>
+> The basic idea I asked Gavin to implement is that since the FW needs to
+> provide a bunch of DT updates to Linux at runtime in the form of new
+> nodes below an existing one, rather than doing it via some new/custom
+> format, instead, have it send a bit of FDT blob to expand under an
+> existing node.
 
-I *really really* would hate to do so but only because you insist, I'll look
-into this...
+Overlay = an FDT blob to graft into a live running system. Sounds like
+the same thing.
 
-ASDF
+> As for the details of Gavin implementation, I haven't looked at it in
+> details yet so there might be issues there, however I don't know what
+> you mean by "overlays", any pointer ?
 
-  Luis
+CONFIG_OF_OVERLAY
+
+http://events.linuxfoundation.org/sites/events/files/slides/dynamic-dt-keynote-v3.pdf
+
+Rob
