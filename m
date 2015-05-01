@@ -1,87 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:46328 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932456AbbENMPc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2015 08:15:32 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 14 May 2015 17:45:29 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id C8FD2E005A
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 17:48:26 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4ECFOcw42139758
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 17:45:24 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4ECFNpf002756
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 17:45:24 +0530
-Date: Thu, 14 May 2015 22:15:17 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 9/9] powerpc/eeh: handle VF PE properly
-Message-ID: <20150514121516.GA12847@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-10-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150513011630.GA8973@gwshan>
- <20150514093531.GA12847@richard>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:18123 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbbEASpW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 14:45:22 -0400
+From: <wdavis@nvidia.com>
+To: joro@8bytes.org
+CC: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 1/6] dma-debug: add checking for map/unmap_resource
+Date: Fri, 1 May 2015 13:32:13 -0500
+Message-ID: <1430505138-2877-2-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150514093531.GA12847@richard>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 14, 2015 at 05:35:31PM +0800, Wei Yang wrote:
->On Wed, May 13, 2015 at 11:16:30AM +1000, Gavin Shan wrote:
->>On Mon, May 04, 2015 at 03:07:38PM +0800, Wei Yang wrote:
->>
->>	if (!edev->physfn) {
->>		pr_warn("%s: EEH dev %04x:%02x:%02x:%01x not for VF\n",
->>			edev->phb->global_number, pdn->busno,
->>			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
->>		return NULL;
->>	}
->>
->>>+
->>>+	driver = eeh_pcid_get(dev);
->>>+	if (driver) {
->>>+		eeh_pcid_put(dev);
->>>+		if (driver->err_handler)
->>>+			return NULL;
->>>+	}
->>
->>dev and driver are NULL for those VFs that have been unplugged. For those
->>VFs weren't unplugged, driver and err_handler should be valid. The code
->>looks correct. However, for consistence, please use EEH_DEV_DISCONNECTED
->>that has been marked to those EEH devices which were unplugged. Do you
->>think it would be better?
->>
->>	if (!(dev->flags & EEH_DEV_DISCONNECTED))
->>		return NULL;
->>
->
->
->I think this is a nice idea, while this may not work.
->
->We mark the DISCONNECTED flag when remove a PCI device, while before we do the
->hot plug we will detach it from the tree and remove this flag in
->eeh_pe_detach_dev().
->
->This will leads to the VF not be hot plugged.
->
+From: Will Davis <wdavis@nvidia.com>
 
-Ok, the following way, with the original idea improved for a bit, would
-work for you:
+Add debug callbacks for the new dma_map_resource and dma_unmap_resource
+functions.
 
-- Don't clear DISCONNECTED flag in eeh_pe_detach_dev().
-- Use the flag for your case.
-- Clear DISCONNECTED flag after the hogplug is done, right before
-  eeh_pe_state_clear(pe, EEH_PE_KEEP) in eeh_reset_device().
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/linux/dma-debug.h | 20 ++++++++++++++++++++
+ lib/dma-debug.c           | 48 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+)
 
-Thanks,
-Gavin
-
+diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
+index fe8cb61..19f328c 100644
+--- a/include/linux/dma-debug.h
++++ b/include/linux/dma-debug.h
+@@ -44,6 +44,13 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
+ extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ 				 size_t size, int direction, bool map_single);
+ 
++extern void debug_dma_map_resource(struct device *dev, struct resource *res,
++				   size_t offset, size_t size, int direction,
++				   dma_addr_t dma_addr);
++
++extern void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
++				     size_t size, int direction);
++
+ extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 			     int nents, int mapped_ents, int direction);
+ 
+@@ -120,6 +127,19 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ {
+ }
+ 
++static inline void debug_dma_map_resource(struct device *dev,
++					  struct resource *res, size_t offset,
++					  size_t size, int direction,
++					  dma_addr_t dma_addr)
++{
++}
++
++static inline void debug_dma_unmap_resource(struct device *dev,
++					    dma_addr_t addr, size_t size,
++					    int direction)
++{
++}
++
+ static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 				    int nents, int mapped_ents, int direction)
+ {
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index ae4b65e..0ef092f 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -43,6 +43,7 @@ enum {
+ 	dma_debug_page,
+ 	dma_debug_sg,
+ 	dma_debug_coherent,
++	dma_debug_resource,
+ };
+ 
+ enum map_err_types {
+@@ -1348,6 +1349,53 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ }
+ EXPORT_SYMBOL(debug_dma_unmap_page);
+ 
++void debug_dma_map_resource(struct device *dev, struct resource *resource,
++			    size_t offset, size_t size, int direction,
++			    dma_addr_t dma_addr)
++{
++	struct dma_debug_entry *entry;
++
++	if (unlikely(dma_debug_disabled()))
++		return;
++
++	if (dma_mapping_error(dev, dma_addr))
++		return;
++
++	entry = dma_entry_alloc();
++	if (!entry)
++		return;
++
++	entry->dev       = dev;
++	entry->type      = dma_debug_resource;
++	entry->pfn       = resource->start >> PAGE_SHIFT;
++	entry->offset    = offset,
++	entry->dev_addr  = dma_addr;
++	entry->size      = size;
++	entry->direction = direction;
++	entry->map_err_type = MAP_ERR_NOT_CHECKED;
++
++	add_dma_entry(entry);
++}
++EXPORT_SYMBOL(debug_dma_map_resource);
++
++void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
++			      size_t size, int direction)
++{
++	struct dma_debug_entry ref = {
++		.type           = dma_debug_resource,
++		.dev            = dev,
++		.dev_addr       = addr,
++		.size           = size,
++		.direction      = direction,
++	};
++
++	if (unlikely(dma_debug_disabled()))
++		return;
++
++	check_unmap(&ref);
++}
++EXPORT_SYMBOL(debug_dma_unmap_resource);
++
+ void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 		      int nents, int mapped_ents, int direction)
+ {
+-- 
+2.3.7
 
