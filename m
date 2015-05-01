@@ -1,101 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: [PATCH v2 1/5] DT: phy: qcom: Add PCIe PHY devicetree bindings
-Date: Mon,  4 May 2015 15:42:14 +0300
-Message-Id: <1430743338-10441-2-git-send-email-svarbanov@mm-sol.com>
-In-Reply-To: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:19621 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839AbbEASpV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 14:45:21 -0400
+From: <wdavis@nvidia.com>
+To: joro@8bytes.org
+CC: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+Date: Fri, 1 May 2015 13:32:12 -0500
+Message-ID: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document Qualcomm PCIe PHY devicetree bindings.
+From: Will Davis <wdavis@nvidia.com>
 
-Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
----
- .../devicetree/bindings/phy/qcom-pcie-phy.txt      |   60 ++++++++++++++++++++
- 1 files changed, 60 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/qcom-pcie-phy.txt
+Hi,
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom-pcie-phy.txt b/Documentation/devicetree/bindings/phy/qcom-pcie-phy.txt
-new file mode 100644
-index 0000000..e4c7f9c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/qcom-pcie-phy.txt
-@@ -0,0 +1,60 @@
-+* Qualcomm PCIe PHY controller
-+
-+PCIe PHY nodes are defined to describe on-chip PCIe Physical layer controllers.
-+Each PCIe PHY controller should have its own node.
-+
-+- compatible:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Value should contain "qcom,pcie-phy"
-+
-+- reg:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: Offset and length of the PCIe PHY registers
-+
-+- #phy-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Must be zero
-+
-+- clocks:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: A list of phandles and clock specifier pair, one
-+		    for each entry in clock-names property
-+
-+- clock-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain "core" for PHY core clock
-+
-+- resets:
-+	Usage: required
-+	Value type: <phandle>
-+	Definition: List of phandle and reset specifier pairs as listed
-+		    in reset-names property
-+
-+- reset-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain "core" for PHY core reset
-+
-+- <name>-supply:
-+	Usage: required
-+	Value type: <phandle>
-+	Definition: List of phandles to the power supply regulators
-+		    - "vdda_pll" analog Vdd PLL power supply
-+
-+* Example
-+
-+	pciephy0: phy@fc526000 {
-+		compatible = "qcom,pcie-phy";
-+		reg = <0xfc526000 0x1000>;
-+		clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
-+		clock-names = "core";
-+		resets = <&gcc GCC_PCIE_0_PHY_BCR>;
-+		reset-names = "core";
-+		vdda_pll-supply = <&pma8084_l12>;
-+		#phy-cells = <0>;
-+	};
+This patch series adds DMA APIs to map and unmap a struct resource to and from
+a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
+of these interfaces.
+
+This solves a long-standing problem with the existing DMA-remapping interfaces,
+which require that a struct page be given for the region to be mapped into a
+device's IOVA domain. This requirement cannot support peer device BAR ranges,
+for which no struct pages exist.
+
+The underlying implementations of map_page and map_sg convert the struct page
+into its physical address anyway, so we just need a way to route the physical
+address of the BAR region to these implementations. The new interfaces do this
+by taking the struct resource describing a device's BAR region, from which the
+physical address is derived.
+
+The Intel and nommu versions have been verified on a dual Intel Xeon E5405
+workstation. I'm in the process of obtaining hardware to test the AMD version
+as well. Please review.
+
+Thanks,
+Will
+
+Will Davis (6):
+  dma-debug: add checking for map/unmap_resource
+  DMA-API: Introduce dma_(un)map_resource
+  dma-mapping: pci: add pci_(un)map_resource
+  iommu/amd: Implement (un)map_resource
+  iommu/vt-d: implement (un)map_resource
+  x86: add pci-nommu implementation of map_resource
+
+ arch/x86/kernel/pci-nommu.c              | 17 +++++++
+ drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
+ drivers/iommu/intel-iommu.c              | 18 ++++++++
+ include/asm-generic/dma-mapping-broken.h |  9 ++++
+ include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
+ include/asm-generic/pci-dma-compat.h     | 14 ++++++
+ include/linux/dma-debug.h                | 20 +++++++++
+ include/linux/dma-mapping.h              |  7 +++
+ lib/dma-debug.c                          | 48 ++++++++++++++++++++
+ 9 files changed, 230 insertions(+), 13 deletions(-)
+
 -- 
-1.7.0.4
+2.3.7
 
