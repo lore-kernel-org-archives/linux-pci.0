@@ -1,336 +1,431 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dimitri Sivanich <sivanich@sgi.com>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Grant Likely <grant.likely@linaro.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch Part2 v5 01/33] x86/irq: Kill unused old IOAPIC irqdomain interfaces
-Date: Tue, 14 Apr 2015 10:29:38 +0800
-Message-Id: <1428978610-28986-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1428978610-28986-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:51654 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279AbbEAGEf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:35 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:34 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 1C24A2CE805A
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:32 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164NhD17301556
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:32 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163vnM009572
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:58 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 05/21] powerpc/powernv: Improve DMA32 segment assignment
+Date: Fri,  1 May 2015 16:02:52 +1000
+Message-Id: <1430460188-31343-6-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have converted to hierarchy irqdomain, so kill unused old IOAPIC
-irqdomain interfaces and code.
+For P7IOC, the whole available DMA32 space, which is below the
+MEM32 space, is evenly divided into 256MB segments. How many
+continuous segments assigned to one particular PE depends on
+the PE's DMA weight that is figured out from the type of each
+PCI devices contained in the PE, and PHB's DMA weight which is
+accumulative DMA weight of PEs contained in the PHB. It means
+that the PHB's DMA weight calculation depends on existing PEs,
+which works perfectly now, but not hotplug friendly. As the
+whole available DMA32 space can be assigned to one PE on PHB3,
+so we don't have the issue on PHB3.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Grant Likely <grant.likely@linaro.org>
-Link: http://lkml.kernel.org/r/1416901802-24211-11-git-send-email-jiang.liu@linux.intel.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Joerg Roedel <jroedel@suse.de>
+The patch improves DMA32 segment assignment by removing the
+dependency of existing PEs to make the piece of logic friendly
+to PCI hotplug. Besides, it's always worthy to trace the DMA32
+segments consumed by one PE, which can be released at PCI
+unplugging time.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/include/asm/io_apic.h |    4 -
- arch/x86/kernel/apic/io_apic.c |  202 +---------------------------------------
- 2 files changed, 1 insertion(+), 205 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 204 ++++++++++++++++--------------
+ arch/powerpc/platforms/powernv/pci.h      |  24 +---
+ 2 files changed, 116 insertions(+), 112 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index ecc192624eaf..705c425c9c3d 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -204,9 +204,6 @@ extern int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 			      struct ioapic_domain_cfg *cfg);
- extern int mp_unregister_ioapic(u32 gsi_base);
- extern int mp_ioapic_registered(u32 gsi_base);
--extern int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
--			    irq_hw_number_t hwirq);
--extern void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq);
- extern int mp_irqdomain_alloc(struct irq_domain *domain, unsigned int virq,
- 			      unsigned int nr_irqs, void *arg);
- extern void mp_irqdomain_free(struct irq_domain *domain, unsigned int virq,
-@@ -218,7 +215,6 @@ extern void mp_irqdomain_deactivate(struct irq_domain *domain,
- extern int mp_irqdomain_ioapic_idx(struct irq_domain *domain);
- extern void ioapic_set_alloc_attr(struct irq_alloc_info *info,
- 				  int node, int trigger, int polarity);
--extern int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node);
- 
- extern void mp_save_irq(struct mpc_intsrc *m);
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index ba50f8d6f6b0..523b326d71c2 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -89,7 +89,6 @@ struct mp_chip_data {
- struct mp_pin_info {
- 	int trigger;
- 	int polarity;
--	int node;
- 	int set;
- 	u32 count;
- };
-@@ -1310,30 +1309,6 @@ static inline int IO_APIC_irq_trigger(int irq)
- }
- #endif
- 
--static void ioapic_register_intr(unsigned int irq, struct irq_cfg *cfg,
--				 unsigned long trigger)
--{
--	struct irq_chip *chip = &ioapic_chip;
--	irq_flow_handler_t hdl;
--	bool fasteoi;
--
--	if ((trigger == IOAPIC_AUTO && IO_APIC_irq_trigger(irq)) ||
--	    trigger == IOAPIC_LEVEL) {
--		irq_set_status_flags(irq, IRQ_LEVEL);
--		fasteoi = true;
--	} else {
--		irq_clear_status_flags(irq, IRQ_LEVEL);
--		fasteoi = false;
--	}
--
--	if (setup_remapped_irq(irq, cfg, chip))
--		fasteoi = trigger != 0;
--
--	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
--	irq_set_chip_and_handler_name(irq, chip, hdl,
--				      fasteoi ? "fasteoi" : "edge");
--}
--
- int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
- 			      unsigned int destination, int vector,
- 			      struct io_apic_irq_attr *attr)
-@@ -1358,48 +1333,6 @@ int native_setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
- 	return 0;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 7e6e266..9ef745e 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -976,8 +976,11 @@ static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
+ 	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
  }
  
--static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
--				struct io_apic_irq_attr *attr)
--{
--	struct IO_APIC_route_entry entry;
--	unsigned int dest;
--
--	if (!IO_APIC_IRQ(irq))
--		return;
--
--	if (assign_irq_vector(irq, cfg, apic->target_cpus()))
--		return;
--
--	if (apic->cpu_mask_to_apicid_and(cfg->domain, apic->target_cpus(),
--					 &dest)) {
--		pr_warn("Failed to obtain apicid for ioapic %d, pin %d\n",
--			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		clear_irq_vector(irq, cfg);
--
--		return;
--	}
--
--	apic_printk(APIC_VERBOSE,KERN_DEBUG
--		    "IOAPIC[%d]: Set routing entry (%d-%d -> 0x%x -> "
--		    "IRQ %d Mode:%i Active:%i Dest:%d)\n",
--		    attr->ioapic, mpc_ioapic_id(attr->ioapic), attr->ioapic_pin,
--		    cfg->vector, irq, attr->trigger, attr->polarity, dest);
--
--	if (x86_io_apic_ops.setup_entry(irq, &entry, dest, cfg->vector, attr)) {
--		pr_warn("Failed to setup ioapic entry for ioapic  %d, pin %d\n",
--			mpc_ioapic_id(attr->ioapic), attr->ioapic_pin);
--		clear_irq_vector(irq, cfg);
--
--		return;
--	}
--
--	ioapic_register_intr(irq, cfg, attr->trigger);
--	if (irq < nr_legacy_irqs())
--		legacy_pic->mask(irq);
--
--	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
--}
--
- static void __init setup_IO_APIC_irqs(void)
+-static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
++static unsigned int pnv_ioda_dev_dma_weight(struct pci_dev *dev)
  {
- 	unsigned int ioapic, pin;
-@@ -1419,46 +1352,6 @@ static void __init setup_IO_APIC_irqs(void)
++	struct pci_controller *hose = pci_bus_to_host(dev->bus);
++	struct pnv_phb *phb = hose->private_data;
++
+ 	/* This is quite simplistic. The "base" weight of a device
+ 	 * is 10. 0 means no DMA is to be accounted for it.
+ 	 */
+@@ -990,14 +993,33 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+ 	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
+ 	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
+ 	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+-		return 3;
++		return 3 * phb->ioda.tce32_count;
+ 
+ 	/* Increase the weight of RAID (includes Obsidian) */
+ 	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
+-		return 15;
++		return 15 * phb->ioda.tce32_count;
+ 
+ 	/* Default */
+-	return 10;
++	return 10 * phb->ioda.tce32_count;
++}
++
++static int __pnv_ioda_phb_dma_weight(struct pci_dev *pdev, void *data)
++{
++	unsigned int *dma_weight = data;
++
++	*dma_weight += pnv_ioda_dev_dma_weight(pdev);
++	return 0;
++}
++
++static void pnv_ioda_phb_dma_weight(struct pnv_phb *phb)
++{
++	phb->ioda.dma_weight = 0;
++	if (!phb->hose->bus)
++		return;
++
++	pci_walk_bus(phb->hose->bus,
++		     __pnv_ioda_phb_dma_weight,
++		     &phb->ioda.dma_weight);
+ }
+ 
+ #ifdef CONFIG_PCI_IOV
+@@ -1156,7 +1178,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+ 			continue;
+ 		}
+ 		pdn->pe_number = pe->pe_number;
+-		pe->dma_weight += pnv_ioda_dma_weight(dev);
++		pe->dma_weight += pnv_ioda_dev_dma_weight(dev);
+ 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+ 			pnv_ioda_setup_same_PE(dev->subordinate, pe);
  	}
+@@ -1193,7 +1215,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+ 	pe->pbus = bus;
+ 	pe->pdev = NULL;
+-	pe->tce32_seg = -1;
+ 	pe->mve_number = -1;
+ 	pe->rid = bus->busn_res.start << 8;
+ 	pe->dma_weight = 0;
+@@ -1223,14 +1244,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 	/* Put PE to the list */
+ 	list_add_tail(&pe->list, &phb->ioda.pe_list);
+ 
+-	/* Account for one DMA PE if at least one DMA capable device exist
+-	 * below the bridge
+-	 */
+-	if (pe->dma_weight != 0) {
+-		phb->ioda.dma_weight += pe->dma_weight;
+-		phb->ioda.dma_pe_count++;
+-	}
+-
+ 	/* Link the PE */
+ 	pnv_ioda_link_pe_by_weight(phb, pe);
+ }
+@@ -1569,7 +1582,6 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 		pe->flags = PNV_IODA_PE_VF;
+ 		pe->pbus = NULL;
+ 		pe->parent_dev = pdev;
+-		pe->tce32_seg = -1;
+ 		pe->mve_number = -1;
+ 		pe->rid = (pci_iov_virtfn_bus(pdev, vf_index) << 8) |
+ 			   pci_iov_virtfn_devfn(pdev, vf_index);
+@@ -1890,28 +1902,70 @@ void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
+ 		pnv_pci_ioda2_tce_invalidate(pe, tbl, startp, endp, rm);
  }
  
--/*
-- * Set up the timer pin, possibly with the 8259A-master behind.
-- */
--static void __init setup_timer_IRQ0_pin(unsigned int ioapic_idx,
--					unsigned int pin, int vector)
--{
--	struct IO_APIC_route_entry entry;
--	unsigned int dest;
--
--	memset(&entry, 0, sizeof(entry));
--
--	/*
--	 * We use logical delivery to get the timer IRQ
--	 * to the first CPU.
--	 */
--	if (unlikely(apic->cpu_mask_to_apicid_and(apic->target_cpus(),
--						  apic->target_cpus(), &dest)))
--		dest = BAD_APICID;
--
--	entry.dest_mode = apic->irq_dest_mode;
--	entry.mask = 0;			/* don't mask IRQ for edge */
--	entry.dest = dest;
--	entry.delivery_mode = apic->irq_delivery_mode;
--	entry.polarity = 0;
--	entry.trigger = 0;
--	entry.vector = vector;
--
--	/*
--	 * The timer IRQ doesn't have to know that behind the
--	 * scene we may have a 8259A-master in AEOI mode ...
--	 */
--	irq_set_chip_and_handler_name(0, &ioapic_chip, handle_edge_irq,
--				      "edge");
--
--	/*
--	 * Add it to the IO-APIC irq-routing table:
--	 */
--	ioapic_write_entry(ioapic_idx, pin, entry);
--}
--
- void native_io_apic_print_entries(unsigned int apic, unsigned int nr_entries)
+-static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+-				      struct pnv_ioda_pe *pe, unsigned int base,
+-				      unsigned int segs)
++static int pnv_pci_ioda1_dma_segment_alloc(struct pnv_phb *phb,
++					   struct pnv_ioda_pe *pe)
++{
++	unsigned int weight, base, segs;
++
++	/* We shouldn't already have 32-bits DMA associated */
++	if (WARN_ON(pe->tce32_seg_start || pe->tce32_seg_end))
++		return -EEXIST;
++
++	/* Needn't setup TCE table for non-DMA capable PE */
++	weight = pe->dma_weight;
++	if (!weight)
++		return -ENODEV;
++
++	/* Calculate the DMA segments that PE needs. It's guaranteed
++	 * that the PE will have one segment at least.
++	 */
++	if (weight < phb->ioda.dma_weight / phb->ioda.tce32_count)
++		weight = phb->ioda.dma_weight / phb->ioda.tce32_count;
++	segs = (weight * phb->ioda.tce32_count) / phb->ioda.dma_weight;
++
++	/* Reserve the DMA segments with back-off way, which should
++	 * give us one segment at least.
++	 */
++	do {
++		base = bitmap_find_next_zero_area(phb->ioda.tce32_segmap,
++						  phb->ioda.tce32_count,
++						  0, segs, 0);
++		if (base < phb->ioda.tce32_count)
++			bitmap_set(phb->ioda.tce32_segmap, base, segs);
++	} while ((base > phb->ioda.tce32_count) && (--segs));
++
++	/* There are possibly no DMA32 segments */
++	if (!segs)
++		return -ENODEV;
++
++	pe->tce32_seg_start = base;
++	pe->tce32_seg_end = base + segs;
++	return 0;
++}
++
++static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
++				       struct pnv_ioda_pe *pe)
  {
- 	int i;
-@@ -2669,20 +2562,6 @@ static int __init ioapic_init_ops(void)
  
- device_initcall(ioapic_init_ops);
+ 	struct page *tce_mem = NULL;
+ 	const __be64 *swinvp;
+ 	struct iommu_table *tbl;
+-	unsigned int i;
+-	int64_t rc;
+ 	void *addr;
++	unsigned int base, segs, i;
++	int64_t rc;
  
--static int
--io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
--{
--	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
--	int ret;
+ 	/* XXX FIXME: Handle 64-bit only DMA devices */
+ 	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
+-	/* XXX FIXME: Allocate multi-level tables on PHB3 */
+ 
+-	/* We shouldn't already have a 32-bit DMA associated */
+-	if (WARN_ON(pe->tce32_seg >= 0))
++	/* Allocate TCE32 segments */
++	if (pnv_pci_ioda1_dma_segment_alloc(phb, pe)) {
++		pe_err(pe, " Cannot setting up 32-bits TCE table\n");
+ 		return;
++	}
+ 
+-	/* Grab a 32-bit TCE table */
+-	pe->tce32_seg = base;
++	/* Build a 32-bits TCE table */
++	base = pe->tce32_seg_start;
++	segs = pe->tce32_seg_end - pe->tce32_seg_start;
+ 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+ 		(base << 28), ((base + segs) << 28) - 1);
+ 
+@@ -1943,6 +1997,10 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 		}
+ 	}
+ 
++	/* Print some info */
++	pe_info(pe, "DMA weight %d, assigned (%d %d) DMA32 segments\n",
++		pe->dma_weight, base, segs);
++
+ 	/* Setup linux iommu table */
+ 	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+@@ -1981,8 +2039,8 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	return;
+  fail:
+ 	/* XXX Failure: Try to fallback to 64-bit only ? */
+-	if (pe->tce32_seg >= 0)
+-		pe->tce32_seg = -1;
++	bitmap_clear(phb->ioda.tce32_segmap, base, segs);
++	pe->tce32_seg_start = pe->tce32_seg_end = 0;
+ 	if (tce_mem)
+ 		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
+ }
+@@ -2051,11 +2109,10 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	int64_t rc;
+ 
+ 	/* We shouldn't already have a 32-bit DMA associated */
+-	if (WARN_ON(pe->tce32_seg >= 0))
++	if (WARN_ON(pe->tce32_seg_end > pe->tce32_seg_start))
+ 		return;
+ 
+ 	/* The PE will reserve all possible 32-bits space */
+-	pe->tce32_seg = 0;
+ 	end = (1 << ilog2(phb->ioda.m32_pci_base));
+ 	tce_table_size = (end / 0x1000) * 8;
+ 	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
+@@ -2066,7 +2123,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 				   get_order(tce_table_size));
+ 	if (!tce_mem) {
+ 		pe_err(pe, "Failed to allocate a 32-bit TCE memory\n");
+-		goto fail;
++		return;
+ 	}
+ 	addr = page_address(tce_mem);
+ 	memset(addr, 0, tce_table_size);
+@@ -2079,11 +2136,16 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 					pe->pe_number << 1, 1, __pa(addr),
+ 					tce_table_size, 0x1000);
+ 	if (rc) {
++		__free_pages(tce_mem, get_order(tce_table_size));
+ 		pe_err(pe, "Failed to configure 32-bit TCE table,"
+ 		       " err %ld\n", rc);
+-		goto fail;
++		return;
+ 	}
+ 
++	/* Print some info */
++	pe->tce32_seg_end = pe->tce32_seg_start + 1;
++	pe_info(pe, "Assigned DMA32 space\n");
++
+ 	/* Setup linux iommu table */
+ 	tbl = pe->tce32_table;
+ 	pnv_pci_setup_iommu_table(tbl, addr, tce_table_size, 0,
+@@ -2120,76 +2182,30 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 	/* Also create a bypass window */
+ 	if (!pnv_iommu_bypass_disabled)
+ 		pnv_pci_ioda2_setup_bypass_pe(phb, pe);
 -
--	if (!cfg)
--		return -EINVAL;
--	ret = __add_pin_to_irq_node(cfg, node, attr->ioapic, attr->ioapic_pin);
--	if (!ret)
--		setup_ioapic_irq(irq, cfg, attr);
--	return ret;
--}
--
- static int io_apic_get_redir_entries(int ioapic)
- {
- 	union IO_APIC_reg_01	reg_01;
-@@ -3239,58 +3118,8 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
- 	irq_attr->polarity	= polarity;
+-	return;
+-fail:
+-	if (pe->tce32_seg >= 0)
+-		pe->tce32_seg = -1;
+-	if (tce_mem)
+-		__free_pages(tce_mem, get_order(tce_table_size));
  }
  
--int mp_irqdomain_map(struct irq_domain *domain, unsigned int virq,
--		     irq_hw_number_t hwirq)
--{
--	int ioapic = mp_irqdomain_ioapic_idx(domain);
--	struct mp_pin_info *info = mp_pin_info(ioapic, hwirq);
--	struct io_apic_irq_attr attr;
+-static void pnv_ioda_setup_dma(struct pnv_phb *phb)
++void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
++			       struct pnv_ioda_pe *pe)
+ {
+-	struct pci_controller *hose = phb->hose;
+-	unsigned int residual, remaining, segs, tw, base;
+-	struct pnv_ioda_pe *pe;
 -
--	/* Get default attribute if not set by caller yet */
--	if (!info->set) {
--		u32 gsi = mp_pin_to_gsi(ioapic, hwirq);
+-	/* If we have more PE# than segments available, hand out one
+-	 * per PE until we run out and let the rest fail. If not,
+-	 * then we assign at least one segment per PE, plus more based
+-	 * on the amount of devices under that PE
++	/* Recalculate the PHB's total DMA weight, which depends on
++	 * PCI devices. That means the PCI devices beneath the PHB
++	 * should have been probed successfully. Otherwise, the
++	 * calculated PHB's DMA weight won't be accurate.
+ 	 */
+-	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
+-		residual = 0;
+-	else
+-		residual = phb->ioda.tce32_count -
+-			phb->ioda.dma_pe_count;
++	pnv_ioda_phb_dma_weight(phb);
+ 
+-	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
+-		hose->global_number, phb->ioda.tce32_count);
+-	pr_info("PCI: %d PE# for a total weight of %d\n",
+-		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
 -
--		if (acpi_get_override_irq(gsi, &info->trigger,
--					  &info->polarity) < 0) {
--			/*
--			 * PCI interrupts are always polarity one level
--			 * triggered.
--			 */
--			info->trigger = 1;
--			info->polarity = 1;
+-	/* Walk our PE list and configure their DMA segments, hand them
+-	 * out one base segment plus any residual segments based on
+-	 * weight
+-	 */
+-	remaining = phb->ioda.tce32_count;
+-	tw = phb->ioda.dma_weight;
+-	base = 0;
+-	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+-		if (!pe->dma_weight)
+-			continue;
+-		if (!remaining) {
+-			pe_warn(pe, "No DMA32 resources available\n");
+-			continue;
 -		}
--		info->node = NUMA_NO_NODE;
--
+-		segs = 1;
+-		if (residual) {
+-			segs += ((pe->dma_weight * residual)  + (tw / 2)) / tw;
+-			if (segs > remaining)
+-				segs = remaining;
+-		}
++	if (phb->type == PNV_PHB_IODA1)
++		pnv_pci_ioda1_setup_dma_pe(phb, pe);
++	else if (phb->type == PNV_PHB_IODA2)
++		pnv_pci_ioda2_setup_dma_pe(phb, pe);
++}
+ 
 -		/*
--		 * setup_IO_APIC_irqs() programs all legacy IRQs with default
--		 * trigger and polarity attributes. Don't set the flag for that
--		 * case so the first legacy IRQ user could reprogram the pin
--		 * with real trigger and polarity attributes.
+-		 * For IODA2 compliant PHB3, we needn't care about the weight.
+-		 * The all available 32-bits DMA space will be assigned to
+-		 * the specific PE.
 -		 */
--		if (virq >= nr_legacy_irqs() || info->count)
--			info->set = 1;
+-		if (phb->type == PNV_PHB_IODA1) {
+-			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+-				pe->dma_weight, segs);
+-			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
+-		} else {
+-			pe_info(pe, "Assign DMA32 space\n");
+-			segs = 0;
+-			pnv_pci_ioda2_setup_dma_pe(phb, pe);
+-		}
++static void pnv_ioda_setup_dma(struct pnv_phb *phb)
++{
++	struct pnv_ioda_pe *pe;
+ 
+-		remaining -= segs;
+-		base += segs;
 -	}
--	set_io_apic_irq_attr(&attr, ioapic, hwirq, info->trigger,
--			     info->polarity);
--
--	return io_apic_setup_irq_pin(virq, info->node, &attr);
--}
--
--void mp_irqdomain_unmap(struct irq_domain *domain, unsigned int virq)
--{
--	struct irq_data *data = irq_get_irq_data(virq);
--	struct irq_cfg *cfg = irq_cfg(virq);
--	int ioapic = mp_irqdomain_ioapic_idx(domain);
--	int pin = (int)data->hwirq;
--
--	ioapic_mask_entry(ioapic, pin);
--	__remove_pin_from_irq(cfg, ioapic, pin);
--	WARN_ON(!list_empty(&cfg->irq_2_pin));
--	arch_teardown_hwirq(virq);
--}
--
- static void mp_irqdomain_get_attr(u32 gsi, struct mp_chip_data *data,
--				 struct irq_alloc_info *info)
-+				  struct irq_alloc_info *info)
- {
- 	if (info && info->ioapic_valid) {
- 		data->trigger = info->ioapic_trigger;
-@@ -3414,35 +3243,6 @@ void mp_irqdomain_deactivate(struct irq_domain *domain,
- 			  (int)irq_data->hwirq);
++	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link)
++		pnv_pci_ioda_setup_dma_pe(phb, pe);
  }
  
--int mp_set_gsi_attr(u32 gsi, int trigger, int polarity, int node)
--{
--	int ret = 0;
--	int ioapic, pin;
--	struct mp_pin_info *info;
+ #ifdef CONFIG_PCI_MSI
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index f604bb7..2784951 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -58,15 +58,11 @@ struct pnv_ioda_pe {
+ 	unsigned long		m32_segmap[8];
+ 	unsigned long		m64_segmap[8];
+ 
+-	/* "Weight" assigned to the PE for the sake of DMA resource
+-	 * allocations
+-	 */
+-	unsigned int		dma_weight;
 -
--	ioapic = mp_find_ioapic(gsi);
--	if (ioapic < 0)
--		return -ENODEV;
+-	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+-	int			tce32_seg;
+-	int			tce32_segcount;
++	/* 32-bits DMA */
+ 	struct iommu_table	*tce32_table;
++	unsigned int		dma_weight;
++	unsigned int		tce32_seg_start;
++	unsigned int		tce32_seg_end;
+ 	phys_addr_t		tce_inval_reg_phys;
+ 
+ 	/* 64-bit TCE bypass region */
+@@ -183,17 +179,9 @@ struct pnv_phb {
+ 			unsigned char		pe_rmap[0x10000];
+ 
+ 			/* 32-bit TCE tables allocation */
+-			unsigned long		tce32_count;
 -
--	pin = mp_find_ioapic_pin(ioapic, gsi);
--	info = mp_pin_info(ioapic, pin);
--	trigger = trigger ? 1 : 0;
--	polarity = polarity ? 1 : 0;
+-			/* Total "weight" for the sake of DMA resources
+-			 * allocation
+-			 */
+ 			unsigned int		dma_weight;
+-			unsigned int		dma_pe_count;
 -
--	mutex_lock(&ioapic_mutex);
--	if (!info->set) {
--		info->trigger = trigger;
--		info->polarity = polarity;
--		info->node = node;
--		info->set = 1;
--	} else if (info->trigger != trigger || info->polarity != polarity) {
--		ret = -EBUSY;
--	}
--	mutex_unlock(&ioapic_mutex);
--
--	return ret;
--}
--
- int mp_irqdomain_ioapic_idx(struct irq_domain *domain)
- {
- 	return (int)(long)domain->host_data;
+-			/* Sorted list of used PE's, sorted at
+-			 * boot for resource allocation purposes
+-			 */
++			unsigned long		tce32_count;
++			unsigned long		tce32_segmap[8];
+ 			struct list_head	pe_dma_list;
+ 		} ioda;
+ 	};
 -- 
-1.7.10.4
+2.1.0
 
