@@ -1,149 +1,176 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150430165238.GS5622@wotan.suse.de>
-References: <1430343372-687-1-git-send-email-mcgrof@do-not-panic.com>
- <1430343372-687-2-git-send-email-mcgrof@do-not-panic.com> <20150430155917.GC7888@google.com>
- <20150430165238.GS5622@wotan.suse.de>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Thu, 30 Apr 2015 10:03:18 -0700
-Message-ID: <CALCETrXWBWq-az=AMgrV5t5BHwmPd-NHY31vC7eEsxpmrhhRQQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/5] pci: add pci_iomap_wc() variants
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	David Airlie <airlied@linux.ie>, daniel.vetter@intel.com,
-	Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-	cocci@systeme.lip6.fr,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	ville.syrjala@linux.intel.com,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-	xen-devel@lists.xensource.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:41593 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935AbbEAGEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:35 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 1C5EA2BB0040
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:34 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164Pl320119676
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:34 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t41640vI000860
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:00 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 14/21] powerpc/powernv: Functions to get/reset PCI slot status
+Date: Fri,  1 May 2015 16:03:01 +1000
+Message-Id: <1430460188-31343-15-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 30, 2015 at 9:52 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Thu, Apr 30, 2015 at 10:59:17AM -0500, Bjorn Helgaas wrote:
->> [+cc linux-pci]
->>
->> Hi Luis,
->>
->> On Wed, Apr 29, 2015 at 02:36:08PM -0700, Luis R. Rodriguez wrote:
->> > From: "Luis R. Rodriguez" <mcgrof@suse.com>
->> >
->> > This allows drivers to take advantage of write-combining
->> > when possible. Ideally we'd have pci_read_bases() just
->> > peg an IORESOURCE_WC flag for us
->>
->> This makes it sound like pci_read_bases() could do a better job
->> if we just tried harder, but I don't think that's the case.  All
->> pci_read_bases() can do is look at the bits in the BAR.  For
->> memory BARs, there's a "prefetchable" bit and a "64-bit" bit.
->>
->> If you just want to complain that the PCI spec didn't define a
->> way for software to discover whether a BAR can be mapped with WC,
->> that's fine, but it's misleading to suggest that pci_read_bases()
->> could figure out WC without some help from the spec.
->
-> You're right sorry about that, in my original patch this was more
-> of a question and I did not have a full answer for but mst had
-> clarified before the spec doesn't allow for this [0] and you are
-> confirming this now as well.
->
-> [0] https://lkml.org/lkml/2015/4/21/714
->
-> I'll update the patch and at least document we did think about
-> this and that its a shortcoming of the spec.
->
->> > but where exactly
->> > video devices memory lie varies *largely* and at times things
->> > are mixed with MMIO registers, sometimes we can address
->> > the changes in drivers, other times the change requires
->> > intrusive changes.
->> >
->> > Although there is also arch_phys_wc_add() that makes use of
->> > architecture specific write-combining alternatives (MTRR on
->> > x86 when a system does not have PAT) we void polluting
->> > pci_iomap() space with it and force drivers and subsystems
->> > that want to use it to be explicit.
->>
->> I'm not quite sure I understand the point you're making here
->> about not polluting pci_iomap_wc() with arch_phys_wc_add().  I
->> think the choice is for a driver to do either this:
->>
->>   info->screen_base = pci_iomap_wc(dev, 0, 0);
->>
->> or this:
->>
->>   info->screen_base = pci_iomap_wc(dev, 0, 0);
->>   par->wc_cookie = arch_phys_wc_add(pci_resource_start(dev, 0),
->>                                   pci_resource_len(dev, 0));
->>
->> The driver is *already* being explicit because it calls
->> pci_iomap_wc() instead of pci_iomap().
->>
->> It seems like it would be ideal if ioremap_wc() could call
->> arch_phys_wc_add() internally.
->
-> Indeed, that's what I was alluding to.
->
->> Doesn't any caller of
->> arch_phys_wc_add() have to also do some sort of ioremap()
->> beforehand?
->
-> This is not a requirement as the physical address is used,
-> not the virtual address.
->
->> I assume there's some reason for separating them,
->
-> Well a full sweep to change to arch_phys_wc_add() was never done,
-> consider this part of the last effort to do so. In retrospect now
-> that I've covered all other drivers in 12 different series of patches
-> I think its perhaps best to not mesh them together as we're phasing
-> out MTRR and the only reason to have arch_phys_wc_add() is for MTRR
-> which is legacy.
+The patch exports 3 functions, which base on corresponding OPAL
+APIs to get or set PCI slot status. Those functions are going to
+be used by PCI hotplug module in subsequent patches:
 
-I would say it much more strongly.
+   pnv_pci_get_presence_status()  opal_pci_get_presence_status()
+   pnv_pci_get_power_status()     opal_pci_get_power_status()
+   pnv_pci_set_power_status()     opal_pci_set_power_status()
 
-Drivers for new hardware SHOULD NOT call arch_phys_wc_add, directly or
-otherwise.  MTRRs are crap.  They have nasty alignment requirements,
-they are a very limited and unpredictable resource, and the interact
-poorly with BIOS.  They should really only be used for old video
-framebuffers and such.
+Besides, the patch also exports pnv_pci_hotplug_notifier() to allow
+registering PCI hotplug notifier, which will be used to receive PCI
+hotplug message from skiboot firmware.
 
-Anything new should use PAT (it's been available for a long time) and
-possibly streaming memory writes.  Even fancy server gear (myri10ge,
-for example) should stay far away from MTRRs and such: it's very easy
-to put enough devices in a server board that you simply run out of
-MTRRs and arch_phys_wc_add will stop working.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/opal-api.h            |  7 +++-
+ arch/powerpc/include/asm/opal.h                |  3 ++
+ arch/powerpc/include/asm/pnv-pci.h             |  5 +++
+ arch/powerpc/platforms/powernv/opal-wrappers.S |  3 ++
+ arch/powerpc/platforms/powernv/pci.c           | 45 ++++++++++++++++++++++++++
+ 5 files changed, 62 insertions(+), 1 deletion(-)
 
-If we make ioremap_wc and similar start automatically adding MTRRs,
-then performance will vary wildly with the order of driver loading,
-because we'll run out of MTRRs part-way through bootup.
+diff --git a/arch/powerpc/include/asm/opal-api.h b/arch/powerpc/include/asm/opal-api.h
+index 0321a90..29b407d 100644
+--- a/arch/powerpc/include/asm/opal-api.h
++++ b/arch/powerpc/include/asm/opal-api.h
+@@ -153,7 +153,10 @@
+ #define OPAL_FLASH_READ				110
+ #define OPAL_FLASH_WRITE			111
+ #define OPAL_FLASH_ERASE			112
+-#define OPAL_LAST				112
++#define OPAL_PCI_GET_PRESENCE_STATUS		116
++#define OPAL_PCI_GET_POWER_STATUS		117
++#define OPAL_PCI_SET_POWER_STATUS		118
++#define OPAL_LAST				118
+ 
+ /* Device tree flags */
+ 
+@@ -352,6 +355,8 @@ enum opal_msg_type {
+ 	OPAL_MSG_SHUTDOWN,		/* params[0] = 1 reboot, 0 shutdown */
+ 	OPAL_MSG_HMI_EVT,
+ 	OPAL_MSG_DPO,
++	OPAL_MSG_PRD,
++	OPAL_MSG_PCI_HOTPLUG,
+ 	OPAL_MSG_TYPE_MAX,
+ };
+ 
+diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+index 6d467df..a0eb206 100644
+--- a/arch/powerpc/include/asm/opal.h
++++ b/arch/powerpc/include/asm/opal.h
+@@ -200,6 +200,9 @@ int64_t opal_flash_write(uint64_t id, uint64_t offset, uint64_t buf,
+ 		uint64_t size, uint64_t token);
+ int64_t opal_flash_erase(uint64_t id, uint64_t offset, uint64_t size,
+ 		uint64_t token);
++int64_t opal_pci_get_presence_status(uint64_t id, uint8_t *status);
++int64_t opal_pci_get_power_status(uint64_t id, uint8_t *status);
++int64_t opal_pci_set_power_status(uint64_t id, uint8_t status);
+ 
+ /* Internal functions */
+ extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
+diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+index f9b4982..50d92a4 100644
+--- a/arch/powerpc/include/asm/pnv-pci.h
++++ b/arch/powerpc/include/asm/pnv-pci.h
+@@ -13,6 +13,11 @@
+ #include <linux/pci.h>
+ #include <misc/cxl.h>
+ 
++extern int pnv_pci_get_presence_status(uint64_t id, uint8_t *status);
++extern int pnv_pci_get_power_status(uint64_t id, uint8_t *status);
++extern int pnv_pci_set_power_status(uint64_t id, uint8_t status);
++extern int pnv_pci_hotplug_notifier(struct notifier_block *nb, bool enable);
++
+ int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
+ int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+ 			   unsigned int virq);
+diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
+index a7ade94..aa95dcb 100644
+--- a/arch/powerpc/platforms/powernv/opal-wrappers.S
++++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
+@@ -295,3 +295,6 @@ OPAL_CALL(opal_i2c_request,			OPAL_I2C_REQUEST);
+ OPAL_CALL(opal_flash_read,			OPAL_FLASH_READ);
+ OPAL_CALL(opal_flash_write,			OPAL_FLASH_WRITE);
+ OPAL_CALL(opal_flash_erase,			OPAL_FLASH_ERASE);
++OPAL_CALL(opal_pci_get_presence_status,		OPAL_PCI_GET_PRESENCE_STATUS);
++OPAL_CALL(opal_pci_get_power_status,		OPAL_PCI_GET_POWER_STATUS);
++OPAL_CALL(opal_pci_set_power_status,		OPAL_PCI_SET_POWER_STATUS);
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index a2da9a3..60e6d65 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -60,6 +60,51 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
+ 	return rval ? -EIO : 0;
+ }
+ 
++int pnv_pci_get_presence_status(uint64_t id, uint8_t *status)
++{
++	long rc;
++
++	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATUS))
++		return -ENXIO;
++
++	rc = opal_pci_get_presence_status(id, status);
++	return pnv_pci_poll(id, rc, status);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_get_presence_status);
++
++int pnv_pci_get_power_status(uint64_t id, uint8_t *status)
++{
++	long rc;
++
++	if (!opal_check_token(OPAL_PCI_GET_POWER_STATUS))
++		return -ENXIO;
++
++	rc = opal_pci_get_power_status(id, status);
++	return pnv_pci_poll(id, rc, status);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_get_power_status);
++
++int pnv_pci_set_power_status(uint64_t id, uint8_t status)
++{
++	long rc;
++
++	if (!opal_check_token(OPAL_PCI_SET_POWER_STATUS))
++		return -ENXIO;
++
++	rc = opal_pci_set_power_status(id, status);
++	return pnv_pci_poll(id, rc, NULL);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_set_power_status);
++
++int pnv_pci_hotplug_notifier(struct notifier_block *nb, bool enable)
++{
++	if (enable)
++		return opal_message_notifier_register(OPAL_MSG_PCI_HOTPLUG, nb);
++
++	return opal_message_notifier_unregister(OPAL_MSG_PCI_HOTPLUG, nb);
++}
++EXPORT_SYMBOL_GPL(pnv_pci_hotplug_notifier);
++
+ #ifdef CONFIG_PCI_MSI
+ static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
+-- 
+2.1.0
 
-ioremap_wc via PAT, on the other hand, is 100% reliable on newer hardware.
-
-Maybe I should have called it arch_phys_wc_add_awful_legacy_hack.
-
---Andy
