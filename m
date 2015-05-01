@@ -1,134 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50740 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752447AbbDNJoj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Apr 2015 05:44:39 -0400
-Date: Tue, 14 Apr 2015 11:44:26 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Fam Zheng <famz@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 04/10] PCI/MSI: Don't disable MSI/MSI-X at shutdown
-Message-ID: <20150414112739-mutt-send-email-mst@redhat.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150410225446.20848.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150413093708.GE17059@ad.nay.redhat.com>
- <CAErSpo7ARr7GHNUCMAa04Mk-cG-dufE=_ajB1txTuGRxzCqZwA@mail.gmail.com>
- <87twwkugd0.fsf@x220.int.ebiederm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87twwkugd0.fsf@x220.int.ebiederm.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60579 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753336AbbEAGFA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:05:00 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:58 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 095C32CE804E
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:56 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164l1g28377242
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:55 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4164LA2001364
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:22 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 18/21] powerpc/pci: Update bridge windows on PCI plugging
+Date: Fri,  1 May 2015 16:03:05 +1000
+Message-Id: <1430460188-31343-19-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 13, 2015 at 11:45:31AM -0500, Eric W. Biederman wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
-> 
-> > On Mon, Apr 13, 2015 at 4:37 AM, Fam Zheng <famz@redhat.com> wrote:
-> >> Hi Bjorn,
-> >>
-> >> On Fri, 04/10 17:54, Bjorn Helgaas wrote:
-> >>> From: Michael S. Tsirkin <mst@redhat.com>
-> >>>
-> >>> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
-> >>> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
-> >>>
-> >>> The problem is that after we disable MSI, the device may assert INTx, and
-> >>> if the driver hasn't registered an interrupt handler for it, the interrupt
-> >>> is never deasserted and causes a kernel hang.  In particular, this was
-> >>> observed with virtio.
-> >>>
-> >>> We now disable MSI/MSI-X for all devices during enumeration regardless of
-> >>> CONFIG_PCI_MSI.  This solves the kexec problem in the new kernel, not the
-> >>> old one.
-> >>>
-> >>> Stop disabling MSIs at shutdown to avoid the kernel hang.
-> >>>
-> >>> XXX bugzilla reference, details about how the hang happens?
-> >>
-> >> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=96571
-> >>
-> >> Please let me know if you need any further information in the bug.
-> >
-> > Please attach a complete dmesg log.  The bugzilla doesn't really have
-> > any new information other than that you see a soft lockup.  I'm trying
-> > to connect more of the dots between a spurious interrupt and a hang or
-> > soft lockup.
-> >
-> 
-> The bugzilla implies that there is a screaming irq (which causes the
-> softlockup when they disable the kernels protections for buggy irqs).
-> 
-> > It doesn't seem right that a spurious interrupt could cause a hang or
-> > soft lockup.
-> 
-> The interrupt handler keeps firing.
-> 
-> > I would think Linux would emit a message about the
-> > unexpected interrupt, but would otherwise be relatively unconcerned.
-> 
-> That was disabled on the kernel command line.
-> 
-> > So I'm trying to figure out why my assumption is wrong.  Probably this
-> > is just because I don't know much about Linux IRQ handling.
-> >
-> > Having more details, e.g., a stacktrace fragment from a soft lockup,
-> > can also help people connect a problem they're seeing with the
-> > solution.  It's pretty hard to google for "kernel hang," but if you
-> > can google for a soft lockup in a specific function, that can be much
-> > more useful.
-> 
-> The thing is not disabling msi interrupts for the case described in the
-> buzilla report is the wrong fix.
-> 
-> The report is about a buggy driver doing the wrong thing.  Until someone
-> ships a system that is msi native (aka no intx support) disabling msi
-> interrupts as shutdown is the right thing to do.  If there is something
-> that handles intx interrupts it is not an msi native system.
-> 
-> The real bug is probably disabling bugging interrupt detection on the
-> kernel command line.
-> 
-> Beyond that to handle kexec cleanly something needs to stop the
-> interrupts and stop the the DMA transfers.   Which in the short term
-> means someone probably needs to write a shutdown method for the buggy
-> driver.
-> 
-> An interrupt coming in almost always implies a DMA having completed,
-> and if that DMA completed in the wrong spot the kexec'd kernel will be
-> toast.
-> 
-> We disable interrupts at boot so that a kernel started with
-> kexec-on-panic (which doesn't shut anything down) can boot.  There are
-> probably other valid use cases (like native msi interrupts) but I am not
-> aware of them.  But according to the pci spec shutting down msi
-> interrupts at boot should be a noop.
-> 
-> So in summary not disabling MSI/MSI-X at shutdown is the wrong fix,
-> and someone needs to fix a buggy driver.
-> 
-> Eric
+During the PCI plugging event, the PCI devices are rescanned and
+their IO and MMIO resources are reassigned. However, the PowerNV
+platform will assign PE# based on that, which depends on updating
+to window of bridge of the PE's primary bus.
 
-I'm not all that worried about this patch making it into stable.  So I
-suggest for now we ignore the bugzilla and just focus on the patch
-itself.
+The patch updates the windows of bridge of PE's primary bus if
+we have valid bridge. Otherwise, we assume it's root bus or SRIOV
+virtual bus and PE won't be assigned during PCI plugging time.
 
-And the patch itself is not about a buggy driver.  It's about
-a correct driver causing screaming interrupts because
-pci core decided to disable msi at shutdown.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Which is not necessary for two reasons:
-- because previous patches disable msi when kexec starts now
-- because suppressing DMA automatically suppresses MSI
-  as well
-
-
-
-
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 01d2a84..cb0bb3f 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1473,8 +1473,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
+ 
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
 -- 
-MST
+2.1.0
+
