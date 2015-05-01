@@ -1,105 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:10638 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbbDHIQ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Apr 2015 04:16:28 -0400
-Message-ID: <5524E353.8070703@huawei.com>
-Date: Wed, 8 Apr 2015 16:14:11 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<x86@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>, <linux-alpha@vger.kernel.org>,
-	<linux-m68k@lists.linux-m68k.org>, Liviu Dudau <liviu@dudau.co.uk>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v9 07/30] PCI: Add default bus resource in pci_host_bridge
-References: <1428053164-28277-1-git-send-email-wangyijing@huawei.com> <1428053164-28277-9-git-send-email-wangyijing@huawei.com> <20150407222541.GK10892@google.com>
-In-Reply-To: <20150407222541.GK10892@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60520 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268AbbEAGEM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:12 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:10 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 171D8357804C
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:09 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t41640KL45416544
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:08 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163YLT005540
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 02/21] powerpc/powernv: Enable M64 on P7IOC
+Date: Fri,  1 May 2015 16:02:49 +1000
+Message-Id: <1430460188-31343-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 1542df8..f189dfb 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -404,6 +404,8 @@ struct pci_host_bridge {
->>  	int domain;
->>  	struct device dev;
->>  	struct pci_bus *bus;		/* root bus */
->> +	/* we use default bus resource if no bus resource provided */
->> +	struct resource busn_res;
-> 
-> I don't understand the need for another busn_res here.  The host bridge bus
-> range should be identical to the root bus range.  Having two copies will
-> confuse things.
-> 
-> And apparently this host->busn_res is only filled in if the arch doesn't
-> provide a busn resource?
-> 
-> To check for conflicts between host bridges, can you iterate through the
-> existing ones and check the range of their root buses?
+The patch enables M64 window on P7IOC, which has been enabled on
+PHB3. Comparing to PHB3, there are 16 M64 BARs and each of them
+are divided to 8 segments. So each PHB can support 128 M64 segments.
+Also, P7IOC has M64DT, which helps mapping one particular M64
+segment# to arbitrary PE#. However, we just provide 128 M64 (16 BARs)
+segments and fixed mapping between PE# and M64 segment# in order
+to keep same logic to support M64 for PHB3 and P7IOC. In turn, we
+just need different phb->init_m64() hooks for P7IOC and PHB3.
 
-Checking root buses is not enough, there is time gap between pci_host_bridge creation and
-pci root bus creation.
-E.g. A and B do pci scan sync in two cpus, A first check the buses resource, and find free
-bus resource, then it go to create pci_host_bridge and scan root bus, at the same time, B
-also check the buses resource, because A has not created root bus, B also think there are
-free buses, this is a problem.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 115 ++++++++++++++++++++++++++----
+ 1 file changed, 103 insertions(+), 12 deletions(-)
 
-I agree you that having two copies is not a good idea.
-
-For pci bus resource, we have the following request path:
-1. arch supplies the busn_res or PCI core add the default bus resource(in pci_scan_bus);
-2. Call pci_bus_insert_busn_res() to insert the bus resource for root bus.
-3. Call get_pci_domain_busn_res() to return the per-domain bus resource.
-4. Request root bus resource under per-domain bus resource.
-
-We have the per-domain structure pci_domain_busn_res to manage the bus resources in one domain,
-so what about add a bitmap to manage the free bus resource ?
-In pci_create_host_bridge(), first check whether the new pci_host_bridge bus resources required
-is free, if yes, we set the bitmap to occupy the bus resource at once,  then create the host bridge
-and add it to the global list.
-
-struct pci_domain_busn_res {
-	struct list_head list;
-	struct resource res;
-	int domain_nr;
-	bitmap used;
-};
-
-Another problem, I found it's unnecessary to add bus resource to pci_host_bridge->windows.
-Unlike the IO and MEM resource, we never use the pci_host_bridge bus resource again after
-pci enumeration. I think we could clean it up, or in some cases, when arch supplies the
-bus resource, we still have the two copies.
-
-Thanks!
-Yijing.
-
-> 
->>  	struct list_head windows;	/* resource_entry */
->>  	void (*release_fn)(struct pci_host_bridge *);
->>  	void *release_data;
->> -- 
->> 1.7.1
->>
-> 
-> .
-> 
-
-
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index f8bc950..646962f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -165,6 +165,67 @@ static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
+ 	clear_bit(pe, phb->ioda.pe_alloc);
+ }
+ 
++static int pnv_ioda1_init_m64(struct pnv_phb *phb)
++{
++	struct resource *r;
++	int seg;
++	s64 rc;
++
++	/* Each PHB supports 16 separate M64 BARs, each of which are
++	 * divided into 8 segments. So there are number of M64 segments
++	 * as total PE#, which is 128.
++	 */
++	for (seg = 0; seg < phb->ioda.total_pe; seg += 8) {
++		unsigned long base;
++
++		base = phb->ioda.m64_base + seg * phb->ioda.m64_segsize;
++		rc = opal_pci_set_phb_mem_window(phb->opal_id,
++						 OPAL_M64_WINDOW_TYPE,
++						 seg / 8,
++						 base,
++						 0, /* unused */
++						 8 * phb->ioda.m64_segsize);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("  Failure %lld configuring M64 BAR#%d on PHB#%d\n",
++				rc, seg / 8, phb->hose->global_number);
++			goto fail;
++		}
++
++		rc = opal_pci_phb_mmio_enable(phb->opal_id,
++					      OPAL_M64_WINDOW_TYPE,
++					      seg / 8,
++					      OPAL_ENABLE_M64_SPLIT);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("  Failure %lld enabling M64 BAR#%d on PHB#%d\n",
++				rc, seg / 8, phb->hose->global_number);
++			goto fail;
++		}
++	}
++
++	/* Strip of the segment used by the reserved PE, which
++	 * is expected to be 0 or last supported PE#
++	 */
++	r = &phb->hose->mem_resources[1];
++	if (phb->ioda.reserved_pe == 0)
++		r->start += phb->ioda.m64_segsize;
++	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
++		r->end -= phb->ioda.m64_segsize;
++	else
++		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
++			phb->ioda.reserved_pe);
++
++	return 0;
++
++fail:
++	for ( ; seg >= 0; seg -= 8)
++		opal_pci_phb_mmio_enable(phb->opal_id,
++					 OPAL_M64_WINDOW_TYPE,
++					 seg / 8,
++					 OPAL_DISABLE_M64);
++
++	return -EIO;
++}
++
+ /* The default M64 BAR is shared by all PEs */
+ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+ {
+@@ -222,7 +283,7 @@ fail:
+ 	return -EIO;
+ }
+ 
+-static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
++static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
+ {
+ 	resource_size_t sgsz = phb->ioda.m64_segsize;
+ 	struct pci_dev *pdev;
+@@ -248,8 +309,8 @@ static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
+ 	}
+ }
+ 
+-static int pnv_ioda2_pick_m64_pe(struct pnv_phb *phb,
+-				 struct pci_bus *bus, int all)
++static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
++				struct pci_bus *bus, int all)
+ {
+ 	resource_size_t segsz = phb->ioda.m64_segsize;
+ 	struct pci_dev *pdev;
+@@ -346,6 +407,28 @@ done:
+ 			pe->master = master_pe;
+ 			list_add_tail(&pe->list, &master_pe->slaves);
+ 		}
++
++		/* P7IOC supports M64DT, which helps mapping M64 segment
++		 * to one particular PE#. Unfortunately, PHB3 has fixed
++		 * mapping between M64 segment and PE#. In order for same
++		 * logic for P7IOC and PHB3, we enforce fixed mapping
++		 * between M64 segment and PE# on P7IOC.
++		 */
++		if (phb->type == PNV_PHB_IODA1) {
++			int64_t rc;
++
++			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++							 pe->pe_number,
++							 OPAL_M64_WINDOW_TYPE,
++							 pe->pe_number / 8,
++							 pe->pe_number % 8);
++			if (rc != OPAL_SUCCESS)
++				pr_warn("%s: Failure %lld mapping "
++					"M64 for PHB#%d-PE#%d\n",
++					__func__, rc,
++					phb->hose->global_number,
++					pe->pe_number);
++		}
+ 	}
+ 
+ 	kfree(pe_alloc);
+@@ -360,12 +443,6 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 	const u32 *r;
+ 	u64 pci_addr;
+ 
+-	/* FIXME: Support M64 for P7IOC */
+-	if (phb->type != PNV_PHB_IODA2) {
+-		pr_info("  Not support M64 window\n");
+-		return;
+-	}
+-
+ 	if (!firmware_has_feature(FW_FEATURE_OPALv3)) {
+ 		pr_info("  Firmware too old to support M64 window\n");
+ 		return;
+@@ -394,9 +471,23 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+ 
+ 	/* Use last M64 BAR to cover M64 window */
+ 	phb->ioda.m64_bar_idx = 15;
+-	phb->init_m64 = pnv_ioda2_init_m64;
+-	phb->reserve_m64_pe = pnv_ioda2_reserve_m64_pe;
+-	phb->pick_m64_pe = pnv_ioda2_pick_m64_pe;
++	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
++	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
++	switch (phb->type) {
++	case PNV_PHB_IODA1:
++		phb->init_m64 = pnv_ioda1_init_m64;
++		break;
++	case PNV_PHB_IODA2:
++		phb->init_m64 = pnv_ioda2_init_m64;
++		break;
++	default:
++		phb->init_m64 = NULL;
++		phb->reserve_m64_pe = NULL;
++		phb->pick_m64_pe = NULL;
++		phb->ioda.m64_size = 0;
++		phb->ioda.m64_segsize = 0;
++		phb->ioda.m64_base = 0;
++	}
+ }
+ 
+ static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
 -- 
-Thanks!
-Yijing
+2.1.0
 
