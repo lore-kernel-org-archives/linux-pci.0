@@ -1,58 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 2 Apr 2015 23:28:19 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Alexei Starovoitov <ast@plumgrid.com>,
-	stephen hemminger <stephen@networkplumber.org>,
-	Masahiro Yamada <yamada.m@jp.panasonic.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-api@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v2] pci: export class IDs from pci_ids.h
-Message-ID: <20150402232804-mutt-send-email-mst@redhat.com>
-References: <1427714755-16873-1-git-send-email-mst@redhat.com>
- <20150402205347.GA10892@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150402205347.GA10892@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:34686 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341AbbEAGEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 02:04:37 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 May 2015 16:04:35 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3183C2BB005A
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2015 16:04:32 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4164OCo52166792
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:04:32 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4163vb2009600
+	for <linux-pci@vger.kernel.org>; Fri, 1 May 2015 16:03:58 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v4 20/21] powerpc/powernv: Select OF_DYNAMIC
+Date: Fri,  1 May 2015 16:03:07 +1000
+Message-Id: <1430460188-31343-21-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 02, 2015 at 03:53:47PM -0500, Bjorn Helgaas wrote:
-> On Mon, Mar 30, 2015 at 01:33:28PM +0200, Michael S. Tsirkin wrote:
-> > The basic class ID macros in pci_ids.h are pretty useful for userspace
-> > using the pci sysfs interface, and they aren't fundamentally different
-> > from the constants in pci_regs.h - both are defined in the
-> > pci spec.
-> > 
-> > At the moment userspace is forced to duplicate these macros
-> > (e.g. QEMU does this, so do seabios, gpxe, and others), it is better to
-> > expose them in /usr/include/linux/pci_ids.h so everyone can just include
-> > this header.
-> 
-> I agree that it would be nice for applications to get these definitions
-> from a single place, but I'm not sure that include/uapi/linux/pci_ids.h
-> needs to be that place.
-> 
-> These constants are just copies of what's in the spec, and I don't think
-> you're suggesting that the constants are necessary to use a kernel API.
-> 
-> I know the kernel does provide access to values via sysfs "class" files,
-> but the kernel is just passing the values through from the hardware.
-> That's analogous to reading the class with setpci, and I don't think it
-> leads to a requirement that the kernel export all the information about how
-> to interpret the class values.
-> 
-> I haven't looked at libpci or libudev, but it sounds like you think those
-> are not good solutions.  Is that because they don't currently have this
-> information?  People don't want to add dependencies on them?
-> 
-> Bjorn
+The device tree nodes will be changed dynamically on PCI hotplug
+events on PowerNV platform. The patch selects OF_DYNAMIC on the
+platform to support PCI hotplug.
 
-People don't want to add dependencies on them.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
+index 4b044d8..9c62631 100644
+--- a/arch/powerpc/platforms/powernv/Kconfig
++++ b/arch/powerpc/platforms/powernv/Kconfig
+@@ -18,4 +18,5 @@ config PPC_POWERNV
+ 	select CPU_FREQ_GOV_ONDEMAND
+ 	select CPU_FREQ_GOV_CONSERVATIVE
+ 	select PPC_DOORBELL
++	select OF_DYNAMIC
+ 	default y
 -- 
-MST
+2.1.0
+
