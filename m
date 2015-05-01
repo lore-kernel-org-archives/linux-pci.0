@@ -1,196 +1,163 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 28 May 2015 07:41:12 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150528124112.GJ10210@google.com>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
- <20150528022332.GA23724@roeck-us.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:37552 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750843AbbEAIkR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 May 2015 04:40:17 -0400
+Date: Fri, 1 May 2015 09:40:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Jayachandran C." <jchandra@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150501084014.GA6174@red-moon>
+References: <1430307599-20536-1-git-send-email-jchandra@broadcom.com>
+ <6662179.AoBfCMOsxD@wuerfel>
+ <20150429174356.GA20947@red-moon>
+ <20150430095949.GJ2992@jayachandranc.netlogicmicro.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150528022332.GA23724@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150430095949.GJ2992@jayachandranc.netlogicmicro.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 07:23:32PM -0700, Guenter Roeck wrote:
-> On Wed, May 27, 2015 at 04:04:47PM -0500, Bjorn Helgaas wrote:
-> > [+cc Lorenzo, Suravee, Will]
-> > 
-> > I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
-> > pci_read_bases() from the PCI core instead of from arch code, and there are
-> > likely some dependencies between these two things.
-> > 
-> > On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
-> > > The PCI subsystem always assumes that I/O is supported on PCIe bridges
-> > > and tries to assign an I/O window to each port even if that is not
-> > > the case.
+On Thu, Apr 30, 2015 at 10:59:50AM +0100, Jayachandran C. wrote:
+> On Wed, Apr 29, 2015 at 06:43:57PM +0100, Lorenzo Pieralisi wrote:
+> > On Wed, Apr 29, 2015 at 01:34:20PM +0100, Arnd Bergmann wrote:
+> > > On Wednesday 29 April 2015 17:09:58 Jayachandran C wrote:
+> > > > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > > > from the arch/arm/ to do a part of the PCI initialization, and this
+> > > > prevents it from being used on arm64.
+> > > > 
+> > > > The initialization done by pci_common_init_dev() that is really
+> > > > needed by pci-host-generic.c can be done in the same file without
+> > > > using the hw_pci API of ARM.
+> > > > 
+> > > > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > > > this is be handled by setting up 'struct gen_pci' to embed a
+> > > > pci_sys_data variable as the first element on the ARM platform.
+> > > > 
+> > > > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 > > > 
-> > > This may result in messages such as
-> > > 
-> > > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
-> > > 					get_res_add_size add_size 1000
-> > > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> > > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
-> > > 
-> > > for each bridge port, even if a port or its parent does not support
-> > > I/O in the first place.
-> > > 
-> > > To avoid this message, check if a port supports I/O before trying to
-> > > enable it. Also check if port's parent supports I/O, and only modify
-> > > a port's I/O resource size if both the port and its parent support I/O.
-> > > 
-> > > If IO is disabled after the initial port scan, the IO base and size
-> > > registers are set to 0x00f0 to indicate that IO is disabled. A later
-> > > rescan interprets this as "IO supported" and enables the IO range,
-> > > even if the parent does not support IO. Handle this situation as well.
-> > > 
-> > > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> > > ---
-> > >  drivers/pci/probe.c     | 14 ++++++++++++++
-> > >  drivers/pci/setup-bus.c |  4 ++--
-> > >  include/linux/pci.h     |  9 +++++++++
-> > >  3 files changed, 25 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index 6675a7a1b9fc..f4944ef45148 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
-> > >  	base = (io_base_lo & io_mask) << 8;
-> > >  	limit = (io_limit_lo & io_mask) << 8;
-> > >  
-> > > +	/* If necessary, check if the bridge supports an I/O aperture */
-> > > +	if (!io_base_lo && !io_limit_lo) {
-> > > +		u16 io;
-> > > +
-> > > +		if (!pci_parent_supports_io(child))
-> > > +			return;
-> > > +
-> > > +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
-> > > +		pci_read_config_word(dev, PCI_IO_BASE, &io);
-> > > +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
-> > > +		if (!io)
-> > > +			return;
-> > > +	}
+> > > This seems very useful
 > > 
-> > I really like the idea of pushing this into pci_read_bridge_io().
+> > Yes, it is getting less awful, waiting for pci_sys_data to disappear.
 > > 
-> > I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
-> > somehow get rid of pci_bridge_check_ranges() altogether?
-> > 
-> Sure, I just figured I'd start with IO, and do the rest after
-> I have a better idea if I am going into the right direction.
-
-I definitely think this is the right direction :)
-
-> > It does make sense that if the bridge supports an I/O aperture, but there's
-> > no possibility of I/O resources on the primary side, we should pretend the
-> > bridge has no I/O aperture.  But I think it might be nice to emit a
-> > diagnostic about *why* we're ignoring it.  Otherwise there's a little
-> > discrepancy between dmesg and lspci.
-> > 
-> Ok, makes sense. Would you want to see that message for every port ?
-> Guess I can check how it looks like, to make sure that I don't end up
-> getting a lot of noise again.
-
-I was thinking once per port.  We currently print a line for every enabled
-bridge window, so it shouldn't be too much.  In fact, we often print the
-bridge windows several times (which I think is overkill; I'd prefer to
-print it once when we discover it and again only if we change something
-later).
-
-> > > +
-> > >  	if ((io_base_lo & PCI_IO_RANGE_TYPE_MASK) == PCI_IO_RANGE_TYPE_32) {
-> > >  		u16 io_base_hi, io_limit_hi;
-> > >  
-> > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > index 4fd0cacf7ca0..963b31a109a9 100644
-> > > --- a/drivers/pci/setup-bus.c
-> > > +++ b/drivers/pci/setup-bus.c
-> > > @@ -750,12 +750,12 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> > >  	b_res[1].flags |= IORESOURCE_MEM;
-> > >  
-> > >  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > -	if (!io) {
-> > > +	if (!io && pci_parent_supports_io(bus)) {
-> > >  		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> > >  		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > >  		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> > >  	}
-> > > -	if (io)
-> > > +	if (io && (io != 0x00f0 || pci_parent_supports_io(bus)))
-> > 
-> > I *think* this 0x00f0 depends on what pci_setup_bridge_io() writes to
-> > PCI_IO_BASE when it disables an I/O aperture.  Depending on that particular
+> > > > -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+> > > > +static int gen_pci_init(struct device *dev, struct gen_pci *pci)
+> > > >  {
+> > > > -	struct gen_pci *pci = sys->private_data;
+> > > > -	list_splice_init(&pci->resources, &sys->resources);
+> > > > -	return 1;
+> > > > +	struct pci_bus *bus;
+> > > > +
+> > > > +	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+> > > 
+> > > Do we want to set that flag unconditionally? At least for servers,
+> > > the resources should get assigned by firmware, and things might
+> > > go wrong if Linux tries to reassign them. This is probably the
+> > > case on kvmtool as well.
 > 
-> Correct. I could have checked if io is disabled (limit < base),
-> but at least for the time being I wanted the impact to be minimal.
-> So far the code auto-enables IO if it was disabled (eg by the BIOS)
-> but the bridge chip supports it. I only wanted to keep it disabled
-> if it was likely that it was disabled by pci_setup_bridge_io().
+> I can skip setting this flag if PCI_PROBE_ONLY is set. Adding another
+> device tree parameter for this may not be needed.
 
-OK, I see.  What I think we *should* do is:
+I think that's reasonable for the time being.
 
-  - If the I/O window was enabled by the BIOS, leave it that way unless we
-    need to change it
-
-  - If the I/O window was left disabled by the BIOS, enable it only if we
-    need it, i.e., there's I/O space available on the primary side of the
-    bridge and one of the following is true:
-
-      1) the bridge supports hotplug
-      2) a downstream bridge supports hotplug
-      3) a downstream device needs I/O space
-
-> > But it would be ideal if we could get rid of pci_bridge_check_ranges()
-> > altogether and have the rule that we read bridge window characteristics
-> > (IORESOURCE_IO, IORESOURCE_MEM, IORESOURCE_PREFETCH, IORESOURCE_MEM_64)
-> > once when we enumerate the bridge.  After that, the only changes would be
-> > to change res->start and res->end and update the hardware correspondingly.
+> > I will give it a go on kvmtool, but at first glance concern is
+> > shared.
 > > 
-> Would be great - this should solve the above problem automatically.
-> I was hesitant to do that, because I don't know if there would be side
-> effects. I could take out the io handling from pci_bridge_check_ranges()
-> and see what happens, but obviously my test coverage would be somewhat
-> limited.
-
-I'm willing to take the risk :)  Of course, we'll need to analyze it as
-much as we can to make sure we believe it is correct.
-
-> > I'd like res->flags to reflect the capabilities of the hardware, not
-> > whether the window is currently enabled.
+> > > > +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
+> > > > +	if (!bus) {
+> > > > +		dev_err(dev, "Scanning rootbus failed");
+> > > > +		return -ENODEV;
+> > > > +	}
+> > > > +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> > > 
+> > > I thought this was done by default now. If it is not, can
+> > > we make the of_irq swizzling the default?
 > > 
-> Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
-> purpose, or could that cause conflicts elsewhere ?
-
-Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
-below a host bridge that doesn't support I/O space.
-
-> > > +static inline bool pci_parent_supports_io(struct pci_bus *pbus)
-> > > +{
-> > > +	return pci_is_root_bus(pbus) || pci_is_root_bus(pbus->parent) ||
-> > > +	       (pbus->parent->resource[0]->flags & IORESOURCE_IO);
-> > 
-> > This is not obvious to me.  There are host bridges that do not have I/O
-> > apertures, so I don't see what the pci_is_root_bus() tests have to do with
-> > this.  The resource[0]->flags & IORESOURCE_IO part does make sense to me.
-> > 
-> More a matter of me not knowing what I need to do. resource[0] is NULL
-> for the root bus, at least on the powerpc system I used for testing.
+> > Possibly yes.
 > 
-> > I think at the root bus, we'd have to iterate through all the host bridge
-> > resources to figure out whether there are any I/O apertures.
+> I am not sure I understand this, I thought pci_fixup_irqs needs to be
+> called at this point.
+
+What we meant is that passing of_irq_parse_and_map_pci as a mapping
+function is the most common option, but I do not think there is much
+you can do at the moment apart from adding a pci_of_fixup_irqs function
+to the generic PCI layer and calling that instead, I do not see where
+the improvement is, so I think you can leave it as it is.
+
+> > > > +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> > > > +		pci_bus_size_bridges(bus);
+> > > > +		pci_bus_assign_resources(bus);
+> > > > +	}
+> > > > +	pci_bus_add_devices(bus);
+> > > > +
+> > > > +	/* Configure PCI Express settings */
+> > > > +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> > > > +		struct pci_bus *child;
+> > > > +
+> > > > +		list_for_each_entry(child, &bus->children, node)
+> > > > +			pcie_bus_configure_settings(child);
+> > > > +	}
+> > > > +	return 0;
+> > > >  }
+> > > 
+> > > We should also try to come up wtih a way to make that
+> > > pcie_bus_configure_settings() automatic if it's required here.
+> > > 
+> > > >  static int gen_pci_probe(struct platform_device *pdev)
+> > > > @@ -214,13 +237,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+> > > >  	struct device *dev = &pdev->dev;
+> > > >  	struct device_node *np = dev->of_node;
+> > > >  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > > > -	struct hw_pci hw = {
+> > > > -		.nr_controllers	= 1,
+> > > > -		.private_data	= (void **)&pci,
+> > > > -		.setup		= gen_pci_setup,
+> > > > -		.map_irq	= of_irq_parse_and_map_pci,
+> > > > -		.ops		= &gen_pci_ops,
+> > > > -	};
+> > > >  
+> > > >  	if (!pci)
+> > > >  		return -ENOMEM;
+> > > > @@ -258,8 +274,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> > > >  		return err;
+> > > >  	}
+> > > >  
+> > > > -	pci_common_init_dev(dev, &hw);
+> > > > -	return 0;
+> > > > +	return gen_pci_init(dev, pci);
+> > > 
+> > > How about moving the new code right into the probe() function?
 > > 
-> Can you give me a hint on how to do that, hopefully in a platform
-> independent way ? Walk through bus->resources and search for an
-> IO resource ? Or does resource[0] == NULL already indicate
-> that there is no IO aperture ?
+> > +1.
+> 
+> I will add this to patch v2.
+>  
+> > I suspect the PCI_PROBE_ONLY case was not tested on arm64, since we
+> > still need a patch to prevent resources enablement there (in the
+> > pcibios_enable_device call - actually the check for PCI_PROBE_ONLY
+> > should be moved to the default pcibios_enable_device function in
+> > drivers/pci/pci.c).
+> > 
+> > The other bit missing is MSI handling, that should still be implemented.
+> 
+> I think we should parse msi-parent and set ->msi on the root bus in
+> pci-host-generic.c. The implementation of pcibios_msi_controller() for
+> arm/arm64 can go up the bus hierarchy and return the first msi
+> controller it finds. This would be trivial to add to arm/arm64.
+> I can post a follow up patch for this if you are interested.
 
-Use pci_bus_for_each_resource() and look for one with IORESOURCE_IO set.
+I do not want to see a pcibios_msi_controller implementation on arm64,
+or put it differently what you are proposing has nothing in it arm64
+specific, we need to find a solution that goes into generic code, there
+is already, pending further discussion:
 
-Bjorn
+http://lwn.net/Articles/628872/
+
+Thanks,
+Lorenzo
