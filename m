@@ -1,64 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:53031 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932372AbbDQOJy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Apr 2015 10:09:54 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-pci@vger.kernel.org,
-	zajec5@gmail.com, florian@openwrt.org, peter.senna@gmail.com,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>
-Subject: Re: [RFC] PCI: BCM5301X: add PCIe2 driver for BCM5301X SoCs
-Date: Fri, 17 Apr 2015 16:09:23 +0200
-Message-ID: <4575399.moLzVD0xqT@wuerfel>
-In-Reply-To: <11068573.lefhT3BUSj@wuerfel>
-References: <1415470392-28229-1-git-send-email-hauke@hauke-m.de> <545E8AA2.6050301@hauke-m.de> <11068573.lefhT3BUSj@wuerfel>
+Received: from kirsty.vergenet.net ([202.4.237.240]:35570 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077AbbEAAgF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Apr 2015 20:36:05 -0400
+Date: Fri, 1 May 2015 09:36:00 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Cc: geert@linux-m68k.org, linux-sh@vger.kernel.org,
+	magnus.damm@gmail.com, laurent.pinchart+renesas@ideasonboard.com,
+	kuninori.morimoto.gx@renesas.com, linus.walleij@linaro.org,
+	devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 15/15] PCI: rcar: document r8a7793 DT bindings
+Message-ID: <20150501003600.GC13754@verge.net.au>
+References: <1430403544-26742-1-git-send-email-ulrich.hecht+renesas@gmail.com>
+ <1430403544-26742-16-git-send-email-ulrich.hecht+renesas@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430403544-26742-16-git-send-email-ulrich.hecht+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(reviving an old thread)
+[CC Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org ]
 
-On Sunday 09 November 2014 21:27:40 Arnd Bergmann wrote:
+On Thu, Apr 30, 2015 at 04:19:04PM +0200, Ulrich Hecht wrote:
+> Signed-off-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+> Acked-by: Simon Horman <horms+renesas@verge.net.au>
+> Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: devicetree@vger.kernel.org
+> ---
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
+>  1 file changed, 1 insertion(+)
+
+I suppose this one is for the PCI subsystem and thus Bjorn Helgaas (CCed).
+
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index d8ef5bf..8b156fe 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -8,6 +8,7 @@ OHCI and EHCI controllers.
+>  Required properties:
+>  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+>  	      "renesas,pci-r8a7791" for the R8A7791 SoC.
+> +	      "renesas,pci-r8a7793" for the R8A7793 SoC.
+>  - reg:	A list of physical regions to access the device: the first is
+>  	the operational registers for the OHCI/EHCI controllers and the
+>  	second is for the bridge configuration and control registers.
+> -- 
+> 2.3.5
 > 
-> > >> +  /*
-> > >> +   * Inbound address translation setup
-> > >> +   * Northstar only maps up to 128 MiB inbound, DRAM could be up to 1 GiB.
-> > >> +   *
-> > >> +   * For now allow access to entire DRAM, assuming it is less than 128MiB,
-> > >> +   * otherwise DMA bouncing mechanism may be required.
-> > >> +   * Also consider DMA mask to limit DMA physical address
-> > >> +   */
-> > >> +  /* 64-bit LE regs, write low word, high is 0 at reset */
-> > >> +  bcma_write32(bdev, BCMA_CORE_PCIE2_FUNC0_IMAP1, PHYS_OFFSET | 0x1);
-> > >> +  bcma_write32(bdev, BCMA_CORE_PCIE2_IARR1_LOWER,
-> > >> +                     PHYS_OFFSET | ((SZ_128M >> 20) & 0xff));
-> > > 
-> > > Maybe I should bully you into enabling swiotlb on arm32 
-> > 
-> > This sounds complicated, I hope I can avoid it. 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> I'd really hope that it's not that hard. We basically just need a copy of
-> coherent_swiotlb_dma_ops/noncoherent_swiotlb_dma_ops from arm64 and
-> use those on bcma devices, with the right dma_mask set.
-
-Peter Senna has tested this on bcm4708a0 (Buffalo WZR-1750DHP) and found
-that all RAM is DMA capable, as tested with CONFIG_VMSPLIT_1G. Could
-the code comment here be incorrect, or is it possible that it was fixed
-in later chip versions?
-
-If this works, using CONFIG_VMSPLIT_1G should result in noticeably
-better I/O performance on this chip.
-
-I have created a patch that lets him simulate the broken behavior on his
-machine, so he can work on implementing swiotlb, but it would certainly
-be best to understand which machines are really affected.
-
-Note that the driver that was merged as drivers/pci/host/pcie-iproc.c
-does not seem to touch the BCMA_CORE_PCIE2_IARR1_LOWER (offset 0xd08)
-register, and presumably the power-on default for this register
-maps all of RAM correctly.
-
-	Arnd
