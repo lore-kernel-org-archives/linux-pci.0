@@ -1,402 +1,398 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH 11/11] ARM64 / PCI / ACPI: support for ACPI based PCI hostbridge init
-Date: Tue, 26 May 2015 20:49:24 +0800
-Message-Id: <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org>
-In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40615 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbbECX3i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 May 2015 19:29:38 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 09:29:34 +1000
+Date: Mon, 4 May 2015 09:28:24 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Message-ID: <20150503232824.GA5318@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Based on Jiang Liu's common interface to support PCI host bridge
-init and refactoring of MMCONFIG, this patch using information
-from ACPI MCFG table and IO/irq resources from _CRS to init
-ARM64 PCI hostbridge, then PCI will work on ARM64.
+On Fri, May 01, 2015 at 07:54:03AM -0500, Rob Herring wrote:
+>+dt list
+>
+>On Fri, May 1, 2015 at 1:03 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> The requirement is raised when developing the PCI hotplug feature
+>> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
+>> When plugging PCI adapter to one PCI slot, the firmware rescans the
+>> slot and build FDT (Flat Device Tree) blob, which is sent to the
+>> PowerNV PCI hotplug driver for processing. The new constructed device
+>> nodes from the FDT blob are expected to be attached to the device
+>> node of the PCI slot. Unfortunately, it seems we don't have a API
+>> to support the scenario. The patch intends to support it by newly
+>> introduced function of_fdt_add_subtree(), the design behind it is
+>> shown as below:
+>>
+>>    * When the sub-tree FDT blob, which is owned by firmware, is
+>>      received by kernel. It's copied over to the blob, which is
+>>      dynamically allocated. Since then, the FDT blob owned by
+>>      firmware isn't touched.
+>>    * Rework unflatten_dt_node() so that the device nodes in current
+>>      and deeper depth have been constructed from the FDT blob. All
+>>      device nodes are marked with flag OF_DYNAMIC_HYBIRD, which is
+>
+>Perhaps you meant HYBRID?
+>
 
-This patch is based on Mark Salter and Tomasz Nowicki's work.
+Yeah, It should be "HYBRID".
 
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
----
- arch/arm64/Kconfig      |   7 ++
- arch/arm64/kernel/pci.c | 245 +++++++++++++++++++++++++++++++++++++++++++++---
- drivers/pci/pci.c       |  26 +++--
- 3 files changed, 257 insertions(+), 21 deletions(-)
+>>      similar to OF_DYNAMIC. However, device node with the flag set
+>>      can be free'd, but in the way other than that for OF_DYNAMIC
+>>      device nodes.
+>
+>The difference seems to be whether you allocate space or just point to
+>the FDT for various strings/data. Is that right?
+>
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 9b80428..8e4b789 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -276,6 +276,13 @@ config PCI_DOMAINS_GENERIC
- config PCI_SYSCALL
- 	def_bool PCI
- 
-+config PCI_MMCONFIG
-+	def_bool y
-+	select PCI_ECAM
-+	select HAVE_PCI_ECAM
-+	select GENERIC_PCI_ECAM
-+	depends on ACPI
-+
- source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 4095379..d1629dc 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -11,12 +11,15 @@
-  */
- 
- #include <linux/acpi.h>
-+#include <linux/ecam.h>
- #include <linux/init.h>
- #include <linux/io.h>
- #include <linux/kernel.h>
- #include <linux/mm.h>
-+#include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-+#include <linux/pci-acpi.h>
- #include <linux/slab.h>
- 
- #include <asm/pci-bridge.h>
-@@ -43,31 +46,251 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-  */
- int pcibios_add_device(struct pci_dev *dev)
- {
--	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+	if (acpi_disabled)
-+		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
- 
- 	return 0;
- }
- 
-+#ifdef CONFIG_ACPI
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *sd = bridge->bus->sysdata;
-+
-+	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-+	return 0;
-+}
-+
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
-+int pcibios_enable_irq(struct pci_dev *dev)
-+{
-+	if (!pci_dev_msi_enabled(dev))
-+		acpi_pci_irq_enable(dev);
-+	return 0;
-+}
-+
-+int pcibios_disable_irq(struct pci_dev *dev)
-+{
-+	if (!pci_dev_msi_enabled(dev))
-+		acpi_pci_irq_disable(dev);
-+	return 0;
-+}
-+
-+int pcibios_enable_device(struct pci_dev *dev, int bars)
-+{
-+	int err;
-+
-+	err = pci_enable_resources(dev, bars);
-+	if (err < 0)
-+		return err;
-+
-+	return pcibios_enable_irq(dev);
-+}
-+
-+static int __init pcibios_assign_resources(void)
-+{
-+	struct pci_bus *root_bus;
-+
-+	if (acpi_disabled)
-+		return 0;
-+
-+	list_for_each_entry(root_bus, &pci_root_buses, node) {
-+		pcibios_resource_survey_bus(root_bus);
-+		pci_assign_unassigned_root_bus_resources(root_bus);
-+	}
-+	return 0;
-+}
- /*
-- * raw_pci_read/write - Platform-specific PCI config space access.
-+ * fs_initcall comes after subsys_initcall, so we know acpi scan
-+ * has run.
-  */
--int raw_pci_read(unsigned int domain, unsigned int bus,
--		  unsigned int devfn, int reg, int len, u32 *val)
-+fs_initcall(pcibios_assign_resources);
-+
-+static int pci_read(struct pci_bus *bus, unsigned int devfn, int where,
-+		    int size, u32 *value)
- {
--	return -ENXIO;
-+	return raw_pci_read(pci_domain_nr(bus), bus->number,
-+			    devfn, where, size, value);
- }
- 
--int raw_pci_write(unsigned int domain, unsigned int bus,
--		unsigned int devfn, int reg, int len, u32 val)
-+static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
-+		     int size, u32 value)
- {
--	return -ENXIO;
-+	return raw_pci_write(pci_domain_nr(bus), bus->number,
-+			     devfn, where, size, value);
- }
- 
--#ifdef CONFIG_ACPI
-+struct pci_ops pci_root_ops = {
-+	.read = pci_read,
-+	.write = pci_write,
-+};
-+
-+struct pci_root_info {
-+	struct acpi_pci_root_info common;
-+#ifdef  CONFIG_PCI_MMCONFIG
-+	bool mcfg_added;
-+	u8 start_bus;
-+	u8 end_bus;
-+#endif
-+};
-+
-+#ifdef CONFIG_PCI_MMCONFIG
-+static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
-+{
-+	struct pci_mmcfg_region *cfg;
-+	struct pci_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	int err, seg = ci->controller.segment;
-+
-+	info = container_of(ci, struct pci_root_info, common);
-+	info->start_bus = (u8)root->secondary.start;
-+	info->end_bus = (u8)root->secondary.end;
-+	info->mcfg_added = false;
-+
-+	rcu_read_lock();
-+	cfg = pci_mmconfig_lookup(seg, info->start_bus);
-+	rcu_read_unlock();
-+	if (cfg)
-+		return 0;
-+
-+	cfg = pci_mmconfig_alloc(seg, info->start_bus, info->end_bus,
-+				 root->mcfg_addr);
-+	if (!cfg)
-+		return -ENOMEM;
-+
-+	err = pci_mmconfig_inject(cfg);
-+	if (!err)
-+		info->mcfg_added = true;
-+
-+	return err;
-+}
-+
-+static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
-+{
-+	struct pci_root_info *info;
-+
-+	info = container_of(ci, struct pci_root_info, common);
-+	if (info->mcfg_added) {
-+		pci_mmconfig_delete(ci->controller.segment, info->start_bus,
-+				    info->end_bus);
-+		info->mcfg_added = false;
-+	}
-+}
-+#else
-+static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
-+{
-+	return 0;
-+}
-+
-+static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci) { }
-+#endif
-+
-+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
-+{
-+	return pci_add_mmconfig_region(ci);
-+}
-+
-+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-+{
-+	struct pci_root_info *info;
-+
-+	info = container_of(ci, struct pci_root_info, common);
-+	pci_remove_mmconfig_region(ci);
-+	kfree(info);
-+}
-+
-+static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci,
-+					   int status)
-+{
-+	struct resource_entry *entry, *tmp;
-+
-+	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-+		struct resource *res = entry->res;
-+
-+		/*
-+		 * Special handling for ARM IO range
-+		 * TODO: need to move pci_register_io_range() function out
-+		 * of drivers/of/address.c for both used by DT and ACPI
-+		 */
-+		if (res->flags & IORESOURCE_IO) {
-+			unsigned long port;
-+			int err;
-+			resource_size_t length = res->end - res->start;
-+
-+			err = pci_register_io_range(res->start, length);
-+			if (err) {
-+				resource_list_destroy_entry(entry);
-+				continue;
-+			}
-+
-+			port = pci_address_to_pio(res->start);
-+			if (port == (unsigned long)-1) {
-+				resource_list_destroy_entry(entry);
-+				continue;
-+			}
-+
-+			res->start = port;
-+			res->end = res->start + length - 1;
-+
-+			if (pci_remap_iospace(res, res->start) < 0)
-+				resource_list_destroy_entry(entry);
-+		}
-+	}
-+
-+	return status;
-+}
-+
-+static struct acpi_pci_root_ops acpi_pci_root_ops = {
-+	.pci_ops = &pci_root_ops,
-+	.init_info = pci_acpi_root_init_info,
-+	.release_info = pci_acpi_root_release_info,
-+	.prepare_resources = pci_acpi_root_prepare_resources,
-+};
-+
- /* Root bridge scanning */
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
--	/* TODO: Should be revisited when implementing PCI on ACPI */
--	return NULL;
-+	struct pci_root_info *info;
-+	int node;
-+	int domain = root->segment;
-+	int busnum = root->secondary.start;
-+	struct pci_bus *bus;
-+
-+	if (domain && !pci_domains_supported) {
-+		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
-+			domain, busnum);
-+		return NULL;
-+	}
-+
-+	node = acpi_get_node(root->device->handle);
-+	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-+	if (!info) {
-+		dev_err(&root->device->dev, "pci_bus %04x:%02x: ignored (out of memory)\n",
-+			domain, busnum);
-+		return NULL;
-+	}
-+
-+	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &info->common);
-+
-+	/* After the PCI-E bus has been walked and all devices discovered,
-+	 * configure any settings of the fabric that might be necessary.
-+	 */
-+	if (bus) {
-+		struct pci_bus *child;
-+
-+		list_for_each_entry(child, &bus->children, node)
-+			pcie_bus_configure_settings(child);
-+	}
-+
-+	return bus;
- }
- #endif
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index acc4b6e..0268a1d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -25,6 +25,7 @@
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci_hotplug.h>
-+#include <linux/acpi.h>
- #include <asm-generic/pci-bridge.h>
- #include <asm/setup.h>
- #include "pci.h"
-@@ -4509,7 +4510,7 @@ int pci_get_new_domain_nr(void)
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- {
- 	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain;
- 
- 	/*
- 	 * Check DT domain and use_dt_domains values.
-@@ -4537,17 +4538,22 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 	 * invalidating the domain value (domain = -1) and printing a
- 	 * corresponding error.
- 	 */
--	if (domain >= 0 && use_dt_domains) {
--		use_dt_domains = 1;
--	} else if (domain < 0 && use_dt_domains != 1) {
--		use_dt_domains = 0;
--		domain = pci_get_new_domain_nr();
-+	if (acpi_disabled) {
-+		domain = of_get_pci_domain_nr(parent->of_node);
-+		if (domain >= 0 && use_dt_domains) {
-+			use_dt_domains = 1;
-+		} else if (domain < 0 && use_dt_domains != 1) {
-+			use_dt_domains = 0;
-+			domain = pci_get_new_domain_nr();
-+		} else {
-+			dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-+				parent->of_node->full_name);
-+			domain = -1;
-+		}
- 	} else {
--		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
--			parent->of_node->full_name);
--		domain = -1;
-+		struct pci_controller *sd = bus->sysdata;
-+		domain = sd->segment;
- 	}
--
- 	bus->domain_nr = domain;
- }
- #endif
--- 
-1.9.1
+It's correct. The FDT blob passed from firmware is copied by kernel to
+the memory chunk, which is allocated from slab. That means the FDT blob
+managed by firmware can be released in time. In kernel, the instances of
+"struct device_node" and "struct property" are allocated from slab
+dynamically, but some of their fields are points to the (copied) FDT
+blob. It indicates the (copied) FDT can only be released when the sub-tree
+is cut off completely.
+
+
+>>    * of_fdt_add_subtree() is the introduced API to do the work.
+>
+>Have you looked at overlays and if so why do they not work for your purposes?
+>
+>Why do you need to do this with the flattened tree?
+>
+
+It seems that Ben already helped answering the questions. I'll reply
+in other threads if necessary. Rob, thanks for review.
+
+Thanks,
+Gavin
+
+>Rob
+>
+>>
+>> Cc: Grant Likely <grant.likely@linaro.org>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/of/dynamic.c   |  19 +++++--
+>>  drivers/of/fdt.c       | 133 ++++++++++++++++++++++++++++++++++++++++---------
+>>  include/linux/of.h     |   2 +
+>>  include/linux/of_fdt.h |   1 +
+>>  4 files changed, 127 insertions(+), 28 deletions(-)
+>>
+>> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+>> index 3351ef4..f562080 100644
+>> --- a/drivers/of/dynamic.c
+>> +++ b/drivers/of/dynamic.c
+>> @@ -330,13 +330,22 @@ void of_node_release(struct kobject *kobj)
+>>                 return;
+>>         }
+>>
+>> -       if (!of_node_check_flag(node, OF_DYNAMIC))
+>> +       /* Release the subtree */
+>> +       if (node->subtree) {
+>> +               kfree(node->subtree);
+>> +               node->subtree = NULL;
+>> +       }
+>> +
+>> +       if (!of_node_check_flag(node, OF_DYNAMIC) &&
+>> +           !of_node_check_flag(node, OF_DYNAMIC_HYBIRD))
+>>                 return;
+>>
+>>         while (prop) {
+>>                 struct property *next = prop->next;
+>> -               kfree(prop->name);
+>> -               kfree(prop->value);
+>> +               if (of_node_check_flag(node, OF_DYNAMIC)) {
+>> +                       kfree(prop->name);
+>> +                       kfree(prop->value);
+>> +               }
+>>                 kfree(prop);
+>>                 prop = next;
+>>
+>> @@ -345,7 +354,9 @@ void of_node_release(struct kobject *kobj)
+>>                         node->deadprops = NULL;
+>>                 }
+>>         }
+>> -       kfree(node->full_name);
+>> +
+>> +       if (of_node_check_flag(node, OF_DYNAMIC))
+>> +               kfree(node->full_name);
+>>         kfree(node->data);
+>>         kfree(node);
+>>  }
+>> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+>> index cde35c5d01..7659560 100644
+>> --- a/drivers/of/fdt.c
+>> +++ b/drivers/of/fdt.c
+>> @@ -28,6 +28,10 @@
+>>  #include <asm/setup.h>  /* for COMMAND_LINE_SIZE */
+>>  #include <asm/page.h>
+>>
+>> +#include "of_private.h"
+>> +
+>> +static int cur_node_depth;
+>> +
+>>  /*
+>>   * of_fdt_limit_memory - limit the number of regions in the /memory node
+>>   * @limit: maximum entries
+>> @@ -168,20 +172,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+>>   * @dad: Parent struct device_node
+>>   * @fpsize: Size of the node path up at the current depth.
+>>   */
+>> -static void * unflatten_dt_node(void *blob,
+>> -                               void *mem,
+>> -                               int *poffset,
+>> -                               struct device_node *dad,
+>> -                               struct device_node **nodepp,
+>> -                               unsigned long fpsize,
+>> -                               bool dryrun)
+>> +static void *unflatten_dt_node(void *blob,
+>> +                              void *mem,
+>> +                              int *poffset,
+>> +                              struct device_node *dad,
+>> +                              struct device_node **nodepp,
+>> +                              unsigned long fpsize,
+>> +                              bool dryrun,
+>> +                              bool dynamic)
+>>  {
+>>         const __be32 *p;
+>>         struct device_node *np;
+>>         struct property *pp, **prev_pp = NULL;
+>>         const char *pathp;
+>>         unsigned int l, allocl;
+>> -       static int depth = 0;
+>>         int old_depth;
+>>         int offset;
+>>         int has_name = 0;
+>> @@ -219,12 +223,18 @@ static void * unflatten_dt_node(void *blob,
+>>                 }
+>>         }
+>>
+>> -       np = unflatten_dt_alloc(&mem, sizeof(struct device_node) + allocl,
+>> +       if (dynamic)
+>> +               np = kzalloc(sizeof(struct device_node) + allocl, GFP_KERNEL);
+>> +       else
+>> +               np = unflatten_dt_alloc(&mem,
+>> +                               sizeof(struct device_node) + allocl,
+>>                                 __alignof__(struct device_node));
+>>         if (!dryrun) {
+>>                 char *fn;
+>>                 of_node_init(np);
+>>                 np->full_name = fn = ((char *)np) + sizeof(*np);
+>> +               if (dynamic)
+>> +                       of_node_set_flag(np, OF_DYNAMIC_HYBIRD);
+>>                 if (new_format) {
+>>                         /* rebuild full path for new format */
+>>                         if (dad && dad->parent) {
+>> @@ -267,8 +277,12 @@ static void * unflatten_dt_node(void *blob,
+>>                 }
+>>                 if (strcmp(pname, "name") == 0)
+>>                         has_name = 1;
+>> -               pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+>> -                                       __alignof__(struct property));
+>> +
+>> +               if (dynamic)
+>> +                       pp = kzalloc(sizeof(struct property), GFP_KERNEL);
+>> +               else
+>> +                       pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+>> +                                               __alignof__(struct property));
+>>                 if (!dryrun) {
+>>                         /* We accept flattened tree phandles either in
+>>                          * ePAPR-style "phandle" properties, or the
+>> @@ -309,8 +323,13 @@ static void * unflatten_dt_node(void *blob,
+>>                 if (pa < ps)
+>>                         pa = p1;
+>>                 sz = (pa - ps) + 1;
+>> -               pp = unflatten_dt_alloc(&mem, sizeof(struct property) + sz,
+>> -                                       __alignof__(struct property));
+>> +
+>> +               if (dynamic)
+>> +                       pp = kzalloc(sizeof(struct property) + sz, GFP_KERNEL);
+>> +               else
+>> +                       pp = unflatten_dt_alloc(&mem,
+>> +                                               sizeof(struct property) + sz,
+>> +                                               __alignof__(struct property));
+>>                 if (!dryrun) {
+>>                         pp->name = "name";
+>>                         pp->length = sz;
+>> @@ -334,13 +353,21 @@ static void * unflatten_dt_node(void *blob,
+>>                         np->type = "<NULL>";
+>>         }
+>>
+>> -       old_depth = depth;
+>> -       *poffset = fdt_next_node(blob, *poffset, &depth);
+>> -       if (depth < 0)
+>> -               depth = 0;
+>> -       while (*poffset > 0 && depth > old_depth)
+>> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+>> -                                       fpsize, dryrun);
+>> +       old_depth = cur_node_depth;
+>> +       *poffset = fdt_next_node(blob, *poffset, &cur_node_depth);
+>> +       while (*poffset > 0) {
+>> +               if (cur_node_depth < old_depth)
+>> +                       break;
+>> +
+>> +               if (cur_node_depth == old_depth)
+>> +                       mem = unflatten_dt_node(blob, mem, poffset,
+>> +                                               dad, NULL, fpsize,
+>> +                                               dryrun, dynamic);
+>> +               else if (cur_node_depth > old_depth)
+>> +                       mem = unflatten_dt_node(blob, mem, poffset,
+>> +                                               np, NULL, fpsize,
+>> +                                               dryrun, dynamic);
+>> +       }
+>>
+>>         if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+>>                 pr_err("unflatten: error %d processing FDT\n", *poffset);
+>> @@ -379,8 +406,8 @@ static void * unflatten_dt_node(void *blob,
+>>   * for the resulting tree
+>>   */
+>>  static void __unflatten_device_tree(void *blob,
+>> -                            struct device_node **mynodes,
+>> -                            void * (*dt_alloc)(u64 size, u64 align))
+>> +                               struct device_node **mynodes,
+>> +                               void * (*dt_alloc)(u64 size, u64 align))
+>>  {
+>>         unsigned long size;
+>>         int start;
+>> @@ -405,7 +432,9 @@ static void __unflatten_device_tree(void *blob,
+>>
+>>         /* First pass, scan for size */
+>>         start = 0;
+>> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+>> +       cur_node_depth = 1;
+>> +       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL,
+>> +                                               NULL, 0, true, false);
+>>         size = ALIGN(size, 4);
+>>
+>>         pr_debug("  size is %lx, allocating...\n", size);
+>> @@ -420,7 +449,8 @@ static void __unflatten_device_tree(void *blob,
+>>
+>>         /* Second pass, do actual unflattening */
+>>         start = 0;
+>> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+>> +       cur_node_depth = 1;
+>> +       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false, false);
+>>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>>                 pr_warning("End of tree marker overwritten: %08x\n",
+>>                            be32_to_cpup(mem + size));
+>> @@ -448,6 +478,61 @@ void of_fdt_unflatten_tree(unsigned long *blob,
+>>  }
+>>  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+>>
+>> +static void populate_sysfs_for_child_nodes(struct device_node *parent)
+>> +{
+>> +       struct device_node *child;
+>> +
+>> +       for_each_child_of_node(parent, child) {
+>> +               __of_attach_node_sysfs(child);
+>> +               populate_sysfs_for_child_nodes(child);
+>> +       }
+>> +}
+>> +
+>> +/**
+>> + * of_fdt_add_substree - Create sub-tree of device nodes
+>> + * @parent: parent device node to which the sub-tree will attach
+>> + * @blob: flat device tree blob representing the sub-tree
+>> + *
+>> + * Copy over the FDT blob, which passed from firmware, and then
+>> + * unflatten the sub-tree.
+>> + */
+>> +void of_fdt_add_subtree(struct device_node *parent, void *blob)
+>> +{
+>> +       int start = 0;
+>> +
+>> +       /* Validate the header */
+>> +       if (!blob || fdt_check_header(blob)) {
+>> +               pr_err("%s: Invalid device-tree blob header at 0x%p\n",
+>> +                      __func__, blob);
+>> +               return;
+>> +       }
+>> +
+>> +       /* Free the flat blob for last time lazily */
+>> +       if (parent->subtree) {
+>> +               kfree(parent->subtree);
+>> +               parent->subtree = NULL;
+>> +       }
+>> +
+>> +       /* Copy over the flat blob */
+>> +       parent->subtree = kzalloc(fdt_totalsize(blob), GFP_KERNEL);
+>> +       if (!parent->subtree) {
+>> +               pr_err("%s: Cannot copy over device-tree blob\n",
+>> +                      __func__);
+>> +               return;
+>> +       }
+>> +
+>> +       memcpy(parent->subtree, blob, fdt_totalsize(blob));
+>> +
+>> +       /* Unflatten it */
+>> +       mutex_lock(&of_mutex);
+>> +       cur_node_depth = 1;
+>> +       unflatten_dt_node(parent->subtree, NULL, &start, parent, NULL,
+>> +                         strlen(parent->full_name), false, true);
+>> +       populate_sysfs_for_child_nodes(parent);
+>> +       mutex_unlock(&of_mutex);
+>> +}
+>> +EXPORT_SYMBOL(of_fdt_add_subtree);
+>> +
+>>  /* Everything below here references initial_boot_params directly. */
+>>  int __initdata dt_root_addr_cells;
+>>  int __initdata dt_root_size_cells;
+>> diff --git a/include/linux/of.h b/include/linux/of.h
+>> index ddeaae6..ac50b02 100644
+>> --- a/include/linux/of.h
+>> +++ b/include/linux/of.h
+>> @@ -60,6 +60,7 @@ struct device_node {
+>>         struct  device_node *sibling;
+>>         struct  kobject kobj;
+>>         unsigned long _flags;
+>> +       void    *subtree;
+>>         void    *data;
+>>  #if defined(CONFIG_SPARC)
+>>         const char *path_component_name;
+>> @@ -222,6 +223,7 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
+>>  #define OF_DETACHED    2 /* node has been detached from the device tree */
+>>  #define OF_POPULATED   3 /* device already created for the node */
+>>  #define OF_POPULATED_BUS       4 /* of_platform_populate recursed to children of this node */
+>> +#define OF_DYNAMIC_HYBIRD      5 /* similar to OF_DYNAMIC, but partially */
+>>
+>>  #define OF_IS_DYNAMIC(x) test_bit(OF_DYNAMIC, &x->_flags)
+>>  #define OF_MARK_DYNAMIC(x) set_bit(OF_DYNAMIC, &x->_flags)
+>> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+>> index 587ee50..1fb47d7 100644
+>> --- a/include/linux/of_fdt.h
+>> +++ b/include/linux/of_fdt.h
+>> @@ -39,6 +39,7 @@ extern int of_fdt_match(const void *blob, unsigned long node,
+>>                         const char *const *compat);
+>>  extern void of_fdt_unflatten_tree(unsigned long *blob,
+>>                                struct device_node **mynodes);
+>> +extern void of_fdt_add_subtree(struct device_node *parent, void *blob);
+>>
+>>  /* TBD: Temporary export of fdt globals - remove when code fully merged */
+>>  extern int __initdata dt_root_addr_cells;
+>> --
+>> 2.1.0
+>>
+>
 
