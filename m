@@ -1,148 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:37724 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbbEDAYS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 May 2015 20:24:18 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 10:24:16 +1000
+Date: Mon, 4 May 2015 10:23:14 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Message-ID: <20150504002314.GA12518@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+ <1430493730.7979.58.camel@kernel.crashing.org>
+ <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+ <1430521038.7979.70.camel@kernel.crashing.org>
+ <1430522976.7979.78.camel@kernel.crashing.org>
 MIME-Version: 1.0
-Date: Wed, 6 May 2015 09:47:49 -0500
-Message-ID: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com>
-Subject: I/O conflict on Versalogic Tiger (VL-EPM-24)
-From: George McCollister <george.mccollister@gmail.com>
-To: linux-acpi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430522976.7979.78.camel@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We're using Versalogic Tiger (VL-EPM-24) SBCs in embedded systems
-running linux 3.2.x without any problems. Recently, when testing the
-latest mainline kernel I found the system hard locked during boot.
+On Sat, May 02, 2015 at 09:29:36AM +1000, Benjamin Herrenschmidt wrote:
+>On Sat, 2015-05-02 at 08:57 +1000, Benjamin Herrenschmidt wrote:
+>
+>> > Overlay = an FDT blob to graft into a live running system. Sounds like
+>> > the same thing.
+>> > 
+>> > > As for the details of Gavin implementation, I haven't looked at it in
+>> > > details yet so there might be issues there, however I don't know what
+>> > > you mean by "overlays", any pointer ?
+>> > 
+>> > CONFIG_OF_OVERLAY
+>> > 
+>> > http://events.linuxfoundation.org/sites/events/files/slides/dynamic-dt-keynote-v3.pdf
+>> 
+>> Well, that looks horrendously complicated, poorly documented and totally
+>> unused in-tree outside of the unittest stuff, yay ! It has all sort of
+>> "features" that I don't really care about.
+>
+>Looking a bit more at it, I don't quite see how I can attach a subtree
+>using that stuff.
+>
+>Instead, each node in the overlay seems to need extra nodes and
+>properties to refer to the original.
+>
+>So the FW would essentially have to create something a lot more complex
+>than just reflattening a bit of its internal tree. For each internal
+>node, it will need to add all those __overlay__ nodes and properties.
+>
+>That is not going to fly for me at all. It's order of magnitudes more
+>complex than the solution we are pursuing.
+>
+>So I think for our use case, we should continue in the direction of
+>having a helper to unflatten a piece of FDT underneath an existing
+>node. I don't like the "HYBRID" stuff though, we should not refer to
+>the original FDT, we should just make them normal dynamic nodes.
+>
 
-After some investigation I noticed that the kernel print time stamps
-were bogus after one of the pcieports was enabled:
-[    1.658879] io scheduler cfq registered (default)
-[    1.663905] pcieport 0000:00:1c.0: enabling device (0004 -> 0007)
-[    6.254134] Serial: 8250/16550 driver, 21 ports, IRQ sharing enabled
-[    6.254134] 00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200)
-is a 16550A
-[    6.254134] 00:04: ttyS1 at I/O 0x2f8 (irq = 0, base_baud = 115200)
-is a 16550A
-[    6.254134] 00:05: ttyS2 at I/O 0x3e8 (irq = 0, base_baud = 115200)
-is a 16550A
-[    6.254134] 00:06: ttyS4 at I/O 0x238 (irq = 0, base_baud = 115200)
-is a 16550A
+The original FDT from firmware is copied over to the memory chunk
+allocated from slab by kernel. So we refer to the copy of the FDT,
+not original one. Yeah, "HYBRID" wouldn't be a good idea. If we
+want make all device nodes and properties of the sub-tree "DYNAMIC",
+the FDT hasn't to be copied over from skiboot to kernel, indicating
+those dynamic device nodes and properties in the subtree can be
+figured out directly from the FDT blob, which is owned by firmware.
 
-I was surprised to find that the problem existed as far back as 3.11.
-I checked to make sure we were using the latest BIOS and contacted the
-vendor to see if they were aware of anyone else using recent versions
-of the linux kernel. They stated that they were unaware of anyone
-using recent kernel versions on this board and tired to convince me to
-stick with an old version.
-
-I then git bisected to this commit:
-ac212b6980d8d5eda705864fc5a8ecddc6d6eacc ACPI / processor: Use common
-hotplug infrastructure
-
-After diffing the kernel output before and after this commit I noticed
-that the I/O BAR assigned to the pcieport (same one as above) changed
-from 0x1000 to 0x2000.
-
-@@ -191,13 +191,13 @@
-Switching to clocksource acpi_pm
-pci 0000:00:1c.0: BAR 9: assigned [mem 0x80000000-0x801fffff pref]
-pci 0000:00:1c.1: BAR 9: assigned [mem 0x80200000-0x803fffff pref]
--pci 0000:00:1c.0: BAR 7: assigned [io  0x1000-0x1fff]
-+pci 0000:00:1c.0: BAR 7: assigned [io  0x2000-0x2fff]
-pci 0000:02:01.0: PCI bridge to [bus 03]
-pci 0000:02:01.0:   bridge window [mem 0xdff00000-0xdfffffff]
-pci 0000:01:00.0: PCI bridge to [bus 02-03]
-pci 0000:01:00.0:   bridge window [mem 0xdff00000-0xdfffffff]
-pci 0000:00:1c.0: PCI bridge to [bus 01-03]
--pci 0000:00:1c.0:   bridge window [io  0x1000-0x1fff]
-+pci 0000:00:1c.0:   bridge window [io  0x2000-0x2fff]
-pci 0000:00:1c.0:   bridge window [mem 0xdff00000-0xdfffffff]
-pci 0000:00:1c.0:   bridge window [mem 0x80000000-0x801fffff pref]
-pci 0000:00:1c.1: PCI bridge to [bus 04]
-
-I also noticed the kernel output 'ACPI: PM-Timer IO Port: 0x2008' and
-made the connection that since acpi_pm was being used as the
-clocksource and since the problems started when the BAR switched from
-0x1000 to 0x2000 an I/O conflict must be the source of the problems.
-
-I did some reading into ACPI (since my understanding of it was novice
-at the time) and dumped the DSDT. I found no reference to anything in
-the 0x2xxx I/O range though I did find the following in the FADT:
-PM1a_EVT_BLK at 0x2000-0x2003
-PM1a_CNT_BLK at 0x2004-0x2005
-PM_TMR at 0x2008-0x200b
-
-I dumped the DSDT on other systems and found that some used PNP0C02 to
-reserve I/O ranges used by the ACPI PM registers.
-
-I added the following to the Versalogic Tiger dsdt.dsl under the PCI
-bus, compiled it and and compiled into the linux kernel:
-            Device (PMIO)
-            {
-                Name (_HID, EisaId ("PNP0C02") /* PNP Motherboard
-Resources */)  // _HID: Hardware ID
-                Name (_UID, 0x09)  // _UID: Unique ID
-                Method (_CRS, 0, NotSerialized)  // _CRS: Current
-Resource Settings
-                {
-                    Name (BUF0, ResourceTemplate ()
-                    {
-                        IO (Decode16,
-                            0x2000,            // Range Minimum
-                            0x2000,            // Range Maximum
-                            0x01,              // Alignment
-                            0xC,               // Length
-                        )
-                        IO (Decode16,
-                            0x20C0,            // Range Minimum
-                            0x20C0,            // Range Maximum
-                            0x01,              // Alignment
-                            0x8,               // Length
-                        )
-                    })
-                    Return (BUF0)
-                }
-            }
-
-It booted just fine! (comment welcome on whether or not this looks
-like the correct fix)
-
-Unfortunately even if I get the vendor to release a new BIOS with the
-DSDT modifications, rolling out BIOS updates to thousands of systems
-in the field will be nearly impossible. When we roll out a new kernel
-to the production systems we'll need it to work with the existing
-BIOS.
-
-I've been searching around the linux kernel for a way to apply a quirk
-specific to this board.
-I've found I can do something like the following and match the Poulsbo
-Host bridge and that it'll fix the problem but I don't see a decent
-way of restricting it to this board.
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85f247e..1f16dbf 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -413,6 +413,17 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,
-PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
-
-/*
-+ * Versa Logic Tiger
-+ */
-+static void quirk_versa_logic_tiger(struct pci_dev *dev)
-+{
-+       dev_info(&dev->dev, "Versalogic Tiger, reserving I/O ports\n");
-+       request_region(0x2000, 0x0C, "Versalogic Tiger");
-+       request_region(0x20C0, 0x08, "Versalogic Tiger");
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x8100, quirk_versa_logic_tiger);
-+
-+/*
-
-Any suggestions on what could be done to get a fix for this board
-mainlined into the kernel? Should I give up hope and just apply a cute
-embedded non-sense hack?
+Also, it just need small changes to code what we have. Not too much
+changes needed.
 
 Thanks,
-George McCollister
+Gavin
+
