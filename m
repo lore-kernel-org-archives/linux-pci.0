@@ -1,133 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:47388 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbbEOGUT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 02:20:19 -0400
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:40321 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751723AbbEDHLG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:11:06 -0400
 Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 16:20:17 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 4E1482CE804E
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:20:15 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F6K6QB30343252
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:20:15 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F6Jg5u017318
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:19:42 +1000
-Date: Fri, 15 May 2015 16:19:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 05/11] powerpc/powernv: create/release eeh_dev for VF
-Message-ID: <20150515061916.GA29805@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 17:11:04 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A26133578048
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:11:00 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t447Aq9u49414282
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:11:00 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t447ARTT003120
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:10:28 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V3 8/9] powerpc/powernv: Support PCI config restore for VFs
+Date: Mon,  4 May 2015 15:07:37 +0800
+Message-Id: <1430723258-21299-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 01:46:20PM +0800, Wei Yang wrote:
->EEH on powerpc platform needs eeh_dev structure to track the PCI device
->status. Since VFs are created/released dynamically, VF's eeh_dev is also
->dynamically created/released in system.
->
->This patch creates/removes eeh_dev when pci_dn is created/removed for VFs,
->and marks it with EEH_DEV_VF type.
->
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Since FW is not aware of VFs, the restore action for VF should be done in
+kernel.
 
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+This patch introduces pnv_eeh_vf_restore_config() for VF.
 
-After removing the unnecessary line of code as below.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h        |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   77 +++++++++++++++++++++++++-
+ 2 files changed, 77 insertions(+), 1 deletion(-)
 
->---
-> arch/powerpc/include/asm/eeh.h |    1 +
-> arch/powerpc/kernel/eeh.c      |    4 ++++
-> arch/powerpc/kernel/pci_dn.c   |   11 +++++++++++
-> 3 files changed, 16 insertions(+)
->
->diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->index a52db28..1b3614d 100644
->--- a/arch/powerpc/include/asm/eeh.h
->+++ b/arch/powerpc/include/asm/eeh.h
->@@ -138,6 +138,7 @@ struct eeh_dev {
-> 	struct pci_controller *phb;	/* Associated PHB		*/
-> 	struct pci_dn *pdn;		/* Associated PCI device node	*/
-> 	struct pci_dev *pdev;		/* Associated PCI device	*/
->+	struct pci_dev *physfn;		/* Associated PF PORT		*/
-> 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
-> };
->
->diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
->index 6c7ce1b..221e280 100644
->--- a/arch/powerpc/kernel/eeh.c
->+++ b/arch/powerpc/kernel/eeh.c
->@@ -1135,6 +1135,10 @@ void eeh_add_device_late(struct pci_dev *dev)
-> 	}
->
-> 	edev->pdev = dev;
->+#ifdef CONFIG_PCI_IOV
->+	if (dev->is_virtfn)
->+		edev->physfn = dev->physfn;
->+#endif
-> 	dev->dev.archdata.edev = edev;
->
-> 	if (eeh_has_flag(EEH_PROBE_MODE_DEV))
->diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->index f771130..94806a4 100644
->--- a/arch/powerpc/kernel/pci_dn.c
->+++ b/arch/powerpc/kernel/pci_dn.c
->@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
-> struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
-> {
-> #ifdef CONFIG_PCI_IOV
->+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-> 	struct pci_dn *parent, *pdn;
->+	struct eeh_dev *edev;
-> 	int i;
->
-> 	/* Only support IOV for now */
->@@ -206,6 +208,8 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
-> 				 __func__, i);
-> 			return NULL;
-> 		}
->+		eeh_dev_init(pdn, hose);
->+		edev = pdn_to_eeh_dev(pdn);
-
-Nothing is done to edev after getting it. So I think the last line of changes
-here isn't needed. Could you check and remove it if I'm correct?
-
-Thanks,
-Gavin
-
-> 	}
-> #endif /* CONFIG_PCI_IOV */
->
->@@ -254,10 +258,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
-> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
-> 		list_for_each_entry_safe(pdn, tmp,
-> 			&parent->child_list, list) {
->+			struct eeh_dev *edev;
-> 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
-> 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
-> 				continue;
->
->+			edev = pdn_to_eeh_dev(pdn);
->+			if (edev) {
->+				pdn->edev = NULL;
->+				kfree(edev);
->+			}
->+
-> 			if (!list_empty(&pdn->list))
-> 				list_del(&pdn->list);
->
->-- 
->1.7.9.5
->
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 9582aa2..de55ef6 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -205,6 +205,7 @@ struct pci_dn {
+ 	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
++	int	mps;
+ #endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 1ad322f..6ba6d87 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1589,6 +1589,59 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static int pnv_eeh_vf_restore_config(struct pci_dn *pdn)
++{
++	int pcie_cap, aer_cap, old_mps;
++	u32 devctl, cmd, cap2, aer_capctl;
++
++	/* Restore MPS */
++	pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
++	if (pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
++	}
++
++	/* Disable Completion Timeout */
++	if (pcie_cap) {
++		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
++		if (cap2 & 0x10) {
++			pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
++			cap2 |= 0x10;
++			pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	pnv_pci_cfg_read(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	pnv_pci_cfg_write(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (pcie_cap) {
++		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (pcie_cap) {
++		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
++		pnv_pci_cfg_read(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		pnv_pci_cfg_write(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
++	}
++
++	return 0;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1599,7 +1652,13 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
+ 
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++#ifdef CONFIG_PCI_IOV
++	/* FW is not VF aware, we rely on OS to restore it */
++	if (edev->mode & EEH_DEV_VF)
++		ret = pnv_eeh_vf_restore_config(pdn);
++	else
++#endif
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+@@ -1660,4 +1719,20 @@ static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+ 	}
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
++
++static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
+ #endif /* CONFIG_PCI_IOV */
+-- 
+1.7.9.5
 
