@@ -1,46 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:34794 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbbE0OSl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 10:18:41 -0400
-Received: by pdbki1 with SMTP id ki1so17207637pdb.1
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2015 07:18:40 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Yijing Wang'" <wangyijing@huawei.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>
-Cc: <linux-pci@vger.kernel.org>, "'Daniel Axtens'" <dja@axtens.net>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"'Mohit Kumar'" <mohit.kumar@st.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Lucas Stach'" <l.stach@pengutronix.de>
-Subject: Re: [PATCH Part1 v11 3/5] PCI: designware: Use pci_scan_root_bus() for simplicity
-Date: Wed, 27 May 2015 23:18:37 +0900
-Message-ID: <000301d09888$09d01370$1d703a50$@com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55477B86.70705@linux.intel.com>
+Date: Mon, 04 May 2015 22:00:38 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Amir Vadai <amirv@mellanox.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Hadar Hen Zion <hadarh@mellanox.com>,
+	Eran Ben Elisha <eranbe@mellanox.com>,
+	Joe Perches <joe@perches.com>,
+	Saeed Mahameed <saeedm@mellanox.com>,
+	Matan Barak <matanb@mellanox.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of
+ irq_desc
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>	<1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com> <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+In-Reply-To: <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 28 Apr 2015 15:01:37 +0800, Yijing Wang wrote:
-
-> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
-> Now pci_scan_root_bus() == pci_create_root_bus() +
-> pci_scan_child_bus() if busn resource is supplied.
-> Designware added the busn resource to resources list
-> in dw_pcie_setup(). So it should be safe to use
-> pci_scan_root_bus() instead.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Mohit Kumar <mohit.kumar@st.com>
-> CC: Jingoo Han <jg1.han@samsung.com>
-
-+cc: Pratyush Anand, Lucas Stach
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-> ---
->  drivers/pci/host/pcie-designware.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
-
+On 2015/5/4 20:10, Amir Vadai wrote:
+> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> The field 'affinity' in irq_desc won't change once the irq_desc data
+>> structure is created. So cache irq_desc->affinity instead of irq_desc.
+>> This also helps to hide struct irq_desc from device drivers.
+> 
+> Hi Jiang,
+> 
+> I might not understand the new changes irq core, but up until now
+> affinity was changed when the user changed it through
+> /proc/irq/<IRQ>/smp_affinity.
+> This code is monitoring the affinity from the napi_poll context to
+> detect affinity changes, and prevent napi from keep running on the
+> wrong CPU.
+> Therefore, the affinity can't be cached at the beginning. Please
+> revert this caching.
+Hi Amir,
+	Thanks for review:) We want to hide irq_desc implementation
+details from device drivers, so made these changes.
+	Function irq_get_affinity_mask() returns 'struct cpumask *'
+and we cache the returned pointer. On the other hand, user may change
+IRQ affinity through /proc/irq/<IRQ>/smp_affinity, but that only
+changes the bitmap pointed to by the cached pointer and won't change
+the pointer itself. So it should always return the latest affinity
+setting by calling cpumask_test_cpu(cpu_curr, cq->irq_affinity).
+Or am I missing something here?
+Thanks!
+Gerry
+> 
+> Thanks,
+> Amir
+> 
