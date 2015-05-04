@@ -1,48 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:49882 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964807AbbELVbK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 May 2015 17:31:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: rjui@broadcom.com, bhelgaas@google.com, arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, sbranden@broadcom.com,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/2] PCI: iproc: add bcma PCIe 2.0 controller
-Date: Tue, 12 May 2015 23:22:59 +0200
-Message-Id: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-am33-list@redhat.com
+Subject: [RFC v1 05/11] mn10300: Fix incorrect use of data->affinity
+Date: Mon,  4 May 2015 11:15:33 +0800
+Message-Id: <1430709339-29083-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After Ray submitted the PCIe controller for the iProc devices using 
-pure device tree this adds support for the devices using bcma to scan 
-the bus. This should replaces the driver I initially send for inclusion.
+The field affinity in struct irq_data is type of cpumask_var_t, so
+we should pass in data->affinity instead of &data->affinity when
+calling cpumask_xxxx().
 
-@Ray The driver found in the Broadcom SDK does some more stuff:
-* setting up some DMA memory areas
-* chaining MPS and MRRS to 512
-* PHY changes:
- * "improving" the PCIe jitter 
- * some special initializations for the 3rd PCIe port
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/mn10300/kernel/irq.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-For me it works without these additions, but I haven't tested for 
-performance or stability or 3rd port. Can you check if this is needed 
-at all for the devices found on the market?
-
-Hauke Mehrtens (2):
-  PCI: iproc: make of_irq_parse_and_map_pci() configurable
-  PCI: iproc: add bcma pcie driver
-
- drivers/pci/host/Kconfig               |  11 ++++
- drivers/pci/host/Makefile              |   1 +
- drivers/pci/host/pcie-iproc-bcma.c     | 112 +++++++++++++++++++++++++++++++++
- drivers/pci/host/pcie-iproc-platform.c |   2 +
- drivers/pci/host/pcie-iproc.c          |   2 +-
- drivers/pci/host/pcie-iproc.h          |   1 +
- 6 files changed, 128 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/host/pcie-iproc-bcma.c
-
+diff --git a/arch/mn10300/kernel/irq.c b/arch/mn10300/kernel/irq.c
+index 6ab3b73efcf8..480de70f4059 100644
+--- a/arch/mn10300/kernel/irq.c
++++ b/arch/mn10300/kernel/irq.c
+@@ -320,11 +320,11 @@ void migrate_irqs(void)
+ 		if (irqd_is_per_cpu(data))
+ 			continue;
+ 
+-		if (cpumask_test_cpu(self, &data->affinity) &&
++		if (cpumask_test_cpu(self, data->affinity) &&
+ 		    !cpumask_intersects(&irq_affinity[irq], cpu_online_mask)) {
+ 			int cpu_id;
+ 			cpu_id = cpumask_first(cpu_online_mask);
+-			cpumask_set_cpu(cpu_id, &data->affinity);
++			cpumask_set_cpu(cpu_id, data->affinity);
+ 		}
+ 		/* We need to operate irq_affinity_online atomically. */
+ 		arch_local_cli_save(flags);
+@@ -335,7 +335,7 @@ void migrate_irqs(void)
+ 			GxICR(irq) = x & GxICR_LEVEL;
+ 			tmp = GxICR(irq);
+ 
+-			new = cpumask_any_and(&data->affinity,
++			new = cpumask_any_and(data->affinity,
+ 					      cpu_online_mask);
+ 			irq_affinity_online[irq] = new;
+ 
 -- 
-2.1.4
+1.7.10.4
 
