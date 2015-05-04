@@ -1,110 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og108.obsmtp.com ([64.18.0.186]:52770 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753498AbbERJzm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 05:55:42 -0400
-Received: by pdea3 with SMTP id a3so141545579pde.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 02:55:40 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+Received: from gate.crashing.org ([63.228.1.57]:57537 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752003AbbEDVOt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 May 2015 17:14:49 -0400
+Message-ID: <1430774063.7979.139.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Pantelis Antoniou <panto@antoniou-consulting.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v7 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
-Date: Mon, 18 May 2015 02:55:20 -0700
-Message-Id: <2dafcf7d9a810804fa1616289e82d3ed86dd4980.1431940313.git.dhdang@apm.com>
-In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
-References: <cover.1431940313.git.dhdang@apm.com>
-In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
-References: <20150422135002.1b407b98@why.wild-wind.fr.eu.org> <cover.1431940313.git.dhdang@apm.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Tue, 05 May 2015 07:14:23 +1000
+In-Reply-To: <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+	 <1430493730.7979.58.camel@kernel.crashing.org>
+	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+	 <1430521038.7979.70.camel@kernel.crashing.org>
+	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+On Mon, 2015-05-04 at 19:41 +0300, Pantelis Antoniou wrote:
+> 
+> You get all of the corner cases handled for free. Perhaps it works for
+> your case too.
+> 
+> Perhaps you can educate me on what you need supported and we can make
+> sure it’s included.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+Which corner cases ?
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index f1ad9c2..4b719c9 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -354,6 +354,28 @@
- 			};
- 		};
- 
-+		msi: msi@79000000 {
-+			compatible = "apm,xgene1-msi";
-+			msi-controller;
-+			reg = <0x00 0x79000000 0x0 0x900000>;
-+			interrupts = <  0x0 0x10 0x4
-+					0x0 0x11 0x4
-+					0x0 0x12 0x4
-+					0x0 0x13 0x4
-+					0x0 0x14 0x4
-+					0x0 0x15 0x4
-+					0x0 0x16 0x4
-+					0x0 0x17 0x4
-+					0x0 0x18 0x4
-+					0x0 0x19 0x4
-+					0x0 0x1a 0x4
-+					0x0 0x1b 0x4
-+					0x0 0x1c 0x4
-+					0x0 0x1d 0x4
-+					0x0 0x1e 0x4
-+					0x0 0x1f 0x4>;
-+		};
-+
- 		pcie0: pcie@1f2b0000 {
- 			status = "disabled";
- 			device_type = "pci";
-@@ -375,6 +397,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie0clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie1: pcie@1f2c0000 {
-@@ -398,6 +421,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie1clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie2: pcie@1f2d0000 {
-@@ -421,6 +445,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie2clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie3: pcie@1f500000 {
-@@ -444,6 +469,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie3clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie4: pcie@1f510000 {
-@@ -467,6 +493,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie4clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		serial0: serial@1c020000 {
--- 
-1.9.1
+IE, what I want is simply "update" the device-tree below a PCIe slot on
+PCI hotplug.
+
+The DT isn't "compiled" from a dts (it's amazing how many people seem to
+believe this is the only way you get fdt's nowadays). It's dynamically
+(ie programatically) generated by firmware at boot time and contains
+whatever PCIe devices happen to be plugged during boot.
+
+When doing PCIe hotplug operations, the kernel does various FW calls
+(among others to control slot power), and during these, the FW re-probes
+underneath the slot and refreshes its internal representation. So the
+phandles remain fully consistent, there is no fixup needed.
+
+We want the kernel to also update his copy as wee in order to avoid
+keeping stale nodes that don't match what's there anymore. Also, when
+plugging specific kind of IO drawers, the FW can provide additional node
+and properties that will be used to control slots inside the drawers.
+
+So what we need is:
+
+  - On PCIe unplug, remove all old nodes below the slot
+  - On PCIe plug, get all the new nodes from FW
+
+Note that there is no need to do anything like platform device probing
+etc... the PCI layer takes care of that, we will remove the old nodes
+after the pci_dev are gone and create the new ones before Linux
+re-probes the PCIe bus subtree.
+
+So what we need is very simple: The removal can be handled without FW
+help, and the plug case is a matter of just transferring all those new
+nodes to Linux to re-expand.
+
+Since the phandle etc... are all consistent with the original tree,
+there is no fixups required.
+
+So the "trivial" way to do it (and the way we have implemented the FW
+side so far) is to have the FW simply "flatten" the subtree below the
+slot and pass it to Linux, with the intent of expanding it back below
+the slot node.
+
+This is what Gavin proposed patches do.
+
+The overlay mechanism adds all sorts of features that we don't seen to
+need and would make the above more complex.
+
+Cheers,
+Ben.
+
 
