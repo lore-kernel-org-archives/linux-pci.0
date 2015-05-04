@@ -1,277 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <554C1F9C.7020300@huawei.com>
-Date: Fri, 8 May 2015 10:29:48 +0800
-From: "Yun Wu (Abel)" <wuyun.wu@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44855 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbbEDBbQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 May 2015 21:31:16 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 11:31:14 +1000
+Date: Mon, 4 May 2015 11:30:12 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, <x86@kernel.org>,
-	"Jason Cooper" <jason@lakedaemon.net>,
 	Grant Likely <grant.likely@linaro.org>,
-	"Kevin Cernekee" <cernekee@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, <linux-sh@vger.kernel.org>
-Subject: Re: [RFC v1 02/11] genirq: Move field 'node' from struct irq_data
- into struct irq_common_data
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430709339-29083-3-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Message-ID: <20150504013012.GA15561@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+ <1430493730.7979.58.camel@kernel.crashing.org>
+ <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+ <1430521038.7979.70.camel@kernel.crashing.org>
+ <1430522976.7979.78.camel@kernel.crashing.org>
+ <1430534906.7979.85.camel@kernel.crashing.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430534906.7979.85.camel@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gerry,
-On 2015/5/4 11:15, Jiang Liu wrote:
+On Sat, May 02, 2015 at 12:48:26PM +1000, Benjamin Herrenschmidt wrote:
+>On Sat, 2015-05-02 at 09:29 +1000, Benjamin Herrenschmidt wrote:
+>
+>> Looking a bit more at it, I don't quite see how I can attach a subtree
+>> using that stuff.
+>> 
+>> Instead, each node in the overlay seems to need extra nodes and
+>> properties to refer to the original.
+>> 
+>> So the FW would essentially have to create something a lot more complex
+>> than just reflattening a bit of its internal tree. For each internal
+>> node, it will need to add all those __overlay__ nodes and properties.
+>> 
+>> That is not going to fly for me at all. It's order of magnitudes more
+>> complex than the solution we are pursuing.
+>> 
+>> So I think for our use case, we should continue in the direction of
+>> having a helper to unflatten a piece of FDT underneath an existing
+>> node. I don't like the "HYBRID" stuff though, we should not refer to
+>> the original FDT, we should just make them normal dynamic nodes.
 
-> NUMA node information is per-irq instead of per-irqchip, so move it into
-> struct irq_common_data.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/sh/kernel/irq.c          |    2 +-
->  arch/x86/kernel/apic/vector.c |    8 ++++----
->  arch/x86/platform/uv/uv_irq.c |    2 +-
->  include/linux/irq.h           |   20 ++++++++++++++++++--
->  kernel/irq/internals.h        |    5 +++++
->  kernel/irq/irqdesc.c          |   10 ++--------
->  kernel/irq/irqdomain.c        |    4 ++--
->  kernel/irq/manage.c           |    2 +-
->  kernel/irq/proc.c             |    2 +-
->  9 files changed, 35 insertions(+), 20 deletions(-)
-> 
-> diff --git a/arch/sh/kernel/irq.c b/arch/sh/kernel/irq.c
-> index eb10ff84015c..8dc677cc136b 100644
-> --- a/arch/sh/kernel/irq.c
-> +++ b/arch/sh/kernel/irq.c
-> @@ -227,7 +227,7 @@ void migrate_irqs(void)
->  	for_each_active_irq(irq) {
->  		struct irq_data *data = irq_get_irq_data(irq);
->  
-> -		if (data->node == cpu) {
-> +		if (irq_data_get_node(data) == cpu) {
->  			unsigned int newcpu = cpumask_any_and(data->affinity,
->  							      cpu_online_mask);
->  			if (newcpu >= nr_cpu_ids) {
-> diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-> index 96ce5068a926..983bea2a09ce 100644
-> --- a/arch/x86/kernel/apic/vector.c
-> +++ b/arch/x86/kernel/apic/vector.c
-> @@ -345,7 +345,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
->  	struct irq_alloc_info *info = arg;
->  	struct apic_chip_data *data;
->  	struct irq_data *irq_data;
-> -	int i, err;
-> +	int i, err, node;
->  
->  	if (disable_apic)
->  		return -ENXIO;
-> @@ -357,12 +357,13 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
->  	for (i = 0; i < nr_irqs; i++) {
->  		irq_data = irq_domain_get_irq_data(domain, virq + i);
->  		BUG_ON(!irq_data);
-> +		node = irq_data_get_node(irq_data);
->  #ifdef	CONFIG_X86_IO_APIC
->  		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
->  			data = legacy_irq_data[virq + i];
->  		else
->  #endif
-> -			data = alloc_apic_chip_data(irq_data->node);
-> +			data = alloc_apic_chip_data(node);
->  		if (!data) {
->  			err = -ENOMEM;
->  			goto error;
-> @@ -371,8 +372,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
->  		irq_data->chip = &lapic_controller;
->  		irq_data->chip_data = data;
->  		irq_data->hwirq = virq + i;
-> -		err = assign_irq_vector_policy(virq, irq_data->node, data,
-> -					       info);
-> +		err = assign_irq_vector_policy(virq, node, data, info);
->  		if (err)
->  			goto error;
->  	}
-> diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-> index cdf86cd3fd97..bc992b7b041f 100644
-> --- a/arch/x86/platform/uv/uv_irq.c
-> +++ b/arch/x86/platform/uv/uv_irq.c
-> @@ -89,7 +89,7 @@ static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
->  		return -EINVAL;
->  
->  	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
-> -				 irq_data->node);
-> +				 irq_data_get_node(irq_data));
->  	if (!chip_data)
->  		return -ENOMEM;
->  
-> diff --git a/include/linux/irq.h b/include/linux/irq.h
-> index 3b6e0def7f5c..3f999a0af713 100644
-> --- a/include/linux/irq.h
-> +++ b/include/linux/irq.h
-> @@ -129,9 +129,13 @@ struct irq_domain;
->   * struct irq_common_data - per irq data shared by all irqchips
->   * @state_use_accessors: status information for irq chip functions.
->   *			Use accessor functions to deal with it
-> + * @node:		node index useful for balancing
->   */
->  struct irq_common_data {
->  	unsigned int		state_use_accessors;
-> +#ifdef CONFIG_SMP
+Just took a close look on the overlay code. Hopefully I understand
+how it works completely. Yeah, there is one questions according to my
+understanding. The "overlay" device node should have been in child list
+of the device node, who also has the indicator to "target" node. That
+means some one else has to create "overlay" node and figure out the
+"target" node in advance, then invokes overlay module to apply the
+changes. From this perspective, the mechanism is something used to
+apply the changes to device-tree, not parsing and create device nodes
+from input. It does gurantee all the changes will be applied or none
+of them. So I agree on what Ben suggested: to continue the direction
+of having a helper to unflatten FDT blobk underneath the existing node,
+and "HYBRID" should be replaced with "OF_DYNAMIC".
 
-Would CONFIG_NUMA be a little more appropriate?
-Or even let @node be always compiled?
+>
+>A bit more thought... if we were to use the overlay stuff, Gavin, what
+>we *could* do is add to OPAL FW internal representation a generation
+>count to every node and property.
+>
+>That way we could essentially know whenever something's changed from
+>what we flattened originally for the kernel.
+>
+>We can then create a generic (not PCI specific) call that generates
+>an overlay tree for every node and property that has a generation
+>count that is newer than what was flattened (or passed by the OS).
+>
+>It's still a LOT more complex than what we need though...
+>
+
+Thanks, Ben. If we really need utilize overlay to support our case,
+we need some one to parse the input (device-tree changes) from firmware
+and create "overlay" device node and "target" node as I mentioned above.
+It's not simpler than the way we had to support our case. I'm not sure
+if we really need utilize overlay for our case.
 
 Thanks,
-	Abel
-
-> +	unsigned int		node;
-> +#endif
->  };
->  
->  /**
-> @@ -139,7 +143,6 @@ struct irq_common_data {
->   * @mask:		precomputed bitmask for accessing the chip registers
->   * @irq:		interrupt number
->   * @hwirq:		hardware interrupt number, local to the interrupt domain
-> - * @node:		node index useful for balancing
->   * @common:		point to data shared by all irqchips
->   * @chip:		low level interrupt hardware access
->   * @domain:		Interrupt translation domain; responsible for mapping
-> @@ -160,7 +163,6 @@ struct irq_data {
->  	u32			mask;
->  	unsigned int		irq;
->  	unsigned long		hwirq;
-> -	unsigned int		node;
->  	struct irq_common_data	*common;
->  	struct irq_chip		*chip;
->  	struct irq_domain	*domain;
-> @@ -634,6 +636,20 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
->  	return d ? irqd_get_trigger_type(d) : 0;
->  }
->  
-> +static inline int irq_common_data_get_node(struct irq_common_data *d)
-> +{
-> +#ifdef CONFIG_SMP
-> +	return d->node;
-> +#else
-> +	return 0;
-> +#endif
-> +}
-> +
-> +static inline int irq_data_get_node(struct irq_data *d)
-> +{
-> +	return irq_common_data_get_node(d->common);
-> +}
-> +
->  unsigned int arch_dynirq_lower_bound(unsigned int from);
->  
->  int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-> index ed84299788b3..d82a77d39aeb 100644
-> --- a/kernel/irq/internals.h
-> +++ b/kernel/irq/internals.h
-> @@ -199,6 +199,11 @@ static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *d
->  	__this_cpu_inc(kstat.irqs_sum);
->  }
->  
-> +static inline int irq_desc_get_node(struct irq_desc *desc)
-> +{
-> +	return irq_common_data_get_node(&desc->irq_common_data);
-> +}
-> +
->  #ifdef CONFIG_PM_SLEEP
->  bool irq_pm_check_wakeup(struct irq_desc *desc);
->  void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
-> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-> index eac1aac906ea..20773f073e24 100644
-> --- a/kernel/irq/irqdesc.c
-> +++ b/kernel/irq/irqdesc.c
-> @@ -52,23 +52,17 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
->  
->  static void desc_smp_init(struct irq_desc *desc, int node)
->  {
-> -	desc->irq_data.node = node;
-> +	desc->irq_common_data.node = node;
->  	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
->  #ifdef CONFIG_GENERIC_PENDING_IRQ
->  	cpumask_clear(desc->pending_mask);
->  #endif
->  }
->  
-> -static inline int desc_node(struct irq_desc *desc)
-> -{
-> -	return desc->irq_data.node;
-> -}
-> -
->  #else
->  static inline int
->  alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
->  static inline void desc_smp_init(struct irq_desc *desc, int node) { }
-> -static inline int desc_node(struct irq_desc *desc) { return 0; }
->  #endif
->  
->  static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
-> @@ -300,7 +294,7 @@ static void free_desc(unsigned int irq)
->  	unsigned long flags;
->  
->  	raw_spin_lock_irqsave(&desc->lock, flags);
-> -	desc_set_defaults(irq, desc, desc_node(desc), NULL);
-> +	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
->  	raw_spin_unlock_irqrestore(&desc->lock, flags);
->  }
->  
-> diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-> index 3552b8750efd..93ef89059022 100644
-> --- a/kernel/irq/irqdomain.c
-> +++ b/kernel/irq/irqdomain.c
-> @@ -830,12 +830,12 @@ static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
->  {
->  	struct irq_data *irq_data;
->  
-> -	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
-> +	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL,
-> +				irq_data_get_node(child));
->  	if (irq_data) {
->  		child->parent_data = irq_data;
->  		irq_data->irq = child->irq;
->  		irq_data->common = child->common;
-> -		irq_data->node = child->node;
->  		irq_data->domain = domain;
->  	}
->  
-> diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-> index e68932bb308e..d206aa2c3378 100644
-> --- a/kernel/irq/manage.c
-> +++ b/kernel/irq/manage.c
-> @@ -332,7 +332,7 @@ static int
->  setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
->  {
->  	struct cpumask *set = irq_default_affinity;
-> -	int node = desc->irq_data.node;
-> +	int node = irq_desc_get_node(desc);
->  
->  	/* Excludes PER_CPU and NO_BALANCE interrupts */
->  	if (!irq_can_set_affinity(irq))
-> diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-> index df2f4642d1e7..0e97c142ce40 100644
-> --- a/kernel/irq/proc.c
-> +++ b/kernel/irq/proc.c
-> @@ -241,7 +241,7 @@ static int irq_node_proc_show(struct seq_file *m, void *v)
->  {
->  	struct irq_desc *desc = irq_to_desc((long) m->private);
->  
-> -	seq_printf(m, "%d\n", desc->irq_data.node);
-> +	seq_printf(m, "%d\n", irq_desc_get_node(desc));
->  	return 0;
->  }
->  
-
-
+Gavin
 
