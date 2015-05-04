@@ -1,84 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23170 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754302AbbEKNsB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 09:48:01 -0400
-Date: Mon, 11 May 2015 09:47:47 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen/pcifront: Remove usage of struct timeval
-Message-ID: <20150511134747.GB18474@l.oracle.com>
-References: <20150511024448.GA2836@tinar>
+Received: from comal.ext.ti.com ([198.47.26.152]:41018 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751079AbbEDOg4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 May 2015 10:36:56 -0400
+Message-ID: <554783CD.50708@ti.com>
+Date: Mon, 4 May 2015 20:05:57 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150511024448.GA2836@tinar>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com>
+In-Reply-To: <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 11, 2015 at 08:14:48AM +0530, Tina Ruchandani wrote:
-> struct timeval uses a 32-bit field for representing seconds,
-> which will overflow in the year 2038 and beyond. This patch replaces
-> struct timeval with 64-bit ktime_t which is 2038 safe.
-> The patch is part of a larger effort to remove instances of
-> 32-bit timekeeping variables (timeval, time_t and timespec)
-> from the kernel.
-> 
-> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+Hi,
 
-
-Looks OK to me.
+On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
+> Add a PCIe PHY driver used by PCIe host controller driver
+> on Qualcomm SoCs like Snapdragon 805.
+>
+> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 > ---
->  drivers/pci/xen-pcifront.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index 7cfd2db..43d1d6c 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -20,6 +20,7 @@
->  #include <linux/workqueue.h>
->  #include <linux/bitops.h>
->  #include <linux/time.h>
-> +#include <linux/ktime.h>
->  #include <xen/platform_pci.h>
->  
->  #include <asm/xen/swiotlb-xen.h>
-> @@ -115,7 +116,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->  	evtchn_port_t port = pdev->evtchn;
->  	unsigned irq = pdev->irq;
->  	s64 ns, ns_timeout;
-> -	struct timeval tv;
-> +	ktime_t tv;
->  
->  	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
->  
-> @@ -132,8 +133,8 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->  	 * (in the latter case we end up continually re-executing poll() with a
->  	 * timeout in the past). 1s difference gives plenty of slack for error.
->  	 */
-> -	do_gettimeofday(&tv);
-> -	ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
-> +	tv = ktime_get_real();
-> +	ns_timeout = ktime_to_ns(tv) + 2 * (s64)NSEC_PER_SEC;
->  
->  	xen_clear_irq_pending(irq);
->  
-> @@ -141,8 +142,8 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->  			(unsigned long *)&pdev->sh_info->flags)) {
->  		xen_poll_irq_timeout(irq, jiffies + 3*HZ);
->  		xen_clear_irq_pending(irq);
-> -		do_gettimeofday(&tv);
-> -		ns = timeval_to_ns(&tv);
-> +		tv = ktime_get_real();
-> +		ns = ktime_to_ns(tv);
->  		if (ns > ns_timeout) {
->  			dev_err(&pdev->xdev->dev,
->  				"pciback not responding!!!\n");
-> -- 
-> 2.2.0.rc0.207.ga3a616c
-> 
+>   drivers/phy/Kconfig         |    9 ++
+>   drivers/phy/Makefile        |    1 +
+>   drivers/phy/phy-qcom-pcie.c |  291 +++++++++++++++++++++++++++++++++++++++++++
+
+Why do you need a new PHY driver for this? Why not use the existing QCOM PHY 
+driver. I can see the registers used here in phy-qcom-ufs-qmp-14nm.h?
+
+Thanks
+Kishon
+
