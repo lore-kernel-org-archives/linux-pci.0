@@ -1,139 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:25050 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbbEHHaH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:07 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH Part3 v11 5/9] powerpc/PCI: Rename pcibios_root_bridge_prepare() to pcibios_root_bus_prepare()
-Date: Fri, 8 May 2015 15:22:55 +0800
-Message-ID: <1431069779-29346-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Grant Likely <grant.likely@linaro.org>,
+	Kevin Cernekee <cernekee@gmail.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC v1 03/11] genirq: Use CONFIG_NUMA instead of CONFIG_SMP to guard irq_common_data.node
+Date: Mon,  4 May 2015 11:15:31 +0800
+Message-Id: <1430709339-29083-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pcibios_root_bridge_prepare() in powerpc set root bus
-speed, it's not the preparation for pci host bridge.
-For better separation of host bridge and root bus creation,
-It's need to rename it to another weak function.
+NUMA is enabled by CONFIG_NUMA instead of CONFIG_SMP, so use CONFIG_NUMA
+to guard irq_common_data.node.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |    6 +++---
- arch/powerpc/platforms/pseries/pci.c     |    2 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- drivers/pci/probe.c                      |    9 +++++++++
- 6 files changed, 16 insertions(+), 7 deletions(-)
+ include/linux/irq.h  |    4 ++--
+ kernel/irq/irqdesc.c |    4 +++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index ef88994..f236660 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -125,7 +125,7 @@ struct machdep_calls {
- 	/* Called after allocating resources */
- 	void		(*pcibios_fixup)(void);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
-+	int		(*pcibios_root_bus_prepare)(struct pci_host_bridge
- 				*bridge);
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 3f999a0af713..0138f046642c 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -133,7 +133,7 @@ struct irq_domain;
+  */
+ struct irq_common_data {
+ 	unsigned int		state_use_accessors;
+-#ifdef CONFIG_SMP
++#ifdef CONFIG_NUMA
+ 	unsigned int		node;
+ #endif
+ };
+@@ -638,7 +638,7 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
  
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index e9506d5..5754367 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -781,10 +781,10 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+int pcibios_root_bus_prepare(struct pci_host_bridge *bridge)
+ static inline int irq_common_data_get_node(struct irq_common_data *d)
  {
--	if (ppc_md.pcibios_root_bridge_prepare)
--		return ppc_md.pcibios_root_bridge_prepare(bridge);
-+	if (ppc_md.pcibios_root_bus_prepare)
-+		return ppc_md.pcibios_root_bus_prepare(bridge);
- 
+-#ifdef CONFIG_SMP
++#ifdef CONFIG_NUMA
+ 	return d->node;
+ #else
  	return 0;
- }
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index fe16a50..885f9ff 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 20773f073e24..0c3057e42906 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -52,11 +52,13 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
  
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
-+int pseries_root_bus_prepare(struct pci_host_bridge *bridge)
+ static void desc_smp_init(struct irq_desc *desc, int node)
  {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 8411c27..41310dc 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -75,7 +75,7 @@ static inline int dlpar_memory(struct pseries_hp_errorlog *hp_elog)
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
-+int pseries_root_bus_prepare(struct pci_host_bridge *bridge);
- 
- extern struct pci_controller_ops pseries_pci_controller_ops;
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..2815309 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -537,7 +537,7 @@ static void __init pSeries_setup_arch(void)
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
- 	}
- 
--	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
-+	ppc_md.pcibios_root_bus_prepare = pseries_root_bus_prepare;
- 
- 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
- 		long rc;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9f9445e..f5f5de6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1883,6 +1883,11 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
+-	desc->irq_common_data.node = node;
+ 	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	cpumask_clear(desc->pending_mask);
+ #endif
++#ifdef CONFIG_NUMA
++	desc->irq_common_data.node = node;
++#endif
  }
  
-+int __weak pcibios_root_bus_prepare(struct pci_host_bridge *bridge)
-+{
-+	return 0;
-+}
-+
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
- }
-@@ -1948,6 +1953,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
- 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-+	error = pcibios_root_bus_prepare(bridge);
-+	if (error)
-+		goto class_dev_reg_err;
-+
- 	error = device_register(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
+ #else
 -- 
-1.7.1
+1.7.10.4
 
