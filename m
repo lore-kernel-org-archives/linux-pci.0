@@ -1,124 +1,276 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 8 May 2015 09:21:18 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
-	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, alex.williamson@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150508012118.GA4809@dhcp-128-4.nay.redhat.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <551E56F6.60503@hp.com>
- <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
- <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
- <20150407034622.GB7213@localhost.localdomain>
- <5523E5DB.2090001@redhat.com>
- <20150507140029.GC4559@localhost.localdomain>
- <554B75D6.1060204@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554B75D6.1060204@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:45569 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753283AbbEDMmZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 May 2015 08:42:25 -0400
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: [PATCH v2 3/5] DT: PCI: qcom: Document PCIe devicetree bindings
+Date: Mon,  4 May 2015 15:42:16 +0300
+Message-Id: <1430743338-10441-4-git-send-email-svarbanov@mm-sol.com>
+In-Reply-To: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/07/15 at 10:25am, Don Dutile wrote:
-> On 05/07/2015 10:00 AM, Dave Young wrote:
-> >On 04/07/15 at 10:12am, Don Dutile wrote:
-> >>On 04/06/2015 11:46 PM, Dave Young wrote:
-> >>>On 04/05/15 at 09:54am, Baoquan He wrote:
-> >>>>On 04/03/15 at 05:21pm, Dave Young wrote:
-> >>>>>On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
-> >>>>>>Hi Dave,
-> >>>>>>
-> >>>>>>There may be some possibilities that the old iommu data is corrupted by
-> >>>>>>some other modules. Currently we do not have a better solution for the
-> >>>>>>dmar faults.
-> >>>>>>
-> >>>>>>But I think when this happens, we need to fix the module that corrupted
-> >>>>>>the old iommu data. I once met a similar problem in normal kernel, the
-> >>>>>>queue used by the qi_* functions was written again by another module.
-> >>>>>>The fix was in that module, not in iommu module.
-> >>>>>
-> >>>>>It is too late, there will be no chance to save vmcore then.
-> >>>>>
-> >>>>>Also if it is possible to continue corrupt other area of oldmem because
-> >>>>>of using old iommu tables then it will cause more problems.
-> >>>>>
-> >>>>>So I think the tables at least need some verifycation before being used.
-> >>>>>
-> >>>>
-> >>>>Yes, it's a good thinking anout this and verification is also an
-> >>>>interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
-> >>>>and then verify this again when panic happens in purgatory. This checks
-> >>>>whether any code stomps into region reserved for kexec/kernel and corrupt
-> >>>>the loaded kernel.
-> >>>>
-> >>>>If this is decided to do it should be an enhancement to current
-> >>>>patchset but not a approach change. Since this patchset is going very
-> >>>>close to point as maintainers expected maybe this can be merged firstly,
-> >>>>then think about enhancement. After all without this patchset vt-d often
-> >>>>raised error message, hung.
-> >>>
-> >>>It does not convince me, we should do it right at the beginning instead of
-> >>>introduce something wrong.
-> >>>
-> >>>I wonder why the old dma can not be remap to a specific page in kdump kernel
-> >>>so that it will not corrupt more memory. But I may missed something, I will
-> >>>looking for old threads and catch up.
-> >>>
-> >>>Thanks
-> >>>Dave
-> >>>
-> >>The (only) issue is not corruption, but once the iommu is re-configured, the old,
-> >>not-stopped-yet, dma engines will use iova's that will generate dmar faults, which
-> >>will be enabled when the iommu is re-configured (even to a single/simple paging scheme)
-> >>in the kexec kernel.
-> >>
-> >
-> >Don, so if iommu is not reconfigured then these faults will not happen?
-> >
-> Well, if iommu is not reconfigured, then if the crash isn't caused by
-> an IOMMU fault (some systems have firmware-first catch the IOMMU fault & convert
-> them into NMI_IOCK), then the DMA's will continue into the old kernel memory space.
+Document Qualcomm PCIe driver devicetree bindings.
 
-So NMI_IOCK is one reason to cause kernel hang, I think I'm still not clear about
-what does re-configured means though. DMAR faults will happen originally this is the old
-behavior but we are removing the faults by alowing DMA continuing into old memory
-space.
+Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
+ 1 files changed, 231 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
 
-> 
-> >Baoquan and me has a confusion below today about iommu=off/intel_iommu=off:
-> >
-> >intel_iommu_init()
-> >{
-> >...
-> >
-> >        dmar_table_init();
-> >
-> >        disable active iommu translations;
-> >
-> >        if (no_iommu || dmar_disabled)
-> >                 goto out_free_dmar;
-> >
-> >...
-> >}
-> >
-> >Any reason not move no_iommu check to the begining of intel_iommu_init function?
-> >
-> What does that do/help?
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+new file mode 100644
+index 0000000..dcf7348
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -0,0 +1,231 @@
++* Qualcomm PCI express root complex
++
++- compatible:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Value shall include
++		    - "qcom,pcie-v0" for apq/ipq8064
++		    - "qcom,pcie-v1" for apq8084
++
++- reg:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: Register ranges as listed in the reg-names property
++
++- reg-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Must include the following entries
++		    - "parf"   Qualcomm specific registers
++		    - "dbi"    Designware PCIe registers
++		    - "elbi"   External local bus interface registers
++		    - "config" PCIe configuration space
++
++- device_type:
++	Usage: required
++	Value type: <string>
++	Definition: Should be "pci". As specified in designware-pcie.txt
++
++- #address-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be set to 3. As specified in designware-pcie.txt
++
++- #size-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be set 2. As specified in designware-pcie.txt
++
++- ranges:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- interrupts:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: MSI interrupt
++
++- interrupt-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain "msi"
++
++- #interrupt-cells:
++	Usage: required
++	Value type: <u32>
++	Definition: Should be 1. As specified in designware-pcie.txt
++
++- interrupt-map-mask:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- interrupt-map:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: As specified in designware-pcie.txt
++
++- clocks:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: List of phandle and clock specifier pairs as listed
++		    in clock-names property
++
++- clock-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++		    * should be populated for v0 and v1
++		    	- "iface"      Configuration AHB clock
++
++		    * should be populated for v0
++		    	- "core"       Clocks the pcie hw block
++		    	- "phy"        Clocks the pcie PHY block
++
++		    * should be populated for v1
++			- "aux"        Auxiliary (AUX) clock
++		    	- "bus_master" Master AXI clock
++		    	- "bus_slave"  Slave AXI clock
++
++- resets:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: List of phandle and reset specifier pairs as listed
++		    in reset-names property
++
++- reset-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++		    * should be populated for v0
++			- "axi"  AXI reset
++			- "ahb"  AHB reset
++			- "por"  POR reset
++			- "pci"  PCI reset
++			- "phy"  PHY reset
++
++		    * should be populated for v1
++			- "core" Core reset
++
++- power-domains:
++	Usage: required (for v1 only)
++	Value type: <prop-encoded-array>
++	Definition: A phandle and power domain specifier pair to the
++		    power domain which is responsible for collapsing
++		    and restoring power to the peripheral
++
++- <name>-supply:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandles to the power supply regulator(s)
++		    * should be populated for v0 and v1
++			- "vdda"        core analog power supply
++
++		    * should be populated for v0
++			- "vdda_phy"    analog power supply for PHY
++			- "vdda_refclk" analog power supply for IC which generate
++					reference clock
++
++- phys:
++	Usage: required (for v1 only)
++	Value type: <phandle>
++	Definition: List of phandle(s) as listed in phy-names property
++
++- phy-names:
++	Usage: required (for v1 only)
++	Value type: <stringlist>
++	Definition: Should contain "pciephy"
++
++- <name>-gpio:
++	Usage: optional
++	Value type: <prop-encoded-array>
++	Definition: List of phandle and gpio specifier pairs. Should contain
++		    - "perst"  PCIe endpoint reset signal line
++		    - "pewake" PCIe endpoint wake signal line
++
++- pinctrl-0:
++	Usage: required
++	Value type: <phandle>
++	Definition: List of phandles pointing at a pin(s) configuration
++
++- pinctrl-names
++	Usage: required
++	Value type: <stringlist>
++	Definition: List of names of pinctrl-0 state
++
++* Example for v0
++	pcie0: pci@1b500000 {
++		compatible = "qcom,pcie-v0";
++		reg = <0x1b500000 0x1000
++		       0x1b502000 0x80
++		       0x1b600000 0x100
++		       0x0ff00000 0x100000>;
++		reg-names = "dbi", "elbi", "parf", "config";
++		device_type = "pci";
++		linux,pci-domain = <0>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0	  0x0fe00000 0 0x00100000   /* I/O */
++			  0x82000000 0 0x00000000 0x08000000 0 0x07e00000>; /* memory */
++		interrupts = <GIC_SPI 35 IRQ_TYPE_NONE>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 36 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 37 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 38 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 39 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++		clocks = <&gcc PCIE_A_CLK>,
++			 <&gcc PCIE_H_CLK>,
++			 <&gcc PCIE_PHY_CLK>;
++		clock-names = "core", "iface", "phy";
++		resets = <&gcc PCIE_ACLK_RESET>,
++			 <&gcc PCIE_HCLK_RESET>,
++			 <&gcc PCIE_POR_RESET>,
++			 <&gcc PCIE_PCI_RESET>,
++			 <&gcc PCIE_PHY_RESET>;
++		reset-names = "axi", "ahb", "por", "pci", "phy";
++	};
++
++* Example for v1
++	pcie0@fc520000 {
++		compatible = "qcom,pcie-v1";
++		reg = <0xfc520000 0x2000>,
++		      <0xff000000 0x1000>,
++		      <0xff001000 0x1000>,
++		      <0xff002000 0x2000>;
++		reg-names = "parf", "dbi", "elbi", "config";
++		device_type = "pci";
++		linux,pci-domain = <0>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x81000000 0 0          0xff200000 0 0x00100000   /* I/O */
++			  0x82000000 0 0x00300000 0xff300000 0 0x00d00000>; /* memory */
++		interrupts = <GIC_SPI 243 IRQ_TYPE_NONE>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 244 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 245 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 247 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 248 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++		clocks = <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
++			 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
++			 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
++			 <&gcc GCC_PCIE_0_AUX_CLK>;
++		clock-names = "iface", "master_bus", "slave_bus", "aux";
++		resets = <&gcc GCC_PCIE_0_BCR>;
++		reset-names = "core";
++		power-domains = <&gcc PCIE0_GDSC>;
++		vdda-supply = <&pma8084_l3>;
++		phys = <&pciephy0>;
++		phy-names = "pciephy";
++		perst-gpio = <&tlmm 70 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&pcie0_pins_default>;
++		pinctrl-names = "default";
++	};
+-- 
+1.7.0.4
 
-Just do not know why the previous handling is necessary with iommu=off, shouldn't
-we do noting and return earlier?
-
-Also there is a guess, dmar faults appears after iommu_init, so not sure if the codes
-before dmar_disabled checking have some effect about enabling the faults messages.
-
-Thanks
-Dave
