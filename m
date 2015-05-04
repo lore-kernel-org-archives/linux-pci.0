@@ -1,110 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:37782 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787AbbESBgg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:36:36 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 11:36:33 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id C71532BB005B
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:36:29 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1aLca28901566
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:36:29 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1ZuZ7028371
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:35:56 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V6 01/10] PCI/IOV: Rename and export virtfn_add/virtfn_remove
-Date: Tue, 19 May 2015 09:35:03 +0800
-Message-Id: <1431999312-10517-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Joerg Roedel <joro@8bytes.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: [Patch 1/2] irq_remapping/vt-d: Fix regression caused by commit b106ee63abcc
+Date: Mon,  4 May 2015 10:47:40 +0800
+Message-Id: <1430707662-28598-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430707662-28598-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1430707662-28598-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During EEH recovery, hotplug is applied to the devices which don't
-have drivers or their drivers don't support EEH. However, the hotplug,
-which was implemented based on PCI bus, can't be applied to VF directly.
+Commit b106ee63abcc ("irq_remapping/vt-d: Enhance Intel IR driver to
+support hierarchical irqdomains") caused a regression, which forgot
+to initialize remapping data structures other than the first entry
+when setting up remapping entries for multiple MSIs.
 
-The patch renames virtn_{add,remove}() and exports them so that they
-can be used in PCI hotplug during EEH recovery.
+Code is written by Thomas and commit message is written by Jiang.
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/iov.c   |   10 +++++-----
- include/linux/pci.h |    2 ++
- 2 files changed, 7 insertions(+), 5 deletions(-)
+Hi Thomas,
+	I missed this patch when rebasing my patch set. It may be
+fold into commit b106ee63abcc ("irq_remapping/vt-d: Enhance Intel IR
+driver to support hierarchical irqdomains").
+Thanks!
+Gerry
+---
+ drivers/iommu/intel_irq_remapping.c |   16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..cc941dd 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 14d95694fc1b..7ecc6b3180ba 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -1113,7 +1113,7 @@ static int intel_irq_remapping_alloc(struct irq_domain *domain,
  {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -183,7 +183,7 @@ failed:
- 	return rc;
- }
+ 	struct intel_iommu *iommu = domain->host_data;
+ 	struct irq_alloc_info *info = arg;
+-	struct intel_ir_data *data;
++	struct intel_ir_data *data, *ird;
+ 	struct irq_data *irq_data;
+ 	struct irq_cfg *irq_cfg;
+ 	int i, ret, index;
+@@ -1158,14 +1158,20 @@ static int intel_irq_remapping_alloc(struct irq_domain *domain,
+ 		}
  
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
- 	struct pci_dev *virtfn;
-@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		if (i > 0) {
+-			data = kzalloc(sizeof(*data), GFP_KERNEL);
+-			if (!data)
++			ird = kzalloc(sizeof(*ird), GFP_KERNEL);
++			if (!ird)
+ 				goto out_free_data;
++			/* Initialize the common data */
++			ird->irq_2_iommu = data->irq_2_iommu;
++			ird->irq_2_iommu.sub_handle = i;
++		} else {
++			ird = data;
+ 		}
++
+ 		irq_data->hwirq = (index << 16) + i;
+-		irq_data->chip_data = data;
++		irq_data->chip_data = ird;
+ 		irq_data->chip = &intel_ir_chip;
+-		intel_irq_remapping_prepare_irte(data, irq_cfg, info, index, i);
++		intel_irq_remapping_prepare_irte(ird, irq_cfg, info, index, i);
+ 		irq_set_status_flags(virq + i, IRQ_MOVE_PCNTXT);
  	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
- 
- 	pcibios_sriov_disable(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..94bacfa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ 	return 0;
 -- 
-1.7.9.5
+1.7.10.4
 
