@@ -1,56 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555BFA73.5060902@linux.intel.com>
-Date: Wed, 20 May 2015 11:07:31 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:42148 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751030AbbEDQXV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 May 2015 12:23:21 -0400
+Date: Mon, 4 May 2015 18:23:18 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Dave Young <dyoung@redhat.com>
+Cc: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
+	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150504162318.GH15736@8bytes.org>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+ <20150415005731.GC19051@localhost.localdomain>
+ <552DFB56.1070600@hp.com>
+ <20150415064803.GF19051@localhost.localdomain>
+ <20150424080147.GC4458@dhcp-16-116.nay.redhat.com>
+ <20150424082528.GA23912@dhcp-128-91.nay.redhat.com>
+ <20150424083530.GD4458@dhcp-16-116.nay.redhat.com>
+ <20150424084957.GC23912@dhcp-128-91.nay.redhat.com>
 MIME-Version: 1.0
-To: "Michael S. Tsirkin" <mst@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [RFC 2/4] PCI, MSI: Optionally free legacy PCI IRQ when enabling
- MSI/MSI-X
-References: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com> <1430968374-29286-3-git-send-email-jiang.liu@linux.intel.com> <20150519150838.GQ31666@google.com> <20150519171518-mutt-send-email-mst@redhat.com> <20150519172534-mutt-send-email-mst@redhat.com>
-In-Reply-To: <20150519172534-mutt-send-email-mst@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150424084957.GC23912@dhcp-128-91.nay.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/19 23:26, Michael S. Tsirkin wrote:
-> On Tue, May 19, 2015 at 05:16:54PM +0200, Michael S. Tsirkin wrote:
->> On Tue, May 19, 2015 at 10:08:38AM -0500, Bjorn Helgaas wrote:
->>> [+cc Michael]
->>>
->>> On Thu, May 07, 2015 at 11:12:52AM +0800, Jiang Liu wrote:
->>>> Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
->>>> make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
->>>> So optionally free legacy PCI IRQ when enabling MSI/MSI-X and reallocate
->>>> when disabling MSI/MSI-X.
->>>>
->>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>> ---
->>>>  drivers/pci/msi.c |    6 +++++-
->>>>  1 file changed, 5 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>>> index c3e7dfcf9ff5..47cf72c669f0 100644
->>>> --- a/drivers/pci/msi.c
->>>> +++ b/drivers/pci/msi.c
->>>> @@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->>>>  	msi_set_enable(dev, 1);
->>>>  	dev->msi_enabled = 1;
->>>>  
->>>> +	pcibios_free_irq(dev);
->>>
->>> >From the recent discussion about disabling MSI at shutdown, I seem to
->>> recall that turning off bus mastering also effectively disables MSI and
->>> causes at least some devices to revert to using INTx.
-> 
-> So to stress this point, turning off bus mastering also effectively
-> disables MSI without making devices revert to using INTx.
-> This is why clearing bus master is the right thing to do
-> if you don't want any interrupts at all.
+On Fri, Apr 24, 2015 at 04:49:57PM +0800, Dave Young wrote:
+> I'm more than happy to see this issue can be fixed in the patchset, I
+> do not agree to add the code there with such problems. OTOH, for now
+> seems there's no way to fix it.
 
-Thanks for explanation, Michael:)
+And that's the point. We discuss this issue and possible solutions for
+years by now, and what ZhenHua implemented is what we agreed to be the
+best-effort on what we can do in the kdump case with IOMMU enabled.
+
+Of course there are still failure scenarios left, but that is not
+different from systems without any IOMMU.
+
+
+	Joerg
+
