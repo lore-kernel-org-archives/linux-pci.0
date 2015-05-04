@@ -1,56 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <555315A1.5020402@hp.com>
-Date: Wed, 13 May 2015 17:13:05 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
-MIME-Version: 1.0
-To: Baoquan He <bhe@redhat.com>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old
- mem
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com> <1431337974-545-5-git-send-email-zhen-hual@hp.com> <20150513090035.GE3736@dhcp-128-28.nay.redhat.com>
-In-Reply-To: <20150513090035.GE3736@dhcp-128-28.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:45589 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289AbbEDMm2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 May 2015 08:42:28 -0400
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: [PATCH v2 5/5] ARM: qcom: Add Qualcomm APQ8084 SoC
+Date: Mon,  4 May 2015 15:42:18 +0300
+Message-Id: <1430743338-10441-6-git-send-email-svarbanov@mm-sol.com>
+In-Reply-To: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Baoquan,
-I am using a list here to store all the mapped addresses, and unmap them 
-out of iounmap.
+This adds Snapdragon 805 ARM-based SoC as multiplatform
+compatible platform.
 
-About the reason, please check the old mails. I cannot remember the 
-detailed reasons.
+Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+---
+ arch/arm/mach-qcom/Kconfig |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Thanks
-Zhenhua
-
-On 05/13/2015 05:00 PM, Baoquan He wrote:
-> On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
->> Add some functions to copy the data from old kernel.
->> These functions are used to copy context tables and page tables.
->>
->> To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
->> use a link here, store the pointers , and then use iounmap to free them in
->> another place.
->
-> Hi Zhenhua,
->
-> I remember you mentioned iounmap will cause error inside
-> spin_lock_irqsave. Do you know why it happened now? And could you also
-> describe why avoid calling iounmap between
-> spin_lock_irqsave/unlock_irqsave  is needed here and what's the status
-> now?
->
-> I think other reviewer may want to know it too.
->
-> Thanks
-> Baoquan
->
+diff --git a/arch/arm/mach-qcom/Kconfig b/arch/arm/mach-qcom/Kconfig
+index 2256cd1..9cfebee 100644
+--- a/arch/arm/mach-qcom/Kconfig
++++ b/arch/arm/mach-qcom/Kconfig
+@@ -22,4 +22,11 @@ config ARCH_MSM8974
+ 	bool "Enable support for MSM8974"
+ 	select HAVE_ARM_ARCH_TIMER
+ 
++config ARCH_APQ8084
++	bool "Enable support for APQ8084"
++	select HAVE_ARM_ARCH_TIMER
++	select MIGHT_HAVE_PCI
++	select PCI_DOMAINS if PCI
++	select PCI_MSI if PCI
++
+ endif
+-- 
+1.7.0.4
 
