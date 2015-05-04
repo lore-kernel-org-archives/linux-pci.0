@@ -1,104 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v8 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
-Date: Fri, 22 May 2015 11:41:11 -0700
-Message-Id: <27a6fb8d129cc9abf84d1a0ae02163a9b87d3d0a.1432318289.git.dhdang@apm.com>
-In-Reply-To: <cover.1432318289.git.dhdang@apm.com>
-References: <cover.1432318289.git.dhdang@apm.com>
-In-Reply-To: <cover.1432318289.git.dhdang@apm.com>
-References: <20150520101605.205eee40@arm.com> <cover.1432318289.git.dhdang@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:39917 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752003AbbEDLFx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 May 2015 07:05:53 -0400
+Date: Mon, 4 May 2015 13:05:51 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Dave Young <dyoung@redhat.com>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150504110551.GD15736@8bytes.org>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+On Fri, Apr 03, 2015 at 04:40:31PM +0800, Dave Young wrote:
+> Have not read all the patches, but I have a question, not sure this
+> has been answered before. Old memory is not reliable, what if the old
+> memory get corrupted before panic? Is it safe to continue using it in
+> 2nd kernel, I worry that it will cause problems.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+Yes, the old memory could be corrupted, and there are more failure cases
+left which we have no way of handling yet (if iommu data structures are
+in kdump backup areas).
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index f1ad9c2..4b719c9 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -354,6 +354,28 @@
- 			};
- 		};
- 
-+		msi: msi@79000000 {
-+			compatible = "apm,xgene1-msi";
-+			msi-controller;
-+			reg = <0x00 0x79000000 0x0 0x900000>;
-+			interrupts = <  0x0 0x10 0x4
-+					0x0 0x11 0x4
-+					0x0 0x12 0x4
-+					0x0 0x13 0x4
-+					0x0 0x14 0x4
-+					0x0 0x15 0x4
-+					0x0 0x16 0x4
-+					0x0 0x17 0x4
-+					0x0 0x18 0x4
-+					0x0 0x19 0x4
-+					0x0 0x1a 0x4
-+					0x0 0x1b 0x4
-+					0x0 0x1c 0x4
-+					0x0 0x1d 0x4
-+					0x0 0x1e 0x4
-+					0x0 0x1f 0x4>;
-+		};
-+
- 		pcie0: pcie@1f2b0000 {
- 			status = "disabled";
- 			device_type = "pci";
-@@ -375,6 +397,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie0clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie1: pcie@1f2c0000 {
-@@ -398,6 +421,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie1clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie2: pcie@1f2d0000 {
-@@ -421,6 +445,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie2clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie3: pcie@1f500000 {
-@@ -444,6 +469,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie3clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie4: pcie@1f510000 {
-@@ -467,6 +493,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie4clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		serial0: serial@1c020000 {
--- 
-1.9.1
+The question is what to do if we find some of the old data structures
+corrupted, hand how far should the tests go. Should we also check the
+page-tables, for example? I think if some of the data structures for a
+device are corrupted it probably already failed in the old kernel and
+things won't get worse in the new one.
+
+So checking is not strictly necessary in the first version of these
+patches (unless we find a valid failure scenario). Once we have some
+good plan on what to do if we find corruption, we can add checking of
+course.
+
+
+Regards,
+
+	Joerg
 
