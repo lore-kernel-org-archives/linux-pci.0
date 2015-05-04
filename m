@@ -1,46 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	ddutile@redhat.com, linux-kernel@vger.kernel.org, lenb@kernel.org
-Subject: Re: [PATCH v2 0/2] ACPI / PCI: Fix _PRT lookup for ARI enabled devices
-Date: Sat, 30 May 2015 01:53:30 +0200
-Message-ID: <3075635.JhZ4D0jF4G@vostro.rjw.lan>
-In-Reply-To: <20150529221848.GD12733@google.com>
-References: <20150526210927.7537.55656.stgit@gimli.home> <20150529221848.GD12733@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:34308 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbbEDMKM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 08:10:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com>
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+	<1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com>
+Date: Mon, 4 May 2015 15:10:10 +0300
+Message-ID: <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of irq_desc
+From: Amir Vadai <amirv@mellanox.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Amir Vadai <amirv@mellanox.com>,
+	Ido Shamay <idos@mellanox.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Hadar Hen Zion <hadarh@mellanox.com>,
+	Eran Ben Elisha <eranbe@mellanox.com>,
+	Joe Perches <joe@perches.com>,
+	Saeed Mahameed <saeedm@mellanox.com>,
+	Matan Barak <matanb@mellanox.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 29, 2015 05:18:48 PM Bjorn Helgaas wrote:
-> On Tue, May 26, 2015 at 03:11:38PM -0600, Alex Williamson wrote:
-> > v2: don't modify entry->id.device
-> > 
-> > In most cases we only use ARI with SR-IOV VFs, which do not support
-> > INTx and therefore never hit this problem.  However, some non-SR-IOV
-> > implementations create multiple PFs, extending beyond the standard
-> > 3-bit function numbers with ARI, and do support INTx for those
-> > additional functions.  This can happen with Solarflare SFC9120
-> > adapters.  The host driver typically doesn't use INTx, so we also
-> > haven't noticed this problem on bare metal, but when we attempt to
-> > assign the device to a VM using vfio-pci, we fail trying to setup
-> > default INTx signaling.  Thanks,
-> > 
-> > Alex
-> > 
-> > ---
-> > 
-> > Alex Williamson (2):
-> >       PCI: Move pci_ari_enabled() to global header
-> >       ACPI / PCI: Account for ARI in _PRT lookups
-> 
-> Rafael, do you want this or should I take it?
-> 
-> I put it on my pci/virtualization branch for v4.2.
+On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> The field 'affinity' in irq_desc won't change once the irq_desc data
+> structure is created. So cache irq_desc->affinity instead of irq_desc.
+> This also helps to hide struct irq_desc from device drivers.
 
-That's fine.  Please feel free to add my ACKs to those if that helps.
+Hi Jiang,
 
-Rafael
+I might not understand the new changes irq core, but up until now
+affinity was changed when the user changed it through
+/proc/irq/<IRQ>/smp_affinity.
+This code is monitoring the affinity from the napi_poll context to
+detect affinity changes, and prevent napi from keep running on the
+wrong CPU.
+Therefore, the affinity can't be cached at the beginning. Please
+revert this caching.
 
+Thanks,
+Amir
