@@ -1,107 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:35694 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbbEGRQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 13:16:51 -0400
-Received: by qcbgu10 with SMTP id gu10so24542621qcb.2
-        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 10:16:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <ec4d9f89290441a79e0caf986383c5df@HQMAIL106.nvidia.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
- <20150506221818.GH24643@google.com> <554AC48A.2030209@huawei.com>
- <CAErSpo6xp5kM57PX9RkXKr5MM4BQM7-uXPtvCBL8=9Br8FYLdA@mail.gmail.com> <ec4d9f89290441a79e0caf986383c5df@HQMAIL106.nvidia.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 7 May 2015 12:16:30 -0500
-Message-ID: <CAErSpo7dv=q+v+zEvT8Fbt26_Xq+AVZQBjJOZX9y5o+A5kFhTA@mail.gmail.com>
-Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
-To: William Davis <wdavis@nvidia.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:51074 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169AbbEDHIe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:08:34 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 17:08:32 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id E38C72CE8052
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:08:29 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4478LaC23789648
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:08:29 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4477vYL031448
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:07:57 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V3 0/9] VF EEH on Power8
+Date: Mon,  4 May 2015 15:07:29 +0800
+Message-Id: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 7, 2015 at 11:23 AM, William Davis <wdavis@nvidia.com> wrote:
->
->
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Thursday, May 7, 2015 8:13 AM
->> To: Yijing Wang
->> Cc: William Davis; Joerg Roedel; open list:INTEL IOMMU (VT-d); linux-
->> pci@vger.kernel.org; Terence Ripperda; John Hubbard; Jerome Glisse; Dave
->> Jiang; David S. Miller; Alex Williamson
->> Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
->>
->> On Wed, May 6, 2015 at 8:48 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> > On 2015/5/7 6:18, Bjorn Helgaas wrote:
->> >> [+cc Yijing, Dave J, Dave M, Alex]
->> >>
->> >> On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
->> >>> From: Will Davis <wdavis@nvidia.com>
->> >>>
->> >>> Hi,
->> >>>
->> >>> This patch series adds DMA APIs to map and unmap a struct resource
->> >>> to and from a PCI device's IOVA domain, and implements the AMD,
->> >>> Intel, and nommu versions of these interfaces.
->> >>>
->> >>> This solves a long-standing problem with the existing DMA-remapping
->> >>> interfaces, which require that a struct page be given for the region
->> >>> to be mapped into a device's IOVA domain. This requirement cannot
->> >>> support peer device BAR ranges, for which no struct pages exist.
->> >>> ...
->>
->> >> I think we currently assume there's no peer-to-peer traffic.
->> >>
->> >> I don't know whether changing that will break anything, but I'm
->> >> concerned about these:
->> >>
->> >>   - PCIe MPS configuration (see pcie_bus_configure_settings()).
->> >
->> > I think it should be ok for PCIe MPS configuration, PCIE_BUS_PEER2PEER
->> > force every device's MPS to 128B, what its concern is the TLP payload
->> > size. In this series, it seems to only map a iova for device bar region.
->>
->> MPS configuration makes assumptions about whether there will be any peer-
->> to-peer traffic.  If there will be none, MPS can be configured more
->> aggressively.
->>
->> I don't think Linux has any way to detect whether a driver is doing peer-
->> to-peer, and there's no way to prevent a driver from doing it.
->> We're stuck with requiring the user to specify boot options
->> ("pci=pcie_bus_safe", "pci=pcie_bus_perf", "pci=pcie_bus_peer2peer",
->> etc.) that tell the PCI core what the user expects to happen.
->>
->> This is a terrible user experience.  The user has no way to tell what
->> drivers are going to do.  If he specifies the wrong thing, e.g., "assume no
->> peer-to-peer traffic," and then loads a driver that does peer-to-peer, the
->> kernel will configure MPS aggressively and when the device does a peer-to-
->> peer transfer, it may cause a Malformed TLP error.
->>
->
-> I agree that this isn't a great user experience, but just want to clarify that this problem is orthogonal to this patch series, correct?
->
-> Prior to this series, the MPS mismatch is still possible with p2p traffic, but when an IOMMU is enabled p2p traffic will result in DMAR faults. The aim of the series is to allow drivers to fix the latter, not the former.
+This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+VF edev and VF PE and handle them properly.
 
-Prior to this series, there wasn't any infrastructure for drivers to
-do p2p, so it was mostly reasonable to assume that there *was* no p2p
-traffic.
+Different from the Bus PE, VF PE just contain one VF. This introduces the
+difference of EEH error handling on a VF PE. Generally, it has several
+differences.
 
-I think we currently default to doing nothing to MPS.  Prior to this
-series, it might have been reasonable to optimize based on a "no-p2p"
-assumption, e.g., default to pcie_bus_safe or pcie_bus_perf.  After
-this series, I'm not sure what we could do, because p2p will be much
-more likely.
+First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+relationship between its PF. This is not proper to enumerate a VF by usual
+scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+set.
 
-It's just an issue; I don't know what the resolution is.
+Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+the VF, this means the usual reset function done in FW will not work. One of
+the patch will imitate the reset/restore function in kernel space.
 
-Bjorn
+Third, the VF may be removed during the PF's error_detected function. In this
+case, the original error_detected->slot_reset->resume sequence is not proper
+to those removed VFs, since they are re-created by PF in a fresh state. A flag
+in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+track whether this device needs to be reset or not.
+
+This has been tested both on host and in guest on Power8 with latest kernel
+version.
+
+v3:
+   * add back vf_index in pci_dn to track the VF's index
+   * rename ppdev in eeh_dev to physfn for consistency
+   * move edev->physfn assignment before dev->dev.archdata.edev is set
+   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
+   * more clear and detail in commit log and comment in code
+   * merge eeh_rmv_virt_device() with eeh_rmv_device()
+   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
+     pnv_eeh_cfg_blocked()
+   * move the vf reset/restore logic into its own patch, two patches are
+     created.
+     powerpc/powernv: Support PCI config restore for VFs
+     powerpc/powernv: Support EEH reset for VFs
+   * simplify the vf reset logic
+v2:
+   * add prefix pci_iov_ to virtfn_add/virtfn_remove
+   * use EEH_DEV_VF as a flag for a VF's eeh_dev
+   * use eeh_dev instead of edev in change log
+   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
+   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
+     well initialized
+   * do FLR to reset a VF PE
+   * imitate the restore function in FW for VF
+   * remove the reverse order patch, since it is still under discussion
+
+Wei Yang (9):
+  pci/iov: rename and export virtfn_add/virtfn_remove
+  powerpc/pci_dn: cache vf_index in pci_dn
+  powerpc/pci: remove PCI devices in reverse order
+  powerpc/eeh: cache address range just for normal device
+  powerpc/eeh: create EEH_PE_VF for VF PE
+  powerpc/powernv: create/release eeh_dev for VF
+  powerpc/powernv: Support EEH reset for VFs
+  powerpc/powernv: Support PCI config restore for VFs
+  powerpc/eeh: handle VF PE properly
+
+ arch/powerpc/include/asm/eeh.h               |   10 ++
+ arch/powerpc/include/asm/pci-bridge.h        |    2 +
+ arch/powerpc/kernel/eeh.c                    |    5 +
+ arch/powerpc/kernel/eeh_cache.c              |    2 +-
+ arch/powerpc/kernel/eeh_dev.c                |   20 +++
+ arch/powerpc/kernel/eeh_driver.c             |  108 +++++++++++---
+ arch/powerpc/kernel/eeh_pe.c                 |   15 +-
+ arch/powerpc/kernel/pci-hotplug.c            |    2 +-
+ arch/powerpc/kernel/pci_dn.c                 |   12 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  200 +++++++++++++++++++++++++-
+ drivers/pci/iov.c                            |   10 +-
+ include/linux/pci.h                          |    2 +
+ 12 files changed, 352 insertions(+), 36 deletions(-)
+
+-- 
+1.7.9.5
+
