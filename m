@@ -1,124 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:33285 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405AbbESKvf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:51:35 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:51:33 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id F01532CE804E
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:29 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JApLfH13959416
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:29 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAous9030407
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:50:57 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 01/10] PCI/IOV: Rename and export virtfn_add/virtfn_remove
-Date: Tue, 19 May 2015 18:50:03 +0800
-Message-Id: <1432032612-21701-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55478F1A.3000401@mm-sol.com>
+Date: Mon, 04 May 2015 18:24:10 +0300
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+MIME-Version: 1.0
+To: Kishon Vijay Abraham I <kishon@ti.com>
+CC: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com> <554783CD.50708@ti.com>
+In-Reply-To: <554783CD.50708@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During EEH recovery, hotplug is applied to the devices which don't
-have drivers or their drivers don't support EEH. However, the hotplug,
-which was implemented based on PCI bus, can't be applied to VF directly.
+On 05/04/2015 05:35 PM, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
+>> Add a PCIe PHY driver used by PCIe host controller driver
+>> on Qualcomm SoCs like Snapdragon 805.
+>>
+>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+>> ---
+>>   drivers/phy/Kconfig         |    9 ++
+>>   drivers/phy/Makefile        |    1 +
+>>   drivers/phy/phy-qcom-pcie.c |  291
+>> +++++++++++++++++++++++++++++++++++++++++++
+> 
+> Why do you need a new PHY driver for this? Why not use the existing QCOM
+> PHY driver. I can see the registers used here in phy-qcom-ufs-qmp-14nm.h?
 
-The patch renames virtn_{add,remove}() and exports them so that they
-can be used in PCI hotplug during EEH recovery.
+I agree that on first glance there are similarities, but I'm not sure
+does the PHYs are the same IP blocks. Or at least they are different
+revisions which have too many differences. So trying to combine them
+will lead to more code than now.
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   10 +++++-----
- include/linux/pci.h |    8 ++++++++
- 2 files changed, 13 insertions(+), 5 deletions(-)
+Either way I will try to understand how many the differences are.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..cc941dd 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -183,7 +183,7 @@ failed:
- 	return rc;
- }
- 
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
- 	struct pci_dev *virtfn;
-@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
- 
- 	pcibios_sriov_disable(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..06aa5dd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-@@ -1696,6 +1698,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
-+static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
-+{
-+	return -ENOSYS;
-+}
-+static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
-+{ }
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
 -- 
-1.7.9.5
-
+regards,
+Stan
