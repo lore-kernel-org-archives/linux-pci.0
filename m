@@ -1,67 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 15/16] ntb: default to cpu memcpy for performance
-Date: Wed, 20 May 2015 11:41:16 -0400
-Message-Id: <0979e7faf4814d1059640cd448a5ad8496604a98.1432135632.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:39959 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750977AbbEDHIz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:08:55 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 17:08:54 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 56B0B357804F
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:08:51 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4478hpM33685584
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:08:51 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4478Ikl031884
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:08:18 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V3 1/9] pci/iov: rename and export virtfn_add/virtfn_remove
+Date: Mon,  4 May 2015 15:07:30 +0800
+Message-Id: <1430723258-21299-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dave Jiang <dave.jiang@intel.com>
+During the EEH procedure, when a device's driver is not EEH aware or no
+driver is binded with a device, EEH core would do hotplug on this devices.
+While it isn't feasible for a VF with usual hotplug procedure. During
+removal of a VF, virt_bus should be removed if necessary. During the
+re-creation, the pci_scan_slot() doesn't work on a VF.
 
-Disable DMA usage by default, since the CPU provides much better
-performance with write combining.  Provide a module parameter to enable
-DMA usage when offloading the memcpy is preferred.
+This patch exports two functions to handle the hotplug case for VF
+properly. They will be invoked when the EEH core do the hotplug case for
+VFs.
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/ntb/ntb_transport.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ drivers/pci/iov.c   |   10 +++++-----
+ include/linux/pci.h |    2 ++
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index cc0b7ff..237f76f 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -88,6 +88,10 @@ static unsigned int copy_bytes = 1024;
- module_param(copy_bytes, uint, 0644);
- MODULE_PARM_DESC(copy_bytes, "Threshold under which NTB will use the CPU to copy instead of DMA");
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..cc941dd 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+ }
  
-+static bool use_dma;
-+module_param(use_dma, bool, 0644);
-+MODULE_PARM_DESC(use_dma, "Use DMA engine to perform large data copy");
-+
- static struct dentry *nt_debugfs_dir;
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -183,7 +183,7 @@ failed:
+ 	return rc;
+ }
  
- struct ntb_queue_entry {
-@@ -1570,10 +1574,15 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	dma_cap_zero(dma_mask);
- 	dma_cap_set(DMA_MEMCPY, dma_mask);
+-static void virtfn_remove(struct pci_dev *dev, int id, int reset)
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
  
--	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
--					   (void *)(unsigned long)node);
--	if (!qp->dma_chan)
--		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
-+	if (use_dma) {
-+		qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
-+						   (void *)(unsigned long)node);
-+		if (!qp->dma_chan)
-+			dev_info(&pdev->dev, "Unable to allocate DMA channel\n");
-+	} else {
-+		qp->dma_chan = NULL;
-+	}
-+	dev_dbg(&pdev->dev, "Using %s memcpy\n", qp->dma_chan ? "DMA" : "CPU");
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = pci_iov_virtfn_add(dev, i, 0);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
  
- 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
- 		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
+ failed:
+ 	for (j = 0; j < i; j++)
+-		virtfn_remove(dev, j, 0);
++		pci_iov_virtfn_remove(dev, j, 0);
+ 
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		return;
+ 
+ 	for (i = 0; i < iov->num_VFs; i++)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_virtfn_remove(dev, i, 0);
+ 
+ 	pcibios_sriov_disable(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..94bacfa 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
 -- 
-2.4.0.rc0.43.gcf8a8c6
+1.7.9.5
 
