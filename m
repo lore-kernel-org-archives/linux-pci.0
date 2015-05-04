@@ -1,396 +1,290 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:41159 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395AbbEYJwm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2015 05:52:42 -0400
-Message-ID: <5562F0C9.4090007@hisilicon.com>
-Date: Mon, 25 May 2015 17:52:09 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-To: Jingoo Han <jingoohan1@gmail.com>
-CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Liviu Dudau'" <liviu.dudau@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, "'Zhang Jukuo'" <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, "'Liguozhu'" <liguozhu@hisilicon.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
-	"'Lucas Stach'" <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-References: <000001d096a9$27bf43f0$773dcbd0$@com>
-In-Reply-To: <000001d096a9$27bf43f0$773dcbd0$@com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:51431 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbbEDHLX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:11:23 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 4 May 2015 17:11:21 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7D3CA2BB0051
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:11:19 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t447BAVr14811228
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:11:18 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t447Aj2s003597
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:10:45 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V3 9/9] powerpc/eeh: handle VF PE properly
+Date: Mon,  4 May 2015 15:07:38 +0800
+Message-Id: <1430723258-21299-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/25 13:10, Jingoo Han wrote:
-> On Wed, 20 May 2015 14:21:39 +0800, Zhou Wang wrote:
->>
->> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
->> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
->> move related operations to dw_pcie_host_init.
->>
->> I am not very clear about I/O resource management:
->>> 	if (global_io_offset < SZ_1M && pp->io_size > 0) {
->>> 		pci_ioremap_io(global_io_offset, pp->io_base);
->>> 		global_io_offset += SZ_64K;
->>> 		pci_add_resource_offset(&res, &pp->io,
->>> 					global_io_offset - pp->io_bus_addr);
->>> 	}
->> so just move steps in dw_pcie_setup to dw_pcie_host_init.
->>
->> I have compiled the driver with multi_v7_defconfig. However, I don't have
->> ARM32 PCIe related board to do test. It will be appreciated if someone could
->> help to test it.
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> ---
->>  drivers/pci/host/pcie-designware.c | 128 +++++++++++++++----------------------
->>  1 file changed, 50 insertions(+), 78 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index 2e9f84f..7bad9e5 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -22,6 +22,7 @@
->>  #include <linux/pci_regs.h>
->>  #include <linux/platform_device.h>
->>  #include <linux/types.h>
->> +#include <asm/hardirq.h>
-> 
-> +cc Kishon Vijay Abraham I, Richard Zhu, Lucas Stach
-> 
+Compared with Bus PE, VF PE just has one single pci function. This
+introduces the difference of error handling on a VF PE.
 
-Thanks to involve more related guys to this discussion :)
+For example in the hotplug case, EEH needs to remove and re-create the VF
+properly. In the case when PF's error_detected() disable SRIOV, this patch
+introduces a flag to mark the eeh_dev of a VF to avoid the slot_reset() and
+resume(). Since the FW is not ware of the VF, this patch handles the VF
+restore/reset in kernel directly.
 
-> Please use <linux/hardirq.h> and insert it alphabetically.
-> 
-> +#include <linux/hardirq.h>
->  #include <linux/irq.h>
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
-> 
+This patch is to handle the VF PE properly in these cases.
 
-OK, will do in next version patch.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h   |    1 +
+ arch/powerpc/kernel/eeh.c        |    1 +
+ arch/powerpc/kernel/eeh_driver.c |  108 ++++++++++++++++++++++++++++++--------
+ arch/powerpc/kernel/eeh_pe.c     |    3 +-
+ 4 files changed, 90 insertions(+), 23 deletions(-)
 
->>  
->>  #include "pcie-designware.h"
->>  
->> @@ -67,17 +68,10 @@
->>  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
->>  #define PCIE_ATU_UPPER_TARGET		0x91C
->>  
->> -static struct hw_pci dw_pci;
->> +static struct pci_ops dw_pcie_ops;
->>  
->>  static unsigned long global_io_offset;
->>  
->> -static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
->> -{
->> -	BUG_ON(!sys->private_data);
->> -
->> -	return sys->private_data;
->> -}
->> -
->>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
->>  {
->>  	*val = readl(addr);
->> @@ -238,7 +232,7 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
->>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->>  {
->>  	int irq, pos0, i;
->> -	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
->> +	struct pcie_port *pp = desc->dev->bus->sysdata;
->>  
->>  	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
->>  				       order_base_2(no_irqs));
->> @@ -281,7 +275,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
->>  {
->>  	int irq, pos;
->>  	struct msi_msg msg;
->> -	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
->> +	struct pcie_port *pp = pdev->bus->sysdata;
->>  
->>  	if (desc->msi_attrib.is_msix)
->>  		return -EINVAL;
->> @@ -310,7 +304,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
->>  {
->>  	struct irq_data *data = irq_get_irq_data(irq);
->>  	struct msi_desc *msi = irq_data_get_msi(data);
->> -	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
->> +	struct pcie_port *pp = msi->dev->bus->sysdata;
->>  
->>  	clear_irq_range(pp, irq, 1, data->hwirq);
->>  }
->> @@ -342,13 +336,15 @@ static const struct irq_domain_ops msi_domain_ops = {
->>  	.map = dw_pcie_msi_map,
->>  };
->>  
->> -int dw_pcie_host_init(struct pcie_port *pp)
->> +int __init dw_pcie_host_init(struct pcie_port *pp)
->>  {
->>  	struct device_node *np = pp->dev->of_node;
->>  	struct platform_device *pdev = to_platform_device(pp->dev);
->>  	struct of_pci_range range;
->>  	struct of_pci_range_parser parser;
->> +	struct pci_bus *bus;
->>  	struct resource *cfg_res;
->> +	LIST_HEAD(res);
->>  	u32 val, na, ns;
->>  	const __be32 *addrp;
->>  	int i, index, ret;
->> @@ -502,15 +498,49 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>  	val |= PORT_LOGIC_SPEED_CHANGE;
->>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
->>  
->> -#ifdef CONFIG_PCI_MSI
->> -	dw_pcie_msi_chip.dev = pp->dev;
->> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
->> +#ifdef CONFIG_ARM
->> +	/*
->> +	 * FIXME: we should really be able to use
->> +	 * of_pci_get_host_bridge_resources on arm32 as well,
->> +	 * but the conversion needs some more testing
->> +	 */
->> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
->> +		pci_ioremap_io(global_io_offset, pp->io_base);
->> +		global_io_offset += SZ_64K;
->> +		pci_add_resource_offset(&res, &pp->io,
->> +					global_io_offset - pp->io_bus_addr);
->> +	}
->> +	pci_add_resource_offset(&res, &pp->mem,
->> +				pp->mem.start - pp->mem_bus_addr);
->> +	pci_add_resource(&res, &pp->busn);
->> +#else
->> +	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
->> +	if (ret)
->> +		return ret;
->> +#endif
->> +
->> +	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
->> +			      pp, &res);
->> +	if (!bus)
->> +		return -ENOMEM;
->> +
->> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
->> +	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
->> +#else
->> +	bus->msi = &dw_pcie_msi_chip;
->>  #endif
->>  
->> -	dw_pci.nr_controllers = 1;
->> -	dw_pci.private_data = (void **)&pp;
->> +	pci_scan_child_bus(bus);
->> +	if (pp->ops->scan_bus)
->> +		pp->ops->scan_bus(pp);
->>  
->> -	pci_common_init_dev(pp->dev, &dw_pci);
->> +#ifdef CONFIG_ARM
->> +	/* support old dtbs that incorrectly describe IRQs */
->> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->> +#endif
->> +
->> +	pci_assign_unassigned_bus_resources(bus);
->> +	pci_bus_add_devices(bus);
->>  
->>  	return 0;
->>  }
->> @@ -653,7 +683,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
->>  static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->>  			int size, u32 *val)
->>  {
->> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
->> +	struct pcie_port *pp = bus->sysdata;
->>  	int ret;
->>  
->>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
->> @@ -677,7 +707,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->>  static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
->>  			int where, int size, u32 val)
->>  {
->> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
->> +	struct pcie_port *pp = bus->sysdata;
->>  	int ret;
->>  
->>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
->> @@ -701,64 +731,6 @@ static struct pci_ops dw_pcie_ops = {
->>  	.write = dw_pcie_wr_conf,
->>  };
->>  
->> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->> -{
->> -	struct pcie_port *pp;
->> -
->> -	pp = sys_to_pcie(sys);
->> -
->> -	if (global_io_offset < SZ_1M && pp->io_size > 0) {
->> -		sys->io_offset = global_io_offset - pp->io_bus_addr;
->> -		pci_ioremap_io(global_io_offset, pp->io_base);
->> -		global_io_offset += SZ_64K;
->> -		pci_add_resource_offset(&sys->resources, &pp->io,
->> -					sys->io_offset);
->> -	}
->> -
->> -	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
->> -	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
->> -	pci_add_resource(&sys->resources, &pp->busn);
->> -
->> -	return 1;
->> -}
->> -
->> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->> -{
->> -	struct pci_bus *bus;
->> -	struct pcie_port *pp = sys_to_pcie(sys);
->> -
->> -	pp->root_bus_nr = sys->busnr;
-> 
-> 'pp->root_bus_nr' is initialized as '-1' at some soc-specific drivers
-> However, 'sys->busnr' is set as '0, 1, 2 ...' by pcibios_init_hw()
-> in arch/arm/kernel/bios32.c. '0, 1, 2 ...' means the number of
-> each host controller.
-> 
-> So, without setting 'pp->root_bus_nr' as '0, 1, 2, ...',
-> it makes the problem.
-> 
-
-'sys->busnr' is set as "0, busn_res.end + 1 ..." in pcibios_init_hw() I think:
-
-pcibios_init_hw()
-	for (nr = busnr = 0; nr < hw->nr_controllers; nr++)
-		sys->busnr = busnr;
-		...
-		busnr = sys->bus->busn_res.end + 1;
-
-and it indicates root bus number of one pcie controller.
-so in dw_pcie_scan_bus:
-	pp->root_bus_nr = sys->busnr;
-	bus = pci_create_root_bus(..., sys->busnr, ...);
-we set root bus number as "0, busn_res.end + 1". But in pcie-designware,
-nr_controllers is set as 1, so it only comes into the loop in
-pcibios_init_hw() one time.
-
-so how about we set 0 as default value of pp->root_bus_nr, then use
-pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops, pp, &res);
-to create root bus?
-
-> Thus, we need to come up with the way to resolve this.
-> 
-> 1. Setting 'pp->root_bus_nr' as '0, 1, 2 ..' by each soc-specific driver.
-> 
-> e.g)
-> 
-> ./drivers/pci/host/pci-exynos.c
-> @@ -534,7 +534,7 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
->                 }
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &exynos_pcie_host_ops;
-> 
-> ./drivers/pci/host/pci-imx6.c
-> @@ -541,7 +541,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->                 }
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &imx6_pcie_host_ops;
->  
-> ./drivers/pci/host/pci-keystone.c
-> @@ -312,7 +312,7 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
->                         return ret;
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &keystone_pcie_host_ops;
-> 
-> ./drivers/pci/host/pci-layerscape.c
-> @@ -101,7 +101,7 @@ static int ls_add_pcie_port(struct ls_pcie *pcie)
->         pp = &pcie->pp;
->         pp->dev = pcie->dev;
->         pp->dbi_base = pcie->dbi;
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &ls_pcie_host_ops;
->  
-> ./drivers/pci/host/pcie-spear13xx.c
-> @@ -287,7 +287,7 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
->                 return ret;
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &spear13xx_pcie_host_ops;
-> 
-> 
-> 2. Setting 'pp->root_bus_nr' as '0, 1, 2 ..' by pcie-designware.c
-> 
-> I believe that someone will give better idea. :-)
-> 
->> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
->> -				  &dw_pcie_ops, sys, &sys->resources);
->> -	if (!bus)
->> -		return NULL;
->> -
->> -	pci_scan_child_bus(bus);
->> -
->> -	if (bus && pp->ops->scan_bus)
->> -		pp->ops->scan_bus(pp);
->> -
->> -	return bus;
->> -}
->> -
->> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->> -{
->> -	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
->> -	int irq;
->> -
->> -	irq = of_irq_parse_and_map_pci(dev, slot, pin);
->> -	if (!irq)
->> -		irq = pp->irq;
->> -
->> -	return irq;
->> -}
->> -
->> -static struct hw_pci dw_pci = {
->> -	.setup		= dw_pcie_setup,
->> -	.scan		= dw_pcie_scan_bus,
->> -	.map_irq	= dw_pcie_map_irq,
->> -};
-> 
-> Right, 'struct hw_pci' should not be used in order to unify ARM32 and
-> ARM64. I have no objection to remove 'struct hw_pci' from 'pcie-designware.c'.
-> Thank you for your patch.
-> 
-> Best regards,
-> Jingoo Han
-> 
-
-Many thanks for your reviewing!
-Zhou Wang
-
->> -
->>  void dw_pcie_setup_rc(struct pcie_port *pp)
->>  {
->>  	u32 val;
->> -- 
->> 1.9.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 78c8bec..43e8a24 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -141,6 +141,7 @@ struct eeh_dev {
+ 	struct pci_controller *phb;	/* Associated PHB		*/
+ 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+ 	struct pci_dev *pdev;		/* Associated PCI device	*/
++	int    in_error;		/* Error flag for eeh_dev	*/
+ #ifdef CONFIG_PCI_IOV
+ 	struct pci_dev *physfn;		/* Associated PF PORT		*/
+ #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 221e280..077c3d1 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -1226,6 +1226,7 @@ void eeh_remove_device(struct pci_dev *dev)
+ 	 * from the parent PE during the BAR resotre.
+ 	 */
+ 	edev->pdev = NULL;
++	edev->in_error = 0;
+ 	dev->dev.archdata.edev = NULL;
+ 	if (!(edev->pe->state & EEH_PE_KEEP))
+ 		eeh_rmv_from_parent_pe(edev);
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 89eb4bc..6e42cad 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
+ 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
+ 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
+ 
++	edev->in_error = 1;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->slot_reset ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		eeh_pcid_put(dev);
+ 		return NULL;
+ 	}
+@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->resume ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		edev->mode &= ~EEH_DEV_NO_HANDLER;
+-		eeh_pcid_put(dev);
+-		return NULL;
++		goto out;
+ 	}
+ 
+ 	driver->err_handler->resume(dev);
+ 
++out:
++	edev->in_error = 0;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -386,12 +390,42 @@ static void *eeh_report_failure(void *data, void *userdata)
+ 	return NULL;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static void *eeh_add_virt_device(void *data, void *userdata)
++{
++	struct pci_driver *driver;
++	struct eeh_dev *edev = (struct eeh_dev *)data;
++	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
++
++	if (!(edev->mode & EEH_DEV_VF)) {
++		pr_warn("EEH: eeh_dev(%04x:%02x:%02x:%01x) is not a VF\n",
++			edev->phb->global_number, pdn->busno,
++			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
++		return NULL;
++	}
++
++	driver = eeh_pcid_get(dev);
++	if (driver) {
++		eeh_pcid_put(dev);
++		if (driver->err_handler)
++			return NULL;
++	}
++
++	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
++	return NULL;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static void *eeh_rmv_device(void *data, void *userdata)
+ {
+ 	struct pci_driver *driver;
+ 	struct eeh_dev *edev = (struct eeh_dev *)data;
+ 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+ 	int *removed = (int *)userdata;
++#ifdef CONFIG_PCI_IOV
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
++#endif
+ 
+ 	/*
+ 	 * Actually, we should remove the PCI bridges as well.
+@@ -416,7 +450,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 	driver = eeh_pcid_get(dev);
+ 	if (driver) {
+ 		eeh_pcid_put(dev);
+-		if (driver->err_handler)
++		if (removed && driver->err_handler)
+ 			return NULL;
+ 	}
+ 
+@@ -425,11 +459,21 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 		 pci_name(dev));
+ 	edev->bus = dev->bus;
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+-	(*removed)++;
+-
+-	pci_lock_rescan_remove();
+-	pci_stop_and_remove_bus_device(dev);
+-	pci_unlock_rescan_remove();
++	if (removed)
++		(*removed)++;
++
++#ifdef CONFIG_PCI_IOV
++	if (edev->mode & EEH_DEV_VF) {
++		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
++		edev->pdev = NULL;
++		pdn->pe_number = IODA_INVALID_PE;
++	} else
++#endif
++	{
++		pci_lock_rescan_remove();
++		pci_stop_and_remove_bus_device(dev);
++		pci_unlock_rescan_remove();
++	}
+ 
+ 	return NULL;
+ }
+@@ -548,6 +592,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
+ 	struct timeval tstamp;
+ 	int cnt, rc, removed = 0;
++	struct eeh_dev *edev;
+ 
+ 	/* pcibios will clear the counter; save the value */
+ 	cnt = pe->freeze_count;
+@@ -561,12 +606,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+ 	if (bus) {
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(bus);
+-		pci_unlock_rescan_remove();
+-	} else if (frozen_bus) {
++		if (pe->type & EEH_PE_VF)
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++		else {
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(bus);
++			pci_unlock_rescan_remove();
++		}
++	} else if (frozen_bus)
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+-	}
+ 
+ 	/*
+ 	 * Reset the pci controller. (Asserts RST#; resets config space).
+@@ -607,14 +655,26 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 		 * PE. We should disconnect it so the binding can be
+ 		 * rebuilt when adding PCI devices.
+ 		 */
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(bus);
++#ifdef CONFIG_PCI_IOV
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++#endif
++			pcibios_add_pci_devices(bus);
+ 	} else if (frozen_bus && removed) {
+ 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+ 		ssleep(5);
+ 
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(frozen_bus);
++#ifdef CONFIG_PCI_IOV
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++#endif
++			pcibios_add_pci_devices(frozen_bus);
+ 	}
+ 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+ 
+@@ -792,11 +852,15 @@ perm_error:
+ 	 * the their PCI config any more.
+ 	 */
+ 	if (frozen_bus) {
+-		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+-
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(frozen_bus);
+-		pci_unlock_rescan_remove();
++		if (pe->type & EEH_PE_VF) {
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++		} else {
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(frozen_bus);
++			pci_unlock_rescan_remove();
++		}
+ 	}
+ }
+ 
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index edfe63a..3b8b32f 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -916,7 +916,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
+ 	if (pe->type & EEH_PE_PHB) {
+ 		bus = pe->phb->bus;
+ 	} else if (pe->type & EEH_PE_BUS ||
+-		   pe->type & EEH_PE_DEVICE) {
++		   pe->type & EEH_PE_DEVICE ||
++		   pe->type & EEH_PE_VF) {
+ 		if (pe->bus) {
+ 			bus = pe->bus;
+ 			goto out;
+-- 
+1.7.9.5
 
