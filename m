@@ -1,74 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28182 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020AbbEJLJV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 10 May 2015 07:09:21 -0400
-Date: Sun, 10 May 2015 13:09:11 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Michael S. Tsirkin" <mst@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
-Message-ID: <20150510130619-mutt-send-email-mst@redhat.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150426084739-mutt-send-email-mst@kernel.org>
- <20150506210327.GG24643@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55478E95.7090206@redhat.com>
+Date: Mon, 04 May 2015 11:21:57 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150506210327.GG24643@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Joerg Roedel <joro@8bytes.org>, Dave Young <dyoung@redhat.com>
+CC: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, doug.hatch@hp.com, jerry.hoemann@hp.com,
+	tom.vaden@hp.com, li.zhang6@hp.com, lisa.mitchell@hp.com,
+	billsumnerlinux@gmail.com, rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com> <20150403084031.GF22579@dhcp-128-53.nay.redhat.com> <20150504110551.GD15736@8bytes.org>
+In-Reply-To: <20150504110551.GD15736@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 06, 2015 at 04:03:27PM -0500, Bjorn Helgaas wrote:
-> On Sun, Apr 26, 2015 at 08:50:06AM +0200, Michael S. Tsirkin wrote:
-> > On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
-> > > Hi Michael,
-> > > 
-> > > I put your patches on my pci/msi branch and I hope to merge them for v4.1.
-> > > I didn't apply the acks from Fam and Eric because I made changes to those
-> > > patches that weren't completely trivial.  I think the end result is
-> > > equivalent, though.  The diff attached to this cover letter is the
-> > > difference between your v5 series and this v6 series.
-> > > 
-> > > As far as I'm concerned, this is ready to go except that I would like a
-> > > little more info about the virtio kernel hang to include in the changelog
-> > > for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
-> > 
-> > 
-> > Hi Bjorn,
-> > do you have eveything you need to merge this?
-> 
-> No.  I made the minor changelog edits you suggested and the result is on
-> my pci/msi-v7 branch.  But I still have these open issues:
-> 
->   - The last thing I heard from Eric was that "not disabling MSI/MSI-X at
->     shutdown is the wrong fix, and someone needs to fix a buggy driver."
->     I want to hear Eric say "OK, we need to leave MSI/MSI-X enabled at
->     shutdown for this case."
-> 
->   - One changelog says "Stop disabling MSIs at shutdown to avoid
->     conflicting with drivers."  But I don't know what the conflict is.
+On 05/04/2015 07:05 AM, Joerg Roedel wrote:
+> On Fri, Apr 03, 2015 at 04:40:31PM +0800, Dave Young wrote:
+>> Have not read all the patches, but I have a question, not sure this
+>> has been answered before. Old memory is not reliable, what if the old
+>> memory get corrupted before panic? Is it safe to continue using it in
+>> 2nd kernel, I worry that it will cause problems.
+>
+> Yes, the old memory could be corrupted, and there are more failure cases
+> left which we have no way of handling yet (if iommu data structures are
+> in kdump backup areas).
+>
+> The question is what to do if we find some of the old data structures
+> corrupted, hand how far should the tests go. Should we also check the
+> page-tables, for example? I think if some of the data structures for a
+> device are corrupted it probably already failed in the old kernel and
+> things won't get worse in the new one.
+>
+> So checking is not strictly necessary in the first version of these
+> patches (unless we find a valid failure scenario). Once we have some
+> good plan on what to do if we find corruption, we can add checking of
+> course.
+>
+>
+> Regards,
+>
+> 	Joerg
+>
 
-OK, I'll try to clarify.
+Agreed.  This is a significant improvement over what we (don') have.
 
->   - The bugzilla has no dmesg log or detailed analysis.  Fam said the
->     scenario I came up with
->     (http://lkml.kernel.org/r/20150416194245.GB20701@google.com)
->     was fairly close, but it took me a lot of work to derive that.  Fixing
->     any errors in it and putting it in the bugzilla would be a big step.
->     The bugzilla should have the raw data and the analysis, so someone else
->     can validate the analysis and conclude that this patch is a reasonable
->     fix for it.  That's currently impossible because the bugzilla really
->     only contains the fix as a fait accompli.
-> 
-> Bjorn
+Corruption related to IOMMU must occur within the host, and it must be
+a software corruption, b/c the IOMMU inherently protects itself by protecting
+all of memory from errant DMAs.  Therefore, if the only IOMMU corruptor is
+in the host, it's likely the entire host kernel crash dump will either be
+useless, or corrupted by the security breach, at which point,
+this is just another scenario of a failed crash dump that will never be taken.
 
-I think it's easier to just have all the info in the commit log, so I'll
-do that for the next version.  I'm not too worried about adding these
-patches to stable, so I think adding bugzilla for this isn't a must,
-right?
+The kernel can't protect the mapping tables, which are the most likely area to
+be corrupted, b/c it'd (minimally) have to be per-device (to avoid locking
+& coherency issues), and would require significant
+overhead to keep/update a checksum-like scheme on (potentially) 4 levels of page tables.
 
--- 
-MST
+
