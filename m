@@ -1,131 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:45482 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787AbbESD0Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 23:26:16 -0400
-Message-ID: <555AAD3C.7050100@huawei.com>
-Date: Tue, 19 May 2015 11:25:48 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from www.linutronix.de ([62.245.132.108]:45572 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243AbbEDPKp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 11:10:45 -0400
+Date: Mon, 4 May 2015 17:10:26 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Amir Vadai <amirv@mellanox.com>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Hadar Hen Zion <hadarh@mellanox.com>,
+	Eran Ben Elisha <eranbe@mellanox.com>,
+	Joe Perches <joe@perches.com>,
+	Saeed Mahameed <saeedm@mellanox.com>,
+	Matan Barak <matanb@mellanox.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of
+ irq_desc
+In-Reply-To: <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+Message-ID: <alpine.DEB.2.11.1505041708190.4225@nanos>
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com> <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
-	<rwhite@pobox.com>, <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2] PCI: Fix NULL pointer when find parent pcie_link_state
-References: <1429858791-26331-1-git-send-email-wangyijing@huawei.com> <20150518170613.GN31666@google.com>
-In-Reply-To: <20150518170613.GN31666@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> +/*
->> + * We assume root port is always on the upstream end of
->> + * a link, and the pcie hierarchy should alternate
->> + * between links and internal switch logic.
->> + */
->> +static bool pcie_has_external_link(struct pci_dev *pdev)
->> +{
->> +	if (!pci_is_pcie(pdev))
->> +		return false;
->> +
->> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
->> +		return true;
->> +
->> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
->> +		if (!pdev->bus->self->link_state)
->> +			return true;
->> +
->> +	return false;
+On Mon, 4 May 2015, Amir Vadai wrote:
+
+> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> > The field 'affinity' in irq_desc won't change once the irq_desc data
+> > structure is created. So cache irq_desc->affinity instead of irq_desc.
+> > This also helps to hide struct irq_desc from device drivers.
 > 
-> I like the idea of this, but I'd rather not bury it inside ASPM and I'd
-> rather not have it depend on ASPM data (the link_state pointer).  I think
-> it would be better if we had a real PCI interface, maybe using a bit in
-> struct pci_dev that we could set in set_pcie_port_type().
-
-OK， I will add a flag in pci_dev.
-
+> Hi Jiang,
 > 
-> We should also look for other cases that might not work on this topology.
-> The following functions test for PCI_EXP_TYPE_DOWNSTREAM and I think most
-> of them assume that the Downstream Port has a link on its secondary side,
-> which is not the case in this topology:
-> 
->   reset_link()
+> I might not understand the new changes irq core, but up until now
+> affinity was changed when the user changed it through
+> /proc/irq/<IRQ>/smp_affinity.
+> This code is monitoring the affinity from the napi_poll context to
+> detect affinity changes, and prevent napi from keep running on the
+> wrong CPU.
+> Therefore, the affinity can't be cached at the beginning. Please
+> revert this caching.
 
-Right, we should identify pcie link by the new flag.
+Sigh. All of this is completely wrong. Polling in the internals of
+irq_desc is just crap.
 
->   alloc_pcie_link_state()
->   __pci_disable_link_state()
+irq_set_affinity_notifier() has been added for exactly this purpose.
 
-Ditto.
+Please get rid of your irq_desc abuse.
 
->   pcie_aspm_pm_state_change()
->   pcie_aspm_powersave_config_link()
->   pcie_aspm_create_sysfs_dev_files()
->   pcie_aspm_remove_sysfs_dev_files()
+Thanks,
 
-I think it's no need to use new flag to identify whether pcie device has pcie link in above
-functions.
-For ASPM, we alloc pcie_link_state when call pcie_aspm_init_link_state() -> alloc_pcie_link_state()
-In pcie_aspm_init_link_state(), only root port and downstream port devices would have chance to
-have a valid pcie_link_state, so in ASPM functions(above), only to check pdev->link_state is enough.
-So I would post a cleanup patch to clean the redundant checking code.
+	tglx
 
->   only_one_child()
-
-Would use the new flag instead.
-
->   quirk_apple_wait_for_thunderbolt()
-
-This is a quirk, if I use the new flag instead, it may change the logic(now only downstream port deivce could come in), for safe, keep it.
-
->   pci_vc_enable()
-
-Would use the new flag instead.
-
-> 
-> "has_external_link" doesn't seem very descriptive to me -- I'm not sure how
-> to interpret "external."  "has_downstream_link" suggests a link on the
-> downstream (secondary) side, which is more what we're getting at, although
-> it might be confusing that an Upstream Port can have a downstream link.  Or
-> maybe "has_secondary_link" or "secondary_is_link"./parent
-
-I like has_secondary_link better.
-
-
-Thanks!
-Yijing.
-
-> 
-> Bjorn
-> 
->> +}
->>  /*
->>   * pcie_aspm_init_link_state: Initiate PCI express link state.
->>   * It is called after the pcie and its children devices are scanned.
->> @@ -561,8 +580,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
->>  
->>  	if (!pci_is_pcie(pdev) || pdev->link_state)
->>  		return;
->> -	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
->> -	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
->> +
->> +	if (!pcie_has_external_link(pdev))
->>  		return;
->>  
->>  	/* VIA has a strange chipset, root port is under a bridge */
->> -- 
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
 
