@@ -1,58 +1,89 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
-Date: Thu, 28 May 2015 20:30:47 -0500
-Message-ID: <CAOS_Y6QaKAbSc101_mReezB1GsoafkvJGXFZ0MUpW2vk3o__ng@mail.gmail.com>
-Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
-From: Rob Landley <rob@landley.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Jonathan Corbet <corbet@lwn.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>, Alan <gnomes@lxorguk.ukuu.org.uk>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Kosina <jkosina@suse.cz>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
-	bp@suse.de, "Luis R. Rodriguez" <mcgrof@suse.com>
-Content-Type: text/plain; charset=UTF-8
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC v2 1/7] ACPI/PCI: Enhance ACPI core to support sparse IO space
+Date: Tue,  5 May 2015 10:46:04 +0800
+Message-Id: <1430793970-11159-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 28, 2015 at 1:56 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
->
-> Current documentation over use case for EXPORT_SYMBOL_GPL()
-> only acknowledges functions which are "an internal implementation
-> issue, and not really an interface".
+Enhance ACPI resource parsing interfaces to support sparse IO space,
+which will be used to share common code between x86 and IA64 later.
 
-I.E. a statement of intent that this symbol is not intended as a
-stable API that external users can program to regardless of underlying
-implementation, and thus should not be viewed as a barrier to "derived
-work" status for copyright purposes.
+Tested-by: Tony Luck <tony.luck@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/resource.c |    9 ++++++---
+ include/linux/ioport.h  |    1 +
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-(If you get a book out of the library and program to its APIs, you're
-not a derived work of an implementation not contained in that book.)
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 8244f013f210..fdcc73dad2c1 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+-				      u8 io_decode)
++				      u8 io_decode, u8 translation_type)
+ {
+ 	res->flags = IORESOURCE_IO;
+ 
+@@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
++	if (translation_type == ACPI_SPARSE_TRANSLATION)
++		res->flags |= IORESOURCE_IO_SPARSE;
+ }
+ 
+ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+@@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	acpi_dev_ioresource_flags(res, len, io_decode);
++	acpi_dev_ioresource_flags(res, len, io_decode, 0);
+ }
+ 
+ /**
+@@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
+ 		acpi_dev_memresource_flags(res, len, wp);
+ 		break;
+ 	case ACPI_IO_RANGE:
+-		acpi_dev_ioresource_flags(res, len, iodec);
++		acpi_dev_ioresource_flags(res, len, iodec,
++					  addr->info.io.translation_type);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 388e3ae94f7a..24bea087e7af 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -94,6 +94,7 @@ struct resource {
+ /* PnP I/O specific bits (IORESOURCE_BITS) */
+ #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
+ #define IORESOURCE_IO_FIXED		(1<<1)
++#define IORESOURCE_IO_SPARSE		(1<<2)
+ 
+ /* PCI ROM control bits (IORESOURCE_BITS) */
+ #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+-- 
+1.7.10.4
 
-> In practice these days
-> though we have some maintainers taking on preferences to require
-> all new functionality go in with EXPORT_SYMBOL_GPL().
-
-Ah, so they're predicting that Oracle will win the new "Apple vs
-Franklin" case extending copyright to render whole new areas of
-software proprietary, I.E. that APIs will be declared copyrightable
-putting Wine and Samba and such out of business, and probably LEON's
-ability to clone Sparc, and so on.
-
-https://lwn.net/Articles/646160/
-
-(And of course that TPP, which is now fast-tracked, will let us impose
-this upon the rest of the world without appeal.)
-
-Clearly, you want us to be on the side of Oracle, because GPL is
-Freedom by definition no matter what the side effects everywhere else.
-
-Bravo.
-
-Rob
