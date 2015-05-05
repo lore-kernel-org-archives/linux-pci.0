@@ -1,129 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25385 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159AbbETJij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 May 2015 05:38:39 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+Received: from mout.kundenserver.de ([212.227.126.130]:54453 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2993487AbbEEP7M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 May 2015 11:59:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v2 00/14] Split struct irq_data into common part and per-chip part
-Date: Wed, 20 May 2015 17:40:31 +0800
-Message-Id: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Date: Tue, 05 May 2015 17:58:31 +0200
+Message-ID: <7101508.6RhN5G3AIR@wuerfel>
+In-Reply-To: <20150505155346.GJ1550@arm.com>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com> <20150505155346.GJ1550@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
-	Now the irq core supports hierarchy irq and stacked irqchips,
-so there may be multiple irq_datas associated with the same irq. But
-some fields in struct irq_data are per-irq instance and duplicating
-those fields into multiple irq_data may cause troubles.
-	So this patch introduces a new data structure 'struct
-irq_common_data' to host per-irq instance data fields, and struct
-irq_data will only host per-chip data fields after the conversion.
+On Tuesday 05 May 2015 16:53:46 Will Deacon wrote:
+> On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
+> > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > from the arch/arm/ to do a part of the PCI initialization, and this
+> > prevents it from being used on arm64.
+> > 
+> > The initialization done by pci_common_init_dev() that is really
+> > needed by pci-host-generic.c can be done in the same file without
+> > using the hw_pci API of ARM.
+> > 
+> > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > this is be handled by setting up 'struct gen_pci' to embed a
+> > pci_sys_data variable as the first element on the ARM platform.
+> > 
+> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > ---
+> > Here's v2 of the patches, this enables use of pci-host-generic on
+> > arm64.
+> > 
+> > This has been tested on both qemu and fast model for arm64, and on
+> > qemu for arm32.
+> > 
+> > v1->v2
+> >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
+> >     - move contents of gen_pci_init to gen_pci_probe
+> >     - assign resources only when !probe_only
+> >  - tested on ARM32 with qemu option -M virt
+> 
+> I tried this with an arm64 kernel running under kvmtool, but I get the
+> following errors (a 32-bit ARM kernel does seem to work):
+> 
+>   PCI host bridge /pci ranges:
+>      IO 0x00000000..0x0000ffff -> 0x00000000
+>     MEM 0x41000000..0x7fffffff -> 0x41000000
+>   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
+>   pci_bus 0000:00: root bus resource [bus 00-01]
+>   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
+>   pci_bus 0000:00: scanning bus
+>   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
+>   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
+>   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
+>   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
+>   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
+>   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
+>   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
+>   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
+>   pci_bus 0000:00: fixups for bus
+>   pci_bus 0000:00: bus scan returning with max=00
+>   pci 0000:00:00.0: fixup irq: got 10
+>   pci 0000:00:00.0: assigning IRQ 10
+>   pci 0000:00:01.0: fixup irq: got 11
+>   pci 0000:00:01.0: assigning IRQ 11
+>   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
+>   virtio-pci: probe of 0000:00:00.0 failed with error -22
+>   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
+>   virtio-pci: probe of 0000:00:01.0 failed with error -22
 
-It's based on tip/x86/apic.
+What do you see in /proc/ioport and /proc/iomem, respectively?
 
-And it passes Fengguang's zeroday test suite.
+It sounds like the memory resource of the host did not get registered right.
 
-V1->V2:
-1) Patch "net/mlx4: Cache irq_desc->affinity instead of irq_desc" is
-   still kept to avoid build failure. It may be dropped if Amir Vadai
-   changed related code.
-2) Reorganize patches according to Thomas's suggestion.
-3) Rename irq_data_get_msi() as irq_data_get_msi_desc().
-
-Thanks!
-Gerry
-
-Jiang Liu (14):
-  genirq: Introduce struct irq_common_data to host shared irq data
-  genirq: Introduce helper function irq_data_get_node()
-  x86, irq: Use accessor irq_data_get_node() to hide struct irq_data
-    detail
-  sh, irq: Use accessor irq_data_get_node() to hide struct irq_data
-    detail
-  genirq: Move field 'node' from struct irq_data into struct
-    irq_common_data
-  genirq: Move field 'handler_data' from struct irq_data into struct
-    irq_common_data
-  mn10300: Fix incorrect use of data->affinity
-  genirq: Introduce helper function irq_data_get_affinity_mask()
-  net/mlx4: Cache irq_desc->affinity instead of irq_desc
-  genirq: Move field 'affinity' from struct irq_data into struct
-    irq_common_data
-  genirq: Rename irq_data_get_msi() as irq_data_get_msi_desc()
-  genirq: Use helper function to access irq_data->msi_desc
-  genirq: Move field 'msi_desc' from struct irq_data into struct
-    irq_common_data
-  genirq: Pass irq_data to helper function
-    __irq_set_chip_handler_name_locked()
-
- arch/alpha/kernel/irq.c                      |    2 +-
- arch/arm/kernel/irq.c                        |    4 +-
- arch/arm64/kernel/irq.c                      |    4 +-
- arch/blackfin/mach-common/ints-priority.c    |    3 +-
- arch/ia64/kernel/iosapic.c                   |    8 +-
- arch/ia64/kernel/irq.c                       |    6 +-
- arch/ia64/kernel/msi_ia64.c                  |    6 +-
- arch/ia64/sn/kernel/msi_sn.c                 |    4 +-
- arch/metag/kernel/irq.c                      |   10 ++-
- arch/mips/alchemy/common/irq.c               |    4 +-
- arch/mips/bcm63xx/irq.c                      |    2 +-
- arch/mips/cavium-octeon/octeon-irq.c         |   14 ++--
- arch/mips/pmcs-msp71xx/msp_irq_cic.c         |    3 +-
- arch/mn10300/kernel/cevt-mn10300.c           |    2 +-
- arch/mn10300/kernel/irq.c                    |   13 +--
- arch/parisc/kernel/irq.c                     |   12 +--
- arch/powerpc/kernel/irq.c                    |    2 +-
- arch/powerpc/sysdev/xics/ics-opal.c          |    4 +-
- arch/powerpc/sysdev/xics/ics-rtas.c          |    4 +-
- arch/sh/kernel/irq.c                         |    9 ++-
- arch/sparc/kernel/irq_64.c                   |   27 ++++---
- arch/sparc/kernel/leon_kernel.c              |    6 +-
- arch/sparc/kernel/sun4d_irq.c                |    4 +-
- arch/sparc/kernel/sun4m_irq.c                |    6 +-
- arch/tile/kernel/pci_gx.c                    |    2 +-
- arch/x86/kernel/apic/io_apic.c               |    2 +-
- arch/x86/kernel/apic/msi.c                   |    2 +-
- arch/x86/kernel/apic/vector.c                |   13 ++-
- arch/x86/kernel/hpet.c                       |    4 +-
- arch/x86/kernel/irq.c                        |    5 +-
- arch/x86/platform/uv/uv_irq.c                |    2 +-
- arch/xtensa/kernel/irq.c                     |   10 ++-
- drivers/gpio/gpio-davinci.c                  |    2 +-
- drivers/gpio/gpio-zynq.c                     |    9 +--
- drivers/irqchip/irq-metag-ext.c              |    5 +-
- drivers/irqchip/irq-mips-gic.c               |   13 ++-
- drivers/net/ethernet/mellanox/mlx4/en_cq.c   |    6 +-
- drivers/net/ethernet/mellanox/mlx4/en_rx.c   |    5 +-
- drivers/net/ethernet/mellanox/mlx4/mlx4_en.h |    2 +-
- drivers/parisc/iosapic.c                     |    2 +-
- drivers/pci/host/pcie-designware.c           |    2 +-
- drivers/pci/msi.c                            |    4 +-
- drivers/sh/intc/chip.c                       |    6 +-
- drivers/sh/intc/virq.c                       |    4 +-
- drivers/xen/events/events_base.c             |    4 +-
- include/linux/irq.h                          |  111 +++++++++++++++++---------
- include/linux/irqdesc.h                      |   19 +++--
- kernel/irq/chip.c                            |    4 +-
- kernel/irq/internals.h                       |   15 ++--
- kernel/irq/irqdesc.c                         |   27 +++----
- kernel/irq/irqdomain.c                       |    5 +-
- kernel/irq/manage.c                          |   14 ++--
- kernel/irq/proc.c                            |    4 +-
- 53 files changed, 259 insertions(+), 203 deletions(-)
-
--- 
-1.7.10.4
-
+	Arnd
