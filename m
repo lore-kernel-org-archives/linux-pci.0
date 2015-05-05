@@ -1,152 +1,160 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 May 2015 09:53:35 +0200
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <865795326.20150526095335@eikelenboom.it>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	david.vrabel@citrix.com, <xen-devel@lists.xenproject.org>,
-	<linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:38792 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964842AbbEEB6y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 21:58:54 -0400
+From: Jayachandran C <jchandra@broadcom.com>
+To: Will Deacon <will.deacon@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Do not set ACPI companions for host bridges with parents
-In-Reply-To: <2625308.mOex6suvmm@vostro.rjw.lan>
-References: <555FDDA1.8030806@oracle.com> <2059136.yfbqz351P1@vostro.rjw.lan> <1901357.YAorP09rCo@vostro.rjw.lan> <2625308.mOex6suvmm@vostro.rjw.lan>
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Date: Tue, 5 May 2015 07:32:12 +0530
+Message-ID: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The current code in pci-host-generic.c uses pci_common_init_dev()
+from the arch/arm/ to do a part of the PCI initialization, and this
+prevents it from being used on arm64.
 
-Tuesday, May 26, 2015, 4:17:05 AM, you wrote:
+The initialization done by pci_common_init_dev() that is really
+needed by pci-host-generic.c can be done in the same file without
+using the hw_pci API of ARM.
 
-> On Tuesday, May 26, 2015 03:08:17 AM Rafael J. Wysocki wrote:
->> On Tuesday, May 26, 2015 01:42:16 AM Rafael J. Wysocki wrote:
->> > On Tuesday, May 26, 2015 01:22:12 AM Rafael J. Wysocki wrote:
->> > > On Friday, May 22, 2015 09:53:37 PM Boris Ostrovsky wrote:
->> > > > On 05/22/2015 04:11 AM, Sander Eikelenboom wrote:
->> > > > > Hello Sander,
->> > > > >
->> > 
->> > [cut]
->> > 
->> > > > (+Rafael again)
->> > > > 
->> > > > So the immediate cause of those errors is that pdev->evtchn is 0. 
->> > > > Backend is not notified and things not go well then.
->> > > > 
->> > > > And it is indeed caused by 97badf873ab60e841243b66133ff9eff2a46ef29:
->> > > > 
->> > > > We allocate pcifront_sd in pcifront_scan_root() and then pass it to 
->> > > > pci_scan_bus_parented() as sysdata. Eventually this sysdata is used in 
->> > > > pcibios_root_bridge_prepare() as pci_sysdata. It is dereferenced as 
->> > > > pci_sysdata->companion (which I believe is aliased to pcifront_sd->pdev)
->> > 
->> > Well, there is an int node field between them, so I'm not sure.
->> > 
->> > > > and then set_primary_fwnode() writes it, thus corrupting 
->> > > > pcifront_sd->pdev (and I think this is what sets evtchn to zero).
->> > 
->> > So the corruption happens when set_primary_fwnode() writes NULL to the
->> > 'secondary' field of object pointed to by 'fwnode'.
->> > 
->> > This isn't strictly necessary and we might avoid the crash by only
->> > writing to fwnode->secondary if fn is not NULL.
->> > 
->> > So, Sander please test the patch below too if possible.
->> > 
->> > Of course, that doesn't solve a problem of passing an incorrect pointer
->> > to ACPI_COMPANION_SET() in pcibios_root_bridge_prepare().
->> 
->> And here's one more thing to test.
+The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+this is be handled by setting up 'struct gen_pci' to embed a
+pci_sys_data variable as the first element on the ARM platform.
 
-> And the below is how I'd fix it, so you can simply test this patch and skip the
-> previous ones.
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+Here's v2 of the patches, this enables use of pci-host-generic on
+arm64.
 
-Hi Rafael,
+This has been tested on both qemu and fast model for arm64, and on
+qemu for arm32.
 
-Just tested it, works for me, thanks !
+v1->v2
+ - Address comments from Arnd Bergmann and Lorenzo Pieralisi
+    - move contents of gen_pci_init to gen_pci_probe
+    - assign resources only when !probe_only
+ - tested on ARM32 with qemu option -M virt
 
---
-Sander
+Notes:
+ - passing a zeroed out pci_sys_data for ARM looks ok, but I haven't
+   tested it on ARM.
+ - tested it on ARM64 fast model
+ - Any information on how this can be tested on arm is welcome.
+ - There is only one ifdef, and that can be removed when arm64 gets
+   a sysdata, or when arm loses its sysdata.
 
+ drivers/pci/host/pci-host-generic.c | 50 +++++++++++++++++++++++--------------
+ 1 file changed, 31 insertions(+), 19 deletions(-)
 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / ACPI: Do not set ACPI companions for host bridges with parents
-
-> Commit 97badf873ab6 (device property: Make it possible to use
-> secondary firmware nodes) uncovered a bug in the x86 (and ia64) PCI
-> host bridge initialization code that assumes bridge->bus->sysdata
-> to always point to a struct pci_sysdata object which need not be
-> the case (in particular, the Xen PCI frontend driver sets it to point
-> to a different data type).  If it is not the case, an incorrect
-> pointer (or a piece of data that is not a pointer at all) will be
-> passed to ACPI_COMPANION_SET() and that may cause interesting
-> breakage to happen going forward.
-
-> To work around this problem use the observation that the ACPI
-> host bridge initialization always passes NULL as parent to
-> pci_create_root_bus(), so if pcibios_root_bridge_prepare() sees
-> a non-NULL parent of the bridge, it should not attempt to set
-> an ACPI companion for it, because that means that
-> pci_create_root_bus() has been called by someone else.
-
-> Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  arch/ia64/pci/pci.c |   13 ++++++++++---
->  arch/x86/pci/acpi.c |   13 ++++++++++---
->  2 files changed, 20 insertions(+), 6 deletions(-)
-
-> Index: linux-pm/arch/x86/pci/acpi.c
-> ===================================================================
-> --- linux-pm.orig/arch/x86/pci/acpi.c
-> +++ linux-pm/arch/x86/pci/acpi.c
-> @@ -482,9 +482,16 @@ struct pci_bus *pci_acpi_scan_root(struc
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
-> -       struct pci_sysdata *sd = bridge->bus->sysdata;
-> -
-> -       ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> +       /*
-> +        * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> +        * here, pci_create_root_bus() has been called by someone else and
-> +        * sysdata is likely to be different from what we expect.  Let it go in
-> +        * that case.
-> +        */
-> +       if (!bridge->dev.parent) {
-> +               struct pci_sysdata *sd = bridge->bus->sysdata;
-> +               ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> +       }
->         return 0;
->  }
->  
-> Index: linux-pm/arch/ia64/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/arch/ia64/pci/pci.c
-> +++ linux-pm/arch/ia64/pci/pci.c
-> @@ -478,9 +478,16 @@ struct pci_bus *pci_acpi_scan_root(struc
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
-> -       struct pci_controller *controller = bridge->bus->sysdata;
-> -
-> -       ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-> +       /*
-> +        * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> +        * here, pci_create_root_bus() has been called by someone else and
-> +        * sysdata is likely to be different from what we expect.  Let it go in
-> +        * that case.
-> +        */
-> +       if (!bridge->dev.parent) {
-> +               struct pci_controller *controller = bridge->bus->sysdata;
-> +               ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-> +       }
->         return 0;
->  }
->  
-
-
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index ba46e58..e9cc559 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -39,6 +39,9 @@ struct gen_pci_cfg_windows {
+ };
+ 
+ struct gen_pci {
++#ifdef CONFIG_ARM
++	struct pci_sys_data			sys;
++#endif
+ 	struct pci_host_bridge			host;
+ 	struct gen_pci_cfg_windows		cfg;
+ 	struct list_head			resources;
+@@ -48,8 +51,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+ 					     int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus->sysdata;
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 8) | where);
+@@ -64,8 +66,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+ 					      unsigned int devfn,
+ 					      int where)
+ {
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct gen_pci *pci = sys->private_data;
++	struct gen_pci *pci = bus->sysdata;
+ 	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+ 
+ 	return pci->cfg.win[idx] + ((devfn << 12) | where);
+@@ -198,13 +199,6 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	return 0;
+ }
+ 
+-static int gen_pci_setup(int nr, struct pci_sys_data *sys)
+-{
+-	struct gen_pci *pci = sys->private_data;
+-	list_splice_init(&pci->resources, &sys->resources);
+-	return 1;
+-}
+-
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+ 	int err;
+@@ -214,13 +208,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-	struct hw_pci hw = {
+-		.nr_controllers	= 1,
+-		.private_data	= (void **)&pci,
+-		.setup		= gen_pci_setup,
+-		.map_irq	= of_irq_parse_and_map_pci,
+-		.ops		= &gen_pci_ops,
+-	};
++	struct pci_bus *bus;
+ 
+ 	if (!pci)
+ 		return -ENOMEM;
+@@ -258,7 +246,31 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
+-	pci_common_init_dev(dev, &hw);
++	/* do not reassign resource if probe only */
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		pci_add_flags(PCI_REASSIGN_ALL_RSRC);
++
++	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
++	if (!bus) {
++		dev_err(dev, "Scanning rootbus failed");
++		return -ENODEV;
++	}
++
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++	}
++	pci_bus_add_devices(bus);
++
++	/* Configure PCI Express settings */
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		struct pci_bus *child;
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
 
