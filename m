@@ -1,87 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:46152 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbbESWnl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 18:43:41 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-CC: Alexander Duyck <alexander.h.duyck@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
- Ethernet devices
-Date: Tue, 19 May 2015 22:43:39 +0000
-Message-ID: <46CDD500-2A1B-4457-BE17-961AFC50769E@intel.com>
-References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com>
- <555B5CBF.1090902@redhat.com>
- <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com>
- <555B77E5.5060006@redhat.com>
- <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com>
- <555B9F74.3040004@redhat.com>
- <DA06AAB6-CE9B-4A27-B60D-8F55BB52A063@intel.com> <555BA850.1090901@gmail.com>
-In-Reply-To: <555BA850.1090901@gmail.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 5 May 2015 21:25:06 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dimitri Sivanich <sivanich@sgi.com>,
+	Jonathan Corbet <corbet@lwn.net>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Daniel J Blueman <daniel@numascale.com>,
+	linux-doc@vger.kernel.org
+Subject: Re: [Patch 2/2] x86, irq: Support CPU vector allocation policies
+In-Reply-To: <1430707662-28598-3-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1505052116210.4225@nanos>
+References: <1430707662-28598-1-git-send-email-jiang.liu@linux.intel.com> <1430707662-28598-3-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+On Mon, 4 May 2015, Jiang Liu wrote:
+> +enum {
+> +	/* Allocate CPU vectors from CPUs on device local node */
+> +	X86_VECTOR_POL_NODE = 0x1,
+> +	/* Allocate CPU vectors from all online CPUs */
+> +	X86_VECTOR_POL_GLOBAL = 0x2,
+> +	/* Allocate CPU vectors from caller specified CPUs */
+> +	X86_VECTOR_POL_CALLER = 0x4,
+> +	X86_VECTOR_POL_MIN = X86_VECTOR_POL_NODE,
+> +	X86_VECTOR_POL_MAX = X86_VECTOR_POL_CALLER,
+> +}
 
-> On May 19, 2015, at 2:17 PM, Alexander Duyck =
-<alexander.duyck@gmail.com> wrote:
->=20
-> Any chance you could point me toward the software in question?  Just =
-wondering because it seems like what you are fixing with this is an =
-implementation issue in the application since you really shouldn't be =
-accessing areas outside the scope of the VPD data structure, and doing =
-so is undefined in terms of what happens if you do.
+> +static unsigned int vector_alloc_policy = X86_VECTOR_POL_NODE |
+> +					  X86_VECTOR_POL_GLOBAL |
+> +					  X86_VECTOR_POL_CALLER;
+  
+> +static int __init apic_parse_vector_policy(char *str)
+> +{
+> +	if (!strncmp(str, "node", 4))
+> +		vector_alloc_policy |= X86_VECTOR_POL_NODE;
 
-I don't have it, but if you dump VPD via sysfs you will see it comes out =
-as 32k in size. The kernel just blindly provides access to the full 32K =
-space provided by the spec. I'm sure that we agree that the kernel =
-should not go parse it and find the actual size. If it is read via =
-stdio, say fread, the read access would be whatever buffer size it =
-chooses to use.
+This does not make sense. X86_VECTOR_POL_NODE is already set.
 
-If you looked at the quirks, you might have noticed that Broadcom =
-limited the VPD access for some devices for functional reasons. That is =
-what gave me the idea for limiting access to what was possibly there. =
-With the existing Intel Ethernet quirk, it seemed like a simple thing to =
-do.
+> +	else if (!strncmp(str, "global", 6))
+> +		vector_alloc_policy &= ~X86_VECTOR_POL_NODE;
 
---
-Mark Rustad, Networking Division, Intel Corporation
+Why would one disable node aware allocation? We fall back to the
+global allocation anyway, if the node aware allocation fails.
 
+I'm completely missing the value of this command line option.
 
---Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
+Thanks,
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVW7yaAAoJEDwO/+eO4+5uc/8QAITb0mh4u5YVVfHMyOLMh5yw
-JA8BFJmBfP0ufBxMS7vsMJw68gqiHKnoKcPG0cOT4HiKCxgRSwdZLXY99G/VGwE1
-VkwfIHe/hhPUROHJngO3V9NQveZ7OGhv/iJBqzl1v/DfDa56xYuhzuVto24ZVixK
-RziXaQnR1ISztjK4gJM79Jr4mXyFltTiO1PdjCSiKw0DIlGVCcnvdsEk4yknBLeq
-hgQEK8mH0nFBF/3Snj3ttuMZSKTN4McHptF8BNyrkZ+E2IjivQziBK6XOOK5MQ4k
-25FtyqRnDhG9czQEFRitVuIISUnLROIaKuGk6qv3sPM7280cUEXnUok9IA8u1NN7
-+iq40BPRp3JaGR8VR2XLqTRwlCeaiCEiz3JXkBNzi6wdn40F6lx/WgpXxjxfHhLu
-mrG+QyOwy/YhlNotfXLFtIUFVM/Lu2x4RU08qmSoWeyZ/M+ABJdZSG+EVan8BQ1J
-qnYy6OcLAg1X4Gup/Tjj2VNZAcy2KD8MxZnt5ZUEgMkgPtY3nqDiAiIWobTYB5Y2
-6U0L750gRnoLtLMPdJUGYjTwSRCdhL+UjAsfLzgK8doghfJj2J2kWluAeUGM7K6m
-8/TdczdLztl6loFzrwmNr+F69u3bDr9F+GvEnFguZlAll3j7j2hUnOBPX0ecE4am
-jozxT1N0+FA0+1f7QOO4
-=1eme
------END PGP SIGNATURE-----
-
---Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0--
+	tglx
