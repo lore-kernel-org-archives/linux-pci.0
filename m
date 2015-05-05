@@ -1,83 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:8547 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754577AbbE1Wfp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 18:35:45 -0400
-From: Casey Leedom <leedom@chelsio.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: Request for advice on where to put Root Complex "fix up" code
- for downstream device
-Date: Thu, 28 May 2015 22:35:41 +0000
-Message-ID: <4985EFDD773FCB459EF7915D2A3621ADBDE9A7@nice.asicdesigners.com>
-References: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>,<20150507230426.GO24643@google.com>,<4985EFDD773FCB459EF7915D2A3621ADBC80D4@nice.asicdesigners.com>
-In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADBC80D4@nice.asicdesigners.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:36132 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbbEEWJO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 May 2015 18:09:14 -0400
+Received: by iecnq11 with SMTP id nq11so795699iec.3
+        for <linux-pci@vger.kernel.org>; Tue, 05 May 2015 15:09:13 -0700 (PDT)
+Date: Tue, 5 May 2015 17:09:04 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	kernel@stlinux.com, linux-pci@vger.kernel.org,
+	Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: Re: [PATCH v3 2/5] PCI: st: Add Device Tree bindings for sti pcie
+Message-ID: <20150505220904.GD24643@google.com>
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+ <1428657168-12495-3-git-send-email-gabriel.fernandez@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1428657168-12495-3-git-send-email-gabriel.fernandez@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-| From: Casey Leedom [leedom@chelsio.com]
-| Sent: Thursday, May 07, 2015 4:31 PM
-| 
-| | From: Bjorn Helgaas [bhelgaas@google.com]
-| | Sent: Thursday, May 07, 2015 4:04 PM
-| |
-| | There are a lot of fixups in drivers/pci/quirks.c.  For things that have to
-| | be worked around either before a driver claims the device or if there is no
-| | driver at all, the fixup *has* to go in drivers/pci/quirks.c
-| |
-| | But for things like this, where the problem can only occur after a driver
-| | claims the device, I think it makes more sense to put the fixup in the
-| | driver itself.  The only wrinkle here is that the fixup has to be done on a
-| | separate device, not the device claimed by the driver.  But I think it
-| | probably still makes sense to put this fixup in the driver.
-| ...
-|   One complication to doing this in cxgb4 is that it attaches to Physical
-| Function 4 of our T5 chip.  Meanwhile, a completely separate storage
-| driver, csiostor, connections to PF5 and PF6 and there's no
-| requirement at all that cxgb4 be loaded.  So if we go down the road of
-| putting the fixup code in the cxgb4 driver, we'll also need to duplicate
-| that code in the csiostor driver.
+On Fri, Apr 10, 2015 at 11:12:45AM +0200, Gabriel FERNANDEZ wrote:
+> sti pcie is built around a Synopsis Designware PCIe IP.
+> 
+> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
 
-  I never heard back on this issue of needing to put the Root Complex "fixup" code in two different drivers -- cxgb4 and csiostor -- if we don't go down the path of using a PCI Quirk.  I'm happy doing either and have verified both solutions locally.  I'd just like to get a judgement call on this.
+Arnd, Rob, can you ack this?
 
-  It comes down to adding ~30 lines to
-
-    drivers/net/eththernet/chelsio/cxgb4/cxgb4_main.c
-    drivers/scsi/csiostor/csio_init.c
-
-or ~30 lines to
-
-    drivers/pci/quirks.c
-
-| | Can you include a pointer to the relevant part of the spec?
-| 
-|   Sure:
-| 
-|     2.2.9. Completion Rules
-|     ...
-|     Completion headers must supply the same values for
-|     the Attribute as were supplied in the 20 header of
-|     the corresponding Request, except as explicitly
-|     allowed when IDO is used (see Section 2.2.6.4).
-|     ...
-|     2.3.2. Completion Handling Rules
-|     ...
-|     If a received Completion matches the Transaction ID
-|     of an outstanding Request, but in some other way
-|     does not match the corresponding Request (e.g., a
-|     problem with Attributes, Traffic Class, Byte Count,
-|     Lower Address, etc), it is strongly recommended for
-|     the Receiver to handle the Completion as a Malformed
-|     TLP. However, if the Completion is otherwise properly
-|     formed, it is permitted[22] for the Receiver to
-|     handle the Completion as an Unexpected Completion.
-
-| | Can you use pci_upstream_bridge() here?  There are a couple places where we
-| | want to find the Root Port, so we might factor that out someday.  It'll be
-| | easier to find all those places if they use with pci_upstream_bridge().
-| 
-| It looks like pci_upstream_bridge() just traverses one like upstream toward the
-| Root Complex?  Or am I misunderstanding that function?
+> ---
+>  Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
+>  1 file changed, 53 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
+> new file mode 100644
+> index 0000000..25fcab3
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
+> @@ -0,0 +1,53 @@
+> +STMicroelectronics STi PCIe controller
+> +
+> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+> +and thus inherits all the common properties defined in designware-pcie.txt.
+> +
+> +Required properties:
+> + - compatible: "st,stih407-pcie"
+> + - reg: base address and length of the pcie controller, mem-window address
+> +   and length available to the controller.
+> + - interrupts: A list of interrupt outputs of the controller. Must contain an
+> +   entry for each entry in the interrupt-names property.
+> + - interrupt-names: Should be "msi". STi interrupt that is asserted when an
+> +   MSI is received.
+> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
+> +   offset for IP configuration.
+> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
+> +   Associated names must be "powerdown" and "softreset".
+> + - phys, phy-names: the phandle for the PHY device.
+> +   Associated name must be "pcie"
+> +
+> +Optional properties:
+> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
+> +
+> +Example:
+> +
+> +pcie0: pcie@9b00000 {
+> +	compatible = "st,pcie", "snps,dw-pcie";
+> +	device_type = "pci";
+> +	reg = <0x09b00000 0x4000>,	/* dbi cntrl registers */
+> +	      <0x2fff0000 0x00010000>,	/* configuration space */
+> +	      <0x40000000 0x80000000>;	/* lmi mem window */
+> +	reg-names = "dbi", "config", "mem-window";
+> +	st,syscfg = <&syscfg_core 0xd8 0xe0>;
+> +	#address-cells = <3>;
+> +	#size-cells = <2>;
+> +	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
+> +	num-lanes = <1>;
+> +	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
+> +	interrupt-names = "msi";
+> +	#interrupt-cells = <1>;
+> +	interrupt-map-mask = <0 0 0 7>;
+> +	interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
+> +			<0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
+> +			<0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
+> +			<0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
+> +
+> +	resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
+> +		 <&softreset STIH407_PCIE0_SOFTRESET>;
+> +	reset-names = "powerdown",
+> +		      "softreset";
+> +	phys = <&phy_port0 PHY_TYPE_PCIE>;
+> +	phy-names = "pcie";
+> +};
+> -- 
+> 1.9.1
+> 
