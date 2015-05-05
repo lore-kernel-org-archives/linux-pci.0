@@ -1,149 +1,64 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 27 May 2015 17:58:21 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
-	linux-kernel@vger.kernel.org,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Do not set ACPI companions for host bridges
- with parents
-Message-ID: <20150527225821.GF10210@google.com>
-References: <555FDDA1.8030806@oracle.com>
- <2059136.yfbqz351P1@vostro.rjw.lan>
- <1901357.YAorP09rCo@vostro.rjw.lan>
- <2625308.mOex6suvmm@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2625308.mOex6suvmm@vostro.rjw.lan>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC v2 0/7] Consolidate ACPI PCI root common code into ACPI core
+Date: Tue,  5 May 2015 10:46:03 +0800
+Message-Id: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 04:17:05AM +0200, Rafael J. Wysocki wrote:
-> On Tuesday, May 26, 2015 03:08:17 AM Rafael J. Wysocki wrote:
-> > On Tuesday, May 26, 2015 01:42:16 AM Rafael J. Wysocki wrote:
-> > > On Tuesday, May 26, 2015 01:22:12 AM Rafael J. Wysocki wrote:
-> > > > On Friday, May 22, 2015 09:53:37 PM Boris Ostrovsky wrote:
-> > > > > On 05/22/2015 04:11 AM, Sander Eikelenboom wrote:
-> > > > > > Hello Sander,
-> > > > > >
-> > > 
-> > > [cut]
-> > > 
-> > > > > (+Rafael again)
-> > > > > 
-> > > > > So the immediate cause of those errors is that pdev->evtchn is 0. 
-> > > > > Backend is not notified and things not go well then.
-> > > > > 
-> > > > > And it is indeed caused by 97badf873ab60e841243b66133ff9eff2a46ef29:
-> > > > > 
-> > > > > We allocate pcifront_sd in pcifront_scan_root() and then pass it to 
-> > > > > pci_scan_bus_parented() as sysdata. Eventually this sysdata is used in 
-> > > > > pcibios_root_bridge_prepare() as pci_sysdata. It is dereferenced as 
-> > > > > pci_sysdata->companion (which I believe is aliased to pcifront_sd->pdev)
-> > > 
-> > > Well, there is an int node field between them, so I'm not sure.
-> > > 
-> > > > > and then set_primary_fwnode() writes it, thus corrupting 
-> > > > > pcifront_sd->pdev (and I think this is what sets evtchn to zero).
-> > > 
-> > > So the corruption happens when set_primary_fwnode() writes NULL to the
-> > > 'secondary' field of object pointed to by 'fwnode'.
-> > > 
-> > > This isn't strictly necessary and we might avoid the crash by only
-> > > writing to fwnode->secondary if fn is not NULL.
-> > > 
-> > > So, Sander please test the patch below too if possible.
-> > > 
-> > > Of course, that doesn't solve a problem of passing an incorrect pointer
-> > > to ACPI_COMPANION_SET() in pcibios_root_bridge_prepare().
-> > 
-> > And here's one more thing to test.
-> 
-> And the below is how I'd fix it, so you can simply test this patch and skip the
-> previous ones.
-> 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / ACPI: Do not set ACPI companions for host bridges with parents
-> 
-> Commit 97badf873ab6 (device property: Make it possible to use
-> secondary firmware nodes) uncovered a bug in the x86 (and ia64) PCI
-> host bridge initialization code that assumes bridge->bus->sysdata
-> to always point to a struct pci_sysdata object which need not be
-> the case (in particular, the Xen PCI frontend driver sets it to point
-> to a different data type).  If it is not the case, an incorrect
-> pointer (or a piece of data that is not a pointer at all) will be
-> passed to ACPI_COMPANION_SET() and that may cause interesting
-> breakage to happen going forward.
-> 
-> To work around this problem use the observation that the ACPI
-> host bridge initialization always passes NULL as parent to
-> pci_create_root_bus(), so if pcibios_root_bridge_prepare() sees
-> a non-NULL parent of the bridge, it should not attempt to set
-> an ACPI companion for it, because that means that
-> pci_create_root_bus() has been called by someone else.
-> 
-> Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This patch set consolidates common code to support ACPI PCI root on x86
+and IA64 platforms into ACPI core, to reproduce duplicated code and
+simplify maintenance. The common code should also used to support PCI
+host bridge on ARM64 too, but I'm lacking of knowledge about PCIe host
+bridge implementation details on ARM64, so please help to review whether
+this is suitable for ARM64 too.
 
-Do you want to merge this, Rafael?
+It's based on latest mainstream kernel plus the patch to fix a regression
+at: http://lkml.org/lkml/2015/4/30/13
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+It passes Fengguang's 0day test suite and has been tested on two IA64
+platforms and one x86 platform.
 
-> ---
->  arch/ia64/pci/pci.c |   13 ++++++++++---
->  arch/x86/pci/acpi.c |   13 ++++++++++---
->  2 files changed, 20 insertions(+), 6 deletions(-)
-> 
-> Index: linux-pm/arch/x86/pci/acpi.c
-> ===================================================================
-> --- linux-pm.orig/arch/x86/pci/acpi.c
-> +++ linux-pm/arch/x86/pci/acpi.c
-> @@ -482,9 +482,16 @@ struct pci_bus *pci_acpi_scan_root(struc
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
-> -	struct pci_sysdata *sd = bridge->bus->sysdata;
-> -
-> -	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> +	/*
-> +	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> +	 * here, pci_create_root_bus() has been called by someone else and
-> +	 * sysdata is likely to be different from what we expect.  Let it go in
-> +	 * that case.
-> +	 */
-> +	if (!bridge->dev.parent) {
-> +		struct pci_sysdata *sd = bridge->bus->sysdata;
-> +		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> +	}
->  	return 0;
->  }
->  
-> Index: linux-pm/arch/ia64/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/arch/ia64/pci/pci.c
-> +++ linux-pm/arch/ia64/pci/pci.c
-> @@ -478,9 +478,16 @@ struct pci_bus *pci_acpi_scan_root(struc
->  
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
-> -	struct pci_controller *controller = bridge->bus->sysdata;
-> -
-> -	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-> +	/*
-> +	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> +	 * here, pci_create_root_bus() has been called by someone else and
-> +	 * sysdata is likely to be different from what we expect.  Let it go in
-> +	 * that case.
-> +	 */
-> +	if (!bridge->dev.parent) {
-> +		struct pci_controller *controller = bridge->bus->sysdata;
-> +		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-> +	}
->  	return 0;
->  }
->  
-> 
+The patch set is available at:
+https://github.com/jiangliu/linux.git acpi_pci_root_v2
+
+Thanks!
+Gerry
+
+Jiang Liu (7):
+  ACPI/PCI: Enhance ACPI core to support sparse IO space
+  ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
+    bridge
+  ia64/PCI: Use common struct resource_entry to replace struct
+    iospace_resource
+  x86/PCI: Rename struct pci_sysdata as struct pci_controller
+  PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
+  x86/PCI/ACPI: Use common interface to support PCI host bridge
+  ia64/PCI/ACPI: Use common interface to support PCI host bridge
+
+ arch/ia64/include/asm/pci.h   |    5 -
+ arch/ia64/pci/pci.c           |  373 +++++++++++------------------------------
+ arch/x86/include/asm/pci.h    |   13 +-
+ arch/x86/include/asm/pci_64.h |    4 +-
+ arch/x86/pci/acpi.c           |  281 +++++++++----------------------
+ arch/x86/pci/common.c         |    2 +-
+ drivers/acpi/pci_root.c       |  214 +++++++++++++++++++++++
+ drivers/acpi/resource.c       |    9 +-
+ include/linux/ioport.h        |    1 +
+ include/linux/pci-acpi.h      |   24 +++
+ 10 files changed, 431 insertions(+), 495 deletions(-)
+
+-- 
+1.7.10.4
+
