@@ -1,142 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:33203 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbbESXPB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:15:01 -0400
-Received: by igbpi8 with SMTP id pi8so119930848igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:15:00 -0700 (PDT)
-Date: Tue, 19 May 2015 18:14:56 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Ray Jui <rjui@broadcom.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Scott Branden <sbranden@broadcom.com>,
+Received: from foss.arm.com ([217.140.101.70]:45271 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2993511AbbEEQDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 May 2015 12:03:35 -0400
+Date: Tue, 5 May 2015 17:03:37 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
-Message-ID: <20150519231456.GX31666@google.com>
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
- <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
- <CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com>
- <5553742E.7070204@broadcom.com>
- <CACna6rzT=218pQk9M6NJWH51wszn=p0LmHrizrvV9Xkn-=Om3Q@mail.gmail.com>
- <55537C43.4050606@broadcom.com>
- <55539B63.2060203@hauke-m.de>
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150505160337.GB23106@red-moon>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55539B63.2060203@hauke-m.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150505155346.GJ1550@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 13, 2015 at 08:43:47PM +0200, Hauke Mehrtens wrote:
-> On 05/13/2015 06:30 PM, Ray Jui wrote:
-> > Hi Rafal,
+On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
+> On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
+> > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > from the arch/arm/ to do a part of the PCI initialization, and this
+> > prevents it from being used on arm64.
 > > 
-> > On 5/13/2015 9:19 AM, Rafał Miłecki wrote:
-> >> On 13 May 2015 at 17:56, Ray Jui <rjui@broadcom.com> wrote:
-> >>> On 5/12/2015 11:27 PM, Rafał Miłecki wrote:
-> >>>> On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> >>>>> This driver adds support for the PCIe 2.0 controller found on the bcma
-> >>>>> bus. This controller can be found on (mostly) all Broadcom BCM470X /
-> >>>>> BCM5301X ARM SoCs.
-> >>>>>
-> >>>>> The driver found in the Broadcom SDK does some more stuff, like setting
-> >>>>> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
-> >>>>> PHY changes like "improving" the PCIe jitter and doing some special
-> >>>>> initializations for the 3rd PCIe port.
-> >>>>>
-> >>>>> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
-> >>>>> connected to them.
-> >>>>>
-> >>>>> PCI_DOMAINS is needed by this driver, because normally there is more
-> >>>>> than one PCIe controller and without PCI_DOMAINS only the first
-> >>>>> controller gets registered.
-> >>>>> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
-> >>>>>
-> >>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> >>>>
-> >>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
-> >>>>
-> >>>>
-> >>>>> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
-> >>>>> +{
-> >>>>> +       struct iproc_pcie *pcie;
-> >>>>> +       LIST_HEAD(res);
-> >>>>> +       struct resource res_mem;
-> >>>>> +       int ret;
-> >>>>> +
-> >>>>> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
-> >>>>> +       if (!pcie)
-> >>>>> +               return -ENOMEM;
-> >>>>> +
-> >>>>> +       pcie->dev = &bdev->dev;
-> >>>>> +       bcma_set_drvdata(bdev, pcie);
-> >>>>> +
-> >>>>> +       pcie->base = bdev->io_addr;
-> >>>>> +
-> >>>>> +       res_mem.start = bdev->addr_s[0];
-> >>>>> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
-> >>>>> +       res_mem.name = "PCIe MEM space";
-> >>>>> +       res_mem.flags = IORESOURCE_MEM;
-> >>>>> +       pci_add_resource(&res, &res_mem);
-> >>>>> +
-> >>>>> +       pcie->resources = &res;
-> >>>>> +
-> >>>>> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
-> >>>>> +
-> >>>>> +       ret = iproc_pcie_setup(pcie);
-> >>>>
-> >>>> I think I don't like this part of iproc design. It lefts
-> >>>> pcie->resources pointing to some random memory after the setup/probe
-> >>>> are done. Guess it should be a separated parameter or sth.
-> >>>>
-> >>>> The patch is still OK, I just refer to generic iproc possible issue.
-> >>>>
-> >>> Sorry Rafal, but could you please be more specific on this?
-> >>
-> >> iproc_pcie_pltfm_probe (and iproc_pcie_bcma_probe) have local "res"
-> >> variable (each its own). They do:
-> >> pcie->resources = &res;
-> >> and then they call
-> >> iproc_pcie_setup(pcie);
-> >>
-> >> After iproc_pcie_pltfm_probe / iproc_pcie_bcma_probe returns, the
-> >> pointer pcie->resources is not valid anymore, yet pcie struct is still
-> >> in use. Of course pcie->resources isn't used anymore, but still, it's
-> >> some in-struct pointer (to the random memory since local variable is
-> >> not accessible anymore).
-> >>
-> >> I think you should drop
-> >> struct list_head *resources;
-> >> from the struct iproc_pcie and use
-> >> iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *resources)
-> >>
+> > The initialization done by pci_common_init_dev() that is really
+> > needed by pci-host-generic.c can be done in the same file without
+> > using the hw_pci API of ARM.
 > > 
-> > Okay thanks. That makes sense.
+> > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > this is be handled by setting up 'struct gen_pci' to embed a
+> > pci_sys_data variable as the first element on the ARM platform.
 > > 
-> > Or I should keep a copy of the resources under pcie->resources. In the
-> > current pcie-iproc.c, the resource is not used anywhere else except when
-> > creating the root bus under iproc_pcie_setup. But in the future, I might
-> > need to add more code to explicitly program the outbound/inbound windows
-> > so this driver can work with some other iProc SoCs where the desired
-> > windows do not match power-on-reset values.
+> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > ---
+> > Here's v2 of the patches, this enables use of pci-host-generic on
+> > arm64.
 > > 
-> > I plan to change this along with the window programming patch in the
-> > future. I also think Hauke's current patch is fine.
+> > This has been tested on both qemu and fast model for arm64, and on
+> > qemu for arm32.
 > > 
-> > Thanks,
-> > 
-> > Ray
-> > 
-> I think parts of this resources are allocated and never freed.
+> > v1->v2
+> >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
+> >     - move contents of gen_pci_init to gen_pci_probe
+> >     - assign resources only when !probe_only
+> >  - tested on ARM32 with qemu option -M virt
 > 
-> pci_add_resource() allocates some bytes, but I do not see where they are
-> freed, this also applies to the platform driver.
+> I tried this with an arm64 kernel running under kvmtool, but I get the
+> following errors (a 32-bit ARM kernel does seem to work):
+> 
+>   PCI host bridge /pci ranges:
+>      IO 0x00000000..0x0000ffff -> 0x00000000
+>     MEM 0x41000000..0x7fffffff -> 0x41000000
+>   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
+>   pci_bus 0000:00: root bus resource [bus 00-01]
+>   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
+>   pci_bus 0000:00: scanning bus
+>   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
+>   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
+>   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
+>   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
+>   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
+>   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
+>   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
+>   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
+>   pci_bus 0000:00: fixups for bus
+>   pci_bus 0000:00: bus scan returning with max=00
+>   pci 0000:00:00.0: fixup irq: got 10
+>   pci 0000:00:00.0: assigning IRQ 10
+>   pci 0000:00:01.0: fixup irq: got 11
+>   pci 0000:00:01.0: assigning IRQ 11
+>   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
+>   virtio-pci: probe of 0000:00:00.0 failed with error -22
+>   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
+>   virtio-pci: probe of 0000:00:01.0 failed with error -22
 
-Where are we on this patch?  I see Ray's ack for [1/2], and a "I think the
-current patch is fine"; is that an ack for [2/2] as well?
+Yes, I already mentioned on v1 and comment was not taken into account,
+at the moment when we enable devices on arm64 we rely on the generic
 
-Bjorn
+pcibios_enable_device()
+
+function that by enabling resources trigger that error on PROBE_ONLY
+systems.
+
+We could do what arm does, by checking the PROBE_ONLY flag
+and call pci_enable_resources only if !PROBE_ONLY (and do that in the
+generic drivers/pci/pci.c pcibios_enable_device function) but IIRC Bjorn
+did not like that much.
+
+Lorenzo
