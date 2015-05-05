@@ -1,154 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33550 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbbEHX7c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 19:59:32 -0400
-Received: by pacwv17 with SMTP id wv17so61938113pac.0
-        for <linux-pci@vger.kernel.org>; Fri, 08 May 2015 16:59:32 -0700 (PDT)
-Message-ID: <554D4DDD.6010607@ozlabs.ru>
-Date: Sat, 09 May 2015 09:59:25 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:24023 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964846AbbEEB65 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 21:58:57 -0400
+From: Jayachandran C <jchandra@broadcom.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v2 2/2] PCI: generic: add arm64 support
+Date: Tue, 5 May 2015 07:32:13 +0530
+Message-ID: <1430791333-26013-2-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-CC: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v4 00/21] PowerPC/PowerNV: PCI Slot Management
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2015 04:02 PM, Gavin Shan wrote:
-> The series of patches intend to support PCI slot for PowerPC PowerNV platform,
-> which is running on top of skiboot firmware. The patchset requires corresponding
-> changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
-> for review. The PCI slots are exposed by skiboot with device node properties,
-> and kernel utilizes those properties to populated PCI slots accordingly.
->
-> The original PCI infrastructure on PowerNV platform can't support hotplug
-> because the PE is assigned during PHB fixup time, which is called for once
-> during system boot time. For this, the PCI infrastructure on PowerNV platform
-> has been reworked for a lot. After that, the PE and its corresponding resources
-> (IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
-> PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
-> resources, on P8 strictly speaking).
+Make pci-host-generic driver available on arm64. This needs
+drivers/pci/setup-irq.o to be built for the arm64 as well.
 
-Out of curiosity - does this PCI scan happen when memory subsystem is 
-initialized? More precisely, after these changes, won't 
-pnv_pci_ioda2_setup_dma_pe() be called too early after boot so I won't be 
-able to use kmalloc() to allocate iommu_table's?
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/pci/Makefile     | 1 +
+ drivers/pci/host/Kconfig | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Also, checkpatch.pl failed multiple times on the series. Please fix.
-
-
-> Each PE will maintain a reference count,
-> which is (number of child PCI devices + 1). That indicates when last child PCI
-> device leaves the PE, the PE and its included resources will be relased and put
-> back into free pool again. With this design, the PE will be released when EEH PE
-> is released. PATCH[1 - 8] are related to this part.
->
->  From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
-> resets to EEH. The kernel gets to know if skiboot supports various reset on one
-> particular PCI slot through device-tree node. If it does, EEH will utilize the
-> functionality provided by skiboot. Besides, the device-tree nodes have to change
-> in order to support PCI hotplug. For example, when one PCI adapter inserted to
-> one slot, its device-tree node should be added to the system dynamically. Conversely,
-> the device-tree node should be removed from the system when the PCI adapter is going
-> to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
-> they should be added/removed accordingly during PCI hotplug. Patch[9 - 20] are
-> doing the related work.
->
-> The last patch is the standalone PCI hotplug driver for PowerNV platform. When
-> removing PCI adapter from one PCI slot, which is invoked by command in userland,
-> the skiboot will power off the slot to save power and remove all device-tree
-> nodes for all PCI devices behind the slot. Conversely, the Power to the slot
-> is turned on, the PCI devices behind the slot is rescanned, and the device-tree
-> nodes for those newly detected PCI devices will be built in skiboot. For both
-> of cases, one message will be sent to kernel by skiboot so that the kernel
-> can adjust the device-tree accordingly. At the same time, the kernel also have
-> to deallocate or allocate PE# and its related resources (PE# and so on) for the
-> removed/added PCI devices.
->
-> Changelog
-> =========
-> v4:
->     * Rebased to 4.1.RC1
->     * Added API to unflatten FDT blob to device node sub-tree, which is attached
->       the indicated parent device node. The original mechanism based on formatted
->       string stream has been dropped.
->     * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
->       was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
->       Support" depends on that.
-> v3:
->     * Rebased to 4.1.RC0
->     * PowerNV PCI infrasturcture is total refactored in order to support PCI
->       hotplug. The PowerNV hotplug driver is also reworked a lot because of
->       the changes in skiboot in order to support PCI hotplug.
->
-> Gavin Shan (21):
->    pci: Add pcibios_setup_bridge()
->    powerpc/powernv: Enable M64 on P7IOC
->    powerpc/powernv: M64 support improvement
->    powerpc/powernv: Improve IO and M32 mapping
->    powerpc/powernv: Improve DMA32 segment assignment
->    powerpc/powernv: Create PEs dynamically
->    powerpc/powernv: Release PEs dynamically
->    powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
->    powerpc/powernv: Use PCI slot reset infrastructure
->    powerpc/powernv: Fundamental reset for PCI bus reset
->    powerpc/pci: Don't scan empty slot
->    powerpc/pci: Move pcibios_find_pci_bus() around
->    powerpc/powernv: Introduce pnv_pci_poll()
->    powerpc/powernv: Functions to get/reset PCI slot status
->    powerpc/pci: Delay creating pci_dn
->    powerpc/pci: Create eeh_dev while creating pci_dn
->    powerpc/pci: Export traverse_pci_device_nodes()
->    powerpc/pci: Update bridge windows on PCI plugging
->    drivers/of: Support adding sub-tree
->    powerpc/powernv: Select OF_DYNAMIC
->    pci/hotplug: PowerPC PowerNV PCI hotplug driver
->
->   arch/powerpc/include/asm/eeh.h                 |    7 +-
->   arch/powerpc/include/asm/opal-api.h            |    7 +-
->   arch/powerpc/include/asm/opal.h                |    7 +-
->   arch/powerpc/include/asm/pci-bridge.h          |    7 +-
->   arch/powerpc/include/asm/pnv-pci.h             |    5 +
->   arch/powerpc/include/asm/ppc-pci.h             |    7 +-
->   arch/powerpc/kernel/eeh_dev.c                  |   20 +-
->   arch/powerpc/kernel/pci-common.c               |   18 +-
->   arch/powerpc/kernel/pci-hotplug.c              |   44 +-
->   arch/powerpc/kernel/pci_dn.c                   |  119 +-
->   arch/powerpc/platforms/maple/pci.c             |   35 +-
->   arch/powerpc/platforms/pasemi/pci.c            |    3 -
->   arch/powerpc/platforms/powermac/pci.c          |   39 +-
->   arch/powerpc/platforms/powernv/Kconfig         |    1 +
->   arch/powerpc/platforms/powernv/eeh-powernv.c   |  245 ++--
->   arch/powerpc/platforms/powernv/opal-wrappers.S |    3 +
->   arch/powerpc/platforms/powernv/pci-ioda.c      | 1657 +++++++++++++++---------
->   arch/powerpc/platforms/powernv/pci.c           |   64 +-
->   arch/powerpc/platforms/powernv/pci.h           |   52 +-
->   arch/powerpc/platforms/pseries/msi.c           |    4 +-
->   arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
->   arch/powerpc/platforms/pseries/setup.c         |    9 +-
->   drivers/of/dynamic.c                           |   19 +-
->   drivers/of/fdt.c                               |  133 +-
->   drivers/pci/hotplug/Kconfig                    |   12 +
->   drivers/pci/hotplug/Makefile                   |    4 +
->   drivers/pci/hotplug/powernv_php.c              |  146 +++
->   drivers/pci/hotplug/powernv_php.h              |   78 ++
->   drivers/pci/hotplug/powernv_php_slot.c         |  643 +++++++++
->   drivers/pci/setup-bus.c                        |   12 +-
->   include/linux/of.h                             |    2 +
->   include/linux/of_fdt.h                         |    1 +
->   include/linux/pci.h                            |    1 +
->   33 files changed, 2473 insertions(+), 963 deletions(-)
->   create mode 100644 drivers/pci/hotplug/powernv_php.c
->   create mode 100644 drivers/pci/hotplug/powernv_php.h
->   create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
->
-
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 73e4af4..be3f631 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -33,6 +33,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+ #
+ obj-$(CONFIG_ALPHA) += setup-irq.o
+ obj-$(CONFIG_ARM) += setup-irq.o
++obj-$(CONFIG_ARM64) += setup-irq.o
+ obj-$(CONFIG_UNICORE32) += setup-irq.o
+ obj-$(CONFIG_SUPERH) += setup-irq.o
+ obj-$(CONFIG_MIPS) += setup-irq.o
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 1dfb567..51741ad 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -53,7 +53,7 @@ config PCI_RCAR_GEN2_PCIE
+ 
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+-	depends on ARM && OF
++	depends on (ARM || ARM64) && OF
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
 -- 
-Alexey
+1.9.1
+
