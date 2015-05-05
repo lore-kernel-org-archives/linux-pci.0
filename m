@@ -1,87 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:56978 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405AbbESKvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:51:55 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:51:53 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B658D3578048
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:51 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAphVG18350238
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:51 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JApIrG030864
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:19 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 02/10] powerpc/pci: Cache VF index in pci_dn
-Date: Tue, 19 May 2015 18:50:04 +0800
-Message-Id: <1432032612-21701-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.11.1505041708190.4225@nanos>
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+	<1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com>
+	<CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+	<alpine.DEB.2.11.1505041708190.4225@nanos>
+Date: Tue, 5 May 2015 12:17:28 +0300
+Message-ID: <CAPcc5Pi7qNQKocTVmfZafVhi3MJwboY=XKYzNmqAnVqt0gU4vw@mail.gmail.com>
+Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of irq_desc
+From: Amir Vadai <amirv@mellanox.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Amir Vadai <amirv@mellanox.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Hadar Hen Zion <hadarh@mellanox.com>,
+	Eran Ben Elisha <eranbe@mellanox.com>,
+	Joe Perches <joe@perches.com>,
+	Saeed Mahameed <saeedm@mellanox.com>,
+	Matan Barak <matanb@mellanox.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch caches the VF index in pci_dn, which can be used to calculate
-VF's bus, device and function number. Those information helps to locate
-the VF's PCI device instance when doing hotplug during EEH recovery if
-necessary.
+On Mon, May 4, 2015 at 6:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Mon, 4 May 2015, Amir Vadai wrote:
+>
+>> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> > The field 'affinity' in irq_desc won't change once the irq_desc data
+>> > structure is created. So cache irq_desc->affinity instead of irq_desc.
+>> > This also helps to hide struct irq_desc from device drivers.
+>>
+>> Hi Jiang,
+>>
+>> I might not understand the new changes irq core, but up until now
+>> affinity was changed when the user changed it through
+>> /proc/irq/<IRQ>/smp_affinity.
+>> This code is monitoring the affinity from the napi_poll context to
+>> detect affinity changes, and prevent napi from keep running on the
+>> wrong CPU.
+>> Therefore, the affinity can't be cached at the beginning. Please
+>> revert this caching.
+>
+> Sigh. All of this is completely wrong. Polling in the internals of
+> irq_desc is just crap.
+Hi,
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci_dn.c          |    4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+>
+> irq_set_affinity_notifier() has been added for exactly this purpose.
+rmap is already registered on irq_set_affinity_notifier().
+Actually, I did post an extension to the affinity notifier, to use
+affinity chain which you rejected [1] (and BTW, convinced me that this
+is not the way to do it).
+Current code is according to your suggestion.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 1811c44..c324882 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -196,6 +196,7 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+	int     vf_index;		/* VF index in the PF */
- #ifdef CONFIG_PCI_IOV
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..f771130 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
- #ifdef CONFIG_PCI_IOV
- static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 					   struct pci_dev *pdev,
-+					   int vf_index,
- 					   int busno, int devfn)
- {
- 	struct pci_dn *pdn;
-@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 	pdn->parent = parent;
- 	pdn->busno = busno;
- 	pdn->devfn = devfn;
-+	pdn->vf_index = vf_index;
- #ifdef CONFIG_PPC_POWERNV
- 	pdn->pe_number = IODA_INVALID_PE;
- #endif
-@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 		return NULL;
- 
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
--		pdn = add_one_dev_pci_data(parent, NULL,
-+		pdn = add_one_dev_pci_data(parent, NULL, i,
- 					   pci_iov_virtfn_bus(pdev, i),
- 					   pci_iov_virtfn_devfn(pdev, i));
- 		if (!pdn) {
--- 
-1.7.9.5
+[1] - https://lkml.org/lkml/2014/5/26/222
 
+Amir
+
+>
+> Please get rid of your irq_desc abuse.
+>
+> Thanks,
+>
+>         tglx
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
