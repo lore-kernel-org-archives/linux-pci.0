@@ -1,82 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:18131 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbbEASpY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 14:45:24 -0400
-From: <wdavis@nvidia.com>
-To: joro@8bytes.org
-CC: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 5/6] iommu/vt-d: implement (un)map_resource
-Date: Fri, 1 May 2015 13:32:17 -0500
-Message-ID: <1430505138-2877-6-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5548C45A.7040709@ti.com>
+Date: Tue, 5 May 2015 18:53:38 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Pratyush Anand <pratyush.anand@gmail.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit ST <mohit.kumar.dhaka@gmail.com>
+Subject: Re: [Query] PCIe power management with designware
+References: <55479D35.3060603@ti.com> <CAHM4w1mXddxXbbJo8FR=PvzVJ66iJLDyHFvmHoLxABjfO21m3Q@mail.gmail.com>
+In-Reply-To: <CAHM4w1mXddxXbbJo8FR=PvzVJ66iJLDyHFvmHoLxABjfO21m3Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+Hi Pratyush,
 
-Implement 'map_resource' for the Intel IOMMU driver. Simply translate the
-resource to a physical address and route it to the same handlers used by
-the 'map_page' API.
+On Tuesday 05 May 2015 06:33 PM, Pratyush Anand wrote:
 
-This allows a device to map another's resource, to enable peer-to-peer
-transactions.
+Thank you for responding.
+> Hi Kishon,
+>
+> Correcting Mohit's ID
+>
+> On Mon, May 4, 2015 at 9:54 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>
+>> Hi,
+>>
+>> I'm planning to add power management (suspend/resume) support for DRA7xx and have a query.
+>>
+>> The pci_pm_suspend_noirq callback being a bus pm_ops gets invoked late i.e after the suspend hooks of the pci devices (including the RC driver). The problem is after the 'suspend' of the RC driver, the clocks are disabled. Now
+>
+> I think, clocks should not be disabled at this point.
+>
+> pci_pm_suspend_noirq has a call to pci_save_state() which tries to access the
+>> configuration space registers. Since the clocks are disabled by now, this results in an abort. Shouldn't we do save_state() earlier?
+>
+> So, RC driver should need to implement a pm->suspend_noirq() where it
+> can handle all these.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- drivers/iommu/intel-iommu.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+okay.. let me try that.
+>
+>>
+>> After working around the above problem, I face one more issue with broadcom BCM95721 A211 card. After resuming, I'm unable to access the memory space. I'm not sure if that is specific to that particular card, since I have no problems with USB cards.
+>
+> If you are able to access configuration space and  not able to access
+> memory space then that seems strange.
+> If cfg is also not accessible then can you check if link training with
+> BCM95721 A211 card was successful?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 68d43be..0f49eff 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3095,6 +3095,15 @@ static dma_addr_t intel_map_page(struct device *dev, struct page *page,
- 				  dir, *dev->dma_mask);
- }
- 
-+static dma_addr_t intel_map_resource(struct device *dev, struct resource *res,
-+				     unsigned long offset, size_t size,
-+				     enum dma_data_direction dir,
-+				     struct dma_attrs *attrs)
-+{
-+	return __intel_map_single(dev, res->start + offset, size,
-+				  dir, *dev->dma_mask);
-+}
-+
- static void flush_unmaps(void)
- {
- 	int i, j;
-@@ -3226,6 +3235,13 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
- 	intel_unmap(dev, dev_addr);
- }
- 
-+static void intel_unmap_resource(struct device *dev, dma_addr_t dev_addr,
-+				 size_t size, enum dma_data_direction dir,
-+				 struct dma_attrs *attrs)
-+{
-+	intel_unmap(dev, dev_addr);
-+}
-+
- static void *intel_alloc_coherent(struct device *dev, size_t size,
- 				  dma_addr_t *dma_handle, gfp_t flags,
- 				  struct dma_attrs *attrs)
-@@ -3382,6 +3398,8 @@ struct dma_map_ops intel_dma_ops = {
- 	.unmap_sg = intel_unmap_sg,
- 	.map_page = intel_map_page,
- 	.unmap_page = intel_unmap_page,
-+	.map_resource = intel_map_resource,
-+	.unmap_resource = intel_unmap_resource,
- 	.mapping_error = intel_mapping_error,
- };
- 
--- 
-2.3.7
+I'm able to access the configuration space. The pci core writes D0 to the pmcsr 
+register of the card and I get
 
+"tg3 0000:01:00.0: Refused to change power state, currently in D3".
+
+After that in the resume callback of the card, when it tries to access the 
+ethernet registers it hangs.
+
+Thanks
+Kishon
