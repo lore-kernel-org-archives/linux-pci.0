@@ -1,65 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 May 2015 18:08:18 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:56964 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751119AbbEFWam (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 May 2015 18:30:42 -0400
+Message-ID: <1430951427.4472.529.camel@redhat.com>
+Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: wdavis@nvidia.com, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
 	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-Message-ID: <20150526170817.GU1565@arm.com>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
- <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	Dave Jiang <dave.jiang@intel.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Wed, 06 May 2015 16:30:27 -0600
+In-Reply-To: <20150506221818.GH24643@google.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+	 <20150506221818.GH24643@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 01:49:18PM +0100, Hanjun Guo wrote:
-> From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+On Wed, 2015-05-06 at 17:18 -0500, Bjorn Helgaas wrote:
+> [+cc Yijing, Dave J, Dave M, Alex]
 > 
-> ECAM standard and MCFG table are architecture independent and it makes
-> sense to share common code across all architectures. Both are going to
-> corresponding files - ecam.c and mcfg.c
+> On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
+> > From: Will Davis <wdavis@nvidia.com>
+> > 
+> > Hi,
+> > 
+> > This patch series adds DMA APIs to map and unmap a struct resource to and from
+> > a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
+> > of these interfaces.
+> > 
+> > This solves a long-standing problem with the existing DMA-remapping interfaces,
+> > which require that a struct page be given for the region to be mapped into a
+> > device's IOVA domain. This requirement cannot support peer device BAR ranges,
+> > for which no struct pages exist.
+> > 
+> > The underlying implementations of map_page and map_sg convert the struct page
+> > into its physical address anyway, so we just need a way to route the physical
+> > address of the BAR region to these implementations. The new interfaces do this
+> > by taking the struct resource describing a device's BAR region, from which the
+> > physical address is derived.
+> > 
+> > The Intel and nommu versions have been verified on a dual Intel Xeon E5405
+> > workstation. I'm in the process of obtaining hardware to test the AMD version
+> > as well. Please review.
 > 
-> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
-> We already have acpi_parse_mcfg prototype which is used nowhere.
-> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
-> can be used perfectly here.
+> I think we currently assume there's no peer-to-peer traffic.
 > 
-> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> ---
->  arch/x86/Kconfig               |   3 +
->  arch/x86/include/asm/pci_x86.h |  33 ------
->  arch/x86/pci/acpi.c            |   1 +
->  arch/x86/pci/mmconfig-shared.c | 244 +---------------------------------------
->  arch/x86/pci/mmconfig_32.c     |   1 +
->  arch/x86/pci/mmconfig_64.c     |   1 +
->  arch/x86/pci/numachip.c        |   1 +
->  drivers/acpi/Makefile          |   1 +
->  drivers/acpi/mcfg.c            |  57 ++++++++++
->  drivers/pci/Kconfig            |   7 ++
->  drivers/pci/Makefile           |   5 +
->  drivers/pci/ecam.c             | 245 +++++++++++++++++++++++++++++++++++++++++
+> I don't know whether changing that will break anything, but I'm concerned
+> about these:
+> 
+>   - PCIe MPS configuration (see pcie_bus_configure_settings()).
+> 
+>   - PCIe ACS, e.g., pci_acs_enabled().  My guess is that this one is OK,
+>     but Alex would know better.
 
-Why can't we make use of the ECAM implementation used by pci-host-generic
-and drivers/pci/access.c?
+I think it should be OK too.  ACS will force the transaction upstream
+for IOMMU translation rather than possible allowing redirection lower in
+the topology, but that's sort of the price we pay for isolation.  The
+p2p context entries need to be present in the IOMMU, so without actually
+reading the patches, this does seem like something a driver might want
+to do via the DMA API.  The IOMMU API already allows us to avoid the
+struct page issue and create mappings for p2p in the IOMMU.
 
-Will
+>   - dma_addr_t.  Currently dma_addr_t is big enough to hold any address
+>     returned from the DMA API.  That's not necessarily big enough to hold a
+>     PCI bus address, e.g., a raw BAR value.
+> 
+> > Will Davis (6):
+> >   dma-debug: add checking for map/unmap_resource
+> >   DMA-API: Introduce dma_(un)map_resource
+> >   dma-mapping: pci: add pci_(un)map_resource
+> >   iommu/amd: Implement (un)map_resource
+> >   iommu/vt-d: implement (un)map_resource
+> >   x86: add pci-nommu implementation of map_resource
+> > 
+> >  arch/x86/kernel/pci-nommu.c              | 17 +++++++
+> >  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
+> >  drivers/iommu/intel-iommu.c              | 18 ++++++++
+> >  include/asm-generic/dma-mapping-broken.h |  9 ++++
+> >  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
+> >  include/asm-generic/pci-dma-compat.h     | 14 ++++++
+> >  include/linux/dma-debug.h                | 20 +++++++++
+> >  include/linux/dma-mapping.h              |  7 +++
+> >  lib/dma-debug.c                          | 48 ++++++++++++++++++++
+> >  9 files changed, 230 insertions(+), 13 deletions(-)
+> > 
+> > -- 
+> > 2.3.7
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
