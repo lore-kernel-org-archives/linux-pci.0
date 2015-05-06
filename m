@@ -1,118 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:33820 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405AbbESKzK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:55:10 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:55:08 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 13D232CE804E
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:05 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAsusa18087982
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:05 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAsWoh001597
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:32 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-Date: Tue, 19 May 2015 18:50:08 +0800
-Message-Id: <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com>
+References: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 May 2015 10:51:39 -0500
+Message-ID: <CAErSpo4YEUTyrFth3xVyeja0=cbk69+tSQgsOFCO5nvFK=suhw@mail.gmail.com>
+Subject: Re: I/O conflict on Versalogic Tiger (VL-EPM-24)
+To: George McCollister <george.mccollister@gmail.com>
+Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current EEH recovery code works with the assumption: the PE has primary
-bus. Unfortunately, that's not true to VF PEs, which generally contains
-one or multiple VFs (for VF group case). The patch creates PEs for VFs
-at PCI final fixup time. Those PEs for VFs are indentified with newly
-introduced flag EEH_PE_VF so that we handle them differently during
-EEH recovery.
+[+cc Rafael]
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |    1 +
- arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
- arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
- 3 files changed, 26 insertions(+), 2 deletions(-)
+On Wed, May 6, 2015 at 9:47 AM, George McCollister
+<george.mccollister@gmail.com> wrote:
+> We're using Versalogic Tiger (VL-EPM-24) SBCs in embedded systems
+> running linux 3.2.x without any problems. Recently, when testing the
+> latest mainline kernel I found the system hard locked during boot.
+>
+> After some investigation I noticed that the kernel print time stamps
+> were bogus after one of the pcieports was enabled:
+> [    1.658879] io scheduler cfq registered (default)
+> [    1.663905] pcieport 0000:00:1c.0: enabling device (0004 -> 0007)
+> [    6.254134] Serial: 8250/16550 driver, 21 ports, IRQ sharing enabled
+> [    6.254134] 00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200)
+> is a 16550A
+> [    6.254134] 00:04: ttyS1 at I/O 0x2f8 (irq = 0, base_baud = 115200)
+> is a 16550A
+> [    6.254134] 00:05: ttyS2 at I/O 0x3e8 (irq = 0, base_baud = 115200)
+> is a 16550A
+> [    6.254134] 00:06: ttyS4 at I/O 0x238 (irq = 0, base_baud = 115200)
+> is a 16550A
+>
+> I was surprised to find that the problem existed as far back as 3.11.
+> I checked to make sure we were using the latest BIOS and contacted the
+> vendor to see if they were aware of anyone else using recent versions
+> of the linux kernel. They stated that they were unaware of anyone
+> using recent kernel versions on this board and tired to convince me to
+> stick with an old version.
+>
+> I then git bisected to this commit:
+> ac212b6980d8d5eda705864fc5a8ecddc6d6eacc ACPI / processor: Use common
+> hotplug infrastructure
+>
+> After diffing the kernel output before and after this commit I noticed
+> that the I/O BAR assigned to the pcieport (same one as above) changed
+> from 0x1000 to 0x2000.
+>
+> @@ -191,13 +191,13 @@
+> Switching to clocksource acpi_pm
+> pci 0000:00:1c.0: BAR 9: assigned [mem 0x80000000-0x801fffff pref]
+> pci 0000:00:1c.1: BAR 9: assigned [mem 0x80200000-0x803fffff pref]
+> -pci 0000:00:1c.0: BAR 7: assigned [io  0x1000-0x1fff]
+> +pci 0000:00:1c.0: BAR 7: assigned [io  0x2000-0x2fff]
+> pci 0000:02:01.0: PCI bridge to [bus 03]
+> pci 0000:02:01.0:   bridge window [mem 0xdff00000-0xdfffffff]
+> pci 0000:01:00.0: PCI bridge to [bus 02-03]
+> pci 0000:01:00.0:   bridge window [mem 0xdff00000-0xdfffffff]
+> pci 0000:00:1c.0: PCI bridge to [bus 01-03]
+> -pci 0000:00:1c.0:   bridge window [io  0x1000-0x1fff]
+> +pci 0000:00:1c.0:   bridge window [io  0x2000-0x2fff]
+> pci 0000:00:1c.0:   bridge window [mem 0xdff00000-0xdfffffff]
+> pci 0000:00:1c.0:   bridge window [mem 0x80000000-0x801fffff pref]
+> pci 0000:00:1c.1: PCI bridge to [bus 04]
+>
+> I also noticed the kernel output 'ACPI: PM-Timer IO Port: 0x2008' and
+> made the connection that since acpi_pm was being used as the
+> clocksource and since the problems started when the BAR switched from
+> 0x1000 to 0x2000 an I/O conflict must be the source of the problems.
+>
+> I did some reading into ACPI (since my understanding of it was novice
+> at the time) and dumped the DSDT. I found no reference to anything in
+> the 0x2xxx I/O range though I did find the following in the FADT:
+> PM1a_EVT_BLK at 0x2000-0x2003
+> PM1a_CNT_BLK at 0x2004-0x2005
+> PM_TMR at 0x2008-0x200b
+>
+> I dumped the DSDT on other systems and found that some used PNP0C02 to
+> reserve I/O ranges used by the ACPI PM registers.
+>
+> I added the following to the Versalogic Tiger dsdt.dsl under the PCI
+> bus, compiled it and and compiled into the linux kernel:
+>             Device (PMIO)
+>             {
+>                 Name (_HID, EisaId ("PNP0C02") /* PNP Motherboard
+> Resources */)  // _HID: Hardware ID
+>                 Name (_UID, 0x09)  // _UID: Unique ID
+>                 Method (_CRS, 0, NotSerialized)  // _CRS: Current
+> Resource Settings
+>                 {
+>                     Name (BUF0, ResourceTemplate ()
+>                     {
+>                         IO (Decode16,
+>                             0x2000,            // Range Minimum
+>                             0x2000,            // Range Maximum
+>                             0x01,              // Alignment
+>                             0xC,               // Length
+>                         )
+>                         IO (Decode16,
+>                             0x20C0,            // Range Minimum
+>                             0x20C0,            // Range Maximum
+>                             0x01,              // Alignment
+>                             0x8,               // Length
+>                         )
+>                     })
+>                     Return (BUF0)
+>                 }
+>             }
+>
+> It booted just fine! (comment welcome on whether or not this looks
+> like the correct fix)
+>
+> Unfortunately even if I get the vendor to release a new BIOS with the
+> DSDT modifications, rolling out BIOS updates to thousands of systems
+> in the field will be nearly impossible. When we roll out a new kernel
+> to the production systems we'll need it to work with the existing
+> BIOS.
+>
+> I've been searching around the linux kernel for a way to apply a quirk
+> specific to this board.
+> I've found I can do something like the following and match the Poulsbo
+> Host bridge and that it'll fix the problem but I don't see a decent
+> way of restricting it to this board.
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 85f247e..1f16dbf 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -413,6 +413,17 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,
+> PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+>
+> /*
+> + * Versa Logic Tiger
+> + */
+> +static void quirk_versa_logic_tiger(struct pci_dev *dev)
+> +{
+> +       dev_info(&dev->dev, "Versalogic Tiger, reserving I/O ports\n");
+> +       request_region(0x2000, 0x0C, "Versalogic Tiger");
+> +       request_region(0x20C0, 0x08, "Versalogic Tiger");
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x8100, quirk_versa_logic_tiger);
+> +
+> +/*
+>
+> Any suggestions on what could be done to get a fix for this board
+> mainlined into the kernel? Should I give up hope and just apply a cute
+> embedded non-sense hack?
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 1b3614d..c1fde48 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -70,6 +70,7 @@ struct pci_dn;
- #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
- #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
- #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
-+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
- 
- #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
- #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 35f0b62..260a701 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
- 	 * EEH device already having associated PE, but
- 	 * the direct parent EEH device doesn't have yet.
- 	 */
--	pdn = pdn ? pdn->parent : NULL;
-+	if (edev->physfn)
-+		pdn = pci_get_pdn(edev->physfn);
-+	else
-+		pdn = pdn ? pdn->parent : NULL;
- 	while (pdn) {
- 		/* We're poking out of PCI territory */
- 		parent = pdn_to_eeh_dev(pdn);
-@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
- 	}
- 
- 	/* Create a new EEH PE */
--	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-+	if (edev->physfn)
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
-+	else
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
- 	if (!pe) {
- 		pr_err("%s: out of memory!\n", __func__);
- 		return -ENOMEM;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index ce738ab..c505036 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.restore_config		= pnv_eeh_restore_config
- };
- 
-+static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/*
-+	 * The following operations will fail if VF's sysfs files
-+	 * aren't created or its resources aren't finalized.
-+	 */
-+	eeh_add_device_early(pdn);
-+	eeh_add_device_late(pdev);
-+	eeh_sysfs_add_device(pdev);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
-+
- /**
-  * eeh_powernv_init - Register platform dependent EEH operations
-  *
--- 
-1.7.9.5
+I think your DSDT tweak is on the right track.  We have some similar
+things in drivers/pnp/quirks.c.  Possibly a new region could be added
+to an existing PNP0C02 device, maybe via dmi_check_system() to limit
+it to this platform.
 
+But I notice that board claims Windows compatibility, so I wonder if
+there's a smarter way.  I doubt that Windows would have a quirk for
+this specific board, so we should be able to make Linux work without a
+quirk, too.
+
+Complete dmesg logs from pre- and post-ac212b6980d8 might have a clue
+about what changed.  It looks like your FADT should be enough to
+reserve those regions via acpi_reserve_resources().  But maybe there's
+something wrong there, or maybe we incorrectly use that for PCI space.
+Does  your post-ac212b6980d8 /proc/ioports show those regions?
+
+Bjorn
