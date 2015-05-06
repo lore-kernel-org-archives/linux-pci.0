@@ -1,261 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:25049 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbbEHHaH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:07 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH Part3 v11 8/9] PCI: Remove platform specific pci_domain_nr()
-Date: Fri, 8 May 2015 15:22:58 +0800
-Message-ID: <1431069779-29346-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7_ev1oYptvBObK2dS9_LXkU2_W_OMD825POE6L5Yh7Lw@mail.gmail.com>
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
+	<1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
+	<20150505221646.GE24643@google.com>
+	<CAG374jAv9aHBPGV+x+xs2MyRGz+fw1ymwu78fqNXDPtPqehgZA@mail.gmail.com>
+	<CAErSpo7_ev1oYptvBObK2dS9_LXkU2_W_OMD825POE6L5Yh7Lw@mail.gmail.com>
+Date: Wed, 6 May 2015 15:40:39 +0200
+Message-ID: <CAG374jCfo1165cbMrip5SrYigjNkXPyc-dqgmRbTQ0Yaw3wmDA@mail.gmail.com>
+Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_host_bridge holds the domain number,
-so we could eliminate all platform specific
-pci_domain_nr().
+Hi Arnd, Bjorn,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/alpha/include/asm/pci.h     |    2 --
- arch/ia64/include/asm/pci.h      |    1 -
- arch/microblaze/pci/pci-common.c |   11 -----------
- arch/mips/include/asm/pci.h      |    2 --
- arch/powerpc/kernel/pci-common.c |   11 -----------
- arch/s390/pci/pci.c              |    6 ------
- arch/sh/include/asm/pci.h        |    2 --
- arch/sparc/kernel/pci.c          |   17 -----------------
- arch/tile/include/asm/pci.h      |    2 --
- arch/x86/include/asm/pci.h       |    6 ------
- drivers/pci/pci.c                |    8 ++++++++
- include/linux/pci.h              |    7 +------
- 12 files changed, 9 insertions(+), 66 deletions(-)
+I agree with last reply of Arnd.
+ I will mark the probe function as __init and use
+platform_driver_probe() to prevent the probe function from being
+deferred.
+And to prevent module unloading, i will use module_init only.
 
-diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
-index f7f680f..63a9a1e 100644
---- a/arch/alpha/include/asm/pci.h
-+++ b/arch/alpha/include/asm/pci.h
-@@ -95,8 +95,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 	return channel ? 15 : 14;
- }
- 
--#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = bus->sysdata;
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed..1dcea49 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -99,7 +99,6 @@ struct pci_controller {
- 
- 
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
--#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
- extern struct pci_ops pci_root_ops;
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index d232c8a..6f64908 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index d969299..f5e96d4 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -124,8 +124,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- #endif
- 
- #ifdef CONFIG_PCI_DOMAINS
--#define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = bus->sysdata;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 5754367..b787d89 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -195,17 +195,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index b9ac2f5..86acba4 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -101,12 +101,6 @@ static struct zpci_dev *get_zdev_by_bus(struct pci_bus *bus)
- 	return (bus && bus->sysdata) ? (struct zpci_dev *) bus->sysdata : NULL;
- }
- 
--int pci_domain_nr(struct pci_bus *bus)
--{
--	return ((struct zpci_dev *) bus->sysdata)->domain;
--}
--EXPORT_SYMBOL_GPL(pci_domain_nr);
--
- int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
-index 5b45115..4dc3ad6 100644
---- a/arch/sh/include/asm/pci.h
-+++ b/arch/sh/include/asm/pci.h
-@@ -109,8 +109,6 @@ static inline void pci_dma_burst_advice(struct pci_dev *pdev,
- /* Board-specific fixup routines. */
- int pcibios_map_platform_irq(const struct pci_dev *dev, u8 slot, u8 pin);
- 
--#define pci_domain_nr(bus) ((struct pci_channel *)(bus)->sysdata)->index
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	struct pci_channel *hose = bus->sysdata;
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index dc74202..b38eba5 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -886,23 +886,6 @@ int pcibus_to_node(struct pci_bus *pbus)
- EXPORT_SYMBOL(pcibus_to_node);
- #endif
- 
--/* Return the domain number for this pci bus */
--
--int pci_domain_nr(struct pci_bus *pbus)
--{
--	struct pci_pbm_info *pbm = pbus->sysdata;
--	int ret;
--
--	if (!pbm) {
--		ret = -ENXIO;
--	} else {
--		ret = pbm->index;
--	}
--
--	return ret;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- #ifdef CONFIG_PCI_MSI
- int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- {
-diff --git a/arch/tile/include/asm/pci.h b/arch/tile/include/asm/pci.h
-index dfedd7a..23a726e 100644
---- a/arch/tile/include/asm/pci.h
-+++ b/arch/tile/include/asm/pci.h
-@@ -199,8 +199,6 @@ int __init pcibios_init(void);
- 
- void pcibios_fixup_bus(struct pci_bus *bus);
- 
--#define pci_domain_nr(bus) (((struct pci_controller *)(bus)->sysdata)->index)
--
- /*
-  * This decides whether to display the domain number in /proc.
-  */
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4e370a5..4fe0458 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -29,12 +29,6 @@ extern int noioapicreroute;
- #ifdef CONFIG_PCI
- 
- #ifdef CONFIG_PCI_DOMAINS
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_sysdata *sd = bus->sysdata;
--	return sd->domain;
--}
--
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 46a0240..2e2f429 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4498,6 +4498,14 @@ static void pci_no_domains(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS
-+int pci_domain_nr(struct pci_bus *bus)
-+{
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-+
-+	return host->domain;
-+}
-+EXPORT_SYMBOL(pci_domain_nr);
-+
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- static atomic_t __domain_nr = ATOMIC_INIT(-1);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 636c0a9..13ed681 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1314,6 +1314,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
-  */
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
-+int pci_domain_nr(struct pci_bus *bus);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
-@@ -1325,12 +1326,6 @@ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
-  * architecture does not need custom management of PCI
-  * domains then this implementation will be used
-  */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--static inline int pci_domain_nr(struct pci_bus *bus)
--{
--	return bus->domain_nr;
--}
--#endif
- 
- /* some architectures require additional setup to direct VGA traffic */
- typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
--- 
-1.7.1
+Ok i will wait before sending a v4.
 
+Thanks.
+Gabriel.
+
+On 6 May 2015 at 15:29, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, May 6, 2015 at 4:14 AM, Gabriel Fernandez
+> <gabriel.fernandez@linaro.org> wrote:
+>> Hi Bjorn,
+>>
+>> On 6 May 2015 at 00:16, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Fri, Apr 10, 2015 at 11:12:46AM +0200, Gabriel FERNANDEZ wrote:
+>>>> sti pcie is built around a Synopsis Designware PCIe IP.
+>>>>
+>>>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>>>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+>>>
+>>>> +/* ST PCIe driver does not allow module unload */
+>>>
+>>> Is there something that prevents module unload, or is it just untested?
+>>>
+>> Yes we haven't tested
+>>
+>>>> +static int __init pcie_init(void)
+>>>> +{
+>>>> +     return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
+>>>> +}
+>>>> +device_initcall(pcie_init);
+>>>
+>>> Can you use module_platform_driver_probe() or module_init() here?
+>>>
+>>
+>> Yes we can use module_init() here.
+>>
+>> By the way if figure out i removed __init attribute on st_pcie_probe()
+>> in previous version to follow Arnd's remark.
+>> But st_pcie_probe calls hook_fault_code() that has __init attribute.
+>> So I think we need to keep __init for probe routine ?
+>> Also, we have to restrict bind/unbind with "suppress_bind_attrs" in
+>> platform_driver structure.
+>> This is the main reason to not allow module unload/reload.
+>
+> I don't really care which solution you end up with here.  But please
+> do take a look at how the other drivers solve the same problem.  Using
+> "device_initcall()" is unique in drivers/pci/host, and I don't believe
+> the problem is unique.  If several drivers have the same issue, they
+> should solve it the same way.
+>
+>> If you are ok i will send a v4 ?
+>
+> I think I'll have a few questions about the designware changes, too,
+> so you might want to wait a day or two.
+>
+>>>> +MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
+>>>> +MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
+>>>> +MODULE_LICENSE("GPL v2");
+>>>> --
+>>>> 1.9.1
+>>>>
