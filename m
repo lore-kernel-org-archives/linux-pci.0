@@ -1,137 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:36594 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750845AbbEFGrM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 02:47:12 -0400
+Message-ID: <5549B87B.709@st.com>
+Date: Wed, 6 May 2015 08:45:15 +0200
+From: Maxime Coquelin <maxime.coquelin@st.com>
 MIME-Version: 1.0
-In-Reply-To: <20150520203936.GC32152@google.com>
-References: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
- <20150519224452.GT31666@google.com> <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
- <CAErSpo6B3_vRq-4YTSPg4f927WChZ4MXnZRY7wWCvQgZJ=9eOQ@mail.gmail.com>
- <CAB=NE6U8Fg1TuU9ceVCBHJwR2j+DetDz+L3ZqcJzvSy3_wvPUA@mail.gmail.com>
- <1347189446.1486831.1432078140756.JavaMail.zimbra@redhat.com>
- <CAB=NE6VkAT7JidB4ty0C1tAWTc__-tgTvzHa5OdPazrDzCv0-g@mail.gmail.com> <20150520203936.GC32152@google.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 20 May 2015 13:52:06 -0700
-Message-ID: <CAB=NE6X-aGAZbxEwwjAVV1g=Zq8=zE-HEbzUqRh-B7PdWmmgeA@mail.gmail.com>
-Subject: Re: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@redhat.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Gabriel FERNANDEZ <gabriel.fernandez@st.com>
+CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <kernel@stlinux.com>,
+	<linux-pci@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Subject: Re: [PATCH v3 5/5] MAINTAINERS: Add pci-st.c to ARCH/STI architecture
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org> <1428657168-12495-6-git-send-email-gabriel.fernandez@linaro.org> <20150505214225.GC24643@google.com>
+In-Reply-To: <20150505214225.GC24643@google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 1:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, May 19, 2015 at 04:45:30PM -0700, Luis R. Rodriguez wrote:
->> On Tue, May 19, 2015 at 4:29 PM, David Airlie <airlied@redhat.com> wrote:
->> >
->> >> On Tue, May 19, 2015 at 4:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >> > [-cc Venkatesh (bouncing)
->> >> >
->> >> > On Tue, May 19, 2015 at 5:46 PM, Luis R. Rodriguez
->> >> > <mcgrof@do-not-panic.com> wrote:
->> >> >> On Tue, May 19, 2015 at 3:44 PM, Bjorn Helgaas <bhelgaas@google.com>
->> >> >> wrote:
->> >> >>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->> >> >>
->> >> >> Thanks! Who's tree should this go through?
->> >> >
->> >> > I don't know.  This is the only patch that went to linux-pci, so I
->> >> > haven't seen the rest.
->> >>
->> >> Oh I only rev'd a v5 for 1/5 as that's the only one that had feedback
->> >> asking for changes.
->> >>
->> >> Patch v4 2/5 was for "lib: devres: add pcim_iomap_wc() variants", you
->> >> had questions about EXPORT_SYMBOL_GPL() and the fact that this is not
->> >> yet used. I replied. This patch can then be ignored but again, I'd
->> >> hate for folks to go in and try to add a non EXPORT_SYMBOL_GPL()
->> >> symbol of this.
->
-> I'm not really a fan of adding code before it's needed.
+Hello Bjorn,
 
-OK I'll skip this patch.
-
-> But even when we have a user and that objection is resolved, I'd
-> like to have a little more guidance on the difference between
-> EXPORT_SYMBOL() and EXPORT_SYMBOL_GPL(), e.g., a patch to clarify
-> what's in Documentation/DocBook/kernel-hacking.tmpl.  I can't
-> evaluate that issue based on "current trends and reality"; I need
-> something a little more formal.
->
-> If we want to allow non-GPL modules and we want to give them a
-> consistent kernel interface, even though it might be lacking some
-> implementation-specific things, I can follow that guideline.
->
-> That's how I read the current kernel-hacking.tmpl text
-> ("[EXPORT_SYMBOL_GPL()] implies that the function is considered
-> an internal implementation issue, and not really an interface"),
-> and that would lead me to suggest EXPORT_SYMBOL() in this case.
->
-> If we don't care about consistency, and EXPORT_SYMBOL_GPL()
-> should be used at the developer's preference, I can follow that
-> guideline instead, but it would be easier if it were made more
-> explicit.
-
-I think that's fair for a maintainer to ask, provided that some
-maintainers may not be aware of some history, I'll send a patch to
-update the documentation to reflect reality. Note that this is not
-just about allowing or not proprietary drivers, some folks also take
-code from the kernel and use it or sell it on proprietary systems. The
-rabbit hole is pretty big.
-
->> >> Patches v4 3-5 remain intact, I had addressed it to you, but failed to
->> >> Cc linux-pci, I'll go ahead and bounce those now.
->> >>
->> >> Just today Dave Arlie provided a Reviewed-by to some simple
->> >> framebuffer device driver changes. I wonder if these changes should go
->> >> through the framebuffer tree provided you already gave the Acked-by
->> >> for the PCI parts, or if the PCI parts should go in first and only
->> >> later (I guess we'd have to wait) then intake the driver changes that
->> >> use the symbol.
->> >>
->> >> What we decide should likely also apply to the series that adds
->> >> pci_ioremap_wc_bar() and makes use of it on drivers.
->> >>
->> >> Dave, Tomi, any preference?
->> >>
->> >
->> > Maybe send Bjorn a pull request with a tree with the pci changes, and the fb changes reviewed-by me and acked by Tomi.
->> >
->> > Seems like it could be the simplest path forward.
+On 05/05/2015 11:42 PM, Bjorn Helgaas wrote:
+> On Fri, Apr 10, 2015 at 11:12:48AM +0200, Gabriel FERNANDEZ wrote:
+>> This patch adds the pci-st.c pci driver found on STMicroelectronics
+>> SoC's into the STI arch section of the maintainers file.
 >>
->> Works with me, Bjorn, are you OK with that?
+>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+> I'd like an ack from the current maintainers:
 >
-> Can you incorporate the acks and just post a complete v6?  I don't like
-> trying to assemble patches from different versions of a series; it's too
-> much administrative hassle and too easy for me to screw up.
+>    ARM/STI ARCHITECTURE
+>    M:      Srinivas Kandagatla <srinivas.kandagatla@gmail.com>
+>    M:      Maxime Coquelin <maxime.coquelin@st.com>
+>    M:      Patrice Chotard <patrice.chotard@st.com>
+>
+> that they're OK with taking on this additional file.
+Yes, you can add my:
+Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
 
-Yeah sure, will do. While at it, can you also review the patch that
-adds pci_ioremap_wc_bar() as well? I'll bundle that series up too.
+Thanks,
+Maxime
 
- Luis
+
