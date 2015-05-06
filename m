@@ -1,56 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 19 May 2015 17:41:43 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:34879 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbbEFVDb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 17:03:31 -0400
+Received: by igbyr2 with SMTP id yr2so142747179igb.0
+        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 14:03:30 -0700 (PDT)
+Date: Wed, 6 May 2015 16:03:27 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
-Message-ID: <20150519224143.GS31666@google.com>
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
- <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com>
- <554783CD.50708@ti.com>
- <55478F1A.3000401@mm-sol.com>
+To: "Michael S. Tsirkin" <mst@kernel.org>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
+Message-ID: <20150506210327.GG24643@google.com>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150426084739-mutt-send-email-mst@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55478F1A.3000401@mm-sol.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150426084739-mutt-send-email-mst@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 04, 2015 at 06:24:10PM +0300, Stanimir Varbanov wrote:
-> On 05/04/2015 05:35 PM, Kishon Vijay Abraham I wrote:
-> > Hi,
+On Sun, Apr 26, 2015 at 08:50:06AM +0200, Michael S. Tsirkin wrote:
+> On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
+> > Hi Michael,
 > > 
-> > On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
-> >> Add a PCIe PHY driver used by PCIe host controller driver
-> >> on Qualcomm SoCs like Snapdragon 805.
-> >>
-> >> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> >> ---
-> >>   drivers/phy/Kconfig         |    9 ++
-> >>   drivers/phy/Makefile        |    1 +
-> >>   drivers/phy/phy-qcom-pcie.c |  291
-> >> +++++++++++++++++++++++++++++++++++++++++++
+> > I put your patches on my pci/msi branch and I hope to merge them for v4.1.
+> > I didn't apply the acks from Fam and Eric because I made changes to those
+> > patches that weren't completely trivial.  I think the end result is
+> > equivalent, though.  The diff attached to this cover letter is the
+> > difference between your v5 series and this v6 series.
 > > 
-> > Why do you need a new PHY driver for this? Why not use the existing QCOM
-> > PHY driver. I can see the registers used here in phy-qcom-ufs-qmp-14nm.h?
+> > As far as I'm concerned, this is ready to go except that I would like a
+> > little more info about the virtio kernel hang to include in the changelog
+> > for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
 > 
-> I agree that on first glance there are similarities, but I'm not sure
-> does the PHYs are the same IP blocks. Or at least they are different
-> revisions which have too many differences. So trying to combine them
-> will lead to more code than now.
 > 
-> Either way I will try to understand how many the differences are.
+> Hi Bjorn,
+> do you have eveything you need to merge this?
 
-Ping, where are we with this?  Should I wait for something else, or are you
-convinced there's enough difference to warrant a new PHY driver, Kishon?
+No.  I made the minor changelog edits you suggested and the result is on
+my pci/msi-v7 branch.  But I still have these open issues:
+
+  - The last thing I heard from Eric was that "not disabling MSI/MSI-X at
+    shutdown is the wrong fix, and someone needs to fix a buggy driver."
+    I want to hear Eric say "OK, we need to leave MSI/MSI-X enabled at
+    shutdown for this case."
+
+  - One changelog says "Stop disabling MSIs at shutdown to avoid
+    conflicting with drivers."  But I don't know what the conflict is.
+
+  - The bugzilla has no dmesg log or detailed analysis.  Fam said the
+    scenario I came up with
+    (http://lkml.kernel.org/r/20150416194245.GB20701@google.com)
+    was fairly close, but it took me a lot of work to derive that.  Fixing
+    any errors in it and putting it in the bugzilla would be a big step.
+    The bugzilla should have the raw data and the analysis, so someone else
+    can validate the analysis and conclude that this patch is a reasonable
+    fix for it.  That's currently impossible because the bugzilla really
+    only contains the fix as a fait accompli.
 
 Bjorn
