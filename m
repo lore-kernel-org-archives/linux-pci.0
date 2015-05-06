@@ -1,160 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li42-95.members.linode.com ([209.123.162.95]:34735 "EHLO
-	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751263AbbENGXp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 02:23:45 -0400
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-From: Pantelis Antoniou <panto@antoniou-consulting.com>
-In-Reply-To: <1431564871.4160.8.camel@kernel.crashing.org>
-Date: Thu, 14 May 2015 09:23:39 +0300
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:34169 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbbEFWSW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 18:18:22 -0400
+Received: by iedfl3 with SMTP id fl3so28876231ied.1
+        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 15:18:21 -0700 (PDT)
+Date: Wed, 6 May 2015 17:18:18 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: wdavis@nvidia.com
+Cc: joro@8bytes.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, tripperda@nvidia.com,
+	jhubbard@nvidia.com, jglisse@redhat.com,
+	Yijing Wang <wangyijing@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+Message-ID: <20150506221818.GH24643@google.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+[+cc Yijing, Dave J, Dave M, Alex]
 
-Sorry for taking this long to respond, but I am working on the same problem right
-now. I thought I might have something to show, but not yet :)
-
-My PCI overlay case is different. In my case there is no firmware and there
-is the blob is provided as an overlay.
-
-The idea is that for a given PCI bus, when a PCI device with a matching
-device id, vendor id is probed a matching overlay should be applied.
-
-The trickiness lies in the way that the way that the target is different
-each time and how to handle generational issues (i.e. what happens if the pci device
-is removed before the application of the overlay occurs, what happens when multiple
-applications should happen in parallel, etc.)
-
-
-> On May 14, 2015, at 03:54 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
+> From: Will Davis <wdavis@nvidia.com>
 > 
-> On Wed, 2015-05-13 at 19:18 -0500, Rob Herring wrote:
+> Hi,
 > 
->> I haven't decided really.
->> 
->> The main thing with the current patch is I don't really like the added
->> complexity to unflatten_dt_node. It is already a fairly complex
->> function. Perhaps removing of "hybrid" as discussed will help?
+> This patch series adds DMA APIs to map and unmap a struct resource to and from
+> a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
+> of these interfaces.
 > 
-> I agree, we should be able to make that much simpler, I was planning on
-> sorting that out with Gavin.
+> This solves a long-standing problem with the existing DMA-remapping interfaces,
+> which require that a struct page be given for the region to be mapped into a
+> device's IOVA domain. This requirement cannot support peer device BAR ranges,
+> for which no struct pages exist.
 > 
-
-I think using overlays should cover your case without any issues.
-I don’t like messing with the unflatten method TBH.
-
->> If there are things we can do to make overlays easier to use in your
->> use case, I'd like to hear ideas. I don't really buy that being more
->> complex than needed is an obstacle. That is very often the case to
->> have common, scale-able solutions. I want to see a simple case be
->> simple to support.
+> The underlying implementations of map_page and map_sg convert the struct page
+> into its physical address anyway, so we just need a way to route the physical
+> address of the BAR region to these implementations. The new interfaces do this
+> by taking the struct resource describing a device's BAR region, from which the
+> physical address is derived.
 > 
-> Well, it's a LOT more complex from the FW perspective for a bunch of
-> features we don't really need, in a way because the DT update in our
-> case is just purely informational to avoid keeping wrong/outdated DT
-> bits, it has little functional impact (it might have a bit for interrupt
-> routing through bridges though).
+> The Intel and nommu versions have been verified on a dual Intel Xeon E5405
+> workstation. I'm in the process of obtaining hardware to test the AMD version
+> as well. Please review.
+
+I think we currently assume there's no peer-to-peer traffic.
+
+I don't know whether changing that will break anything, but I'm concerned
+about these:
+
+  - PCIe MPS configuration (see pcie_bus_configure_settings()).
+
+  - PCIe ACS, e.g., pci_acs_enabled().  My guess is that this one is OK,
+    but Alex would know better.
+
+  - dma_addr_t.  Currently dma_addr_t is big enough to hold any address
+    returned from the DMA API.  That's not necessarily big enough to hold a
+    PCI bus address, e.g., a raw BAR value.
+
+> Will Davis (6):
+>   dma-debug: add checking for map/unmap_resource
+>   DMA-API: Introduce dma_(un)map_resource
+>   dma-mapping: pci: add pci_(un)map_resource
+>   iommu/amd: Implement (un)map_resource
+>   iommu/vt-d: implement (un)map_resource
+>   x86: add pci-nommu implementation of map_resource
 > 
-> However, I am also pursuing an approach on FW side using a generation
-> count in our nodes and properties which we could use to generate
-> arbitrary overlays if we know what generation linux has.
+>  arch/x86/kernel/pci-nommu.c              | 17 +++++++
+>  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
+>  drivers/iommu/intel-iommu.c              | 18 ++++++++
+>  include/asm-generic/dma-mapping-broken.h |  9 ++++
+>  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
+>  include/asm-generic/pci-dma-compat.h     | 14 ++++++
+>  include/linux/dma-debug.h                | 20 +++++++++
+>  include/linux/dma-mapping.h              |  7 +++
+>  lib/dma-debug.c                          | 48 ++++++++++++++++++++
+>  9 files changed, 230 insertions(+), 13 deletions(-)
 > 
-> There might actual be a usage scenario for a generic way for our
-> firwmare to convey DT updates to Linux for other reasons.
+> -- 
+> 2.3.7
 > 
-> A few things that I don't find in the overlay code (but maybe I haven't
-> looked at it hard enough):
-> 
-> - Can it remove nodes/properties ?
-> 
-
-Yes.
-
-> - Can it "commit" a changeset so it's permanently part of the main DT ?
-> We will never have a concept of "revertable" changesets, if we need a
-> subsequent update, we will get a new overlay from FW that will remove
-> what needs to be removed and add what needs to be added.
-> 
-
-The overlay when applied is a part of the kernel DT tree.
-It is trivial to add a mechanism that simply commits everything and
-tosses away the revert information.
-
-Note that in that case you have to make provisions for the unflatten
-blob to not be freed or for the device tree nodes/properties to be
-dynamically allocated.
-
-> IE, our current mechanism without overlay is fairly simple:
-> 
->  - On PCI unplug, we remove all nodes below the slot (from linux),
-> the FW does the equivalent internally.
-> 
-
-If you use an overlay, you just revert it and everything would
-be as it was before, without anything hanging below the slot node.
-
-Note that the ‘remove all nodes below the slot’ does not work for my case.
-
-That is because there are devices being instantiated under the slot
-(i2c busses, i2c devices, FPGAs etc) that need to be removed from the
-system.
-
->  - On PCI re-plug, the FW internally builds new nodes and sends a
-> new subtree as an FDT that we can expand/attach.
-> 
-
-You can easily send a DT blob containing an overlay from firmware.
-
-It can be even easy, since you might not have to recreate the full blob
-each time, but instead using flat device tree methods to populate the
-few properties that change each time.
-
-> Now we could consider that subtree as a changeset that can be undone,
-> but that wouldn't work for boot time. And subsequent updates wouldn't
-> have that concept of "undoing" anyway.
-> 
-
-I have posted another patch that does boot-time DT quirk which are
-non-revertable.
-
-https://lkml.org/lkml/2015/2/18/258
-
-> IE. conceptually, what overlays do today is quite rooted around the idea
-> of having a fixed "base" DT and some pre-compiled DTB overlays that
-> get added/removed. The design completely ignore the idea of a FW that
-> maintains a "live" tree which we want to keep in sync, which is what we
-> want to do here, or what we could do with a "live" open firmware
-> implementation.
-> 
-> Now we might be able to reconcile them, but it feels to me that the
-> overlay/changeset stuff is too rooted in the first concept…
-> 
-
-The first DT overlays use case (beaglebone capes) is what got the concept
-started.
-
-Right now is a generic mechanism to apply modifications to the kernel
-live tree, with the possibility to revert them.
-
-> Ben.
-> 
-> 
-
-Regards
-
-— Pantelis
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
