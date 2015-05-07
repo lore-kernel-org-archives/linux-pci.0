@@ -1,108 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:56813 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbbEZIKM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 04:10:12 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jingoohan1@gmail.com>
-Cc: 'Zhou Wang' <wangzhou1@hisilicon.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Pratyush Anand' <pratyush.anand@gmail.com>,
-	'Liviu Dudau' <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
-	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
-	zhudacai@hisilicon.com, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
-	qiuzhenfa@hisilicon.com, 'Liguozhu' <liguozhu@hisilicon.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	'Richard Zhu' <Richard.Zhu@freescale.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-Date: Tue, 26 May 2015 10:09:17 +0200
-Message-ID: <3203781.NTEqUP6iLy@wuerfel>
-In-Reply-To: <000001d096a9$27bf43f0$773dcbd0$@com>
-References: <000001d096a9$27bf43f0$773dcbd0$@com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <554B416C.6050701@mellanox.com>
+Date: Thu, 7 May 2015 13:41:48 +0300
+From: Amir Vadai <amirv@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	"Yinghai Lu" <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>,
+	Ido Shamay <idos@mellanox.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Hadar Hen Zion <hadarh@mellanox.com>,
+	Eran Ben Elisha <eranbe@mellanox.com>,
+	Joe Perches <joe@perches.com>,
+	Saeed Mahameed <saeedm@mellanox.com>,
+	Matan Barak <matanb@mellanox.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Tony Luck" <tony.luck@intel.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Amir Vadai <amirv@mellanox.com>
+Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of
+ irq_desc
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+ <1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com>
+ <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+ <alpine.DEB.2.11.1505041708190.4225@nanos>
+ <CAPcc5Pi7qNQKocTVmfZafVhi3MJwboY=XKYzNmqAnVqt0gU4vw@mail.gmail.com>
+ <alpine.DEB.2.11.1505051652280.4225@nanos>
+In-Reply-To: <alpine.DEB.2.11.1505051652280.4225@nanos>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 25 May 2015 14:10:37 Jingoo Han wrote:
-> 'pp->root_bus_nr' is initialized as '-1' at some soc-specific drivers
-> However, 'sys->busnr' is set as '0, 1, 2 ...' by pcibios_init_hw()
-> in arch/arm/kernel/bios32.c. '0, 1, 2 ...' means the number of
-> each host controller.
+On 5/5/2015 5:53 PM, Thomas Gleixner wrote:
+> On Tue, 5 May 2015, Amir Vadai wrote:
 > 
-> So, without setting 'pp->root_bus_nr' as '0, 1, 2, ...',
-> it makes the problem.
+>> On Mon, May 4, 2015 at 6:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>>> On Mon, 4 May 2015, Amir Vadai wrote:
+>>>
+>>>> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>>>> The field 'affinity' in irq_desc won't change once the irq_desc data
+>>>>> structure is created. So cache irq_desc->affinity instead of irq_desc.
+>>>>> This also helps to hide struct irq_desc from device drivers.
+>>>>
+>>>> Hi Jiang,
+>>>>
+>>>> I might not understand the new changes irq core, but up until now
+>>>> affinity was changed when the user changed it through
+>>>> /proc/irq/<IRQ>/smp_affinity.
+>>>> This code is monitoring the affinity from the napi_poll context to
+>>>> detect affinity changes, and prevent napi from keep running on the
+>>>> wrong CPU.
+>>>> Therefore, the affinity can't be cached at the beginning. Please
+>>>> revert this caching.
+>>>
+>>> Sigh. All of this is completely wrong. Polling in the internals of
+>>> irq_desc is just crap.
+>> Hi,
+>>
+>>>
+>>> irq_set_affinity_notifier() has been added for exactly this purpose.
+>> rmap is already registered on irq_set_affinity_notifier().
+>> Actually, I did post an extension to the affinity notifier, to use
+>> affinity chain which you rejected [1] (and BTW, convinced me that this
+>> is not the way to do it).
+>> Current code is according to your suggestion.
+>>
+>> [1] - https://lkml.org/lkml/2014/5/26/222
 > 
-> Thus, we need to come up with the way to resolve this.
+> No, it's not. I wrote:
 > 
-> 1. Setting 'pp->root_bus_nr' as '0, 1, 2 ..' by each soc-specific driver.
+>  "So what's the point of adding notifier call chain complexity,
+>   ordering problems etc., if you can simply note the fact that the
+>   affinity changed in the rmap itself and check that in the RX path?"
 > 
-> e.g)
+> I did not tell you to fiddle in irqdesc, really.
 > 
-> ./drivers/pci/host/pci-exynos.c
-> @@ -534,7 +534,7 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
->                 }
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &exynos_pcie_host_ops;
+> Thanks,
 > 
-> ./drivers/pci/host/pci-imx6.c
-> @@ -541,7 +541,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->                 }
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &imx6_pcie_host_ops;
->  
-> ./drivers/pci/host/pci-keystone.c
-> @@ -312,7 +312,7 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
->                         return ret;
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &keystone_pcie_host_ops;
+> 	tglx
 > 
-> ./drivers/pci/host/pci-layerscape.c
-> @@ -101,7 +101,7 @@ static int ls_add_pcie_port(struct ls_pcie *pcie)
->         pp = &pcie->pp;
->         pp->dev = pcie->dev;
->         pp->dbi_base = pcie->dbi;
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &ls_pcie_host_ops;
->  
-> ./drivers/pci/host/pcie-spear13xx.c
-> @@ -287,7 +287,7 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
->                 return ret;
->         }
->  
-> -       pp->root_bus_nr = -1;
-> +       pp->root_bus_nr++;
->         pp->ops = &spear13xx_pcie_host_ops;
-> 
-> 
-> 2. Setting 'pp->root_bus_nr' as '0, 1, 2 ..' by pcie-designware.c
-> 
-> I believe that someone will give better idea. 
 
-Assigning the root bus number through hw_pci is a historic artifact
-from drivers that probe multiple host bridges at the same time.
-Some legacy ARM platforms still do that (specifically all the ones
-that set nr_controllers to >1: dove, mv78xx0, orion5x, and iop),
-but all modern platforms should probe each host bridge separately,
-either from a platform driver probe function, or they only have
-one and hardcode that fact in the ARM platform code.
+It is problematic, since I didn't want to link the napi polling affinity
+issue and CONFIG_CPU_RMAP being selected. That's why I CC'd you when
+submitted the patch [1]. Guess it was my bad that I didn't do it in a
+better way that would give you a chance to fully review it.
 
-For the drivers in drivers/pci/host, we give each host controller
-its own PCI domain, which means we can have overlapping bus numbers
-and do not need the heuristic to split the available 255 bus numbers
-across the present host bridges.
+Anyway, I understand now that I shouldn't access irqdesc attributes from
+a device driver.
+I will see if I can live with disabling this whole feature (migrate a
+currently looping NAPI when affinity is changed), when CONFIG_CPU_RMAP
+is not selected. If not, I might modify the rmap code to give me this
+information even when it is not selected. I assume that rmap notifier
+callback can access this information.
 
-	Arnd
+Thanks,
+Amir
+
