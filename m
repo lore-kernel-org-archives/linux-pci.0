@@ -1,290 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:51431 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbbEDHLX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:11:23 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 4 May 2015 17:11:21 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7D3CA2BB0051
-	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:11:19 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t447BAVr14811228
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:11:18 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t447Aj2s003597
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:10:45 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V3 9/9] powerpc/eeh: handle VF PE properly
-Date: Mon,  4 May 2015 15:07:38 +0800
-Message-Id: <1430723258-21299-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52758 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751839AbbEGNZw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 May 2015 09:25:52 -0400
+Date: Thu, 7 May 2015 21:25:36 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150507132536.GA4559@localhost.localdomain>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <20150504110551.GD15736@8bytes.org>
+ <20150505060931.GB31063@dhcp-128-4.nay.redhat.com>
+ <20150505152343.GP15736@8bytes.org>
+ <20150506014649.GA14065@dhcp-128-4.nay.redhat.com>
+ <20150506081617.GB20611@8bytes.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150506081617.GB20611@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Compared with Bus PE, VF PE just has one single pci function. This
-introduces the difference of error handling on a VF PE.
+On 05/06/15 at 10:16am, Joerg Roedel wrote:
+> On Wed, May 06, 2015 at 09:46:49AM +0800, Dave Young wrote:
+> > For the original problem, the key issue is dmar faults cause kdump kernel
+> > hang so that vmcore can not be saved. I do not know the reason why it hangs
+> > I think it is acceptable if kdump kernel boot ok with some dma errors..
+> 
+> It hangs because some devices can't handle the DMAR faults and the kdump
+> kernel can't initialize them and will hang itself. For that it doesn't
+> matter whether the fault was caused by a read or write request.
 
-For example in the hotplug case, EEH needs to remove and re-create the VF
-properly. In the case when PF's error_detected() disable SRIOV, this patch
-introduces a flag to mark the eeh_dev of a VF to avoid the slot_reset() and
-resume(). Since the FW is not ware of the VF, this patch handles the VF
-restore/reset in kernel directly.
+Ok, thanks for explanation. so it explains sometimes kdump kernel boot ok
+with faults, sometimes it hangs instead.
 
-This patch is to handle the VF PE properly in these cases.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h   |    1 +
- arch/powerpc/kernel/eeh.c        |    1 +
- arch/powerpc/kernel/eeh_driver.c |  108 ++++++++++++++++++++++++++++++--------
- arch/powerpc/kernel/eeh_pe.c     |    3 +-
- 4 files changed, 90 insertions(+), 23 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 78c8bec..43e8a24 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -141,6 +141,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	int    in_error;		/* Error flag for eeh_dev	*/
- #ifdef CONFIG_PCI_IOV
- 	struct pci_dev *physfn;		/* Associated PF PORT		*/
- #endif /* CONFIG_PCI_IOV */
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 221e280..077c3d1 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1226,6 +1226,7 @@ void eeh_remove_device(struct pci_dev *dev)
- 	 * from the parent PE during the BAR resotre.
- 	 */
- 	edev->pdev = NULL;
-+	edev->in_error = 0;
- 	dev->dev.archdata.edev = NULL;
- 	if (!(edev->pe->state & EEH_PE_KEEP))
- 		eeh_rmv_from_parent_pe(edev);
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 89eb4bc..6e42cad 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
- 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
- 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
- 
-+	edev->in_error = 1;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->slot_reset ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		eeh_pcid_put(dev);
- 		return NULL;
- 	}
-@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->resume ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		edev->mode &= ~EEH_DEV_NO_HANDLER;
--		eeh_pcid_put(dev);
--		return NULL;
-+		goto out;
- 	}
- 
- 	driver->err_handler->resume(dev);
- 
-+out:
-+	edev->in_error = 0;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -386,12 +390,42 @@ static void *eeh_report_failure(void *data, void *userdata)
- 	return NULL;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static void *eeh_add_virt_device(void *data, void *userdata)
-+{
-+	struct pci_driver *driver;
-+	struct eeh_dev *edev = (struct eeh_dev *)data;
-+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
-+
-+	if (!(edev->mode & EEH_DEV_VF)) {
-+		pr_warn("EEH: eeh_dev(%04x:%02x:%02x:%01x) is not a VF\n",
-+			edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+		return NULL;
-+	}
-+
-+	driver = eeh_pcid_get(dev);
-+	if (driver) {
-+		eeh_pcid_put(dev);
-+		if (driver->err_handler)
-+			return NULL;
-+	}
-+
-+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
-+	return NULL;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static void *eeh_rmv_device(void *data, void *userdata)
- {
- 	struct pci_driver *driver;
- 	struct eeh_dev *edev = (struct eeh_dev *)data;
- 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
- 	int *removed = (int *)userdata;
-+#ifdef CONFIG_PCI_IOV
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
-+#endif
- 
- 	/*
- 	 * Actually, we should remove the PCI bridges as well.
-@@ -416,7 +450,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 	driver = eeh_pcid_get(dev);
- 	if (driver) {
- 		eeh_pcid_put(dev);
--		if (driver->err_handler)
-+		if (removed && driver->err_handler)
- 			return NULL;
- 	}
- 
-@@ -425,11 +459,21 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 		 pci_name(dev));
- 	edev->bus = dev->bus;
- 	edev->mode |= EEH_DEV_DISCONNECTED;
--	(*removed)++;
--
--	pci_lock_rescan_remove();
--	pci_stop_and_remove_bus_device(dev);
--	pci_unlock_rescan_remove();
-+	if (removed)
-+		(*removed)++;
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (edev->mode & EEH_DEV_VF) {
-+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
-+		edev->pdev = NULL;
-+		pdn->pe_number = IODA_INVALID_PE;
-+	} else
-+#endif
-+	{
-+		pci_lock_rescan_remove();
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_unlock_rescan_remove();
-+	}
- 
- 	return NULL;
- }
-@@ -548,6 +592,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
- 	struct timeval tstamp;
- 	int cnt, rc, removed = 0;
-+	struct eeh_dev *edev;
- 
- 	/* pcibios will clear the counter; save the value */
- 	cnt = pe->freeze_count;
-@@ -561,12 +606,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
- 	if (bus) {
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(bus);
--		pci_unlock_rescan_remove();
--	} else if (frozen_bus) {
-+		if (pe->type & EEH_PE_VF)
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+		else {
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(bus);
-+			pci_unlock_rescan_remove();
-+		}
-+	} else if (frozen_bus)
- 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
--	}
- 
- 	/*
- 	 * Reset the pci controller. (Asserts RST#; resets config space).
-@@ -607,14 +655,26 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		 * PE. We should disconnect it so the binding can be
- 		 * rebuilt when adding PCI devices.
- 		 */
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(bus);
-+#ifdef CONFIG_PCI_IOV
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+#endif
-+			pcibios_add_pci_devices(bus);
- 	} else if (frozen_bus && removed) {
- 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
- 		ssleep(5);
- 
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(frozen_bus);
-+#ifdef CONFIG_PCI_IOV
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+#endif
-+			pcibios_add_pci_devices(frozen_bus);
- 	}
- 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
- 
-@@ -792,11 +852,15 @@ perm_error:
- 	 * the their PCI config any more.
- 	 */
- 	if (frozen_bus) {
--		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
--
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(frozen_bus);
--		pci_unlock_rescan_remove();
-+		if (pe->type & EEH_PE_VF) {
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+		} else {
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(frozen_bus);
-+			pci_unlock_rescan_remove();
-+		}
- 	}
- }
- 
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index edfe63a..3b8b32f 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -916,7 +916,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
- 	if (pe->type & EEH_PE_PHB) {
- 		bus = pe->phb->bus;
- 	} else if (pe->type & EEH_PE_BUS ||
--		   pe->type & EEH_PE_DEVICE) {
-+		   pe->type & EEH_PE_DEVICE ||
-+		   pe->type & EEH_PE_VF) {
- 		if (pe->bus) {
- 			bus = pe->bus;
- 			goto out;
--- 
-1.7.9.5
-
+Dave
