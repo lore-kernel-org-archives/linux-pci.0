@@ -1,46 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:35708 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409AbbE0D6H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 23:58:07 -0400
-Received: by pdea3 with SMTP id a3so107200967pde.2
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 20:58:06 -0700 (PDT)
-Message-ID: <556540C7.6080301@linaro.org>
-Date: Wed, 27 May 2015 11:57:59 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:38418 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038AbbEGXEa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 19:04:30 -0400
+Received: by igbhj9 with SMTP id hj9so7246109igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 16:04:30 -0700 (PDT)
+Date: Thu, 7 May 2015 18:04:26 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Request for advice on where to put Root Complex "fix up" code
+ for downstream device
+Message-ID: <20150507230426.GO24643@google.com>
+References: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
-Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1951882.p8DdrcurkC@vostro.rjw.lan>
-In-Reply-To: <1951882.p8DdrcurkC@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月27日 08:30, Rafael J. Wysocki wrote:
-> On Tuesday, May 26, 2015 08:49:13 PM Hanjun Guo wrote:
->> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
->> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
->> code into ACPI core":
->>
->> https://lkml.org/lkml/2015/5/14/98
->
-> I'll be regarding this patchset as an RFC until the one from Jiang Liu goes in.
+Hi Casey,
 
-Yes, please, Jiang Liu's patch set should go in first.
+On Thu, May 07, 2015 at 12:34:51AM +0000, Casey Leedom wrote:
+> Hello,
+> 
+>   I've included both the Network and PCI Development mailing lists because this crosses both domains.  If this violates protocols, I apologise in advance.  I believe that this ~probably~ will be a "PCI Development" issue but since it affects a Network Device, I figured input from that quarter should be solicited as well.
+> 
+>   We have a Network Device, T5, which unfortunately has a PCI Compliance bug in it[1].  Doubly unfortunately, the PCI SIG 3.0 Compliance Tests which we dutifully ranb before releasing the silicon two years ago didn't include a vector for this, so it wasn't discovered till very recently.  In order to solve this bug, we need to modify the Root Complex's PCI Express Capability Device Control register in order to turn off the Enable No Snoop and Enable Relaxed Ordering features.
+> 
+>   I've cons'ed up demonstration code within the Device Driver for T5, cxgb4, to traverse the PCI graph to the Root Complex for the T5 Device and perform this modification[2].  This demonstrates the "workability" of doing the operation, but I'm betting that this is _not_ where either the Network or PCI Development teams would like such code to go.  My expectation is that this code needs to go into drivers/pci/quirks.c.
+> 
+>   So, this mail is a request for advice on how the Network and PCI Development teams would like this handled.  Once I receive this input, I will submit a patch to the correct team for inclusion in the kernel.  Thank you for your time and attention.
 
-Thanks
-Hanjun
+There are a lot of fixups in drivers/pci/quirks.c.  For things that have to
+be worked around either before a driver claims the device or if there is no
+driver at all, the fixup *has* to go in drivers/pci/quirks.c
+
+But for things like this, where the problem can only occur after a driver
+claims the device, I think it makes more sense to put the fixup in the
+driver itself.  The only wrinkle here is that the fixup has to be done on a
+separate device, not the device claimed by the driver.  But I think it
+probably still makes sense to put this fixup in the driver.
+
+> Casey
+> 
+> [1] Chelsio T5 PCI-E Compliance Bug:
+> 
+>     The bug is that when the Root Complex send a Transaction Layer Packet (TLP)
+>     Request downstream to a Device,the TLP may contain Attributes.  The PCI
+>     Specification states that two of these Attributes, No Snoop and Relaxed
+>     Ordering, must be included in the Device's TLP Response.  Further, the PCI
+>     Specification "encourages" Root Complexes to drop TLP Responses which
+>     are out of compliance with this rule.
+
+Can you include a pointer to the relevant part of the spec?
+
+> [2] Demonstration Code for clearing Root Complex No Snoop and Relaxed Ordering:
+> 
+> --- a/drivers/net/ethernet/chelsio/cxgb4_main.c	Mon Apr 06 09:27:21 2015 -0700
+> +++ b/drivers/net/ethernet/chelsio/cxgb4_main.c	Tue Apr 07 13:39:05 2015 -0700
+> @@ -9956,6 +9956,36 @@ static void enable_pcie_relaxed_ordering
+>  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
+>  }
+>  
+> +/*
+> + * Find the highest PCI-Express bridge above a PCI Device.  If found, that's
+> + * the Root Complex PCI-PCI Bridge for the PCI Device.  If we find the Root
+> + * Comples, clear the Enable Relaxed Ordering and Enable No Snoop bits in that
+
+s/Comples/Complex/, but the Root Complex itself does not appear as a PCI
+device, so we'll never actually find *it*.  But I think we should *always*
+find a Root Port.  Your code and text suggests that it's possible we
+wouldn't (since you say "*If* found, ...").  Is there a case you're
+thinking of where we wouldn't find a Root Port?
+
+> + * bridge's PCI-E Capability Device Control register.  This will prevent the
+> + * Root Complex from setting those attributes in the Transaction Layer Packets
+> + * of the Requests which it sends down stream to the PCI Device.
+> + */
+> +static void clear_root_complex_tlp_attributes(struct pci_dev *pdev)
+> +{
+> +	struct pci_bus *bus = pdev->bus;
+> +	struct pci_dev *highest_pcie_bridge = NULL;
+> +
+> +	while (bus) {
+> +		struct pci_dev *bridge = bus->self;
+> +
+> +		if (!bridge || !bridge->pcie_cap)
+> +			break;
+> +		highest_pcie_bridge = bridge;
+> +		bus = bus->parent;
+> +	}
+
+Can you use pci_upstream_bridge() here?  There are a couple places where we
+want to find the Root Port, so we might factor that out someday.  It'll be
+easier to find all those places if they use with pci_upstream_bridge().
+
+> +
+> +	if (highest_pcie_bridge)
+> +		pcie_capability_clear_and_set_word(highest_pcie_bridge,
+> +						   PCI_EXP_DEVCTL,
+> +						   PCI_EXP_DEVCTL_RELAX_EN |
+> +						   PCI_EXP_DEVCTL_NOSNOOP_EN,
+> +						   0);
+
+Please include a dmesg note here, especially since the driver is changing
+the config of a device other than its own.
+
+> +}
+> +
+>  static int init_one(struct pci_dev *pdev,
+>  			      const struct pci_device_id *ent)
+>  {
+> @@ -9973,6 +10003,19 @@ static int init_one(struct pci_dev *pdev
+>  		++version_printed;
+>  	}
+>  
+> +	/*
+> +	 * T5 has a PCI-E Compliance bug in it where it doesn't copy the
+> +	 * Transaction Layer Packet Attributes from downstream Requests into
+> +	 * it's upstream Responses.  Most Root Complexes are fine with this
+
+s/it's/its/
+
+> +	 * but a few get prissy and drop the non-compliant T5 Responses
+> +	 * leading to endless Device Timeouts when TLP Attributes are set.  So
+> +	 * if we're a T5, attempt to clear our Root Complex's enable bits for
+> +	 * TLP Attributes ...
+> +	 */
+> +	if (CHELSIO_PCI_ID_VER(pdev->device) == CHELSIO_T5 ||
+> +	    CHELSIO_PCI_ID_VER(pdev->device) == CHELSIO_T5_FPGA)
+> +		clear_root_complex_tlp_attributes(pdev);
+> +
+>  	err = pci_request_regions(pdev, KBUILD_MODNAME);
+>  	if (err) {
+>  		/* Just info, some other driver may have claimed the device. */--
+
+Bjorn
