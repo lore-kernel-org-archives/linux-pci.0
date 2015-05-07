@@ -1,99 +1,190 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:25304 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158AbbEGAey convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 20:34:54 -0400
-From: Casey Leedom <leedom@chelsio.com>
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Request for advice on where to put Root Complex "fix up" code for
- downstream device
-Date: Thu, 7 May 2015 00:34:51 +0000
-Message-ID: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <554B2352.4080906@hp.com>
+Date: Thu, 07 May 2015 16:33:22 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Baoquan He <bhe@redhat.com>
+CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v10 04/10] iommu/vt-d: functions to copy data from old
+ mem
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com> <1428655333-19504-5-git-send-email-zhen-hual@hp.com> <20150507074916.GA16815@dhcp-16-116.nay.redhat.com>
+In-Reply-To: <20150507074916.GA16815@dhcp-16-116.nay.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+It is called in
+static int copy_root_entry_table(struct intel_iommu *iommu);
 
-  I've included both the Network and PCI Development mailing lists because this crosses both domains.  If this violates protocols, I apologise in advance.  I believe that this ~probably~ will be a "PCI Development" issue but since it affects a Network Device, I figured input from that quarter should be solicited as well.
 
-  We have a Network Device, T5, which unfortunately has a PCI Compliance bug in it[1].  Doubly unfortunately, the PCI SIG 3.0 Compliance Tests which we dutifully ranb before releasing the silicon two years ago didn't include a vector for this, so it wasn't discovered till very recently.  In order to solve this bug, we need to modify the Root Complex's PCI Express Capability Device Control register in order to turn off the Enable No Snoop and Enable Relaxed Ordering features.
+On 05/07/2015 03:49 PM, Baoquan He wrote:
+> On 04/10/15 at 04:42pm, Li, Zhen-Hua wrote:
+>> Add some functions to copy the data from old kernel.
+>> These functions are used to copy context tables and page tables.
+>>
+>> To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+>> use a link here, store the pointers , and then use iounmap to free them in
+>> another place.
+>>
+>> Li, Zhen-hua:
+>>      The functions and logics.
+>>
+>> Takao Indoh:
+>>      Check if pfn is ram:
+>>          if (page_is_ram(pfn))
+>>
+>> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>> ---
+>>   drivers/iommu/intel-iommu.c | 102 ++++++++++++++++++++++++++++++++++++++++++++
+>>   include/linux/intel-iommu.h |   6 +++
+>>   2 files changed, 108 insertions(+)
+>>
+>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+>> index ff5ac04..5ba403a 100644
+>> --- a/drivers/iommu/intel-iommu.c
+>> +++ b/drivers/iommu/intel-iommu.c
+>> @@ -373,6 +373,17 @@ static struct context_entry *device_to_existing_context_entry(
+>>   				struct intel_iommu *iommu,
+>>   				u8 bus, u8 devfn);
+>>
+>> +/*
+>> + * A structure used to store the address allocated by ioremap();
+>> + * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
+>> + */
+>> +struct iommu_remapped_entry {
+>> +	struct list_head list;
+>> +	void __iomem *mem;
+>> +};
+>> +static LIST_HEAD(__iommu_remapped_mem);
+>> +static DEFINE_MUTEX(__iommu_mem_list_lock);
+>> +
+>>
+>>   /*
+>>    * This domain is a statically identity mapping domain.
+>> @@ -4817,3 +4828,94 @@ static struct context_entry *device_to_existing_context_entry(
+>>   	return ret;
+>>   }
+>>
+>> +/*
+>> + * Copy memory from a physically-addressed area into a virtually-addressed area
+>> + */
+>
+> I don't find where __iommu_load_from_oldmem is called. Obsolete code of
+> this patch?
+>
+>> +int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
+>> +{
+>> +	unsigned long pfn;		/* Page Frame Number */
+>> +	size_t csize = (size_t)size;	/* Num(bytes to copy) */
+>> +	unsigned long offset;		/* Lower 12 bits of to */
+>> +	void __iomem *virt_mem;
+>> +	struct iommu_remapped_entry *mapped;
+>> +
+>> +	pfn = from >> VTD_PAGE_SHIFT;
+>> +	offset = from & (~VTD_PAGE_MASK);
+>> +
+>> +	if (page_is_ram(pfn)) {
+>> +		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
+>> +	} else{
+>> +
+>> +		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
+>> +				GFP_KERNEL);
+>> +		if (!mapped)
+>> +			return -ENOMEM;
+>> +
+>> +		virt_mem = ioremap_cache((unsigned long)from, size);
+>> +		if (!virt_mem) {
+>> +			kfree(mapped);
+>> +			return -ENOMEM;
+>> +		}
+>> +		memcpy(to, virt_mem, size);
+>> +
+>> +		mutex_lock(&__iommu_mem_list_lock);
+>> +		mapped->mem = virt_mem;
+>> +		list_add_tail(&mapped->list, &__iommu_remapped_mem);
+>> +		mutex_unlock(&__iommu_mem_list_lock);
+>> +	}
+>> +	return size;
+>> +}
+>> +
+>> +/*
+>> + * Copy memory from a virtually-addressed area into a physically-addressed area
+>> + */
+>> +int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
+>> +{
+>> +	unsigned long pfn;		/* Page Frame Number */
+>> +	size_t csize = (size_t)size;	/* Num(bytes to copy) */
+>> +	unsigned long offset;		/* Lower 12 bits of to */
+>> +	void __iomem *virt_mem;
+>> +	struct iommu_remapped_entry *mapped;
+>> +
+>> +	pfn = to >> VTD_PAGE_SHIFT;
+>> +	offset = to & (~VTD_PAGE_MASK);
+>> +
+>> +	if (page_is_ram(pfn)) {
+>> +		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
+>> +	} else{
+>> +		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
+>> +				GFP_KERNEL);
+>> +		if (!mapped)
+>> +			return -ENOMEM;
+>> +
+>> +		virt_mem = ioremap_cache((unsigned long)to, size);
+>> +		if (!virt_mem) {
+>> +			kfree(mapped);
+>> +			return -ENOMEM;
+>> +		}
+>> +		memcpy(virt_mem, from, size);
+>> +		mutex_lock(&__iommu_mem_list_lock);
+>> +		mapped->mem = virt_mem;
+>> +		list_add_tail(&mapped->list, &__iommu_remapped_mem);
+>> +		mutex_unlock(&__iommu_mem_list_lock);
+>> +	}
+>> +	return size;
+>> +}
+>> +
+>> +/*
+>> + * Free the mapped memory for ioremap;
+>> + */
+>> +int __iommu_free_mapped_mem(void)
+>> +{
+>> +	struct iommu_remapped_entry *mem_entry, *tmp;
+>> +
+>> +	mutex_lock(&__iommu_mem_list_lock);
+>> +	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
+>> +		iounmap(mem_entry->mem);
+>> +		list_del(&mem_entry->list);
+>> +		kfree(mem_entry);
+>> +	}
+>> +	mutex_unlock(&__iommu_mem_list_lock);
+>> +	return 0;
+>> +}
+>> +
+>> diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+>> index a65208a..4bca7b5 100644
+>> --- a/include/linux/intel-iommu.h
+>> +++ b/include/linux/intel-iommu.h
+>> @@ -368,4 +368,10 @@ extern int dmar_ir_support(void);
+>>
+>>   extern const struct attribute_group *intel_iommu_groups[];
+>>
+>> +extern int __iommu_load_from_oldmem(void *to, unsigned long from,
+>> +					unsigned long size);
+>> +extern int __iommu_save_to_oldmem(unsigned long to, void *from,
+>> +					unsigned long size);
+>> +extern int __iommu_free_mapped_mem(void);
+>> +
+>>   #endif
+>> --
+>> 2.0.0-rc0
+>>
 
-  I've cons'ed up demonstration code within the Device Driver for T5, cxgb4, to traverse the PCI graph to the Root Complex for the T5 Device and perform this modification[2].  This demonstrates the "workability" of doing the operation, but I'm betting that this is _not_ where either the Network or PCI Development teams would like such code to go.  My expectation is that this code needs to go into drivers/pci/quirks.c.
-
-  So, this mail is a request for advice on how the Network and PCI Development teams would like this handled.  Once I receive this input, I will submit a patch to the correct team for inclusion in the kernel.  Thank you for your time and attention.
-
-Casey
-
-[1] Chelsio T5 PCI-E Compliance Bug:
-
-    The bug is that when the Root Complex send a Transaction Layer Packet (TLP)
-    Request downstream to a Device,the TLP may contain Attributes.  The PCI
-    Specification states that two of these Attributes, No Snoop and Relaxed
-    Ordering, must be included in the Device's TLP Response.  Further, the PCI
-    Specification "encourages" Root Complexes to drop TLP Responses which
-    are out of compliance with this rule.
-
-[2] Demonstration Code for clearing Root Complex No Snoop and Relaxed Ordering:
-
---- a/drivers/net/ethernet/chelsio/cxgb4_main.c	Mon Apr 06 09:27:21 2015 -0700
-+++ b/drivers/net/ethernet/chelsio/cxgb4_main.c	Tue Apr 07 13:39:05 2015 -0700
-@@ -9956,6 +9956,36 @@ static void enable_pcie_relaxed_ordering
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
- }
- 
-+/*
-+ * Find the highest PCI-Express bridge above a PCI Device.  If found, that's
-+ * the Root Complex PCI-PCI Bridge for the PCI Device.  If we find the Root
-+ * Comples, clear the Enable Relaxed Ordering and Enable No Snoop bits in that
-+ * bridge's PCI-E Capability Device Control register.  This will prevent the
-+ * Root Complex from setting those attributes in the Transaction Layer Packets
-+ * of the Requests which it sends down stream to the PCI Device.
-+ */
-+static void clear_root_complex_tlp_attributes(struct pci_dev *pdev)
-+{
-+	struct pci_bus *bus = pdev->bus;
-+	struct pci_dev *highest_pcie_bridge = NULL;
-+
-+	while (bus) {
-+		struct pci_dev *bridge = bus->self;
-+
-+		if (!bridge || !bridge->pcie_cap)
-+			break;
-+		highest_pcie_bridge = bridge;
-+		bus = bus->parent;
-+	}
-+
-+	if (highest_pcie_bridge)
-+		pcie_capability_clear_and_set_word(highest_pcie_bridge,
-+						   PCI_EXP_DEVCTL,
-+						   PCI_EXP_DEVCTL_RELAX_EN |
-+						   PCI_EXP_DEVCTL_NOSNOOP_EN,
-+						   0);
-+}
-+
- static int init_one(struct pci_dev *pdev,
- 			      const struct pci_device_id *ent)
- {
-@@ -9973,6 +10003,19 @@ static int init_one(struct pci_dev *pdev
- 		++version_printed;
- 	}
- 
-+	/*
-+	 * T5 has a PCI-E Compliance bug in it where it doesn't copy the
-+	 * Transaction Layer Packet Attributes from downstream Requests into
-+	 * it's upstream Responses.  Most Root Complexes are fine with this
-+	 * but a few get prissy and drop the non-compliant T5 Responses
-+	 * leading to endless Device Timeouts when TLP Attributes are set.  So
-+	 * if we're a T5, attempt to clear our Root Complex's enable bits for
-+	 * TLP Attributes ...
-+	 */
-+	if (CHELSIO_PCI_ID_VER(pdev->device) == CHELSIO_T5 ||
-+	    CHELSIO_PCI_ID_VER(pdev->device) == CHELSIO_T5_FPGA)
-+		clear_root_complex_tlp_attributes(pdev);
-+
- 	err = pci_request_regions(pdev, KBUILD_MODNAME);
- 	if (err) {
- 		/* Just info, some other driver may have claimed the device. */
