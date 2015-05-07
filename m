@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -8,72 +8,104 @@ To: Thomas Gleixner <tglx@linutronix.de>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Steve Longerbeam <slongerbeam@gmail.com>
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [RFC v1 09/25] ipu: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Wed, 20 May 2015 17:59:57 +0800
-Message-Id: <1432116013-25902-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Daniel J Blueman <daniel@numascale.com>
+Subject: [Patch v3] x86, irq: Allocate CPU vectors from device local CPUs if possible
+Date: Thu,  7 May 2015 10:53:56 +0800
+Message-Id: <1430967244-28905-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <alpine.DEB.2.11.1505061216390.4225@nanos>
+References: <alpine.DEB.2.11.1505061216390.4225@nanos>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-already have a pointer to corresponding irq_desc.
+On NUMA systems, an IO device may be associated with a NUMA node.
+It may improve IO performance to allocate resources, such as memory
+and interrupts, from device local node.
 
-Do the same thing to avoid pattern "irq_get_chip_data(data->irq)".
+This patch introduces a mechanism to support CPU vector allocation
+policies. It tries to allocate CPU vectors from CPUs on device local
+node first, and then fallback to all online(global) CPUs.
+
+This mechanism may be used to support NumaConnect systems to allocate
+CPU vectors from device local node.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Daniel J Blueman <daniel@numascale.com>
 ---
- drivers/dma/ipu/ipu_irq.c       |    2 +-
- drivers/gpu/ipu-v3/ipu-common.c |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Hi Thomas,
+	I feel this should be simpliest version now:)
+Thanks!
+Gerry
+---
+ arch/x86/kernel/apic/vector.c |   23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/dma/ipu/ipu_irq.c b/drivers/dma/ipu/ipu_irq.c
-index 2e284a4438bc..0e12af37fe2f 100644
---- a/drivers/dma/ipu/ipu_irq.c
-+++ b/drivers/dma/ipu/ipu_irq.c
-@@ -268,7 +268,7 @@ int ipu_irq_unmap(unsigned int source)
- /* Chained IRQ handler for IPU error interrupt */
- static void ipu_irq_err(unsigned int irq, struct irq_desc *desc)
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 1c7dd42b98c1..eb65c6b98de0 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -210,6 +210,18 @@ static int assign_irq_vector(int irq, struct apic_chip_data *data,
+ 	return err;
+ }
+ 
++static int assign_irq_vector_policy(int irq, int node,
++				    struct apic_chip_data *data,
++				    struct irq_alloc_info *info)
++{
++	if (info && info->mask)
++		return assign_irq_vector(irq, data, info->mask);
++	if (node != NUMA_NO_NODE &&
++	    assign_irq_vector(irq, data, cpumask_of_node(node)) == 0)
++		return 0;
++	return assign_irq_vector(irq, data, apic->target_cpus());
++}
++
+ static void clear_irq_vector(int irq, struct apic_chip_data *data)
  {
--	struct ipu *ipu = irq_get_handler_data(irq);
-+	struct ipu *ipu = irq_desc_get_handler_data(desc);
- 	u32 status;
- 	int i, line;
+ 	int cpu, vector;
+@@ -258,12 +270,6 @@ void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
+ 		memset(dst, 0, sizeof(*dst));
+ }
  
-diff --git a/drivers/gpu/ipu-v3/ipu-common.c b/drivers/gpu/ipu-v3/ipu-common.c
-index 67bab5c36056..7022825b7a2c 100644
---- a/drivers/gpu/ipu-v3/ipu-common.c
-+++ b/drivers/gpu/ipu-v3/ipu-common.c
-@@ -915,8 +915,8 @@ static void ipu_irq_handle(struct ipu_soc *ipu, const int *regs, int num_regs)
- static void ipu_irq_handler(unsigned int irq, struct irq_desc *desc)
+-static inline const struct cpumask *
+-irq_alloc_info_get_mask(struct irq_alloc_info *info)
+-{
+-	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
+-}
+-
+ static void x86_vector_free_irqs(struct irq_domain *domain,
+ 				 unsigned int virq, unsigned int nr_irqs)
  {
- 	struct ipu_soc *ipu = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	const int int_reg[] = { 0, 1, 2, 3, 10, 11, 12, 13, 14};
--	struct irq_chip *chip = irq_get_chip(irq);
- 
- 	chained_irq_enter(chip, desc);
- 
-@@ -928,8 +928,8 @@ static void ipu_irq_handler(unsigned int irq, struct irq_desc *desc)
- static void ipu_err_irq_handler(unsigned int irq, struct irq_desc *desc)
+@@ -289,7 +295,6 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
  {
- 	struct ipu_soc *ipu = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	const int int_reg[] = { 4, 5, 8, 9};
--	struct irq_chip *chip = irq_get_chip(irq);
+ 	struct irq_alloc_info *info = arg;
+ 	struct apic_chip_data *data;
+-	const struct cpumask *mask;
+ 	struct irq_data *irq_data;
+ 	int i, err;
  
- 	chained_irq_enter(chip, desc);
+@@ -300,7 +305,6 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	if ((info->flags & X86_IRQ_ALLOC_CONTIGUOUS_VECTORS) && nr_irqs > 1)
+ 		return -ENOSYS;
  
+-	mask = irq_alloc_info_get_mask(info);
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
+@@ -318,7 +322,8 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 		irq_data->chip = &lapic_controller;
+ 		irq_data->chip_data = data;
+ 		irq_data->hwirq = virq + i;
+-		err = assign_irq_vector(virq, data, mask);
++		err = assign_irq_vector_policy(virq, irq_data->node, data,
++					       info);
+ 		if (err)
+ 			goto error;
+ 	}
 -- 
 1.7.10.4
 
