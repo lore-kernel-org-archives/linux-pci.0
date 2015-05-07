@@ -1,63 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:47766 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934359AbbEONjk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:39:40 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 23:39:38 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 213882CE804E
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:39:35 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDdQjA30474422
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:39:34 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDd1nu011068
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:39:02 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V5 04/10] powerpc/eeh: cache address range just for normal device
-Date: Fri, 15 May 2015 21:36:58 +0800
-Message-Id: <1431697024-5710-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: [RFC 1/4] PCI: Add hooks to allocate/free IRQ resources when binding/unbinding driver
+Date: Thu,  7 May 2015 11:12:51 +0800
+Message-Id: <1430968374-29286-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The address cache is used to find the related eeh_dev for a given MMIO
-address.  From the definition of pci_dev.resource[], it keeps MMIO address
-in following order: 6 normal BAR, ROM BAR, 6 IOV BAR, 4 Bridge window.
+Add two hook points pcibios_{alloc|free}_irq() into PCI core, which will
+be called when binding/unbinding PCI device drivers. Then PCI arch code
+may hook into these two points to allocate IRQ resources on demand and
+free them when not used anymore.
 
-In the address cache, first it doesn't cache bridge device, second the IOV
-BAR range should map to their own VFs separately. This means it just need
-to cache the first 7 BARs for a normal device.
-
-This patch restricts the address cache to save the first 7 BARs for a pci
-device.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/kernel/eeh_cache.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci-driver.c |   33 +++++++++++++++++++++++----------
+ include/linux/pci.h      |    2 ++
+ 2 files changed, 25 insertions(+), 10 deletions(-)
 
-diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-index a1e86e1..f0ce2a3 100644
---- a/arch/powerpc/kernel/eeh_cache.c
-+++ b/arch/powerpc/kernel/eeh_cache.c
-@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210de553..8af4a671686f 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -388,18 +388,30 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
+ 	return error;
+ }
+ 
+-static int pci_device_probe(struct device *dev)
++int __weak pcibios_alloc_irq(struct pci_dev *dev)
+ {
+-	int error = 0;
+-	struct pci_driver *drv;
+-	struct pci_dev *pci_dev;
++	return dev->irq;
++}
+ 
+-	drv = to_pci_driver(dev->driver);
+-	pci_dev = to_pci_dev(dev);
+-	pci_dev_get(pci_dev);
+-	error = __pci_device_probe(drv, pci_dev);
+-	if (error)
+-		pci_dev_put(pci_dev);
++void __weak pcibios_free_irq(struct pci_dev *dev)
++{
++}
++
++static int pci_device_probe(struct device *dev)
++{
++	int error;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	struct pci_driver *drv = to_pci_driver(dev->driver);
++
++	error = pcibios_alloc_irq(pci_dev);
++	if (error >= 0) {
++		pci_dev_get(pci_dev);
++		error = __pci_device_probe(drv, pci_dev);
++		if (error) {
++			pcibios_free_irq(pci_dev);
++			pci_dev_put(pci_dev);
++		}
++	}
+ 
+ 	return error;
+ }
+@@ -415,6 +427,7 @@ static int pci_device_remove(struct device *dev)
+ 			drv->remove(pci_dev);
+ 			pm_runtime_put_noidle(dev);
+ 		}
++		pcibios_free_irq(pci_dev);
+ 		pci_dev->driver = NULL;
  	}
  
- 	/* Walk resources on this device, poke them into the tree */
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		resource_size_t start = pci_resource_start(dev,i);
- 		resource_size_t end = pci_resource_end(dev,i);
- 		unsigned long flags = pci_resource_flags(dev,i);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8dc4c6e..f50d16a04abc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1656,6 +1656,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ int pcibios_add_device(struct pci_dev *dev);
+ void pcibios_release_device(struct pci_dev *dev);
+ void pcibios_penalize_isa_irq(int irq, int active);
++int pcibios_alloc_irq(struct pci_dev *dev);
++void pcibios_free_irq(struct pci_dev *dev);
+ 
+ #ifdef CONFIG_HIBERNATE_CALLBACKS
+ extern struct dev_pm_ops pcibios_pm_ops;
 -- 
-1.7.9.5
+1.7.10.4
 
