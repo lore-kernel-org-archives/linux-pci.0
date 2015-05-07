@@ -1,86 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 22 May 2015 16:44:16 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	lorenzo.stanco@gmail.com, tiagdtd-lava@yahoo.de
-Subject: Re: [PATCH] PCI / hotplug / ACPI: Check ignore_hotplug for all
- downstream devices
-Message-ID: <20150522214416.GJ32152@google.com>
-References: <1499297.p2drhZLZaT@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 7 May 2015 22:00:29 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
+	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, iommu@lists.linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, alex.williamson@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150507140029.GC4559@localhost.localdomain>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <551E56F6.60503@hp.com>
+ <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
+ <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
+ <20150407034622.GB7213@localhost.localdomain>
+ <5523E5DB.2090001@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499297.p2drhZLZaT@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <5523E5DB.2090001@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, tiagdtd-lava]
+On 04/07/15 at 10:12am, Don Dutile wrote:
+> On 04/06/2015 11:46 PM, Dave Young wrote:
+> >On 04/05/15 at 09:54am, Baoquan He wrote:
+> >>On 04/03/15 at 05:21pm, Dave Young wrote:
+> >>>On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
+> >>>>Hi Dave,
+> >>>>
+> >>>>There may be some possibilities that the old iommu data is corrupted by
+> >>>>some other modules. Currently we do not have a better solution for the
+> >>>>dmar faults.
+> >>>>
+> >>>>But I think when this happens, we need to fix the module that corrupted
+> >>>>the old iommu data. I once met a similar problem in normal kernel, the
+> >>>>queue used by the qi_* functions was written again by another module.
+> >>>>The fix was in that module, not in iommu module.
+> >>>
+> >>>It is too late, there will be no chance to save vmcore then.
+> >>>
+> >>>Also if it is possible to continue corrupt other area of oldmem because
+> >>>of using old iommu tables then it will cause more problems.
+> >>>
+> >>>So I think the tables at least need some verifycation before being used.
+> >>>
+> >>
+> >>Yes, it's a good thinking anout this and verification is also an
+> >>interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
+> >>and then verify this again when panic happens in purgatory. This checks
+> >>whether any code stomps into region reserved for kexec/kernel and corrupt
+> >>the loaded kernel.
+> >>
+> >>If this is decided to do it should be an enhancement to current
+> >>patchset but not a approach change. Since this patchset is going very
+> >>close to point as maintainers expected maybe this can be merged firstly,
+> >>then think about enhancement. After all without this patchset vt-d often
+> >>raised error message, hung.
+> >
+> >It does not convince me, we should do it right at the beginning instead of
+> >introduce something wrong.
+> >
+> >I wonder why the old dma can not be remap to a specific page in kdump kernel
+> >so that it will not corrupt more memory. But I may missed something, I will
+> >looking for old threads and catch up.
+> >
+> >Thanks
+> >Dave
+> >
+> The (only) issue is not corruption, but once the iommu is re-configured, the old,
+> not-stopped-yet, dma engines will use iova's that will generate dmar faults, which
+> will be enabled when the iommu is re-configured (even to a single/simple paging scheme)
+> in the kexec kernel.
+> 
 
-On Wed, May 20, 2015 at 02:14:13AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> If the ignore_hotplug flag is set for a PCI device without an ACPI
-> companion and a bus check notification is received for an ancestor
-> bridge that is not the device's parent, ACPIPHP will ignore that
-> flag.
-> 
-> Namely, in that case acpiphp_check_bridge() is called for the target
-> bridge and if all of the devices immediately below the bridge are
-> still present, trim_stale_devices() will be called for each of them.
-> That function recursively walks the hierarchy downwards and removes
-> device objects corresponding to devices that don't appear to be
-> present any more.  Unfortunately, it only checks ignore_hotplug
-> for devices having ACPI companions, so it will remove the others
-> (if they don't respond) regardless of the ignore_hotplug value.
-> 
-> Fix the problem by making trim_stale_devices() take ignore_hotplug
-> into consideration regardless of whether or not an ACPI companion
-> is present for the device it has been called for.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Don, so if iommu is not reconfigured then these faults will not happen?
 
-Applied to pci/hotplug for v4.2, thanks!
+Baoquan and me has a confusion below today about iommu=off/intel_iommu=off:
 
-I cc'd Lorenzo and tiagdtd-lava in hopes they can test this patch and see
-whether it resolves https://bugzilla.kernel.org/show_bug.cgi?id=61891 .
+intel_iommu_init()
+{
+...
 
-The branch with this patch applied is here:
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/hotplug
+       dmar_table_init();
 
-> ---
-> 
-> This may fix BZ61891, but even if it doesn't, the bug is quite obvious to me.
-> 
-> Should be applicable since commit b440bde74f04 (PCI: Add pci_ignore_hotplug()
-> to ignore hotplug events for a device) which shipped in 3.17.
-> 
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |    5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -632,15 +632,14 @@ static void trim_stale_devices(struct pc
->  {
->  	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
->  	struct pci_bus *bus = dev->subordinate;
-> -	bool alive = false;
-> +	bool alive = dev->ignore_hotplug;
->  
->  	if (adev) {
->  		acpi_status status;
->  		unsigned long long sta;
->  
->  		status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
-> -		alive = (ACPI_SUCCESS(status) && device_status_valid(sta))
-> -			|| dev->ignore_hotplug;
-> +		alive = alive || (ACPI_SUCCESS(status) && device_status_valid(sta));
->  	}
->  	if (!alive)
->  		alive = pci_device_is_present(dev);
-> 
+       disable active iommu translations;
+
+       if (no_iommu || dmar_disabled)
+                goto out_free_dmar;
+
+...
+}
+
+Any reason not move no_iommu check to the begining of intel_iommu_init function?
+
+Thanks
+Dave
