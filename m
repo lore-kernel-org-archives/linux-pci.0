@@ -1,66 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34409 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161002AbbEOXD6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 19:03:58 -0400
-Received: by ieczm2 with SMTP id zm2so61249477iec.1
-        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:03:58 -0700 (PDT)
-Date: Fri, 15 May 2015 18:03:54 -0500
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:36485 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbbEGPII (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 11:08:08 -0400
+Received: by igbpi8 with SMTP id pi8so25360361igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 08:08:07 -0700 (PDT)
+Date: Thu, 7 May 2015 10:08:04 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Pratyush Anand <panand@redhat.com>
-Cc: jg1.han@samsung.com, linux-pci@vger.kernel.org,
-	mohit.kumar.dhaka@gmail.com,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: Update SPEAr13xx and Designware PCIe
- maintainer
-Message-ID: <20150515230354.GC31666@google.com>
-References: <dd210909090e843e8f7cfc84479af7baa2250d33.1430366548.git.panand@redhat.com>
+To: wdavis@nvidia.com
+Cc: joro@8bytes.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, tripperda@nvidia.com,
+	jhubbard@nvidia.com, jglisse@redhat.com
+Subject: Re: [PATCH 6/6] x86: add pci-nommu implementation of map_resource
+Message-ID: <20150507150804.GJ24643@google.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+ <1430505138-2877-7-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dd210909090e843e8f7cfc84479af7baa2250d33.1430366548.git.panand@redhat.com>
+In-Reply-To: <1430505138-2877-7-git-send-email-wdavis@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 30, 2015 at 09:46:07AM +0530, Pratyush Anand wrote:
-> From: Pratyush Anand <pratyush.anand@gmail.com>
+On Fri, May 01, 2015 at 01:32:18PM -0500, wdavis@nvidia.com wrote:
+> From: Will Davis <wdavis@nvidia.com>
 > 
-> Didn't add myself as Maintainer earlier, as I was moving out of ST
-> and didn't had a board to test. But learnt recently that, its fine being
-> in MAINTAINERS in such situations, at least I can review the patches.
+> Simply pass through the physical address as the DMA address.
 > 
-> So, let me add myself.
-> 
-> Signed-off-by: Pratyush Anand <pratyush.anand@gmail.com>
-
-Applied with Jingoo's ack to for-linus for v4.1, thanks!
-
+> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 > ---
->  MAINTAINERS | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  arch/x86/kernel/pci-nommu.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 68e96ee0d58c..69ce49782ff9 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7553,6 +7553,7 @@ F:	drivers/pci/host/pci-exynos.c
+> diff --git a/arch/x86/kernel/pci-nommu.c b/arch/x86/kernel/pci-nommu.c
+> index da15918..6e9e66d 100644
+> --- a/arch/x86/kernel/pci-nommu.c
+> +++ b/arch/x86/kernel/pci-nommu.c
+> @@ -38,6 +38,22 @@ static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
+>  	return bus;
+>  }
 >  
->  PCI DRIVER FOR SYNOPSIS DESIGNWARE
->  M:	Jingoo Han <jg1.han@samsung.com>
-> +M:	Pratyush Anand <pratyush.anand@gmail.com>
->  L:	linux-pci@vger.kernel.org
->  S:	Maintained
->  F:	drivers/pci/host/*designware*
-> @@ -7566,8 +7567,9 @@ F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
->  F:	drivers/pci/host/pci-host-generic.c
->  
->  PCIE DRIVER FOR ST SPEAR13XX
-> +M:	Pratyush Anand <pratyush.anand@gmail.com>
->  L:	linux-pci@vger.kernel.org
-> -S:	Orphan
-> +S:	Maintained
->  F:	drivers/pci/host/*spear*
->  
->  PCMCIA SUBSYSTEM
+> +static dma_addr_t nommu_map_resource(struct device *dev, struct resource *res,
+> +				     unsigned long offset, size_t size,
+> +				     enum dma_data_direction dir,
+> +				     struct dma_attrs *attrs)
+> +{
+> +	dma_addr_t bus = res->start + offset;
+
+"res->start" is the CPU physical address, not the bus address.  There is a
+pci_bus_address() interface to get the bus address.
+
+On many, but not all, x86 platforms the CPU physical address is identical
+to the PCI bus address.
+
+> +
+> +	WARN_ON(size == 0);
+> +
+> +	if (!check_addr("map_resource", dev, bus, size))
+> +		return DMA_ERROR_CODE;
+> +	flush_write_buffers();
+> +	return bus;
+> +}
+> +
+> +
+>  /* Map a set of buffers described by scatterlist in streaming
+>   * mode for DMA.  This is the scatter-gather version of the
+>   * above pci_map_single interface.  Here the scatter gather list
+> @@ -93,6 +109,7 @@ struct dma_map_ops nommu_dma_ops = {
+>  	.free			= dma_generic_free_coherent,
+>  	.map_sg			= nommu_map_sg,
+>  	.map_page		= nommu_map_page,
+> +	.map_resource		= nommu_map_resource,
+>  	.sync_single_for_device = nommu_sync_single_for_device,
+>  	.sync_sg_for_device	= nommu_sync_sg_for_device,
+>  	.is_phys		= 1,
 > -- 
-> 2.1.0
+> 2.3.7
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
