@@ -1,92 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:34573 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155AbbEPNMN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 May 2015 09:12:13 -0400
-Received: by ieczm2 with SMTP id zm2so69479090iec.1
-        for <linux-pci@vger.kernel.org>; Sat, 16 May 2015 06:12:12 -0700 (PDT)
-Date: Sat, 16 May 2015 08:12:09 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: BAR 7 io space assignment errors
-Message-ID: <20150516131209.GD31666@google.com>
-References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
- <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
- <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
- <20150515221149.GA31666@google.com>
- <20150516022713.GA4417@svl-evodev-groeck.juniper.net>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:33337 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbbEGCld (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 22:41:33 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 7 May 2015 12:41:30 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5DB093578048
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2015 12:41:28 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t472fJDR23920752
+	for <linux-pci@vger.kernel.org>; Thu, 7 May 2015 12:41:28 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t472etwj032476
+	for <linux-pci@vger.kernel.org>; Thu, 7 May 2015 12:40:55 +1000
+Date: Thu, 7 May 2015 10:40:38 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci/iov: return a reference to PF on destroying VF
+Message-ID: <20150507024038.GB6645@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150505212905.GB24643@google.com>
+ <20150506072557.GA22377@richard>
+ <CAErSpo7oTxbThDGj6UkbpsAKBakkzJsq104swqsZWkr=0+dNkA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150516022713.GA4417@svl-evodev-groeck.juniper.net>
+In-Reply-To: <CAErSpo7oTxbThDGj6UkbpsAKBakkzJsq104swqsZWkr=0+dNkA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 07:27:13PM -0700, Guenter Roeck wrote:
-> On Fri, May 15, 2015 at 05:11:49PM -0500, Bjorn Helgaas wrote:
-> > This sounds like an interesting topology.  A device coming online later is
-> > a hotplug event from the core's point of view.  Since the core can't tell
-> > what a hot-added device is going to be, it allocates a default amount of
-> > space (pci_hotplug_io_size) to accomodate it.  You can influence that with
-> > the "pci=hpiosize=" boot parameter.  Maybe "pci=hpiosize=0" would help in
-> > your case, but we'd still have the problem that the messages don't make
-> > sense to the average user (including me).
-> > 
-> Also, I don't really want to specify lots of boot parameters if I can avoid it.
+On Wed, May 06, 2015 at 10:23:26AM -0500, Bjorn Helgaas wrote:
+>On Wed, May 6, 2015 at 2:25 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>> On Tue, May 05, 2015 at 04:29:05PM -0500, Bjorn Helgaas wrote:
+>
+>>>It would be useful to mention a way to cause the leak.  I suspect writing
+>>>to a VF's sysfs "remove" file is the easiest.
+>>>
+>>
+>> Looks a VF don't support the remove now.
+>>
+>> static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+>>                                             struct attribute *a, int n)
+>> {
+>>         struct device *dev = container_of(kobj, struct device, kobj);
+>>         struct pci_dev *pdev = to_pci_dev(dev);
+>>
+>>         if (pdev->is_virtfn)
+>>                 return 0;
+>>
+>>         return a->mode;
+>> }
+>>
+>> static struct attribute_group pci_dev_hp_attr_group = {
+>>         .attrs = pci_dev_hp_attrs,
+>>         .is_visible = pci_dev_hp_attrs_are_visible,
+>> };
+>
+>Right, I forgot about this.  A VF has no "remove" file, so it can't be
+>used to cause the leak.
 
-Yes, I agree completely.  I hate boot parameters.
+Hmm, I see this is introduced in commit dfab88beda88, to prevent some memory
+leak.
 
-> >   fsl-pci fff70a000.pcie: PCI host bridge to bus 0000:00
-> >   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> >   pci 0000:00:00.0: PCI bridge to [bus 01-ff]      # Root Port
-> >   pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
-> > 
-> > The host bridge does have an I/O aperture, and it looks like firmware set
-> > up the 00:00.0 bridge with a small piece of that.  That's sort of a waste:
-> > supposedly we have 64K of I/O space available on bus 00, and 4K of that is
-> > routed to [bus 01-ff].  The other 60K could be used by other devices on bus
-> > 00, but it doesn't look like there *are* any, so it is wasted.
-> > 
-> The problem is that I can not reprogram PCI_IO_BASE on 0000:00:00.0.
-> Here is a debug log:
-> 
-> pci 0000:00:00.0: io base written 0xe0f0 reads back as 0x0
-> pci 0000:00:00.0: io base written 0xf000 reads back as 0x0
+Could we say, if we do the release properly like in this patch, we could
+re-enable this "remove"?
 
-That's odd; that's a non-conformant bridge.  Per spec (PCI-to-PCI Bridge
-r1.2, sec 3.2.5.6), for a bridge that implements an I/O address range, the
-upper four bits of I/O Base is writable.
+-- 
+Richard Yang
+Help you, Help me
 
-But I suspect this bridge is discovered via OF and there's something broken
-about how config access is done.  That's arch code and I don't know much
-about it.
-
-Or maybe the hardware itself is not quite spec-compliant, although it would
-be strange to have I/O aperture addresses hard-wired into the hardware.  
-
-> The io ranges of ports behind it (ie the ones below) are programmable.
-> I can try to find out if there is a means to program the io range
-> on 0000:00:00.0, but I would prefer to just disable the io range for
-> everything downstream of it.
-
-As far as I can tell, you don't need any I/O port space anywhere in this
-hierarchy.  If you could disable this host bridge I/O aperture:
-
-  PCI host bridge /pcie@a000 (primary) ranges:
-    IO 0x0000000fffc00000..0x0000000fffc0ffff -> 0x0000000000000000
-
-e.g., remove it from the OF description of the bridge, the core could know
-that it needn't bother trying to assign I/O space.  It might not be smart
-enough to notice that today, but it would at least be possible in
-principle.
-
-> "bridge window [io  0x1000-0x0fff]" for sure looks odd. Maybe it means
-> something to you, but for me it is just confusing.
-
-"The I/O Limit register can be programmed to a smaller value than the I/O
-Base register, if there are no I/O addresses on the secondary side of the
-bridge."  So this would ordinarily mean the I/O window is disabled.  But I
-agree, this is a confusing way to say it.
-
-Bjorn
