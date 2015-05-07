@@ -1,82 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: RE: [PATCH 03/16] ntb: Enable link training for RP mode in the
- driver probe
-Date: Wed, 20 May 2015 21:46:58 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D7825D377@MX104CL02.corp.emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
- <ae66adf68441cdaf893d2a562924615c229489c0.1432135631.git.Allen.Hubbe@emc.com>
- <CAErSpo5gf9VhegEGY5S+dak0UuMNEMDD29JT4TcTz_UPey3aNQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5gf9VhegEGY5S+dak0UuMNEMDD29JT4TcTz_UPey3aNQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:46288 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750793AbbEGRcD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 May 2015 13:32:03 -0400
+Date: Thu, 7 May 2015 19:32:00 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Baoquan He <bhe@redhat.com>
+Cc: "Li, ZhenHua" <zhen-hual@hp.com>, alex.williamson@redhat.com,
+	indou.takao@jp.fujitsu.com, tom.vaden@hp.com, rwright@hp.com,
+	dwmw2@infradead.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, lisa.mitchell@hp.com,
+	jerry.hoemann@hp.com, iommu@lists.linux-foundation.org,
+	ddutile@redhat.com, doug.hatch@hp.com,
+	ishii.hironobu@jp.fujitsu.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, billsumnerlinux@gmail.com, li.zhang6@hp.com,
+	dyoung@redhat.com, vgoyal@redhat.com
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150507173200.GF20611@8bytes.org>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+ <20150429112024.GB5799@dhcp-16-116.nay.redhat.com>
+ <20150503085530.GK15033@dhcp-16-116.nay.redhat.com>
+ <5546E240.5090403@hp.com>
+ <20150504031749.GF5799@dhcp-16-116.nay.redhat.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150504031749.GF5799@dhcp-16-116.nay.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFBsZWFz
-ZSBydW4gImdpdCBsb2cgLS1vbmVsaW5lIGRyaXZlcnMvbnRiIiBhbmQgbWFrZSB5b3VyIHN1Ympl
-Y3QgbGluZXMNCj4gY29uc2lzdGVudC4gIFRoZSBjb252ZW50aW9uIEkgdXNlIGluIFBDSSAoYW5k
-IHdoYXQgd2FzIHVzZWQgaW4gTlRCDQo+IHVudGlsIHJlY2VudGx5KSBpcw0KPiANCj4gICAtIEFj
-cm9ueW1zIGFuZCBpbml0aWFsaXNtcyBhcmUgY2FwaXRhbGl6ZWQNCj4gICAtIFN1YmplY3QgbGlu
-ZSBpcyBhIHN1YnN5c3RlbSBwcmVmaXggKCJQQ0k6IiwgIk5UQjoiLCBldGMuKSBmb2xsb3dlZA0K
-PiBieSBhIGNvbXBsZXRlIHNlbnRlbmNlIHN0YXJ0aW5nIHdpdGggYSBjYXBpdGFsaXplZCB2ZXJi
-LCB3aXRoIG5vDQo+IHBlcmlvZCBhdCB0aGUgZW5kDQoNClRoZXNlIGFyZSB0aGUgbmV3IHN1Ympl
-Y3QgbGluZXMgdGhhdCB3aWxsIGJlIGluIHRoZSB2MiBvZiB0aGlzIHNldC4NCg0KTlRCOiBGaXgg
-c21hbGwgY29kZSBmb3JtYXQgaXNzdWVzIGluIHRyYW5zcG9ydA0KTlRCOiBEZWZhdWx0IHRvIENQ
-VSBtZW1jcHkgZm9yIHBlcmZvcm1hbmNlDQpOVEI6IEltcHJvdmUgcGVyZm9ybWFuY2Ugd2l0aCB3
-cml0ZSBjb21iaW5pbmcNCk5UQjogVXNlIE5VTUEgYXdhcmUgbWVtb3J5IGFsbG9jYXRpb24NCk5U
-QjogVXNlIE5VTUEgbWVtb3J5IGFuZCBETUEgY2hhbiBpbiB0cmFuc3BvcnQNCk5UQjogUmVzZXQg
-dHJhbnNwb3J0IFFQIGxpbmsgc3RhdHMgb24gZG93bg0KTlRCOiBEbyBub3QgYWR2YW5jZSB0cmFu
-c3BvcnQgUlggb24gbGluayBkb3duDQpOVEI6IERpZmZlcmVudGlhdGUgdHJhbnNwb3J0IGxpbmsg
-ZG93biBtZXNzYWdlcw0KTlRCOiBSYXRlIGxpbWl0IG50Yl9xcF9saW5rX3dvcmsNCk5UQjogQWRk
-IHRvb2wgY2xpZW50DQpOVEI6IEFkZCBwaW5nIHBvbmcgY2xpZW50DQpOVEI6IEludGVsIE5UQiBw
-YXJhbXMgZm9yIFNOQiBCMkIgYWRkcmVzc2VzDQpOVEI6IENoZWNrIHRoZSBESUQgZm9yIHdvcmth
-cm91bmQgZXJyb3IgZmxhZ3MNCk5UQjogRW5hYmxlIGxpbmsgdHJhaW5pbmcgZm9yIFJQIG1vZGUg
-aW4gcHJvYmUNCk5UQjogQWRkIE5UQiBoYXJkd2FyZSBhYnN0cmFjdGlvbiBsYXllcg0KTlRCOiBN
-b3ZlIGZpbGVzIGluIHByZXBhcmF0aW9uIGZvciBOVEIgYWJzdHJhY3Rpb24NCg0KPiANCj4gT24g
-V2VkLCBNYXkgMjAsIDIwMTUgYXQgMTA6NDEgQU0sIEFsbGVuIEh1YmJlIDxBbGxlbi5IdWJiZUBl
-bWMuY29tPg0KPiB3cm90ZToNCj4gPiBGcm9tOiBEYXZlIEppYW5nIDxkYXZlLmppYW5nQGludGVs
-LmNvbT4NCj4gPg0KPiA+IExpbmsgdHJhaW5pbmcgZm9yIFJQIHNob3VsZCBiZSBlbmFibGVkIGlu
-IHRoZSBkcml2ZXIgcHJvYmUuIFdlIHNob3VsZA0KPiA+IG5vdCBoYXZlIHRvIHdhaXQgZm9yIHRy
-YW5zcG9ydCBsb2FkZWQgZm9yIHRoaXMgdG8gaGFwZW4uIE90aGVyd2lzZSB0aGUNCj4gDQo+IHMv
-aGFwZW4vaGFwcGVuLw0KPiANCj4gPiBkZXZpY2Ugd2lsbCBub3Qgc2hvdyB1cCBvbiB0aGUgdHJh
-bnNwYXJlbnQgYnJpZGdlIHNpZGUuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEYXZlIEppYW5n
-IDxkYXZlLmppYW5nQGludGVsLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9udGIvaHcvaW50
-ZWwvbnRiX2h3X2ludGVsLmMgfCAxMCArKysrKysrKysrDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAx
-MCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9udGIvaHcvaW50
-ZWwvbnRiX2h3X2ludGVsLmMNCj4gYi9kcml2ZXJzL250Yi9ody9pbnRlbC9udGJfaHdfaW50ZWwu
-Yw0KPiA+IGluZGV4IDA1YzRiNzcuLmQxNjJmMjIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9u
-dGIvaHcvaW50ZWwvbnRiX2h3X2ludGVsLmMNCj4gPiArKysgYi9kcml2ZXJzL250Yi9ody9pbnRl
-bC9udGJfaHdfaW50ZWwuYw0KPiA+IEBAIC0xMzMzLDYgKzEzMzMsOSBAQCBzdGF0aWMgaW50IHNu
-Yl9wb2xsX2xpbmsoc3RydWN0IGludGVsX250Yl9kZXYNCj4gKm5kZXYpDQo+ID4NCj4gPiAgc3Rh
-dGljIGludCBzbmJfbGlua19pc191cChzdHJ1Y3QgaW50ZWxfbnRiX2RldiAqbmRldikNCj4gPiAg
-ew0KPiA+ICsgICAgICAgaWYgKG5kZXYtPm50Yi50b3BvID09IE5UQl9UT1BPX1NFQykNCj4gPiAr
-ICAgICAgICAgICAgICAgcmV0dXJuIDE7DQo+ID4gKw0KPiA+ICAgICAgICAgcmV0dXJuIE5UQl9M
-TktfU1RBX0FDVElWRShuZGV2LT5sbmtfc3RhKTsNCj4gPiAgfQ0KPiA+DQo+ID4gQEAgLTE2NDIs
-NiArMTY0NSw3IEBAIHN0YXRpYyBpbnQgc25iX3NldHVwX2IyYl9tdyhzdHJ1Y3QgaW50ZWxfbnRi
-X2Rldg0KPiAqbmRldiwNCj4gPiAgc3RhdGljIGludCBzbmJfaW5pdF9udGIoc3RydWN0IGludGVs
-X250Yl9kZXYgKm5kZXYpDQo+ID4gIHsNCj4gPiAgICAgICAgIGludCByYzsNCj4gPiArICAgICAg
-IHUzMiBudGJfY3RsOw0KPiA+DQo+ID4gICAgICAgICBpZiAobmRldi0+YmFyNF9zcGxpdCkNCj4g
-PiAgICAgICAgICAgICAgICAgbmRldi0+bXdfY291bnQgPSBIU1hfU1BMSVRfQkFSX01XX0NPVU5U
-Ow0KPiA+IEBAIC0xNjU4LDYgKzE2NjIsMTIgQEAgc3RhdGljIGludCBzbmJfaW5pdF9udGIoc3Ry
-dWN0IGludGVsX250Yl9kZXYNCj4gKm5kZXYpDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAg
-ZGV2X2VycihuZGV2X2RldihuZGV2KSwgIk5UQiBQcmltYXJ5IGNvbmZpZw0KPiBkaXNhYmxlZFxu
-Iik7DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQo+ID4gICAg
-ICAgICAgICAgICAgIH0NCj4gPiArDQo+ID4gKyAgICAgICAgICAgICAgIC8qIGVuYWJsZSBsaW5r
-IHRvIGFsbG93IHNlY29uZGFyeSBzaWRlIGRldmljZSB0bw0KPiBhcHBlYXIgKi8NCj4gPiArICAg
-ICAgICAgICAgICAgbnRiX2N0bCA9IGlvcmVhZDMyKG5kZXYtPnNlbGZfbW1pbyArIG5kZXYtPnJl
-Zy0NCj4gPm50Yl9jdGwpOw0KPiA+ICsgICAgICAgICAgICAgICBudGJfY3RsICY9IH5OVEJfQ1RM
-X0RJU0FCTEU7DQo+ID4gKyAgICAgICAgICAgICAgIGlvd3JpdGUzMihudGJfY3RsLCBuZGV2LT5z
-ZWxmX21taW8gKyBuZGV2LT5yZWctDQo+ID5udGJfY3RsKTsNCj4gPiArDQo+ID4gICAgICAgICAg
-ICAgICAgIC8qIHVzZSBoYWxmIHRoZSBzcGFkcyBmb3IgdGhlIHBlZXIgKi8NCj4gPiAgICAgICAg
-ICAgICAgICAgbmRldi0+c3BhZF9jb3VudCA+Pj0gMTsNCj4gPiAgICAgICAgICAgICAgICAgbmRl
-di0+c2VsZl9yZWcgPSAmc25iX3ByaV9yZWc7DQo+ID4gLS0NCj4gPiAyLjQuMC5yYzAuNDMuZ2Nm
-OGE4YzYNCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
-bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4gaW4NCj4gPiB0aGUgYm9keSBv
-ZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+IE1vcmUgbWFqb3Jk
-b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Hi Baoquan, ZhenHua,
+
+On Mon, May 04, 2015 at 11:17:49AM +0800, Baoquan He wrote:
+> On 05/04/15 at 11:06am, Li, ZhenHua wrote:
+> > Hi baoquan,
+> > Could you paste the kernel log of the first kernel ?
+
+Please let me know when you have worked this issue out.
+
+
+Thanks,
+
+	Joerg
+
