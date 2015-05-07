@@ -1,100 +1,252 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:38703 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754448AbbETTtC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 15:49:02 -0400
-Received: by igcau1 with SMTP id au1so48395734igc.1
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 12:49:01 -0700 (PDT)
-Date: Wed, 20 May 2015 14:48:58 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, mjg59@coreos.com, rwhite@pobox.com,
-	alex.williamson@redhat.com
-Subject: Re: [PATCH] PCI/ASPM: Remove redundant checking for pcie port type
-Message-ID: <20150520194858.GA32152@google.com>
-References: <1432006894-12203-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:32890 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbbEGN2f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 09:28:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432006894-12203-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <16669466.MatE2KDcHs@vostro.rjw.lan>
+References: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com>
+	<CAErSpo4YEUTyrFth3xVyeja0=cbk69+tSQgsOFCO5nvFK=suhw@mail.gmail.com>
+	<CAFSKS=NbDdmr+khTTTPRRdj_wen4c5LR0X2AShO-ARE0yWGg1g@mail.gmail.com>
+	<16669466.MatE2KDcHs@vostro.rjw.lan>
+Date: Thu, 7 May 2015 08:28:35 -0500
+Message-ID: <CAFSKS=PxJMwkhrswHTdE-vVJqocHkzWELO=BvKm12NjFRtfNew@mail.gmail.com>
+Subject: Re: I/O conflict on Versalogic Tiger (VL-EPM-24)
+From: George McCollister <george.mccollister@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 11:41:34AM +0800, Yijing Wang wrote:
-> Only pcie root port or downstream port would allocate
-> a pcie_link_state when call alloc_pcie_link_state() in
-> pcie_aspm_init_link_state(). So when call another ASPM
-> functions to configure pcie_link_state, checking
-> pdev->link_state is enough, it's no need to check pcie
-> port type again in these functions.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Wed, May 6, 2015 at 5:14 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, May 06, 2015 02:15:15 PM George McCollister wrote:
+>> On Wed, May 6, 2015 at 10:51 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > [+cc Rafael]
+>> >
+>> > On Wed, May 6, 2015 at 9:47 AM, George McCollister
+>> > <george.mccollister@gmail.com> wrote:
+>> >> We're using Versalogic Tiger (VL-EPM-24) SBCs in embedded systems
+>> >> running linux 3.2.x without any problems. Recently, when testing the
+>> >> latest mainline kernel I found the system hard locked during boot.
+>> >>
+>> >> After some investigation I noticed that the kernel print time stamps
+>> >> were bogus after one of the pcieports was enabled:
+>> >> [    1.658879] io scheduler cfq registered (default)
+>> >> [    1.663905] pcieport 0000:00:1c.0: enabling device (0004 -> 0007)
+>> >> [    6.254134] Serial: 8250/16550 driver, 21 ports, IRQ sharing enabled
+>> >> [    6.254134] 00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200)
+>> >> is a 16550A
+>> >> [    6.254134] 00:04: ttyS1 at I/O 0x2f8 (irq = 0, base_baud = 115200)
+>> >> is a 16550A
+>> >> [    6.254134] 00:05: ttyS2 at I/O 0x3e8 (irq = 0, base_baud = 115200)
+>> >> is a 16550A
+>> >> [    6.254134] 00:06: ttyS4 at I/O 0x238 (irq = 0, base_baud = 115200)
+>> >> is a 16550A
+>> >>
+>> >> I was surprised to find that the problem existed as far back as 3.11.
+>> >> I checked to make sure we were using the latest BIOS and contacted the
+>> >> vendor to see if they were aware of anyone else using recent versions
+>> >> of the linux kernel. They stated that they were unaware of anyone
+>> >> using recent kernel versions on this board and tired to convince me to
+>> >> stick with an old version.
+>> >>
+>> >> I then git bisected to this commit:
+>> >> ac212b6980d8d5eda705864fc5a8ecddc6d6eacc ACPI / processor: Use common
+>> >> hotplug infrastructure
+>> >>
+>> >> After diffing the kernel output before and after this commit I noticed
+>> >> that the I/O BAR assigned to the pcieport (same one as above) changed
+>> >> from 0x1000 to 0x2000.
+>> >>
+>> >> @@ -191,13 +191,13 @@
+>> >> Switching to clocksource acpi_pm
+>> >> pci 0000:00:1c.0: BAR 9: assigned [mem 0x80000000-0x801fffff pref]
+>> >> pci 0000:00:1c.1: BAR 9: assigned [mem 0x80200000-0x803fffff pref]
+>> >> -pci 0000:00:1c.0: BAR 7: assigned [io  0x1000-0x1fff]
+>> >> +pci 0000:00:1c.0: BAR 7: assigned [io  0x2000-0x2fff]
+>> >> pci 0000:02:01.0: PCI bridge to [bus 03]
+>> >> pci 0000:02:01.0:   bridge window [mem 0xdff00000-0xdfffffff]
+>> >> pci 0000:01:00.0: PCI bridge to [bus 02-03]
+>> >> pci 0000:01:00.0:   bridge window [mem 0xdff00000-0xdfffffff]
+>> >> pci 0000:00:1c.0: PCI bridge to [bus 01-03]
+>> >> -pci 0000:00:1c.0:   bridge window [io  0x1000-0x1fff]
+>> >> +pci 0000:00:1c.0:   bridge window [io  0x2000-0x2fff]
+>> >> pci 0000:00:1c.0:   bridge window [mem 0xdff00000-0xdfffffff]
+>> >> pci 0000:00:1c.0:   bridge window [mem 0x80000000-0x801fffff pref]
+>> >> pci 0000:00:1c.1: PCI bridge to [bus 04]
+>> >>
+>> >> I also noticed the kernel output 'ACPI: PM-Timer IO Port: 0x2008' and
+>> >> made the connection that since acpi_pm was being used as the
+>> >> clocksource and since the problems started when the BAR switched from
+>> >> 0x1000 to 0x2000 an I/O conflict must be the source of the problems.
+>> >>
+>> >> I did some reading into ACPI (since my understanding of it was novice
+>> >> at the time) and dumped the DSDT. I found no reference to anything in
+>> >> the 0x2xxx I/O range though I did find the following in the FADT:
+>> >> PM1a_EVT_BLK at 0x2000-0x2003
+>> >> PM1a_CNT_BLK at 0x2004-0x2005
+>> >> PM_TMR at 0x2008-0x200b
+>> >>
+>> >> I dumped the DSDT on other systems and found that some used PNP0C02 to
+>> >> reserve I/O ranges used by the ACPI PM registers.
+>> >>
+>> >> I added the following to the Versalogic Tiger dsdt.dsl under the PCI
+>> >> bus, compiled it and and compiled into the linux kernel:
+>> >>             Device (PMIO)
+>> >>             {
+>> >>                 Name (_HID, EisaId ("PNP0C02") /* PNP Motherboard
+>> >> Resources */)  // _HID: Hardware ID
+>> >>                 Name (_UID, 0x09)  // _UID: Unique ID
+>> >>                 Method (_CRS, 0, NotSerialized)  // _CRS: Current
+>> >> Resource Settings
+>> >>                 {
+>> >>                     Name (BUF0, ResourceTemplate ()
+>> >>                     {
+>> >>                         IO (Decode16,
+>> >>                             0x2000,            // Range Minimum
+>> >>                             0x2000,            // Range Maximum
+>> >>                             0x01,              // Alignment
+>> >>                             0xC,               // Length
+>> >>                         )
+>> >>                         IO (Decode16,
+>> >>                             0x20C0,            // Range Minimum
+>> >>                             0x20C0,            // Range Maximum
+>> >>                             0x01,              // Alignment
+>> >>                             0x8,               // Length
+>> >>                         )
+>> >>                     })
+>> >>                     Return (BUF0)
+>> >>                 }
+>> >>             }
+>> >>
+>> >> It booted just fine! (comment welcome on whether or not this looks
+>> >> like the correct fix)
+>> >>
+>> >> Unfortunately even if I get the vendor to release a new BIOS with the
+>> >> DSDT modifications, rolling out BIOS updates to thousands of systems
+>> >> in the field will be nearly impossible. When we roll out a new kernel
+>> >> to the production systems we'll need it to work with the existing
+>> >> BIOS.
+>> >>
+>> >> I've been searching around the linux kernel for a way to apply a quirk
+>> >> specific to this board.
+>> >> I've found I can do something like the following and match the Poulsbo
+>> >> Host bridge and that it'll fix the problem but I don't see a decent
+>> >> way of restricting it to this board.
+>> >>
+>> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> >> index 85f247e..1f16dbf 100644
+>> >> --- a/drivers/pci/quirks.c
+>> >> +++ b/drivers/pci/quirks.c
+>> >> @@ -413,6 +413,17 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+>> >> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,
+>> >> PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+>> >>
+>> >> /*
+>> >> + * Versa Logic Tiger
+>> >> + */
+>> >> +static void quirk_versa_logic_tiger(struct pci_dev *dev)
+>> >> +{
+>> >> +       dev_info(&dev->dev, "Versalogic Tiger, reserving I/O ports\n");
+>> >> +       request_region(0x2000, 0x0C, "Versalogic Tiger");
+>> >> +       request_region(0x20C0, 0x08, "Versalogic Tiger");
+>> >> +}
+>> >> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x8100, quirk_versa_logic_tiger);
+>> >> +
+>> >> +/*
+>> >>
+>> >> Any suggestions on what could be done to get a fix for this board
+>> >> mainlined into the kernel? Should I give up hope and just apply a cute
+>> >> embedded non-sense hack?
+>> >
+>> > I think your DSDT tweak is on the right track.  We have some similar
+>> > things in drivers/pnp/quirks.c.  Possibly a new region could be added
+>> > to an existing PNP0C02 device, maybe via dmi_check_system() to limit
+>> > it to this platform.
+>> >
+>> > But I notice that board claims Windows compatibility, so I wonder if
+>> > there's a smarter way.  I doubt that Windows would have a quirk for
+>> > this specific board, so we should be able to make Linux work without a
+>> > quirk, too.
+>>
+>> Maybe it works by accident, linux worked too until 0x2000 started
+>> getting used for the I/O window. Though I'm not sure why it changed
+>> just by looking at the commit.
+>>
+>
+> The commit change the initialization ordering, especially if the ACPI processor
+> driver is modular in your kernel.  Before it would register the processors on
+> the module load and after the commit in question is registers them before
+> enumerating the PCI bus.
+>
+>> > Complete dmesg logs from pre- and post-ac212b6980d8 might have a clue
+>> > about what changed.  It looks like your FADT should be enough to
+>> > reserve those regions via acpi_reserve_resources().  But maybe there's
+>> > something wrong there, or maybe we incorrectly use that for PCI space.
+>> > Does  your post-ac212b6980d8 /proc/ioports show those regions?
+>> I've attached the the last good and first bad dmesg logs.
+>> acpi_reserve_resources() doesn't do any good (at least in 4.1rc2)
+>> because it's called after pcieport has already enabled the device and
+>> put the i/o window into use.
+>> I wasn't able to get ac212b6980d8 to boot without making DSDT or
+>> quirks.c changes but I was able to get 4.1rc2 to boot by disabling
+>> PCIEPORTBUS which keeps 0000:00:1c.0 from being enabled. I've attached
+>> the ioports information. It looks like ACPI PM1a_EVT_BLK, ACPI
+>> PM1a_CNT_BLK and ACPI PM_TMR show up at 2000-2003, 2004-2005 and
+>> 2008-200b respectively but instead of conflicting with the PCI-bridge
+>> window they show up underneath it.
+>>
+>> I think the key here is that the region needs to be requested before
+>> bridge window is assigned.
+>
+> That's correct, so things don't happen in the right order now.
+>
+> Well, acpi_reserve_resources() is a device_initcall(), so its ordering with
+> respect to other things is somewhat random.
+>
+> Does the patch below make any difference by any chance?
+>
 
-This is excellent simplification!  Applied to pci/aspm for v4.2, thanks!
+Yes, with this patch it boots with no problems.
 
+>
 > ---
->  drivers/pci/pcie/aspm.c |   19 ++++---------------
->  1 files changed, 4 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 8830740..16a1ffb 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -675,10 +675,7 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev)
+>  drivers/acpi/osl.c |    6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> Index: linux-pm/drivers/acpi/osl.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/osl.c
+> +++ linux-pm/drivers/acpi/osl.c
+> @@ -182,7 +182,7 @@ static void __init acpi_request_region (
+>                 request_mem_region(addr, length, desc);
+>  }
+>
+> -static int __init acpi_reserve_resources(void)
+> +static void __init acpi_reserve_resources(void)
 >  {
->  	struct pcie_link_state *link = pdev->link_state;
->  
-> -	if (aspm_disabled || !pci_is_pcie(pdev) || !link)
-> -		return;
-> -	if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> -	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM))
-> +	if (aspm_disabled || !link)
->  		return;
->  	/*
->  	 * Devices changed PM state, we should recheck if latency
-> @@ -696,16 +693,12 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
->  {
->  	struct pcie_link_state *link = pdev->link_state;
->  
-> -	if (aspm_disabled || !pci_is_pcie(pdev) || !link)
-> +	if (aspm_disabled || !link)
->  		return;
->  
->  	if (aspm_policy != POLICY_POWERSAVE)
->  		return;
->  
-> -	if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> -	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM))
-> -		return;
+>         acpi_request_region(&acpi_gbl_FADT.xpm1a_event_block, acpi_gbl_FADT.pm1_event_length,
+>                 "ACPI PM1a_EVT_BLK");
+> @@ -211,10 +211,7 @@ static int __init acpi_reserve_resources
+>         if (!(acpi_gbl_FADT.gpe1_block_length & 0x1))
+>                 acpi_request_region(&acpi_gbl_FADT.xgpe1_block,
+>                                acpi_gbl_FADT.gpe1_block_length, "ACPI GPE1_BLK");
 > -
->  	down_read(&pci_bus_sem);
->  	mutex_lock(&aspm_lock);
->  	pcie_config_aspm_path(link);
-> @@ -906,9 +899,7 @@ void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
+> -       return 0;
+>  }
+> -device_initcall(acpi_reserve_resources);
+>
+>  void acpi_os_printf(const char *fmt, ...)
 >  {
->  	struct pcie_link_state *link_state = pdev->link_state;
->  
-> -	if (!pci_is_pcie(pdev) ||
-> -	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
-> -	     pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM) || !link_state)
-> +	if (!link_state)
->  		return;
->  
->  	if (link_state->aspm_support)
-> @@ -923,9 +914,7 @@ void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
+> @@ -1845,6 +1842,7 @@ acpi_status __init acpi_os_initialize(vo
+>
+>  acpi_status __init acpi_os_initialize1(void)
 >  {
->  	struct pcie_link_state *link_state = pdev->link_state;
->  
-> -	if (!pci_is_pcie(pdev) ||
-> -	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
-> -	     pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM) || !link_state)
-> +	if (!link_state)
->  		return;
->  
->  	if (link_state->aspm_support)
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +       acpi_reserve_resources();
+>         kacpid_wq = alloc_workqueue("kacpid", 0, 1);
+>         kacpi_notify_wq = alloc_workqueue("kacpi_notify", 0, 1);
+>         kacpi_hotplug_wq = alloc_ordered_workqueue("kacpi_hotplug", 0);
+>
