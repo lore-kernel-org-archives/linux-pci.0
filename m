@@ -1,58 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:35828 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459AbbETOwI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 10:52:08 -0400
-Received: by igbyr2 with SMTP id yr2so104514004igb.0
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 07:52:07 -0700 (PDT)
-Date: Wed, 20 May 2015 09:52:04 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: rjui@broadcom.com, arnd@arndb.de, linux-pci@vger.kernel.org,
-	sbranden@broadcom.com, linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, zajec5@gmail.com
-Subject: Re: [PATCH 0/2] PCI: iproc: add bcma PCIe 2.0 controller
-Message-ID: <20150520145204.GA30184@google.com>
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:52471 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbbEGBui (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 21:50:38 -0400
+Message-ID: <554AC48A.2030209@huawei.com>
+Date: Thu, 7 May 2015 09:48:58 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, <wdavis@nvidia.com>
+CC: <joro@8bytes.org>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <tripperda@nvidia.com>,
+	<jhubbard@nvidia.com>, <jglisse@redhat.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com> <20150506221818.GH24643@google.com>
+In-Reply-To: <20150506221818.GH24643@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 12, 2015 at 11:22:59PM +0200, Hauke Mehrtens wrote:
-> After Ray submitted the PCIe controller for the iProc devices using 
-> pure device tree this adds support for the devices using bcma to scan 
-> the bus. This should replaces the driver I initially send for inclusion.
+On 2015/5/7 6:18, Bjorn Helgaas wrote:
+> [+cc Yijing, Dave J, Dave M, Alex]
 > 
-> @Ray The driver found in the Broadcom SDK does some more stuff:
-> * setting up some DMA memory areas
-> * chaining MPS and MRRS to 512
-> * PHY changes:
->  * "improving" the PCIe jitter 
->  * some special initializations for the 3rd PCIe port
+> On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
+>> From: Will Davis <wdavis@nvidia.com>
+>>
+>> Hi,
+>>
+>> This patch series adds DMA APIs to map and unmap a struct resource to and from
+>> a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
+>> of these interfaces.
+>>
+>> This solves a long-standing problem with the existing DMA-remapping interfaces,
+>> which require that a struct page be given for the region to be mapped into a
+>> device's IOVA domain. This requirement cannot support peer device BAR ranges,
+>> for which no struct pages exist.
+>>
+>> The underlying implementations of map_page and map_sg convert the struct page
+>> into its physical address anyway, so we just need a way to route the physical
+>> address of the BAR region to these implementations. The new interfaces do this
+>> by taking the struct resource describing a device's BAR region, from which the
+>> physical address is derived.
+>>
+>> The Intel and nommu versions have been verified on a dual Intel Xeon E5405
+>> workstation. I'm in the process of obtaining hardware to test the AMD version
+>> as well. Please review.
 > 
-> For me it works without these additions, but I haven't tested for 
-> performance or stability or 3rd port. Can you check if this is needed 
-> at all for the devices found on the market?
+> I think we currently assume there's no peer-to-peer traffic.
 > 
-> Hauke Mehrtens (2):
->   PCI: iproc: make of_irq_parse_and_map_pci() configurable
->   PCI: iproc: add bcma pcie driver
+> I don't know whether changing that will break anything, but I'm concerned
+> about these:
 > 
->  drivers/pci/host/Kconfig               |  11 ++++
->  drivers/pci/host/Makefile              |   1 +
->  drivers/pci/host/pcie-iproc-bcma.c     | 112 +++++++++++++++++++++++++++++++++
->  drivers/pci/host/pcie-iproc-platform.c |   2 +
->  drivers/pci/host/pcie-iproc.c          |   2 +-
->  drivers/pci/host/pcie-iproc.h          |   1 +
->  6 files changed, 128 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/pci/host/pcie-iproc-bcma.c
+>   - PCIe MPS configuration (see pcie_bus_configure_settings()).
 
-Applied to pci/host-iproc for v4.2 with acks from Ray and Rafał, thanks!
+I think it should be ok for PCIe MPS configuration, PCIE_BUS_PEER2PEER force every
+device's MPS to 128B, what its concern is the TLP payload size. In this series, it
+seems to only map a iova for device bar region.
 
-I corrected some typos, the most important being MODULE_LICENSE, where I
-changed "GPLv2" to "GPL v2".  See license_is_gpl_compatible() and
-eed6542dd53f ("PCI: generic: Fix GPL v2 license string typo").
 
-Bjorn
+> 
+>   - PCIe ACS, e.g., pci_acs_enabled().  My guess is that this one is OK,
+>     but Alex would know better.
+> 
+>   - dma_addr_t.  Currently dma_addr_t is big enough to hold any address
+>     returned from the DMA API.  That's not necessarily big enough to hold a
+>     PCI bus address, e.g., a raw BAR value.
+> 
+>> Will Davis (6):
+>>   dma-debug: add checking for map/unmap_resource
+>>   DMA-API: Introduce dma_(un)map_resource
+>>   dma-mapping: pci: add pci_(un)map_resource
+>>   iommu/amd: Implement (un)map_resource
+>>   iommu/vt-d: implement (un)map_resource
+>>   x86: add pci-nommu implementation of map_resource
+>>
+>>  arch/x86/kernel/pci-nommu.c              | 17 +++++++
+>>  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
+>>  drivers/iommu/intel-iommu.c              | 18 ++++++++
+>>  include/asm-generic/dma-mapping-broken.h |  9 ++++
+>>  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
+>>  include/asm-generic/pci-dma-compat.h     | 14 ++++++
+>>  include/linux/dma-debug.h                | 20 +++++++++
+>>  include/linux/dma-mapping.h              |  7 +++
+>>  lib/dma-debug.c                          | 48 ++++++++++++++++++++
+>>  9 files changed, 230 insertions(+), 13 deletions(-)
+>>
+>> -- 
+>> 2.3.7
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
