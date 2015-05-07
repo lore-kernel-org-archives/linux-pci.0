@@ -1,80 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 20 May 2015 12:16:46 +0200
-From: Hans-Christian Egtvedt <egtvedt@samfundet.no>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Steven Miao <realmz6@gmail.com>,
-	Mark Salter <msalter@redhat.com>,
-	Aurelien Jacquiot <a-jacquiot@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>, x86@kernel.org,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Andreas Larsson <andreas@gaisler.com>,
-	Joe Perches <joe@perches.com>,
-	Christoph Lameter <cl@linux.com>,
-	Brian Gerst <brgerst@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, linux-alpha@vger.kernel.org,
-	adi-buildroot-devel@lists.sourceforge.net,
-	linux-c6x-dev@linux-c6x.org, sparclinux@vger.kernel.org,
-	lguest@lists.ozlabs.org
-Subject: Re: [RFC v1 20/25] genirq: Kill the first parameter 'irq' of
- irq_flow_handler_t
-Message-ID: <20150520101646.GB12898@samfundet.no>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
- <1432116013-25902-21-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 7 May 2015 21:56:00 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150507135600.GB4559@localhost.localdomain>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <20150504110551.GD15736@8bytes.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432116013-25902-21-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20150504110551.GD15736@8bytes.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Around Wed 20 May 2015 18:00:08 +0800 or thereabout, Jiang Liu wrote:
-> Now most IRQ flow handlers make no use of the first parameter 'irq'.
-> And for those who do make use of 'irq', we could easily get the irq
-> number through irq_desc->irq_data->irq. So kill the first parameter
-> 'irq' of irq_flow_handler_t.
+On 05/04/15 at 01:05pm, Joerg Roedel wrote:
+> On Fri, Apr 03, 2015 at 04:40:31PM +0800, Dave Young wrote:
+> > Have not read all the patches, but I have a question, not sure this
+> > has been answered before. Old memory is not reliable, what if the old
+> > memory get corrupted before panic? Is it safe to continue using it in
+> > 2nd kernel, I worry that it will cause problems.
 > 
-> To ease review, I have split the changes into several parts, though
-> they should be merge as one to support bisecting.
+> Yes, the old memory could be corrupted, and there are more failure cases
+> left which we have no way of handling yet (if iommu data structures are
+> in kdump backup areas).
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/alpha/kernel/irq.c             |    2 +-
->  arch/avr32/mach-at32ap/extint.c     |    2 +-
->  arch/avr32/mach-at32ap/pio.c        |    2 +-
+> The question is what to do if we find some of the old data structures
+> corrupted, hand how far should the tests go. Should we also check the
+> page-tables, for example? I think if some of the data structures for a
+> device are corrupted it probably already failed in the old kernel and
+> things won't get worse in the new one.
 
-For the AVR32 related bits
+Joreg, I can not find the last reply from you, so just reply here about
+my worries here.
 
-Acked-by: Hans-Christian Egtvedt <egtvedt@samfundet.no>
+I said that the patchset will cause more problems, let me explain about
+it more here:
 
->  arch/blackfin/kernel/ipipe.c        |    4 ++--
->  arch/c6x/platforms/megamod-pic.c    |    3 ++-
->  arch/sparc/kernel/leon_kernel.c     |    2 +-
->  arch/sparc/kernel/leon_pci_grpci1.c |    2 +-
->  arch/sparc/kernel/leon_pci_grpci2.c |    2 +-
->  arch/tile/kernel/pci_gx.c           |    4 ++--
->  arch/unicore32/kernel/irq.c         |    3 ++-
->  arch/x86/kernel/irq_64.c            |    2 +-
->  arch/x86/lguest/boot.c              |    2 +-
->  12 files changed, 16 insertions(+), 14 deletions(-)
+Suppose page table was corrupted, ie. original mapping iova1 -> page 1
+it was changed to iova1 -> page 2 accidently while crash happening,
+thus future dma will read/write page 2 instead page 1, right?
 
-<snipp diff>
+so the behavior changes like:
+originally, dmar faults happen, but kdump kernel may boot ok with these
+faults, and vmcore can be saved.
+with the patchset, dmar faults does not happen, dma translation will be
+handled, but dma write could corrupt unrelevant memory.
 
--- 
-HcE
+This might be corner case, but who knows because kernel paniced we can
+not assume old page table is right.
+
+But seems you all think it is safe, but let us understand each other
+first then go to a solution.
+
+Today we talked with Zhenhua about the problem I think both of us are clear
+about the problems. Just he think it can be left as future work.
+
+Thanks
+Dave
