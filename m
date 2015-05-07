@@ -1,79 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59442 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932525AbbESND6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 09:03:58 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jarod Wilson <jarod@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCIe / hotplug: Drop pointless ACPI-based "slot detection" check
-Date: Tue, 19 May 2015 15:29:17 +0200
-Message-ID: <14352741.Nj7ZOtZbsW@vostro.rjw.lan>
-In-Reply-To: <555B2F98.4050906@redhat.com>
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <6257210.QKy3yrBgEf@vostro.rjw.lan> <555B2F98.4050906@redhat.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38579 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbbEGPJx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 11:09:53 -0400
+Received: by igbhj9 with SMTP id hj9so48084919igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 08:09:53 -0700 (PDT)
+Date: Thu, 7 May 2015 10:09:50 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: wdavis@nvidia.com
+Cc: joro@8bytes.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, tripperda@nvidia.com,
+	jhubbard@nvidia.com, jglisse@redhat.com
+Subject: Re: [PATCH 2/6] DMA-API: Introduce dma_(un)map_resource
+Message-ID: <20150507150950.GK24643@google.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+ <1430505138-2877-3-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430505138-2877-3-git-send-email-wdavis@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, May 19, 2015 08:42:00 AM Jarod Wilson wrote:
-> On 5/19/2015 7:43 AM, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Jarod Wilson reports that the expresscard hotplug setup doesn't work
-> > on HP ZBook G2.  The problem turns out to be the ACPI-based "slot
-> > detection" code called from pciehp_probe() which tries to use some
-> > questionable heuristics based on what ACPI objects are present for
-> > the PCIe port device at hand to figure out whether or not to register
-> > a hotplug slot for that port.
-> >
-> > That code is used if there is at least one PCIe port having an ACPI
-> > device configuration object related to hotplug (such as _EJ0 or _RMV)
-> > and the Thunderbolt port on the affected machine has _RMV.  Of course,
-> > Thunderbolt and PCIe native hotplug need not be mutually exclusive
-> > (as they aren't on the machine in question), so that rule is simply
-> > incorrect.
-> >
-> > Moreover, the ACPI-based "slot detection" check does not add any
-> > value if pciehp_probe() is called at all and the service type of the
-> > device object it has been called for is PCIE_PORT_SERVICE_HP, because
-> > PCIe hotplug services are only registered if the _OSC handshake in
-> > acpi_pci_root_add() allows the kernel to control the PCIe native
-> > hotplug feature.  No more checks need to be carried out to decide
-> > whether or not to register a native PCIe hotlug slot in that case.
-> >
-> > For the above reasons, make pciehp_probe() check if it has been
-> > called for the right service type and drop the pointless ACPI-based
-> > "slot detection" check from it.  Also remove the entire code whose
-> > only user is that check (the entire pciehp_acpi.c file goes away
-> > as a result) and drop function headers related to it from the
-> > internal PCIeHP header file.
-> >
-> > Link: http://marc.info/?t=143163219300002&r=1&w=2
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=98581
-> > Reported-by: Jarod Wilson <jarod@redhat.com>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >
-> > Bjorn, that's -stable material I think.  It should be applicable at least
-> > since commit 5ba113f7c4fb (PCI: acpiphp: Handle PCIe ports without native
-> > hotplug capability) that was shipped in 3.10.
-> >
-> > Thanks!
+On Fri, May 01, 2015 at 01:32:14PM -0500, wdavis@nvidia.com wrote:
+> From: Will Davis <wdavis@nvidia.com>
 > 
-> I believe you also want to rip the pciehp_acpi.o hunk out of 
-> drivers/pci/hotplug/Makefile,
+> Add functions to DMA-map and -unmap a resource for a given device. This
+> will allow devices to DMA-map a peer device's resource (for example,
+> another device's BAR region on PCI) to enable peer-to-peer transactions.
+> 
+> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+> ---
+>  include/asm-generic/dma-mapping-broken.h |  9 +++++++++
+>  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++++++++++++++++++++
+>  include/linux/dma-mapping.h              |  7 +++++++
 
-Right, just sent an updated patch.
+You should document these new interfaces in Documentation/DMA-API-*
 
-> but I made more or less the exact same 
-> changes here, and am about to give them a spin on the ZBook 17.
-
-Cool, thanks!
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
