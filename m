@@ -1,106 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:43923 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbbE1LgY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 07:36:24 -0400
-Message-ID: <5566FD5C.4050708@hisilicon.com>
-Date: Thu, 28 May 2015 19:34:52 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:35393 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233AbbEGPTJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 11:19:09 -0400
+Received: by ieczm2 with SMTP id zm2so41815335iec.2
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 08:19:08 -0700 (PDT)
+Date: Thu, 7 May 2015 10:19:05 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: wdavis@nvidia.com
+Cc: joro@8bytes.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, tripperda@nvidia.com,
+	jhubbard@nvidia.com, jglisse@redhat.com,
+	"David S. Miller" <davem@davemloft.net>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 3/6] dma-mapping: pci: add pci_(un)map_resource
+Message-ID: <20150507151905.GL24643@google.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+ <1430505138-2877-4-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>, <zhudacai@hisilicon.com>,
-	<devicetree@vger.kernel.org>,
-	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
-	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	<qiuzhenfa@hisilicon.com>, <linux-pci@vger.kernel.org>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Liviu Dudau'" <liviu.dudau@arm.com>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	"'Liguozhu'" <liguozhu@hisilicon.com>,
-	"'Lucas Stach'" <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-References: <000001d096a9$27bf43f0$773dcbd0$@com> <5565CD0B.6020206@hisilicon.com> <2378629.Ocol8HRDqD@wuerfel> <2095085.CuXXeGT0Wg@wuerfel>
-In-Reply-To: <2095085.CuXXeGT0Wg@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430505138-2877-4-git-send-email-wdavis@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/27 23:43, Arnd Bergmann wrote:
-> On Wednesday 27 May 2015 17:31:46 Arnd Bergmann wrote:
->> Yes, that works. However there are two problems with the approach:
->>
->> - we have to change all PCI host drivers on ARM to do this in order to remove
->>   the ARM-specific pcibios_msi_controller() function
->> - it's possible that there are dw_pcie implementations that do not include
->>   an MSI controller, so that pointer would be NULL, which leads to the
->>   core code to still call the ARM-specific pcibios_msi_controller() function
->>   unless we remove it.
+[+cc Dave for sparc64, Yinghai]
+
+On Fri, May 01, 2015 at 01:32:15PM -0500, wdavis@nvidia.com wrote:
+> From: Will Davis <wdavis@nvidia.com>
 > 
-> I wonder if this simple patch would be sufficient to kill off
-> pcibios_msi_controller().
+> Simply route these through to the new dma_(un)map_resource APIs.
 > 
-> Can one of you try it?
+> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+> ---
+>  include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
 > 
-> 	Arnd
-> 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index fcbbbb1b9e95..7afb6d253162 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -18,15 +18,6 @@
+> diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+> index c110843..ac4a4ad 100644
+> --- a/include/asm-generic/pci-dma-compat.h
+> +++ b/include/asm-generic/pci-dma-compat.h
+> @@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+>  	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+>  }
 >  
->  static int debug_pci;
->  
-> -#ifdef CONFIG_PCI_MSI
-> -struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> -{
-> -	struct pci_sys_data *sysdata = dev->bus->sysdata;
-> -
-> -	return sysdata->msi_ctrl;
-> -}
-> -#endif
-> -
->  /*
->   * We can't use pci_get_device() here since we are
->   * called from interrupt context.
-> @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		if (!sys)
->  			panic("PCI: unable to allocate sys data!");
->  
-> -#ifdef CONFIG_PCI_MSI
-> -		sys->msi_ctrl = hw->msi_ctrl;
-> -#endif
->  		sys->busnr   = busnr;
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
-> @@ -493,6 +481,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  				panic("PCI: unable to scan bus!");
->  
->  			busnr = sys->bus->busn_res.end + 1;
-> +#ifdef CONFIG_PCI_MSI
-> +			bus->msi = hw->msi_ctrl;
-> +#endif
->  
->  			list_add(&sys->node, head);
->  		} else {
-> 
+> +static inline dma_addr_t
+> +pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
+> +		 unsigned long offset, size_t size, int direction)
+> +{
+> +	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
+> +}
 
-Hi Arnd,
+On sparc64, PCI bus addresses, e.g., raw BAR values, can be 64 bits wide,
+but dma_addr_t is only 32 bits [1].  So dma_addr_t is a bit of a problem
+here.  It's likely that we will add a pci_bus_addr_t, but that hasn't
+happened yet [2].
 
-I think it does not work in above way(with adaptation as Fabrice mentioned).
-As the msi controller is passed to secondary bus one by one during the process of enumeration.
-Here we just set msi controller for root bus.
+We do have existing problems already, e.g,. pci_bus_address() returns a
+dma_addr_t, so it has the same problem.  So I guess this is just a heads-up
+that this needs to be fixed eventually.
 
-Best Regards,
-Zhou
+Bjorn
 
-> 
-> .
-> 
-
-
+[1] http://lkml.kernel.org/r/20150327.145016.86183910134380870.davem@davemloft.net
+[2] http://lkml.kernel.org/r/1427857069-6789-2-git-send-email-yinghai@kernel.org
