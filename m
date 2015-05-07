@@ -1,179 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [209.85.192.174] ([209.85.192.174]:33893 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753171AbbEZMxd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 08:53:33 -0400
-Received: by pdbki1 with SMTP id ki1so48619656pdb.1
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 05:50:39 -0700 (PDT)
-From: Hanjun Guo <hanjun.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH 07/11] x86, pci: mmconfig_{32,64}.c code refactoring - remove code duplication.
-Date: Tue, 26 May 2015 20:49:20 +0800
-Message-Id: <1432644564-24746-8-git-send-email-hanjun.guo@linaro.org>
-In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Received: from out03.mta.xmission.com ([166.70.13.233]:52395 "EHLO
+	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbbEGA6T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 20:58:19 -0400
+From: ebiederm@xmission.com (Eric W. Biederman)
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Michael S. Tsirkin" <mst@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>
+References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20150426084739-mutt-send-email-mst@kernel.org>
+	<20150506210327.GG24643@google.com>
+Date: Wed, 06 May 2015 19:53:48 -0500
+In-Reply-To: <20150506210327.GG24643@google.com> (Bjorn Helgaas's message of
+	"Wed, 6 May 2015 16:03:27 -0500")
+Message-ID: <871titfbs3.fsf@x220.int.ebiederm.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Bjorn Helgaas <bhelgaas@google.com> writes:
 
-mmconfig_64.c version is going to be default implementation for arch
-agnostic low-level direct PCI config space accessors for ECAM dirver.
-However, now it initialize raw_pci_ext_ops pointer which is x86 specific
-code only. Moreover, mmconfig_32.c is doing the same thing at the same time.
+> On Sun, Apr 26, 2015 at 08:50:06AM +0200, Michael S. Tsirkin wrote:
+>> On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
+>> > Hi Michael,
+>> > 
+>> > I put your patches on my pci/msi branch and I hope to merge them for v4.1.
+>> > I didn't apply the acks from Fam and Eric because I made changes to those
+>> > patches that weren't completely trivial.  I think the end result is
+>> > equivalent, though.  The diff attached to this cover letter is the
+>> > difference between your v5 series and this v6 series.
+>> > 
+>> > As far as I'm concerned, this is ready to go except that I would like a
+>> > little more info about the virtio kernel hang to include in the changelog
+>> > for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
+>> 
+>> 
+>> Hi Bjorn,
+>> do you have eveything you need to merge this?
+>
+> No.  I made the minor changelog edits you suggested and the result is on
+> my pci/msi-v7 branch.  But I still have these open issues:
+>
+>   - The last thing I heard from Eric was that "not disabling MSI/MSI-X at
+>     shutdown is the wrong fix, and someone needs to fix a buggy driver."
+>     I want to hear Eric say "OK, we need to leave MSI/MSI-X enabled at
+>     shutdown for this case."
 
-Move it to mmconfig_shared.c so it becomes common for both and
-mmconfig_64.c turns out to be purely arch agnostic.
+So far this just sounds like a device that needs a shutdown method.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/x86/pci/mmconfig-shared.c | 10 ++++++++--
- arch/x86/pci/mmconfig_32.c     | 10 ++--------
- arch/x86/pci/mmconfig_64.c     | 11 ++---------
- include/linux/ecam.h           |  5 +++++
- 4 files changed, 17 insertions(+), 19 deletions(-)
+>   - One changelog says "Stop disabling MSIs at shutdown to avoid
+>     conflicting with drivers."  But I don't know what the conflict is.
+>
+>   - The bugzilla has no dmesg log or detailed analysis.  Fam said the
+>     scenario I came up with
+>     (http://lkml.kernel.org/r/20150416194245.GB20701@google.com)
+>     was fairly close, but it took me a lot of work to derive that.  Fixing
+>     any errors in it and putting it in the bugzilla would be a big step.
+>     The bugzilla should have the raw data and the analysis, so someone else
+>     can validate the analysis and conclude that this patch is a reasonable
+>     fix for it.  That's currently impossible because the bugzilla really
+>     only contains the fix as a fait accompli.
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 6fa3080..8938db3 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -29,6 +29,11 @@
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- 
-+const struct pci_raw_ops pci_mmcfg = {
-+	.read =		pci_mmcfg_read,
-+	.write =	pci_mmcfg_write,
-+};
-+
- static u32
- pci_mmconfig_amd_read(int len, void __iomem *addr)
- {
-@@ -555,9 +560,10 @@ static void __init __pci_mmcfg_init(int early)
- 		}
- 	}
- 
--	if (pci_mmcfg_arch_init())
-+	if (pci_mmcfg_arch_init()) {
-+		raw_pci_ext_ops = &pci_mmcfg;
- 		pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
--	else {
-+	} else {
- 		free_all_mmcfg();
- 		pci_mmcfg_arch_init_failed = true;
- 	}
-diff --git a/arch/x86/pci/mmconfig_32.c b/arch/x86/pci/mmconfig_32.c
-index 5cf6291..7a050cb 100644
---- a/arch/x86/pci/mmconfig_32.c
-+++ b/arch/x86/pci/mmconfig_32.c
-@@ -50,7 +50,7 @@ static void pci_exp_set_dev_base(unsigned int base, int bus, int devfn)
- 	}
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	unsigned long flags;
-@@ -79,7 +79,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	unsigned long flags;
-@@ -106,15 +106,9 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- int __init pci_mmcfg_arch_init(void)
- {
- 	printk(KERN_INFO "PCI: Using MMCONFIG for extended config space\n");
--	raw_pci_ext_ops = &pci_mmcfg;
- 	return 1;
- }
- 
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index b62ff18..fd857ea 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -25,7 +25,7 @@ static char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned i
- 	return NULL;
- }
- 
--static int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
- 			  unsigned int devfn, int reg, int len, u32 *value)
- {
- 	char __iomem *addr;
-@@ -49,7 +49,7 @@ err:		*value = -1;
- 	return 0;
- }
- 
--static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 			   unsigned int devfn, int reg, int len, u32 value)
- {
- 	char __iomem *addr;
-@@ -71,11 +71,6 @@ static int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 	return 0;
- }
- 
--const struct pci_raw_ops pci_mmcfg = {
--	.read =		pci_mmcfg_read,
--	.write =	pci_mmcfg_write,
--};
--
- static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
- {
- 	void __iomem *addr;
-@@ -101,8 +96,6 @@ int __init pci_mmcfg_arch_init(void)
- 			return 0;
- 		}
- 
--	raw_pci_ext_ops = &pci_mmcfg;
--
- 	return 1;
- }
- 
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index 2387df5..fba5d6b 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -47,5 +47,10 @@ extern struct list_head pci_mmcfg_list;
- 
- #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
- 
-+int pci_mmcfg_read(unsigned int seg, unsigned int bus,
-+		   unsigned int devfn, int reg, int len, u32 *value);
-+int pci_mmcfg_write(unsigned int seg, unsigned int bus,
-+		    unsigned int devfn, int reg, int len, u32 value);
-+
- #endif  /* __KERNEL__ */
- #endif  /* __ECAM_H */
--- 
-1.9.1
+What I saw in the bugzilla was:
+
+An interrupt was stuck on, and being reasserted as quickly as we could
+call iret for that interrupt.
+
+We did not disable that interrupt because irq debugging was explicitly
+disabled on the kernel command line.
+
+The irq was asserted because the the device did not have a shutdown
+method to stop the device doing things.
+
+There is an argument that disabling bus mastering should have disabled
+whatever the interrupting condition was (and thus there may also be a
+bug in the qemu device emulation).
+
+So I read this as the driver and maybe the "hardware" is buggy not that
+the linux pci layer is buggy.
+
+Eric
 
