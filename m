@@ -1,96 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5564AB68.6080502@linux.intel.com>
-Date: Wed, 27 May 2015 01:20:40 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:35694 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333AbbEGRQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 13:16:51 -0400
+Received: by qcbgu10 with SMTP id gu10so24542621qcb.2
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 10:16:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
+In-Reply-To: <ec4d9f89290441a79e0caf986383c5df@HQMAIL106.nvidia.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+ <20150506221818.GH24643@google.com> <554AC48A.2030209@huawei.com>
+ <CAErSpo6xp5kM57PX9RkXKr5MM4BQM7-uXPtvCBL8=9Br8FYLdA@mail.gmail.com> <ec4d9f89290441a79e0caf986383c5df@HQMAIL106.nvidia.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 7 May 2015 12:16:30 -0500
+Message-ID: <CAErSpo7dv=q+v+zEvT8Fbt26_Xq+AVZQBjJOZX9y5o+A5kFhTA@mail.gmail.com>
+Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+To: William Davis <wdavis@nvidia.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
- ACPI
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org> <20150526165844.GD2175@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20150526165844.GD2175@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Terence Ripperda <TRipperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/27 0:58, Liviu Dudau wrote:
-> On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
->> ARM64 ACPI based PCI host bridge init needs a arch dependent
->> struct pci_controller to accommodate common PCI host bridge
->> code which is introduced later, or it will lead to compile
->> errors on ARM64.
-> 
-> Hi Hanjun,
-> 
-> Two questions: why don't you introduce this patch next to the
-> one that is going to make use of it (or even merge it there)?
-> Second, why is the whole struct pci_controller not surrounded
-> by #ifdef CONFIG_ACPI as you are implying that this is needed
-> only for ACPI?
-> 
-> Btw, looking through the whole series I'm not (yet) convinced
-> that this is needed at all.
-Hi Liviu,
-	This structure is required by the requested patch set
-at http://patchwork.ozlabs.org/patch/472249/, which consolidates
-the common code to support PCI host bridge into ACPI core.
-Thanks!
-Gerry
+On Thu, May 7, 2015 at 11:23 AM, William Davis <wdavis@nvidia.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Thursday, May 7, 2015 8:13 AM
+>> To: Yijing Wang
+>> Cc: William Davis; Joerg Roedel; open list:INTEL IOMMU (VT-d); linux-
+>> pci@vger.kernel.org; Terence Ripperda; John Hubbard; Jerome Glisse; Dave
+>> Jiang; David S. Miller; Alex Williamson
+>> Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+>>
+>> On Wed, May 6, 2015 at 8:48 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> > On 2015/5/7 6:18, Bjorn Helgaas wrote:
+>> >> [+cc Yijing, Dave J, Dave M, Alex]
+>> >>
+>> >> On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
+>> >>> From: Will Davis <wdavis@nvidia.com>
+>> >>>
+>> >>> Hi,
+>> >>>
+>> >>> This patch series adds DMA APIs to map and unmap a struct resource
+>> >>> to and from a PCI device's IOVA domain, and implements the AMD,
+>> >>> Intel, and nommu versions of these interfaces.
+>> >>>
+>> >>> This solves a long-standing problem with the existing DMA-remapping
+>> >>> interfaces, which require that a struct page be given for the region
+>> >>> to be mapped into a device's IOVA domain. This requirement cannot
+>> >>> support peer device BAR ranges, for which no struct pages exist.
+>> >>> ...
+>>
+>> >> I think we currently assume there's no peer-to-peer traffic.
+>> >>
+>> >> I don't know whether changing that will break anything, but I'm
+>> >> concerned about these:
+>> >>
+>> >>   - PCIe MPS configuration (see pcie_bus_configure_settings()).
+>> >
+>> > I think it should be ok for PCIe MPS configuration, PCIE_BUS_PEER2PEER
+>> > force every device's MPS to 128B, what its concern is the TLP payload
+>> > size. In this series, it seems to only map a iova for device bar region.
+>>
+>> MPS configuration makes assumptions about whether there will be any peer-
+>> to-peer traffic.  If there will be none, MPS can be configured more
+>> aggressively.
+>>
+>> I don't think Linux has any way to detect whether a driver is doing peer-
+>> to-peer, and there's no way to prevent a driver from doing it.
+>> We're stuck with requiring the user to specify boot options
+>> ("pci=pcie_bus_safe", "pci=pcie_bus_perf", "pci=pcie_bus_peer2peer",
+>> etc.) that tell the PCI core what the user expects to happen.
+>>
+>> This is a terrible user experience.  The user has no way to tell what
+>> drivers are going to do.  If he specifies the wrong thing, e.g., "assume no
+>> peer-to-peer traffic," and then loads a driver that does peer-to-peer, the
+>> kernel will configure MPS aggressively and when the device does a peer-to-
+>> peer transfer, it may cause a Malformed TLP error.
+>>
+>
+> I agree that this isn't a great user experience, but just want to clarify that this problem is orthogonal to this patch series, correct?
+>
+> Prior to this series, the MPS mismatch is still possible with p2p traffic, but when an IOMMU is enabled p2p traffic will result in DMAR faults. The aim of the series is to allow drivers to fix the latter, not the former.
 
-> 
-> Best regards,
-> Liviu
-> 
->>
->> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Arnd Bergmann <arnd@arndb.de>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Liviu Dudau <Liviu.Dudau@arm.com>
->> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
->> CC: Will Deacon <will.deacon@arm.com>
->> ---
->>  arch/arm64/include/asm/pci.h | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
->> index b008a72..7088495 100644
->> --- a/arch/arm64/include/asm/pci.h
->> +++ b/arch/arm64/include/asm/pci.h
->> @@ -10,6 +10,16 @@
->>  #include <asm-generic/pci-bridge.h>
->>  #include <asm-generic/pci-dma-compat.h>
->>  
->> +struct acpi_device;
->> +
->> +struct pci_controller {
->> +#ifdef CONFIG_ACPI
->> +	struct acpi_device *companion;	/* ACPI companion device */
->> +#endif
->> +	int		segment;	/* PCI domain */
->> +	int		node;		/* NUMA node */
->> +};
->> +
->>  #define PCIBIOS_MIN_IO		0x1000
->>  #define PCIBIOS_MIN_MEM		0
->>  
->> -- 
->> 1.9.1
->>
-> 
+Prior to this series, there wasn't any infrastructure for drivers to
+do p2p, so it was mostly reasonable to assume that there *was* no p2p
+traffic.
+
+I think we currently default to doing nothing to MPS.  Prior to this
+series, it might have been reasonable to optimize based on a "no-p2p"
+assumption, e.g., default to pcie_bus_safe or pcie_bus_perf.  After
+this series, I'm not sure what we could do, because p2p will be much
+more likely.
+
+It's just an issue; I don't know what the resolution is.
+
+Bjorn
