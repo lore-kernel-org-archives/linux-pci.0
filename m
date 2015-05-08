@@ -1,155 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:6250 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754617AbbERSie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:34 -0400
-From: <wdavis@nvidia.com>
-To: <joro@8bytes.org>, <bhelgaas@google.com>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
-	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-Date: Mon, 18 May 2015 13:25:01 -0500
-Message-ID: <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:31040 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbbEHHkE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:40:04 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH Part3 v11 3/9] PCI: Remove declaration for pci_get_new_domain_nr()
+Date: Fri, 8 May 2015 15:22:53 +0800
+Message-ID: <1431069779-29346-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+pci_get_new_domain_nr() is only used in drivers/pci/pci.c,
+remove the declaration in include/linux/pci.h.
 
-Add references to both the general API documentation as well as the HOWTO.
-
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- Documentation/DMA-API-HOWTO.txt | 39 +++++++++++++++++++++++++++++++++++++--
- Documentation/DMA-API.txt       | 36 +++++++++++++++++++++++++++++++-----
- 2 files changed, 68 insertions(+), 7 deletions(-)
+ drivers/pci/pci.c   |    4 ++--
+ include/linux/pci.h |    3 ---
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-index 0f7afb2..89bd730 100644
---- a/Documentation/DMA-API-HOWTO.txt
-+++ b/Documentation/DMA-API-HOWTO.txt
-@@ -138,6 +138,10 @@ What about block I/O and networking buffers?  The block I/O and
- networking subsystems make sure that the buffers they use are valid
- for you to DMA from/to.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index acc4b6e..7bf27e8 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4498,14 +4498,14 @@ static void pci_no_domains(void)
+ }
  
-+In some systems, it may also be possible to DMA to and/or from a peer
-+device's MMIO region, as described by a 'struct resource'. This is
-+referred to as a peer-to-peer mapping.
-+
- 			DMA addressing limitations
+ #ifdef CONFIG_PCI_DOMAINS
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static atomic_t __domain_nr = ATOMIC_INIT(-1);
  
- Does your device have any DMA addressing limitations?  For example, is
-@@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
- counterpart, because the bus address space is a shared resource and
- you could render the machine unusable by consuming all bus addresses.
+-int pci_get_new_domain_nr(void)
++static int pci_get_new_domain_nr(void)
+ {
+ 	return atomic_inc_return(&__domain_nr);
+ }
  
-+Peer-to-peer DMA mappings can be obtained using dma_map_resource() to map
-+another device's MMIO region for the given device:
-+
-+	struct resource *peer_mmio_res = &other_dev->resource[0];
-+	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
-+						 offset, size, direction);
-+	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
-+	{
-+		/*
-+		 * If dma_handle == 0, dma_map_resource() is not
-+		 * implemented, and peer-to-peer transactions will not
-+		 * work.
-+		 */
-+		goto map_error_handling;
-+	}
-+
-+	...
-+
-+	dma_unmap_resource(dev, dma_handle, size, direction);
-+
-+Here, "offset" means byte offset within the given resource.
-+
-+You should both check for a 0 return value and call dma_mapping_error(),
-+as dma_map_resource() can either be not implemented or fail and return
-+error as outlined under the dma_map_single() discussion.
-+
-+You should call dma_unmap_resource() when DMA activity is finished, e.g.,
-+from the interrupt which told you that the DMA transfer is done.
-+
- If you need to use the same streaming DMA region multiple times and touch
- the data in between the DMA transfers, the buffer needs to be synced
- properly in order for the CPU and device to see the most up-to-date and
-@@ -765,8 +798,8 @@ failure can be determined by:
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5ff35cb..636c0a9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1314,12 +1314,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+  */
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+-int pci_get_new_domain_nr(void);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #endif /* CONFIG_PCI_DOMAINS */
  
- - checking if dma_alloc_coherent() returns NULL or dma_map_sg returns 0
+ /*
+@@ -1442,7 +1440,6 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
  
--- checking the dma_addr_t returned from dma_map_single() and dma_map_page()
--  by using dma_mapping_error():
-+- checking the dma_addr_t returned from dma_map_single(), dma_map_resource(),
-+  and dma_map_page() by using dma_mapping_error():
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
  
- 	dma_addr_t dma_handle;
- 
-@@ -780,6 +813,8 @@ failure can be determined by:
- 		goto map_error_handling;
- 	}
- 
-+- checking if dma_map_resource() returns 0
-+
- - unmap pages that are already mapped, when mapping error occurs in the middle
-   of a multiple page mapping attempt. These example are applicable to
-   dma_map_page() as well.
-diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-index 5208840..c25c549 100644
---- a/Documentation/DMA-API.txt
-+++ b/Documentation/DMA-API.txt
-@@ -283,14 +283,40 @@ and <size> parameters are provided to do partial page mapping, it is
- recommended that you never use these unless you really know what the
- cache width is.
- 
-+dma_addr_t
-+dma_map_resource(struct device *dev, struct resource *res,
-+		 unsigned long offset, size_t size,
-+		 enum dma_data_direction_direction)
-+
-+API for mapping resources. This API allows a driver to map a peer
-+device's resource for DMA. All the notes and warnings for the other
-+APIs apply here. Also, the success of this API does not validate or
-+guarantee that peer-to-peer transactions between the device and its
-+peer will be functional. They only grant access so that if such
-+transactions are possible, an IOMMU will not prevent them from
-+succeeding.
-+
-+If this API is not provided by the underlying implementation, 0 is
-+returned and the driver must take appropriate action. Otherwise, the
-+DMA address is returned, and that DMA address should be checked by
-+the driver (see dma_mapping_error() below).
-+
-+void
-+dma_unmap_resource(struct device *dev, dma_addr_t dma_address, size_t size,
-+		   enum dma_data_direction direction)
-+
-+Unmaps the resource previously mapped. All the parameters passed in
-+must be identical to those passed in to (and returned by) the mapping
-+API.
-+
- int
- dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
- 
--In some circumstances dma_map_single() and dma_map_page() will fail to create
--a mapping. A driver can check for these errors by testing the returned
--DMA address with dma_mapping_error(). A non-zero return value means the mapping
--could not be created and the driver should take appropriate action (e.g.
--reduce current DMA mapping usage or delay and try again later).
-+In some circumstances dma_map_single(), dma_map_page() and dma_map_resource()
-+will fail to create a mapping. A driver can check for these errors by testing
-+the returned DMA address with dma_mapping_error(). A non-zero return value
-+means the mapping could not be created and the driver should take appropriate
-+action (e.g. reduce current DMA mapping usage or delay and try again later).
- 
- 	int
- 	dma_map_sg(struct device *dev, struct scatterlist *sg,
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
 -- 
-2.4.0
+1.7.1
 
