@@ -1,46 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Aleksey Makarov <aleksey.makarov@auriga.com>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	David Daney <david.daney@cavium.com>,
-	Robert Richter <robert.richter@caviumnetworks.com>,
-	Aleksey Makarov <aleksey.makarov@auriga.com>,
-	Sunil Goutham <sgoutham@cavium.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH net-next v4 1/2] pci: Add Cavium PCI vendor id
-Date: Mon, 18 May 2015 18:59:14 -0700
-Message-Id: <1432000757-28700-2-git-send-email-aleksey.makarov@auriga.com>
-In-Reply-To: <1432000757-28700-1-git-send-email-aleksey.makarov@auriga.com>
-References: <1432000757-28700-1-git-send-email-aleksey.makarov@auriga.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25041 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbbEHHaH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:07 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH Part3 v11 4/9] PCI: Introduce pci_host_assign_domain_nr() to assign domain
+Date: Fri, 8 May 2015 15:22:54 +0800
+Message-ID: <1431069779-29346-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sunil Goutham <sgoutham@cavium.com>
+Introduce pci_host_assign_domain_nr() to save domain number
+in pci_host_bridge.
 
-This vendor id will be used by network (vNIC), USB (xHCI),
-SATA (AHCI), GPIO, I2C, MMC and maybe other drivers
-for ThunderX SoC.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sunil Goutham <sgoutham@cavium.com>
-Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/pci.c |   24 +++++++++++++++++++-----
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index e63c02a..3633cc6 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2327,6 +2327,8 @@
- #define PCI_DEVICE_ID_ALTIMA_AC9100	0x03ea
- #define PCI_DEVICE_ID_ALTIMA_AC1003	0x03eb
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7bf27e8..46a0240 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4506,10 +4506,10 @@ static int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
+ }
  
-+#define PCI_VENDOR_ID_CAVIUM		0x177d
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int pci_assign_domain_nr(struct device *dev)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain = of_get_pci_domain_nr(dev->of_node);
+ 
+ 	/*
+ 	 * Check DT domain and use_dt_domains values.
+@@ -4543,16 +4543,30 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+ 	} else {
+-		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node->full_name);
++		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++			dev->of_node->full_name);
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
 +
- #define PCI_VENDOR_ID_BELKIN		0x1799
- #define PCI_DEVICE_ID_BELKIN_F5D7010V7	0x701f
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = pci_assign_domain_nr(parent);
+ }
+ #endif
+ #endif
  
++void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
++{
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	host->domain = pci_assign_domain_nr(host->dev.parent);
++#else
++	host->domain = domain;
++#endif
++}
++
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index bc3e79a..c2e1a6b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -334,4 +334,5 @@ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+ }
+ #endif
+ 
++void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
+ #endif /* DRIVERS_PCI_H */
 -- 
-2.4.0
+1.7.1
 
