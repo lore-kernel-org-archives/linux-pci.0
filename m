@@ -1,128 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:59313 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbbEOFtK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:49:10 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:49:07 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E24193578055
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:05 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5mvHD19005642
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:05 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5mWOs000428
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:48:33 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 00/11] VF EEH on Power8
-Date: Fri, 15 May 2015 13:46:15 +0800
-Message-Id: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25083 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288AbbEHHaI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH Part3 v11 9/9] PCI: Remove pci_bus_assign_domain_nr()
+Date: Fri, 8 May 2015 15:22:59 +0800
+Message-ID: <1431069779-29346-10-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-VF edev and VF PE and handle them properly.
+Now we save the domain number in pci_host_bridge,
+we could remove pci_bus_assign_domain_nr() and
+clean the domain member in pci_bus.
 
-Different from the Bus PE, VF PE just contain one VF. This introduces the
-difference of EEH error handling on a VF PE. Generally, it has several
-differences.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c   |    5 -----
+ drivers/pci/pci.h   |    9 ---------
+ drivers/pci/probe.c |   11 +++--------
+ include/linux/pci.h |    3 ---
+ 4 files changed, 3 insertions(+), 25 deletions(-)
 
-First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-relationship between its PF. This is not proper to enumerate a VF by usual
-scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-set.
-
-Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-the VF, this means the usual reset function done in FW will not work. One of
-the patch will imitate the reset/restore function in kernel space.
-
-Third, the VF may be removed during the PF's error_detected function. In this
-case, the original error_detected->slot_reset->resume sequence is not proper
-to those removed VFs, since they are re-created by PF in a fresh state. A flag
-in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-track whether this device needs to be reset or not.
-
-This has been tested both on host and in guest on Power8 with latest kernel
-version.
-
-v4:
-   * refine the change logs, comment and code style
-   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
-     CONFIG_PCI_IOV macro
-   * reorder patch 5/6 to make the logic more reasonable
-   * remove remove_dev_pci_data()
-   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
-     remove related CONFIG_PCI_IOV macro
-   * add the option for VF reset
-   * fix the pnv_eeh_cfg_blocked() logic
-   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
-     pnv_eeh_vf_restore_config()
-   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
-   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
-     to arch/powerpc/platforms/powernv/pci.c
-   * add a field compound in pnv_ioda_pe to link compound PEs
-   * handle compound PE for VF PEs
-v3:
-   * add back vf_index in pci_dn to track the VF's index
-   * rename ppdev in eeh_dev to physfn for consistency
-   * move edev->physfn assignment before dev->dev.archdata.edev is set
-   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
-   * more clear and detail in commit log and comment in code
-   * merge eeh_rmv_virt_device() with eeh_rmv_device()
-   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
-     pnv_eeh_cfg_blocked()
-   * move the vf reset/restore logic into its own patch, two patches are
-     created.
-     powerpc/powernv: Support PCI config restore for VFs
-     powerpc/powernv: Support EEH reset for VFs
-   * simplify the vf reset logic
-v2:
-   * add prefix pci_iov_ to virtfn_add/virtfn_remove
-   * use EEH_DEV_VF as a flag for a VF's eeh_dev
-   * use eeh_dev instead of edev in change log
-   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
-   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
-     well initialized
-   * do FLR to reset a VF PE
-   * imitate the restore function in FW for VF
-   * remove the reverse order patch, since it is still under discussion
-
-Wei Yang (11):
-  pci/iov: rename and export virtfn_add/virtfn_remove
-  powerpc/pci_dn: cache vf_index in pci_dn
-  powerpc/pci: remove PCI devices in reverse order
-  powerpc/eeh: cache address range just for normal device
-  powerpc/powernv: create/release eeh_dev for VF
-  powerpc/eeh: create EEH_PE_VF for VF PE
-  powerpc/powernv: Support EEH reset for VFs
-  powerpc/powernv: Support PCI config restore for VFs
-  powerpc/eeh: handle VF PE properly
-  powerpc/powernv: use "compound" as the child's list_head for compound
-    PE
-  powerpc/powernv: compound PE for VFs
-
- arch/powerpc/include/asm/eeh.h               |    4 +
- arch/powerpc/include/asm/pci-bridge.h        |    2 +
- arch/powerpc/kernel/eeh.c                    |    5 +
- arch/powerpc/kernel/eeh_cache.c              |    2 +-
- arch/powerpc/kernel/eeh_driver.c             |  103 +++++++++++---
- arch/powerpc/kernel/eeh_pe.c                 |   13 +-
- arch/powerpc/kernel/pci-hotplug.c            |    2 +-
- arch/powerpc/kernel/pci_dn.c                 |   15 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c |  196 +++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci-ioda.c    |   35 ++++-
- arch/powerpc/platforms/powernv/pci.c         |   16 +++
- arch/powerpc/platforms/powernv/pci.h         |    1 +
- drivers/pci/iov.c                            |   10 +-
- include/linux/pci.h                          |    2 +
- 14 files changed, 366 insertions(+), 40 deletions(-)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2e2f429..a3cb571 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4558,11 +4558,6 @@ static int pci_assign_domain_nr(struct device *dev)
+ 
+ 	return domain;
+ }
+-
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+-{
+-	bus->domain_nr = pci_assign_domain_nr(parent);
+-}
+ #endif
+ #endif
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c2e1a6b..d8a4238 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -325,14 +325,5 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+-#else
+-static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-					struct device *parent)
+-{
+-}
+-#endif
+-
+ void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e4ef791..be60074 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -481,7 +481,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	}
+ }
+ 
+-static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
++static struct pci_bus *pci_alloc_bus(void)
+ {
+ 	struct pci_bus *b;
+ 
+@@ -496,10 +496,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	if (parent)
+-		b->domain_nr = parent->domain_nr;
+-#endif
+ 	return b;
+ }
+ 
+@@ -670,7 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+ 	 */
+-	child = pci_alloc_bus(parent);
++	child = pci_alloc_bus();
+ 	if (!child)
+ 		return NULL;
+ 
+@@ -1936,7 +1932,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
+ 		goto unregister_host;
+ 	}
+ 
+-	b = pci_alloc_bus(NULL);
++	b = pci_alloc_bus();
+ 	if (!b)
+ 		goto unregister_host;
+ 
+@@ -1944,7 +1940,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+-	pci_bus_assign_domain_nr(b, parent);
+ 
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 13ed681..f010042 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -460,9 +460,6 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+-	int		domain_nr;
+-#endif
+ 
+ 	char		name[48];
+ 
 -- 
-1.7.9.5
+1.7.1
 
