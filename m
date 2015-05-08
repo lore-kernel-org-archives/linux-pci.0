@@ -1,77 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0115.outbound.protection.outlook.com ([207.46.100.115]:56713
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753625AbbEAPXf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 11:23:35 -0400
-From: Stuart Yoder <stuart.yoder@freescale.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Varun Sethi <Varun.Sethi@freescale.com>
-CC: Marc Zyngier <Marc.Zyngier@arm.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Scott Wood <scottwood@freescale.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-Date: Fri, 1 May 2015 15:23:31 +0000
-Message-ID: <CY1PR0301MB074815BD2BF26823E50BE99487D50@CY1PR0301MB0748.namprd03.prod.outlook.com>
-References: <CY1PR0301MB0748D9259F32CBBC2C580BD187E30@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150422170718.GG13019@arm.com>
- <CY1PR0301MB0748AFF942250831769C40E587EE0@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150424161818.GC7313@arm.com> <553A72D4.7000801@arm.com>
- <CY1PR0301MB074896DF1A06CDEC3A0E09B687EC0@CY1PR0301MB0748.namprd03.prod.outlook.com>
- <20150425113930.7386a42a@arm.com>
- <BN1PR0301MB06276181976E880432B8C49AEAEA0@BN1PR0301MB0627.namprd03.prod.outlook.com>
- <553DEC20.3010400@arm.com>
- <BN1PR0301MB0627CD95FC31B221DAA644EDEAE90@BN1PR0301MB0627.namprd03.prod.outlook.com>
- <20150427170423.GC3310@arm.com>
-In-Reply-To: <20150427170423.GC3310@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:42687 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955AbbEHD6L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 23:58:11 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 8 May 2015 13:58:09 +1000
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t483sL8113566140
+	for <linux-pci@vger.kernel.org>; Fri, 8 May 2015 13:54:29 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t483ruwh006343
+	for <linux-pci@vger.kernel.org>; Fri, 8 May 2015 13:53:57 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com, gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V2] pci/iov: fix resource leak on destroying VF
+Date: Fri,  8 May 2015 11:53:27 +0800
+Message-Id: <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Beside pci_dev resources, VF has other resources between its PF, like
+refcount to PF, sysfs link between them and the virtual bus. When a VF is
+released in virtfn_remove(), those resources are released properly. But
+in the hotplug case, they are not.
 
+In hotplug case, VFs are removed by pci_stop_and_remove_bus_device()
+instead of virtfn_remove(). This leads to some leak for resources.
 
-> -----Original Message-----
-> From: Will Deacon [mailto:will.deacon@arm.com]
-> Sent: Monday, April 27, 2015 12:04 PM
-> To: Sethi Varun-B16395
-> Cc: Marc Zyngier; Yoder Stuart-B08248; Lian Minghuan-B31939; linux-pci@vger.kernel.org; Arnd Bergmann; Hu
-> Mingkai-B21284; Zang Roy-R61911; Bjorn Helgaas; Wood Scott-B07421; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH 1/2] irqchip/gicv3-its: Support share device ID
-> 
-> On Mon, Apr 27, 2015 at 02:08:10PM +0100, Varun Sethi wrote:
-> > > >>> In the SMMU/GIC-500-ITS world the iommu isolation ID (the stream ID)
-> > > >>> and the GIC-ITS device ID are in fact the same ID.
-> > > >>
-> > > >> The DeviceID is the "MSI group" you mention. This is what provides
-> > > >> isolation at the ITS level.
-> > > >>
-> > > > [varun] True, in case of a transparent host bridge device Id won't
-> > > > provide the necessary isolation.
-> > >
-> > > Well, it depends how you look at it. How necessary is this isolation, since
-> > > we've already established that you couldn't distinguish between these
-> > > devices at the IOMMU level?
-> > >
-> > [varun] Yes, the devices would fall in the same IOMMU group. So, devices
-> > would end up sharing the interrupt?
-> 
-> Well, I think that's the crux of the issue here. If IOMMU groups are also
-> needed to relay constraints to the IRQ subsystem, then perhaps we need a
-> more general notion of device grouping and ID transformations between
-> the different levels of group hierarchy.
+This patch moves the resource release to pci_destroy_dev() to make sure
+those resources are released when VF is destroyed.
 
-I agree.  Have been thinking about it over the last few days...is is
-a matter of renaming what we currently call an "IOMMU group"?   Or,
-do we really need to separate general 'device grouping' and 'iommu groups'
-in the Linux kernel?
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c    |   42 +++++++++++++++++++++++-------------------
+ drivers/pci/pci.h    |   10 ++++++++++
+ drivers/pci/remove.c |   31 +++++++++++++++++++++++++++++++
+ 3 files changed, 64 insertions(+), 19 deletions(-)
 
-Stuart
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..47daf2f 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -17,8 +17,6 @@
+ #include <linux/pci-ats.h>
+ #include "pci.h"
+ 
+-#define VIRTFN_ID_LEN	16
+-
+ int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+ {
+ 	if (!dev->is_physfn)
+@@ -94,7 +92,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ 	return child;
+ }
+ 
+-static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
++void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ {
+ 	if (physbus != virtbus && list_empty(&virtbus->devices))
+ 		pci_remove_bus(virtbus);
+@@ -185,9 +183,7 @@ failed:
+ 
+ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+-	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+-	struct pci_sriov *iov = dev->sriov;
+ 
+ 	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+ 					     pci_iov_virtfn_bus(dev, id),
+@@ -200,24 +196,10 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 		__pci_reset_function(virtfn);
+ 	}
+ 
+-	sprintf(buf, "virtfn%u", id);
+-	sysfs_remove_link(&dev->dev.kobj, buf);
+-	/*
+-	 * pci_stop_dev() could have been called for this virtfn already,
+-	 * so the directory for the virtfn may have been removed before.
+-	 * Double check to avoid spurious sysfs warnings.
+-	 */
+-	if (virtfn->dev.kobj.sd)
+-		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+-
+-	mutex_lock(&iov->dev->sriov->lock);
+ 	pci_stop_and_remove_bus_device(virtfn);
+-	virtfn_remove_bus(dev->bus, virtfn->bus);
+-	mutex_unlock(&iov->dev->sriov->lock);
+ 
+ 	/* balance pci_get_domain_bus_and_slot() */
+ 	pci_dev_put(virtfn);
+-	pci_dev_put(dev);
+ }
+ 
+ int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+@@ -760,3 +742,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ 	return dev->sriov->total_VFs;
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
++
++void pci_sriov_lock(struct pci_dev *dev)
++{
++	struct pci_sriov *iov;
++
++	if (!dev->is_physfn)
++		return;
++
++	iov = dev->sriov;
++	mutex_lock(&iov->dev->sriov->lock);
++}
++
++void pci_sriov_unlock(struct pci_dev *dev)
++{
++	struct pci_sriov *iov;
++
++	if (!dev->is_physfn)
++		return;
++
++	iov = dev->sriov;
++	mutex_unlock(&iov->dev->sriov->lock);
++}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 9bd762c2..a0323a2 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -260,6 +260,12 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+ #endif /* CONFIG_PCI_ATS */
+ 
+ #ifdef CONFIG_PCI_IOV
++
++#define VIRTFN_ID_LEN	16
++void pci_sriov_lock(struct pci_dev *dev);
++void pci_sriov_unlock(struct pci_dev *dev);
++void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus);
++
+ int pci_iov_init(struct pci_dev *dev);
+ void pci_iov_release(struct pci_dev *dev);
+ int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+@@ -268,6 +274,10 @@ void pci_restore_iov_state(struct pci_dev *dev);
+ int pci_iov_bus_range(struct pci_bus *bus);
+ 
+ #else
++static inline void pci_sriov_lock(struct pci_dev *dev) { }
++static inline void pci_sriov_unlock(struct pci_dev *dev) { }
++static inline void virtfn_remove_bus(struct pci_bus *physbus,
++		struct pci_bus *virtbus) { }
+ static inline int pci_iov_init(struct pci_dev *dev)
+ {
+ 	return -ENODEV;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8a280e9..f2a07bf 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -41,6 +41,37 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	list_del(&dev->bus_list);
+ 	up_write(&pci_bus_sem);
+ 
++#ifdef CONFIG_PCI_IOV
++	if (dev->is_virtfn) {
++		char buf[VIRTFN_ID_LEN];
++		int id;
++		struct pci_dev *pdev = dev->physfn;
++
++		for (id = 0; id < pci_sriov_get_totalvfs(pdev); id++) {
++			if ((dev->bus->number == pci_iov_virtfn_bus(pdev, id))
++			   && (dev->devfn == pci_iov_virtfn_devfn(pdev, id))) {
++				sprintf(buf, "virtfn%u", id);
++				sysfs_remove_link(&pdev->dev.kobj, buf);
++				break;
++			}
++		}
++		/*
++		 * pci_stop_dev() could have been called for this virtfn
++		 * already, so the directory for the virtfn may have been
++		 * removed before.  Double check to avoid spurious sysfs
++		 * warnings.
++		 */
++		if (dev->dev.kobj.sd)
++			sysfs_remove_link(&dev->dev.kobj, "physfn");
++
++		pci_sriov_lock(pdev);
++		virtfn_remove_bus(pdev->bus, dev->bus);
++		pci_sriov_unlock(pdev);
++
++		pci_dev_put(dev->physfn);
++	}
++#endif
++
+ 	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
+-- 
+1.7.9.5
+
