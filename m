@@ -1,82 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:17787 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbbEGQXJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 12:23:09 -0400
-From: William Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25120 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbbEHHaL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:11 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
 	Yijing Wang <wangyijing@huawei.com>
-CC: Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	"John Hubbard" <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Alex Williamson" <alex.williamson@redhat.com>
-Subject: RE: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
-Date: Thu, 7 May 2015 16:23:07 +0000
-Message-ID: <ec4d9f89290441a79e0caf986383c5df@HQMAIL106.nvidia.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
- <20150506221818.GH24643@google.com> <554AC48A.2030209@huawei.com>
- <CAErSpo6xp5kM57PX9RkXKr5MM4BQM7-uXPtvCBL8=9Br8FYLdA@mail.gmail.com>
-In-Reply-To: <CAErSpo6xp5kM57PX9RkXKr5MM4BQM7-uXPtvCBL8=9Br8FYLdA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH Part3 v11 6/9] PCI: Make pci_host_bridge hold sysdata in drvdata
+Date: Fri, 8 May 2015 15:22:56 +0800
+Message-ID: <1431069779-29346-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
+References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBNYXkgNywgMjAx
-NSA4OjEzIEFNDQo+IFRvOiBZaWppbmcgV2FuZw0KPiBDYzogV2lsbGlhbSBEYXZpczsgSm9lcmcg
-Um9lZGVsOyBvcGVuIGxpc3Q6SU5URUwgSU9NTVUgKFZULWQpOyBsaW51eC0NCj4gcGNpQHZnZXIu
-a2VybmVsLm9yZzsgVGVyZW5jZSBSaXBwZXJkYTsgSm9obiBIdWJiYXJkOyBKZXJvbWUgR2xpc3Nl
-OyBEYXZlDQo+IEppYW5nOyBEYXZpZCBTLiBNaWxsZXI7IEFsZXggV2lsbGlhbXNvbg0KPiBTdWJq
-ZWN0OiBSZTogW1BBVENIIDAvNl0gSU9NTVUvRE1BIG1hcF9yZXNvdXJjZSBzdXBwb3J0IGZvciBw
-ZWVyLXRvLXBlZXINCj4gDQo+IE9uIFdlZCwgTWF5IDYsIDIwMTUgYXQgODo0OCBQTSwgWWlqaW5n
-IFdhbmcgPHdhbmd5aWppbmdAaHVhd2VpLmNvbT4gd3JvdGU6DQo+ID4gT24gMjAxNS81LzcgNjox
-OCwgQmpvcm4gSGVsZ2FhcyB3cm90ZToNCj4gPj4gWytjYyBZaWppbmcsIERhdmUgSiwgRGF2ZSBN
-LCBBbGV4XQ0KPiA+Pg0KPiA+PiBPbiBGcmksIE1heSAwMSwgMjAxNSBhdCAwMTozMjoxMlBNIC0w
-NTAwLCB3ZGF2aXNAbnZpZGlhLmNvbSB3cm90ZToNCj4gPj4+IEZyb206IFdpbGwgRGF2aXMgPHdk
-YXZpc0BudmlkaWEuY29tPg0KPiA+Pj4NCj4gPj4+IEhpLA0KPiA+Pj4NCj4gPj4+IFRoaXMgcGF0
-Y2ggc2VyaWVzIGFkZHMgRE1BIEFQSXMgdG8gbWFwIGFuZCB1bm1hcCBhIHN0cnVjdCByZXNvdXJj
-ZQ0KPiA+Pj4gdG8gYW5kIGZyb20gYSBQQ0kgZGV2aWNlJ3MgSU9WQSBkb21haW4sIGFuZCBpbXBs
-ZW1lbnRzIHRoZSBBTUQsDQo+ID4+PiBJbnRlbCwgYW5kIG5vbW11IHZlcnNpb25zIG9mIHRoZXNl
-IGludGVyZmFjZXMuDQo+ID4+Pg0KPiA+Pj4gVGhpcyBzb2x2ZXMgYSBsb25nLXN0YW5kaW5nIHBy
-b2JsZW0gd2l0aCB0aGUgZXhpc3RpbmcgRE1BLXJlbWFwcGluZw0KPiA+Pj4gaW50ZXJmYWNlcywg
-d2hpY2ggcmVxdWlyZSB0aGF0IGEgc3RydWN0IHBhZ2UgYmUgZ2l2ZW4gZm9yIHRoZSByZWdpb24N
-Cj4gPj4+IHRvIGJlIG1hcHBlZCBpbnRvIGEgZGV2aWNlJ3MgSU9WQSBkb21haW4uIFRoaXMgcmVx
-dWlyZW1lbnQgY2Fubm90DQo+ID4+PiBzdXBwb3J0IHBlZXIgZGV2aWNlIEJBUiByYW5nZXMsIGZv
-ciB3aGljaCBubyBzdHJ1Y3QgcGFnZXMgZXhpc3QuDQo+ID4+PiAuLi4NCj4gDQo+ID4+IEkgdGhp
-bmsgd2UgY3VycmVudGx5IGFzc3VtZSB0aGVyZSdzIG5vIHBlZXItdG8tcGVlciB0cmFmZmljLg0K
-PiA+Pg0KPiA+PiBJIGRvbid0IGtub3cgd2hldGhlciBjaGFuZ2luZyB0aGF0IHdpbGwgYnJlYWsg
-YW55dGhpbmcsIGJ1dCBJJ20NCj4gPj4gY29uY2VybmVkIGFib3V0IHRoZXNlOg0KPiA+Pg0KPiA+
-PiAgIC0gUENJZSBNUFMgY29uZmlndXJhdGlvbiAoc2VlIHBjaWVfYnVzX2NvbmZpZ3VyZV9zZXR0
-aW5ncygpKS4NCj4gPg0KPiA+IEkgdGhpbmsgaXQgc2hvdWxkIGJlIG9rIGZvciBQQ0llIE1QUyBj
-b25maWd1cmF0aW9uLCBQQ0lFX0JVU19QRUVSMlBFRVINCj4gPiBmb3JjZSBldmVyeSBkZXZpY2Un
-cyBNUFMgdG8gMTI4Qiwgd2hhdCBpdHMgY29uY2VybiBpcyB0aGUgVExQIHBheWxvYWQNCj4gPiBz
-aXplLiBJbiB0aGlzIHNlcmllcywgaXQgc2VlbXMgdG8gb25seSBtYXAgYSBpb3ZhIGZvciBkZXZp
-Y2UgYmFyIHJlZ2lvbi4NCj4gDQo+IE1QUyBjb25maWd1cmF0aW9uIG1ha2VzIGFzc3VtcHRpb25z
-IGFib3V0IHdoZXRoZXIgdGhlcmUgd2lsbCBiZSBhbnkgcGVlci0NCj4gdG8tcGVlciB0cmFmZmlj
-LiAgSWYgdGhlcmUgd2lsbCBiZSBub25lLCBNUFMgY2FuIGJlIGNvbmZpZ3VyZWQgbW9yZQ0KPiBh
-Z2dyZXNzaXZlbHkuDQo+IA0KPiBJIGRvbid0IHRoaW5rIExpbnV4IGhhcyBhbnkgd2F5IHRvIGRl
-dGVjdCB3aGV0aGVyIGEgZHJpdmVyIGlzIGRvaW5nIHBlZXItDQo+IHRvLXBlZXIsIGFuZCB0aGVy
-ZSdzIG5vIHdheSB0byBwcmV2ZW50IGEgZHJpdmVyIGZyb20gZG9pbmcgaXQuDQo+IFdlJ3JlIHN0
-dWNrIHdpdGggcmVxdWlyaW5nIHRoZSB1c2VyIHRvIHNwZWNpZnkgYm9vdCBvcHRpb25zDQo+ICgi
-cGNpPXBjaWVfYnVzX3NhZmUiLCAicGNpPXBjaWVfYnVzX3BlcmYiLCAicGNpPXBjaWVfYnVzX3Bl
-ZXIycGVlciIsDQo+IGV0Yy4pIHRoYXQgdGVsbCB0aGUgUENJIGNvcmUgd2hhdCB0aGUgdXNlciBl
-eHBlY3RzIHRvIGhhcHBlbi4NCj4gDQo+IFRoaXMgaXMgYSB0ZXJyaWJsZSB1c2VyIGV4cGVyaWVu
-Y2UuICBUaGUgdXNlciBoYXMgbm8gd2F5IHRvIHRlbGwgd2hhdA0KPiBkcml2ZXJzIGFyZSBnb2lu
-ZyB0byBkby4gIElmIGhlIHNwZWNpZmllcyB0aGUgd3JvbmcgdGhpbmcsIGUuZy4sICJhc3N1bWUg
-bm8NCj4gcGVlci10by1wZWVyIHRyYWZmaWMsIiBhbmQgdGhlbiBsb2FkcyBhIGRyaXZlciB0aGF0
-IGRvZXMgcGVlci10by1wZWVyLCB0aGUNCj4ga2VybmVsIHdpbGwgY29uZmlndXJlIE1QUyBhZ2dy
-ZXNzaXZlbHkgYW5kIHdoZW4gdGhlIGRldmljZSBkb2VzIGEgcGVlci10by0NCj4gcGVlciB0cmFu
-c2ZlciwgaXQgbWF5IGNhdXNlIGEgTWFsZm9ybWVkIFRMUCBlcnJvci4NCj4gDQoNCkkgYWdyZWUg
-dGhhdCB0aGlzIGlzbid0IGEgZ3JlYXQgdXNlciBleHBlcmllbmNlLCBidXQganVzdCB3YW50IHRv
-IGNsYXJpZnkgdGhhdCB0aGlzIHByb2JsZW0gaXMgb3J0aG9nb25hbCB0byB0aGlzIHBhdGNoIHNl
-cmllcywgY29ycmVjdD8NCg0KUHJpb3IgdG8gdGhpcyBzZXJpZXMsIHRoZSBNUFMgbWlzbWF0Y2gg
-aXMgc3RpbGwgcG9zc2libGUgd2l0aCBwMnAgdHJhZmZpYywgYnV0IHdoZW4gYW4gSU9NTVUgaXMg
-ZW5hYmxlZCBwMnAgdHJhZmZpYyB3aWxsIHJlc3VsdCBpbiBETUFSIGZhdWx0cy4gVGhlIGFpbSBv
-ZiB0aGUgc2VyaWVzIGlzIHRvIGFsbG93IGRyaXZlcnMgdG8gZml4IHRoZSBsYXR0ZXIsIG5vdCB0
-aGUgZm9ybWVyLg0KDQpUaGFua3MsDQpXaWxsDQoNCi0tDQpudnB1YmxpYw0K
+Now platform specific sysdata is saved in pci_bus,
+and pcibios_root_bridge_prepare() need to know
+the sysdata. Later, we would move pcibios_root_bridge_prepare()
+prior to root bus creation, so we need to make
+pci_host_bridge hold sysdata.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/ia64/pci/pci.c |    2 +-
+ arch/x86/pci/acpi.c |    2 +-
+ drivers/pci/probe.c |    1 +
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 33803f7..c82d666 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -478,7 +478,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ {
+-	struct pci_controller *controller = bridge->bus->sysdata;
++	struct pci_controller *controller = dev_get_drvdata(&bridge->dev);
+ 
+ 	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+ 	return 0;
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 7563855..948b675 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -462,7 +462,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ {
+-	struct pci_sysdata *sd = bridge->bus->sysdata;
++	struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
+ 
+ 	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+ 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f5f5de6..9ed8ab7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1931,6 +1931,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
+ 	bridge->domain = domain;
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
++	dev_set_drvdata(&bridge->dev, sysdata);
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error) {
+-- 
+1.7.1
+
