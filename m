@@ -1,91 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5564D254.6050004@redhat.com>
-Date: Tue, 26 May 2015 16:06:44 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25085 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbbEHHaI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
+	<linux-ia64@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH Part3 v11 0/9] Remove platform pci_domain_nr()
+Date: Fri, 8 May 2015 15:22:50 +0800
+Message-ID: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-CC: bhelgaas@google.com, rjw@rjwysocki.net,
-	linux-kernel@vger.kernel.org, lenb@kernel.org
-Subject: Re: [PATCH 2/2] ACPI / PCI: Account for ARI in _PRT lookups
-References: <20150526174611.31963.91186.stgit@gimli.home> <20150526175408.31963.49046.stgit@gimli.home>
-In-Reply-To: <20150526175408.31963.49046.stgit@gimli.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/26/2015 01:54 PM, Alex Williamson wrote:
-> The PCIe specification, rev 3.0, section 2.2.8.1, contains the
-> following implementation note:
->
->      Virtual Wire Mapping for INTx Interrupts From ARI Devices
->
->      The implied Device Number for an ARI Device is 0. When ARI-aware
->      software (including BIOS and operating system) enables ARI
->      Forwarding in the Downstream Port immediately above an ARI Device
->      in order to access its Extended Functions, software must
->      comprehend that the Downstream Port will use Device Number 0 for
->      the virtual wire mappings of INTx interrupts coming from all
->      Functions of the ARI Device. If non-ARI-aware software attempts
->      to determine the virtual wire mappings for Extended Functions, it
->      can come up with incorrect mappings by examining the traditional
->      Device Number field and finding it to be non-0.
->
-> We account for this in pci_swizzle_interrupt_pin(), but it looks like
-> we miss it here, looking for a _PRT entry with a slot matching the
-> ARI device slot number.  This can cause errors like:
->
-> pcieport 0000:80:03.0: can't derive routing for PCI INT B
-> sfc 0000:82:01.1: PCI INT B: no GSI
->
-> pci_dev.irq is then invalid, resulting in errors for drivers that
-> attempt to enable INTx on the device.  Fix by using slot 0 for ARI
-> enabled devices.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->   drivers/acpi/pci_irq.c |    4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> index b1def41..65e83cd 100644
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -163,7 +163,7 @@ static int acpi_pci_irq_check_entry(acpi_handle handle, struct pci_dev *dev,
->   {
->   	int segment = pci_domain_nr(dev->bus);
->   	int bus = dev->bus->number;
-> -	int device = PCI_SLOT(dev->devfn);
-> +	int device = pci_ari_enabled(dev->bus) ? 0 : PCI_SLOT(dev->devfn);
->   	struct acpi_prt_entry *entry;
->
->   	if (((prt->address >> 16) & 0xffff) != device ||
-> @@ -181,7 +181,7 @@ static int acpi_pci_irq_check_entry(acpi_handle handle, struct pci_dev *dev,
->   	 */
->   	entry->id.segment = segment;
->   	entry->id.bus = bus;
-> -	entry->id.device = (prt->address >> 16) & 0xFFFF;
-> +	entry->id.device = PCI_SLOT(dev->devfn);
-I would expect that this should be = device, not PCI_SLOT(dev->devfn),
-esp if used by ACPI core, since it'll be expecting a swizzle from device 0,
-per above spec.
+This series is splitted out from previous patchset
+"Refine PCI scan interfaces and make generic pci host bridge".
+It try to clean up all platform pci_domain_nr(), save domain
+in pci_host_bridge, so we could get domain number from the
+common interface.
 
-Additionally, if you look at the beginning of this function, this check is performed:
-        if (((prt->address >> 16) & 0xffff) != device ||
-             prt->pin + 1 != pin)
-                 return -ENODEV;
+You could pull it from https://github.com/YijingWang/linux-pci.git enumer11
 
-So, that implies you leave this assignment as is,
-or set it to device -- six of one, half-dozen another.
+Yijing Wang (9):
+  PCI: Save domain in pci_host_bridge
+  PCI: Move pci_bus_assign_domain_nr() declaration into
+    drivers/pci/pci.h
+  PCI: Remove declaration for pci_get_new_domain_nr()
+  PCI: Introduce pci_host_assign_domain_nr() to assign domain
+  powerpc/PCI: Rename pcibios_root_bridge_prepare() to
+    pcibios_root_bus_prepare()
+  PCI: Make pci_host_bridge hold sysdata in drvdata
+  PCI: Create pci host bridge prior to root bus
+  PCI: Remove platform specific pci_domain_nr()
+  PCI: Remove pci_bus_assign_domain_nr()
 
-
->   	entry->pin = prt->pin + 1;
->
->   	do_prt_fixups(entry, prt);
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+ arch/alpha/include/asm/pci.h             |    2 -
+ arch/alpha/kernel/pci.c                  |    4 +-
+ arch/alpha/kernel/sys_nautilus.c         |    2 +-
+ arch/arm/kernel/bios32.c                 |    2 +-
+ arch/arm/mach-dove/pcie.c                |    2 +-
+ arch/arm/mach-iop13xx/pci.c              |    4 +-
+ arch/arm/mach-mv78xx0/pcie.c             |    2 +-
+ arch/arm/mach-orion5x/pci.c              |    4 +-
+ arch/frv/mb93090-mb00/pci-vdk.c          |    3 +-
+ arch/ia64/include/asm/pci.h              |    1 -
+ arch/ia64/pci/pci.c                      |    6 +-
+ arch/ia64/sn/kernel/io_init.c            |    4 +-
+ arch/m68k/coldfire/pci.c                 |    2 +-
+ arch/microblaze/pci/pci-common.c         |   15 +----
+ arch/mips/include/asm/pci.h              |    2 -
+ arch/mips/pci/pci.c                      |    4 +-
+ arch/mn10300/unit-asb2305/pci.c          |    3 +-
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |   21 ++-----
+ arch/powerpc/platforms/pseries/pci.c     |    2 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ arch/s390/pci/pci.c                      |   10 +---
+ arch/sh/drivers/pci/pci.c                |    4 +-
+ arch/sh/include/asm/pci.h                |    2 -
+ arch/sparc/kernel/leon_pci.c             |    2 +-
+ arch/sparc/kernel/pci.c                  |   21 +------
+ arch/sparc/kernel/pcic.c                 |    2 +-
+ arch/tile/include/asm/pci.h              |    2 -
+ arch/tile/kernel/pci.c                   |    4 +-
+ arch/tile/kernel/pci_gx.c                |    4 +-
+ arch/unicore32/kernel/pci.c              |    2 +-
+ arch/x86/include/asm/pci.h               |    6 --
+ arch/x86/pci/acpi.c                      |    6 +-
+ arch/x86/pci/common.c                    |    2 +-
+ arch/xtensa/kernel/pci.c                 |    2 +-
+ drivers/parisc/dino.c                    |    2 +-
+ drivers/parisc/lba_pci.c                 |    2 +-
+ drivers/pci/host/pci-versatile.c         |    3 +-
+ drivers/pci/host/pci-xgene.c             |    2 +-
+ drivers/pci/host/pcie-designware.c       |    2 +-
+ drivers/pci/host/pcie-iproc.c            |    2 +-
+ drivers/pci/host/pcie-xilinx.c           |    2 +-
+ drivers/pci/hotplug/ibmphp_core.c        |    2 +-
+ drivers/pci/pci.c                        |   31 ++++++++--
+ drivers/pci/pci.h                        |    1 +
+ drivers/pci/probe.c                      |   94 +++++++++++++++++-------------
+ drivers/pci/xen-pcifront.c               |    2 +-
+ include/linux/pci.h                      |   27 ++-------
+ 49 files changed, 145 insertions(+), 187 deletions(-)
 
