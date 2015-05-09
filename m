@@ -1,135 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:10232 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756149AbbE2R2I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:08 -0400
-From: <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Jonathan Corbet" <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	"Dave Jiang" <dave.jiang@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v3 2/7] DMA-API: Introduce dma_(un)map_resource
-Date: Fri, 29 May 2015 12:14:41 -0500
-Message-ID: <1432919686-32306-3-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36154 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbbEIPIf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 May 2015 11:08:35 -0400
+Received: by pabsx10 with SMTP id sx10so73879886pab.3
+        for <linux-pci@vger.kernel.org>; Sat, 09 May 2015 08:08:34 -0700 (PDT)
+Message-ID: <554E22EC.205@ozlabs.ru>
+Date: Sun, 10 May 2015 01:08:28 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+CC: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH v4 16/21] powerpc/pci: Create eeh_dev while creating pci_dn
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-17-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1430460188-31343-17-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+On 05/01/2015 04:03 PM, Gavin Shan wrote:
+> The eeh_dev is always created based on pci_dn, but with initcall
+> supported by core_initcall_sync(). The patch creates eeh_dev
+> when pci_dn is created, indicating they have same life cycle.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/include/asm/eeh.h         |  6 ++++--
+>   arch/powerpc/kernel/eeh_dev.c          | 18 ++++--------------
+>   arch/powerpc/kernel/pci_dn.c           | 12 ++++++++++++
+>   arch/powerpc/platforms/pseries/setup.c |  6 +-----
+>   4 files changed, 21 insertions(+), 21 deletions(-)
+>
+> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+> index 2793d24..4ed88f6 100644
+> --- a/arch/powerpc/include/asm/eeh.h
+> +++ b/arch/powerpc/include/asm/eeh.h
+> @@ -269,7 +269,8 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
+>   const char *eeh_pe_loc_get(struct eeh_pe *pe);
+>   struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
+>
+> -void *eeh_dev_init(struct pci_dn *pdn, void *data);
+> +struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
+> +			     struct pci_controller *phb);
 
-Add functions to DMA-map and -unmap a resource for a given device. This
-will allow devices to DMA-map a peer device's resource (for example,
-another device's BAR region on PCI) to enable peer-to-peer transactions.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- include/asm-generic/dma-mapping-broken.h |  9 +++++++++
- include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++++++++++++++++++++
- include/linux/dma-mapping.h              |  7 +++++++
- 3 files changed, 50 insertions(+)
+Everywhere else (?) you name these pci_controller pointer variables "hose" 
+but not in this patch.
 
-diff --git a/include/asm-generic/dma-mapping-broken.h b/include/asm-generic/dma-mapping-broken.h
-index 6c32af9..d171f01 100644
---- a/include/asm-generic/dma-mapping-broken.h
-+++ b/include/asm-generic/dma-mapping-broken.h
-@@ -59,6 +59,15 @@ extern void
- dma_unmap_page(struct device *dev, dma_addr_t dma_address, size_t size,
- 	       enum dma_data_direction direction);
- 
-+extern dma_addr_t
-+dma_map_resource(struct device *dev, struct resource *res,
-+		 unsigned long offset, size_t size,
-+		 enum dma_data_direction direction);
-+
-+extern void
-+dma_unmap_resource(struct device *dev, dma_addr_t dma_address, size_t size,
-+		   enum dma_data_direction direction);
-+
- extern void
- dma_sync_single_for_cpu(struct device *dev, dma_addr_t dma_handle, size_t size,
- 			enum dma_data_direction direction);
-diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
-index 940d5ec..9e6c201 100644
---- a/include/asm-generic/dma-mapping-common.h
-+++ b/include/asm-generic/dma-mapping-common.h
-@@ -73,6 +73,36 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
- 		ops->unmap_sg(dev, sg, nents, dir, attrs);
- }
- 
-+static inline dma_addr_t dma_map_resource_attrs(struct device *dev,
-+						struct resource *res,
-+						size_t offset, size_t size,
-+						enum dma_data_direction dir,
-+						struct dma_attrs *attrs)
-+{
-+	struct dma_map_ops *ops = get_dma_ops(dev);
-+	dma_addr_t addr;
-+
-+	BUG_ON(!valid_dma_direction(dir));
-+	BUG_ON(ops->map_resource == NULL);
-+	addr = ops->map_resource(dev, res, offset, size, dir, attrs);
-+	debug_dma_map_resource(dev, res, offset, size, dir, addr);
-+
-+	return addr;
-+}
-+
-+static inline void dma_unmap_resource_attrs(struct device *dev, dma_addr_t addr,
-+					    size_t size,
-+					    enum dma_data_direction dir,
-+					    struct dma_attrs *attrs)
-+{
-+	struct dma_map_ops *ops = get_dma_ops(dev);
-+
-+	BUG_ON(!valid_dma_direction(dir));
-+	if (ops->unmap_resource)
-+		ops->unmap_resource(dev, addr, size, dir, attrs);
-+	debug_dma_unmap_resource(dev, addr, size, dir);
-+}
-+
- static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
- 				      size_t offset, size_t size,
- 				      enum dma_data_direction dir)
-@@ -180,6 +210,10 @@ dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
- #define dma_unmap_single(d, a, s, r) dma_unmap_single_attrs(d, a, s, r, NULL)
- #define dma_map_sg(d, s, n, r) dma_map_sg_attrs(d, s, n, r, NULL)
- #define dma_unmap_sg(d, s, n, r) dma_unmap_sg_attrs(d, s, n, r, NULL)
-+#define dma_map_resource(d, e, o, s, r) \
-+	dma_map_resource_attrs(d, e, o, s, r, NULL)
-+#define dma_unmap_resource(d, a, s, r) \
-+	dma_unmap_resource_attrs(d, a, s, r, NULL)
- 
- extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
- 			   void *cpu_addr, dma_addr_t dma_addr, size_t size);
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index ac07ff0..05b0b51 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -34,6 +34,13 @@ struct dma_map_ops {
- 	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
- 			   size_t size, enum dma_data_direction dir,
- 			   struct dma_attrs *attrs);
-+	dma_addr_t (*map_resource)(struct device *dev, struct resource *res,
-+				   unsigned long offset, size_t size,
-+				   enum dma_data_direction dir,
-+				   struct dma_attrs *attrs);
-+	void (*unmap_resource)(struct device *dev, dma_addr_t dma_handle,
-+			       size_t size, enum dma_data_direction dir,
-+			       struct dma_attrs *attrs);
- 	/*
- 	 * map_sg returns 0 on error and a value > 0 on success.
- 	 * It should never return a value < 0.
+
+>   void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
+>   int eeh_init(void);
+>   int __init eeh_ops_register(struct eeh_ops *ops);
+> @@ -322,7 +323,8 @@ static inline int eeh_init(void)
+>   	return 0;
+>   }
+>
+> -static inline void *eeh_dev_init(struct pci_dn *pdn, void *data)
+> +static inline struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
+> +					   struct pci_controller *phb)
+>   {
+>   	return NULL;
+>   }
+> diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
+> index f33ce5b..7486932 100644
+> --- a/arch/powerpc/kernel/eeh_dev.c
+> +++ b/arch/powerpc/kernel/eeh_dev.c
+> @@ -44,14 +44,14 @@
+>   /**
+>    * eeh_dev_init - Create EEH device according to OF node
+>    * @pdn: PCI device node
+> - * @data: PHB
+> + * @phb: PCI controller
+>    *
+>    * It will create EEH device according to the given OF node. The function
+>    * might be called by PCI emunation, DR, PHB hotplug.
+>    */
+> -void *eeh_dev_init(struct pci_dn *pdn, void *data)
+> +struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
+> +			     struct pci_controller *phb)
+>   {
+> -	struct pci_controller *phb = data;
+>   	struct eeh_dev *edev;
+>
+>   	/* Allocate EEH device */
+> @@ -68,7 +68,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>   	edev->phb = phb;
+>   	INIT_LIST_HEAD(&edev->list);
+>
+> -	return NULL;
+> +	return edev;
+>   }
+>
+>   /**
+> @@ -80,16 +80,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>    */
+>   void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
+>   {
+> -	struct pci_dn *root = phb->pci_data;
+> -
+>   	/* EEH PE for PHB */
+>   	eeh_phb_pe_create(phb);
+> -
+> -	/* EEH device for PHB */
+> -	eeh_dev_init(root, phb);
+> -
+> -	/* EEH devices for children OF nodes */
+> -	traverse_pci_dn(root, eeh_dev_init, phb);
+>   }
+>
+>   /**
+> @@ -105,8 +97,6 @@ static int __init eeh_dev_phb_init(void)
+>   	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+>   		eeh_dev_phb_init_dynamic(phb);
+>
+> -	pr_info("EEH: devices created\n");
+> -
+>   	return 0;
+>   }
+>
+> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+> index d3833af..abc81fa 100644
+> --- a/arch/powerpc/kernel/pci_dn.c
+> +++ b/arch/powerpc/kernel/pci_dn.c
+> @@ -276,6 +276,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+>   	const __be32 *regs;
+>   	struct device_node *parent;
+>   	struct pci_dn *pdn;
+> +#ifdef CONFIG_EEH
+> +	struct eeh_dev *edev;
+> +#endif
+>
+>   	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
+>   	if (pdn == NULL)
+> @@ -306,6 +309,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+>   	/* Extended config space */
+>   	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
+>
+> +	/* Initialize EEH device */
+> +#ifdef CONFIG_EEH
+
+You do not need this #ifdef - you have a stub for eeh_dev_init() in 
+arch/powerpc/include/asm/eeh.h
+
+
+> +	edev = eeh_dev_init(pdn, phb);
+> +	if (!edev) {
+
+
+s/!edev/eeh_dev_init(pdn, phb)/ and get rid of @edev local variable at all 
+- you do not use it anyway?
+
+
+> +		kfree(pdn);
+> +		return NULL;
+> +	}
+> +#endif
+> +
+>   	/* Attach to parent node */
+>   	INIT_LIST_HEAD(&pdn->child_list);
+>   	INIT_LIST_HEAD(&pdn->list);
+> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+> index 5f80758..92974aa 100644
+> --- a/arch/powerpc/platforms/pseries/setup.c
+> +++ b/arch/powerpc/platforms/pseries/setup.c
+> @@ -261,12 +261,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+>   	switch (action) {
+>   	case OF_RECONFIG_ATTACH_NODE:
+>   		pci = np->parent->data;
+> -		if (pci) {
+> +		if (pci)
+>   			update_dn_pci_info(np, pci->phb);
+> -
+> -			/* Create EEH device for the OF node */
+> -			eeh_dev_init(PCI_DN(np), pci->phb);
+> -		}
+>   		break;
+>   	default:
+>   		err = NOTIFY_DONE;
+>
+
+
 -- 
-2.4.0
-
+Alexey
