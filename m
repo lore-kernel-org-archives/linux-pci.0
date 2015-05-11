@@ -1,64 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555F11B4.8000503@linaro.org>
-Date: Fri, 22 May 2015 19:23:32 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [Patch v3 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com> <5559E44B.2010702@linaro.org> <555BFC72.3060703@linux.intel.com> <555C0091.6050301@linaro.org>
-In-Reply-To: <555C0091.6050301@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v11 08/10] iommu/vt-d: assign new page table for dma_map
+Date: Mon, 11 May 2015 17:52:52 +0800
+Message-Id: <1431337974-545-9-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月20日 11:33, Hanjun Guo wrote:
-> +CC Suravee,
->
-> On 2015年05月20日 11:16, Jiang Liu wrote:
->> On 2015/5/18 21:08, Hanjun Guo wrote:
->>> Hi Jiang,
->>>
->>> On 2015年05月14日 16:56, Jiang Liu wrote:
->>>> Introduce common interface acpi_pci_root_create() and related data
->>>> structures to create PCI root bus for ACPI PCI host bridges. It will
->>>> be used to kill duplicated arch specific code for IA64 and x86. It may
->>>> also help ARM64 in future.
->>>
->>> As I commented in previous version, this patch will introduce
->>> compile error on ACPI enabled ARM64 kernel because struct
->>> pci_controller is not defined for ARM64, so how about adding
->>> the following patch before this patch, or squash to this one,
->>> does it make sense?
->> Hi Hanjun,
->>     Thanks for fixing this building issue for ARM64. The patch
->> is really what I want:). Will merge it into next version. With this
->> patch applied, are there any other issues from ARM64 side?
->
-> Suravee is testing ARM64 PCI on top of your patch set, he can confirm
-> that if there are any other issues :) (Suravee has a real ARM64 hardware
-> in hand)
+When a device driver issues the first dma_map command for a device, we
+assign a new and empty page-table, thus removing all mappings from the
+old kernel for the device.
 
-After confirmed with Suravee, this patch set works OK on ARM64
-hardware for PCI hostbridge init, and can enumerate PCI devices
-(adding some ARM64 related PCI patches) and works fine with legacy
-interrupt, so to me, this patch set is good to go :)
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 58 ++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 50 insertions(+), 8 deletions(-)
 
-For this patchset:
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 91545bf..3cc1027 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -396,6 +396,9 @@ static int copy_root_entry_table(struct intel_iommu *iommu);
+ 
+ static int intel_iommu_load_translation_tables(struct intel_iommu *iommu);
+ 
++static void unmap_device_dma(struct dmar_domain *domain,
++				struct device *dev,
++				struct intel_iommu *iommu);
+ static void iommu_check_pre_te_status(struct intel_iommu *iommu);
+ static u8 g_translation_pre_enabled;
+ 
+@@ -3115,6 +3118,7 @@ static struct iova *intel_alloc_iova(struct device *dev,
+ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+ {
+ 	struct dmar_domain *domain;
++	struct intel_iommu *iommu;
+ 	int ret;
+ 
+ 	domain = get_domain_for_dev(dev, DEFAULT_DOMAIN_ADDRESS_WIDTH);
+@@ -3124,14 +3128,30 @@ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+ 		return NULL;
+ 	}
+ 
+-	/* make sure context mapping is ok */
+-	if (unlikely(!domain_context_mapped(dev))) {
+-		ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
+-		if (ret) {
+-			printk(KERN_ERR "Domain context map for %s failed",
+-			       dev_name(dev));
+-			return NULL;
+-		}
++	/* if in kdump kernel, we need to unmap the mapped dma pages,
++	 * detach this device first.
++	 */
++	if (likely(domain_context_mapped(dev))) {
++		iommu = domain_get_iommu(domain);
++		if (iommu->pre_enabled_trans) {
++			unmap_device_dma(domain, dev, iommu);
++
++			domain = get_domain_for_dev(dev,
++				DEFAULT_DOMAIN_ADDRESS_WIDTH);
++			if (!domain) {
++				pr_err("Allocating domain for %s failed",
++				       dev_name(dev));
++				return NULL;
++			}
++		} else
++			return domain;
++	}
++
++	ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
++	if (ret) {
++		pr_err("Domain context map for %s failed",
++		       dev_name(dev));
++		return NULL;
+ 	}
+ 
+ 	return domain;
+@@ -5168,6 +5188,28 @@ static int intel_iommu_load_translation_tables(struct intel_iommu *iommu)
+ 	return ret;
+ }
+ 
++static void unmap_device_dma(struct dmar_domain *domain,
++				struct device *dev,
++				struct intel_iommu *iommu)
++{
++	struct context_entry *ce;
++	struct iova *iova;
++	phys_addr_t phys_addr;
++	dma_addr_t dev_addr;
++	struct pci_dev *pdev;
++
++	pdev = to_pci_dev(dev);
++	ce = iommu_context_addr(iommu, pdev->bus->number, pdev->devfn, 1);
++	phys_addr = context_address_root(ce) << VTD_PAGE_SHIFT;
++	dev_addr = phys_to_dma(dev, phys_addr);
++
++	iova = find_iova(&domain->iovad, IOVA_PFN(dev_addr));
++	if (iova)
++		intel_unmap(dev, dev_addr);
++
++	domain_remove_one_dev_info(domain, dev);
++}
++
+ static void iommu_check_pre_te_status(struct intel_iommu *iommu)
+ {
+ 	u32 sts;
+-- 
+2.0.0-rc0
 
-Tested-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-
-I will add my Reviewed-by for some of patches later.
-
-Thanks
-Hanjun
