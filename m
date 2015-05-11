@@ -1,99 +1,135 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 May 2015 17:58:44 +0100
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
- ACPI
-Message-ID: <20150526165844.GD2175@e106497-lin.cambridge.arm.com>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
- <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org>
-MIME-Version: 1.0
-In-Reply-To: <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v11 05/10] iommu/vt-d: Add functions to load and save old re
+Date: Mon, 11 May 2015 17:52:49 +0800
+Message-Id: <1431337974-545-6-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
-> ARM64 ACPI based PCI host bridge init needs a arch dependent
-> struct pci_controller to accommodate common PCI host bridge
-> code which is introduced later, or it will lead to compile
-> errors on ARM64.
+Add functions to load root entry table from old kernel, and to save updated
+root entry table.
+Add two member in struct intel_iommu, to store the RTA in old kernel, and
+the mapped virt address of it.
 
-Hi Hanjun,
+We use the old RTA in dump kernel, and when the iommu->root_entry is used as
+a cache in kdump kernel, its phys address will not be save to RTA register,
+but when its data is changed, we will save the new data to old root entry table.
 
-Two questions: why don't you introduce this patch next to the
-one that is going to make use of it (or even merge it there)?
-Second, why is the whole struct pci_controller not surrounded
-by #ifdef CONFIG_ACPI as you are implying that this is needed
-only for ACPI?
+Li, Zhen-hua:
+    The functions and logics.
 
-Btw, looking through the whole series I'm not (yet) convinced
-that this is needed at all.
+Takao Indoh:
+    Add __iommu_flush_cache.
 
-Best regards,
-Liviu
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ drivers/iommu/intel-iommu.c | 54 ++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/intel-iommu.h |  3 +++
+ 2 files changed, 56 insertions(+), 1 deletion(-)
 
-> 
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Liviu Dudau <Liviu.Dudau@arm.com>
-> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
-> ---
->  arch/arm64/include/asm/pci.h | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> index b008a72..7088495 100644
-> --- a/arch/arm64/include/asm/pci.h
-> +++ b/arch/arm64/include/asm/pci.h
-> @@ -10,6 +10,16 @@
->  #include <asm-generic/pci-bridge.h>
->  #include <asm-generic/pci-dma-compat.h>
->  
-> +struct acpi_device;
-> +
-> +struct pci_controller {
-> +#ifdef CONFIG_ACPI
-> +	struct acpi_device *companion;	/* ACPI companion device */
-> +#endif
-> +	int		segment;	/* PCI domain */
-> +	int		node;		/* NUMA node */
-> +};
-> +
->  #define PCIBIOS_MIN_IO		0x1000
->  #define PCIBIOS_MIN_MEM		0
->  
-> -- 
-> 1.9.1
-> 
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0b97c15..3a5d446 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -371,6 +371,10 @@ static struct context_entry *device_to_existing_context_entry(
+ 				struct intel_iommu *iommu,
+ 				u8 bus, u8 devfn);
+ 
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
++
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
++
+ /*
+  * A structure used to store the address allocated by ioremap();
+  * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
+@@ -382,7 +386,6 @@ struct iommu_remapped_entry {
+ static LIST_HEAD(__iommu_remapped_mem);
+ static DEFINE_MUTEX(__iommu_mem_list_lock);
+ 
+-
+ /*
+  * This domain is a statically identity mapping domain.
+  *	1. This domain creats a static 1:1 mapping to all usable memory.
+@@ -4935,3 +4938,52 @@ int __iommu_free_mapped_mem(void)
+ 	return 0;
+ }
+ 
++/*
++ * Load the old root entry table to new root entry table.
++ */
++static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
++
++	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
++}
++
++/*
++ * When the data in new root entry table is changed, this function
++ * must be called to save the updated data to old root entry table.
++ */
++static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
++{
++	u8 start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->root_entry)
++		|| (!iommu->root_entry_old_virt)
++		|| (!iommu->root_entry_old_phys))
++		return;
++
++	if (index < -1 || index >= ROOT_ENTRY_NR)
++		return;
++
++	if (index == -1) {
++		start = 0;
++		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
++	} else {
++		start = index * sizeof(struct root_entry);
++		size = sizeof(struct root_entry);
++	}
++	to = iommu->root_entry_old_virt;
++	from = iommu->root_entry;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++}
++
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index ced1fac..e7cac12 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -340,6 +340,9 @@ struct intel_iommu {
+ 	spinlock_t	lock; /* protect context, domain ids */
+ 	struct root_entry *root_entry; /* virtual address */
+ 
++	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
++	unsigned long	root_entry_old_phys; /* root entry in old kernel */
++
+ 	struct iommu_flush flush;
+ #endif
+ 	struct q_inval  *qi;            /* Queued invalidation info */
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.0.0-rc0
 
