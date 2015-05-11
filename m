@@ -1,50 +1,243 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:39283 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753934AbbEMXfq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 May 2015 19:35:46 -0400
-Message-ID: <1431560124.20218.91.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Thu, 14 May 2015 09:35:24 +1000
-In-Reply-To: <1430774063.7979.139.camel@kernel.crashing.org>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
-	 <1430774063.7979.139.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:50360 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbbEKDEY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 May 2015 23:04:24 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 13:04:21 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 230602CE8040
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 13:04:18 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B349qb42270900
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 13:04:18 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B33jUI014166
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 13:03:45 +1000
+Date: Mon, 11 May 2015 13:03:19 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 7/9] powerpc/powernv: Support EEH reset for VFs
+Message-ID: <20150511030319.GA12216@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-8-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430723258-21299-8-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-05-05 at 07:14 +1000, Benjamin Herrenschmidt wrote:
-> So the "trivial" way to do it (and the way we have implemented the FW
-> side so far) is to have the FW simply "flatten" the subtree below the
-> slot and pass it to Linux, with the intent of expanding it back below
-> the slot node.
-> 
-> This is what Gavin proposed patches do.
-> 
-> The overlay mechanism adds all sorts of features that we don't seen to
-> need and would make the above more complex.
+On Mon, May 04, 2015 at 03:07:36PM +0800, Wei Yang wrote:
+>Before VF PE introduced, there isn't a method to reset an individual pci
+             ^                                                        ^^^
+             is                                                       PCI
 
-Guys, I never got a final answer from you on this. Are we ok with adding
-the way to just expand a subtree or are you insistent we need to use the
-overlap mechanism ?
+>function. And since FW is not aware of the VF, the VF's reset should be
+                     ^^
+                    skiboot firmware
 
-Cheers,
-Ben.
+>done in kernel.
+>
+>This patch introduce a pnv_eeh_vf_pe_reset() to do the flr or af_flr to a
+            ^^^^^^^^^  ^                                ^^^    ^^^^^^
+            introduces function                         FLR    AF FLR
+>VF.
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> arch/powerpc/include/asm/eeh.h               |    1 +
+> arch/powerpc/platforms/powernv/eeh-powernv.c |  111 +++++++++++++++++++++++++-
+> 2 files changed, 111 insertions(+), 1 deletion(-)
+>
+>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>index 2067de4..78c8bec 100644
+>--- a/arch/powerpc/include/asm/eeh.h
+>+++ b/arch/powerpc/include/asm/eeh.h
+>@@ -135,6 +135,7 @@ struct eeh_dev {
+> 	int pcix_cap;			/* Saved PCIx capability	*/
+> 	int pcie_cap;			/* Saved PCIe capability	*/
+> 	int aer_cap;			/* Saved AER capability		*/
+>+	int af_cap;			/* Saved AF capability		*/
+> 	struct eeh_pe *pe;		/* Associated PE		*/
+> 	struct list_head list;		/* Form link list in the PE	*/
+> 	struct pci_controller *phb;	/* Associated PHB		*/
+>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>index 5447481..1ad322f 100644
+>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>@@ -402,6 +402,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
+> 	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
+> 	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
+> 	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
+>+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
+> 	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
+> 		edev->mode |= EEH_DEV_BRIDGE;
+> 		if (edev->pcie_cap) {
+>@@ -891,6 +892,105 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+> 	return 0;
+> }
+>
+>+static int pnv_pci_wait_for_pending(struct pci_dn *pdn, int pos, u16 mask)
+>+{
+>+	int i;
+>+
+>+	/* Wait for Transaction Pending bit clean */
+>+	for (i = 0; i < 4; i++) {
+>+		u32 status;
+>+		if (i)
+>+			msleep((1 << (i - 1)) * 100);
+>+
+>+		eeh_ops->read_config(pdn, pos, 2, &status);
+>+		if (!(status & mask))
+>+			return 1;
+>+	}
+>+
+>+	return 0;
+>+}
+>+
+>+static int pnv_eeh_do_flr(struct pci_dn *pdn)
+>+{
+>+	u32 cap;
+>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>+
+>+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &cap);
+>+	if (!(cap & PCI_EXP_DEVCAP_FLR))
+>+		return -ENOTTY;
+>+
+>+	if (!pnv_pci_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND))
+>+		pr_err("%04x:%02x:%02x:%01x timed out waiting for pending transaction; performing function level reset anyway\n",
+>+			edev->phb->global_number, pdn->busno,
+>+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+>+
 
+It's breaking the limitation that each line has 80 columns to maximal degree.
+
+>+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL, 4, &cap);
+>+	cap |= PCI_EXP_DEVCTL_BCR_FLR;
+>+	eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL, 4, cap);
+>+	msleep(100);
+>+	return 0;
+>+}
+>+
+>+static int pnv_eeh_do_af_flr(struct pci_dn *pdn)
+>+{
+>+	u32 cap;
+>+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>+
+>+	if (!edev->af_cap)
+>+		return -ENOTTY;
+>+
+>+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
+>+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
+>+		return -ENOTTY;
+
+Why not cache af_cap is it really support reset during probe time? With
+that, you don't have the check.
+
+>+
+>+	/*
+>+	 * Wait for Transaction Pending bit to clear.  A word-aligned test
+>+	 * is used, so we use the conrol offset rather than status and shift
+>+	 * the test bit to match.
+>+	 */
+>+	if (!pnv_pci_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
+>+				 PCI_AF_STATUS_TP << 8))
+>+		pr_err("%04x:%02x:%02x:%01x timed out waiting for pending transaction; performing AF function level reset anyway\n",
+>+			edev->phb->global_number, pdn->busno,
+>+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+>+
+
+It's breaking the limitation that each line has 80 columns.
+
+>+	eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, PCI_AF_CTRL_FLR);
+>+	msleep(100);
+>+	return 0;
+>+}
+>+
+
+Can you merge the above two functions to one (pnv_eeh_do_vf_reset())? 
+
+>+static int pnv_eeh_reset_vf(struct pci_dn *pdn)
+>+{
+>+	int rc;
+>+
+>+	might_sleep();
+>+
+>+	rc = pnv_eeh_do_flr(pdn);
+>+	if (rc != -ENOTTY)
+>+		goto done;
+>+
+>+	rc = pnv_eeh_do_af_flr(pdn);
+>+	if (rc != -ENOTTY)
+>+		goto done;
+>+
+>+done:
+>+	return rc;
+>+}
+>+
+>+static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
+>+{
+>+	struct eeh_dev *edev, *tmp;
+>+	struct pci_dn *pdn;
+>+	int ret = 0;
+>+
+
+Why you ignore "option" here? In that case, the PE will be resetted
+for twice at asserting/deasserting time.
+
+>+	eeh_pe_for_each_dev(pe, edev, tmp) {
+>+		pdn = eeh_dev_to_pdn(edev);
+>+		ret |= pnv_eeh_reset_vf(pdn);
+
+When hitting error from reset on one VF, you don't need proceed, no?
+
+>+	}
+>+
+>+	return ret;
+>+}
+>+
+> void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+> {
+> 	struct pci_controller *hose;
+>@@ -966,7 +1066,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+> 		}
+>
+> 		bus = eeh_pe_bus_get(pe);
+>-		if (pci_is_root_bus(bus) ||
+>+		if (pe->type & EEH_PE_VF)
+>+			ret = pnv_eeh_vf_pe_reset(pe, option);
+>+		else if (pci_is_root_bus(bus) ||
+> 			pci_is_root_bus(bus->parent))
+> 			ret = pnv_eeh_root_reset(hose, option);
+> 		else
+>@@ -1106,6 +1208,13 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
+> 	if (!edev || !edev->pe)
+> 		return false;
+>
+>+	/*
+>+	 * For VF's reset operation, we need to rely on the kernel to
+>+	 * do those pci read/write, since FW isn't aware of VFs.
+              ^^^^^^^^^^^^^^^^^^^^
+
+              PCI config operations since firmware isn't aware of VFs.
+
+>+	 */
+>+	if ((edev->mode & EEH_DEV_VF) && (edev->pe->state & EEH_PE_RESET))
+>+		return true;
+>+
+
+Hrm, did you test the code? The PCI config is blocked when issuing reset
+to VF PE. "false" should be returned here, isn't it?
+
+> 	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
+> 		return true;
+>
+
+Thanks,
+Gavin
 
