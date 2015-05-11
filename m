@@ -1,83 +1,209 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:29890 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752977AbbETQAs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 May 2015 12:00:48 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.h.duyck@redhat.com>
-CC: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to
- protect VPD operations
-Date: Wed, 20 May 2015 16:00:46 +0000
-Message-ID: <C73FDF83-62F7-47F4-905A-CD7D482F0709@intel.com>
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
- <555B78F7.60908@redhat.com> <20150519160158.00002cd6@unknown>
- <555BD029.7050803@redhat.com>
- <F47DC49C-CCC5-4693-8905-20ABCE6F5993@intel.com>
- <555BDD14.2080807@redhat.com>
-In-Reply-To: <555BDD14.2080807@redhat.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_8D7C4533-375A-45A6-BB00-B7E88D683895";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:59796 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039AbbEKHZV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 03:25:21 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 17:25:17 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A9E0C3578052
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:25:14 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B7P6IZ12517398
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:25:14 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B7OfSC013242
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:24:42 +1000
+Date: Mon, 11 May 2015 17:24:16 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Subject: Re: [PATCH v4 16/21] powerpc/pci: Create eeh_dev while creating
+ pci_dn
+Message-ID: <20150511072416.GA14997@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-17-git-send-email-gwshan@linux.vnet.ibm.com>
+ <554E22EC.205@ozlabs.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <554E22EC.205@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_8D7C4533-375A-45A6-BB00-B7E88D683895
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+On Sun, May 10, 2015 at 01:08:28AM +1000, Alexey Kardashevskiy wrote:
+>On 05/01/2015 04:03 PM, Gavin Shan wrote:
+>>The eeh_dev is always created based on pci_dn, but with initcall
+>>supported by core_initcall_sync(). The patch creates eeh_dev
+>>when pci_dn is created, indicating they have same life cycle.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/eeh.h         |  6 ++++--
+>>  arch/powerpc/kernel/eeh_dev.c          | 18 ++++--------------
+>>  arch/powerpc/kernel/pci_dn.c           | 12 ++++++++++++
+>>  arch/powerpc/platforms/pseries/setup.c |  6 +-----
+>>  4 files changed, 21 insertions(+), 21 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index 2793d24..4ed88f6 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -269,7 +269,8 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
+>>  const char *eeh_pe_loc_get(struct eeh_pe *pe);
+>>  struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
+>>
+>>-void *eeh_dev_init(struct pci_dn *pdn, void *data);
+>>+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
+>>+			     struct pci_controller *phb);
+>
+>
+>Everywhere else (?) you name these pci_controller pointer variables "hose"
+>but not in this patch.
+>
 
-> On May 19, 2015, at 6:02 PM, Alexander Duyck =
-<alexander.h.duyck@redhat.com> wrote:
->=20
-> My suspicion is that we have a number of bugs floating around out =
-there like the Broadcom issue.  Specifically, one of the ones I found =
-was that the r8169 seems to have a similar issue as called out in the =
-email thread at http://permalink.gmane.org/gmane.linux.network/232260.  =
-I'm wondering if we shouldn't add an initializer for the read/write =
-functions that will go through and pull out the 3 or 4 headers from the =
-VPD data needed to get the actual length.  Then it would lock down the =
-VPD and save some serious time on reads since most devices don't have =
-32K of VPD to read.
+Yeah, better to have "struct pci_controller *hose" actually. For PCI related
+code in platforms/powernv/*.c, we have "struct pci_controller *hose" and
+"struct pnv_phb *phb".
 
-That is interesting. I noticed that there are functions already present =
-to find VPD tags. If the VPD were invalid, would this block its being =
-read at all, or would it default to allow reading/writing anything? I =
-don't know if there might be people using Linux to completely write the =
-VPD area. Presumably your idea would prevent rewriting the VPD area to =
-something larger.
+>>  void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
+>>  int eeh_init(void);
+>>  int __init eeh_ops_register(struct eeh_ops *ops);
+>>@@ -322,7 +323,8 @@ static inline int eeh_init(void)
+>>  	return 0;
+>>  }
+>>
+>>-static inline void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>+static inline struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
+>>+					   struct pci_controller *phb)
+>>  {
+>>  	return NULL;
+>>  }
+>>diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
+>>index f33ce5b..7486932 100644
+>>--- a/arch/powerpc/kernel/eeh_dev.c
+>>+++ b/arch/powerpc/kernel/eeh_dev.c
+>>@@ -44,14 +44,14 @@
+>>  /**
+>>   * eeh_dev_init - Create EEH device according to OF node
+>>   * @pdn: PCI device node
+>>- * @data: PHB
+>>+ * @phb: PCI controller
+>>   *
+>>   * It will create EEH device according to the given OF node. The function
+>>   * might be called by PCI emunation, DR, PHB hotplug.
+>>   */
+>>-void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
+>>+			     struct pci_controller *phb)
+>>  {
+>>-	struct pci_controller *phb = data;
+>>  	struct eeh_dev *edev;
+>>
+>>  	/* Allocate EEH device */
+>>@@ -68,7 +68,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>  	edev->phb = phb;
+>>  	INIT_LIST_HEAD(&edev->list);
+>>
+>>-	return NULL;
+>>+	return edev;
+>>  }
+>>
+>>  /**
+>>@@ -80,16 +80,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+>>   */
+>>  void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
+>>  {
+>>-	struct pci_dn *root = phb->pci_data;
+>>-
+>>  	/* EEH PE for PHB */
+>>  	eeh_phb_pe_create(phb);
+>>-
+>>-	/* EEH device for PHB */
+>>-	eeh_dev_init(root, phb);
+>>-
+>>-	/* EEH devices for children OF nodes */
+>>-	traverse_pci_dn(root, eeh_dev_init, phb);
+>>  }
+>>
+>>  /**
+>>@@ -105,8 +97,6 @@ static int __init eeh_dev_phb_init(void)
+>>  	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+>>  		eeh_dev_phb_init_dynamic(phb);
+>>
+>>-	pr_info("EEH: devices created\n");
+>>-
+>>  	return 0;
+>>  }
+>>
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index d3833af..abc81fa 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -276,6 +276,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+>>  	const __be32 *regs;
+>>  	struct device_node *parent;
+>>  	struct pci_dn *pdn;
+>>+#ifdef CONFIG_EEH
+>>+	struct eeh_dev *edev;
+>>+#endif
+>>
+>>  	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
+>>  	if (pdn == NULL)
+>>@@ -306,6 +309,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+>>  	/* Extended config space */
+>>  	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
+>>
+>>+	/* Initialize EEH device */
+>>+#ifdef CONFIG_EEH
+>
+>You do not need this #ifdef - you have a stub for eeh_dev_init() in
+>arch/powerpc/include/asm/eeh.h
+>
+>
+>>+	edev = eeh_dev_init(pdn, phb);
+>>+	if (!edev) {
+>
+>
+>s/!edev/eeh_dev_init(pdn, phb)/ and get rid of @edev local variable at all -
+>you do not use it anyway?
+>
+>
 
---
-Mark Rustad, Networking Division, Intel Corporation
+Yep, you're correct and I'll fix it up.
 
+>>+		kfree(pdn);
+>>+		return NULL;
+>>+	}
+>>+#endif
+>>+
+>>  	/* Attach to parent node */
+>>  	INIT_LIST_HEAD(&pdn->child_list);
+>>  	INIT_LIST_HEAD(&pdn->list);
+>>diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+>>index 5f80758..92974aa 100644
+>>--- a/arch/powerpc/platforms/pseries/setup.c
+>>+++ b/arch/powerpc/platforms/pseries/setup.c
+>>@@ -261,12 +261,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+>>  	switch (action) {
+>>  	case OF_RECONFIG_ATTACH_NODE:
+>>  		pci = np->parent->data;
+>>-		if (pci) {
+>>+		if (pci)
+>>  			update_dn_pci_info(np, pci->phb);
+>>-
+>>-			/* Create EEH device for the OF node */
+>>-			eeh_dev_init(PCI_DN(np), pci->phb);
+>>-		}
+>>  		break;
+>>  	default:
+>>  		err = NOTIFY_DONE;
+>>
 
---Apple-Mail=_8D7C4533-375A-45A6-BB00-B7E88D683895
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
+Thanks,
+Gavin
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVXK+tAAoJEDwO/+eO4+5uCzIQALOmwWUbPkoYyC0COmg72qe/
-E9MxuQD9et55vp4DS6zDdLH5eruRgqEGYu6LZxintzNgUawD+rH0P1f6l5LRZo7B
-r4KNMIwsnvDc2JDAsvBWBMGnEyjaZv16YLrL/aYVwBwT9W7/hz1EQum8ijeSwkOZ
-BcBBQm2VKJmkEh6q1CLSyVLhgaMSZvmI3GBNIIst3Y6xNSPSww+WZ59rkYxZYYDv
-5VDnGmHs6q6tpvB+a/BSTgUhZ/7uQsMZ+O1FBecnWtLp36AXtL0dHSBVVAHZ0QhS
-Il/R8RNYEhpbfpukdY+yt81TZEX4Zm8MwYB35GIJzlCIVlDn6NvQqNl/O480dyYf
-0PPfoSAf/aWSg46DUOJMo0oh8zt3DEU6Fk8cR89LKzKUzlVU90cMj0tbOlxD46Il
-DreV6AHIXaDeuNKU6AlS0CO69KlECF7iU0s2+8Zus5PO++6CCeuzGEpf4MEHDY79
-t5fAFiqu6pVk31pAaQl7Y+P6GzhJszgZYxuyDoh861QXKwMdNWTb7grXeXc0gpJv
-9WjecP1alFkTuJKzPwf2ScK/cCSv/VqydhwTEQTdHN5HLFndTuzLaVkcKs15pezl
-prs5ggSYdxZGx2MTiBOutEhOsgYGYcJcAu6vYlVNrcikLkGzWy6VYdxZX6FJy9az
-B1WTBfBqZyxsTSNdcsnE
-=ghFr
------END PGP SIGNATURE-----
-
---Apple-Mail=_8D7C4533-375A-45A6-BB00-B7E88D683895--
