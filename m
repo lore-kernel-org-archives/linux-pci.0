@@ -1,684 +1,408 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwhop.emc.com ([168.159.213.141]:45480 "EHLO
-	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747AbbEUNWM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 09:22:12 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v2 07/17] NTB: Add tool test client
-Date: Thu, 21 May 2015 04:20:51 -0400
-Message-Id: <4975ad78369e7d3f15ac14911600b7a9a36f21ae.1432196075.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
-References: <cover.1432192681.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
-References: <cover.1432196075.git.Allen.Hubbe@emc.com>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:57817 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbbEKEsS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 00:48:18 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 14:48:16 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0BB732CE8040
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:48:02 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B4lrrp19202256
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:48:01 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B4lS97020841
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:47:29 +1000
+Date: Mon, 11 May 2015 14:47:04 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Subject: Re: [PATCH v4 03/21] powerpc/powernv: M64 support improvement
+Message-ID: <20150511044704.GB24743@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-4-git-send-email-gwshan@linux.vnet.ibm.com>
+ <554DE04E.8080900@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <554DE04E.8080900@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a simple debugging driver that enables the doorbell and
-scratchpad registers to be read and written from the debugfs.  This
-tool enables more complicated debugging to be scripted from user space.
-This driver may be used to test that your ntb hardware and drivers are
-functioning at a basic level.
+On Sat, May 09, 2015 at 08:24:14PM +1000, Alexey Kardashevskiy wrote:
+>On 05/01/2015 04:02 PM, Gavin Shan wrote:
+>>We're having the hardware or enforced (on P7IOC) limitation: M64
+>
+>I would think if it is enforced, then it is enforced by hardware but you say
+>"hardware OR enforced" :)
+>
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- Documentation/ntb.txt       |  32 +++
- MAINTAINERS                 |   1 +
- drivers/ntb/test/Kconfig    |  11 +
- drivers/ntb/test/Makefile   |   1 +
- drivers/ntb/test/ntb_tool.c | 557 ++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 602 insertions(+)
- create mode 100644 drivers/ntb/test/ntb_tool.c
+PHB3 doesn't have M64DT from hardware. P7IOC supports that, but I
+don't utilize the capability. So I called it's enforced. Maybe it
+may be more clear to have "software enforced" ? :-)
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index e5d1591..b48249a 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -64,6 +64,38 @@ Module Parameters:
- * dyndbg - It is suggested to specify dyndbg=+p when loading this module, and
- 	then to observe debugging output on the console.
- 
-+### NTB Tool Test Client (ntb\_tool)
-+
-+The Tool test client serves for debugging, primarily, ntb hardware and drivers.
-+The Tool provides access through debugfs for reading, setting, and clearing the
-+NTB doorbell, and reading and writing scratchpads.
-+
-+The Tool does not currently have any module parameters.
-+
-+Debugfs Files:
-+
-+* *debugfs*/ntb\_tool/*hw*/ - A directory in debugfs will be created for each
-+	NTB device probed by the tool.  This directory is shortened to *hw*
-+	below.
-+* *hw*/db - This file is used to read, set, and clear the local doorbell.  Not
-+	all operations may be supported by all hardware.  To read the doorbell,
-+	read the file.  To set the doorbell, write `s` followed by the bits to
-+	set (eg: `echo 's 0x0101' > db`).  To clear the doorbell, write `c`
-+	followed by the bits to clear.
-+* *hw*/mask - This file is used to read, set, and clear the local doorbell mask.
-+	See *db* for details.
-+* *hw*/peer\_db - This file is used to read, set, and clear the peer doorbell.
-+	See *db* for details.
-+* *hw*/peer\_mask - This file is used to read, set, and clear the peer doorbell
-+	mask.  See *db* for details.
-+* *hw*/spad - This file is used to read and write local scratchpads.  To read
-+	the values of all scratchpads, read the file.  To write values, write a
-+	series of pairs of scratchpad number and value
-+	(eg: `echo '4 0x123 7 0xabc' > spad`
-+	# to set scratchpads `4` and `7` to `0x123` and `0xabc`, respectively).
-+* *hw*/peer\_spad - This file is used to read and write peer scratchpads.  See
-+	*spad* for details.
-+
- ## NTB Hardware Drivers
- 
- NTB hardware drivers should register devices with the NTB core driver.  After
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cbc9d3d..dccfe82 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6953,6 +6953,7 @@ F:	drivers/ntb/
- F:	drivers/net/ntb_netdev.c
- F:	drivers/ntb/ntb.c
- F:	drivers/ntb/ntb_pingpong.c
-+F:	drivers/ntb/ntb_tool.c
- F:	drivers/ntb/ntb_transport.c
- F:	include/linux/ntb.h
- F:	include/linux/ntb_transport.h
-diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
-index 72d255d..01852f9 100644
---- a/drivers/ntb/test/Kconfig
-+++ b/drivers/ntb/test/Kconfig
-@@ -6,3 +6,14 @@ config NTB_PINGPONG
- 	 your ntb hardware and drivers are functioning at a basic level.
- 
- 	 If unsure, say N.
-+
-+config NTB_TOOL
-+	tristate "NTB Debugging Tool Test Client"
-+	help
-+	 This is a simple debugging driver that enables the doorbell and
-+	 scratchpad registers to be read and written from the debugfs.  This
-+	 enables more complicated debugging to be scripted from user space.
-+	 This driver may be used to test that your ntb hardware and drivers are
-+	 functioning at a basic level.
-+
-+	 If unsure, say N.
-diff --git a/drivers/ntb/test/Makefile b/drivers/ntb/test/Makefile
-index b323093..0ea32a3 100644
---- a/drivers/ntb/test/Makefile
-+++ b/drivers/ntb/test/Makefile
-@@ -1 +1,2 @@
- obj-$(CONFIG_NTB_PINGPONG) += ntb_pingpong.o
-+obj-$(CONFIG_NTB_TOOL) += ntb_tool.o
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-new file mode 100644
-index 0000000..49628ef
---- /dev/null
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -0,0 +1,557 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ *   redistributing this file, you may do so under either license.
-+ *
-+ *   GPL LICENSE SUMMARY
-+ *
-+ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
-+ *
-+ *   This program is free software; you can redistribute it and/or modify
-+ *   it under the terms of version 2 of the GNU General Public License as
-+ *   published by the Free Software Foundation.
-+ *
-+ *   This program is distributed in the hope that it will be useful, but
-+ *   WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *   General Public License for more details.
-+ *
-+ *   BSD LICENSE
-+ *
-+ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
-+ *
-+ *   Redistribution and use in source and binary forms, with or without
-+ *   modification, are permitted provided that the following conditions
-+ *   are met:
-+ *
-+ *     * Redistributions of source code must retain the above copyright
-+ *       notice, this list of conditions and the following disclaimer.
-+ *     * Redistributions in binary form must reproduce the above copy
-+ *       notice, this list of conditions and the following disclaimer in
-+ *       the documentation and/or other materials provided with the
-+ *       distribution.
-+ *     * Neither the name of Intel Corporation nor the names of its
-+ *       contributors may be used to endorse or promote products derived
-+ *       from this software without specific prior written permission.
-+ *
-+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ * PCIe NTB Debugging Tool Linux driver
-+ *
-+ * Contact Information:
-+ * Allen Hubbe <Allen.Hubbe@emc.com>
-+ */
-+
-+/*
-+ * How to use this tool, by example.
-+ *
-+ * Assuming $DBG_DIR is something like:
-+ * '/sys/kernel/debug/ntb_tool/0000:00:03.0'
-+ *
-+ * Eg: check if clearing the doorbell mask generates an interrupt.
-+ *
-+ * # Set the doorbell mask
-+ * root@self# echo 's 1' > $DBG_DIR/mask
-+ *
-+ * # Ring the doorbell from the peer
-+ * root@peer# echo 's 1' > $DBG_DIR/peer_db
-+ *
-+ * # Clear the doorbell mask
-+ * root@self# echo 'c 1' > $DBG_DIR/mask
-+ *
-+ * Observe debugging output in dmesg or your console.  You should see a
-+ * doorbell event triggered by clearing the mask.  If not, this may indicate an
-+ * issue with the hardware that needs to be worked around in the driver.
-+ *
-+ * Eg: read and write scratchpad registers
-+ *
-+ * root@peer# echo '0 0x01010101 1 0x7f7f7f7f' > $DBG_DIR/peer_spad
-+ *
-+ * root@self# cat $DBG_DIR/spad
-+ *
-+ * Observe that spad 0 and 1 have the values set by the peer.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+
-+#include <linux/debugfs.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/pci.h>
-+#include <linux/slab.h>
-+
-+#include <linux/ntb.h>
-+
-+#define DRIVER_NAME			"ntb_tool"
-+#define DRIVER_DESCRIPTION		"PCIe NTB Debugging Tool"
-+
-+#define DRIVER_LICENSE			"Dual BSD/GPL"
-+#define DRIVER_VERSION			"1.0"
-+#define DRIVER_RELDATE			"22 April 2015"
-+#define DRIVER_AUTHOR			"Allen Hubbe <Allen.Hubbe@emc.com>"
-+
-+MODULE_LICENSE(DRIVER_LICENSE);
-+MODULE_VERSION(DRIVER_VERSION);
-+MODULE_AUTHOR(DRIVER_AUTHOR);
-+MODULE_DESCRIPTION(DRIVER_DESCRIPTION);
-+
-+static struct dentry *tool_dbgfs;
-+
-+struct tool_ctx {
-+	struct ntb_dev *ntb;
-+	struct dentry *dbgfs;
-+};
-+
-+#define SPAD_FNAME_SIZE 0x10
-+#define INT_PTR(x) ((void *)(unsigned long)x)
-+#define PTR_INT(x) ((int)(unsigned long)x)
-+
-+#define TOOL_FOPS_RDWR(__name, __read, __write) \
-+	const struct file_operations __name = {	\
-+		.owner = THIS_MODULE,		\
-+		.open = simple_open,		\
-+		.read = __read,			\
-+		.write = __write,		\
-+	}
-+
-+static void tool_link_event(void *ctx)
-+{
-+	struct tool_ctx *tc = ctx;
-+	enum ntb_speed speed;
-+	enum ntb_width width;
-+	int up;
-+
-+	up = ntb_link_is_up(tc->ntb, &speed, &width);
-+
-+	dev_dbg(&tc->ntb->dev, "link is %s speed %d width %d\n",
-+		up ? "up" : "down", speed, width);
-+}
-+
-+static void tool_db_event(void *ctx, int vec)
-+{
-+	struct tool_ctx *tc = ctx;
-+	u64 db_bits, db_mask;
-+
-+	db_mask = ntb_db_vector_mask(tc->ntb, vec);
-+	db_bits = ntb_db_read(tc->ntb);
-+
-+	dev_dbg(&tc->ntb->dev, "doorbell vec %d mask %#llx bits %#llx\n",
-+		vec, db_mask, db_bits);
-+}
-+
-+static const struct ntb_ctx_ops tool_ops = {
-+	.link_event = tool_link_event,
-+	.db_event = tool_db_event,
-+};
-+
-+static ssize_t tool_dbfn_read(struct tool_ctx *tc, char __user *ubuf,
-+			      size_t size, loff_t *offp,
-+			      u64 (*db_read_fn)(struct ntb_dev *))
-+{
-+	size_t buf_size;
-+	char *buf;
-+	ssize_t pos, rc;
-+
-+	if (!db_read_fn)
-+		return -EINVAL;
-+
-+	buf_size = min(size, 0x20ul);
-+
-+	buf = kmalloc(buf_size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	pos = scnprintf(buf, buf_size, "%#llx\n",
-+			db_read_fn(tc->ntb));
-+
-+	rc = simple_read_from_buffer(ubuf, size, offp, buf, pos);
-+
-+	kfree(buf);
-+
-+	return rc;
-+}
-+
-+static ssize_t tool_dbfn_write(struct tool_ctx *tc,
-+			       const char __user *ubuf,
-+			       size_t size, loff_t *offp,
-+			       int (*db_set_fn)(struct ntb_dev *, u64),
-+			       int (*db_clear_fn)(struct ntb_dev *, u64))
-+{
-+	u64 db_bits;
-+	char *buf, cmd;
-+	ssize_t rc;
-+	int n;
-+
-+	buf = kmalloc(size + 1, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	rc = simple_write_to_buffer(buf, size, offp, ubuf, size);
-+	if (rc < 0) {
-+		kfree(buf);
-+		return rc;
-+	}
-+
-+	buf[size] = 0;
-+
-+	n = sscanf(buf, "%c %lli", &cmd, &db_bits);
-+
-+	kfree(buf);
-+
-+	if (n != 2) {
-+		rc = -EINVAL;
-+	} else if (cmd == 's') {
-+		if (!db_set_fn)
-+			rc = -EINVAL;
-+		else
-+			rc = db_set_fn(tc->ntb, db_bits);
-+	} else if (cmd == 'c') {
-+		if (!db_clear_fn)
-+			rc = -EINVAL;
-+		else
-+			rc = db_clear_fn(tc->ntb, db_bits);
-+	} else {
-+		rc = -EINVAL;
-+	}
-+
-+	return rc ? : size;
-+}
-+
-+static ssize_t tool_spadfn_read(struct tool_ctx *tc, char __user *ubuf,
-+				size_t size, loff_t *offp,
-+				u32 (*spad_read_fn)(struct ntb_dev *, int))
-+{
-+	size_t buf_size;
-+	char *buf;
-+	ssize_t pos, rc;
-+	int i, spad_count;
-+
-+	if (!spad_read_fn)
-+		return -EINVAL;
-+
-+	buf_size = min(size, 0x100ul);
-+
-+	buf = kmalloc(buf_size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	pos = 0;
-+
-+	spad_count = ntb_spad_count(tc->ntb);
-+	for (i = 0; i < spad_count; ++i) {
-+		pos += scnprintf(buf + pos, buf_size - pos, "%d\t%#x\n",
-+				 i, spad_read_fn(tc->ntb, i));
-+	}
-+
-+	rc = simple_read_from_buffer(ubuf, size, offp, buf, pos);
-+
-+	kfree(buf);
-+
-+	return rc;
-+}
-+
-+static ssize_t tool_spadfn_write(struct tool_ctx *tc,
-+				 const char __user *ubuf,
-+				 size_t size, loff_t *offp,
-+				 int (*spad_write_fn)(struct ntb_dev *,
-+						      int, u32))
-+{
-+	int spad_idx;
-+	u32 spad_val;
-+	char *buf;
-+	int pos, n;
-+	ssize_t rc;
-+
-+	if (!spad_write_fn) {
-+		dev_dbg(&tc->ntb->dev, "no spad write fn\n");
-+		return -EINVAL;
-+	}
-+
-+	buf = kmalloc(size + 1, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	rc = simple_write_to_buffer(buf, size, offp, ubuf, size);
-+	if (rc < 0) {
-+		kfree(buf);
-+		return rc;
-+	}
-+
-+	buf[size] = 0;
-+
-+	n = sscanf(buf, "%d %i%n", &spad_idx, &spad_val, &pos);
-+	while (n == 2) {
-+		rc = spad_write_fn(tc->ntb, spad_idx, spad_val);
-+		if (rc)
-+			break;
-+
-+		n = sscanf(buf + pos, "%d %i%n", &spad_idx, &spad_val, &pos);
-+	}
-+
-+	if (n < 0)
-+		rc = n;
-+
-+	kfree(buf);
-+
-+	return rc ? : size;
-+}
-+
-+static ssize_t tool_db_read(struct file *filep, char __user *ubuf,
-+			    size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->db_read);
-+}
-+
-+static ssize_t tool_db_write(struct file *filep, const char __user *ubuf,
-+			     size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->db_set,
-+			       tc->ntb->ops->db_clear);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_db_fops,
-+		      tool_db_read,
-+		      tool_db_write);
-+
-+static ssize_t tool_mask_read(struct file *filep, char __user *ubuf,
-+			      size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->db_read_mask);
-+}
-+
-+static ssize_t tool_mask_write(struct file *filep, const char __user *ubuf,
-+			       size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->db_set_mask,
-+			       tc->ntb->ops->db_clear_mask);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_mask_fops,
-+		      tool_mask_read,
-+		      tool_mask_write);
-+
-+static ssize_t tool_peer_db_read(struct file *filep, char __user *ubuf,
-+				 size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->peer_db_read);
-+}
-+
-+static ssize_t tool_peer_db_write(struct file *filep, const char __user *ubuf,
-+				  size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->peer_db_set,
-+			       tc->ntb->ops->peer_db_clear);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_peer_db_fops,
-+		      tool_peer_db_read,
-+		      tool_peer_db_write);
-+
-+static ssize_t tool_peer_mask_read(struct file *filep, char __user *ubuf,
-+				   size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->peer_db_read_mask);
-+}
-+
-+static ssize_t tool_peer_mask_write(struct file *filep, const char __user *ubuf,
-+				    size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->peer_db_set_mask,
-+			       tc->ntb->ops->peer_db_clear_mask);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_peer_mask_fops,
-+		      tool_peer_mask_read,
-+		      tool_peer_mask_write);
-+
-+static ssize_t tool_spad_read(struct file *filep, char __user *ubuf,
-+			      size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_read(tc, ubuf, size, offp,
-+				tc->ntb->ops->spad_read);
-+}
-+
-+static ssize_t tool_spad_write(struct file *filep, const char __user *ubuf,
-+			       size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_write(tc, ubuf, size, offp,
-+				 tc->ntb->ops->spad_write);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_spad_fops,
-+		      tool_spad_read,
-+		      tool_spad_write);
-+
-+static ssize_t tool_peer_spad_read(struct file *filep, char __user *ubuf,
-+				   size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_read(tc, ubuf, size, offp,
-+				tc->ntb->ops->peer_spad_read);
-+}
-+
-+static ssize_t tool_peer_spad_write(struct file *filep, const char __user *ubuf,
-+				    size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_write(tc, ubuf, size, offp,
-+				 tc->ntb->ops->peer_spad_write);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_peer_spad_fops,
-+		      tool_peer_spad_read,
-+		      tool_peer_spad_write);
-+
-+static void tool_setup_dbgfs(struct tool_ctx *tc)
-+{
-+	/* This modules is useless without dbgfs... */
-+	if (!tool_dbgfs) {
-+		tc->dbgfs = NULL;
-+		return;
-+	}
-+
-+	tc->dbgfs = debugfs_create_dir(dev_name(&tc->ntb->dev),
-+				       tool_dbgfs);
-+	if (!tc->dbgfs)
-+		return;
-+
-+	debugfs_create_file("db", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_db_fops);
-+
-+	debugfs_create_file("mask", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_mask_fops);
-+
-+	debugfs_create_file("peer_db", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_peer_db_fops);
-+
-+	debugfs_create_file("peer_mask", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_peer_mask_fops);
-+
-+	debugfs_create_file("spad", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_spad_fops);
-+
-+	debugfs_create_file("peer_spad", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_peer_spad_fops);
-+}
-+
-+static int tool_probe(struct ntb_client *self, struct ntb_dev *ntb)
-+{
-+	struct tool_ctx *tc;
-+	int rc;
-+
-+	if (ntb_db_is_unsafe(ntb))
-+		dev_dbg(&ntb->dev, "doorbell is unsafe\n");
-+
-+	if (ntb_spad_is_unsafe(ntb))
-+		dev_dbg(&ntb->dev, "scratchpad is unsafe\n");
-+
-+	tc = kmalloc(sizeof(*tc), GFP_KERNEL);
-+	if (!tc) {
-+		rc = -ENOMEM;
-+		goto err_tc;
-+	}
-+
-+	tc->ntb = ntb;
-+
-+	tool_setup_dbgfs(tc);
-+
-+	rc = ntb_set_ctx(ntb, tc, &tool_ops);
-+	if (rc)
-+		goto err_ctx;
-+
-+	ntb_link_enable(ntb, NTB_SPEED_AUTO, NTB_WIDTH_AUTO);
-+	ntb_link_event(ntb);
-+
-+	return 0;
-+
-+err_ctx:
-+	debugfs_remove_recursive(tc->dbgfs);
-+	kfree(tc);
-+err_tc:
-+	return rc;
-+}
-+
-+static void tool_remove(struct ntb_client *self, struct ntb_dev *ntb)
-+{
-+	struct tool_ctx *tc = ntb->ctx;
-+
-+	ntb_clear_ctx(ntb);
-+	ntb_link_disable(ntb);
-+
-+	debugfs_remove_recursive(tc->dbgfs);
-+	kfree(tc);
-+}
-+
-+static struct ntb_client tool_client = {
-+	.ops = {
-+		.probe = tool_probe,
-+		.remove = tool_remove,
-+	},
-+	.name = DRIVER_NAME,
-+};
-+
-+static int __init tool_init(void)
-+{
-+	int rc;
-+
-+	if (debugfs_initialized())
-+		tool_dbgfs = debugfs_create_dir(KBUILD_MODNAME, NULL);
-+
-+	rc = ntb_register_client(&tool_client);
-+	if (rc)
-+		goto err_client;
-+
-+	return 0;
-+
-+err_client:
-+	debugfs_remove_recursive(tool_dbgfs);
-+	return rc;
-+}
-+module_init(tool_init);
-+
-+static void __exit tool_exit(void)
-+{
-+	ntb_unregister_client(&tool_client);
-+	debugfs_remove_recursive(tool_dbgfs);
-+}
-+module_exit(tool_exit);
--- 
-2.4.0.rc0.43.gcf8a8c6
+>
+>>segment#x can only be assigned to PE#x. IO and M32 segment can be
+>>mapped to arbitrary PE# via IODT and M32DT. It means the PE number
+>>should be x if M64 segment#x has been assigned to the PE. Also, each
+>>PE own one M64 segment at most. Currently, we are reserving PE#
+>>according to root port's M64 window. It won't be reliable once we
+>>extend M64 windows of root port, or the upstream port of the PCIE
+>>switch behind root port to PHB's M64 window, in order to support
+>>PCI hotplug in future.
+>>
+>>The patch reserves PE# for M64 segments according to the M64 resources
+>>of the PCI devices (not bridges) contained in the PE. Besides, it's
+>>always worthy to trace the M64 segments consumed by the PE, which can
+>>be released at PCI unplugging time.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 190 ++++++++++++++++++------------
+>>  arch/powerpc/platforms/powernv/pci.h      |  10 +-
+>>  2 files changed, 122 insertions(+), 78 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 646962f..a994882 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -283,28 +283,78 @@ fail:
+>>  	return -EIO;
+>>  }
+>>
+>>-static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
+>>+/* We extend the M64 window of root port, or the upstream bridge port
+>>+ * of the PCIE switch behind root port. So we shouldn't reserve PEs
+>>+ * for M64 resources because there are no (normal) PCI devices consuming
+>
+>"PCI devices"? Not "root ports or PCI bridges"?
+>
+
+I have "no (normal) PCI devices" here, which means root port and PCI bridges
+are excluded.
+
+>>+ * M64 resources on the PCI buses leading from root port, or the upstream
+>>+ * bridge port.The function returns true if the indicated PCI bus needs
+>>+ * reserved PEs because of M64 resources in advance. Otherwise, the
+>>+ * function returns false.
+>>+ */
+>>+static bool pnv_ioda_need_m64_pe(struct pnv_phb *phb,
+>>+				 struct pci_bus *bus)
+>>  {
+>>-	resource_size_t sgsz = phb->ioda.m64_segsize;
+>>+	/* Root bus */
+>
+>The comment is too obvious as the call below is called "pci_is_root_bus" :)
+>
+
+Indeed, it will be dropped in next revision.
+
+>>+	if (!bus || pci_is_root_bus(bus))
+>>+		return false;
+>>+
+>>+	/* Bus leading from root port. We need check what types of PCI
+>>+	 * devices on the bus. If it's connecting PCI bridge, we don't
+>>+	 * need reserve M64 PEs for it. Otherwise, we still need to do
+>>+	 * that.
+>>+	 */
+>>+	if (pci_is_root_bus(bus->self->bus)) {
+>>+		struct pci_dev *pdev;
+>>+
+>>+		list_for_each_entry(pdev, &bus->devices, bus_list) {
+>>+			if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL)
+>>+				return true;
+>>+		}
+>>+
+>>+		return false;
+>>+	}
+>>+
+>>+	/* Bus leading from the upstream bridge port on top level */
+>>+	if (pci_is_root_bus(bus->self->bus->self->bus))
+>
+>
+>Is it for second level bridges? Like root->bridge->bridge? And for 3 levels
+>you will need a PE?
+>
+
+It's for upstream port of PCIe switch behind root port (a bit complicated).
+Yes, the bus leaded from the downstream port will need a PE as you said.
+
+>>+		return false;
+>>+
+>>+	return true;
+>>+}
+>>+
+>>+static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb,
+>>+				    struct pci_bus *bus)
+>>+{
+>>+	resource_size_t segsz = phb->ioda.m64_segsize;
+>>  	struct pci_dev *pdev;
+>>  	struct resource *r;
+>>-	int base, step, i;
+>>+	unsigned long pe_no, limit;
+>>+	int i;
+>>
+>>-	/*
+>>-	 * Root bus always has full M64 range and root port has
+>>-	 * M64 range used in reality. So we're checking root port
+>>-	 * instead of root bus.
+>>+	if (!pnv_ioda_need_m64_pe(phb, bus))
+>>+		return;
+>>+
+>>+	/* The bridge's M64 window might have been extended to the
+>>+	 * PHB's M64 window in order to support PCI hotplug. So the
+>>+	 * bridge's M64 window isn't reliable to be used for picking
+>>+	 * PE# for its leading PCI bus. We have to check the M64
+>>+	 * resources consumed by the PCI devices, which seat on the
+>>+	 * PCI bus.
+>>  	 */
+>>-	list_for_each_entry(pdev, &phb->hose->bus->devices, bus_list) {
+>>-		for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+>>-			r = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
+>>-			if (!r->parent ||
+>>-			    !pnv_pci_is_mem_pref_64(r->flags))
+>>+	list_for_each_entry(pdev, &bus->devices, bus_list) {
+>>+		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>>+#ifdef CONFIG_PCI_IOV
+>>+			if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
+>>+				continue;
+>>+#endif
+>>+			r = &pdev->resource[i];
+>>+			if (!r->flags || r->start >= r->end ||
+>>+			    !r->parent || !pnv_pci_is_mem_pref_64(r->flags))
+>>  				continue;
+>>
+>>-			base = (r->start - phb->ioda.m64_base) / sgsz;
+>>-			for (step = 0; step < resource_size(r) / sgsz; step++)
+>>-				pnv_ioda_reserve_pe(phb, base + step);
+>>+			pe_no = (r->start - phb->ioda.m64_base) / segsz;
+>>+			limit = ALIGN(r->end - phb->ioda.m64_base, segsz) / segsz;
+>>+			for (; pe_no < limit; pe_no++)
+>>+				pnv_ioda_reserve_pe(phb, pe_no);
+>>  		}
+>>  	}
+>>  }
+>>@@ -316,85 +366,64 @@ static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
+>>  	struct pci_dev *pdev;
+>>  	struct resource *r;
+>>  	struct pnv_ioda_pe *master_pe, *pe;
+>>-	unsigned long size, *pe_alloc;
+>>-	bool found;
+>>-	int start, i, j;
+>>-
+>>-	/* Root bus shouldn't use M64 */
+>>-	if (pci_is_root_bus(bus))
+>>-		return IODA_INVALID_PE;
+>>-
+>>-	/* We support only one M64 window on each bus */
+>>-	found = false;
+>>-	pci_bus_for_each_resource(bus, r, i) {
+>>-		if (r && r->parent &&
+>>-		    pnv_pci_is_mem_pref_64(r->flags)) {
+>>-			found = true;
+>>-			break;
+>>-		}
+>>-	}
+>>+	unsigned long size, *pe_bitsmap;
+>
+>s/pe_bitsmap/pe_bitmap/
+>
+
+Yeah, will fix it up. Thanks!
+
+>>+	unsigned long pe_no, limit;
+>>+	int i;
+>>
+>>-	/* No M64 window found ? */
+>>-	if (!found)
+>>+	if (!pnv_ioda_need_m64_pe(phb, bus))
+>>  		return IODA_INVALID_PE;
+>>
+>>-	/* Allocate bitmap */
+>>+        /* Allocate bitmap */
+>>  	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+>>-	pe_alloc = kzalloc(size, GFP_KERNEL);
+>>-	if (!pe_alloc) {
+>>-		pr_warn("%s: Out of memory !\n",
+>>-			__func__);
+>>+	pe_bitsmap = kzalloc(size, GFP_KERNEL);
+>>+	if (!pe_bitsmap) {
+>>+		pr_warn("%s: Out of memory !\n", __func__);
+>>  		return IODA_INVALID_PE;
+>>  	}
+>>
+>>-	/*
+>>-	 * Figure out reserved PE numbers by the PE
+>>-	 * the its child PEs.
+>>-	 */
+>>-	start = (r->start - phb->ioda.m64_base) / segsz;
+>>-	for (i = 0; i < resource_size(r) / segsz; i++)
+>>-		set_bit(start + i, pe_alloc);
+>>-
+>>-	if (all)
+>>-		goto done;
+>>-
+>>-	/*
+>>-	 * If the PE doesn't cover all subordinate buses,
+>>-	 * we need subtract from reserved PEs for children.
+>>+	/* The bridge's M64 window might be extended to PHB's M64
+>>+	 * window by intention to support PCI hotplug. So we have
+>>+	 * to check the M64 resources consumed by the PCI devices
+>>+	 * on the PCI bus.
+>>  	 */
+>>  	list_for_each_entry(pdev, &bus->devices, bus_list) {
+>>-		if (!pdev->subordinate)
+>>-			continue;
+>>+		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>>+#ifdef CONFIG_PCI_IOV
+>>+			if (i >= PCI_IOV_RESOURCES &&
+>>+			    i <= PCI_IOV_RESOURCE_END)
+>>+				continue;
+>>+#endif
+>>+			/* Don't scan bridge's window if the PE
+>>+			 * doesn't contain its subordinate bus.
+>>+			 */
+>>+			if (!all && i >= PCI_BRIDGE_RESOURCES &&
+>>+			    i <= PCI_BRIDGE_RESOURCE_END)
+>>+				continue;
+>>
+>>-		pci_bus_for_each_resource(pdev->subordinate, r, i) {
+>>-			if (!r || !r->parent ||
+>>-			    !pnv_pci_is_mem_pref_64(r->flags))
+>>+			r = &pdev->resource[i];
+>>+			if (!r->flags || r->start >= r->end ||
+>>+			    !r->parent || !pnv_pci_is_mem_pref_64(r->flags))
+>>  				continue;
+>>
+>>-			start = (r->start - phb->ioda.m64_base) / segsz;
+>>-			for (j = 0; j < resource_size(r) / segsz ; j++)
+>>-				clear_bit(start + j, pe_alloc);
+>>-                }
+>>-        }
+>>+			pe_no = (r->start - phb->ioda.m64_base) / segsz;
+>>+			limit = ALIGN(r->end - phb->ioda.m64_base, segsz) / segsz;
+>>+			for (; pe_no < limit; pe_no++)
+>>+				set_bit(pe_no, pe_bitsmap);
+>>+		}
+>>+	}
+>>
+>>-	/*
+>>-	 * the current bus might not own M64 window and that's all
+>>-	 * contributed by its child buses. For the case, we needn't
+>>-	 * pick M64 dependent PE#.
+>>-	 */
+>>-	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
+>>-		kfree(pe_alloc);
+>>+	/* No M64 window found ? */
+>>+	if (bitmap_empty(pe_bitsmap, phb->ioda.total_pe)) {
+>>+		kfree(pe_bitsmap);
+>>  		return IODA_INVALID_PE;
+>>  	}
+>>
+>>-	/*
+>>-	 * Figure out the master PE and put all slave PEs to master
+>>-	 * PE's list to form compound PE.
+>>+	/* Figure out the master PE and put all slave PEs
+>>+	 * to master PE's list to form compound PE.
+>>  	 */
+>>-done:
+>>  	master_pe = NULL;
+>>  	i = -1;
+>>-	while ((i = find_next_bit(pe_alloc, phb->ioda.total_pe, i + 1)) <
+>>+	while ((i = find_next_bit(pe_bitsmap, phb->ioda.total_pe, i + 1)) <
+>>  		phb->ioda.total_pe) {
+>>  		pe = &phb->ioda.pe_array[i];
+>>
+>>@@ -408,6 +437,13 @@ done:
+>>  			list_add_tail(&pe->list, &master_pe->slaves);
+>>  		}
+>>
+>>+		/* Pick the M64 segment, which should be available. Also,
+>
+>test_and_set_bit() does not pick or choose, it just marks PE#pe_number used.
+>
+
+It's true. I will replace "Pick" with "Reserve" M64 segment in next revision.
+If that's still not what you're suggesting, please let me know :-)
+
+>>+		 * those M64 segments consumed by slave PEs are contributed
+>>+		 * to the master PE.
+>>+		 */
+>>+		BUG_ON(test_and_set_bit(pe->pe_number, phb->ioda.m64_segmap));
+>>+		BUG_ON(test_and_set_bit(pe->pe_number, master_pe->m64_segmap));
+>>+
+>>  		/* P7IOC supports M64DT, which helps mapping M64 segment
+>>  		 * to one particular PE#. Unfortunately, PHB3 has fixed
+>>  		 * mapping between M64 segment and PE#. In order for same
+>>@@ -431,7 +467,7 @@ done:
+>>  		}
+>>  	}
+>>
+>>-	kfree(pe_alloc);
+>>+	kfree(pe_bitsmap);
+>>  	return master_pe->pe_number;
+>>  }
+>>
+>>@@ -1233,7 +1269,7 @@ static void pnv_pci_ioda_setup_PEs(void)
+>>
+>>  		/* M64 layout might affect PE allocation */
+>>  		if (phb->reserve_m64_pe)
+>>-			phb->reserve_m64_pe(phb);
+>>+			phb->reserve_m64_pe(phb, phb->hose->bus);
+>>
+>>  		pnv_ioda_setup_PEs(hose->bus);
+>>  	}
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 070ee88..19022cf 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -49,6 +49,13 @@ struct pnv_ioda_pe {
+>>  	/* PE number */
+>>  	unsigned int		pe_number;
+>>
+>>+	/* IO/M32/M64 segments consumed by the PE. Each PE can
+>>+	 * have one M64 segment at most, but M64 segments consumed
+>>+	 * by slave PEs will be contributed to the master PE. One
+>>+	 * PE can own multiple IO and M32 segments.
+>>+	 */
+>>+	unsigned long		m64_segmap[8];
+>
+>
+>Why 8? 64*8 = 512 segments?  s'8'512/sizeof(unsigned long)' may be?
+>
+
+There are 128 M64 segments for P7IOC, but 256 M64 segments for PHB3.
+512 is number bigger than 128 and 256. I still prefer m64_segmap[8] :-)
+
+>
+>>+
+>>  	/* "Weight" assigned to the PE for the sake of DMA resource
+>>  	 * allocations
+>>  	 */
+>>@@ -114,7 +121,7 @@ struct pnv_phb {
+>>  	u32 (*bdfn_to_pe)(struct pnv_phb *phb, struct pci_bus *bus, u32 devfn);
+>>  	void (*shutdown)(struct pnv_phb *phb);
+>>  	int (*init_m64)(struct pnv_phb *phb);
+>>-	void (*reserve_m64_pe)(struct pnv_phb *phb);
+>>+	void (*reserve_m64_pe)(struct pnv_phb *phb, struct pci_bus *bus);
+>>  	int (*pick_m64_pe)(struct pnv_phb *phb, struct pci_bus *bus, int all);
+>>  	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
+>>  	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
+>>@@ -153,6 +160,7 @@ struct pnv_phb {
+>>  			struct mutex		pe_alloc_mutex;
+>>
+>>  			/* M32 & IO segment maps */
+>>+			unsigned long		m64_segmap[8];
+>>  			unsigned int		*m32_segmap;
+>>  			unsigned int		*io_segmap;
+>>  			struct pnv_ioda_pe	*pe_array;
+>>
+
+Thanks,
+Gavin
 
