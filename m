@@ -1,84 +1,160 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 5 May 2015 16:53:33 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Amir Vadai <amirv@mellanox.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Hadar Hen Zion <hadarh@mellanox.com>,
-	Eran Ben Elisha <eranbe@mellanox.com>,
-	Joe Perches <joe@perches.com>,
-	Saeed Mahameed <saeedm@mellanox.com>,
-	Matan Barak <matanb@mellanox.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of
- irq_desc
-In-Reply-To: <CAPcc5Pi7qNQKocTVmfZafVhi3MJwboY=XKYzNmqAnVqt0gU4vw@mail.gmail.com>
-Message-ID: <alpine.DEB.2.11.1505051652280.4225@nanos>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com> <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com> <alpine.DEB.2.11.1505041708190.4225@nanos>
- <CAPcc5Pi7qNQKocTVmfZafVhi3MJwboY=XKYzNmqAnVqt0gU4vw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:41714 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbbEKCiK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 May 2015 22:38:10 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 12:38:08 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E03B72BB0051
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:38:05 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B2buqf46202976
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:38:05 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B2bWm7004373
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:37:32 +1000
+Date: Mon, 11 May 2015 12:37:07 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 5/9] powerpc/eeh: create EEH_PE_VF for VF PE
+Message-ID: <20150511023707.GA8816@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 5 May 2015, Amir Vadai wrote:
+On Mon, May 04, 2015 at 03:07:34PM +0800, Wei Yang wrote:
 
-> On Mon, May 4, 2015 at 6:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > On Mon, 4 May 2015, Amir Vadai wrote:
-> >
-> >> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> >> > The field 'affinity' in irq_desc won't change once the irq_desc data
-> >> > structure is created. So cache irq_desc->affinity instead of irq_desc.
-> >> > This also helps to hide struct irq_desc from device drivers.
-> >>
-> >> Hi Jiang,
-> >>
-> >> I might not understand the new changes irq core, but up until now
-> >> affinity was changed when the user changed it through
-> >> /proc/irq/<IRQ>/smp_affinity.
-> >> This code is monitoring the affinity from the napi_poll context to
-> >> detect affinity changes, and prevent napi from keep running on the
-> >> wrong CPU.
-> >> Therefore, the affinity can't be cached at the beginning. Please
-> >> revert this caching.
-> >
-> > Sigh. All of this is completely wrong. Polling in the internals of
-> > irq_desc is just crap.
-> Hi,
-> 
-> >
-> > irq_set_affinity_notifier() has been added for exactly this purpose.
-> rmap is already registered on irq_set_affinity_notifier().
-> Actually, I did post an extension to the affinity notifier, to use
-> affinity chain which you rejected [1] (and BTW, convinced me that this
-> is not the way to do it).
-> Current code is according to your suggestion.
-> 
-> [1] - https://lkml.org/lkml/2014/5/26/222
+Please reorder PATCH[6] with this one because the EEH device is expected
+to be created before EEH PE.
 
-No, it's not. I wrote:
+>On powernv platform, VF PE is a special PE which is different from the Bus
+>PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
+>properly. For example, we need to create VF PE when VF's pci_dev is
+>initialized in kernel. And add a flag to mark it is a VF PF.
+                                                       ^^^^^
+>
 
- "So what's the point of adding notifier call chain complexity,
-  ordering problems etc., if you can simply note the fact that the
-  affinity changed in the rmap itself and check that in the RX path?"
+>From above commit log, my understanding is that you're adding a flag to
+identify VF PE, which is handled differently from bus PE. You missed the
+details on the difference between them and the speical treament to VF PE.
+Could you help add those information in the commit log to make it looks
+complete?
 
-I did not tell you to fiddle in irqdesc, really.
+>This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
+>At the mean time, it creates the sysfs and address cache for VF PE.
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+                   it creates the sysfs and address cache for VF PE at PCI
+device final fixup time.
+
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> arch/powerpc/include/asm/eeh.h               |    1 +
+> arch/powerpc/kernel/eeh_pe.c                 |   12 ++++++++++--
+> arch/powerpc/platforms/powernv/eeh-powernv.c |   12 ++++++++++++
+> 3 files changed, 23 insertions(+), 2 deletions(-)
+>
+>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>index a52db28..56e8cd9 100644
+>--- a/arch/powerpc/include/asm/eeh.h
+>+++ b/arch/powerpc/include/asm/eeh.h
+>@@ -70,6 +70,7 @@ struct pci_dn;
+> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+>+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>
+> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>index 35f0b62..edfe63a 100644
+>--- a/arch/powerpc/kernel/eeh_pe.c
+>+++ b/arch/powerpc/kernel/eeh_pe.c
+>@@ -299,7 +299,12 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+> 	 * EEH device already having associated PE, but
+> 	 * the direct parent EEH device doesn't have yet.
+> 	 */
+>-	pdn = pdn ? pdn->parent : NULL;
+>+#ifdef CONFIG_PCI_IOV
+>+	if (edev->mode & EEH_DEV_VF)
+>+		pdn = pci_get_pdn(edev->physfn);
+>+	else
+>+#endif
+>+		pdn = pdn ? pdn->parent : NULL;
+
+[A]
+
+> 	while (pdn) {
+> 		/* We're poking out of PCI territory */
+> 		parent = pdn_to_eeh_dev(pdn);
+>@@ -382,7 +387,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+> 	}
+>
+> 	/* Create a new EEH PE */
+>-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>+	if (edev->mode & EEH_DEV_VF)
+>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+>+	else
+>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+
+You don't have CONFIG_PCI_IOV here to protect the code, but you had
+that at [A]. In order to keep the code look consistent, you either
+add it or remove it for all places. I prefer to remove it, which
+we don't need CONFIG_PCI_IOV.
+ 
+> 	if (!pe) {
+> 		pr_err("%s: out of memory!\n", __func__);
+> 		return -ENOMEM;
+>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>index 622f08c..5447481 100644
+>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>@@ -1540,3 +1540,15 @@ static int __init eeh_powernv_init(void)
+> 	return ret;
+> }
+> machine_early_initcall(powernv, eeh_powernv_init);
+>+
+>+#ifdef CONFIG_PCI_IOV
+>+static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+>+{
+
+Please rename it to pnv_eeh_vf_final_fixup(). Names of all functions
+in this file expect prefix "pnv_eeh_". With "_final_", it's clearly
+to tell it's called on PCI device final fixup time.
+
+>+	/* sysfs files should only be added after devices are added */
+
+It's nice to explain why here: sysfs for the PCI device isn't populated
+and the MMIO resource isn't finalized for the PCI device yet.
+
+>+	if (pdev->is_virtfn) {
+>+		eeh_add_device_late(pdev);
+>+		eeh_sysfs_add_device(pdev);
+>+	}
+>+}
+
+The nested ifdef can be avoided as:
+
+	if (!pdev->is_virtfn)
+		return;
+
+	eeh_add_device_late(pdev);
+	eeh_sysfs_add_device(pdev);
+
+>+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
+>+#endif /* CONFIG_PCI_IOV */
 
 Thanks,
-
-	tglx
+Gavin
 
