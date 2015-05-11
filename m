@@ -1,74 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og105.obsmtp.com ([64.18.0.180]:40564 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751361AbbE0RVm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 13:21:42 -0400
-Received: by wizo1 with SMTP id o1so31123729wiz.1
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2015 10:21:41 -0700 (PDT)
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:34618 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbbEKPfQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 11:35:16 -0400
+Received: by pdbqa5 with SMTP id qa5so146935863pdb.1
+        for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 08:35:15 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Pratyush Anand'" <pratyush.anand@gmail.com>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] MAINTAINERS: Update SPEAr13xx and Designware PCIe maintainer
+Date: Tue, 12 May 2015 00:35:08 +0900
+Message-ID: <001201d08c00$128a0c30$379e2490$@com>
 MIME-Version: 1.0
-In-Reply-To: <20150527154758.GU32152@google.com>
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
-	<1430204499-19571-5-git-send-email-wangyijing@huawei.com>
-	<20150527154758.GU32152@google.com>
-Date: Wed, 27 May 2015 10:21:40 -0700
-Message-ID: <CACoXjcnZG9+oyc43G2NM1tvrZycMGiQFHm2E27+1Q_8_Vu9aEQ@mail.gmail.com>
-Subject: Re: [PATCH Part1 v11 4/5] PCI: xgene: Use pci_scan_root_bus() instead
- of pci_create_root_bus()
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	dja@axtens.net, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 8:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Apr 28, 2015 at 03:01:38PM +0800, Yijing Wang wrote:
->> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
->> Now pci_scan_root_bus() == pci_create_root_bus() +
->> pci_scan_child_bus() if busn resource is supplied.
->> Xgene added the busn resource to resources list
->> in of_pci_get_host_bridge_resources(). So it should be safe
->> to use pci_scan_root_bus() instead.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Tanmay Inamdar <tinamdar@apm.com>
+> Didn't add myself as Maintainer earlier, as I was moving out of ST
+> and didn't had a board to test. But learnt recently that, its fine being
+> in MAINTAINERS in such situations, at least I can review the patches.
 >
-> Tanmay, any comments on this?
+> So, let me add myself.
 >
+> Signed-off-by: Pratyush Anand <pratyush.anand@gmail.com>
 
-Looks good to me.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-Acked-by: Tanmay Inamdar <tinamdar@apm.com>
+Best regards,
+Jingoo Han
 
->> ---
->>  drivers/pci/host/pci-xgene.c |    3 +--
->>  1 files changed, 1 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
->> index ee082c0..87e3962 100644
->> --- a/drivers/pci/host/pci-xgene.c
->> +++ b/drivers/pci/host/pci-xgene.c
->> @@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
->>       if (ret)
->>               return ret;
->>
->> -     bus = pci_create_root_bus(&pdev->dev, 0,
->> +     bus = pci_scan_root_bus(&pdev->dev, 0,
->>                                       &xgene_pcie_ops, port, &res);
->>       if (!bus)
->>               return -ENOMEM;
->>
->> -     pci_scan_child_bus(bus);
->>       pci_assign_unassigned_bus_resources(bus);
->>       pci_bus_add_devices(bus);
->>
->> --
->> 1.7.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+>  MAINTAINERS | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+
+
