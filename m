@@ -1,100 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36029 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161881AbbEEV3I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 May 2015 17:29:08 -0400
-Received: by igblo3 with SMTP id lo3so113352024igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 05 May 2015 14:29:08 -0700 (PDT)
-Date: Tue, 5 May 2015 16:29:05 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/iov: return a reference to PF on destroying VF
-Message-ID: <20150505212905.GB24643@google.com>
-References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:49848 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355AbbEKCAH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 May 2015 22:00:07 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 12:00:04 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 4C9072CE8040
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:00:02 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B1xsew30081074
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:00:02 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B1xTAR016056
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 11:59:29 +1000
+Date: Mon, 11 May 2015 11:59:04 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org
+Subject: Re: [PATCH v4 01/21] pci: Add pcibios_setup_bridge()
+Message-ID: <20150511015904.GB3694@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-2-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20150507221224.GN24643@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <20150507221224.GN24643@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 10, 2015 at 04:53:04PM +0800, Wei Yang wrote:
-> Each VF will get a reference to its PF, while it is not returned back in
-> all cases and leave a removed PF's pci_dev un-released.
-> 
-> As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
-> when removing devices on a bus, we do it in the reverse order. This means
-> we would remove VFs first, then PFs. After doing so, VF's removal is done
-> with pci_stop_and_remove_bus_device() instead of virtfn_remove().
-> virtfn_remove() returns the reference of its PF, while
-> pci_stop_and_remove_bus_device() doesn't.
+On Thu, May 07, 2015 at 05:12:24PM -0500, Bjorn Helgaas wrote:
+>Hi Gavin,
+>
+>[Please run "git log --oneline drivers/pci/setup-bus.c" and observe the
+>capitalization convention.]
+>
 
-Please use conventional citation style (12-char SHA1).
+Bjorn, thanks for review. Yeah, it should be something like
+"PCI: xxxx" for the subject. I'll fix it up in next revision.
 
-ac205b7bb72f appeared in v3.4.  Did that commit cause a regression?
-Should this patch be marked for stable?
-
-"After doing so, VF removal is done with pci_stop_and_remove_device() ..."
-After doing what?  After removing the VFs and PFs?  After commit
-ac205b7bb72f?
-
-Prior to your patch, the VF reference was released in virtfn_remove(),
-which is only called via pci_disable_sriov().  This typically happens in
-a driver .remove() method.  The reference is *not* released if we call
-pci_stop_and_remove_bus_device(VF) directly, as we would via the
-remove_store() (sysfs "remove" file) or hot unplug paths, e.g.,
-pciehp_unconfigure_device().
-
-After your patch, the VF reference is released in pci_destroy_dev().  This
-is called from pci_disable_sriov(), so it happens in that path as before.
-But pci_destroy_dev() is called from pci_stop_and_remove_bus_device(), so
-the reference is now released for all the paths that use
-pci_stop_and_remove_bus_device().
-
-What about the other things done in virtfn_remove(), e.g., the sysfs link
-removal?  Your patch fixes a reference count leak, but don't we still have
-a sysfs link leak?
-
-It would be useful to mention a way to cause the leak.  I suspect writing
-to a VF's sysfs "remove" file is the easiest.
-
-> This patches moves the return of PF's reference to pci_destroy_dev() to
-> make sure the PF's pci_dev is released in any case.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/iov.c    |    1 -
->  drivers/pci/remove.c |    5 +++++
->  2 files changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 4b3a4ea..9b04bde 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -167,7 +167,6 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  
->  	/* balance pci_get_domain_bus_and_slot() */
->  	pci_dev_put(virtfn);
-> -	pci_dev_put(dev);
+>On Fri, May 01, 2015 at 04:02:48PM +1000, Gavin Shan wrote:
+>> Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
+>> which is called for once after PCI probing and resource assignment
+>> are completed, to allocate platform required resources for PCI devices:
+>> PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
+>> Obviously, it's not hotplug friendly.
+>> 
+>> The patch adds weak function pcibios_setup_bridge(), which is called
+>> by pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
+>> to assign above platform required resources to newly added PCI devices,
+>> in order to support PCI hotplug on PowerPC PowerNV platform.
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/setup-bus.c | 12 +++++++++---
+>>  include/linux/pci.h     |  1 +
+>>  2 files changed, 10 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 4fd0cac..a7d0c3c 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -674,7 +674,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
+>>  	pci_write_config_dword(bridge, PCI_PREF_LIMIT_UPPER32, lu);
+>>  }
+>>  
+>> -static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+>> +
+>> +void pci_setup_bridge_resources(struct pci_bus *bus, unsigned long type)
+>>  {
+>>  	struct pci_dev *bridge = bus->self;
+>>  
+>> @@ -693,12 +694,17 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+>>  	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
+>>  }
+>>  
+>> +void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
+>> +{
+>> +	pci_setup_bridge_resources(bus, type);
+>> +}
+>
+>I'm not opposed to adding a pcibios_setup_bridge(), but I would rather do
+>the architected updates in the generic PCI core code instead of down in the
+>pcibios code.  In other words, I would rather have this:
+>
+>  void pci_setup_bridge(struct pci_bus *bus)
+>  {
+>    pcibios_setup_bridge(bus, type);
+>    pci_setup_bridge_resources(bus, type);
 >  }
->  
->  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8bd76c9..836ddf6 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -41,6 +41,11 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	list_del(&dev->bus_list);
->  	up_write(&pci_bus_sem);
->  
-> +#ifdef CONFIG_PCI_IOV
-> +	if (dev->is_virtfn)
-> +		pci_dev_put(dev->physfn);
-> +#endif
-> +
->  	pci_free_resources(dev);
->  	put_device(&dev->dev);
->  }
-> -- 
-> 1.7.9.5
-> 
+>
+>That way the default pcibios hook is empty, showing that by default there's
+>no arch-specific code in this path, and we only have to look at the generic
+>core code to verify that we actually do program the bridge windows.
+>
+
+Ok. I'll change the code accordingly in next revision. Thanks for the
+suggestion.
+
+Thanks,
+Gavin
+
