@@ -1,50 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5565E2AA.5030705@redhat.com>
-Date: Wed, 27 May 2015 11:28:42 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:49556 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbbEKFzI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 01:55:08 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 15:55:04 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 188ED2BB0051
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 15:55:03 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B5ssfk26279940
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 15:55:02 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B5sT6A016744
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 15:54:30 +1000
+Date: Mon, 11 May 2015 13:54:12 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 2/9] powerpc/pci_dn: cache vf_index in pci_dn
+Message-ID: <20150511055412.GA1632@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-3-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150511022104.GA7459@gwshan>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-CC: bhelgaas@google.com, rjw@rjwysocki.net,
-	linux-kernel@vger.kernel.org, lenb@kernel.org
-Subject: Re: [PATCH v2 0/2] ACPI / PCI: Fix _PRT lookup for ARI enabled devices
-References: <20150526210927.7537.55656.stgit@gimli.home>
-In-Reply-To: <20150526210927.7537.55656.stgit@gimli.home>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150511022104.GA7459@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/26/2015 05:11 PM, Alex Williamson wrote:
-> v2: don't modify entry->id.device
+On Mon, May 11, 2015 at 12:21:04PM +1000, Gavin Shan wrote:
+>On Mon, May 04, 2015 at 03:07:31PM +0800, Wei Yang wrote:
+>>This patch caches the index of a VF in its PF in pci_dn.
+>>
 >
-> In most cases we only use ARI with SR-IOV VFs, which do not support
-> INTx and therefore never hit this problem.  However, some non-SR-IOV
-> implementations create multiple PFs, extending beyond the standard
-> 3-bit function numbers with ARI, and do support INTx for those
-> additional functions.  This can happen with Solarflare SFC9120
-> adapters.  The host driver typically doesn't use INTx, so we also
-> haven't noticed this problem on bare metal, but when we attempt to
-> assign the device to a VM using vfio-pci, we fail trying to setup
-> default INTx signaling.  Thanks,
+>At least you can mention the purpose of vf_index to make the commit log
+>complete. The following message looks better?
 >
-> Alex
+>The patch caches the VF index in pci_dn, which can be used to calculate
+>VF's bus, device and function number. Those information helps to locate
+>the VF's PCI device instance when doing hotplug during EEH recovery if
+>necessary.
 >
-> ---
->
-> Alex Williamson (2):
->        PCI: Move pci_ari_enabled() to global header
->        ACPI / PCI: Account for ARI in _PRT lookups
->
->
->   drivers/acpi/pci_irq.c |    2 +-
->   drivers/pci/pci.h      |   11 -----------
->   include/linux/pci.h    |   11 +++++++++++
->   3 files changed, 12 insertions(+), 12 deletions(-)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Feel free to add my Reviewed-by / Acked-by
 
--dd
+Thanks, looks better. I added it in the log.
+
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>---
+>> arch/powerpc/include/asm/pci-bridge.h |    1 +
+>> arch/powerpc/kernel/pci_dn.c          |    5 +++--
+>> 2 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>>index 1811c44..9582aa2 100644
+>>--- a/arch/powerpc/include/asm/pci-bridge.h
+>>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>>@@ -199,6 +199,7 @@ struct pci_dn {
+>> #ifdef CONFIG_PCI_IOV
+>> 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+>> 	u16     num_vfs;		/* number of VFs enabled*/
+>>+	int     vf_index;		/* Index to PF for VF dev */
+>                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>
+>					/* VF index in the PF */
+
+Ok, changed in the code.
+
+>
+>And I believe it can be "unsigned int", or u16. We should have
+>non-negative vf_index, no?
+
+Take a look in the virtfn_add(), the index in drivers/pci/iov.c is int. So I
+copy that.
+
+>
+>> 	int     offset;			/* PE# for the first VF PE */
+>> #define M64_PER_IOV 4
+>> 	int     m64_per_iov;
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index b3b4df9..bf0fb873 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -138,7 +138,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+>>
+>> #ifdef CONFIG_PCI_IOV
+>> static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>>-					   struct pci_dev *pdev,
+>>+					   struct pci_dev *pdev, int vf_index,
+>
+>					   struct pci_dev *pdev,
+>					   int vf_index;
+
+Some reason for this comment?
+
+That does not exceed 80 characters.
+
+>
+>> 					   int busno, int devfn)
+>> {
+>> 	struct pci_dn *pdn;
+>>@@ -157,6 +157,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>> 	pdn->parent = parent;
+>> 	pdn->busno = busno;
+>> 	pdn->devfn = devfn;
+>>+	pdn->vf_index = vf_index;
+>> #ifdef CONFIG_PPC_POWERNV
+>> 	pdn->pe_number = IODA_INVALID_PE;
+>> #endif
+>>@@ -196,7 +197,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>> 		return NULL;
+>>
+>> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+>>-		pdn = add_one_dev_pci_data(parent, NULL,
+>>+		pdn = add_one_dev_pci_data(parent, NULL, i,
+>> 					   pci_iov_virtfn_bus(pdev, i),
+>> 					   pci_iov_virtfn_devfn(pdev, i));
+>> 		if (!pdn) {
+>
+>Thanks,
+>Gavin
+
+-- 
+Richard Yang
+Help you, Help me
+
