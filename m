@@ -1,302 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:57391 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752341AbbE0VLI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 17:11:08 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: [PATCH v0 06/13] PCI: Set secondary and subordinate bus numbers
-Date: Wed, 27 May 2015 20:59:10 +0000
-Message-ID: <146310523b594c58b867e5a257b54798@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:54603 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbbEKG0o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 02:26:44 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 16:26:42 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 675B52BB0051
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:26:40 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B6QVTP41156624
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:26:40 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B6Q7RX010973
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:26:07 +1000
+Date: Mon, 11 May 2015 14:25:49 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 5/9] powerpc/eeh: create EEH_PE_VF for VF PE
+Message-ID: <20150511062549.GB1632@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150511023707.GA8816@gwshan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150511023707.GA8816@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By using the static enumeration kcmdline, a user can override secondary
-and subordinate bus numbers assigned to child bridges. This includes
-adding padding to subordinate bus numbers, to accommodate dynamic PCI
-device discovery.
+On Mon, May 11, 2015 at 12:37:07PM +1000, Gavin Shan wrote:
+>On Mon, May 04, 2015 at 03:07:34PM +0800, Wei Yang wrote:
+>
+>Please reorder PATCH[6] with this one because the EEH device is expected
+>to be created before EEH PE.
 
-Signed-off-by: Jason Tang <jason.tang2@ngc.com>
----
- Documentation/kernel-parameters.txt |    9 ++
- drivers/pci/pci.h                   |    4 +
- drivers/pci/pci_static_enum.c       |  173 +++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c                 |    8 +-
- 4 files changed, 193 insertions(+), 1 deletion(-)
+That's a good idea.
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 4d68ec8..af2ce92 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2765,6 +2765,15 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
- 				only look for one device below a PCIe downstream
- 				port.
-+		enum=		Enable static enumeration, overriding any
-+				BIOS/firmware settings.  If "off" then disable
-+				all static enumeration. Otherwise format is:
-+				<device>@<option>[<option2>...]
-+				Where <device> is <domain>:<bus>:<slot>.<func>
-+				and <option> is any combination of:
-+				B<secondary>-<subordinate> -
-+				  force secondary and subordinate bus numbers
-+				All values are in hexadecimal.
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3282b51..7a051f5 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -323,6 +323,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- #ifdef CONFIG_PCI_STATIC_ENUMERATION
- void pci_static_enum_set_opt(const char *str);
-+int pci_static_enum_exists(void);
-+void pci_static_enum_bus_nums(struct pci_bus *bus);
- /**
-  * pci_bus_subordinate() - return the subordinate bus number assigned
-  * to @dev by the static enumeration profile, or 0 if not set
-@@ -333,6 +335,8 @@ static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
- }
- #else
- static inline void pci_static_enum_set_opt(const char *str) { return; }
-+static inline int pci_static_enum_exists(void) { return 0; }
-+static inline void pci_static_enum_bus_nums(struct pci_bus *bus) { return; }
- static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
- {
- 	return 0;
-diff --git a/drivers/pci/pci_static_enum.c b/drivers/pci/pci_static_enum.c
-index a28bd33..dda9055 100644
---- a/drivers/pci/pci_static_enum.c
-+++ b/drivers/pci/pci_static_enum.c
-@@ -11,6 +11,7 @@
- 
- #include <linux/init.h>
- #include <linux/list.h>
-+#include <linux/pci.h>
- #include <linux/spinlock.h>
- #include <linux/string.h>
- 
-@@ -20,6 +21,18 @@
- 
- static DEFINE_SPINLOCK(static_enum_lock);
- 
-+struct pci_static_enum_setting {
-+	struct list_head list;
-+	int seg;
-+	int bus;
-+	int devfn;
-+	unsigned char secondary_bus;
-+	unsigned char subordinate_bus;
-+};
-+
-+LIST_HEAD(settings_list);
-+static int options_parsed;
-+
- #define PCI_STATIC_ENUM_PARAM_SIZE COMMAND_LINE_SIZE
- static char pci_static_enum_param[PCI_STATIC_ENUM_PARAM_SIZE] = { 0 };
- 
-@@ -52,3 +65,163 @@ void __init pci_static_enum_set_opt(const char *str)
- 	strncat(pci_static_enum_param + cur, str, len);
- 	spin_unlock(&static_enum_lock);
- }
-+
-+/**
-+ * pci_static_enum_parse_options() - parse the static enumeration
-+ * options string, creating the linked list of settings
-+ * Return: 0 on success, negative on error or if static enumeration is
-+ * disabled.
-+ */
-+static int pci_static_enum_parse_options(void)
-+{
-+	const char *p = pci_static_enum_param;
-+
-+	pr_debug(PREFIX "Set options are: %s\n", pci_static_enum_param);
-+	options_parsed = 1;
-+	while (*p) {
-+		struct pci_static_enum_setting *setting, *tmp;
-+		int seg, bus, slot, func;
-+		unsigned int secondary_bus, subordinate_bus;
-+		int count = 0, entry_found = 0;
-+
-+		if (strncmp(p, "off", 3) == 0) {
-+			/* delete existing profile, if any */
-+			list_for_each_entry_safe(setting, tmp, &settings_list,
-+						 list) {
-+				kfree(setting);
-+			}
-+			INIT_LIST_HEAD(&settings_list);
-+			return -1;
-+		}
-+
-+		if (sscanf(p, "%x:%x:%x.%x@%n",
-+			   &seg, &bus, &slot, &func, &count) != 4
-+		    || count == 0) {
-+			/* Invalid format */
-+			pr_err(PREFIX "Can't parse enum parameter: `%s'\n", p);
-+			return -1;
-+		}
-+		p += count;
-+
-+		/* check if an entry already created; if not, make one
-+		   and add it to the list */
-+		list_for_each_entry(setting, &settings_list, list) {
-+			if (setting->seg == seg && setting->bus == bus
-+			    && setting->devfn == PCI_DEVFN(slot, func)) {
-+				entry_found = 1;
-+				break;
-+			}
-+		}
-+
-+		if (!entry_found) {
-+			setting = kzalloc(sizeof(*setting), GFP_KERNEL);
-+			if (!setting) {
-+				pr_err(PREFIX "Out of memory\n");
-+				return -1;
-+			}
-+			setting->seg = seg;
-+			setting->bus = bus;
-+			setting->devfn = PCI_DEVFN(slot, func);
-+			list_add(&setting->list, &settings_list);
-+		}
-+
-+		while (*p && *p != ';') {
-+			count = 0;
-+			if (sscanf
-+			    (p, "B%x-%x%n", &secondary_bus, &subordinate_bus,
-+			     &count) == 2 && count > 0) {
-+				p += count;
-+				setting->secondary_bus = secondary_bus;
-+				setting->subordinate_bus = subordinate_bus;
-+			} else {
-+				pr_err(PREFIX "Invalid enum option: `%s'\n", p);
-+				return -1;
-+			}
-+		}
-+
-+		/* increment to next field, if any */
-+		if (*p == ';')
-+			p++;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * pci_static_enum_find_setting() - look for the requested PCI
-+ * device's setting within the static enumeration settings
-+ * @domain: target domain to find
-+ * @bus: target bus to find
-+ * @devfn: target device and function to find
-+ * Return: pointer to found static enumeration settings, or NULL if
-+ * not found or on error
-+ */
-+static struct pci_static_enum_setting *pci_static_enum_find_setting(int domain, unsigned
-+								    char
-+								    bus,
-+								    unsigned int
-+								    devfn)
-+{
-+	struct pci_static_enum_setting *setting = NULL;
-+
-+	spin_lock(&static_enum_lock);
-+	if (!options_parsed && pci_static_enum_parse_options() < 0)
-+		goto out;
-+
-+	list_for_each_entry(setting, &settings_list, list) {
-+		if (setting->seg == domain && setting->bus == bus
-+		    && setting->devfn == devfn)
-+			goto out;
-+	}
-+
-+	/* no static enumeration profile for the requested device */
-+	setting = NULL;
-+out:
-+	spin_unlock(&static_enum_lock);
-+	return setting;
-+}
-+
-+/**
-+ * pci_static_enum_exists() - returns non-zero if a static enumeration
-+ * mapping exists, 0 otherwise
-+ */
-+int pci_static_enum_exists(void)
-+{
-+	int retval;
-+
-+	spin_lock(&static_enum_lock);
-+	retval = pci_static_enum_param[0];
-+	spin_unlock(&static_enum_lock);
-+	return retval;
-+}
-+
-+/**
-+ * pci_static_enum_bus_nums() - statically enumerate the secondary and
-+ * subordinate bus numbers for the given bus, according to its static
-+ * enumeration profile
-+ * @bus: bus to reenumerate
-+ */
-+void pci_static_enum_bus_nums(struct pci_bus *bus)
-+{
-+	struct pci_static_enum_setting *setting;
-+
-+	if (pci_is_root_bus(bus)) {
-+		/* cannot reenumerate the root complex */
-+		return;
-+	}
-+	setting =
-+	    pci_static_enum_find_setting(pci_domain_nr(bus),
-+					 bus->parent->number, bus->self->devfn);
-+	if (!setting)
-+		return;
-+	if (setting->secondary_bus == 0) {
-+		/* no bus settings specified for this device */
-+		return;
-+	}
-+	pr_info(PREFIX "Overriding %x:%x:%x.%x to bus numbers %x-%x\n",
-+		pci_domain_nr(bus), bus->parent->number,
-+		PCI_SLOT(bus->self->devfn), PCI_FUNC(bus->self->devfn),
-+		setting->secondary_bus, setting->subordinate_bus);
-+	bus->number = bus->busn_res.start = setting->secondary_bus;
-+	bus->subordinate = setting->subordinate_bus;
-+}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9c3a9b2..a7bf7c5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -704,6 +704,10 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	child->bridge = get_device(&bridge->dev);
- 	child->dev.parent = child->bridge;
- 
-+	/* if the child bus has a static enumeration profile, override
-+	   its bus numbers here */
-+	pci_static_enum_bus_nums(child);
-+
- 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child),
- 		     child->number);
- 
-@@ -805,6 +809,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	pci_enable_crs(dev);
- 
- 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
-+	    !pci_static_enum_exists() &&
- 	    !is_cardbus && !broken) {
- 		unsigned int cmax;
- 		/*
-@@ -843,7 +848,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 		 * do in the second pass.
- 		 */
- 		if (!pass) {
--			if (pcibios_assign_all_busses() || broken || is_cardbus)
-+			if (pcibios_assign_all_busses() || broken ||
-+			    is_cardbus || pci_static_enum_exists())
- 				/* Temporarily disable forwarding of the
- 				   configuration cycles on all bridges in
- 				   this bus segment to avoid possible
+>
+>>On powernv platform, VF PE is a special PE which is different from the Bus
+>>PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
+>>properly. For example, we need to create VF PE when VF's pci_dev is
+>>initialized in kernel. And add a flag to mark it is a VF PF.
+>                                                       ^^^^^
+>>
+>
+>>From above commit log, my understanding is that you're adding a flag to
+>identify VF PE, which is handled differently from bus PE. You missed the
+>details on the difference between them and the speical treament to VF PE.
+>Could you help add those information in the commit log to make it looks
+>complete?
+>
+
+This patch just introduce the VF PE. For those differences, we have another
+patch "handle VF PE properly" to cover. In the log of that patch, I listed
+those differences. Do you think this is fine?
+
+>>This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
+>>At the mean time, it creates the sysfs and address cache for VF PE.
+>                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>
+>                   it creates the sysfs and address cache for VF PE at PCI
+>device final fixup time.
+>
+>>
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>---
+>> arch/powerpc/include/asm/eeh.h               |    1 +
+>> arch/powerpc/kernel/eeh_pe.c                 |   12 ++++++++++--
+>> arch/powerpc/platforms/powernv/eeh-powernv.c |   12 ++++++++++++
+>> 3 files changed, 23 insertions(+), 2 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index a52db28..56e8cd9 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -70,6 +70,7 @@ struct pci_dn;
+>> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+>> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+>> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+>>+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>>
+>> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+>> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+>>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>>index 35f0b62..edfe63a 100644
+>>--- a/arch/powerpc/kernel/eeh_pe.c
+>>+++ b/arch/powerpc/kernel/eeh_pe.c
+>>@@ -299,7 +299,12 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+>> 	 * EEH device already having associated PE, but
+>> 	 * the direct parent EEH device doesn't have yet.
+>> 	 */
+>>-	pdn = pdn ? pdn->parent : NULL;
+>>+#ifdef CONFIG_PCI_IOV
+>>+	if (edev->mode & EEH_DEV_VF)
+>>+		pdn = pci_get_pdn(edev->physfn);
+>>+	else
+>>+#endif
+>>+		pdn = pdn ? pdn->parent : NULL;
+>
+>[A]
+>
+>> 	while (pdn) {
+>> 		/* We're poking out of PCI territory */
+>> 		parent = pdn_to_eeh_dev(pdn);
+>>@@ -382,7 +387,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+>> 	}
+>>
+>> 	/* Create a new EEH PE */
+>>-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>>+	if (edev->mode & EEH_DEV_VF)
+>>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+>>+	else
+>>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>
+>You don't have CONFIG_PCI_IOV here to protect the code, but you had
+>that at [A]. In order to keep the code look consistent, you either
+>add it or remove it for all places. I prefer to remove it, which
+>we don't need CONFIG_PCI_IOV.
+>
+
+Ok, that's fine to remove it.
+
+BTW, if remove the CONFIG_PCI_IOV, we need to remove it around the physfn in
+eeh_dev definition. That's fine?
+
+>> 	if (!pe) {
+>> 		pr_err("%s: out of memory!\n", __func__);
+>> 		return -ENOMEM;
+>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>index 622f08c..5447481 100644
+>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>@@ -1540,3 +1540,15 @@ static int __init eeh_powernv_init(void)
+>> 	return ret;
+>> }
+>> machine_early_initcall(powernv, eeh_powernv_init);
+>>+
+>>+#ifdef CONFIG_PCI_IOV
+>>+static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+>>+{
+>
+>Please rename it to pnv_eeh_vf_final_fixup(). Names of all functions
+>in this file expect prefix "pnv_eeh_". With "_final_", it's clearly
+>to tell it's called on PCI device final fixup time.
+>
+
+ok
+
+>>+	/* sysfs files should only be added after devices are added */
+>
+>It's nice to explain why here: sysfs for the PCI device isn't populated
+>and the MMIO resource isn't finalized for the PCI device yet.
+>
+
+Don't get your point.
+
+sysfs of the PCI device is populated at this point.
+
+>>+	if (pdev->is_virtfn) {
+>>+		eeh_add_device_late(pdev);
+>>+		eeh_sysfs_add_device(pdev);
+>>+	}
+>>+}
+>
+>The nested ifdef can be avoided as:
+>
+>	if (!pdev->is_virtfn)
+>		return;
+>
+>	eeh_add_device_late(pdev);
+>	eeh_sysfs_add_device(pdev);
+>
+
+Ok.
+
+>>+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
+>>+#endif /* CONFIG_PCI_IOV */
+>
+>Thanks,
+>Gavin
+
 -- 
-1.7.9.5
+Richard Yang
+Help you, Help me
 
