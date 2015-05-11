@@ -1,124 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li42-95.members.linode.com ([209.123.162.95]:37379 "EHLO
-	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751083AbbENHeb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 03:34:31 -0400
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-From: Pantelis Antoniou <panto@antoniou-consulting.com>
-In-Reply-To: <1431588358.4160.42.camel@kernel.crashing.org>
-Date: Thu, 14 May 2015 10:34:26 +0300
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <D7FC0542-DD1A-428F-8E75-81620C6D83DC@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org> <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com> <1431585994.4160.32.camel@kernel.crashing.org> <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com> <1431587657.4160.37.camel@kernel.crashing.org> <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com> <1431588358.4160.42.camel@kernel.crashing.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v11 03/10] iommu/vt-d: Function to get existing context entry
+Date: Mon, 11 May 2015 17:52:47 +0800
+Message-Id: <1431337974-545-4-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+Interface for when a new domain in the old kernel needs some
+values from the panicked kernel's context entries.
 
-> On May 14, 2015, at 10:25 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
-> 
-> On Thu, 2015-05-14 at 10:19 +0300, Pantelis Antoniou wrote:
-> 
->> 
->> You don’t want to know how sausages are made, but they are delicious :)
-> 
-> ... most of the time :)
-> 
->>> But yeah generating the overlay doesn't necessarily scare me, I can
->>> generate a temp tree that is the overlay in which I "copy" the subtree
->>> (or in my internal ptr-based representation I could have a concept of
->>> alias which I follow while flattening).
->>> 
->>> That leaves me with these problems:
->>> 
->>> - No support for removing of nodes, so that needs to be added back to
->>> the format and to Linux unless I continue removing by hand in the PCI
->>> hotplug code itself
->>> 
->> 
->> What kind of nodes/properties you need to remove at _application_ time?
-> 
-> Well, if we stick to removing by hand in Linux for the unplug case, then
-> none.
-> 
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-OK
-
->> What you describe is inserting a bunch of properties and nodes under
->> a slot’s device node. Reverting the overlay removes them all just fine.
-> 
-> Except that still doesn't work for boot time :-)
-> 
-> So I would have to do a special case on unplug:
-> 
-> 	if (slot->dt_is_overlay) /* set to false at boot */
-> 		remove_subtree_myself();
-> 	else
-> 		undo_overlay(slot->overlay);
-> 
-
-OK, in that case you do require removal. But in any case it’s the ‘negative’
-of an already applied one, either at boot time or not.
-
-Modifying the overlay code to apply a ‘negative’ property should do the trick.
-
-Is that correct?
-
->>> - No support for "committing" the overlay which needs to be added as
->>> well.
->>> 
->> 
->> That’s the easiest part.
-> 
-> Yeah, I will need to get my head around the code a bit more but it
-> doesn't seem too scary.
-> 
->> I see. Well, how about this?
->> 
->> Who said you have to do the whole blob dance in the firmware?
->> 
->> You can just as easily pass the blob as it is to the linux kernel and
->> the kernel there can convert it to an overlay and apply it.
-> 
-> That's not that pretty but we can do that too which solve the problem of
-> fixing the FW interface.
-> 
-> There is however an argument to be made in having the FW be able to
-> generate arbitrary overlays. If we ever want to pass more "property"
-> updates or node updates to Linux at runtime.
-> 
-> A few cases have crept up on the radar, like updating the pstate tables
-> or VPD informations ...
-> 
-> If we go down that path, then I would implement a concept of generation
-> count in the firmware, so I can generate an overlay that include all the
-> changes since the last "generation" given to Linux.
-> 
-
-I will probably need that generation count myself for my PCI use case.
-
-> However that requires supporting removal of nodes/properties. So I'm
-> tempted to keep that feature on the back burner and go with an ad-hoc
-> interface for PCI for now.
-> 
-
-I see. Bonne chance :)
-
-> Ben.
-> 
-> 
-
-Regards
-
-— Pantelis
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 1e7ceb5..07e6118 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -367,6 +367,10 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+  * do the same thing as crashdump kernel.
+  */
+ 
++static struct context_entry *device_to_existing_context_entry(
++				struct intel_iommu *iommu,
++				u8 bus, u8 devfn);
++
+ 
+ /*
+  * This domain is a statically identity mapping domain.
+@@ -4810,3 +4814,22 @@ static void __init check_tylersburg_isoch(void)
+ 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
+ 	       vtisochctrl);
+ }
++
++static struct context_entry *device_to_existing_context_entry(
++				struct intel_iommu *iommu,
++				u8 bus, u8 devfn)
++{
++	struct root_entry *root;
++	struct context_entry *context;
++	struct context_entry *ret = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&iommu->lock, flags);
++	root = &iommu->root_entry[bus];
++	context = get_context_addr_from_root(root);
++	if (context && context_present(context+devfn))
++		ret = &context[devfn];
++	spin_unlock_irqrestore(&iommu->lock, flags);
++	return ret;
++}
++
+-- 
+2.0.0-rc0
 
