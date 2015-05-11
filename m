@@ -1,68 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57565 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750787AbbESDI3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 May 2015 23:08:29 -0400
-Message-ID: <555AA8CD.3010706@redhat.com>
-Date: Mon, 18 May 2015 23:06:53 -0400
-From: Jarod Wilson <jarod@redhat.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:18732 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbbEKUF4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 16:05:56 -0400
+From: William Davis <wdavis@nvidia.com>
+To: "markh@compro.net" <markh@compro.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"jglisse@redhat.com" <jglisse@redhat.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Terence Ripperda <TRipperda@nvidia.com>
+Subject: RE: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+Date: Mon, 11 May 2015 20:05:54 +0000
+Message-ID: <b2ae7590ce2c4dd7a8408f739e3aea54@HQMAIL106.nvidia.com>
+References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+ <20150508202134.GB26795@l.oracle.com> <554D2099.2030907@compro.net>
+In-Reply-To: <554D2099.2030907@compro.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook
- G2
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <555A1093.40303@redhat.com> <555A4F68.1020208@redhat.com> <1948383.UKjRPomMUp@vostro.rjw.lan>
-In-Reply-To: <1948383.UKjRPomMUp@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/18/2015 7:06 PM, Rafael J. Wysocki wrote:
-> On Monday, May 18, 2015 04:45:28 PM Jarod Wilson wrote:
-...
->>>>>>> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
->>>>>>>> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
->>>>>>>> including at least BIOS revision 01.07, do not have an ACPI _RMV
->>>>>>>> object
->>>>>>>> associated with their expresscard slots, so acpi-based
->>>>>>>> hotplug-capable
->>>>>>>> slot detection fails. If we fall back to pcie-based detection, the
->>>>>>>> systems
->>>>>>>> work just fine
-...
->> Ah, I forgot some additional details. pciehp_probe() in
->> drivers/pci/hotplug/pciehp_core.c fails on the
->> pciehp_acpi_slot_detection_check() call for the expresscard slot, which
->> is why the base pciehp doesn't bind. DEVICE_ACPI_HANDLE(&dev->dev) in
->> the slot detection check is winding up with a NULL acpi device.
->
-> So IMO the bug is that select_detection_mode() assumes that ACPI should be
-> used as the PCIe hotplug detection method if it has found at least one
-> device that looks like an "ACPI hotplug slot" (Thuderbolt breaks that "logic").
->
-> To be honest, I'm not sure why we need the pciehp_acpi_slot_detection_check()
-> in pciehp_probe() at all.  It doesn't add any value as far as I can say.
->
-> If pciehp_probe() is called at all, we have registered a PCIe port service
-> and if this is a "hotplug" service, we wouldn't have registered it if the
-> _OSC handshake had not given us contol over native hotplug.
->
-> So I wonder if the patch below makes any difference.
 
-Yeah, that also works, for the most part. You still get spew from 
-pciehp_acpi_slot_detection_init() saying "Using ACPI for slot 
-detection.", but in re-reading pciehp_acpi.c in its entirety... I can't 
-see anything productive that it actually does. I'm of the mind that the 
-entire file should just be nuked, the path from pciehp_core.c that your 
-patch alters was the only one that called 
-pciehp_acpi_slot_detection_check(), and everything else is basically the 
-dummy probe and fluff, nothing meaningful actually happens. I can whip 
-up a follow-up patch that neuters that file entirely in the morning. At 
-the very least, the "Using ACPI" bit needs to be beaten into submission, 
-since its not going to be accurate.
 
--- 
-Jarod Wilson
-jarod@redhat.com
+> -----Original Message-----
+> From: Mark Hounschell [mailto:markh@compro.net]
+> Sent: Friday, May 08, 2015 3:46 PM
+> To: Konrad Rzeszutek Wilk; William Davis
+> Cc: linux-pci@vger.kernel.org; iommu@lists.linux-foundation.org; jglisse@redhat.com; John Hubbard;
+> Terence Ripperda
+> Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
+> 
+> On 05/08/2015 04:21 PM, Konrad Rzeszutek Wilk wrote:
+> > On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
+> >> From: Will Davis <wdavis@nvidia.com>
+> >>
+> >> Hi,
+> >>
+> ...
+> >>
+> >> This solves a long-standing problem with the existing DMA-remapping interfaces,
+> >> which require that a struct page be given for the region to be mapped into a
+> >> device's IOVA domain. This requirement cannot support peer device BAR ranges,
+> >> for which no struct pages exist.
+> >>
+> ...
+> >>
+> >> The Intel and nommu versions have been verified on a dual Intel Xeon E5405
+> >> workstation.
+> 
+> PCIe peer2peer is borked on all motherboards I've tried. Only writes are
+> possible. Reads are not supported. I suppose if you have a platform with
+> only PCI and an IOMMU this would be very useful. Without both read and
+> write PCIe peer2peer support, this seems unnecessary.
+> 
+
+PCIe peer-to-peer isn't inherently broken or useless itself, even if a lot of its implementations are; I've successfully tested these patches with existing hardware (dual NVIDIA GPUs + an old-ish workstation), and it solves a longstanding problem for us [1], so I disagree with the assessment that this would be unnecessary.
+
+I guess I don't see why the existence of some, or even a lot of, poor implementations suffices as a reason to reject a generic mechanism to support the "good", standardized implementations.
+
+[1] http://stackoverflow.com/questions/19841815/does-the-nvidia-rdma-gpudirect-always-operate-only-physical-addresses-in-physic
+
+Thanks,
+Will
+
+--
+nvpublic
