@@ -1,82 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:34536 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbbE0SbW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 14:31:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQU9k6m-5bM5ZfFUZxW3H7_v4aOtaK66pa7iV0Zb-J86jw@mail.gmail.com>
-References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
-	<20130725175727.6006.98109.stgit@bhelgaas-glaptop>
-	<CAE9FiQU9k6m-5bM5ZfFUZxW3H7_v4aOtaK66pa7iV0Zb-J86jw@mail.gmail.com>
-Date: Wed, 27 May 2015 11:31:21 -0700
-Message-ID: <CAE9FiQXq59tSBM0SQ4OToXydZrRC3yukALmWEb6K9xpCGbdUhg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not modular
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	linux-sh@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old mem
+Date: Mon, 11 May 2015 17:52:48 +0800
+Message-Id: <1431337974-545-5-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 5:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Jul 25, 2013 at 10:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Convert pciehp to be builtin only, with no module option.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>  drivers/pci/pcie/Kconfig |    5 +----
->>  1 file changed, 1 insertion(+), 4 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
->> index 569f82f..3b94cfc 100644
->> --- a/drivers/pci/pcie/Kconfig
->> +++ b/drivers/pci/pcie/Kconfig
->> @@ -14,15 +14,12 @@ config PCIEPORTBUS
->>  # Include service Kconfig here
->>  #
->>  config HOTPLUG_PCI_PCIE
->> -       tristate "PCI Express Hotplug driver"
->> +       bool "PCI Express Hotplug driver"
->>         depends on HOTPLUG_PCI && PCIEPORTBUS
->>         help
->>           Say Y here if you have a motherboard that supports PCI Express Native
->>           Hotplug
->>
->> -         To compile this driver as a module, choose M here: the
->> -         module will be called pciehp.
->> -
->>           When in doubt, say N.
->>
->>  source "drivers/pci/pcie/aer/Kconfig"
->>
->
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
+Add some functions to copy the data from old kernel.
+These functions are used to copy context tables and page tables.
 
-Hi Bjorn,
+To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+use a link here, store the pointers , and then use iounmap to free them in
+another place.
 
-Looks like we lose the option to disable pciehp after we make it as built-in.
+Li, Zhen-hua:
+    The functions and logics.
 
-Before acpiphp and pciehp could be compiled as modules, and user could
-blacklist to disable them.
+Takao Indoh:
+    Check if pfn is ram:
+        if (page_is_ram(pfn))
 
-Now they are all built-in, but only acpiphp has acpiphp.disable to
-disable acpiphp.
-we don't have pciehp.disable yet.
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ drivers/iommu/intel-iommu.c | 102 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h |   6 +++
+ 2 files changed, 108 insertions(+)
 
-Do you think if we should add pciehp.disable ?
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 07e6118..0b97c15 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -371,6 +371,17 @@ static struct context_entry *device_to_existing_context_entry(
+ 				struct intel_iommu *iommu,
+ 				u8 bus, u8 devfn);
+ 
++/*
++ * A structure used to store the address allocated by ioremap();
++ * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
++ */
++struct iommu_remapped_entry {
++	struct list_head list;
++	void __iomem *mem;
++};
++static LIST_HEAD(__iommu_remapped_mem);
++static DEFINE_MUTEX(__iommu_mem_list_lock);
++
+ 
+ /*
+  * This domain is a statically identity mapping domain.
+@@ -4833,3 +4844,94 @@ static struct context_entry *device_to_existing_context_entry(
+ 	return ret;
+ }
+ 
++/*
++ * Copy memory from a physically-addressed area into a virtually-addressed area
++ */
++int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = from >> VTD_PAGE_SHIFT;
++	offset = from & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
++	} else{
++
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)from, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(to, virt_mem, size);
++
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Copy memory from a virtually-addressed area into a physically-addressed area
++ */
++int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
++{
++	unsigned long pfn;		/* Page Frame Number */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of to */
++	void __iomem *virt_mem;
++	struct iommu_remapped_entry *mapped;
++
++	pfn = to >> VTD_PAGE_SHIFT;
++	offset = to & (~VTD_PAGE_MASK);
++
++	if (page_is_ram(pfn)) {
++		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
++	} else{
++		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
++				GFP_KERNEL);
++		if (!mapped)
++			return -ENOMEM;
++
++		virt_mem = ioremap_cache((unsigned long)to, size);
++		if (!virt_mem) {
++			kfree(mapped);
++			return -ENOMEM;
++		}
++		memcpy(virt_mem, from, size);
++		mutex_lock(&__iommu_mem_list_lock);
++		mapped->mem = virt_mem;
++		list_add_tail(&mapped->list, &__iommu_remapped_mem);
++		mutex_unlock(&__iommu_mem_list_lock);
++	}
++	return size;
++}
++
++/*
++ * Free the mapped memory for ioremap;
++ */
++int __iommu_free_mapped_mem(void)
++{
++	struct iommu_remapped_entry *mem_entry, *tmp;
++
++	mutex_lock(&__iommu_mem_list_lock);
++	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
++		iounmap(mem_entry->mem);
++		list_del(&mem_entry->list);
++		kfree(mem_entry);
++	}
++	mutex_unlock(&__iommu_mem_list_lock);
++	return 0;
++}
++
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 796ef96..ced1fac 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -380,4 +380,10 @@ extern int dmar_ir_support(void);
+ 
+ extern const struct attribute_group *intel_iommu_groups[];
+ 
++extern int __iommu_load_from_oldmem(void *to, unsigned long from,
++					unsigned long size);
++extern int __iommu_save_to_oldmem(unsigned long to, void *from,
++					unsigned long size);
++extern int __iommu_free_mapped_mem(void);
++
+ #endif
+-- 
+2.0.0-rc0
 
-BTW we don't have any description for acpiphp.disable anywhere.
-
-Thanks
-
-Yinghai
