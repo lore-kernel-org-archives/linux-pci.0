@@ -1,201 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:34395 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbbETNDN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 09:03:13 -0400
-Received: by qgez61 with SMTP id z61so19013650qge.1
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 06:03:12 -0700 (PDT)
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:36921 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbbEKHUD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 03:20:03 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 17:20:01 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 083452BB0052
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:19:59 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B7Jont31719640
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:19:58 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B7JP7I003417
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:19:26 +1000
+Date: Mon, 11 May 2015 17:19:01 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Subject: Re: [PATCH v4 13/21] powerpc/powernv: Introduce pnv_pci_poll()
+Message-ID: <20150511071901.GC8241@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-14-git-send-email-gwshan@linux.vnet.ibm.com>
+ <554E19EF.1070903@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20150520085656.GB29274@red-moon>
-References: <1431614537-16136-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1431614537-16136-2-git-send-email-lorenzo.pieralisi@arm.com>
- <5555553F.9070608@amd.com> <20150520085656.GB29274@red-moon>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 May 2015 08:02:52 -0500
-Message-ID: <CAErSpo4OY+mm4R34_1DG5tb+tTJVGQbjuQ75esSF26LUzNWL9A@mail.gmail.com>
-Subject: Re: [RFC/RFT PATCH 2/2] ARM64: kernel: pci: implement PCI device
- resources claiming
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <554E19EF.1070903@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 3:56 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Fri, May 15, 2015 at 03:09:03AM +0100, Suravee Suthikulanit wrote:
->> On 5/14/2015 9:42 AM, Lorenzo Pieralisi wrote:
->> > When a device is scanned and added to the PCI bus, its resources
->> > should be claimed to validate the BARs configuration and to assign
->> > them a parent resource so that the resource hierarchy can be sanity
->> > checked.
->> >
->> > This patch adds code that carries out PCI device resources claiming to
->> > the ARM64 pcibios_add_device implementation so that device resources
->> > are claimed by the core PCI layer upon PCI device initialization on
->> > ARM64 systems.
->> >
->> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> > Cc: Arnd Bergmann <arnd@arndb.de>
->> > Cc: Will Deacon <will.deacon@arm.com>
->> > Cc: Liviu Dudau <liviu.dudau@arm.com>
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > ---
->> >   arch/arm64/kernel/pci.c | 10 ++++++++++
->> >   1 file changed, 10 insertions(+)
->> >
->> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> > index 4095379..c0a88ca 100644
->> > --- a/arch/arm64/kernel/pci.c
->> > +++ b/arch/arm64/kernel/pci.c
->> > @@ -43,8 +43,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->> >    */
->> >   int pcibios_add_device(struct pci_dev *dev)
->> >   {
->> > +   struct resource *res;
->> > +   int i;
->> > +
->> >     dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> >
->> > +   for (i = 0; i < PCI_NUM_RESOURCES; i++) {
->> > +           res = &dev->resource[i];
->> > +           if (res->parent || !res->flags)
->> > +                   continue;
->> > +           pci_claim_resource(dev, i);
->> > +   }
->> > +
->> >     return 0;
->> >   }
->> >
->> >
+On Sun, May 10, 2015 at 12:30:07AM +1000, Alexey Kardashevskiy wrote:
+>On 05/01/2015 04:03 PM, Gavin Shan wrote:
+>>We might not get some PCI slot information (e.g. power status)
+>>immediately by OPAL API. Instead, opal_pci_poll() need to be called
+>>for the required information.
 >>
->> Lorenzo/Bjorn,
+>>The patch introduces pnv_pci_poll(), which bases on original
+>>pnv_eeh_poll(), to cover the above case
 >>
->> I have tested this patch on top of Jayachandran's V2 patch series
->> (http://www.spinics.net/lists/linux-pci/msg40811.html) on AMD Seattle
->> (w/ PROBE_ONLY and non-PROBE_ONLY mode), and your changes here works
->> with additional changes below.
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 28 ++--------------------------
+>>  arch/powerpc/platforms/powernv/pci.c         | 16 ++++++++++++++++
+>>  arch/powerpc/platforms/powernv/pci.h         |  1 +
+>>  3 files changed, 19 insertions(+), 26 deletions(-)
 >>
->> It seems that when booting w/ PROBE_ONLY case, we need to call
->> pci_read_bridge_bases() at some point before claiming the resources of
->> devices underneath the bridge. This is needed to determine the bridge
->> bases (i.e. bridge io, mmio and mmio_pref bases), and update bridge
->> resources accordingly.
+>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>index 58e4dcf..9253b9e 100644
+>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>@@ -742,24 +742,6 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+>>  	return ret;
+>>  }
 >>
->> ---- BEGIN PATCH -----
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index c0a88ca..57be6aa 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -48,6 +48,11 @@ int pcibios_add_device(struct pci_dev *dev)
+>>-static s64 pnv_eeh_poll(uint64_t id)
+>>-{
+>>-	s64 rc = OPAL_HARDWARE;
+>>-
+>>-	while (1) {
+>>-		rc = opal_pci_poll(id, NULL);
+>>-		if (rc <= 0)
+>>-			break;
+>>-
+>>-		if (system_state < SYSTEM_RUNNING)
+>>-			udelay(1000 * rc);
+>>-		else
+>>-			msleep(rc);
+>>-	}
+>>-
+>>-	return rc;
+>>-}
+>>-
+>>  int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+>>  {
+>>  	struct pnv_phb *phb = hose->private_data;
+>>@@ -788,10 +770,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
 >>
->>          dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->>
->> +       if (pci_has_flag(PCI_PROBE_ONLY) &&
+>>  	/* Issue reset and poll until it's completed */
+>>  	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
+>>-	if (rc > 0)
+>>-		rc = pnv_eeh_poll(phb->opal_id);
+>>-
+>>-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>>+	return pnv_pci_poll(phb->opal_id, rc, NULL);
 >
-> Does it really matter if PCI_PROBE_ONLY is set ?
 >
->> +           !pci_is_root_bus(dev->bus) &&
+>You are carrying a negative value to the new helper too? Looks complicated.
 >
-> This check is useless, since pci_read_bridge_bases checks that already.
->
->> +           !pci_bridge_bases_is_read(dev->bus))
->> +               pci_read_bridge_bases(dev->bus);
->> +
->
-> Ok. Most of the archs do that in pcibios_fixup_bus, I would like to
-> understand:
->
-> 1) Should we do it on PCI_PROBE_ONLY only
-> 2) Can we move this to generic code - ie pci_scan_child_bus (I guess answer
->    is no, because there are corner cases I am not aware of)
 
-In my opinion, we should call pci_read_bridge_bases() in all cases,
-regardless of PCI_PROBE_ONLY.  pci_read_bridge_bases() doesn't
-*change* anything in the hardware; it only reads what's there.  (It
-should attempt writes to learn whether I/O and prefetchable memory
-apertures are implemented, but those should be done as in
-pci_bridge_check_ranges(), where the original value is restored.)
+Yes, a bit complicated :-)
 
-I also think this should be done in generic code, since there's
-nothing architecture-specific about bridge operation.
-
-I've been hoping to get rid of pcibios_fixup_bus() completely for
-years, and doing pci_read_bridge_bases() in generic code would be a
-big step.
-
-No doubt there are corner cases we'll trip over, but I'm not aware of them yet.
-
-> If I add it to arm64 (in pcibios_fixup_bus) I have to add it to arm too, more
-> arch specific code that has nothing arch specific in it so I am not really
-> keen on that.
+>Also, before you only cared if opal_pci_reset() returned negative value, now
+>you treat it as a timeout, is it new change to OPAL or it has always been
+>there?
 >
-> Comments appreciated.
+
+No, I didn't change the behaviour from skiboot side. The function should
+have following return values:
+
+0 - success; <0 - Error; >0 - Delay in ms;
+
 >
-> Lorenzo
+>>  }
+>>
+>>  static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>@@ -882,10 +861,7 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  	phb = hose->private_data;
+>>  	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
+>>  	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+>>-	if (rc > 0)
+>>-		rc = pnv_eeh_poll(id);
+>>-
+>>-	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>>+	return pnv_pci_poll(id, rc, NULL);
+>>  }
+>>
+>>  static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+>>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>>index bca2aeb..a2da9a3 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.c
+>>+++ b/arch/powerpc/platforms/powernv/pci.c
+>>@@ -44,6 +44,22 @@
+>>  #define cfg_dbg(fmt...)	do { } while(0)
+>>  //#define cfg_dbg(fmt...)	printk(fmt)
+>>
+>>+int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
+>>+{
+>>+	while (rval > 0) {
+>>+		if (system_state < SYSTEM_RUNNING)
+>>+			udelay(1000 * rval);
+>>+		else
+>>+			msleep(rval);
 >
->>          for (i = 0; i < PCI_NUM_RESOURCES; i++) {
->>                  res = &dev->resource[i];
->>                  if (res->parent || !res->flags)
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 6675a7a..6cab8be 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -447,6 +447,13 @@ static void pci_read_bridge_mmio_pref(struct
->> pci_bus *child)
->>          }
->>   }
+>Are these delays the once removed by "PATCH v4 09/21] powerpc/powernv: Use
+>PCI slot reset infrastructure"? If so, I would merge this patch into 09/24 or
+>move this one before that one, for bisect'ability.
+>
+
+No, they are different. The delay here is expected from skiboot firmware, but
+that one in "PATCH v4 09/21" is expected from kernel itself.
+
+>
+>>+
+>>+		rval = opal_pci_poll(id, pval);
+>>+		if (rval == OPAL_SUCCESS && pval)
+>>+			rval = opal_pci_poll(id, pval);
+>
+>Why calling it twice?
+>
+
+When retrieving slot's presence or power status, we have to do so as the opal_pci_poll()
+is implemented like that. It means the first OPAL_SUCCESS from opal_pci_poll() indicates
+the state machine, by which the function is implemented has finished. The next call to
+the same function will get the result.
+
+>>+	}
+>>+
+>>+	return rval ? -EIO : 0;
+>>+}
+>>+
+>>  #ifdef CONFIG_PCI_MSI
+>>  static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>>  {
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 8b10f01..82c5539 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -202,6 +202,7 @@ struct pnv_phb {
 >>
->> +bool pci_bridge_bases_is_read(struct pci_bus *bus)
->> +{
->> +       return (bus->resource[0]->start ||
->> +               bus->resource[1]->start ||
->> +               bus->resource[2]->start);
->> +}
->> +
->>   void pci_read_bridge_bases(struct pci_bus *child)
->>   {
->>          struct pci_dev *dev = child->self;
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 353db8d..11c674d 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -798,6 +798,7 @@ void pci_device_add(struct pci_dev *dev, struct
->> pci_bus *bus);
->>   unsigned int pci_scan_child_bus(struct pci_bus *bus);
->>   void pci_bus_add_device(struct pci_dev *dev);
->>   void pci_read_bridge_bases(struct pci_bus *child);
->> +bool pci_bridge_bases_is_read(struct pci_bus *bus);
->>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->>                                            struct resource *res);
->>   u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
->> ---- END PATCH -----
+>>  extern struct pci_ops pnv_pci_ops;
 >>
->> I'm not sure if this is the best place to be reading the bridge bases.
->> I guess we should be able to do this when adding bridge devices.
+>>+int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
+>>  void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+>>  				unsigned char *log_buff);
+>>  int pnv_pci_cfg_read(struct pci_dn *pdn,
 >>
->> Thanks,
->>
->> Suravee
->>
->>
+
+Thanks,
+Gavin
+
