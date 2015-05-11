@@ -1,130 +1,94 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5565AA8D.1090702@linux.intel.com>
-Date: Wed, 27 May 2015 19:29:17 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <5550A82E.7040809@linaro.org>
+Date: Mon, 11 May 2015 21:01:34 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
- ACPI
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org> <20150526165844.GD2175@e106497-lin.cambridge.arm.com> <5564AB68.6080502@linux.intel.com> <20150527094702.GE2175@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20150527094702.GE2175@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
+	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 1/7] ACPI/PCI: Enhance ACPI core to support sparse IO
+ space
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430793970-11159-2-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/27 17:47, Liviu Dudau wrote:
-> On Tue, May 26, 2015 at 06:20:40PM +0100, Jiang Liu wrote:
->> On 2015/5/27 0:58, Liviu Dudau wrote:
->>> On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
->>>> ARM64 ACPI based PCI host bridge init needs a arch dependent
->>>> struct pci_controller to accommodate common PCI host bridge
->>>> code which is introduced later, or it will lead to compile
->>>> errors on ARM64.
->>>
->>> Hi Hanjun,
->>>
->>> Two questions: why don't you introduce this patch next to the
->>> one that is going to make use of it (or even merge it there)?
->>> Second, why is the whole struct pci_controller not surrounded
->>> by #ifdef CONFIG_ACPI as you are implying that this is needed
->>> only for ACPI?
->>>
->>> Btw, looking through the whole series I'm not (yet) convinced
->>> that this is needed at all.
->> Hi Liviu,
->> 	This structure is required by the requested patch set
->> at http://patchwork.ozlabs.org/patch/472249/, which consolidates
->> the common code to support PCI host bridge into ACPI core.
->> Thanks!
->> Gerry
-> 
-> Hi Jiang,
-> 
-> Thanks for pointing me on the right answer, I've missed that series!
-> Probably not the best place to comment on that series here, but I
-> wonder why did you not made the pci_controller structure available
-> in a more generic header file that can be included so that arches
-> don't have to redefine the structure every time. After all, you are
-> trying to consolidate things.
-> 
-> Oh, and pci_controller name throws a lot of false negatives, maybe
-> a more specific one (acpi_pci_controller?) would make things clear?
-Hi Liviu,
-	It's a trade-off. Once I tried to rename it too, but gave up
-later. There are several reasons to keep it as is:
-1) Several architectures define pci_controller to support PCI
-   root bus.
-2) struct pci_controller is a generic concept, I guess, and ACPI code
-   extends pci_controller to host some ACPI specific data on IA64 and
-   x86.
-3) It will cause big code changes if we rename pci_controller to
-   something else.
-Thanks!
-Gerry
+On 2015年05月05日 10:46, Jiang Liu wrote:
+> Enhance ACPI resource parsing interfaces to support sparse IO space,
+> which will be used to share common code between x86 and IA64 later.
+>
+> Tested-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   drivers/acpi/resource.c |    9 ++++++---
+>   include/linux/ioport.h  |    1 +
+>   2 files changed, 7 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 8244f013f210..fdcc73dad2c1 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>   EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+>
+>   static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+> -				      u8 io_decode)
+> +				      u8 io_decode, u8 translation_type)
+>   {
+>   	res->flags = IORESOURCE_IO;
+>
+> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>
+>   	if (io_decode == ACPI_DECODE_16)
+>   		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
+> +		res->flags |= IORESOURCE_IO_SPARSE;
+>   }
+>
+>   static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+>   {
+>   	res->start = start;
+>   	res->end = start + len - 1;
+> -	acpi_dev_ioresource_flags(res, len, io_decode);
+> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
+>   }
+>
+>   /**
+> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
+>   		acpi_dev_memresource_flags(res, len, wp);
+>   		break;
+>   	case ACPI_IO_RANGE:
+> -		acpi_dev_ioresource_flags(res, len, iodec);
+> +		acpi_dev_ioresource_flags(res, len, iodec,
+> +					  addr->info.io.translation_type);
+>   		break;
+>   	case ACPI_BUS_NUMBER_RANGE:
+>   		res->flags = IORESOURCE_BUS;
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 388e3ae94f7a..24bea087e7af 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -94,6 +94,7 @@ struct resource {
+>   /* PnP I/O specific bits (IORESOURCE_BITS) */
+>   #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
+>   #define IORESOURCE_IO_FIXED		(1<<1)
+> +#define IORESOURCE_IO_SPARSE		(1<<2)
+>
+>   /* PCI ROM control bits (IORESOURCE_BITS) */
+>   #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
 
-> 
-> Best regards,
-> Liviu
-> 
->>
->>>
->>> Best regards,
->>> Liviu
->>>
->>>>
->>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->>>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>> CC: Arnd Bergmann <arnd@arndb.de>
->>>> CC: Catalin Marinas <catalin.marinas@arm.com>
->>>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
->>>> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
->>>> CC: Will Deacon <will.deacon@arm.com>
->>>> ---
->>>>  arch/arm64/include/asm/pci.h | 10 ++++++++++
->>>>  1 file changed, 10 insertions(+)
->>>>
->>>> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
->>>> index b008a72..7088495 100644
->>>> --- a/arch/arm64/include/asm/pci.h
->>>> +++ b/arch/arm64/include/asm/pci.h
->>>> @@ -10,6 +10,16 @@
->>>>  #include <asm-generic/pci-bridge.h>
->>>>  #include <asm-generic/pci-dma-compat.h>
->>>>  
->>>> +struct acpi_device;
->>>> +
->>>> +struct pci_controller {
->>>> +#ifdef CONFIG_ACPI
->>>> +	struct acpi_device *companion;	/* ACPI companion device */
->>>> +#endif
->>>> +	int		segment;	/* PCI domain */
->>>> +	int		node;		/* NUMA node */
->>>> +};
->>>> +
->>>>  #define PCIBIOS_MIN_IO		0x1000
->>>>  #define PCIBIOS_MIN_MEM		0
->>>>  
->>>> -- 
->>>> 1.9.1
->>>>
->>>
->>
-> 
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+
+Thanks
+hanjun
