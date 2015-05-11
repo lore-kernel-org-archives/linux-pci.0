@@ -1,145 +1,416 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0136.outbound.protection.outlook.com ([157.56.111.136]:19728
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S2992629AbbEPCmi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 May 2015 22:42:38 -0400
-Date: Fri, 15 May 2015 19:27:13 -0700
-From: Guenter Roeck <groeck@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: BAR 7 io space assignment errors
-Message-ID: <20150516022713.GA4417@svl-evodev-groeck.juniper.net>
-References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
- <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
- <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
- <20150515221149.GA31666@google.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:48042 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbbEKGqz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 02:46:55 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 16:46:50 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 0CA603578054
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:46:47 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B6kcY630933226
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:46:46 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B6kCn4015256
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:46:14 +1000
+Date: Mon, 11 May 2015 16:45:47 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Subject: Re: [PATCH v4 09/21] powerpc/powernv: Use PCI slot reset
+ infrastructure
+Message-ID: <20150511064547.GA8241@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-10-git-send-email-gwshan@linux.vnet.ibm.com>
+ <554E0E71.2080200@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20150515221149.GA31666@google.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <554E0E71.2080200@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 05:11:49PM -0500, Bjorn Helgaas wrote:
-> On Fri, May 15, 2015 at 01:04:22PM -0700, Guenter Roeck wrote:
-> > Hi Bjorn,
-> > 
-> > On Fri, May 15, 2015 at 02:25:34PM -0500, Bjorn Helgaas wrote:
-> > > [+cc Yinghai]
-> > > 
-> > > Hi Guenter,
-> > > 
-> > > On Fri, May 15, 2015 at 12:28 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> > > > Hi all,
-> > > >
-> > > > ever since 3.18(ish), we see lots of pcie io range allocation error messages
-> > > > when booting our systems.
-> > > >
-> > > > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-> > > > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> > > > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
-> > > >
-> > > > This is repeated for each port.
-> > > >
-> > > > What we atually _want_ is no IO address range, but so far I have not been able to
-> > > > tell this to the code (or to the bridge).
-> > > 
-> > > What information does the core have that we could use to figure out
-> > > that you want no I/O space?  For example, does the host bridge have no
-> > > I/O apertures?  Or are there no devices below 02:00.0 that require I/O
-> > > space?  If you can post a complete dmesg log, that should contain this
-> > > information.
-> > > 
-> > We know that we don't need IO space behind the bridge.
-> > 
-> > Question would be what information the core would need. I have tried
-> > to pre-program PCI_IO_BASE and PCI_IO_LIMIT on the bridge ports,
-> > but that doesn't seem to be the right solution (and it was just a
-> > wild shot anyway ;-).
-> 
-> The core tries to assign address space before drivers start claiming
-> devices because it's very difficult to move devices after drivers are
-> attached.  To avoid assigning I/O space to a bridge, the core would have to
-> know that (1) no devices below the bridge have I/O BARs, and (2) there's no
-> hotplug slot where a new device could be added below the bridge.
-> 
-> In your specific case, I suspect that you have hotplug bridges, but you
-> *know* exactly what devices can be "hot-plugged" and you know they don't
-> need I/O space.  But there's no good way to tell that to the PCI core.
-> 
-Yes, most of the devices are not really hotplug devices but ASICs
-or FPGAs which just come online later.
+On Sat, May 09, 2015 at 11:41:05PM +1000, Alexey Kardashevskiy wrote:
+>On 05/01/2015 04:02 PM, Gavin Shan wrote:
+>>For PowerNV platform, running on top of skiboot, all PE level reset
+>>should be routed to firmware if the bridge of the PE primary bus has
+>>device-node property "ibm,reset-by-firmware". Otherwise, the kernel
+>>has to issue hot reset on PE's primary bus despite the requested reset
+>>types, which is the behaviour before the firmware supports PCI slot
+>>reset. So the changes don't depend on the PCI slot reset capability
+>>exposed from the firmware.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/eeh.h               |   1 +
+>>  arch/powerpc/include/asm/opal.h              |   4 +-
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 206 +++++++++++++--------------
+>>  3 files changed, 102 insertions(+), 109 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index c5eb86f..2793d24 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -190,6 +190,7 @@ enum {
+>>  #define EEH_RESET_DEACTIVATE	0	/* Deactivate the PE reset	*/
+>>  #define EEH_RESET_HOT		1	/* Hot reset			*/
+>>  #define EEH_RESET_FUNDAMENTAL	3	/* Fundamental reset		*/
+>>+#define EEH_RESET_COMPLETE	4	/* PHB complete reset           */
+>>  #define EEH_LOG_TEMP		1	/* EEH temporary error log	*/
+>>  #define EEH_LOG_PERM		2	/* EEH permanent error log	*/
+>>
+>>diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+>>index 042af1a..6d467df 100644
+>>--- a/arch/powerpc/include/asm/opal.h
+>>+++ b/arch/powerpc/include/asm/opal.h
+>>@@ -129,7 +129,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
+>>  int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
+>>  					uint16_t dma_window_number, uint64_t pci_start_addr,
+>>  					uint64_t pci_mem_size);
+>>-int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
+>>+int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
+>>
+>>  int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
+>>  				   uint64_t diag_buffer_len);
+>>@@ -145,7 +145,7 @@ int64_t opal_get_epow_status(__be64 *status);
+>>  int64_t opal_set_system_attention_led(uint8_t led_action);
+>>  int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
+>>  			    __be16 *pci_error_type, __be16 *severity);
+>>-int64_t opal_pci_poll(uint64_t phb_id);
+>>+int64_t opal_pci_poll(uint64_t id, uint8_t *val);
+>>  int64_t opal_return_cpu(void);
+>>  int64_t opal_check_token(uint64_t token);
+>>  int64_t opal_reinit_cpus(uint64_t flags);
+>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>index ce738ab..3c01095 100644
+>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>@@ -742,12 +742,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+>>  	return ret;
+>>  }
+>>
+>>-static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
+>>+static s64 pnv_eeh_poll(uint64_t id)
+>>  {
+>>  	s64 rc = OPAL_HARDWARE;
+>>
+>>  	while (1) {
+>>-		rc = opal_pci_poll(phb->opal_id);
+>>+		rc = opal_pci_poll(id, NULL);
+>>  		if (rc <= 0)
+>>  			break;
+>>
+>>@@ -763,84 +763,38 @@ static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
+>>  int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+>>  {
+>>  	struct pnv_phb *phb = hose->private_data;
+>>+	uint8_t scope;
+>>  	s64 rc = OPAL_HARDWARE;
+>>
+>>  	pr_debug("%s: Reset PHB#%x, option=%d\n",
+>>  		 __func__, hose->global_number, option);
+>>-
+>>-	/* Issue PHB complete reset request */
+>>-	if (option == EEH_RESET_FUNDAMENTAL ||
+>>-	    option == EEH_RESET_HOT)
+>>-		rc = opal_pci_reset(phb->opal_id,
+>>-				    OPAL_RESET_PHB_COMPLETE,
+>>-				    OPAL_ASSERT_RESET);
+>>-	else if (option == EEH_RESET_DEACTIVATE)
+>>-		rc = opal_pci_reset(phb->opal_id,
+>>-				    OPAL_RESET_PHB_COMPLETE,
+>>-				    OPAL_DEASSERT_RESET);
+>>-	if (rc < 0)
+>>-		goto out;
+>>-
+>>-	/*
+>>-	 * Poll state of the PHB until the request is done
+>>-	 * successfully. The PHB reset is usually PHB complete
+>>-	 * reset followed by hot reset on root bus. So we also
+>>-	 * need the PCI bus settlement delay.
+>>-	 */
+>>-	rc = pnv_eeh_phb_poll(phb);
+>>-	if (option == EEH_RESET_DEACTIVATE) {
+>>-		if (system_state < SYSTEM_RUNNING)
+>>-			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
+>>-		else
+>>-			msleep(EEH_PE_RST_SETTLE_TIME);
+>
+>
+>These udelay() and msleep() are gone. How come they are not needed anymore?
+>Worth commenting in the commit log or remove those in a separate patch.
+>
+>I just remember you mentioning some missing delays somewhere which caused
+>NVIDIA device to issue EEH and I do not want those to disappear :)
+>
 
-> > > Is the problem that some device doesn't work, or is it just extra
-> > > annoying messages.  We should fix something in either case, of course,
-> > > but it's more urgent if a device used to work but no longer does.
-> > > 
-> > Just the extra annoying messages. The messages below are just the beginning;
-> > there are many more when the actual devices behind the bridge ports come
-> > online.
-> 
-> This sounds like an interesting topology.  A device coming online later is
-> a hotplug event from the core's point of view.  Since the core can't tell
-> what a hot-added device is going to be, it allocates a default amount of
-> space (pci_hotplug_io_size) to accomodate it.  You can influence that with
-> the "pci=hpiosize=" boot parameter.  Maybe "pci=hpiosize=0" would help in
-> your case, but we'd still have the problem that the messages don't make
-> sense to the average user (including me).
-> 
-Also, I don't really want to specify lots of boot parameters if I can avoid it.
+Yeah, I think you're correct that it's not safe to remove this yet because
+the old firmware (without corresponding PCI hotplug changes) doesn't have
+the required delays from opal_pci_poll() yet. I'll add this in next revision.
 
->   fsl-pci fff70a000.pcie: PCI host bridge to bus 0000:00
->   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->   pci 0000:00:00.0: PCI bridge to [bus 01-ff]      # Root Port
->   pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
-> 
-> The host bridge does have an I/O aperture, and it looks like firmware set
-> up the 00:00.0 bridge with a small piece of that.  That's sort of a waste:
-> supposedly we have 64K of I/O space available on bus 00, and 4K of that is
-> routed to [bus 01-ff].  The other 60K could be used by other devices on bus
-> 00, but it doesn't look like there *are* any, so it is wasted.
-> 
-The problem is that I can not reprogram PCI_IO_BASE on 0000:00:00.0.
-Here is a debug log:
+>
+>>+	switch (option) {
+>>+	case EEH_RESET_HOT:
+>>+		scope = OPAL_RESET_PCI_HOT;
+>>+		break;
+>>+	case EEH_RESET_FUNDAMENTAL:
+>>+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
+>>+		break;
+>>+	case EEH_RESET_COMPLETE:
+>>+		scope = OPAL_RESET_PHB_COMPLETE;
+>>+		break;
+>>+	case EEH_RESET_DEACTIVATE:
+>>+		return 0;
+>>+	default:
+>>+		pr_warn("%s: Unsupported option %d\n",
+>>+			__func__, option);
+>>+		return -EINVAL;
+>>  	}
+>>-out:
+>>-	if (rc != OPAL_SUCCESS)
+>>-		return -EIO;
+>>
+>>-	return 0;
+>>-}
+>>-
+>>-static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+>>-{
+>>-	struct pnv_phb *phb = hose->private_data;
+>>-	s64 rc = OPAL_HARDWARE;
+>>+	/* Issue reset and poll until it's completed */
+>>+	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
+>>+	if (rc > 0)
+>>+		rc = pnv_eeh_poll(phb->opal_id);
+>>
+>>-	pr_debug("%s: Reset PHB#%x, option=%d\n",
+>>-		 __func__, hose->global_number, option);
+>>-
+>>-	/*
+>>-	 * During the reset deassert time, we needn't care
+>>-	 * the reset scope because the firmware does nothing
+>>-	 * for fundamental or hot reset during deassert phase.
+>>-	 */
+>>-	if (option == EEH_RESET_FUNDAMENTAL)
+>>-		rc = opal_pci_reset(phb->opal_id,
+>>-				    OPAL_RESET_PCI_FUNDAMENTAL,
+>>-				    OPAL_ASSERT_RESET);
+>>-	else if (option == EEH_RESET_HOT)
+>>-		rc = opal_pci_reset(phb->opal_id,
+>>-				    OPAL_RESET_PCI_HOT,
+>>-				    OPAL_ASSERT_RESET);
+>>-	else if (option == EEH_RESET_DEACTIVATE)
+>>-		rc = opal_pci_reset(phb->opal_id,
+>>-				    OPAL_RESET_PCI_HOT,
+>>-				    OPAL_DEASSERT_RESET);
+>>-	if (rc < 0)
+>>-		goto out;
+>>-
+>>-	/* Poll state of the PHB until the request is done */
+>>-	rc = pnv_eeh_phb_poll(phb);
+>>-	if (option == EEH_RESET_DEACTIVATE)
+>>-		msleep(EEH_PE_RST_SETTLE_TIME);
+>>-out:
+>>-	if (rc != OPAL_SUCCESS)
+>>-		return -EIO;
+>>-
+>>-	return 0;
+>>+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>>  }
+>>
+>>-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  {
+>>  	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+>>  	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>@@ -891,14 +845,57 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  	return 0;
+>>  }
+>>
+>>+static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>+{
+>>+	struct pci_controller *hose;
+>>+	struct pnv_phb *phb;
+>>+	struct device_node *dn = dev ? pci_device_to_OF_node(dev) : NULL;
+>>+	uint64_t id = (0x1ul << 60);
+>>+	uint8_t scope;
+>>+	s64 rc;
+>
+>
+>int64_t for @rc?
+>
+>
 
-pci 0000:00:00.0: io base written 0xe0f0 reads back as 0x0
-pci 0000:00:00.0: io base written 0xf000 reads back as 0x0
+Yes.
 
-The io ranges of ports behind it (ie the ones below) are programmable.
-I can try to find out if there is a means to program the io range
-on 0000:00:00.0, but I would prefer to just disable the io range for
-everything downstream of it.
+>>+
+>>+	/*
+>>+	 * If the firmware can't handle it, we will issue hot reset
+>>+	 * on the secondary bus despite the requested reset type
+>>+	 */
+>>+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
+>>+		return __pnv_eeh_bridge_reset(dev, option);
+>>+
+>>+	/* The firmware can handle the request */
+>>+	switch (option) {
+>>+	case EEH_RESET_HOT:
+>>+		scope = OPAL_RESET_PCI_HOT;
+>>+		break;
+>>+	case EEH_RESET_FUNDAMENTAL:
+>>+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
+>>+		break;
+>>+	case EEH_RESET_DEACTIVATE:
+>>+		return 0;
+>>+	case EEH_RESET_COMPLETE:
+>>+	default:
+>>+		pr_warn("%s: Unsupported option %d on device %s\n",
+>>+			__func__, option, pci_name(dev));
+>>+		return -EINVAL;
+>>+	}
+>
+>
+>This is the same switch as earlier in this patch (slightly different order).
+>Move it and opal_pci_reset() into a helper and call it pnv_opal_pci_reset()?
+>
+>
 
->   pci 0000:01:00.0: PCI bridge to [bus 02-ff]      # Upstream Port
->   pci 0000:02:00.0: PCI bridge to [bus 40-4f]      # Downstream Port 0x0
->   ...
->   pci 0000:02:0d.0: PCI bridge to [bus a0-af]      # Downstream Port 0xa
-> 
->   pci 0000:02:00.0: bridge window [io  0x1000-0x0fff] to [bus 40-4f] add_size 1000
->   ...
->   pci 0000:02:0d.0: bridge window [io  0x1000-0x0fff] to [bus a0-af] add_size 1000
-> 
-> I'm guessing these Downstream Ports all have "is_hotplug_bridge" set
-> because they have the "Hot-Plug Capable" bit set in their Slot Capabilities
-> register.  We're trying to allocate 0x1000 I/O ports for each, and there
+It sounds a good idea. I'll do accordingly.
 
-Correct.
+>>+
+>>+	hose = pci_bus_to_host(dev->bus);
+>>+	phb = hose->private_data;
+>
+>Previously you would initialize @hose and @phb where you declared those but
+>not here. If you did the same thing as before, the patch could have been
+>smaller and easier to read.
+>
 
-> are 0xb of them, so we'd need 0xb000 I/O ports at the 01:00.0 bridge:
-> 
+Sure.
 
->   pci 0000:01:00.0: bridge window [io  0x1000-0x0fff] to [bus 02-ff] add_size b000
-> 
-> pci_hotplug_io_size defaults to 256, but standard PCI bridges don't support
-> I/O windows smaller than 4K, so they all got rounded up to 4K (0x1000).
-> 
-> I would love it if somebody would clean up those messages and make them all
-> consistent.  There's useful information there, so I'm not sure we want to
-> get rid of them, but I think there's some redundancy we might be able to
-> fix.
-> 
-"bridge window [io  0x1000-0x0fff]" for sure looks odd. Maybe it means
-something to you, but for me it is just confusing.
+>>+	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
+>>+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+>>+	if (rc > 0)
+>>+		rc = pnv_eeh_poll(id);
+>>+
+>>+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>>+}
+>>+
+>>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>>  {
+>>  	struct pci_controller *hose;
+>>
+>>  	if (pci_is_root_bus(dev->bus)) {
+>>  		hose = pci_bus_to_host(dev->bus);
+>>-		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
+>>-		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
+>>+		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
+>>+		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
+>>  	} else {
+>>  		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+>>  		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+>>@@ -920,8 +917,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+>>  static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+>>  {
+>>  	struct pci_controller *hose = pe->phb;
+>>+	struct pnv_phb *phb;
+>>  	struct pci_bus *bus;
+>>-	int ret;
+>>+	s64 rc;
+>>
+>>  	/*
+>>  	 * For PHB reset, we always have complete reset. For those PEs whose
+>>@@ -937,43 +935,37 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+>>  	 * reset. The side effect is that EEH core has to clear the frozen
+>>  	 * state explicitly after BAR restore.
+>>  	 */
+>>-	if (pe->type & EEH_PE_PHB) {
+>>-		ret = pnv_eeh_phb_reset(hose, option);
+>>-	} else {
+>>-		struct pnv_phb *phb;
+>>-		s64 rc;
+>>+	if (pe->type & EEH_PE_PHB)
+>
+>I would keep "{" in the line above ....
+>
+>>+		return pnv_eeh_phb_reset(hose, EEH_RESET_COMPLETE);
+>
+>...put "} else {" here...
+>
+>and the chunk below would become 1) very small 2) very trivial... And then
+>you could make a trivial patch which would do scope removal but without
+>functional changes. Or vice versa.
+>
 
-Guenter
+I intended to remove nested if(). If you really want me to change the code
+according to your comments, I'll do. Otherwise, I prefer to keep it as
+of being.
+
+>>
+>>-		/*
+>>-		 * The frozen PE might be caused by PAPR error injection
+>>-		 * registers, which are expected to be cleared after hitting
+>>-		 * frozen PE as stated in the hardware spec. Unfortunately,
+>>-		 * that's not true on P7IOC. So we have to clear it manually
+>>-		 * to avoid recursive EEH errors during recovery.
+>>-		 */
+>>-		phb = hose->private_data;
+>>-		if (phb->model == PNV_PHB_MODEL_P7IOC &&
+>>-		    (option == EEH_RESET_HOT ||
+>>-		    option == EEH_RESET_FUNDAMENTAL)) {
+>>-			rc = opal_pci_reset(phb->opal_id,
+>>-					    OPAL_RESET_PHB_ERROR,
+>>-					    OPAL_ASSERT_RESET);
+>>-			if (rc != OPAL_SUCCESS) {
+>>-				pr_warn("%s: Failure %lld clearing "
+>>-					"error injection registers\n",
+>>-					__func__, rc);
+>>-				return -EIO;
+>>-			}
+>>+	/*
+>>+	 * The frozen PE might be caused by PAPR error injection
+>>+	 * registers, which are expected to be cleared after hitting
+>>+	 * frozen PE as stated in the hardware spec. Unfortunately,
+>>+	 * that's not true on P7IOC. So we have to clear it manually
+>>+	 * to avoid recursive EEH errors during recovery.
+>>+	 */
+>>+	phb = hose->private_data;
+>>+	if (phb->model == PNV_PHB_MODEL_P7IOC &&
+>>+	    (option == EEH_RESET_HOT ||
+>>+	    option == EEH_RESET_FUNDAMENTAL)) {
+>>+		rc = opal_pci_reset(phb->opal_id,
+>>+				    OPAL_RESET_PHB_ERROR,
+>>+				    OPAL_ASSERT_RESET);
+>>+		if (rc != OPAL_SUCCESS) {
+>>+			pr_warn("%s: Failure %lld clearing error "
+>>+				"injection registers on PHB#%d\n",
+>>+				__func__, rc, hose->global_number);
+>>+			return -EIO;
+>>  		}
+>>-
+>>-		bus = eeh_pe_bus_get(pe);
+>>-		if (pci_is_root_bus(bus) ||
+>>-			pci_is_root_bus(bus->parent))
+>>-			ret = pnv_eeh_root_reset(hose, option);
+>>-		else
+>>-			ret = pnv_eeh_bridge_reset(bus->self, option);
+>>  	}
+>>
+>>-	return ret;
+>>+	/* Route the reset request to PHB or upstream bridge */
+>>+	bus = eeh_pe_bus_get(pe);
+>>+	if (pci_is_root_bus(bus))
+>>+		return pnv_eeh_phb_reset(hose, option);
+>>+
+>>+	return pnv_eeh_bridge_reset(bus->self, option);
+>>  }
+>>
+>>  /**
+>>
+
+Thanks,
+Gavin
+
