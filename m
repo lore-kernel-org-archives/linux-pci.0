@@ -1,332 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:34678 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682AbbEFTWH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 15:22:07 -0400
-Received: by iget9 with SMTP id t9so104759379ige.1
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 12:22:06 -0700 (PDT)
-Date: Wed, 6 May 2015 14:22:01 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gabriel FERNANDEZ <gabriel.fernandez@st.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	kernel@stlinux.com, linux-pci@vger.kernel.org,
-	Lee Jones <lee.jones@linaro.org>,
-	Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Subject: Re: [PATCH v3 4/5] pci: designware: remove pci_common_init_dev()
-Message-ID: <20150506192201.GF24643@google.com>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
- <1428657168-12495-5-git-send-email-gabriel.fernandez@linaro.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:43982 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbbEKEXk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 00:23:40 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 11 May 2015 14:23:38 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9F9EE2CE804E
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:23:36 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B4NRlB31326456
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:23:36 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B4N33b016831
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:23:03 +1000
+Date: Mon, 11 May 2015 14:22:38 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 8/9] powerpc/powernv: Support PCI config restore for
+ VFs
+Message-ID: <20150511042238.GA19629@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-9-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1428657168-12495-5-git-send-email-gabriel.fernandez@linaro.org>
+In-Reply-To: <1430723258-21299-9-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 10, 2015 at 11:12:47AM +0200, Gabriel FERNANDEZ wrote:
-> Call directly pci_*() instead of using pci_common_init_dev().
-> Enforce error handling in probe.
-> It also allows st pcie driver not to declare IO space:
-> pci_common_init_dev() is assigning one by default.
+On Mon, May 04, 2015 at 03:07:37PM +0800, Wei Yang wrote:
+>Since FW is not aware of VFs, the restore action for VF should be done in
+       ^^
+       skiboot firmware
+>kernel.
+>
+>This patch introduces pnv_eeh_vf_restore_config() for VF.
+>
 
-Can you verify that none of the other users (dra7xx, exynos, etc.) depends
-on the default I/O space, and mention that here?
+Would it be better?
 
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+The patch introduces function pnv_eeh_vf_restore_config() to restore PCI
+config space for VFs after reset.
 
-This requires an ack from Jingoo (DesignWare maintainer), of course.
-I think this code is used by dra7xx, exynos, imx6, spear13xx, keystone, and
-layerscape.  It'd be nice to have some review and testing from them, too.
+Also, the function name would be better with pnv_eeh_restore_vf_config()?
 
-> ---
->  drivers/pci/host/pcie-designware.c | 62 ++++++++++++++++++++------------------
->  drivers/pci/host/pcie-designware.h |  1 +
->  2 files changed, 33 insertions(+), 30 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 1f4ea6f..d4b1bf7 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -67,8 +67,6 @@
->  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
->  #define PCIE_ATU_UPPER_TARGET		0x91C
->  
-> -static struct hw_pci dw_pci;
-> -
->  static unsigned long global_io_offset;
->  
->  static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
-> @@ -342,6 +340,9 @@ static const struct irq_domain_ops msi_domain_ops = {
->  	.map = dw_pcie_msi_map,
->  };
->  
-> +static int dw_pcie_setup(struct pci_sys_data *sys);
-> +static struct pci_bus *dw_pcie_scan_bus(struct pci_sys_data *sys);
-> +
->  int __init dw_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct device_node *np = pp->dev->of_node;
-> @@ -352,6 +353,9 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	u32 val, na, ns;
->  	const __be32 *addrp;
->  	int i, index, ret;
-> +	struct list_head *resources = &pp->sysdata.resources;
-> +
-> +	INIT_LIST_HEAD(resources);
->  
->  	/* Find the address cell size and the number of cells in order to get
->  	 * the untranslated address.
-> @@ -504,13 +508,17 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  
->  #ifdef CONFIG_PCI_MSI
->  	dw_pcie_msi_chip.dev = pp->dev;
-> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
-> +	pp->sysdata.msi_ctrl = &dw_pcie_msi_chip;
->  #endif
->  
-> -	dw_pci.nr_controllers = 1;
-> -	dw_pci.private_data = (void **)&pp;
-> +	pp->sysdata.private_data = pp;
->  
-> -	pci_common_init_dev(pp->dev, &dw_pci);
-> +	ret = dw_pcie_setup(&pp->sysdata);
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>---
+> arch/powerpc/include/asm/pci-bridge.h        |    1 +
+> arch/powerpc/platforms/powernv/eeh-powernv.c |   77 +++++++++++++++++++++++++-
+> 2 files changed, 77 insertions(+), 1 deletion(-)
+>
+>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>index 9582aa2..de55ef6 100644
+>--- a/arch/powerpc/include/asm/pci-bridge.h
+>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>@@ -205,6 +205,7 @@ struct pci_dn {
+> 	int     m64_per_iov;
+> #define IODA_INVALID_M64        (-1)
+> 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+>+	int	mps;
+> #endif /* CONFIG_PCI_IOV */
+> #endif
+> 	struct list_head child_list;
+>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>index 1ad322f..6ba6d87 100644
+>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>@@ -1589,6 +1589,59 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+> 	return ret;
+> }
+>
+>+#ifdef CONFIG_PCI_IOV
+>+static int pnv_eeh_vf_restore_config(struct pci_dn *pdn)
+>+{
+>+	int pcie_cap, aer_cap, old_mps;
+>+	u32 devctl, cmd, cap2, aer_capctl;
+>+
+>+	/* Restore MPS */
+>+	pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
+>+	if (pcie_cap) {
+>+		old_mps = (ffs(pdn->mps) - 8) << 5;
+>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
+>+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+>+		devctl |= old_mps;
+>+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
+>+	}
+>+
 
-It's not completely obvious that replacing pci_common_init_dev() with
-dw_pcie_setup() is equivalent.  Here are my notes from trying to convince
-myself that this is correct.  I think your changelog could stand some 
-enhancement.  It would be ideal if you could break this into a few smaller
-patches that were more obviously correct, but I suspect it's too
-intertwined to do that.
+hrm, You can't use pnv_pci_cfg_{read,write} here. Instead, you should use
+eeh_ops->{read,write}_config. By design, the PCI config accessors have been
+classified to 2 classes: one is used for pci_config_{read,write}_* and another
+one is eeh_ops->{read,write}. From EEH perspective, the former isn't controlled
+strictly, but the later one is under control completely. "Not controlled" here
+means the kernel can't determine when the PCI config is accessed, e.g. PCI
+config accesses from user land.
+ 
+>+	/* Disable Completion Timeout */
+>+	if (pcie_cap) {
+>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
+>+		if (cap2 & 0x10) {
+>+			pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
+>+			cap2 |= 0x10;
+>+			pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
+>+		}
+>+	}
+>+
+>+	/* Enable SERR and parity checking */
+>+	pnv_pci_cfg_read(pdn, PCI_COMMAND, 2, &cmd);
+>+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+>+	pnv_pci_cfg_write(pdn, PCI_COMMAND, 2, cmd);
+>+
+>+	/* Enable report various errors */
+>+	if (pcie_cap) {
+>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
+>+		devctl &= ~PCI_EXP_DEVCTL_CERE;
+>+		devctl |= (PCI_EXP_DEVCTL_NFERE |
+>+			   PCI_EXP_DEVCTL_FERE |
+>+			   PCI_EXP_DEVCTL_URRE);
+>+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
+>+	}
+>+
+>+	/* Enable ECRC generation and check */
+>+	if (pcie_cap) {
+>+		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
+>+		pnv_pci_cfg_read(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
+>+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
+>+		pnv_pci_cfg_write(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
+>+	}
+>+
+>+	return 0;
+>+}
+>+#endif /* CONFIG_PCI_IOV */
+>+
 
-Here's an outline of pci_common_init_dev():
+The code is copied over from skiboot firmware. I still dislike the fact that
+we have to maintain two sets of similar functions in skiboot/kernel. I still
+believe the way I suggested can help: the firmware exports the error routing
+rules and kernel has support it based on the rules. With it, the skiboot is
+the source of the information to avoid mismatching between kernel/firmware.
 
-  pci_common_init_dev(parent, hw)
-    pci_add_flags(PCI_REASSIGN_ALL_RSRC)           # [1]
-    if (hw->preinit)
-      hw->preinit                                  # [2]
-    pcibios_init_hw
-      for (nr = 0; nr < hw->nr_controllers;        # [3]
-          sys = kzalloc                            # [4]
-          sys->msi_ctrl = hw->msi_ctrl             # [5]
-          sys->busnr = busnr                       # [6]
-          sys->swizzle = hw->swizzle               # [7]
-          sys->map_irq = hw->map_irq               # [8]
-          sys->align_resource = hw->align_resource # [9]
-          INIT_LIST_HEAD(&sys->resources)          # [10]
-          sys->private_data = hw->private_data     # [11]
-          hw->setup                                # [12]
-          pcibios_init_resources                   # [13]
-          hw->scan                                 # [14]
-    if (hw->postinit)
-      hw->postinit                                 # [15]
-    pci_fixup_irqs                                 # [16]
-    list_for_each_entry(sys, &head,                # [17]
-      if (!pci_has_flag(PCI_PROBE_ONLY))           # [18]
-        pci_bus_size_bridges                       # [19]
-        pci_bus_assign_resources
-      pci_bus_add_devices
-    list_for_each_entry(sys, &head,
-      ...
-        pcie_bus_configure_settings                # [20]
+> static int pnv_eeh_restore_config(struct pci_dn *pdn)
+> {
+> 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>@@ -1599,7 +1652,13 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+> 		return -EEXIST;
+>
+> 	phb = edev->phb->private_data;
+>-	ret = opal_pci_reinit(phb->opal_id,
+>+#ifdef CONFIG_PCI_IOV
+>+	/* FW is not VF aware, we rely on OS to restore it */
+>+	if (edev->mode & EEH_DEV_VF)
+>+		ret = pnv_eeh_vf_restore_config(pdn);
+>+	else
+>+#endif
 
-[1] You don't set PCI_REASSIGN_ALL_RSRC; have you verified that nobody
-cares about that?
+You don't even have to have CONFIG_PCI_IOV since it won't save much
+.text space.
 
-[2] dw_pci.preinit was NULL, so skipping this doesn't matter; looks OK.
+>+		ret = opal_pci_reinit(phb->opal_id,
+> 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+> 	if (ret) {
+> 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+>@@ -1660,4 +1719,20 @@ static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+> 	}
+> }
+> DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
+>+
+>+static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
+>+{
 
-[3] dw_pci.nr_controllers was always 1, so skipping the loop doesn't
-matter; looks OK.
+As I said before, this function shouldn't be part of this file because:
 
-[4] You added struct pci_sys_data sysdata as a member of struct
-pcie_port, so it is now allocated by dw_pcie_host_init() callers, e.g.,
-st_pcie_probe(); looks OK.
+- When CONFIG_EEH=n, this file won't be complied/included.
+- This function isn't part of EEH naturally.
 
-[5] You set pp->sysdata.msi_ctrl in dw_pcie_host_init() instead of
-pcibios_init_hw(); looks OK. 
+Also, pnv_pci_vf_header_fixup() would be better name in case you need
+apply more fixups for VFs in the function.
 
-[6] Since dw_pci.nr_controllers was always 1, sys->busnr was always 0.
-You don't set sys->busnr, so it will retain its initial zero value.  OK, I
-guess.  It's still a little broken that we have both pp->busn and
-pp->sysdata.busnr, but you didn't break it and it's OK that you didn't
-change anything in this regard.
+>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>+	int parent_mps;
+>+
+>+	if (!pdev->is_virtfn)
+>+		return;
+>+
+>+	/* Synchronize MPS for VF and PF */
+>+	parent_mps = pcie_get_mps(pdev->physfn);
+>+	if ((128 << pdev->pcie_mpss) >= parent_mps)
+>+		pcie_set_mps(pdev, parent_mps);
 
-[7] dw_pci.swizzle was NULL, so pcibios_swizzle() would default to
-pci_common_swizzle(), which is what you use when you call pci_fixup_irqs()
-in dw_pcie_scan_bus(); looks OK.
+Hrm, Again, do we have possibility: (128 << pdev->pcie_mpss) < parent_mps ?
+And why we bother if MPS of PF/VF are equal?
 
-[8] dw_pci.map_irq was dw_pcie_map_irq() (which used
-of_irq_parse_and_map_pci()) and sys->map_irq was used by pcibios_map_irq().
-You call pci_fixup_irqs() and pass a pointer to of_irq_parse_and_map_pci();
-looks OK.
+>+	pdn->mps = pcie_get_mps(pdev);
+>+}
+>+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
+> #endif /* CONFIG_PCI_IOV */
+>-- 
+>1.7.9.5
+>
 
-[9] dw_pci.align_resource was NULL, and I assume
-pcie_port.sysdata.align_resource was initialized to zeroes; looks OK.
-
-[10] You call INIT_LIST_HEAD() in dw_pcie_host_init() instead of
-pcibios_init_hw(); looks OK.
-
-[11] You set sys->private_data in dw_pcie_host_init() instead of
-pcibios_init_hw(); looks OK.
-
-[12] dw_pci.setup was dw_pcie_setup(), and you call that from
-dw_pcie_host_init(); looks OK.
-
-[13] You no longer call pcibios_init_resources().  You don't want the
-default I/O space, which makes sense; looks OK (but you need to audit other
-users and make sure they don't need it either).
-
-[14] dw_pci.scan was dw_pcie_scan_bus(), and you call that from
-dw_pcie_host_init(); looks OK.
-
-[15] dw_pci.postinit was NULL, so skipping this doesn't matter; looks OK.
-
-[16] You call pci_fixup_irqs() from dw_pcie_scan_bus() instead of
-pci_common_init_dev(); looks OK.
-
-[17] "head" is a local list in pci_common_init_dev(), and you don't need
-anything similar because dw_pcie_host_init() is called once per host
-bridge; looks OK.
-
-[18] You don't test PCI_PROBE_ONLY; it looks like it can still be set by
-booting with "pci=firmware".  So previously, "pci=firmware" prevented
-resource assignment, but it no longer does.  Is that right?  Is that what
-you intend?
-
-[19] Instead of pci_bus_size_bridges() and pci_bus_assign_resources(), you
-call pci_assign_unassigned_bus_resources() from dw_pcie_scan_bus().  That
-seems like an improvement because it holds pci_bus_sem and supplies
-add_list; looks OK.
-
-[20] I think you no longer call pcie_bus_configure_settings().  That
-configured MPS settings, and I think you still want to do that, don't you?
-
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (!dw_pcie_scan_bus(&pp->sysdata))
-> +		return -ENXIO;
->  
->  	return 0;
->  }
-> @@ -701,15 +709,19 @@ static struct pci_ops dw_pcie_ops = {
->  	.write = dw_pcie_wr_conf,
->  };
->  
-> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> +static int dw_pcie_setup(struct pci_sys_data *sys)
->  {
->  	struct pcie_port *pp;
-> +	int err;
->  
->  	pp = sys_to_pcie(sys);
->  
->  	if (global_io_offset < SZ_1M && pp->io_size > 0) {
->  		sys->io_offset = global_io_offset - pp->io_bus_addr;
-> -		pci_ioremap_io(global_io_offset, pp->io_base);
-> +		err = pci_ioremap_io(global_io_offset, pp->io_base);
-> +		if (err)
-> +			return err;
-> +
->  		global_io_offset += SZ_64K;
->  		pci_add_resource_offset(&sys->resources, &pp->io,
->  					sys->io_offset);
-> @@ -719,10 +731,10 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->  	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
->  	pci_add_resource(&sys->resources, &pp->busn);
->  
-> -	return 1;
-> +	return 0;
->  }
->  
-> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> +static struct pci_bus *dw_pcie_scan_bus(struct pci_sys_data *sys)
->  {
->  	struct pci_bus *bus;
->  	struct pcie_port *pp = sys_to_pcie(sys);
-> @@ -738,27 +750,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->  	if (bus && pp->ops->scan_bus)
->  		pp->ops->scan_bus(pp);
->  
-> -	return bus;
-> -}
-> -
-> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> -{
-> -	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
-> -	int irq;
-> -
-> -	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-> -	if (!irq)
-> -		irq = pp->irq;
-> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> +	pci_assign_unassigned_bus_resources(bus);
-> +	pci_bus_add_devices(bus);
->  
-> -	return irq;
-> +	return bus;
->  }
->  
-> -static struct hw_pci dw_pci = {
-> -	.setup		= dw_pcie_setup,
-> -	.scan		= dw_pcie_scan_bus,
-> -	.map_irq	= dw_pcie_map_irq,
-> -};
-> -
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
-> @@ -822,8 +820,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	/* setup command register */
->  	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
->  	val &= 0xffff0000;
-> -	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
-> -		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
-> +
-> +	if (!pp->io_size)
-> +		val |= PCI_COMMAND_IO;
-> +
-> +	val |= PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
-> +
->  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
->  }
->  
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index d0bbd27..45bc2c2 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -46,6 +46,7 @@ struct pcie_port {
->  	struct resource		io;
->  	struct resource		mem;
->  	struct resource		busn;
-> +	struct pci_sys_data	sysdata;
->  	int			irq;
->  	u32			lanes;
->  	struct pcie_host_ops	*ops;
-> -- 
-> 1.9.1
-> 
