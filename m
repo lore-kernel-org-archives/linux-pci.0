@@ -1,80 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:10224 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752875AbbE2R2F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:05 -0400
-From: <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v3 0/7] IOMMU/DMA map_resource support for peer-to-peer
-Date: Fri, 29 May 2015 12:14:39 -0500
-Message-ID: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v11 10/10] iommu/vt-d: Use old irte in kdump kernel
+Date: Mon, 11 May 2015 17:52:54 +0800
+Message-Id: <1431337974-545-11-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+Fix the intr-remapping fault.
 
-Hi,
+[1.594890] dmar: DRHD: handling fault status reg 2
+[1.594894] dmar: INTR-REMAP: Request device [[41:00.0] fault index 4d
+[1.594894] INTR-REMAP:[fault reason 34] Present field in the IRTE entry
+is clear
 
-This is the third version of a patchset to add the DMA APIs necessary to
-map and unmap a struct resource to and from a PCI device's IOVA domain.
-This allows a PCI device to access a peer device's BAR resource when a
-hardware IOMMU is enabled.
+Use old irte in second kernel, do not disable and re-enable interrupt
+remapping.
 
-Thanks,
-Will
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel_irq_remapping.c | 28 ++++++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 4 deletions(-)
 
-Changelog:
-
-v3:
-- changed dma_map_resource() to BUG() if the map_resource DMA op is not
-  provided, instead of returning 0
-- updated documentation to remove requirement to check for 0 return value
-  as an error
-- remove const keyword from struct dma_map_ops in new DMA APIs for
-  consistency with other APIs
-
-v2: http://www.spinics.net/lists/linux-pci/msg41192.html
-- added documentation for the new DMA APIs
-- fixed physical-to-bus address conversion in the nommu implementation
-
-v1: http://www.spinics.net/lists/linux-pci/msg40747.html
-
-Will Davis (7):
-  dma-debug: add checking for map/unmap_resource
-  DMA-API: Introduce dma_(un)map_resource
-  dma-mapping: pci: add pci_(un)map_resource
-  DMA-API: Add dma_(un)map_resource() documentation
-  iommu/amd: Implement (un)map_resource
-  iommu/vt-d: implement (un)map_resource
-  x86: add pci-nommu implementation of map_resource
-
- Documentation/DMA-API-HOWTO.txt          | 36 ++++++++++++++-
- Documentation/DMA-API.txt                | 31 ++++++++++---
- arch/x86/kernel/pci-nommu.c              | 32 ++++++++++++++
- drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
- drivers/iommu/intel-iommu.c              | 18 ++++++++
- include/asm-generic/dma-mapping-broken.h |  9 ++++
- include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
- include/asm-generic/pci-dma-compat.h     | 14 ++++++
- include/linux/dma-debug.h                | 20 +++++++++
- include/linux/dma-mapping.h              |  7 +++
- lib/dma-debug.c                          | 47 ++++++++++++++++++++
- 11 files changed, 304 insertions(+), 20 deletions(-)
-
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index c2a4406..46d80ad 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -197,6 +197,10 @@ static int modify_irte(int irq, struct irte *irte_modified)
+ 
+ 	set_64bit(&irte->low, irte_modified->low);
+ 	set_64bit(&irte->high, irte_modified->high);
++
++	if (iommu->pre_enabled_ir)
++		__iommu_update_old_irte(iommu, index);
++
+ 	__iommu_flush_cache(iommu, irte, sizeof(*irte));
+ 
+ 	rc = qi_flush_iec(iommu, index, 0);
+@@ -258,6 +262,9 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 	bitmap_release_region(iommu->ir_table->bitmap, index,
+ 			      irq_iommu->irte_mask);
+ 
++	if (iommu->pre_enabled_ir)
++		__iommu_update_old_irte(iommu, -1);
++
+ 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ }
+ 
+@@ -657,11 +664,13 @@ static int __init intel_enable_irq_remapping(void)
+ 		 */
+ 		dmar_fault(-1, iommu);
+ 
++		iommu_check_pre_ir_status(iommu);
++
+ 		/*
+-		 * Disable intr remapping and queued invalidation, if already
+-		 * enabled prior to OS handover.
++		 * Here we do not disable intr remapping,
++		 * if already enabled prior to OS handover.
+ 		 */
+-		iommu_disable_irq_remapping(iommu);
++		/* iommu_disable_irq_remapping(iommu); */
+ 
+ 		dmar_disable_qi(iommu);
+ 	}
+@@ -697,7 +706,18 @@ static int __init intel_enable_irq_remapping(void)
+ 	 * Setup Interrupt-remapping for all the DRHD's now.
+ 	 */
+ 	for_each_iommu(iommu, drhd) {
+-		iommu_set_irq_remapping(iommu, eim);
++		if (iommu->pre_enabled_ir) {
++			unsigned long long q;
++
++			q = dmar_readq(iommu->reg + DMAR_IRTA_REG);
++			iommu->ir_table->base_old_phys = q & VTD_PAGE_MASK;
++			iommu->ir_table->base_old_virt = ioremap_cache(
++				iommu->ir_table->base_old_phys,
++				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++			__iommu_load_old_irte(iommu);
++		} else
++			iommu_set_irq_remapping(iommu, eim);
++
+ 		setup = true;
+ 	}
+ 
 -- 
-2.4.0
+2.0.0-rc0
 
