@@ -1,67 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:38398 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753258AbbE0PsD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 11:48:03 -0400
-Received: by igbjd9 with SMTP id jd9so2031278igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2015 08:48:01 -0700 (PDT)
-Date: Wed, 27 May 2015 10:47:58 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, dja@axtens.net,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH Part1 v11 4/5] PCI: xgene: Use pci_scan_root_bus()
- instead of pci_create_root_bus()
-Message-ID: <20150527154758.GU32152@google.com>
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
- <1430204499-19571-5-git-send-email-wangyijing@huawei.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23170 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754302AbbEKNsB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 09:48:01 -0400
+Date: Mon, 11 May 2015 09:47:47 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Tina Ruchandani <ruchandani.tina@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] xen/pcifront: Remove usage of struct timeval
+Message-ID: <20150511134747.GB18474@l.oracle.com>
+References: <20150511024448.GA2836@tinar>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430204499-19571-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <20150511024448.GA2836@tinar>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 28, 2015 at 03:01:38PM +0800, Yijing Wang wrote:
-> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
-> Now pci_scan_root_bus() == pci_create_root_bus() +
-> pci_scan_child_bus() if busn resource is supplied.
-> Xgene added the busn resource to resources list
-> in of_pci_get_host_bridge_resources(). So it should be safe
-> to use pci_scan_root_bus() instead.
+On Mon, May 11, 2015 at 08:14:48AM +0530, Tina Ruchandani wrote:
+> struct timeval uses a 32-bit field for representing seconds,
+> which will overflow in the year 2038 and beyond. This patch replaces
+> struct timeval with 64-bit ktime_t which is 2038 safe.
+> The patch is part of a larger effort to remove instances of
+> 32-bit timekeeping variables (timeval, time_t and timespec)
+> from the kernel.
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> CC: Tanmay Inamdar <tinamdar@apm.com>
+> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
 
-Tanmay, any comments on this?
 
+Looks OK to me.
 > ---
->  drivers/pci/host/pci-xgene.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
+>  drivers/pci/xen-pcifront.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index ee082c0..87e3962 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 7cfd2db..43d1d6c 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/workqueue.h>
+>  #include <linux/bitops.h>
+>  #include <linux/time.h>
+> +#include <linux/ktime.h>
+>  #include <xen/platform_pci.h>
 >  
-> -	bus = pci_create_root_bus(&pdev->dev, 0,
-> +	bus = pci_scan_root_bus(&pdev->dev, 0,
->  					&xgene_pcie_ops, port, &res);
->  	if (!bus)
->  		return -ENOMEM;
+>  #include <asm/xen/swiotlb-xen.h>
+> @@ -115,7 +116,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>  	evtchn_port_t port = pdev->evtchn;
+>  	unsigned irq = pdev->irq;
+>  	s64 ns, ns_timeout;
+> -	struct timeval tv;
+> +	ktime_t tv;
 >  
-> -	pci_scan_child_bus(bus);
->  	pci_assign_unassigned_bus_resources(bus);
->  	pci_bus_add_devices(bus);
+>  	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
 >  
+> @@ -132,8 +133,8 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>  	 * (in the latter case we end up continually re-executing poll() with a
+>  	 * timeout in the past). 1s difference gives plenty of slack for error.
+>  	 */
+> -	do_gettimeofday(&tv);
+> -	ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
+> +	tv = ktime_get_real();
+> +	ns_timeout = ktime_to_ns(tv) + 2 * (s64)NSEC_PER_SEC;
+>  
+>  	xen_clear_irq_pending(irq);
+>  
+> @@ -141,8 +142,8 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>  			(unsigned long *)&pdev->sh_info->flags)) {
+>  		xen_poll_irq_timeout(irq, jiffies + 3*HZ);
+>  		xen_clear_irq_pending(irq);
+> -		do_gettimeofday(&tv);
+> -		ns = timeval_to_ns(&tv);
+> +		tv = ktime_get_real();
+> +		ns = ktime_to_ns(tv);
+>  		if (ns > ns_timeout) {
+>  			dev_err(&pdev->xdev->dev,
+>  				"pciback not responding!!!\n");
 > -- 
-> 1.7.1
+> 2.2.0.rc0.207.ga3a616c
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
