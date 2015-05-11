@@ -1,48 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:36411 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077AbbETF1a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 01:27:30 -0400
-Received: by igbpi8 with SMTP id pi8so93836098igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 22:27:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
-	<1431465781-10753-3-git-send-email-hauke@hauke-m.de>
-Date: Wed, 20 May 2015 07:27:30 +0200
-Message-ID: <CACna6rxfKT5+LEDHq+QgPuSgX5t-HpOfX93pfnHRXX1_cGy3+A@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Scott Branden <sbranden@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
+	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
+	<dyoung@redhat.com>
+Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
+	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
+	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
+	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
+Subject: [PATCH v11 09/10] iommu/vt-d: Copy functions for irte
+Date: Mon, 11 May 2015 17:52:53 +0800
+Message-Id: <1431337974-545-10-git-send-email-zhen-hual@hp.com>
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This driver adds support for the PCIe 2.0 controller found on the bcma
-> bus. This controller can be found on (mostly) all Broadcom BCM470X /
-> BCM5301X ARM SoCs.
->
-> The driver found in the Broadcom SDK does some more stuff, like setting
-> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
-> PHY changes like "improving" the PCIe jitter and doing some special
-> initializations for the 3rd PCIe port.
->
-> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
-> connected to them.
->
-> PCI_DOMAINS is needed by this driver, because normally there is more
-> than one PCIe controller and without PCI_DOMAINS only the first
-> controller gets registered.
-> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Functions to copy the irte data from the old kernel into the kdump kernel.
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/iommu/intel_irq_remapping.c | 68 +++++++++++++++++++++++++++++++++++++
+ include/linux/intel-iommu.h         |  4 +++
+ 2 files changed, 72 insertions(+)
+
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 5709ae9..c2a4406 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -17,6 +17,10 @@
+ 
+ #include "irq_remapping.h"
+ 
++static int __iommu_load_old_irte(struct intel_iommu *iommu);
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
++static void iommu_check_pre_ir_status(struct intel_iommu *iommu);
++
+ struct ioapic_scope {
+ 	struct intel_iommu *iommu;
+ 	unsigned int id;
+@@ -1299,3 +1303,67 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+ 
+ 	return ret;
+ }
++
++static int __iommu_load_old_irte(struct intel_iommu *iommu)
++{
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	memcpy(iommu->ir_table->base,
++		iommu->ir_table->base_old_virt,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	__iommu_flush_cache(iommu, iommu->ir_table->base,
++		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
++
++	return 0;
++}
++
++static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
++{
++	int start;
++	unsigned long size;
++	void __iomem *to;
++	void *from;
++
++	if ((!iommu)
++		|| (!iommu->ir_table)
++		|| (!iommu->ir_table->base)
++		|| (!iommu->ir_table->base_old_phys)
++		|| (!iommu->ir_table->base_old_virt))
++		return -1;
++
++	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
++		return -1;
++
++	if (index == -1) {
++		start = 0;
++		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
++	} else {
++		start = index * sizeof(struct irte);
++		size = sizeof(struct irte);
++	}
++
++	to = iommu->ir_table->base_old_virt;
++	from = iommu->ir_table->base;
++	memcpy(to + start, from + start, size);
++
++	__iommu_flush_cache(iommu, to + start, size);
++
++	return 0;
++}
++
++static void iommu_check_pre_ir_status(struct intel_iommu *iommu)
++{
++	u32 sts;
++
++	sts = readl(iommu->reg + DMAR_GSTS_REG);
++	if (sts & DMA_GSTS_IRES) {
++		pr_info("IR is enabled prior to OS.\n");
++		iommu->pre_enabled_ir = 1;
++	}
++}
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index 90e122e..d7a0b5d 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -301,6 +301,8 @@ struct q_inval {
+ struct ir_table {
+ 	struct irte *base;
+ 	unsigned long *bitmap;
++	void __iomem *base_old_virt;
++	unsigned long base_old_phys;
+ };
+ #endif
+ 
+@@ -342,6 +344,8 @@ struct intel_iommu {
+ 
+ 	/* whether translation is enabled prior to OS*/
+ 	u8		pre_enabled_trans;
++	/* whether interrupt remapping is enabled prior to OS*/
++	u8		pre_enabled_ir;
+ 
+ 	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
+ 	unsigned long	root_entry_old_phys; /* root entry in old kernel */
+-- 
+2.0.0-rc0
+
