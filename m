@@ -1,205 +1,190 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-gpio@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [RFC v1 05/25] gpio: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Wed, 20 May 2015 17:59:53 +0800
-Message-Id: <1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:59162 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752676AbbELHxx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 03:53:53 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 12 May 2015 17:53:51 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 76324357804C
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 17:53:49 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C7rfXN29622424
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 17:53:49 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C7rGHm009381
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 17:53:16 +1000
+Date: Tue, 12 May 2015 15:52:58 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 5/9] powerpc/eeh: create EEH_PE_VF for VF PE
+Message-ID: <20150512075258.GB16788@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150511023707.GA8816@gwshan>
+ <20150511062549.GB1632@richard>
+ <20150512062823.GB18734@gwshan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150512062823.GB18734@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-already have a pointer to corresponding irq_desc.
+On Tue, May 12, 2015 at 04:28:23PM +1000, Gavin Shan wrote:
+>On Mon, May 11, 2015 at 02:25:49PM +0800, Wei Yang wrote:
+>>On Mon, May 11, 2015 at 12:37:07PM +1000, Gavin Shan wrote:
+>>>On Mon, May 04, 2015 at 03:07:34PM +0800, Wei Yang wrote:
+>>>
+>>>Please reorder PATCH[6] with this one because the EEH device is expected
+>>>to be created before EEH PE.
+>>
+>>That's a good idea.
+>>
+>>>
+>>>>On powernv platform, VF PE is a special PE which is different from the Bus
+>>>>PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
+>>>>properly. For example, we need to create VF PE when VF's pci_dev is
+>>>>initialized in kernel. And add a flag to mark it is a VF PF.
+>>>                                                       ^^^^^
+>>>>
+>>>
+>>>>From above commit log, my understanding is that you're adding a flag to
+>>>identify VF PE, which is handled differently from bus PE. You missed the
+>>>details on the difference between them and the speical treament to VF PE.
+>>>Could you help add those information in the commit log to make it looks
+>>>complete?
+>>>
+>>
+>>This patch just introduce the VF PE. For those differences, we have another
+>>patch "handle VF PE properly" to cover. In the log of that patch, I listed
+>>those differences. Do you think this is fine?
+>>
+>
+>It's fine to me.
+>
+>>>>This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
+>>>>At the mean time, it creates the sysfs and address cache for VF PE.
+>>>                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>>>
+>>>                   it creates the sysfs and address cache for VF PE at PCI
+>>>device final fixup time.
+>>>
+>>>>
+>>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>>---
+>>>> arch/powerpc/include/asm/eeh.h               |    1 +
+>>>> arch/powerpc/kernel/eeh_pe.c                 |   12 ++++++++++--
+>>>> arch/powerpc/platforms/powernv/eeh-powernv.c |   12 ++++++++++++
+>>>> 3 files changed, 23 insertions(+), 2 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>>>index a52db28..56e8cd9 100644
+>>>>--- a/arch/powerpc/include/asm/eeh.h
+>>>>+++ b/arch/powerpc/include/asm/eeh.h
+>>>>@@ -70,6 +70,7 @@ struct pci_dn;
+>>>> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+>>>> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+>>>> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+>>>>+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>>>>
+>>>> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+>>>> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+>>>>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>>>>index 35f0b62..edfe63a 100644
+>>>>--- a/arch/powerpc/kernel/eeh_pe.c
+>>>>+++ b/arch/powerpc/kernel/eeh_pe.c
+>>>>@@ -299,7 +299,12 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+>>>> 	 * EEH device already having associated PE, but
+>>>> 	 * the direct parent EEH device doesn't have yet.
+>>>> 	 */
+>>>>-	pdn = pdn ? pdn->parent : NULL;
+>>>>+#ifdef CONFIG_PCI_IOV
+>>>>+	if (edev->mode & EEH_DEV_VF)
+>>>>+		pdn = pci_get_pdn(edev->physfn);
+>>>>+	else
+>>>>+#endif
+>>>>+		pdn = pdn ? pdn->parent : NULL;
+>>>
+>>>[A]
+>>>
+>>>> 	while (pdn) {
+>>>> 		/* We're poking out of PCI territory */
+>>>> 		parent = pdn_to_eeh_dev(pdn);
+>>>>@@ -382,7 +387,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+>>>> 	}
+>>>>
+>>>> 	/* Create a new EEH PE */
+>>>>-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>>>>+	if (edev->mode & EEH_DEV_VF)
+>>>>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+>>>>+	else
+>>>>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>>>
+>>>You don't have CONFIG_PCI_IOV here to protect the code, but you had
+>>>that at [A]. In order to keep the code look consistent, you either
+>>>add it or remove it for all places. I prefer to remove it, which
+>>>we don't need CONFIG_PCI_IOV.
+>>>
+>>
+>>Ok, that's fine to remove it.
+>>
+>>BTW, if remove the CONFIG_PCI_IOV, we need to remove it around the physfn in
+>>eeh_dev definition. That's fine?
+>>
+>
+>It's fine to me.
+>
+>>>> 	if (!pe) {
+>>>> 		pr_err("%s: out of memory!\n", __func__);
+>>>> 		return -ENOMEM;
+>>>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>index 622f08c..5447481 100644
+>>>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>@@ -1540,3 +1540,15 @@ static int __init eeh_powernv_init(void)
+>>>> 	return ret;
+>>>> }
+>>>> machine_early_initcall(powernv, eeh_powernv_init);
+>>>>+
+>>>>+#ifdef CONFIG_PCI_IOV
+>>>>+static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+>>>>+{
+>>>
+>>>Please rename it to pnv_eeh_vf_final_fixup(). Names of all functions
+>>>in this file expect prefix "pnv_eeh_". With "_final_", it's clearly
+>>>to tell it's called on PCI device final fixup time.
+>>>
+>>
+>>ok
+>>
+>>>>+	/* sysfs files should only be added after devices are added */
+>>>
+>>>It's nice to explain why here: sysfs for the PCI device isn't populated
+>>>and the MMIO resource isn't finalized for the PCI device yet.
+>>>
+>>
+>>Don't get your point.
+>>
+>>sysfs of the PCI device is populated at this point.
+>>
+>
+>You have two operations here: (A) add the PCI device to EEH address cache;
+>(B) add EEH related sysfs entries. (A) requires that the resources (MMIO
+>on PHB3) of the VF is finalized. (B) requires VF's sysfs entries have been
+>populated. So you need two conditions here to make sure (A) and (B) work
+>correctly: sysfs files are created and MMIO resources are populated. I was
+>saying your comments is a bit confusing. Could you have something like this:
+>
+>       /*
+>        * The following operations will fail if VF's sysfs files aren't
+>        * created or its resources aren't finalized.
+>        */ 
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/gpio/gpio-bcm-kona.c   |    2 +-
- drivers/gpio/gpio-dwapb.c      |    2 +-
- drivers/gpio/gpio-mvebu.c      |    2 +-
- drivers/gpio/gpio-mxc.c        |    6 +++---
- drivers/gpio/gpio-mxs.c        |    2 +-
- drivers/gpio/gpio-omap.c       |    2 +-
- drivers/gpio/gpio-tegra.c      |    4 +---
- drivers/gpio/gpio-timberdale.c |    2 +-
- drivers/gpio/gpio-vf610.c      |    2 +-
- drivers/gpio/gpio-zynq.c       |    2 +-
- 10 files changed, 12 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/gpio/gpio-bcm-kona.c b/drivers/gpio/gpio-bcm-kona.c
-index b164ce837b43..2e7a8c66fe57 100644
---- a/drivers/gpio/gpio-bcm-kona.c
-+++ b/drivers/gpio/gpio-bcm-kona.c
-@@ -432,7 +432,7 @@ static void bcm_kona_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
- 	void __iomem *reg_base;
- 	int bit, bank_id;
- 	unsigned long sta;
--	struct bcm_kona_gpio_bank *bank = irq_get_handler_data(irq);
-+	struct bcm_kona_gpio_bank *bank = irq_desc_get_handler_data(desc);
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 
- 	chained_irq_enter(chip, desc);
-diff --git a/drivers/gpio/gpio-dwapb.c b/drivers/gpio/gpio-dwapb.c
-index 58faf04fce5d..649be07a845d 100644
---- a/drivers/gpio/gpio-dwapb.c
-+++ b/drivers/gpio/gpio-dwapb.c
-@@ -149,7 +149,7 @@ static u32 dwapb_do_irq(struct dwapb_gpio *gpio)
- 
- static void dwapb_irq_handler(u32 irq, struct irq_desc *desc)
- {
--	struct dwapb_gpio *gpio = irq_get_handler_data(irq);
-+	struct dwapb_gpio *gpio = irq_desc_get_handler_data(desc);
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 
- 	dwapb_do_irq(gpio);
-diff --git a/drivers/gpio/gpio-mvebu.c b/drivers/gpio/gpio-mvebu.c
-index 1a54205860f5..a8c302ef7bc4 100644
---- a/drivers/gpio/gpio-mvebu.c
-+++ b/drivers/gpio/gpio-mvebu.c
-@@ -460,7 +460,7 @@ static int mvebu_gpio_irq_set_type(struct irq_data *d, unsigned int type)
- 
- static void mvebu_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
- {
--	struct mvebu_gpio_chip *mvchip = irq_get_handler_data(irq);
-+	struct mvebu_gpio_chip *mvchip = irq_desc_get_handler_data(desc);
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	u32 cause, type;
- 	int i;
-diff --git a/drivers/gpio/gpio-mxc.c b/drivers/gpio/gpio-mxc.c
-index 9f7446a7ac64..f10948c04f7c 100644
---- a/drivers/gpio/gpio-mxc.c
-+++ b/drivers/gpio/gpio-mxc.c
-@@ -275,8 +275,8 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
- static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
- {
- 	u32 irq_stat;
--	struct mxc_gpio_port *port = irq_get_handler_data(irq);
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct mxc_gpio_port *port = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 
- 	chained_irq_enter(chip, desc);
- 
-@@ -292,7 +292,7 @@ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
- {
- 	u32 irq_msk, irq_stat;
- 	struct mxc_gpio_port *port;
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 
- 	chained_irq_enter(chip, desc);
- 
-diff --git a/drivers/gpio/gpio-mxs.c b/drivers/gpio/gpio-mxs.c
-index 84cbda6acdda..039c7d50e64f 100644
---- a/drivers/gpio/gpio-mxs.c
-+++ b/drivers/gpio/gpio-mxs.c
-@@ -157,7 +157,7 @@ static void mxs_flip_edge(struct mxs_gpio_port *port, u32 gpio)
- static void mxs_gpio_irq_handler(u32 irq, struct irq_desc *desc)
- {
- 	u32 irq_stat;
--	struct mxs_gpio_port *port = irq_get_handler_data(irq);
-+	struct mxs_gpio_port *port = irq_desc_get_handler_data(desc);
- 
- 	desc->irq_data.chip->irq_ack(&desc->irq_data);
- 
-diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
-index b232397ad7ec..acbf3feff1e2 100644
---- a/drivers/gpio/gpio-omap.c
-+++ b/drivers/gpio/gpio-omap.c
-@@ -719,7 +719,7 @@ static void omap_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
- 	struct gpio_bank *bank;
- 	int unmasked = 0;
- 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
--	struct gpio_chip *chip = irq_get_handler_data(irq);
-+	struct gpio_chip *chip = irq_desc_get_handler_data(desc);
- 
- 	chained_irq_enter(irqchip, desc);
- 
-diff --git a/drivers/gpio/gpio-tegra.c b/drivers/gpio/gpio-tegra.c
-index 1741981d53c8..89ed8a56eb0b 100644
---- a/drivers/gpio/gpio-tegra.c
-+++ b/drivers/gpio/gpio-tegra.c
-@@ -268,16 +268,14 @@ static void tegra_gpio_irq_shutdown(struct irq_data *d)
- 
- static void tegra_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
- {
--	struct tegra_gpio_bank *bank;
- 	int port;
- 	int pin;
- 	int unmasked = 0;
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct tegra_gpio_bank *bank = irq_desc_get_handler_data(desc);
- 
- 	chained_irq_enter(chip, desc);
- 
--	bank = irq_get_handler_data(irq);
--
- 	for (port = 0; port < 4; port++) {
- 		int gpio = tegra_gpio_compose(bank->bank, port, 0);
- 		unsigned long sta = tegra_gpio_readl(GPIO_INT_STA(gpio)) &
-diff --git a/drivers/gpio/gpio-timberdale.c b/drivers/gpio/gpio-timberdale.c
-index e8f97e03c9bb..d4e8cb4f2e53 100644
---- a/drivers/gpio/gpio-timberdale.c
-+++ b/drivers/gpio/gpio-timberdale.c
-@@ -194,7 +194,7 @@ out:
- 
- static void timbgpio_irq(unsigned int irq, struct irq_desc *desc)
- {
--	struct timbgpio *tgpio = irq_get_handler_data(irq);
-+	struct timbgpio *tgpio = irq_desc_get_handler_data(desc);
- 	unsigned long ipr;
- 	int offset;
- 
-diff --git a/drivers/gpio/gpio-vf610.c b/drivers/gpio/gpio-vf610.c
-index 7bd9f209ffa8..fa344388f4da 100644
---- a/drivers/gpio/gpio-vf610.c
-+++ b/drivers/gpio/gpio-vf610.c
-@@ -120,7 +120,7 @@ static int vf610_gpio_direction_output(struct gpio_chip *chip, unsigned gpio,
- 
- static void vf610_gpio_irq_handler(u32 irq, struct irq_desc *desc)
- {
--	struct vf610_gpio_port *port = irq_get_handler_data(irq);
-+	struct vf610_gpio_port *port = irq_desc_get_handler_data(desc);
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	int pin;
- 	unsigned long irq_isfr;
-diff --git a/drivers/gpio/gpio-zynq.c b/drivers/gpio/gpio-zynq.c
-index aea6075e5b2e..70e3a568b1cb 100644
---- a/drivers/gpio/gpio-zynq.c
-+++ b/drivers/gpio/gpio-zynq.c
-@@ -499,7 +499,7 @@ static void zynq_gpio_irqhandler(unsigned int irq, struct irq_desc *desc)
- {
- 	u32 int_sts, int_enb;
- 	unsigned int bank_num;
--	struct zynq_gpio *gpio = irq_get_handler_data(irq);
-+	struct zynq_gpio *gpio = irq_desc_get_handler_data(desc);
- 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
- 
- 	chained_irq_enter(irqchip, desc);
--- 
-1.7.10.4
+Will change the comment with this.
 
