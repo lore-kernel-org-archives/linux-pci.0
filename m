@@ -1,66 +1,146 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 May 2015 17:48:19 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Roland Stigge <stigge@antcom.de>,
-	Tony Lindgren <tony@atomide.com>,
-	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
-	Daniel Mack <daniel@zonque.org>,
-	Haojian Zhuang <haojian.zhuang@gmail.com>,
-	Robert Jarzmik <robert.jarzmik@free.fr>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Russell King <rmk+kernel@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org
-Subject: Re: [RFC v1 15/25] genirq: Kill the first parameter 'irq' of
- irq_flow_handler_t
-In-Reply-To: <555CA929.3080306@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1505201748000.4225@nanos>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-16-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201715380.4225@nanos> <555CA929.3080306@linux.intel.com>
+Date: Tue, 12 May 2015 16:37:45 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 05/10] iommu/vt-d: Add functions to load and save old
+ re
+Message-ID: <20150512083745.GE4561@localhost.localdomain>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1431337974-545-6-git-send-email-zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431337974-545-6-git-send-email-zhen-hual@hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 May 2015, Jiang Liu wrote:
+Seems the subject was truncated? Maybe "re" means root entry? Then please fix it
 
-> On 2015/5/20 23:28, Thomas Gleixner wrote:
-> > On Wed, 20 May 2015, Jiang Liu wrote:
-> >> -static void locomo_handler(unsigned int irq, struct irq_desc *desc)
-> >> +static void locomo_handler(struct irq_desc *desc)
-> >>  {
-> >>  	struct locomo *lchip = irq_desc_get_chip_data(desc);
-> >> +	unsigned int irq;
-> >>  	int req, i;
-> > 
-> > That leaves irq unitialized ....
-> That should be OK, 'irq' here is just a local variable.
-> Actually it may be changed as:
->         if (req) {
->                 /* generate the next interrupt(s) */
-> -                irq = lchip->irq_base;
-> +                unsigned int irq = lchip->irq_base;
+On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
+> Add functions to load root entry table from old kernel, and to save updated
+> root entry table.
+> Add two member in struct intel_iommu, to store the RTA in old kernel, and
+> the mapped virt address of it.
 
-Indeed. 
+Please explain a bit what is "RTA" in patch log, it is unclear to most of people
+who do not know iommu details.
+
+> 
+> We use the old RTA in dump kernel, and when the iommu->root_entry is used as
+> a cache in kdump kernel, its phys address will not be save to RTA register,
+> but when its data is changed, we will save the new data to old root entry table.
+> 
+> Li, Zhen-hua:
+>     The functions and logics.
+> 
+> Takao Indoh:
+>     Add __iommu_flush_cache.
+> 
+> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+> ---
+>  drivers/iommu/intel-iommu.c | 54 ++++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/intel-iommu.h |  3 +++
+>  2 files changed, 56 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 0b97c15..3a5d446 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -371,6 +371,10 @@ static struct context_entry *device_to_existing_context_entry(
+>  				struct intel_iommu *iommu,
+>  				u8 bus, u8 devfn);
+>  
+> +static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
+> +
+> +static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
+> +
+>  /*
+>   * A structure used to store the address allocated by ioremap();
+>   * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
+> @@ -382,7 +386,6 @@ struct iommu_remapped_entry {
+>  static LIST_HEAD(__iommu_remapped_mem);
+>  static DEFINE_MUTEX(__iommu_mem_list_lock);
+>  
+> -
+>  /*
+>   * This domain is a statically identity mapping domain.
+>   *	1. This domain creats a static 1:1 mapping to all usable memory.
+> @@ -4935,3 +4938,52 @@ int __iommu_free_mapped_mem(void)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Load the old root entry table to new root entry table.
+> + */
+> +static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
+> +{
+> +	if ((!iommu)
+> +		|| (!iommu->root_entry)
+> +		|| (!iommu->root_entry_old_virt)
+> +		|| (!iommu->root_entry_old_phys))
+> +		return;
+> +	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
+> +
+> +	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
+> +}
+> +
+> +/*
+> + * When the data in new root entry table is changed, this function
+> + * must be called to save the updated data to old root entry table.
+> + */
+> +static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
+> +{
+> +	u8 start;
+> +	unsigned long size;
+> +	void __iomem *to;
+> +	void *from;
+> +
+> +	if ((!iommu)
+> +		|| (!iommu->root_entry)
+> +		|| (!iommu->root_entry_old_virt)
+> +		|| (!iommu->root_entry_old_phys))
+> +		return;
+> +
+> +	if (index < -1 || index >= ROOT_ENTRY_NR)
+> +		return;
+> +
+> +	if (index == -1) {
+> +		start = 0;
+> +		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
+> +	} else {
+> +		start = index * sizeof(struct root_entry);
+> +		size = sizeof(struct root_entry);
+> +	}
+> +	to = iommu->root_entry_old_virt;
+> +	from = iommu->root_entry;
+> +	memcpy(to + start, from + start, size);
+> +
+> +	__iommu_flush_cache(iommu, to + start, size);
+> +}
+> +
+> diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+> index ced1fac..e7cac12 100644
+> --- a/include/linux/intel-iommu.h
+> +++ b/include/linux/intel-iommu.h
+> @@ -340,6 +340,9 @@ struct intel_iommu {
+>  	spinlock_t	lock; /* protect context, domain ids */
+>  	struct root_entry *root_entry; /* virtual address */
+>  
+> +	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
+> +	unsigned long	root_entry_old_phys; /* root entry in old kernel */
+> +
+>  	struct iommu_flush flush;
+>  #endif
+>  	struct q_inval  *qi;            /* Queued invalidation info */
+> -- 
+> 2.0.0-rc0
+> 
