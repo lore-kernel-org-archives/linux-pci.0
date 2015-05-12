@@ -1,369 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:34596 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753127AbbEIKYV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 May 2015 06:24:21 -0400
-Received: by pdbqa5 with SMTP id qa5so105766244pdb.1
-        for <linux-pci@vger.kernel.org>; Sat, 09 May 2015 03:24:21 -0700 (PDT)
-Message-ID: <554DE04E.8080900@ozlabs.ru>
-Date: Sat, 09 May 2015 20:24:14 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24658 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932856AbbELWSH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 18:18:07 -0400
+Message-ID: <55527C1C.7090901@broadcom.com>
+Date: Tue, 12 May 2015 15:18:04 -0700
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-CC: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v4 03/21] powerpc/powernv: M64 support improvement
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+To: Hauke Mehrtens <hauke@hauke-m.de>, <bhelgaas@google.com>,
+	<arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <sbranden@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>, <zajec5@gmail.com>
+Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
+References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de> <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2015 04:02 PM, Gavin Shan wrote:
-> We're having the hardware or enforced (on P7IOC) limitation: M64
+Hi Hauke,
 
-I would think if it is enforced, then it is enforced by hardware but you 
-say "hardware OR enforced" :)
-
-
-> segment#x can only be assigned to PE#x. IO and M32 segment can be
-> mapped to arbitrary PE# via IODT and M32DT. It means the PE number
-> should be x if M64 segment#x has been assigned to the PE. Also, each
-> PE own one M64 segment at most. Currently, we are reserving PE#
-> according to root port's M64 window. It won't be reliable once we
-> extend M64 windows of root port, or the upstream port of the PCIE
-> switch behind root port to PHB's M64 window, in order to support
-> PCI hotplug in future.
->
-> The patch reserves PE# for M64 segments according to the M64 resources
-> of the PCI devices (not bridges) contained in the PE. Besides, it's
-> always worthy to trace the M64 segments consumed by the PE, which can
-> be released at PCI unplugging time.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 5/12/2015 2:23 PM, Hauke Mehrtens wrote:
+> This driver adds support for the PCIe 2.0 controller found on the bcma
+> bus. This controller can be found on (mostly) all Broadcom BCM470X /
+> BCM5301X ARM SoCs.
+> 
+> The driver found in the Broadcom SDK does some more stuff, like setting
+> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
+> PHY changes like "improving" the PCIe jitter and doing some special
+> initializations for the 3rd PCIe port.
+> 
+> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
+> connected to them.
+> 
+> PCI_DOMAINS is needed by this driver, because normally there is more
+> than one PCIe controller and without PCI_DOMAINS only the first
+> controller gets registered.
+> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 > ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 190 ++++++++++++++++++------------
->   arch/powerpc/platforms/powernv/pci.h      |  10 +-
->   2 files changed, 122 insertions(+), 78 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 646962f..a994882 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -283,28 +283,78 @@ fail:
->   	return -EIO;
->   }
->
-> -static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
-> +/* We extend the M64 window of root port, or the upstream bridge port
-> + * of the PCIE switch behind root port. So we shouldn't reserve PEs
-> + * for M64 resources because there are no (normal) PCI devices consuming
-
-"PCI devices"? Not "root ports or PCI bridges"?
-
-> + * M64 resources on the PCI buses leading from root port, or the upstream
-> + * bridge port.The function returns true if the indicated PCI bus needs
-> + * reserved PEs because of M64 resources in advance. Otherwise, the
-> + * function returns false.
+>  drivers/pci/host/Kconfig           |  11 ++++
+>  drivers/pci/host/Makefile          |   1 +
+>  drivers/pci/host/pcie-iproc-bcma.c | 112 +++++++++++++++++++++++++++++++++++++
+>  3 files changed, 124 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-iproc-bcma.c
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 1dfb567..f23f96d 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -125,4 +125,15 @@ config PCIE_IPROC_PLATFORM
+>  	  Say Y here if you want to use the Broadcom iProc PCIe controller
+>  	  through the generic platform bus interface
+>  
+> +config PCIE_IPROC_BCMA
+> +	bool "Broadcom iProc PCIe bcma bus driver"
+> +	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+> +	select PCIE_IPROC
+> +	select BCMA
+> +	select PCI_DOMAINS
+> +	default ARCH_BCM_5301X
+> +	help
+> +	  Say Y here if you want to use the Broadcom iProc PCIe controller
+> +	  through the bcma bus interface
+> +
+>  endmenu
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index f733b4e..2f7c36f 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -15,3 +15,4 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>  obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+>  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+>  obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+> +obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
+> new file mode 100644
+> index 0000000..c318f19
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-iproc-bcma.c
+> @@ -0,0 +1,112 @@
+> +/* 
+> + * Copyright (C) 2015 Broadcom Corporation
+> + * Copyright (C) 2015 Hauke Mehrtens <hauke@hauke-m.de>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation version 2.
+> + *
+> + * This program is distributed "as is" WITHOUT ANY WARRANTY of any
+> + * kind, whether express or implied; without even the implied warranty
+> + * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
 > + */
-> +static bool pnv_ioda_need_m64_pe(struct pnv_phb *phb,
-> +				 struct pci_bus *bus)
->   {
-> -	resource_size_t sgsz = phb->ioda.m64_segsize;
-> +	/* Root bus */
-
-The comment is too obvious as the call below is called "pci_is_root_bus" :)
-
-
-> +	if (!bus || pci_is_root_bus(bus))
-> +		return false;
 > +
-> +	/* Bus leading from root port. We need check what types of PCI
-> +	 * devices on the bus. If it's connecting PCI bridge, we don't
-> +	 * need reserve M64 PEs for it. Otherwise, we still need to do
-> +	 * that.
-> +	 */
-> +	if (pci_is_root_bus(bus->self->bus)) {
-> +		struct pci_dev *pdev;
+> +#include <linux/kernel.h>
+> +#include <linux/pci.h>
+> +#include <linux/module.h>
+> +#include <linux/slab.h>
+> +#include <linux/phy/phy.h>
+> +#include <linux/bcma/bcma.h>
+> +#include <linux/ioport.h>
 > +
-> +		list_for_each_entry(pdev, &bus->devices, bus_list) {
-> +			if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL)
-> +				return true;
-> +		}
+> +#include "pcie-iproc.h"
 > +
-> +		return false;
-> +	}
 > +
-> +	/* Bus leading from the upstream bridge port on top level */
-> +	if (pci_is_root_bus(bus->self->bus->self->bus))
-
-
-Is it for second level bridges? Like root->bridge->bridge? And for 3 levels 
-you will need a PE?
-
-
-> +		return false;
+> +/* NS: CLASS field is R/O, and set to wrong 0x200 value */
+> +static void bcma_pcie2_fixup_class(struct pci_dev *dev)
+> +{
+> +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x8011, bcma_pcie2_fixup_class);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x8012, bcma_pcie2_fixup_class);
 > +
-> +	return true;
+> +static int iproc_pcie_bcma_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> +{
+> +	struct pci_sys_data *sys = dev->sysdata;
+> +	struct iproc_pcie *pcie = sys->private_data;
+> +	struct bcma_device *bdev = container_of(pcie->dev, struct bcma_device, dev);
+> +
+> +	return bcma_core_irq(bdev, 5);
 > +}
 > +
-> +static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb,
-> +				    struct pci_bus *bus)
+> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
 > +{
-> +	resource_size_t segsz = phb->ioda.m64_segsize;
->   	struct pci_dev *pdev;
->   	struct resource *r;
-> -	int base, step, i;
-> +	unsigned long pe_no, limit;
-> +	int i;
->
-> -	/*
-> -	 * Root bus always has full M64 range and root port has
-> -	 * M64 range used in reality. So we're checking root port
-> -	 * instead of root bus.
-> +	if (!pnv_ioda_need_m64_pe(phb, bus))
-> +		return;
+> +	struct iproc_pcie *pcie;
+> +	LIST_HEAD(res);
+> +	struct resource res_mem;
+> +	int ret;
 > +
-> +	/* The bridge's M64 window might have been extended to the
-> +	 * PHB's M64 window in order to support PCI hotplug. So the
-> +	 * bridge's M64 window isn't reliable to be used for picking
-> +	 * PE# for its leading PCI bus. We have to check the M64
-> +	 * resources consumed by the PCI devices, which seat on the
-> +	 * PCI bus.
->   	 */
-> -	list_for_each_entry(pdev, &phb->hose->bus->devices, bus_list) {
-> -		for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
-> -			r = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
-> -			if (!r->parent ||
-> -			    !pnv_pci_is_mem_pref_64(r->flags))
-> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
-> +		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +#ifdef CONFIG_PCI_IOV
-> +			if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-> +				continue;
-> +#endif
-> +			r = &pdev->resource[i];
-> +			if (!r->flags || r->start >= r->end ||
-> +			    !r->parent || !pnv_pci_is_mem_pref_64(r->flags))
->   				continue;
->
-> -			base = (r->start - phb->ioda.m64_base) / sgsz;
-> -			for (step = 0; step < resource_size(r) / sgsz; step++)
-> -				pnv_ioda_reserve_pe(phb, base + step);
-> +			pe_no = (r->start - phb->ioda.m64_base) / segsz;
-> +			limit = ALIGN(r->end - phb->ioda.m64_base, segsz) / segsz;
-> +			for (; pe_no < limit; pe_no++)
-> +				pnv_ioda_reserve_pe(phb, pe_no);
->   		}
->   	}
->   }
-> @@ -316,85 +366,64 @@ static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
->   	struct pci_dev *pdev;
->   	struct resource *r;
->   	struct pnv_ioda_pe *master_pe, *pe;
-> -	unsigned long size, *pe_alloc;
-> -	bool found;
-> -	int start, i, j;
-> -
-> -	/* Root bus shouldn't use M64 */
-> -	if (pci_is_root_bus(bus))
-> -		return IODA_INVALID_PE;
-> -
-> -	/* We support only one M64 window on each bus */
-> -	found = false;
-> -	pci_bus_for_each_resource(bus, r, i) {
-> -		if (r && r->parent &&
-> -		    pnv_pci_is_mem_pref_64(r->flags)) {
-> -			found = true;
-> -			break;
-> -		}
-> -	}
-> +	unsigned long size, *pe_bitsmap;
-
-s/pe_bitsmap/pe_bitmap/
-
-
-> +	unsigned long pe_no, limit;
-> +	int i;
->
-> -	/* No M64 window found ? */
-> -	if (!found)
-> +	if (!pnv_ioda_need_m64_pe(phb, bus))
->   		return IODA_INVALID_PE;
->
-> -	/* Allocate bitmap */
-> +        /* Allocate bitmap */
->   	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
-> -	pe_alloc = kzalloc(size, GFP_KERNEL);
-> -	if (!pe_alloc) {
-> -		pr_warn("%s: Out of memory !\n",
-> -			__func__);
-> +	pe_bitsmap = kzalloc(size, GFP_KERNEL);
-> +	if (!pe_bitsmap) {
-> +		pr_warn("%s: Out of memory !\n", __func__);
->   		return IODA_INVALID_PE;
->   	}
->
-> -	/*
-> -	 * Figure out reserved PE numbers by the PE
-> -	 * the its child PEs.
-> -	 */
-> -	start = (r->start - phb->ioda.m64_base) / segsz;
-> -	for (i = 0; i < resource_size(r) / segsz; i++)
-> -		set_bit(start + i, pe_alloc);
-> -
-> -	if (all)
-> -		goto done;
-> -
-> -	/*
-> -	 * If the PE doesn't cover all subordinate buses,
-> -	 * we need subtract from reserved PEs for children.
-> +	/* The bridge's M64 window might be extended to PHB's M64
-> +	 * window by intention to support PCI hotplug. So we have
-> +	 * to check the M64 resources consumed by the PCI devices
-> +	 * on the PCI bus.
->   	 */
->   	list_for_each_entry(pdev, &bus->devices, bus_list) {
-> -		if (!pdev->subordinate)
-> -			continue;
-> +		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +#ifdef CONFIG_PCI_IOV
-> +			if (i >= PCI_IOV_RESOURCES &&
-> +			    i <= PCI_IOV_RESOURCE_END)
-> +				continue;
-> +#endif
-> +			/* Don't scan bridge's window if the PE
-> +			 * doesn't contain its subordinate bus.
-> +			 */
-> +			if (!all && i >= PCI_BRIDGE_RESOURCES &&
-> +			    i <= PCI_BRIDGE_RESOURCE_END)
-> +				continue;
->
-> -		pci_bus_for_each_resource(pdev->subordinate, r, i) {
-> -			if (!r || !r->parent ||
-> -			    !pnv_pci_is_mem_pref_64(r->flags))
-> +			r = &pdev->resource[i];
-> +			if (!r->flags || r->start >= r->end ||
-> +			    !r->parent || !pnv_pci_is_mem_pref_64(r->flags))
->   				continue;
->
-> -			start = (r->start - phb->ioda.m64_base) / segsz;
-> -			for (j = 0; j < resource_size(r) / segsz ; j++)
-> -				clear_bit(start + j, pe_alloc);
-> -                }
-> -        }
-> +			pe_no = (r->start - phb->ioda.m64_base) / segsz;
-> +			limit = ALIGN(r->end - phb->ioda.m64_base, segsz) / segsz;
-> +			for (; pe_no < limit; pe_no++)
-> +				set_bit(pe_no, pe_bitsmap);
-> +		}
+> +	pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
+> +	if (!pcie)
+> +		return -ENOMEM;
+> +
+> +	pcie->dev = &bdev->dev;
+> +	bcma_set_drvdata(bdev, pcie);
+> +
+> +	pcie->base = bdev->io_addr;
+> +
+> +	res_mem.start = bdev->addr_s[0];
+> +	res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+> +	res_mem.name = "PCIe MEM space";
+> +	res_mem.flags = IORESOURCE_MEM;
+> +	pci_add_resource(&res, &res_mem);
+> +
+> +	pcie->resources = &res;
+> +
+> +	pcie->map_irq = iproc_pcie_bcma_map_irq;
+> +
+> +	ret = iproc_pcie_setup(pcie);
+> +	if (ret) {
+> +		dev_err(pcie->dev, "PCIe controller setup failed\n");
+> +		return ret;
 > +	}
->
-> -	/*
-> -	 * the current bus might not own M64 window and that's all
-> -	 * contributed by its child buses. For the case, we needn't
-> -	 * pick M64 dependent PE#.
-> -	 */
-> -	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
-> -		kfree(pe_alloc);
-> +	/* No M64 window found ? */
-> +	if (bitmap_empty(pe_bitsmap, phb->ioda.total_pe)) {
-> +		kfree(pe_bitsmap);
->   		return IODA_INVALID_PE;
->   	}
->
-> -	/*
-> -	 * Figure out the master PE and put all slave PEs to master
-> -	 * PE's list to form compound PE.
-> +	/* Figure out the master PE and put all slave PEs
-> +	 * to master PE's list to form compound PE.
->   	 */
-> -done:
->   	master_pe = NULL;
->   	i = -1;
-> -	while ((i = find_next_bit(pe_alloc, phb->ioda.total_pe, i + 1)) <
-> +	while ((i = find_next_bit(pe_bitsmap, phb->ioda.total_pe, i + 1)) <
->   		phb->ioda.total_pe) {
->   		pe = &phb->ioda.pe_array[i];
->
-> @@ -408,6 +437,13 @@ done:
->   			list_add_tail(&pe->list, &master_pe->slaves);
->   		}
->
-> +		/* Pick the M64 segment, which should be available. Also,
-
-test_and_set_bit() does not pick or choose, it just marks PE#pe_number used.
-
-> +		 * those M64 segments consumed by slave PEs are contributed
-> +		 * to the master PE.
-> +		 */
-> +		BUG_ON(test_and_set_bit(pe->pe_number, phb->ioda.m64_segmap));
-> +		BUG_ON(test_and_set_bit(pe->pe_number, master_pe->m64_segmap));
 > +
->   		/* P7IOC supports M64DT, which helps mapping M64 segment
->   		 * to one particular PE#. Unfortunately, PHB3 has fixed
->   		 * mapping between M64 segment and PE#. In order for same
-> @@ -431,7 +467,7 @@ done:
->   		}
->   	}
->
-> -	kfree(pe_alloc);
-> +	kfree(pe_bitsmap);
->   	return master_pe->pe_number;
->   }
->
-> @@ -1233,7 +1269,7 @@ static void pnv_pci_ioda_setup_PEs(void)
->
->   		/* M64 layout might affect PE allocation */
->   		if (phb->reserve_m64_pe)
-> -			phb->reserve_m64_pe(phb);
-> +			phb->reserve_m64_pe(phb, phb->hose->bus);
->
->   		pnv_ioda_setup_PEs(hose->bus);
->   	}
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 070ee88..19022cf 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -49,6 +49,13 @@ struct pnv_ioda_pe {
->   	/* PE number */
->   	unsigned int		pe_number;
->
-> +	/* IO/M32/M64 segments consumed by the PE. Each PE can
-> +	 * have one M64 segment at most, but M64 segments consumed
-> +	 * by slave PEs will be contributed to the master PE. One
-> +	 * PE can own multiple IO and M32 segments.
-> +	 */
-> +	unsigned long		m64_segmap[8];
-
-
-Why 8? 64*8 = 512 segments?  s'8'512/sizeof(unsigned long)' may be?
-
-
+> +	return 0;
+> +}
 > +
->   	/* "Weight" assigned to the PE for the sake of DMA resource
->   	 * allocations
->   	 */
-> @@ -114,7 +121,7 @@ struct pnv_phb {
->   	u32 (*bdfn_to_pe)(struct pnv_phb *phb, struct pci_bus *bus, u32 devfn);
->   	void (*shutdown)(struct pnv_phb *phb);
->   	int (*init_m64)(struct pnv_phb *phb);
-> -	void (*reserve_m64_pe)(struct pnv_phb *phb);
-> +	void (*reserve_m64_pe)(struct pnv_phb *phb, struct pci_bus *bus);
->   	int (*pick_m64_pe)(struct pnv_phb *phb, struct pci_bus *bus, int all);
->   	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
->   	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
-> @@ -153,6 +160,7 @@ struct pnv_phb {
->   			struct mutex		pe_alloc_mutex;
->
->   			/* M32 & IO segment maps */
-> +			unsigned long		m64_segmap[8];
->   			unsigned int		*m32_segmap;
->   			unsigned int		*io_segmap;
->   			struct pnv_ioda_pe	*pe_array;
->
+> +static void iproc_pcie_bcma_remove(struct bcma_device *bdev)
+> +{
+> +	struct iproc_pcie *pcie = bcma_get_drvdata(bdev);
+> +
+> +	iproc_pcie_remove(pcie);
+> +}
+> +
+> +static const struct bcma_device_id iproc_pcie_bcma_table[] = {
+> +	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_NS_PCIEG2, BCMA_ANY_REV, BCMA_ANY_CLASS),
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(bcma, iproc_pcie_bcma_table);
+> +
+> +static struct bcma_driver iproc_pcie_bcma_driver = {
+> +	.name		= KBUILD_MODNAME,
+> +	.id_table	= iproc_pcie_bcma_table,
+> +	.probe		= iproc_pcie_bcma_probe,
+> +	.remove		= iproc_pcie_bcma_remove,
+> +};
+> +
+> +static int __init iproc_pcie_bcma_init(void)
+> +{
+> +	return bcma_driver_register(&iproc_pcie_bcma_driver);
+> +}
+> +module_init(iproc_pcie_bcma_init);
+> +
+> +static void __exit iproc_pcie_bcma_exit(void)
+> +{
+> +	bcma_driver_unregister(&iproc_pcie_bcma_driver);
+> +}
+> +module_exit(iproc_pcie_bcma_exit);
+> +
+> +MODULE_AUTHOR("Hauke Mehrtens");
+> +MODULE_DESCRIPTION("Broadcom iPROC PCIe bcma driver");
+> +MODULE_LICENSE("GPLv2");
+> 
 
+This change looks okay to me in general. But I'm not that familiar with
+BCMA, so someone else should also review this code.
 
--- 
-Alexey
+Thanks,
+
+Ray
