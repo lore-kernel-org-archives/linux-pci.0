@@ -1,124 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:32844 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbbEFPSW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 11:18:22 -0400
-Received: by qkx62 with SMTP id 62so8069428qkx.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 08:18:21 -0700 (PDT)
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:55213 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299AbbELG31 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 02:29:27 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 12 May 2015 16:29:25 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 3F8EB3578052
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 16:29:22 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C6TEjY45351014
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 16:29:22 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C6SnOl011233
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 16:28:49 +1000
+Date: Tue, 12 May 2015 16:28:23 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 5/9] powerpc/eeh: create EEH_PE_VF for VF PE
+Message-ID: <20150512062823.GB18734@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150511023707.GA8816@gwshan>
+ <20150511062549.GB1632@richard>
 MIME-Version: 1.0
-In-Reply-To: <20150506141859.GC26028@red-moon>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
- <20150505155346.GJ1550@arm.com> <20150506141859.GC26028@red-moon>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 May 2015 10:18:00 -0500
-Message-ID: <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150511062549.GB1632@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 6, 2015 at 9:18 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
->> On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
->> > The current code in pci-host-generic.c uses pci_common_init_dev()
->> > from the arch/arm/ to do a part of the PCI initialization, and this
->> > prevents it from being used on arm64.
->> >
->> > The initialization done by pci_common_init_dev() that is really
->> > needed by pci-host-generic.c can be done in the same file without
->> > using the hw_pci API of ARM.
->> >
->> > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
->> > this is be handled by setting up 'struct gen_pci' to embed a
->> > pci_sys_data variable as the first element on the ARM platform.
->> >
->> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
->> > ---
->> > Here's v2 of the patches, this enables use of pci-host-generic on
->> > arm64.
->> >
->> > This has been tested on both qemu and fast model for arm64, and on
->> > qemu for arm32.
->> >
->> > v1->v2
->> >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
->> >     - move contents of gen_pci_init to gen_pci_probe
->> >     - assign resources only when !probe_only
->> >  - tested on ARM32 with qemu option -M virt
+On Mon, May 11, 2015 at 02:25:49PM +0800, Wei Yang wrote:
+>On Mon, May 11, 2015 at 12:37:07PM +1000, Gavin Shan wrote:
+>>On Mon, May 04, 2015 at 03:07:34PM +0800, Wei Yang wrote:
 >>
->> I tried this with an arm64 kernel running under kvmtool, but I get the
->> following errors (a 32-bit ARM kernel does seem to work):
+>>Please reorder PATCH[6] with this one because the EEH device is expected
+>>to be created before EEH PE.
+>
+>That's a good idea.
+>
 >>
->>   PCI host bridge /pci ranges:
->>      IO 0x00000000..0x0000ffff -> 0x00000000
->>     MEM 0x41000000..0x7fffffff -> 0x41000000
->>   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
->>   pci_bus 0000:00: root bus resource [bus 00-01]
->>   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->>   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
->>   pci_bus 0000:00: scanning bus
->>   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
->>   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
->>   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
->>   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
->>   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
->>   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
->>   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
->>   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
->>   pci_bus 0000:00: fixups for bus
->>   pci_bus 0000:00: bus scan returning with max=00
->>   pci 0000:00:00.0: fixup irq: got 10
->>   pci 0000:00:00.0: assigning IRQ 10
->>   pci 0000:00:01.0: fixup irq: got 11
->>   pci 0000:00:01.0: assigning IRQ 11
->>   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
->>   virtio-pci: probe of 0000:00:00.0 failed with error -22
->>   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
->>   virtio-pci: probe of 0000:00:01.0 failed with error -22
+>>>On powernv platform, VF PE is a special PE which is different from the Bus
+>>>PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
+>>>properly. For example, we need to create VF PE when VF's pci_dev is
+>>>initialized in kernel. And add a flag to mark it is a VF PF.
+>>                                                       ^^^^^
+>>>
+>>
+>>>From above commit log, my understanding is that you're adding a flag to
+>>identify VF PE, which is handled differently from bus PE. You missed the
+>>details on the difference between them and the speical treament to VF PE.
+>>Could you help add those information in the commit log to make it looks
+>>complete?
+>>
 >
-> Ok, had a further look.
+>This patch just introduce the VF PE. For those differences, we have another
+>patch "handle VF PE properly" to cover. In the log of that patch, I listed
+>those differences. Do you think this is fine?
 >
-> Referring to this thread:
->
-> https://lkml.org/lkml/2014/9/29/557
->
-> By looking at other architectures code, resources should be claimed
-> (ie requested) even when PCI_PROBE_ONLY is set. Alpha, Sparc and PowerPC
-> seem to do that, in slightly different fashions.
->
-> I do not think, as Bjorn mentioned, that PCI_PROBE_ONLY should be used
-> to prevent enabling resources through a PCI command, which is what
-> pci_enable_resources does.
->
-> What we can do, is providing a generic PCI layer API that allows claiming
-> resources for a specific PCI bus, something similar if not identical
-> to what is done on alpha:
->
-> arch/alpha/kernel/pci.c pcibios_claim_one_bus()
->
-> that is not alpha specific at all. That way, we can use the API to claim
-> bus resources instead of assigning them on PCI_PROBE_ONLY (I *think*
-> that alpha calls pci_assign_unassigned_resources() even if
-> PCI_PROBE_ONLY is set, it should be safe since resources are claimed
-> first so IIUC the PCI layer would revert to FW BAR configuration on
-> assignment failure).
->
-> Bjorn, any opinion on this ? Putting together a patch is easy when
-> we agree on the solution.
 
-I would like claiming resources, i.e., pci_claim_resource(), to happen
-in the core instead of in arch code because it's not inherently
-arch-specific.  I don't think it should depend on PCI_PROBE_ONLY.
+It's fine to me.
 
-Bjorn
+>>>This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
+>>>At the mean time, it creates the sysfs and address cache for VF PE.
+>>                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>>
+>>                   it creates the sysfs and address cache for VF PE at PCI
+>>device final fixup time.
+>>
+>>>
+>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>---
+>>> arch/powerpc/include/asm/eeh.h               |    1 +
+>>> arch/powerpc/kernel/eeh_pe.c                 |   12 ++++++++++--
+>>> arch/powerpc/platforms/powernv/eeh-powernv.c |   12 ++++++++++++
+>>> 3 files changed, 23 insertions(+), 2 deletions(-)
+>>>
+>>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>>index a52db28..56e8cd9 100644
+>>>--- a/arch/powerpc/include/asm/eeh.h
+>>>+++ b/arch/powerpc/include/asm/eeh.h
+>>>@@ -70,6 +70,7 @@ struct pci_dn;
+>>> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+>>> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+>>> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+>>>+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>>>
+>>> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+>>> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+>>>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>>>index 35f0b62..edfe63a 100644
+>>>--- a/arch/powerpc/kernel/eeh_pe.c
+>>>+++ b/arch/powerpc/kernel/eeh_pe.c
+>>>@@ -299,7 +299,12 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+>>> 	 * EEH device already having associated PE, but
+>>> 	 * the direct parent EEH device doesn't have yet.
+>>> 	 */
+>>>-	pdn = pdn ? pdn->parent : NULL;
+>>>+#ifdef CONFIG_PCI_IOV
+>>>+	if (edev->mode & EEH_DEV_VF)
+>>>+		pdn = pci_get_pdn(edev->physfn);
+>>>+	else
+>>>+#endif
+>>>+		pdn = pdn ? pdn->parent : NULL;
+>>
+>>[A]
+>>
+>>> 	while (pdn) {
+>>> 		/* We're poking out of PCI territory */
+>>> 		parent = pdn_to_eeh_dev(pdn);
+>>>@@ -382,7 +387,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+>>> 	}
+>>>
+>>> 	/* Create a new EEH PE */
+>>>-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>>>+	if (edev->mode & EEH_DEV_VF)
+>>>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+>>>+	else
+>>>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>>
+>>You don't have CONFIG_PCI_IOV here to protect the code, but you had
+>>that at [A]. In order to keep the code look consistent, you either
+>>add it or remove it for all places. I prefer to remove it, which
+>>we don't need CONFIG_PCI_IOV.
+>>
+>
+>Ok, that's fine to remove it.
+>
+>BTW, if remove the CONFIG_PCI_IOV, we need to remove it around the physfn in
+>eeh_dev definition. That's fine?
+>
+
+It's fine to me.
+
+>>> 	if (!pe) {
+>>> 		pr_err("%s: out of memory!\n", __func__);
+>>> 		return -ENOMEM;
+>>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>index 622f08c..5447481 100644
+>>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>@@ -1540,3 +1540,15 @@ static int __init eeh_powernv_init(void)
+>>> 	return ret;
+>>> }
+>>> machine_early_initcall(powernv, eeh_powernv_init);
+>>>+
+>>>+#ifdef CONFIG_PCI_IOV
+>>>+static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+>>>+{
+>>
+>>Please rename it to pnv_eeh_vf_final_fixup(). Names of all functions
+>>in this file expect prefix "pnv_eeh_". With "_final_", it's clearly
+>>to tell it's called on PCI device final fixup time.
+>>
+>
+>ok
+>
+>>>+	/* sysfs files should only be added after devices are added */
+>>
+>>It's nice to explain why here: sysfs for the PCI device isn't populated
+>>and the MMIO resource isn't finalized for the PCI device yet.
+>>
+>
+>Don't get your point.
+>
+>sysfs of the PCI device is populated at this point.
+>
+
+You have two operations here: (A) add the PCI device to EEH address cache;
+(B) add EEH related sysfs entries. (A) requires that the resources (MMIO
+on PHB3) of the VF is finalized. (B) requires VF's sysfs entries have been
+populated. So you need two conditions here to make sure (A) and (B) work
+correctly: sysfs files are created and MMIO resources are populated. I was
+saying your comments is a bit confusing. Could you have something like this:
+
+       /*
+        * The following operations will fail if VF's sysfs files aren't
+        * created or its resources aren't finalized.
+        */ 
+
+Also, the PCI device's sysfs files aren't created at this point (final
+fixup time). Note that, PCI final fixup is invoked separately from PCI
+enumeration by fs_initcall_sync().
+
+>>>+	if (pdev->is_virtfn) {
+>>>+		eeh_add_device_late(pdev);
+>>>+		eeh_sysfs_add_device(pdev);
+>>>+	}
+>>>+}
+>>
+>>The nested ifdef can be avoided as:
+>>
+>>	if (!pdev->is_virtfn)
+>>		return;
+>>
+>>	eeh_add_device_late(pdev);
+>>	eeh_sysfs_add_device(pdev);
+>>
+>
+>Ok.
+>
+>>>+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
+>>>+#endif /* CONFIG_PCI_IOV */
+
+Thanks,
+Gavin
+
