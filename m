@@ -1,91 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:10281 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756151AbbE2R2M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:12 -0400
-From: <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v3 6/7] iommu/vt-d: implement (un)map_resource
-Date: Fri, 29 May 2015 12:14:45 -0500
-Message-ID: <1432919686-32306-7-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:36324 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753479AbbELTU4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 15:20:56 -0400
+Received: by qcbgy10 with SMTP id gy10so10283190qcb.3
+        for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 12:20:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150512163412.GD16079@red-moon>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com> <20150506141859.GC26028@red-moon>
+ <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
+ <554ADCE0.8020603@amd.com> <20150512133431.GA2898@google.com> <20150512163412.GD16079@red-moon>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 May 2015 14:20:35 -0500
+Message-ID: <CAErSpo5zjbZaYsGBdt9C2MaBCa-4X9Ws+WGLCz+Pxmd6wTi1Mg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Ming Lei <ming.lei@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+On Tue, May 12, 2015 at 11:34 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Tue, May 12, 2015 at 02:34:31PM +0100, Bjorn Helgaas wrote:
+>
+> [...]
+>
+>> > +void pci_claim_one_bus(struct pci_bus *b)
+>> > +{
+>> > +   struct pci_dev *pdev;
+>> > +   struct pci_bus *child_bus;
+>> > +
+>> > +   list_for_each_entry(pdev, &b->devices, bus_list) {
+>> > +           int i;
+>> > +
+>> > +           for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>> > +                   struct resource *r = &pdev->resource[i];
+>> > +
+>> > +                   if (r->parent || !r->start || !r->flags)
+>> > +                           continue;
+>> > +
+>> > +                   if (pci_has_flag(PCI_PROBE_ONLY) ||
+>> > +                       (r->flags & IORESOURCE_PCI_FIXED)) {
+>> > +                           if (pci_claim_resource(pdev, i) == 0)
+>> > +                                   continue;
+>> > +
+>> > +                           pci_claim_bridge_resource(pdev, i);
+>> > +                   }
+>> > +           }
+>> > +   }
+>> > +
+>> > +   list_for_each_entry(child_bus, &b->children, node) {
+>> > +           pci_claim_one_bus(child_bus);
+>> > +   }
+>> > +}
+>> > +EXPORT_SYMBOL(pci_claim_one_bus);
+>>
+>> I'm not a fan of pci_claim_one_bus(), on the philosophical grounds that
+>> claiming resources is a per-device thing, and I don't want to encourage
+>> people to do it on a per-bus level.
+>>
+>> I'd rather claim them somewhere in the pci_device_add() path, as s390 does
+>> in pcibios_add_device().  In fact, I'd *like* to do it even earlier, when
+>> we read each BAR, so we could identify invalid or unassigned BARs
+>> immediately.
+>
+> You mean claiming the resources in __pci_read_base (and unset the resource
+> if claiming it fails ?) regardless of PCI_PROBE_ONLY ?
 
-Implement 'map_resource' for the Intel IOMMU driver. Simply translate the
-resource to a physical address and route it to the same handlers used by
-the 'map_page' API.
+That's what I'm thinking, but only in the long term.  I doubt we're
+ready to go that far yet.  I was thinking more along the lines of just
+getting it uniformly into the core first, maybe even incrementally,
+and only after that moving it around inside the core.
 
-This allows a device to map another's resource, to enable peer-to-peer
-transactions.
+I don't think it would work right now because I think we read device
+BARs before we read the apertures of the upstream bridge.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- drivers/iommu/intel-iommu.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+> We could claim the resources in pcibios_add_device on arm64, but this
+> means arm code should be patched too since I am not happy at all to let
+> arm and arm64 diverge even more.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 68d43be..0f49eff 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3095,6 +3095,15 @@ static dma_addr_t intel_map_page(struct device *dev, struct page *page,
- 				  dir, *dev->dma_mask);
- }
- 
-+static dma_addr_t intel_map_resource(struct device *dev, struct resource *res,
-+				     unsigned long offset, size_t size,
-+				     enum dma_data_direction dir,
-+				     struct dma_attrs *attrs)
-+{
-+	return __intel_map_single(dev, res->start + offset, size,
-+				  dir, *dev->dma_mask);
-+}
-+
- static void flush_unmaps(void)
- {
- 	int i, j;
-@@ -3226,6 +3235,13 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
- 	intel_unmap(dev, dev_addr);
- }
- 
-+static void intel_unmap_resource(struct device *dev, dma_addr_t dev_addr,
-+				 size_t size, enum dma_data_direction dir,
-+				 struct dma_attrs *attrs)
-+{
-+	intel_unmap(dev, dev_addr);
-+}
-+
- static void *intel_alloc_coherent(struct device *dev, size_t size,
- 				  dma_addr_t *dma_handle, gfp_t flags,
- 				  struct dma_attrs *attrs)
-@@ -3382,6 +3398,8 @@ struct dma_map_ops intel_dma_ops = {
- 	.unmap_sg = intel_unmap_sg,
- 	.map_page = intel_map_page,
- 	.unmap_page = intel_unmap_page,
-+	.map_resource = intel_map_resource,
-+	.unmap_resource = intel_unmap_resource,
- 	.mapping_error = intel_mapping_error,
- };
- 
--- 
-2.4.0
+I agree, it'd be nice to have arm and arm64 be similar, but from my
+point of view, they wouldn't have to be changed at the same time.  To
+me, they just look like two different arches.
 
+Bjorn
