@@ -1,83 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:34249 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbbEMG1s convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 02:27:48 -0400
-Received: by iget9 with SMTP id t9so109821512ige.1
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 23:27:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
-	<1431465781-10753-3-git-send-email-hauke@hauke-m.de>
-Date: Wed, 13 May 2015 08:27:47 +0200
-Message-ID: <CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Scott Branden <sbranden@broadcom.com>,
+Received: from foss.arm.com ([217.140.101.70]:33360 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751583AbbELQeR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 May 2015 12:34:17 -0400
+Date: Tue, 12 May 2015 17:34:12 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150512163412.GD16079@red-moon>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com>
+ <20150506141859.GC26028@red-moon>
+ <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
+ <554ADCE0.8020603@amd.com>
+ <20150512133431.GA2898@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150512133431.GA2898@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This driver adds support for the PCIe 2.0 controller found on the bcma
-> bus. This controller can be found on (mostly) all Broadcom BCM470X /
-> BCM5301X ARM SoCs.
->
-> The driver found in the Broadcom SDK does some more stuff, like setting
-> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
-> PHY changes like "improving" the PCIe jitter and doing some special
-> initializations for the 3rd PCIe port.
->
-> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
-> connected to them.
->
-> PCI_DOMAINS is needed by this driver, because normally there is more
-> than one PCIe controller and without PCI_DOMAINS only the first
-> controller gets registered.
-> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Tue, May 12, 2015 at 02:34:31PM +0100, Bjorn Helgaas wrote:
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
+[...]
 
+> > +void pci_claim_one_bus(struct pci_bus *b)
+> > +{
+> > +	struct pci_dev *pdev;
+> > +	struct pci_bus *child_bus;
+> > +
+> > +	list_for_each_entry(pdev, &b->devices, bus_list) {
+> > +		int i;
+> > +
+> > +		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> > +			struct resource *r = &pdev->resource[i];
+> > +
+> > +			if (r->parent || !r->start || !r->flags)
+> > +				continue;
+> > +
+> > +			if (pci_has_flag(PCI_PROBE_ONLY) ||
+> > +			    (r->flags & IORESOURCE_PCI_FIXED)) {
+> > +				if (pci_claim_resource(pdev, i) == 0)
+> > +					continue;
+> > +
+> > +				pci_claim_bridge_resource(pdev, i);
+> > +			}
+> > +		}
+> > +	}
+> > +
+> > +	list_for_each_entry(child_bus, &b->children, node) {
+> > +		pci_claim_one_bus(child_bus);
+> > +	}
+> > +}
+> > +EXPORT_SYMBOL(pci_claim_one_bus);
+> 
+> I'm not a fan of pci_claim_one_bus(), on the philosophical grounds that
+> claiming resources is a per-device thing, and I don't want to encourage
+> people to do it on a per-bus level.
+> 
+> I'd rather claim them somewhere in the pci_device_add() path, as s390 does
+> in pcibios_add_device().  In fact, I'd *like* to do it even earlier, when
+> we read each BAR, so we could identify invalid or unassigned BARs
+> immediately.
 
-> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
-> +{
-> +       struct iproc_pcie *pcie;
-> +       LIST_HEAD(res);
-> +       struct resource res_mem;
-> +       int ret;
-> +
-> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +       if (!pcie)
-> +               return -ENOMEM;
-> +
-> +       pcie->dev = &bdev->dev;
-> +       bcma_set_drvdata(bdev, pcie);
-> +
-> +       pcie->base = bdev->io_addr;
-> +
-> +       res_mem.start = bdev->addr_s[0];
-> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
-> +       res_mem.name = "PCIe MEM space";
-> +       res_mem.flags = IORESOURCE_MEM;
-> +       pci_add_resource(&res, &res_mem);
-> +
-> +       pcie->resources = &res;
-> +
-> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
-> +
-> +       ret = iproc_pcie_setup(pcie);
+You mean claiming the resources in __pci_read_base (and unset the resource
+if claiming it fails ?) regardless of PCI_PROBE_ONLY ?
 
-I think I don't like this part of iproc design. It lefts
-pcie->resources pointing to some random memory after the setup/probe
-are done. Guess it should be a separated parameter or sth.
+I will give it a go, I fear it might trigger regressions on other archs
+though.
 
-The patch is still OK, I just refer to generic iproc possible issue.
+We could claim the resources in pcibios_add_device on arm64, but this
+means arm code should be patched too since I am not happy at all to let
+arm and arm64 diverge even more.
+
+Lorenzo
