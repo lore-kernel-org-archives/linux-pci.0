@@ -1,115 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59826 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934752AbbEORJc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 May 2015 13:09:32 -0400
-Message-ID: <1431709768.11375.15.camel@redhat.com>
-Subject: Re: Crash at vfio_intx_handler for PCI device
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bhushan Bharat <Bharat.Bhushan@freescale.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bansal Ayushi <Ayushi.Bansal@freescale.com>
-Date: Fri, 15 May 2015 11:09:28 -0600
-In-Reply-To: <CY1PR0301MB12761E3A28E4D4F1F72B2EFB90C70@CY1PR0301MB1276.namprd03.prod.outlook.com>
-References: <BY2PR03MB1606C055D54CC65D00DE8EAFBC70@BY2PR03MB160.namprd03.prod.outlook.com>
-	 <CY1PR0301MB12761E3A28E4D4F1F72B2EFB90C70@CY1PR0301MB1276.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42908 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbbELXKH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 19:10:07 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 13 May 2015 09:10:04 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 0E710357804F
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:10:02 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4CN9rnq38142122
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:10:02 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4CN9Sds008231
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:09:29 +1000
+Date: Wed, 13 May 2015 09:09:04 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 6/9] powerpc/powernv: create/release eeh_dev for VF
+Message-ID: <20150512230904.GA6321@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150511024856.GB8816@gwshan>
+ <20150512080643.GC16788@richard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150512080643.GC16788@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-05-15 at 17:00 +0000, Bhushan Bharat wrote:
-> Hi All,
-> 
-> We are direct assigning the intel ixgbe device on Freescale T4240QDS-2 using VFIO. We are getting below crash when running QEMU.
-> When we set the flag 'nointxmask', the issue resolved. 
+On Tue, May 12, 2015 at 04:06:43PM +0800, Wei Yang wrote:
+>On Mon, May 11, 2015 at 12:48:56PM +1000, Gavin Shan wrote:
+>>On Mon, May 04, 2015 at 03:07:35PM +0800, Wei Yang wrote:
+>>
+>>Please order this patch and PATCH[5] because EEH device is expected to
+>>be created before EEH PE.
+>>
+>>>EEH on powerpc platform needs eeh_dev structure to track the pci device
+>>                                                              ^^^
+>>							      PCI
+>>
+>>>status. Since VFs are created/released dynamically, VF's eeh_dev is also
+>>>dynamically created/released in system.
+>>>
+>>>This patch creates/removes eeh_dev when pci_dn is created/removed for VFs,
+>>>and marks it with EEH_DEV_VF type.
+>>>
+>>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>>---
+>>> arch/powerpc/include/asm/eeh.h |    7 +++++++
+>>> arch/powerpc/kernel/eeh.c      |    4 ++++
+>>> arch/powerpc/kernel/eeh_dev.c  |   20 ++++++++++++++++++++
+>>> arch/powerpc/kernel/pci_dn.c   |    7 +++++++
+>>> 4 files changed, 38 insertions(+)
+>>>
+>>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>>index 56e8cd9..2067de4 100644
+>>>--- a/arch/powerpc/include/asm/eeh.h
+>>>+++ b/arch/powerpc/include/asm/eeh.h
+>>>@@ -124,6 +124,7 @@ static inline bool eeh_pe_passed(struct eeh_pe *pe)
+>>> #define EEH_DEV_NO_HANDLER	(1 << 8)	/* No error handler	*/
+>>> #define EEH_DEV_SYSFS		(1 << 9)	/* Sysfs created	*/
+>>> #define EEH_DEV_REMOVED		(1 << 10)	/* Removed permanently	*/
+>>>+#define EEH_DEV_VF		(1 << 11)	/* VF port		*/
+>>>
+>>
+>>Why you need this flag? I guess "edev->physfn" can be used to distinguish
+>>it's a normal or VF eeh_dev.
+>>
+>
+>Just like we have EEH_DEV_BRIDGE and EEH_DEV_DS_PORT, I use the flag
+>EEH_DEV_VF to mark it a VF eeh_dev.
+>
+>
 
-What's the crash?  There's only lspci info below.  PCI INTx masking
-ought to be arch independent, but is it reproducible on x86?  Thanks,
+They're not equal from my point of review. When the VF edev is created
+from VF's pdn, edev->physfn is determined. Furthermore, edev->physfn
+is only meaningful to VF's edev. It's why I think you needn't introduce
+another one flag (EEH_DEV_VF), which is just duplicated to (edev->physfn).
+So I think you can use following condition to check if one edev is created
+from VF's pdn or others:
 
-Alex
+	if (edev->physfn)
+		/* VF's edev */
+	else
+		/* All other cases */
 
-> Here is the info of lspci -vvvxxx for that PCI device:
-> 
-> 0001:01:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
->                 Subsystem: Intel Corporation Ethernet Server Adapter X520-2
->                 Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
->                 Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->                 Latency: 0, Cache Line Size: 32 bytes
->                 Interrupt: pin B routed to IRQ 17
->                 Region 0: Memory at c40100000 (64-bit, non-prefetchable) [size=512K]
->                 Region 2: I/O ports at 1020 [disabled] [size=32]
->                 Region 4: Memory at c40180000 (64-bit, non-prefetchable) [size=16K]
->                 [virtual] Expansion ROM at c40280000 [disabled] [size=512K]
->                 Capabilities: [40] Power Management version 3
->                                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
->                                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
->                 Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
->                                 Address: 0000000000000000  Data: 0000
->                                 Masking: 00000000  Pending: 00000000
->                 Capabilities: [70] MSI-X: Enable+ Count=64 Masked-
->                                 Vector table: BAR=4 offset=00000000
->                                 PBA: BAR=4 offset=00002000
->                 Capabilities: [a0] Express (v2) Endpoint, MSI 00
->                                 DevCap:               MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
->                                                 ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
->                                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->                                                 RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
->                                                 MaxPayload 128 bytes, MaxReadReq 512 bytes
->                                 DevSta:                CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                                 LnkCap:                Port #4, Speed 5GT/s, Width x8, ASPM L0s, Exit Latency L0s <512ns, L1 <4us
->                                                 ClockPM- Surprise- LLActRep- BwNot-
->                                 LnkCtl:  ASPM Disabled; RCB 64 bytes Disabled- CommClk+
->                                                 ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->                                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported
->                                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
->                                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
->                                                 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->                 Capabilities: [e0] Vital Product Data
->                                 Unknown small resource type 00, will not decode more.
->                 Capabilities: [100 v1] Advanced Error Reporting
->                                 UESta:   DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                                 UEMsk:                DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->                                 CESta:   RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
->                                 CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
->                                 AERCap:               First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
->                 Capabilities: [140 v1] Device Serial Number 00-1b-21-ff-ff-89-81-88
->                 Capabilities: [150 v1] Alternative Routing-ID Interpretation (ARI)
->                                 ARICap:                MFVC- ACS-, Next Function: 0
->                                 ARICtl:  MFVC- ACS-, Function Group: 0
->                 Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
->                                 IOVCap:               Migration-, Interrupt Message Number: 000
->                                 IOVCtl:  Enable- Migration- Interrupt- MSE- ARIHierarchy-
->                                 IOVSta: Migration-
->                                 Initial VFs: 64, Total VFs: 64, Number of VFs: 0, Function Dependency Link: 01
->                                 VF offset: 384, stride: 2, Device ID: 10ed
->                                 Supported Page Size: 00000553, System Page Size: 00000001
->                                 Region 0: Memory at 00000000e0500000 (64-bit, non-prefetchable)
->                                 Region 3: Memory at 00000000e0600000 (64-bit, non-prefetchable)
->                                 VF Migration: offset: 00000000, BIR: 0
->                 Kernel driver in use: vfio-pci
-> 00: 86 80 fb 10 06 04 10 00 01 00 00 02 08 00 80 00
-> 10: 04 00 10 e0 00 00 00 00 21 10 00 00 00 00 00 00
-> 20: 04 00 18 e0 00 00 00 00 00 00 00 00 86 80 11 7a
-> 30: 00 00 00 00 40 00 00 00 00 00 00 00 00 02 00 00
-> 40: 01 50 23 48 00 20 00 2b 00 00 00 00 00 00 00 00
-> 50: 05 70 80 01 00 00 00 00 00 00 00 00 00 00 00 00
-> 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 70: 11 a0 3f 80 04 00 00 00 04 20 00 00 00 00 00 00
-> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> a0: 10 e0 02 00 c2 8c 00 10 10 28 00 00 82 34 01 04
-> b0: 40 00 41 10 00 00 00 00 00 00 00 00 00 00 00 00
-> c0: 00 00 00 00 1f 00 00 00 00 00 00 00 00 00 00 00
-> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> e0: 03 00 00 80 00 00 00 00 00 00 00 00 00 00 00 00
-> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 
-> 
-> Thanks
-> -Bharat
+In order to use the above condition, edev->phyfn is initialized to dereference
+the VF's physical function when it's created from VF's pdn in arch/powerpc/kernel/pdn.c.
 
-
+Thanks,
+Gavin
 
