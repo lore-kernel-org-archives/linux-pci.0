@@ -1,46 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:59207 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458AbbEKPNX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 11:13:23 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: y2038@lists.linaro.org
-Cc: Tina Ruchandani <ruchandani.tina@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	linux-pci@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	xen-devel@lists.xenproject.org,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [Y2038] [PATCH] xen/pcifront: Remove usage of struct timeval
-Date: Mon, 11 May 2015 17:13:08 +0200
-Message-ID: <2563996.ZdytTnlWmN@wuerfel>
-In-Reply-To: <20150511024448.GA2836@tinar>
-References: <20150511024448.GA2836@tinar>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51418 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932689AbbELWFX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 18:05:23 -0400
+Message-ID: <55527919.2030206@broadcom.com>
+Date: Tue, 12 May 2015 15:05:13 -0700
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Hauke Mehrtens <hauke@hauke-m.de>, <bhelgaas@google.com>,
+	<arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <sbranden@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>, <zajec5@gmail.com>
+Subject: Re: [PATCH 0/2] PCI: iproc: add bcma PCIe 2.0 controller
+References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 11 May 2015 08:14:48 Tina Ruchandani wrote:
-> struct timeval uses a 32-bit field for representing seconds,
-> which will overflow in the year 2038 and beyond. This patch replaces
-> struct timeval with 64-bit ktime_t which is 2038 safe.
-> The patch is part of a larger effort to remove instances of
-> 32-bit timekeeping variables (timeval, time_t and timespec)
-> from the kernel.
+Hi Hauke,
 
-The patch looks correct to me, just two minor points:
+On 5/12/2015 2:22 PM, Hauke Mehrtens wrote:
+> After Ray submitted the PCIe controller for the iProc devices using 
+> pure device tree this adds support for the devices using bcma to scan 
+> the bus. This should replaces the driver I initially send for inclusion.
+> 
+> @Ray The driver found in the Broadcom SDK does some more stuff:
+> * setting up some DMA memory areas
+> * chaining MPS and MRRS to 512
+> * PHY changes:
+>  * "improving" the PCIe jitter 
+>  * some special initializations for the 3rd PCIe port
+> 
+> For me it works without these additions, but I haven't tested for 
+> performance or stability or 3rd port. Can you check if this is needed 
+> at all for the devices found on the market?
 
-> +       tv = ktime_get_real();
-> +       ns_timeout = ktime_to_ns(tv) + 2 * (s64)NSEC_PER_SEC;
+Good work, Hauke!
 
-* We have a macro for doing this in one line, so you can just use
+I'll eventually get to these. It may take a while but I'll eventually
+get to them.
 
-	ns_timeout = ktime_get_real_ns() + 2 * (s64)NSEC_PER_SEC;
+Thanks,
 
-* As the time is not stored anywhere and only used in a local function,
-  using monotonic time instead of real time would slightly more appropriate,
-  the only difference being the handling of a concurrent settimeofday()
-  system call. That means calling ktime_get_ns() instead of ktime_get_real_ns().
-
-	Arnd
+Ray
