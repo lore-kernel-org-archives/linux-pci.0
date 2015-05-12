@@ -1,89 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <555F5885.70105@mm-sol.com>
-Date: Fri, 22 May 2015 19:25:41 +0300
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:57529 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751337AbbELAFv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 20:05:51 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 12 May 2015 10:05:49 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 3B6952CE804E
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 10:05:47 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C05dVu31326318
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 10:05:47 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C05EKb005881
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 10:05:14 +1000
+Date: Tue, 12 May 2015 10:04:49 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Subject: Re: [PATCH v4 10/21] powerpc/powernv: Fundamental reset for PCI bus
+ reset
+Message-ID: <20150512000449.GD4646@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-11-git-send-email-gwshan@linux.vnet.ibm.com>
+ <554E15C2.40506@ozlabs.ru>
+ <20150511064720.GB8241@gwshan>
+ <55505796.5030904@ozlabs.ru>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com> <554783CD.50708@ti.com> <55478F1A.3000401@mm-sol.com> <20150519224143.GS31666@google.com> <555C8743.6020708@ti.com> <CAErSpo42N8YHWjrqUCj0ubqZLt4w-3g=ykPdR8ZMmWaW1GjWDw@mail.gmail.com>
-In-Reply-To: <CAErSpo42N8YHWjrqUCj0ubqZLt4w-3g=ykPdR8ZMmWaW1GjWDw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55505796.5030904@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/20/2015 04:23 PM, Bjorn Helgaas wrote:
-> On Wed, May 20, 2015 at 8:08 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> Hi Bjorn,
->>
->>
->> On Wednesday 20 May 2015 04:11 AM, Bjorn Helgaas wrote:
->>>
->>> On Mon, May 04, 2015 at 06:24:10PM +0300, Stanimir Varbanov wrote:
+On Mon, May 11, 2015 at 05:17:42PM +1000, Alexey Kardashevskiy wrote:
+>On 05/11/2015 04:47 PM, Gavin Shan wrote:
+>>On Sun, May 10, 2015 at 12:12:18AM +1000, Alexey Kardashevskiy wrote:
+>>>On 05/01/2015 04:02 PM, Gavin Shan wrote:
+>>>>Function pnv_pci_reset_secondary_bus() is used to reset specified
+>>>>PCI bus, which is leaded by root complex or PCI bridge. That means
+>>>>the function shouldn't be called on PCI root bus and the patch
+>>>>removes the logic for that case.
 >>>>
->>>> On 05/04/2015 05:35 PM, Kishon Vijay Abraham I wrote:
->>>>>
->>>>> Hi,
->>>>>
->>>>> On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
->>>>>>
->>>>>> Add a PCIe PHY driver used by PCIe host controller driver
->>>>>> on Qualcomm SoCs like Snapdragon 805.
->>>>>>
->>>>>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
->>>>>> ---
->>>>>>    drivers/phy/Kconfig         |    9 ++
->>>>>>    drivers/phy/Makefile        |    1 +
->>>>>>    drivers/phy/phy-qcom-pcie.c |  291
->>>>>> +++++++++++++++++++++++++++++++++++++++++++
->>>>>
->>>>>
->>>>> Why do you need a new PHY driver for this? Why not use the existing QCOM
->>>>> PHY driver. I can see the registers used here in
->>>>> phy-qcom-ufs-qmp-14nm.h?
+>>>>Also, some adapters beneath the indicated PCI bus may require
+>>>>fundamental reset in order to successfully reload their firmwares
+>>>>after the reset. The patch translates hot reset to fundamental reset
+>>>>for that case.
 >>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
+>>>>  1 file changed, 26 insertions(+), 9 deletions(-)
 >>>>
->>>> I agree that on first glance there are similarities, but I'm not sure
->>>> does the PHYs are the same IP blocks. Or at least they are different
->>>> revisions which have too many differences. So trying to combine them
->>>> will lead to more code than now.
+>>>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>index 3c01095..58e4dcf 100644
+>>>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>>>@@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>>>  	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
+>>>>  }
 >>>>
->>>> Either way I will try to understand how many the differences are.
+>>>>-void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
 >>>
 >>>
->>> Ping, where are we with this?  Should I wait for something else, or are
->>> you
->>> convinced there's enough difference to warrant a new PHY driver, Kishon?
+>>>Why changing dev to pdev? Keeping "dev" could make the patch simpler.
+>>>
 >>
->>
->> I'd like to wait to see if Stanimir can use existing driver instead of
->> creating a new driver.
-> 
-> OK, I'm waiting for a v3 with either tweaks to the QCOM PHY driver, or
-> stronger justification as to why that's impossible.  It's hard to
-> quantify statements like "there are similarities, but there are too
-> many differences," so you might have to actually attempt a patch for
-> the QCOM code and we can see how ugly that would turn out to be.
+>>In the early stage when I wrote the EEH code, I had "dev" to refer PCI
+>>device, which isn't precisely enough. Actually, "dev" means "struct device"
+>>while "pdev" stands for "struct pci_dev". That's why I changed it.
+>
+>
+>The rest of the file and the kernel overall use "dev" for pci_dev just fine.
+>I would not bother.
+>
 
-Kishon,
+Ok. I'll keep it.
 
-I'm still checking the differences, sorry for the delay.
+>>>>+static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+>>>>  {
+>>>>-	struct pci_controller *hose;
+>>>>+	int *freset = data;
+>>>>
+>>>>-	if (pci_is_root_bus(dev->bus)) {
+>>>>-		hose = pci_bus_to_host(dev->bus);
+>>>>-		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
+>>>>-		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
+>>>>-	} else {
+>>>>-		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+>>>>-		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+>>>>+	/*
+>>>>+	 * Stop the iteration immediately if there is any
+>>>>+	 * one PCI device requesting fundamental reset
+>>>>+	 */
+>>>>+	*freset |= pdev->needs_freset;
+>>>>+	return *freset;
+>>>>+}
+>>>>+
+>>>>+void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
+>>>>+{
+>>>>+	int option = EEH_RESET_HOT;
+>>>>+	int freset = 0;
+>>>>+
+>>>>+	/* Check if there're any PCI devices asking for fundamental reset */
+>>>>+	if (pdev->subordinate) {
+>>>>+		pci_walk_bus(pdev->subordinate,
+>>>>+			     pnv_pci_dev_reset_type,
+>>>>+			     &freset);
+>>>>+		if (freset)
+>>>>+			option = EEH_RESET_FUNDAMENTAL;
+>>>>  	}
+>>>>+
+>>>>+	/* Issue the requested type of reset */
+>>>>+	pnv_eeh_bridge_reset(pdev, option);
+>>>>+	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
+>>>>  }
+>>>>
+>>>>  /**
+>>>>
 
-Bjorn, is the pcie driver looks good enough to be merged?
+Thanks,
+Gavin
 
--- 
-regards,
-Stan
