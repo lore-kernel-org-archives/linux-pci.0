@@ -1,41 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lb1-smtp-cloud6.xs4all.net ([194.109.24.24]:58981 "EHLO
-	lb1-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751569AbbEUJC3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 05:02:29 -0400
-Message-ID: <1432198946.21715.141.camel@x220>
-Subject: Re: [PATCH 07/16] NTB Tool Client
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Allen Hubbe <Allen.Hubbe@emc.com>
-Cc: linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>
-Date: Thu, 21 May 2015 11:02:26 +0200
-In-Reply-To: <6d1c7067f7af16088849a628a5227b2d19085098.1432135632.git.Allen.Hubbe@emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-	 <6d1c7067f7af16088849a628a5227b2d19085098.1432135632.git.Allen.Hubbe@emc.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:49022 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136AbbELJBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 May 2015 05:01:49 -0400
+Date: Tue, 12 May 2015 17:00:53 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 09/10] iommu/vt-d: Copy functions for irte
+Message-ID: <20150512090053.GH4561@localhost.localdomain>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1431337974-545-10-git-send-email-zhen-hual@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431337974-545-10-git-send-email-zhen-hual@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-05-20 at 11:41 -0400, Allen Hubbe wrote:
-> --- a/drivers/ntb/test/Kconfig
-> +++ b/drivers/ntb/test/Kconfig
-> +config NTB_TOOL
-> +       tristate "NTB Debugging Tool Client"
-> +       depends on NTB
+On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
+> Functions to copy the irte data from the old kernel into the kdump kernel.
 
-Same nit as for 2/16 and 7/16.
+Use above line as subject is better, if irte means interrupt remappin table
+entry then descripbe it then I like the long format in subject line.
 
-> +       help
+Also it need a better patch description about why do we need this, and what
+has been added in this patch.
 
-> +        If unsure, say N.
-
-(Please start the indentation with a tab, and not with spaces.)
-
-Thanks,
-
-
-Paul Bolle
-
+> 
+> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+> ---
+>  drivers/iommu/intel_irq_remapping.c | 68 +++++++++++++++++++++++++++++++++++++
+>  include/linux/intel-iommu.h         |  4 +++
+>  2 files changed, 72 insertions(+)
+> 
+> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+> index 5709ae9..c2a4406 100644
+> --- a/drivers/iommu/intel_irq_remapping.c
+> +++ b/drivers/iommu/intel_irq_remapping.c
+> @@ -17,6 +17,10 @@
+>  
+>  #include "irq_remapping.h"
+>  
+> +static int __iommu_load_old_irte(struct intel_iommu *iommu);
+> +static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
+> +static void iommu_check_pre_ir_status(struct intel_iommu *iommu);
+> +
+>  struct ioapic_scope {
+>  	struct intel_iommu *iommu;
+>  	unsigned int id;
+> @@ -1299,3 +1303,67 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
+>  
+>  	return ret;
+>  }
+> +
+> +static int __iommu_load_old_irte(struct intel_iommu *iommu)
+> +{
+> +	if ((!iommu)
+> +		|| (!iommu->ir_table)
+> +		|| (!iommu->ir_table->base)
+> +		|| (!iommu->ir_table->base_old_phys)
+> +		|| (!iommu->ir_table->base_old_virt))
+> +		return -1;
+> +
+> +	memcpy(iommu->ir_table->base,
+> +		iommu->ir_table->base_old_virt,
+> +		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
+> +
+> +	__iommu_flush_cache(iommu, iommu->ir_table->base,
+> +		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
+> +
+> +	return 0;
+> +}
+> +
+> +static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
+> +{
+> +	int start;
+> +	unsigned long size;
+> +	void __iomem *to;
+> +	void *from;
+> +
+> +	if ((!iommu)
+> +		|| (!iommu->ir_table)
+> +		|| (!iommu->ir_table->base)
+> +		|| (!iommu->ir_table->base_old_phys)
+> +		|| (!iommu->ir_table->base_old_virt))
+> +		return -1;
+> +
+> +	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
+> +		return -1;
+> +
+> +	if (index == -1) {
+> +		start = 0;
+> +		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
+> +	} else {
+> +		start = index * sizeof(struct irte);
+> +		size = sizeof(struct irte);
+> +	}
+> +
+> +	to = iommu->ir_table->base_old_virt;
+> +	from = iommu->ir_table->base;
+> +	memcpy(to + start, from + start, size);
+> +
+> +	__iommu_flush_cache(iommu, to + start, size);
+> +
+> +	return 0;
+> +}
+> +
+> +static void iommu_check_pre_ir_status(struct intel_iommu *iommu)
+> +{
+> +	u32 sts;
+> +
+> +	sts = readl(iommu->reg + DMAR_GSTS_REG);
+> +	if (sts & DMA_GSTS_IRES) {
+> +		pr_info("IR is enabled prior to OS.\n");
+> +		iommu->pre_enabled_ir = 1;
+> +	}
+> +}
+> diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+> index 90e122e..d7a0b5d 100644
+> --- a/include/linux/intel-iommu.h
+> +++ b/include/linux/intel-iommu.h
+> @@ -301,6 +301,8 @@ struct q_inval {
+>  struct ir_table {
+>  	struct irte *base;
+>  	unsigned long *bitmap;
+> +	void __iomem *base_old_virt;
+> +	unsigned long base_old_phys;
+>  };
+>  #endif
+>  
+> @@ -342,6 +344,8 @@ struct intel_iommu {
+>  
+>  	/* whether translation is enabled prior to OS*/
+>  	u8		pre_enabled_trans;
+> +	/* whether interrupt remapping is enabled prior to OS*/
+> +	u8		pre_enabled_ir;
+>  
+>  	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
+>  	unsigned long	root_entry_old_phys; /* root entry in old kernel */
+> -- 
+> 2.0.0-rc0
+> 
