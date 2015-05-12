@@ -1,59 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36005 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754577AbbE1WWg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 May 2015 18:22:36 -0400
-Message-ID: <1432851590.4526.4.camel@kernel.crashing.org>
-Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not
- modular
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	linux-sh@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Date: Thu, 28 May 2015 17:19:50 -0500
-In-Reply-To: <CAE9FiQWDsQxKK3m4_-dSXm8V3xNc4oOtg2UQi=aayeKhLutwQg@mail.gmail.com>
-References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
-	 <CAE9FiQXq59tSBM0SQ4OToXydZrRC3yukALmWEb6K9xpCGbdUhg@mail.gmail.com>
-	 <20150527193149.GD10210@google.com> <4269355.CI4MW738Od@vostro.rjw.lan>
-	 <CAE9FiQWDsQxKK3m4_-dSXm8V3xNc4oOtg2UQi=aayeKhLutwQg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 12 May 2015 14:41:10 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
+	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+Message-ID: <20150512064110.GE29874@localhost.localdomain>
+References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
+ <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+ <20150504110551.GD15736@8bytes.org>
+ <20150507135600.GB4559@localhost.localdomain>
+ <20150511101124.GG20611@8bytes.org>
+ <20150512055707.GB29874@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150512055707.GB29874@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-05-28 at 15:08 -0700, Yinghai Lu wrote:
-> On Wed, May 27, 2015 at 6:30 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Wednesday, May 27, 2015 02:31:49 PM Bjorn Helgaas wrote:
-> > For debug you can always use pcie_ports=compat and that will disable
-> > pciehp too.
+On 05/12/15 at 01:57pm, Dave Young wrote:
+> On 05/11/15 at 12:11pm, Joerg Roedel wrote:
+> > On Thu, May 07, 2015 at 09:56:00PM +0800, Dave Young wrote:
+> > > Joreg, I can not find the last reply from you, so just reply here about
+> > > my worries here.
+> > > 
+> > > I said that the patchset will cause more problems, let me explain about
+> > > it more here:
+> > > 
+> > > Suppose page table was corrupted, ie. original mapping iova1 -> page 1
+> > > it was changed to iova1 -> page 2 accidently while crash happening,
+> > > thus future dma will read/write page 2 instead page 1, right?
+> > 
+> > When the page-table is corrupted then it is a left-over from the old
+> > kernel. When the kdump kernel boots the situation can at least not get
+> > worse. For the page tables it is also hard to detect wrong mappings (if
+> > this would be possible the hardware could already do it), so any checks
+> > we could do there are of limited use anyway.
 > 
-> That will disable AER at the same time, right?.
+> Joerg, since both of you guys do not think it is a problem I will object it 
 
-For ppc machines under either our hypervisor or running bare metal with
-our EEH-enabled bridges, both generic AER and hotplug code are going to
-interfere.
+s/will object/will not object
 
-EEH "subsumes" AER, and we have firmware interfaces to do hotplug that
-know more than what the generic code can know about (such as on-board
-GPIOs that can control PERST, it's not always via the hotplug registers
-or hotplug from top-level slots which isn't the same as hotplug from
-switch slots on our platforms).
-
-So basically, at this point, we must not have the PCIe port drivers at
-all, just just interfere.
-
-We should replace that with the appropriate "hooks" for the platform to
-disable selected functions (hotplug and AER) from the generic port
-drivers.
-
-Cheers,
-Ben.
-
-
+> any more though I still do not like reusing the old page tables. So let's
+> leave it as a future issue.
+> 
+> Thanks
+> Dave
