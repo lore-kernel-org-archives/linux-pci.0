@@ -1,71 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:65447 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbbE0N5x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 09:57:53 -0400
-Message-ID: <5565CD0B.6020206@hisilicon.com>
-Date: Wed, 27 May 2015 21:56:27 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 12 May 2015 14:18:52 +0800
+From: Baoquan He <bhe@redhat.com>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150512061852.GA10229@dhcp-16-116.nay.redhat.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Jingoo Han <jingoohan1@gmail.com>, <zhudacai@hisilicon.com>,
-	<devicetree@vger.kernel.org>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
-	<linux-pci@vger.kernel.org>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Liviu Dudau'" <liviu.dudau@arm.com>,
-	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	<qiuzhenfa@hisilicon.com>, "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
-	"'Liguozhu'" <liguozhu@hisilicon.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"'Lucas Stach'" <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-References: <000001d096a9$27bf43f0$773dcbd0$@com> <5563451B.4050609@st.com> <5563DF4F.4080601@hisilicon.com> <3340422.95mKZ6cYUI@wuerfel>
-In-Reply-To: <3340422.95mKZ6cYUI@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/26 16:02, Arnd Bergmann wrote:
-> On Tuesday 26 May 2015 10:49:51 Zhou Wang wrote:
->>
->> I am a little confused that pci_sys_data is still needed as we don't use the code
->> in bios32. What was the problem you met? Could you share me more information? Then
->> let's see how to solve the problem.
->>
-> 
-> The PCI core code still calls pcibios_align_resource(), which will try to
-> use the dev->sysdata pointer as 'struct pci_sys_data'. To solve this, we
+On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
+> This patchset is an update of Bill Sumner's patchset, implements a fix for:
+> If a kernel boots with intel_iommu=on on a system that supports intel vt-d, 
+> when a panic happens, the kdump kernel will boot with these faults:
 
-Thanks for reminding.
-
-> need to change the pci-mvebu driver and the core code first to let the
-
-It seams that only pci-mvebu implemented align_resource callback in ARM ?
-
-> driver override pcibios_align_resource() through an operation in 
-> struct pci_host_bridge.
-> 
-> The other remaining use of dev->sysdata is the ARM pcibios_msi_controller()
-> function that overrides the generic implementation.  To solve this, we need
-> to change the five remaining drivers that set hw_pci->msi_ctrl to use
-> the new generic method, and remove the ARM specific implementation.
-
-Yes, that is better if we can do like this. But for pcie-designware, can we
-just set bus->msi = &dw_pcie_msi_chip and get msi controller using dev->bus->msi
-in pci_msi_controller()?
-
-Best Regards,
-Zhou
+Test passed on my local workstation. Thanks, Zhenhua.
 
 > 
-> 	Arnd
+>     dmar: DRHD: handling fault status reg 102
+>     dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
+>     DMAR:[fault reason 01] Present bit in root entry is clear
 > 
-> .
-> 
-
-
+>     dmar: DRHD: handling fault status reg 2
+>     dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
+>     INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
