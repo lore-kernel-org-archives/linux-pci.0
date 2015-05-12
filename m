@@ -1,153 +1,340 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:35401 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbbEIOaO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 May 2015 10:30:14 -0400
-Received: by pdbqd1 with SMTP id qd1so110811377pdb.2
-        for <linux-pci@vger.kernel.org>; Sat, 09 May 2015 07:30:13 -0700 (PDT)
-Message-ID: <554E19EF.1070903@ozlabs.ru>
-Date: Sun, 10 May 2015 00:30:07 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:57514 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbbELB0V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 21:26:21 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 12 May 2015 11:26:19 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 74CB22CE8054
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:26:15 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C1Q79t27918474
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:26:15 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C1PfOB010747
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:25:42 +1000
+Date: Tue, 12 May 2015 11:25:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com
+Subject: Re: [PATCH v4 07/21] powerpc/powernv: Release PEs dynamically
+Message-ID: <20150512012517.GA31859@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-8-git-send-email-gwshan@linux.vnet.ibm.com>
+ <554E00EB.5070802@ozlabs.ru>
+ <20150511062553.GB28073@gwshan>
+ <555053F0.1000409@ozlabs.ru>
+ <20150512000308.GC4646@gwshan>
+ <55514F09.4040100@ozlabs.ru>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-CC: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v4 13/21] powerpc/powernv: Introduce pnv_pci_poll()
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-14-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-14-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55514F09.4040100@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2015 04:03 PM, Gavin Shan wrote:
-> We might not get some PCI slot information (e.g. power status)
-> immediately by OPAL API. Instead, opal_pci_poll() need to be called
-> for the required information.
+On Tue, May 12, 2015 at 10:53:29AM +1000, Alexey Kardashevskiy wrote:
+>On 05/12/2015 10:03 AM, Gavin Shan wrote:
+>>On Mon, May 11, 2015 at 05:02:08PM +1000, Alexey Kardashevskiy wrote:
+>>>On 05/11/2015 04:25 PM, Gavin Shan wrote:
+>>>>On Sat, May 09, 2015 at 10:43:23PM +1000, Alexey Kardashevskiy wrote:
+>>>>>On 05/01/2015 04:02 PM, Gavin Shan wrote:
+>>>>>>The original code doesn't support releasing PEs dynamically, meaning
+>>>>>>that PE and the associated resources (IO, M32, M64 and DMA) can't
+>>>>>>be released when unplugging a PCI adapter from one hotpluggable slot.
+>>>>>>
+>>>>>>The patch takes object oriented methodology, introducs reference
+>>>>>>count to PE, which is initialized to 1 and increased with 1 when a
+>>>>>>new PCI device joins the PE. Once the last PCI device leaves the
+>>>>>>PE, the PE is going to be release together with its associated
+>>>>>>(IO, M32, M64, DMA) resources.
+>>>>>
+>>>>>
+>>>>>Too little commit log for non-trivial non-cut-n-paste 30KB patch...
+>>>>>
+>>>>
+>>>>Ok. I'll add more details in next revision.
+>>>>
+>>>>>>
+>>>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>>>---
+>>>>>>  arch/powerpc/include/asm/pci-bridge.h     |   3 +
+>>>>>>  arch/powerpc/kernel/pci-hotplug.c         |   5 +
+>>>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 658 +++++++++++++++++++-----------
+>>>>>>  arch/powerpc/platforms/powernv/pci.h      |   4 +-
+>>>>>>  4 files changed, 432 insertions(+), 238 deletions(-)
+>>>>>>
+>>>>>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>>>>>>index 5367eb3..a6ad4b1 100644
+>>>>>>--- a/arch/powerpc/include/asm/pci-bridge.h
+>>>>>>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>>>>>>@@ -31,6 +31,9 @@ struct pci_controller_ops {
+>>>>>>  	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
+>>>>>>  	void		(*setup_bridge)(struct pci_bus *, unsigned long);
+>>>>>>  	void		(*reset_secondary_bus)(struct pci_dev *dev);
+>>>>>>+
+>>>>>>+	/* Called when PCI device is released */
+>>>>>>+	void		(*release_device)(struct pci_dev *);
+>>>>>>  };
+>>>>>>
+>>>>>>  /*
+>>>>>>diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+>>>>>>index 7ed85a6..0040343 100644
+>>>>>>--- a/arch/powerpc/kernel/pci-hotplug.c
+>>>>>>+++ b/arch/powerpc/kernel/pci-hotplug.c
+>>>>>>@@ -29,6 +29,11 @@
+>>>>>>   */
+>>>>>>  void pcibios_release_device(struct pci_dev *dev)
+>>>>>>  {
+>>>>>>+	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+>>>>>>+
+>>>>>>+	if (hose->controller_ops.release_device)
+>>>>>>+		hose->controller_ops.release_device(dev);
+>>>>>>+
+>>>>>>  	eeh_remove_device(dev);
+>>>>>>  }
+>>>>>>
+>>>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>>>index 910fb67..ef8c216 100644
+>>>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>>>@@ -12,6 +12,8 @@
+>>>>>>  #undef DEBUG
+>>>>>>
+>>>>>>  #include <linux/kernel.h>
+>>>>>>+#include <linux/atomic.h>
+>>>>>>+#include <linux/kref.h>
+>>>>>>  #include <linux/pci.h>
+>>>>>>  #include <linux/crash_dump.h>
+>>>>>>  #include <linux/debugfs.h>
+>>>>>>@@ -47,6 +49,8 @@
+>>>>>>  /* 256M DMA window, 4K TCE pages, 8 bytes TCE */
+>>>>>>  #define TCE32_TABLE_SIZE	((0x10000000 / 0x1000) * 8)
+>>>>>>
+>>>>>>+static void pnv_ioda_release_pe(struct kref *kref);
+>>>>>>+
+>>>>>>  static void pe_level_printk(const struct pnv_ioda_pe *pe, const char *level,
+>>>>>>  			    const char *fmt, ...)
+>>>>>>  {
+>>>>>>@@ -123,25 +127,400 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>>>>>>  		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>>>>>>  }
+>>>>>>
+>>>>>>-static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>>>>+static inline void pnv_ioda_pe_get(struct pnv_ioda_pe *pe)
+>>>>>>  {
+>>>>>>-	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
+>>>>>>-		pr_warn("%s: Invalid PE %d on PHB#%x\n",
+>>>>>>-			__func__, pe_no, phb->hose->global_number);
+>>>>>>+	if (!pe)
+>>>>>>+		return;
+>>>>>>+
+>>>>>>+	kref_get(&pe->kref);
+>>>>>>+}
+>>>>>>+
+>>>>>>+static inline void pnv_ioda_pe_put(struct pnv_ioda_pe *pe)
+>>>>>>+{
+>>>>>>+	unsigned int count;
+>>>>>>+
+>>>>>>+	if (!pe)
+>>>>>>  		return;
+>>>>>>+
+>>>>>>+	/*
+>>>>>>+	 * The count is initialized to 1 and increased with 1 when
+>>>>>>+	 * a new PCI device is bound with the PE. Once the last PCI
+>>>>>>+	 * device is leaving from the PE, the PE is going to be
+>>>>>>+	 * released.
+>>>>>>+	 */
+>>>>>>+	count = atomic_read(&pe->kref.refcount);
+>>>>>>+	if (count == 2)
+>>>>>>+		kref_sub(&pe->kref, 2, pnv_ioda_release_pe);
+>>>>>>+	else
+>>>>>>+		kref_put(&pe->kref, pnv_ioda_release_pe);
+>>>>>
+>>>>>
+>>>>>What if pnv_ioda_pe_get() gets called between atomic_read() and kref_sub()?
+>>>>>
+>>>>
+>>>>Yeah, that would have problem. But it shouldn't happen because the
+>>>>PCI devices are joining the parent PE# in strictly serialized mode.
+>>>>Same thing happens when detaching PCI devices from its parent PE.
+>>>
+>>>
+>>>oookay. Another thing then - why is this kref counter initialized to 1?
+>>>It would make sense if you did something special when the counter becomes 1
+>>>after decrement but you do not.
+>>>
+>>>Also, this kref thing makes sense if you do kref_put() in multiple places and
+>>>do not know which one will be the last one so you pass the callback to all of
+>>>them. Here you do kref_put/sub in one place and you read the counter - so you
+>>>can call pnv_ioda_release_pe() directly. And it feels like a simple atomic_t
+>>>would do the job just fine. If you still feel that the counter should start
+>>>from 1, there are atomic_dec_if_positive() and atomic_inc_not_zero() and
+>>>others.
+>>>
+>>
+>>It's good question actually. The counter is initialized to 1 when the PE
+>>is reserved because of M64 requirement or allocated for non-M64 case. If
+>>we reserve or allocate PE#, there is one thing for sure: the PCI bus has
+>>one PCI device (including PCI bridge) at least. After the PE# is reserved
+>>or allocated, the PCI device joins the PE with the result of increasing
+>>the counter with 1. It means the counter is 2 when PE contains one PCI
+>>device, and 3 when there're 2 devices. One reason for this design is that
+>>we just need decrease the counter if we have to release this PE in the
+>>window between PE reservation/allocation and first PCI device joins. I
+>>think you're correct that we can call pnv_ioda_release_pe() in this window.
+>>In this way, the counter is always reflecting the number of PCI devices
+>>the PE contains.
 >
-> The patch introduces pnv_pci_poll(), which bases on original
-> pnv_eeh_poll(), to cover the above case
 >
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/eeh-powernv.c | 28 ++--------------------------
->   arch/powerpc/platforms/powernv/pci.c         | 16 ++++++++++++++++
->   arch/powerpc/platforms/powernv/pci.h         |  1 +
->   3 files changed, 19 insertions(+), 26 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index 58e4dcf..9253b9e 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -742,24 +742,6 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
->   	return ret;
->   }
->
-> -static s64 pnv_eeh_poll(uint64_t id)
-> -{
-> -	s64 rc = OPAL_HARDWARE;
-> -
-> -	while (1) {
-> -		rc = opal_pci_poll(id, NULL);
-> -		if (rc <= 0)
-> -			break;
-> -
-> -		if (system_state < SYSTEM_RUNNING)
-> -			udelay(1000 * rc);
-> -		else
-> -			msleep(rc);
-> -	}
-> -
-> -	return rc;
-> -}
-> -
->   int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
->   {
->   	struct pnv_phb *phb = hose->private_data;
-> @@ -788,10 +770,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
->
->   	/* Issue reset and poll until it's completed */
->   	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
-> -	if (rc > 0)
-> -		rc = pnv_eeh_poll(phb->opal_id);
-> -
-> -	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-> +	return pnv_pci_poll(phb->opal_id, rc, NULL);
-
-
-You are carrying a negative value to the new helper too? Looks complicated.
-
-Also, before you only cared if opal_pci_reset() returned negative value, 
-now you treat it as a timeout, is it new change to OPAL or it has always 
-been there?
-
-
->   }
->
->   static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-> @@ -882,10 +861,7 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   	phb = hose->private_data;
->   	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
->   	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-> -	if (rc > 0)
-> -		rc = pnv_eeh_poll(id);
-> -
-> -	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-> +	return pnv_pci_poll(id, rc, NULL);
->   }
->
->   static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
-> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-> index bca2aeb..a2da9a3 100644
-> --- a/arch/powerpc/platforms/powernv/pci.c
-> +++ b/arch/powerpc/platforms/powernv/pci.c
-> @@ -44,6 +44,22 @@
->   #define cfg_dbg(fmt...)	do { } while(0)
->   //#define cfg_dbg(fmt...)	printk(fmt)
->
-> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval)
-> +{
-> +	while (rval > 0) {
-> +		if (system_state < SYSTEM_RUNNING)
-> +			udelay(1000 * rval);
-> +		else
-> +			msleep(rval);
-
-Are these delays the once removed by "PATCH v4 09/21] powerpc/powernv: Use 
-PCI slot reset infrastructure"? If so, I would merge this patch into 09/24 
-or move this one before that one, for bisect'ability.
-
-
-> +
-> +		rval = opal_pci_poll(id, pval);
-> +		if (rval == OPAL_SUCCESS && pval)
-> +			rval = opal_pci_poll(id, pval);
-
-Why calling it twice?
-
-
-> +	}
-> +
-> +	return rval ? -EIO : 0;
-> +}
-> +
->   #ifdef CONFIG_PCI_MSI
->   static int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
->   {
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 8b10f01..82c5539 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -202,6 +202,7 @@ struct pnv_phb {
->
->   extern struct pci_ops pnv_pci_ops;
->
-> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *pval);
->   void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
->   				unsigned char *log_buff);
->   int pnv_pci_cfg_read(struct pci_dn *pdn,
+>Good :) I believe it was something different 2-3 versions ago and evolved to
+>this so you do not notice it straight away :)
 >
 
+Thanks :)
 
--- 
-Alexey
+>>
+>>>>>>+}
+>>>>>>+
+>>>>>>+static void pnv_pci_release_device(struct pci_dev *pdev)
+>>>>>>+{
+>>>>>>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+>>>>>>+	struct pnv_phb *phb = hose->private_data;
+>>>>>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>>>>>>+	struct pnv_ioda_pe *pe;
+>>>>>>+
+>>>>>>+	if (pdn && pdn->pe_number != IODA_INVALID_PE) {
+>>>>>>+		pe = &phb->ioda.pe_array[pdn->pe_number];
+>>>>>>+		pnv_ioda_pe_put(pe);
+>>>>>>+		pdn->pe_number = IODA_INVALID_PE;
+>>>>>>  	}
+>>>>>>+}
+>>>>>>
+>>>>>>-	if (test_and_set_bit(pe_no, phb->ioda.pe_alloc)) {
+>>>>>>-		pr_warn("%s: PE %d was assigned on PHB#%x\n",
+>>>>>>-			__func__, pe_no, phb->hose->global_number);
+>>>>>>+static void pnv_ioda_release_pe_dma(struct pnv_ioda_pe *pe)
+>>>>>>+{
+>>>>>>+	struct pnv_phb *phb = pe->phb;
+>>>>>>+	int index, count;
+>>>>>>+	unsigned long tbl_addr, tbl_size;
+>>>>>>+
+>>>>>>+	/* No DMA capability for slave PEs */
+>>>>>>+	if (pe->flags & PNV_IODA_PE_SLAVE)
+>>>>>>+		return;
+>>>>>>+
+>>>>>>+	/* Bypass DMA window */
+>>>>>>+	if (phb->type == PNV_PHB_IODA2 &&
+>>>>>>+	    pe->tce_bypass_enabled &&
+>>>>>>+	    pe->tce32_table &&
+>>>>>>+	    pe->tce32_table->set_bypass)
+>>>>>>+		pe->tce32_table->set_bypass(pe->tce32_table, false);
+>>>>>>+
+>>>>>>+	/* 32-bits DMA window */
+>>>>>>+	count = pe->tce32_seg_end - pe->tce32_seg_start;
+>>>>>>+	tbl_addr = pe->tce32_table->it_base;
+>>>>>>+	if (!count)
+>>>>>>  		return;
+>>>>>>+
+>>>>>>+	/* Free IOMMU table */
+>>>>>>+	iommu_free_table(pe->tce32_table,
+>>>>>>+			 of_node_full_name(phb->hose->dn));
+>>>>>>+
+>>>>>>+	/* Deconfigure TCE table */
+>>>>>>+	switch (phb->type) {
+>>>>>>+	case PNV_PHB_IODA1:
+>>>>>>+		for (index = 0; index < count; index++)
+>>>>>>+			opal_pci_map_pe_dma_window(phb->opal_id,
+>>>>>>+						   pe->pe_number,
+>>>>>>+						   pe->tce32_seg_start + index,
+>>>>>>+						   1,
+>>>>>>+						   __pa(tbl_addr) +
+>>>>>>+						   index * TCE32_TABLE_SIZE,
+>>>>>>+						   0,
+>>>>>>+						   0x1000);
+>>>>>>+		bitmap_clear(phb->ioda.tce32_segmap,
+>>>>>>+			     pe->tce32_seg_start,
+>>>>>>+			     count);
+>>>>>>+		tbl_size = TCE32_TABLE_SIZE * count;
+>>>>>>+		break;
+>>>>>>+	case PNV_PHB_IODA2:
+>>>>>>+		opal_pci_map_pe_dma_window(phb->opal_id,
+>>>>>>+					   pe->pe_number,
+>>>>>>+					   pe->pe_number << 1,
+>>>>>>+					   1,
+>>>>>>+					   __pa(tbl_addr),
+>>>>>>+					   0,
+>>>>>>+					   0x1000);
+>>>>>>+		tbl_size = (1ul << ilog2(phb->ioda.m32_pci_base));
+>>>>>>+		tbl_size = (tbl_size >> IOMMU_PAGE_SHIFT_4K) * 8;
+>>>>>>+		break;
+>>>>>>+	default:
+>>>>>>+		pe_warn(pe, "Unsupported PHB type %d\n", phb->type);
+>>>>>>+		return;
+>>>>>>+	}
+>>>>>>+
+>>>>>>+	/* Free memory of IOMMU table */
+>>>>>>+	free_pages(tbl_addr, get_order(tbl_size));
+>>>>>
+>>>>>
+>>>>>You just programmed the table address to TVT and then you are releasing the
+>>>>>pages. It does not seem right, it will leave garbage in TVT. Also, I am
+>>>>>adding helpers to alloc/free TCE pages in DDW patchset, you could reuse bits
+>>>>>from there (I'll post v10 soon, you'll be in copy and you'll have to review
+>>>>>that ;) ).
+>>>>>
+>>>>
+>>>>I assume you're talking about TVE. I don't understand how garbage will be left
+>>>>in TVE. opal_pci_map_pe_dma_window(), which is handled by skiboot, clear TVE
+>>>>with zero'ed "tce_table_size". The pages previously allocated for TCE table is
+>>>>released to buddy system, which can be allocated by somebody else (from buddy
+>>>>or slab).
+>>>
+>>>opal_pci_map_pe_dma_window() takes __pa(tbl_addr) which points to some memory
+>>>which is still allocated. This value goes to a table (which has 2 entries per
+>>>PE, one for 32bit DMA window and one for bypass/hugewindow) which PHB uses to
+>>>get the actual TCE table address. What is the name of this table? :) Anyway,
+>>>you write an address there and then you call free_pages() so after
+>>>free_pages(), the value in that TVE/TVT/whatever table is a garbage.
+>>>
+>>
+>>I don't look into your DDW code yet. Before we have DDW patchset, the bypass
+>>TVE (window) isn't supposed to have corresponding TCE table. I guess you might
+>>change the behaviour in your DDW patchset and I'll take a close look on that.
+>>For DMA32 window, which is the name of the table, the TVE is cleared by skiboot
+>>when having zero "tce_table_size" argument.
+>>
+>>	opal_pci_map_pe_dma_window(phb->opal_id,
+>>				   pe->pe_number,
+>>				   pe->pe_number << 1,
+>>				   1,
+>>				   __pa(tbl_addr),
+>>				   0,			<<<< "tce_table_size".
+>>				   0x1000);
+>
+>
+>Then please, when you pass tce_table_size==0, also pass zero address/zero
+>page size/zero levels, unless you have very good reason to pass non-zero
+>values for these. What you have now is confusing - it looks like you are
+>initializing the table - it is not obvious that "0" is the size and not some
+>flags.
+>
+>When people see this (which does the same thing, please correct me if I am
+>wrong), they do not have questions what you are actually trying to do:
+>
+> 	opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
+> 				   pe->pe_number << 1, 0, 0, 0, 0);
+>
+
+Sure, with more zero'ed parameters to the OPAL call, the purpose will be
+more clear. I also check the skiboot implementation of this function, it
+should work. I'll use the code as you're suggesting.
+
+Thanks,
+Gavin
+
