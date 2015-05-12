@@ -1,73 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:38698 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757202AbbEVO6K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 May 2015 10:58:10 -0400
-Received: by igcau1 with SMTP id au1so34603366igc.1
-        for <linux-pci@vger.kernel.org>; Fri, 22 May 2015 07:58:10 -0700 (PDT)
-Subject: [PATCH] PCI/ASPM: Drop __pci_disable_link_state() useless "force"
- parameter
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Matthew Garrett <mjg59@coreos.com>
-Date: Fri, 22 May 2015 09:58:08 -0500
-Message-ID: <20150522145807.27123.6007.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5551EFC1.2010704@linaro.org>
+Date: Tue, 12 May 2015 20:19:13 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 6/7] x86/PCI/ACPI: Use common interface to support PCI
+ host bridge
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430793970-11159-7-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After 387d37577fdd ("PCI: Don't clear ASPM bits when the FADT declares it's
-unsupported"), the "force" parameter to __pci_disable_link_state() is
-always "false".
+[...]
+>   struct pci_root_info {
+> -	struct acpi_device *bridge;
+> -	char name[16];
+> -	struct pci_controller sd;
+> +	struct acpi_pci_root_info_common common;
+>   #ifdef	CONFIG_PCI_MMCONFIG
+>   	bool mcfg_added;
+>   	u16 segment;
+> @@ -165,14 +164,17 @@ static int check_segment(u16 seg, struct device *dev, char *estr)
+>   	return 0;
+>   }
+>
+> -static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
+> -			  u8 end, phys_addr_t addr)
+> +static int setup_mcfg_map(struct acpi_pci_root_info_common *ci)
+>   {
+>   	int result;
+> -	struct device *dev = &info->bridge->dev;
+> +	struct pci_root_info *info;
+> +	struct acpi_pci_root *root = ci->root;
+> +	struct device *dev = &ci->bridge->dev;
+> +	int seg = ci->controller.segment;
 
-Remove the "force" parameter and assume it's always false.
+...
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/aspm.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+>
+> -	info->start_bus = start;
+> -	info->end_bus = end;
+> +	info = container_of(ci, struct pci_root_info, common);
+> +	info->start_bus = (u8)root->secondary.start;
+> +	info->end_bus = (u8)root->secondary.end;
+>   	info->mcfg_added = false;
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 7d4fcdc..f90d8f2 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -714,8 +714,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
- 	up_read(&pci_bus_sem);
- }
- 
--static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
--				     bool force)
-+static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
- {
- 	struct pci_dev *parent = pdev->bus->self;
- 	struct pcie_link_state *link;
-@@ -737,7 +736,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
- 	 * a similar mechanism using "PciASPMOptOut", which is also
- 	 * ignored in this situation.
- 	 */
--	if (aspm_disabled && !force) {
-+	if (aspm_disabled) {
- 		dev_warn(&pdev->dev, "can't disable ASPM; OS doesn't have ASPM control\n");
- 		return;
- 	}
-@@ -763,7 +762,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
- 
- void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
- {
--	__pci_disable_link_state(pdev, state, false, false);
-+	__pci_disable_link_state(pdev, state, false);
- }
- EXPORT_SYMBOL(pci_disable_link_state_locked);
- 
-@@ -778,7 +777,7 @@ EXPORT_SYMBOL(pci_disable_link_state_locked);
-  */
- void pci_disable_link_state(struct pci_dev *pdev, int state)
- {
--	__pci_disable_link_state(pdev, state, true, false);
-+	__pci_disable_link_state(pdev, state, true);
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
+info->segment is not initialized here
 
+>
+>   	/* return success if MMCFG is not in use */
+> @@ -182,7 +184,8 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
+>   	if (!(pci_probe & PCI_PROBE_MMCONF))
+>   		return check_segment(seg, dev, "MMCONFIG is disabled,");
+>
+> -	result = pci_mmconfig_insert(dev, seg, start, end, addr);
+> +	result = pci_mmconfig_insert(dev, seg, info->start_bus, info->end_bus,
+> +				     root->mcfg_addr);
+>   	if (result == 0) {
+>   		/* enable MMCFG if it hasn't been enabled yet */
+>   		if (raw_pci_ext_ops == NULL)
+> @@ -195,8 +198,11 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
+>   	return 0;
+>   }
+>
+> -static void teardown_mcfg_map(struct pci_root_info *info)
+> +static void teardown_mcfg_map(struct acpi_pci_root_info_common *ci)
+>   {
+> +	struct pci_root_info *info;
+> +
+> +	info = container_of(ci, struct pci_root_info, common);
+>   	if (info->mcfg_added) {
+>   		pci_mmconfig_delete(info->segment, info->start_bus,
+
+But the segment is used here to delete mmconfig entry, it seems that
+the domain is 0 so there will be no problem, did I miss something?
+
+Thanks
+Hanjun
