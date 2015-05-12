@@ -1,103 +1,250 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:33177 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346AbbE2Qzx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 12:55:53 -0400
-Received: by qcmi9 with SMTP id i9so28455744qcm.0
-        for <linux-pci@vger.kernel.org>; Fri, 29 May 2015 09:55:52 -0700 (PDT)
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:41498 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbbELBca (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 21:32:30 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 12 May 2015 11:32:27 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8A5822BB0059
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:32:24 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C1WG9h44302372
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:32:24 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C1VpaE029456
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:31:52 +1000
+Date: Tue, 12 May 2015 09:31:34 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 8/9] powerpc/powernv: Support PCI config restore for
+ VFs
+Message-ID: <20150512013134.GA5814@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-9-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150511042238.GA19629@gwshan>
 MIME-Version: 1.0
-In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADBDF585@nice.asicdesigners.com>
-References: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
- <20150507230426.GO24643@google.com> <4985EFDD773FCB459EF7915D2A3621ADBC80D4@nice.asicdesigners.com>
- <20150529162021.GA12733@google.com> <4985EFDD773FCB459EF7915D2A3621ADBDF585@nice.asicdesigners.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 29 May 2015 11:55:31 -0500
-Message-ID: <CAErSpo6XAANACecyCrn9XtyAy0-YNto1VK6zRNhLEpGqm2usrQ@mail.gmail.com>
-Subject: Re: Request for advice on where to put Root Complex "fix up" code for
- downstream device
-To: Casey Leedom <leedom@chelsio.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150511042238.GA19629@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 29, 2015 at 11:46 AM, Casey Leedom <leedom@chelsio.com> wrote:
->   Thanks Bjorn and no issues at all about the delay -- I definitely understand how
-> busy we all are.
->
->   I'll go ahead and submit a PCI Quirk.  As part of this, would you like me to
-> also commit a new PCI-E routine to find the Root Complex Port for a given
-> PCI Device?  It seem like it might prove useful in the future.  Otherwise I'll
-> just incorporate that loop in my PCI Quirk.
-
-Sure, I wouldn't mind seeing a new interface for that.
-
-Bjorn
-
-> ________________________________________
-> From: Bjorn Helgaas [bhelgaas@google.com]
-> Sent: Friday, May 29, 2015 9:20 AM
-> To: Casey Leedom
-> Cc: netdev@vger.kernel.org; linux-pci@vger.kernel.org
-> Subject: Re: Request for advice on where to put Root Complex "fix up" code for downstream device
->
-> Hi Casey,
->
-> Sorry, this one slipped through and I forgot to respond earlier.
->
-> On Thu, May 07, 2015 at 11:31:58PM +0000, Casey Leedom wrote:
->> | From: Bjorn Helgaas [bhelgaas@google.com]
->> | Sent: Thursday, May 07, 2015 4:04 PM
->> |
->> | There are a lot of fixups in drivers/pci/quirks.c.  For things that have to
->> | be worked around either before a driver claims the device or if there is no
->> | driver at all, the fixup *has* to go in drivers/pci/quirks.c
->> |
->> | But for things like this, where the problem can only occur after a driver
->> | claims the device, I think it makes more sense to put the fixup in the
->> | driver itself.  The only wrinkle here is that the fixup has to be done on a
->> | separate device, not the device claimed by the driver.  But I think it
->> | probably still makes sense to put this fixup in the driver.
+On Mon, May 11, 2015 at 02:22:38PM +1000, Gavin Shan wrote:
+>On Mon, May 04, 2015 at 03:07:37PM +0800, Wei Yang wrote:
+>>Since FW is not aware of VFs, the restore action for VF should be done in
+>       ^^
+>       skiboot firmware
+>>kernel.
 >>
->>   Okay, the example code that I provided (still quoted below) was indeed
->> done as a fix within the cxgb4 Network Driver.  I've also worked up a
->> version as a PCI Quirk but if you and David Miller agree that the fixup
->> code should go into cxgb4, I'm comfortable with that.  I can also provide
->> the example PCI Quirk code I worked up if you like.
+>>This patch introduces pnv_eeh_vf_restore_config() for VF.
 >>
->>   One complication to doing this in cxgb4 is that it attaches to Physical
->> Function 4 of our T5 chip.  Meanwhile, a completely separate storage
->> driver, csiostor, connections to PF5 and PF6 and there's no
->> requirement at all that cxgb4 be loaded.  So if we go down the road of
->> putting the fixup code in the cxgb4 driver, we'll also need to duplicate
->> that code in the csiostor driver.
 >
-> Sounds simpler to just put the quirk in drivers/pci/quirks.c.
+>Would it be better?
 >
->> | > +static void clear_root_complex_tlp_attributes(struct pci_dev *pdev)
->> | > +{
->> | > +     struct pci_bus *bus = pdev->bus;
->> | > +     struct pci_dev *highest_pcie_bridge = NULL;
->> | > +
->> | > +     while (bus) {
->> | > +             struct pci_dev *bridge = bus->self;
->> | > +
->> | > +             if (!bridge || !bridge->pcie_cap)
->> | > +                     break;
->> | > +             highest_pcie_bridge = bridge;
->> | > +             bus = bus->parent;
->> | > +     }
->> |
->> | Can you use pci_upstream_bridge() here?  There are a couple places where we
->> | want to find the Root Port, so we might factor that out someday.  It'll be
->> | easier to find all those places if they use with pci_upstream_bridge().
+>The patch introduces function pnv_eeh_vf_restore_config() to restore PCI
+>config space for VFs after reset.
+>
+
+Ok.
+
+>Also, the function name would be better with pnv_eeh_restore_vf_config()?
+
+Ok.
+
+>
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>---
+>> arch/powerpc/include/asm/pci-bridge.h        |    1 +
+>> arch/powerpc/platforms/powernv/eeh-powernv.c |   77 +++++++++++++++++++++++++-
+>> 2 files changed, 77 insertions(+), 1 deletion(-)
 >>
->> It looks like pci_upstream_bridge() just traverses one like upstream toward the
->> Root Complex?  Or am I misunderstanding that function?
+>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>>index 9582aa2..de55ef6 100644
+>>--- a/arch/powerpc/include/asm/pci-bridge.h
+>>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>>@@ -205,6 +205,7 @@ struct pci_dn {
+>> 	int     m64_per_iov;
+>> #define IODA_INVALID_M64        (-1)
+>> 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+>>+	int	mps;
+>> #endif /* CONFIG_PCI_IOV */
+>> #endif
+>> 	struct list_head child_list;
+>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>index 1ad322f..6ba6d87 100644
+>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>@@ -1589,6 +1589,59 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+>> 	return ret;
+>> }
+>>
+>>+#ifdef CONFIG_PCI_IOV
+>>+static int pnv_eeh_vf_restore_config(struct pci_dn *pdn)
+>>+{
+>>+	int pcie_cap, aer_cap, old_mps;
+>>+	u32 devctl, cmd, cap2, aer_capctl;
+>>+
+>>+	/* Restore MPS */
+>>+	pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
+>>+	if (pcie_cap) {
+>>+		old_mps = (ffs(pdn->mps) - 8) << 5;
+>>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
+>>+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+>>+		devctl |= old_mps;
+>>+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
+>>+	}
+>>+
 >
-> No, you're right.  I was just trying to suggest using pci_upstream_bridge()
-> instead of bus->parent->self in your loop.  It wouldn't replace the loop
-> completely.
+>hrm, You can't use pnv_pci_cfg_{read,write} here. Instead, you should use
+>eeh_ops->{read,write}_config. By design, the PCI config accessors have been
+>classified to 2 classes: one is used for pci_config_{read,write}_* and another
+>one is eeh_ops->{read,write}. From EEH perspective, the former isn't controlled
+>strictly, but the later one is under control completely. "Not controlled" here
+>means the kernel can't determine when the PCI config is accessed, e.g. PCI
+>config accesses from user land.
 >
-> Bjorn
+
+Reasonable, will change it.
+
+>>+	/* Disable Completion Timeout */
+>>+	if (pcie_cap) {
+>>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
+>>+		if (cap2 & 0x10) {
+>>+			pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
+>>+			cap2 |= 0x10;
+>>+			pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
+>>+		}
+>>+	}
+>>+
+>>+	/* Enable SERR and parity checking */
+>>+	pnv_pci_cfg_read(pdn, PCI_COMMAND, 2, &cmd);
+>>+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+>>+	pnv_pci_cfg_write(pdn, PCI_COMMAND, 2, cmd);
+>>+
+>>+	/* Enable report various errors */
+>>+	if (pcie_cap) {
+>>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
+>>+		devctl &= ~PCI_EXP_DEVCTL_CERE;
+>>+		devctl |= (PCI_EXP_DEVCTL_NFERE |
+>>+			   PCI_EXP_DEVCTL_FERE |
+>>+			   PCI_EXP_DEVCTL_URRE);
+>>+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
+>>+	}
+>>+
+>>+	/* Enable ECRC generation and check */
+>>+	if (pcie_cap) {
+>>+		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
+>>+		pnv_pci_cfg_read(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
+>>+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
+>>+		pnv_pci_cfg_write(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
+>>+	}
+>>+
+>>+	return 0;
+>>+}
+>>+#endif /* CONFIG_PCI_IOV */
+>>+
+>
+>The code is copied over from skiboot firmware. I still dislike the fact that
+>we have to maintain two sets of similar functions in skiboot/kernel. I still
+>believe the way I suggested can help: the firmware exports the error routing
+>rules and kernel has support it based on the rules. With it, the skiboot is
+>the source of the information to avoid mismatching between kernel/firmware.
+
+Yes, it looks we have duplicate code in kernel and skiboot.
+
+As you suggest, if we export some bit map from device node, we still have the
+real logic in kernel, until we remove that part in skiboot.
+
+By removing that part in skiboot, we may have some compatibility problem. For
+example, an old kernel may not run on the new version of skiboot.
+
+>
+>> static int pnv_eeh_restore_config(struct pci_dn *pdn)
+>> {
+>> 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>@@ -1599,7 +1652,13 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+>> 		return -EEXIST;
+>>
+>> 	phb = edev->phb->private_data;
+>>-	ret = opal_pci_reinit(phb->opal_id,
+>>+#ifdef CONFIG_PCI_IOV
+>>+	/* FW is not VF aware, we rely on OS to restore it */
+>>+	if (edev->mode & EEH_DEV_VF)
+>>+		ret = pnv_eeh_vf_restore_config(pdn);
+>>+	else
+>>+#endif
+>
+>You don't even have to have CONFIG_PCI_IOV since it won't save much
+>.text space.
+>
+
+ok
+
+>>+		ret = opal_pci_reinit(phb->opal_id,
+>> 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+>> 	if (ret) {
+>> 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+>>@@ -1660,4 +1719,20 @@ static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
+>> 	}
+>> }
+>> DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
+>>+
+>>+static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
+>>+{
+>
+>As I said before, this function shouldn't be part of this file because:
+>
+>- When CONFIG_EEH=n, this file won't be complied/included.
+>- This function isn't part of EEH naturally.
+>
+
+Moved to arch/powerpc/platform/powernv/pci.c
+
+>Also, pnv_pci_vf_header_fixup() would be better name in case you need
+>apply more fixups for VFs in the function.
+>
+
+Ok.
+
+>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>>+	int parent_mps;
+>>+
+>>+	if (!pdev->is_virtfn)
+>>+		return;
+>>+
+>>+	/* Synchronize MPS for VF and PF */
+>>+	parent_mps = pcie_get_mps(pdev->physfn);
+>>+	if ((128 << pdev->pcie_mpss) >= parent_mps)
+>>+		pcie_set_mps(pdev, parent_mps);
+>
+>Hrm, Again, do we have possibility: (128 << pdev->pcie_mpss) < parent_mps ?
+>And why we bother if MPS of PF/VF are equal?
+>
+
+pcie_mpss is the MPS supported, not the MPS itself.
+
+This line means if the pci_dev support the parents mps, apply it.
+Otherwise, just cache the mps.
+
+>>+	pdn->mps = pcie_get_mps(pdev);
+>>+}
+>>+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
+>> #endif /* CONFIG_PCI_IOV */
+>>-- 
+>>1.7.9.5
+>>
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Richard Yang
+Help you, Help me
+
