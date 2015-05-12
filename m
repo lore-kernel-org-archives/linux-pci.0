@@ -1,52 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwhop.emc.com ([168.159.213.141]:59522 "EHLO
-	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409AbbE0Uiv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 16:38:51 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH] NTB: Skip reading doorbell bits in callback
-Date: Wed, 27 May 2015 11:37:49 -0400
-Message-Id: <ccfb91d6e93eb0136b72e0454d697ae4e8101523.1432740351.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 12 May 2015 15:03:10 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: [PATCH v6 0/2] pci: drop msi disable on shutdown
+Message-ID: <1431431730-25164-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Avoid the penalty of ioread latency before doing useful work in the
-doorbell callback.  Instead of reading the doorbell bits, assume the
-bits are set, and always schedule the transport qp tasklets.
+Fam Zheng noticed that pci shutdown disables msi and msix of a device.  This
+was intended to fix kexec with fusion devices but is no longer necessary, and
+can in theory be harmful.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
-Notes:
-  This should theoretically improve the response time.  Experiments with
-  netperf do not show any significant difference in either direction.
+See individual patches for the detailed explanation.
 
- drivers/ntb/ntb_transport.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Please review, and consider for 4.2.
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 4c59f24cef2d..b70b6a30a0b5 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -1922,12 +1922,11 @@ static void ntb_transport_doorbell_callback(void *data, int vector)
- {
- 	struct ntb_transport_ctx *nt = data;
- 	struct ntb_transport_qp *qp;
--	u64 db_mask, db_bits;
-+	u64 db_bits;
- 	unsigned int qp_num;
- 
--	db_mask = (nt->qp_bitmap & ~nt->qp_bitmap_free &
-+	db_bits = (nt->qp_bitmap & ~nt->qp_bitmap_free &
- 		   ntb_db_vector_mask(nt->ndev, vector));
--	db_bits = db_mask & ntb_db_read(nt->ndev);
- 
- 	while (db_bits) {
- 		qp_num = __ffs(db_bits);
+Eric, I would especially appreciate your feedback - I did my best
+to update the commit logs with answers to questions you raised
+on v5.
+
+changes from v5:
+	rebased on top of pci/msi
+	fixed commit log, including comments by Bjorn
+	and adding explanation to address comments/questions by Eric
+	dropped stable Cc, this patch does not seem to qualify for stable
+changes from v4:
+        Yijing Wang <wangyijing@huawei.com> noted that
+        early fixups rely on pci_msi_off.
+        Split out the functionality and move off the
+        required part to run early during pci_device_setup.
+Changes from v3:
+        fix a copy-and-paste error in
+          pci: drop some duplicate code
+        other patches are unchanged
+        drop Cc stable for now
+Changes from v2:
+        move code from probe to device enumeration
+        add patches to unexport pci_msi_off
+
+
+Michael S. Tsirkin (2):
+  PCI/MSI: Don't disable MSI/MSI-X at shutdown
+  PCI/MSI: Make pci_msi_shutdown(), pci_msix_shutdown() static
+
+ include/linux/pci.h      | 4 ----
+ drivers/pci/msi.c        | 4 ++--
+ drivers/pci/pci-driver.c | 2 --
+ 3 files changed, 2 insertions(+), 8 deletions(-)
+
 -- 
-2.4.0.rc0.43.gcf8a8c6
+MST
 
