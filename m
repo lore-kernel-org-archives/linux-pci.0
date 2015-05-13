@@ -1,44 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57279 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751132AbbESXmI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 19:42:08 -0400
-Message-ID: <555BCA4A.2080400@redhat.com>
-Date: Tue, 19 May 2015 16:42:02 -0700
-From: Alexander Duyck <alexander.h.duyck@redhat.com>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:34323 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933039AbbEMNZN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 09:25:13 -0400
+Received: by pdbqa5 with SMTP id qa5so51749619pdb.1
+        for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 06:25:12 -0700 (PDT)
+Message-ID: <555350B2.8050301@linaro.org>
+Date: Wed, 13 May 2015 21:25:06 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
- Ethernet devices
-References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com> <555B5CBF.1090902@redhat.com> <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com> <555B77E5.5060006@redhat.com> <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com> <555B9F74.3040004@redhat.com> <DA06AAB6-CE9B-4A27-B60D-8F55BB52A063@intel.com> <555BA850.1090901@gmail.com> <46CDD500-2A1B-4457-BE17-961AFC50769E@intel.com>
-In-Reply-To: <46CDD500-2A1B-4457-BE17-961AFC50769E@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org> <55534275.2040404@linux.intel.com>
+In-Reply-To: <55534275.2040404@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 05/19/2015 03:43 PM, Rustad, Mark D wrote:
->> On May 19, 2015, at 2:17 PM, Alexander Duyck <alexander.duyck@gmail.com> wrote:
+On 2015年05月13日 20:24, Jiang Liu wrote:
+> On 2015/5/13 17:29, Hanjun Guo wrote:
+>> Hi Jiang,
 >>
->> Any chance you could point me toward the software in question?  Just wondering because it seems like what you are fixing with this is an implementation issue in the application since you really shouldn't be accessing areas outside the scope of the VPD data structure, and doing so is undefined in terms of what happens if you do.
-> I don't have it, but if you dump VPD via sysfs you will see it comes out as 32k in size. The kernel just blindly provides access to the full 32K space provided by the spec. I'm sure that we agree that the kernel should not go parse it and find the actual size. If it is read via stdio, say fread, the read access would be whatever buffer size it chooses to use.
+>> On 2015年05月05日 10:46, Jiang Liu wrote:
+>>> Introduce common interface acpi_pci_root_create() and related data
+>>> structures to create PCI root bus for ACPI PCI host bridges. It will
+>>> be used to kill duplicated arch specific code for IA64 and x86. It may
+>>> also help ARM64 in future.
+>>>
+>> [...]
+>>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+>>> index a965efa52152..a292ee33d74b 100644
+>>> --- a/include/linux/pci-acpi.h
+>>> +++ b/include/linux/pci-acpi.h
+>>> @@ -52,6 +52,30 @@ static inline acpi_handle
+>>> acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>>>        return ACPI_HANDLE(dev);
+>>>    }
+>>>
+>>> +struct acpi_pci_root;
+>>> +struct acpi_pci_root_ops;
+>>> +
+>>> +struct acpi_pci_root_info_common {
+>>> +    struct pci_controller        controller;
+>>
+>> There is another problem that this patch will lead to
+>> compile error on ARM64 since ARM64 has basic ACPI support
+>> in 4.1.
+>>
+>> struct pci_controller        controller is not available
+>> on ARM64, that's the reason why compile errors happens on ARM64.
+>>
+>> How about move struct pci_controller to this head file?
+>>
+>> because all the related file you changed in this patch set
+>> are only compiled when CONFI_ACPI=y, so for x86,
+>>
+>> struct pci_controller {
+>> #ifdef CONFIG_ACPI
+>>          struct acpi_device *companion;  /* ACPI companion device */
+>> #endif
+>> #ifdef CONFIG_X86_64
+>>          void            *iommu;         /* IOMMU private data */
+>> #endif
+>>          int             segment;        /* PCI domain */
+>>          int             node;           /* NUMA node */
+>> };
+>>
+>> I'm sure #ifdef CONFIG_ACPI .. #endif can be removed
+>> with no harm, and for *iommu, we can remove the #ifdef CONFIG_X86_64
+>> with introducing little more memory on x86_32, after
+>> that, the struct pci_controller is almost the same as ia64:
 >
-> If you looked at the quirks, you might have noticed that Broadcom limited the VPD access for some devices for functional reasons. That is what gave me the idea for limiting access to what was possibly there. With the existing Intel Ethernet quirk, it seemed like a simple thing to do.
+> On x86, struct pci_controller may be used when CONFIG_ACPI is disabled.
+> So we can't move it into pci-acpi.h
 
-Actually we probably should be parsing through the VPD data.  The PCIe 
-spec doesn't define what happens if you read past the end marker, and I 
-suspect most applications are probably performing sequential reads of 
-the data instead of just accessing offsets anyway since that is how this 
-is really meant to be accessed.  So if we moved this to a sequenced 
-interface instead of a memory mapped style interface it would probably 
-work out better anyway since we could perform multiple reads in sequence 
-instead of one at a time.
+Ah, ok, I missed this part.
 
-- Alex
+>
+>>
+>> struct pci_controller {
+>>          struct acpi_device *companion;
+>>          void *iommu;
+>>          int segment;
+>>          int node;               /* nearest node with memory or
+>> NUMA_NO_NODE for global allocation */
+>>
+>>          void *platform_data;
+>> };
+>>
+>> except void *platform_data;
+>>
+>> On ARM64, the structure is almost the same, so how about
+>> introduce
+>>
+>> struct pci_controller {
+>>          struct acpi_device *companion;  /* ACPI companion device */
+>>          void            *iommu;         /* IOMMU private data */
+>>          int             segment;        /* PCI domain */
+>>          int             node;           /* NUMA node */
+>> #ifdef CONFIG_IA64
+>>      void *platform_data;
+>> #endif
+>> };
+>>
+>> in this file, then can be used for all architectures?
+> Current mode is that architecture defines its own version of
+> struct pci_controller. It would be better to keep this pattern.
+
+OK, thanks for the clarify :) So how about add my basic
+PCI support patch for ARM64 on top of you patch set to fix
+this problem?
+
+Thanks
+Hanjun
+
 
