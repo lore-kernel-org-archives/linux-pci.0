@@ -1,50 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: RE: [PATCH 02/16] NTB Abstraction Layer
-Date: Thu, 21 May 2015 11:32:26 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D7825F98C@MX104CL02.corp.emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-	 <d653819e0ebc03241fe073c9239be36a52f5e265.1432135631.git.Allen.Hubbe@emc.com>
- <1432198316.21715.135.camel@x220>
-In-Reply-To: <1432198316.21715.135.camel@x220>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33417 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752022AbbEMJBR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 May 2015 05:01:17 -0400
+Date: Wed, 13 May 2015 17:00:35 +0800
+From: Baoquan He <bhe@redhat.com>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old mem
+Message-ID: <20150513090035.GE3736@dhcp-128-28.nay.redhat.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1431337974-545-5-git-send-email-zhen-hual@hp.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431337974-545-5-git-send-email-zhen-hual@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogUGF1bCBCb2xsZSBbbWFpbHRvOnBlYm9sbGVAdGlzY2FsaS5ubF0NCj4gT24gV2VkLCAy
-MDE1LTA1LTIwIGF0IDExOjQxIC0wNDAwLCBBbGxlbiBIdWJiZSB3cm90ZToNCg0KDQo+IA0KPiAo
-TXkgbWFpbGVyIHRlbGxzIG1lIHRoaXMgbWVzc2FnZSBpcyBvdmVyIDIwMEtCIGluIHNpemUuIERp
-ZCB5b3UgY29uc2lkZXINCj4gb2ZmZXJpbmcgYnJpYmVzIHRvIGdldCBwZW9wbGUgdG8gcmV2aWV3
-IHRoaXMgcGF0Y2g/KQ0KDQpJIHdvdWxkIGhhdmUgbGlrZWQgdG8gc2VuZCBzbWFsbGVyIHBhdGNo
-ZXMsIHRvby4NCg0KSSBhdHRlbXB0ZWQgdG8gc3BsaXQgdGhpcyBvbmUgaW4gdGhyZWU6DQoxKSBh
-ZGQgdGhlIG50YiBjb3JlIGRyaXZlciBhbmQgaGVhZGVyIGZpbGUNCjIpIGNoYW5nZSBudGJfaHdf
-aW50ZWwgZHJpdmVyIHRvIHVzZSBuZXcgYXBpDQozKSBjaGFuZ2UgbnRiX3RyYW5zcG9ydCBkcml2
-ZXIgdG8gdXNlIG5ldyBhcGkNCg0KVGhlIHByb2JsZW0gaXMsIGFueSBjaGFuZ2UgdG8gdGhlIG9s
-ZCBudGJfaHdfaW50ZWwgKHdhcyBudGIua28pLCBvciBudGJfdHJhbnNwb3J0LCBhbG9uZSB3aWxs
-IGNhdXNlIHRoZSBvdGhlciBub3QgdG8gd29yay4NCg0KPiANCj4gSSBqdXN0IHNwb3R0ZWQgdHdv
-IG5pdHMuDQo+IA0KPiA+IC0tLSBhL2RyaXZlcnMvbnRiL0tjb25maWcNCj4gPiArKysgYi9kcml2
-ZXJzL250Yi9LY29uZmlnDQo+ID4NCj4gPiAraWYgTlRCDQo+ID4gKw0KPiA+ICtzb3VyY2UgImRy
-aXZlcnMvbnRiL2h3L0tjb25maWciDQo+ID4gKw0KPiA+ICtjb25maWcgTlRCX1RSQU5TUE9SVA0K
-PiA+ICsgICAgICAgdHJpc3RhdGUgIk5UQiBUcmFuc3BvcnQgQ2xpZW50Ig0KPiA+ICsgICAgICAg
-ZGVwZW5kcyBvbiBOVEINCj4gDQo+IFN1cGVyZmx1b3VzIGRlcGVuZGVuY3kuDQoNCkkgd2lsbCBy
-ZW1vdmUgZGVwZW5kcyBOVEIgZnJvbSB0aGlzLCBhbmQgb3RoZXIgdGhpbmdzIHdpdGhpbiBpZiBO
-VEIuDQoNCkkgd2lsbCBhbHNvIGNoYW5nZSB0aGUgbGVhZGluZyBzcGFjZXMgdG8gdGFicy4NCg0K
-PiANCj4gPiArICAgICAgIGhlbHANCj4gPiArICAgICAgICBUaGlzIGlzIGEgdHJhbnNwb3J0IGRy
-aXZlciB0aGF0IGVuYWJsZXMgY29ubmVjdGVkIHN5c3RlbXMgdG8NCj4gZXhjaGFuZ2UNCj4gPiAr
-ICAgICAgICBtZXNzYWdlcyBvdmVyIHRoZSBudGIgaGFyZHdhcmUuICBUaGUgdHJhbnNwb3J0IGV4
-cG9zZXMgYQ0KPiBxdWV1ZSBwYWlyIGFwaQ0KPiA+ICsgICAgICAgIHRvIGNsaWVudCBkcml2ZXJz
-Lg0KPiA+ICsNCj4gPiArICAgICAgICBJZiB1bnN1cmUsIHNheSBOLg0KPiA+ICsNCj4gPiArZW5k
-aWYgIyBOVEINCj4gDQo+ID4gLS0tIC9kZXYvbnVsbA0KPiA+ICsrKyBiL2RyaXZlcnMvbnRiL2h3
-L2ludGVsL0tjb25maWcNCj4gDQo+ID4gK2NvbmZpZyBOVEJfSU5URUwNCj4gPiArICAgICAgIHRy
-aXN0YXRlICJJbnRlbCBOb24tVHJhbnNwYXJlbnQgQnJpZGdlIHN1cHBvcnQiDQo+ID4gKyAgICAg
-ICBkZXBlbmRzIG9uIE5UQg0KPiANCj4gRGl0dG8uDQo+IA0KPiA+ICsgICAgICAgZGVwZW5kcyBv
-biBYODYNCj4gPiArICAgICAgIGhlbHANCj4gPiArICAgICAgICBUaGlzIGRyaXZlciBzdXBwb3J0
-cyBJbnRlbCBOVEIgb24gY2FwYWJsZSBYZW9uIGFuZCBBdG9tDQo+IGhhcmR3YXJlLg0KPiA+ICsN
-Cj4gPiArICAgICAgICBJZiB1bnN1cmUsIHNheSBOLg0KPiANCj4gVGhhbmtzLA0KPiANCj4gDQo+
-IFBhdWwgQm9sbGUNCg0KVGhhbmtzLA0KQWxsZW4NCg==
+On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
+> Add some functions to copy the data from old kernel.
+> These functions are used to copy context tables and page tables.
+> 
+> To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
+> use a link here, store the pointers , and then use iounmap to free them in
+> another place.
+
+Hi Zhenhua,
+
+I remember you mentioned iounmap will cause error inside
+spin_lock_irqsave. Do you know why it happened now? And could you also
+describe why avoid calling iounmap between
+spin_lock_irqsave/unlock_irqsave  is needed here and what's the status
+now? 
+
+I think other reviewer may want to know it too.
+
+Thanks
+Baoquan
+
