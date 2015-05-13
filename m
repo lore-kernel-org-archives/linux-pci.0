@@ -1,63 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:34879 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbbEFVDb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 17:03:31 -0400
-Received: by igbyr2 with SMTP id yr2so142747179igb.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 14:03:30 -0700 (PDT)
-Date: Wed, 6 May 2015 16:03:27 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Michael S. Tsirkin" <mst@kernel.org>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
-Message-ID: <20150506210327.GG24643@google.com>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150426084739-mutt-send-email-mst@kernel.org>
+Received: from mail-bn1bbn0101.outbound.protection.outlook.com ([157.56.111.101]:4067
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754122AbbEMMsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 May 2015 08:48:08 -0400
+Message-ID: <555347EE.6050502@amd.com>
+Date: Wed, 13 May 2015 07:47:42 -0500
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150426084739-mutt-send-email-mst@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Will Deacon <will.deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Liviu Dudau" <Liviu.Dudau@arm.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com> <20150506141859.GC26028@red-moon>
+ <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
+ <554ADCE0.8020603@amd.com>
+In-Reply-To: <554ADCE0.8020603@amd.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 26, 2015 at 08:50:06AM +0200, Michael S. Tsirkin wrote:
-> On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
-> > Hi Michael,
-> > 
-> > I put your patches on my pci/msi branch and I hope to merge them for v4.1.
-> > I didn't apply the acks from Fam and Eric because I made changes to those
-> > patches that weren't completely trivial.  I think the end result is
-> > equivalent, though.  The diff attached to this cover letter is the
-> > difference between your v5 series and this v6 series.
-> > 
-> > As far as I'm concerned, this is ready to go except that I would like a
-> > little more info about the virtio kernel hang to include in the changelog
-> > for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
-> 
-> 
-> Hi Bjorn,
-> do you have eveything you need to merge this?
+Hi Bjorn,
 
-No.  I made the minor changelog edits you suggested and the result is on
-my pci/msi-v7 branch.  But I still have these open issues:
+Somehow, I didn't get your reply email from the ML. So, I've captured 
+your questions here, please see my reply below.
 
-  - The last thing I heard from Eric was that "not disabling MSI/MSI-X at
-    shutdown is the wrong fix, and someone needs to fix a buggy driver."
-    I want to hear Eric say "OK, we need to leave MSI/MSI-X enabled at
-    shutdown for this case."
+On 5/6/2015 10:32 PM, Suravee Suthikulanit wrote:
+> Hi All,
+>
+> I tested this patch series on the AMD Seattle w/o PCI_PROBE_ONLY mode
+> and that works fine. However, w/ PCI_PROBE_ONLY, I also run into the
+> resource not claimed issue (no surprise here).
+>
+> So, I tried porting the pcibios_claim_one_bus() from
+> arch/alpha/kernel/pci.c as Lorenzo suggested, plus the a small change in
+> pci_claim_resource(), and it seems to work w/ PCI_PROBE_ONLY. (Please
+> see example patch below.)
+>
+> The additional while loop is needed in the pci_claim_resource() since I
+> need to reference back to the resource in the root bus, which are
+> defined from the DT node. Does this sounds like a reasonable approach?
+>
+> diff --git a/drivers/pci/host/pci-host-generic.c
+> b/drivers/pci/host/pci-host-generic.c
+> index e9cc559..0dfa23d 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -261,7 +261,10 @@ static int gen_pci_probe(struct platform_device *pdev)
+>       if (!pci_has_flag(PCI_PROBE_ONLY)) {
+>           pci_bus_size_bridges(bus);
+>           pci_bus_assign_resources(bus);
+> +    } else {
+> +        pci_claim_one_bus(bus);
+>       }
+> +
+>       pci_bus_add_devices(bus);
+>
+>       /* Configure PCI Express settings */
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 232f925..d4b43b3 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -109,6 +109,7 @@ int pci_claim_resource(struct pci_dev *dev, int
+> resource)
+>   {
+>       struct resource *res = &dev->resource[resource];
+>       struct resource *root, *conflict;
+> +    struct pci_dev *pdev = dev;
+>
+>       if (res->flags & IORESOURCE_UNSET) {
+>           dev_info(&dev->dev, "can't claim BAR %d %pR: no address
+> assigned\n",
+> @@ -116,7 +117,18 @@ int pci_claim_resource(struct pci_dev *dev, int
+> resource)
+>           return -EINVAL;
+>       }
+>
+> -    root = pci_find_parent_resource(dev, res);
+> +    while (pdev) {
+> +        root = pci_find_parent_resource(pdev, res);
+> +        if (root)
+> +            break;
+> +
+> +        if (pci_has_flag(PCI_PROBE_ONLY) &&
+> +            !pci_is_root_bus(pdev->bus))
+> +            pdev = pdev->bus->self;
+> +        else
+> +            break;
+> +    }
+> +
+>       if (!root) {
+>           dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible
+> bridge window\n",
+>                resource, res);
 
-  - One changelog says "Stop disabling MSIs at shutdown to avoid
-    conflicting with drivers."  But I don't know what the conflict is.
 
-  - The bugzilla has no dmesg log or detailed analysis.  Fam said the
-    scenario I came up with
-    (http://lkml.kernel.org/r/20150416194245.GB20701@google.com)
-    was fairly close, but it took me a lot of work to derive that.  Fixing
-    any errors in it and putting it in the bugzilla would be a big step.
-    The bugzilla should have the raw data and the analysis, so someone else
-    can validate the analysis and conclude that this patch is a reasonable
-    fix for it.  That's currently impossible because the bugzilla really
-    only contains the fix as a fait accompli.
+[From Bjorn]
+I don't understand this new loop.  Apparently you have a device BAR, and
+the upstream bridge doesn't have a window that contains the BAR?  That
+sounds like a problem with the upstream bridge resources.
 
-Bjorn
+Do you have an example that would make this more concrete, e.g., a host
+bridge, P2P bridge(s), and endpoint with their resources?
+
+[Suravee]
+Here is the information you were asking for. This information is setup 
+from the FW. In the PCI bridge (00:02.1), I see the prefetchable memory 
+behind bridge is already setup.
+
+OUTPUT from lspci -tv:
+
+-[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD] Device 1a00
+            +-02.0  Advanced Micro Devices, Inc. [AMD] Device 1a01
+            \-02.1  PCI Bridge -[01]--+-00.0  Intel Corporation 82599ES 
+10-Gigabit SFI/SFP+ Network Connection
+                         \-00.1  Intel Corporation 82599ES 10-Gigabit 
+SFI/SFP+ Network Connection
+
+OUTPUT from lspci -vvv:
+
+00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 1a00
+	Subsystem: Advanced Micro Devices, Inc. [AMD] Device 1a00
+	Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+00:02.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 1a01
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+
+00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 1a02 
+(prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+	I/O behind bridge: 00fff000-00000fff
+	Memory behind bridge: fff00000-000fffff
+	Prefetchable memory behind bridge: 0000007fffe00000-0000007fffffffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+.......
+
+01:00.0 Ethernet controller: Intel Corporation 82599ES 10-Gigabit 
+SFI/SFP+ Network Connection (rev 01)
+	Subsystem: Intel Corporation Ethernet Server Adapter X520-2
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 46
+	Region 0: Memory at 7fffe80000 (64-bit, prefetchable) [size=512K]
+	Region 2: I/O ports at 0020 [size=32]
+	Region 4: Memory at 7ffff04000 (64-bit, prefetchable) [size=16K]
+.......
+
+01:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit 
+SFI/SFP+ Network Connection (rev 01)
+	Subsystem: Intel Corporation Ethernet Server Adapter X520-2
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin B routed to IRQ 47
+	Region 0: Memory at 7fffe00000 (64-bit, prefetchable) [size=512K]
+	Region 2: I/O ports at 0000 [size=32]
+	Region 4: Memory at 7ffff00000 (64-bit, prefetchable) [size=16K]
+........
+
+Thanks,
+Suravee
+
