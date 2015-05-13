@@ -1,78 +1,118 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555A4F68.1020208@redhat.com>
-Date: Mon, 18 May 2015 16:45:28 -0400
-From: Jarod Wilson <jarod@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:48624 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933242AbbEMMYl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 May 2015 08:24:41 -0400
+Message-ID: <55534275.2040404@linux.intel.com>
+Date: Wed, 13 May 2015 20:24:21 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook
- G2
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <20150516143750.GG31666@google.com> <20150516144155.GH31666@google.com> <1481007.OlNlbgiUPd@vostro.rjw.lan> <5559F824.1020703@redhat.com> <555A1093.40303@redhat.com>
-In-Reply-To: <555A1093.40303@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+To: Hanjun Guo <hanjun.guo@linaro.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org>
+In-Reply-To: <55531967.70507@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/18/2015 12:17 PM, Jarod Wilson wrote:
-> On 5/18/2015 10:33 AM, Jarod Wilson wrote:
->> On 5/17/2015 8:26 PM, Rafael J. Wysocki wrote:
->>> On Saturday, May 16, 2015 09:41:55 AM Bjorn Helgaas wrote:
->>>> On Sat, May 16, 2015 at 09:37:50AM -0500, Bjorn Helgaas wrote:
->>>>> Hi Jarod,
->>>>>
->>>>> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
->>>>>> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
->>>>>> including at least BIOS revision 01.07, do not have an ACPI _RMV
->>>>>> object
->>>>>> associated with their expresscard slots, so acpi-based
->>>>>> hotplug-capable
->>>>>> slot detection fails. If we fall back to pcie-based detection, the
->>>>>> systems
->>>>>> work just fine, so this uses dmi matching to do that. With luck, a
->>>>>> future
->>>>>> BIOS will remedy this (I've let someone at HP know about the
->>>>>> problem),
->>>>>> but for now, just use this for all existing versions.
->> ...
->>>>> Oh, my goodness.  I forgot how terrible this path is.  Can anyone
->>>>> write a
->>>>> simple explanation of how we choose to use acpiphp or pciehp?
->>>
->>> In theory, that should depend on the _OSC handshake in
->>> acpi_pci_root_add().
->>>
->>> If the firmware doesn't give us control of the PCIe features, we'll
->>> not use
->>> pciehp (or at least that's the idea).
->>>
->>> acpiphp is used if pciehp doesn't claim the device, AFAICS.
+On 2015/5/13 17:29, Hanjun Guo wrote:
+> Hi Jiang,
+> 
+> On 2015年05月05日 10:46, Jiang Liu wrote:
+>> Introduce common interface acpi_pci_root_create() and related data
+>> structures to create PCI root bus for ACPI PCI host bridges. It will
+>> be used to kill duplicated arch specific code for IA64 and x86. It may
+>> also help ARM64 in future.
 >>
->> [    4.013326] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM
->> ClockPM Segments MSI]
->> [    4.015860] acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug PME
->> AER PCIeCapability]
+> [...]
+>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+>> index a965efa52152..a292ee33d74b 100644
+>> --- a/include/linux/pci-acpi.h
+>> +++ b/include/linux/pci-acpi.h
+>> @@ -52,6 +52,30 @@ static inline acpi_handle
+>> acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>>       return ACPI_HANDLE(dev);
+>>   }
 >>
->> So at a glance, it would appear that pciehp *should* be claiming it,
->> right? Something I noted in the bug I filed is that the device ID
->> reported there is PNP0A08, and the root_device_id table that associates
->> with acpi_pci_root_add() only includes PNP0A03 in it. Is that correct,
->> or should 08 also be in there, which might remedy this? (I can test this
->> out easily enough).
->
-> Nope, makes no difference, seems those are just two different references
-> to the same bus, based on a peek at the extracted dsdt:
->
-> Name (_HID, EisaId ("PNP0A08") /* PCI Express Bus */)  // _HID: Hardware ID
-> Name (_CID, EisaId ("PNP0A03") /* PCI Bus */)  // _CID: Compatible ID
+>> +struct acpi_pci_root;
+>> +struct acpi_pci_root_ops;
+>> +
+>> +struct acpi_pci_root_info_common {
+>> +    struct pci_controller        controller;
+> 
+> There is another problem that this patch will lead to
+> compile error on ARM64 since ARM64 has basic ACPI support
+> in 4.1.
+> 
+> struct pci_controller        controller is not available
+> on ARM64, that's the reason why compile errors happens on ARM64.
+> 
+> How about move struct pci_controller to this head file?
+> 
+> because all the related file you changed in this patch set
+> are only compiled when CONFI_ACPI=y, so for x86,
+> 
+> struct pci_controller {
+> #ifdef CONFIG_ACPI
+>         struct acpi_device *companion;  /* ACPI companion device */
+> #endif
+> #ifdef CONFIG_X86_64
+>         void            *iommu;         /* IOMMU private data */
+> #endif
+>         int             segment;        /* PCI domain */
+>         int             node;           /* NUMA node */
+> };
+> 
+> I'm sure #ifdef CONFIG_ACPI .. #endif can be removed
+> with no harm, and for *iommu, we can remove the #ifdef CONFIG_X86_64
+> with introducing little more memory on x86_32, after
+> that, the struct pci_controller is almost the same as ia64:
 
-Ah, I forgot some additional details. pciehp_probe() in 
-drivers/pci/hotplug/pciehp_core.c fails on the 
-pciehp_acpi_slot_detection_check() call for the expresscard slot, which 
-is why the base pciehp doesn't bind. DEVICE_ACPI_HANDLE(&dev->dev) in 
-the slot detection check is winding up with a NULL acpi device.
+On x86, struct pci_controller may be used when CONFIG_ACPI is disabled.
+So we can't move it into pci-acpi.h
 
--- 
-Jarod Wilson
-jarod@redhat.com
+> 
+> struct pci_controller {
+>         struct acpi_device *companion;
+>         void *iommu;
+>         int segment;
+>         int node;               /* nearest node with memory or
+> NUMA_NO_NODE for global allocation */
+> 
+>         void *platform_data;
+> };
+> 
+> except void *platform_data;
+> 
+> On ARM64, the structure is almost the same, so how about
+> introduce
+> 
+> struct pci_controller {
+>         struct acpi_device *companion;  /* ACPI companion device */
+>         void            *iommu;         /* IOMMU private data */
+>         int             segment;        /* PCI domain */
+>         int             node;           /* NUMA node */
+> #ifdef CONFIG_IA64   
+>     void *platform_data;
+> #endif
+> };
+> 
+> in this file, then can be used for all architectures?
+Current mode is that architecture defines its own version of
+struct pci_controller. It would be better to keep this pattern.
+Thanks!
+Gerry
+
+> 
+> Thanks
+> Hanjun
