@@ -1,111 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:59876 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbbEOFtb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:49:31 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:49:29 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3A3C62BB0051
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:27 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5nIe425100356
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:26 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5msEG000835
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:48:54 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 01/11] pci/iov: rename and export virtfn_add/virtfn_remove
-Date: Fri, 15 May 2015 13:46:16 +0800
-Message-Id: <1431668786-30371-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 13 May 2015 16:42:26 +0800
+From: Dave Young <dyoung@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org, vgoyal@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 02/10] iommu/vt-d: Items required for kdump
+Message-ID: <20150513084226.GO4561@localhost.localdomain>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1431337974-545-3-git-send-email-zhen-hual@hp.com>
+ <20150512081723.GC4561@localhost.localdomain>
+ <5552ACB9.5050309@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5552ACB9.5050309@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During the EEH recovery, when a device's driver is not EEH aware or no
-driver is bound with a device, EEH core would do hotplug on this device.
-While it isn't feasible for a VF with usual hotplug procedure. During
-removal of a VF, virtual bus should be removed if necessary. During the
-re-creation, the pci_scan_slot() doesn't work on a VF.
+On 05/13/15 at 09:45am, Li, ZhenHua wrote:
+> On 05/12/2015 04:17 PM, Dave Young wrote:
+> >On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
+> >>Add context entry functions needed for kdump.
+> >>+/*
+> >>+ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
+> >>+ *
+> >>+ * Fixes the crashdump kernel to deal with an active iommu and legacy
+> >>+ * DMA from the (old) panicked kernel in a manner similar to how legacy
+> >>+ * DMA is handled when no hardware iommu was in use by the old kernel --
+> >>+ * allow the legacy DMA to continue into its current buffers.
+> >>+ *
+> >>+ * In the crashdump kernel, this code:
+> >>+ * 1. skips disabling the IOMMU's translating.
+> >>+ * 2. Do not re-enable IOMMU's translating.
+> >>+ * 3. In kdump kernel, use the old root entry table.
+> >>+ * 4. Allocate pages for new context entry, copy data from old context entries
+> >>+ *    in the old kernel to the new ones.
+> >>+ *
+> >>+ * In other kinds of kernel, for example, a kernel started by kexec,
+> >>+ * do the same thing as crashdump kernel.
+> >>+ */
+> >>+
+> >>+
+> >
+> >Above comments should come along with the code changes instead of putting it
+> >in this patch.
+> >
+> >BTW, there's one more blank line at the end..
+> Code change is in 00/10, the cover letter.
 
-This patch exports two functions to handle the hotplug case for VF
-properly. They will be invoked when the EEH core does the hotplug case for
-VFs.
+I means the real code, not the changelog.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- drivers/pci/iov.c   |   10 +++++-----
- include/linux/pci.h |    2 ++
- 2 files changed, 7 insertions(+), 5 deletions(-)
+> And the blank does not matter, I checked the patch with
+> scripts/checkpatch.pl,  no warnings, no errors.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 47daf2f..f353e6f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -106,7 +106,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
- 
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -181,7 +181,7 @@ failed:
- 	return rc;
- }
- 
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	struct pci_dev *virtfn;
- 
-@@ -302,7 +302,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -314,7 +314,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -343,7 +343,7 @@ static void sriov_disable(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
- 
- 	pcibios_sriov_disable(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..94bacfa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
--- 
-1.7.9.5
+Why add two line breaks if one is enough? Adding such check in checkpatch.pl
+make sense to me actually.
 
+Thanks
+Dave
