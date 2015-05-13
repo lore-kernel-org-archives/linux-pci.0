@@ -1,191 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0101.outbound.protection.outlook.com ([157.56.111.101]:4067
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754122AbbEMMsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 May 2015 08:48:08 -0400
-Message-ID: <555347EE.6050502@amd.com>
-Date: Wed, 13 May 2015 07:47:42 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:34249 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164AbbEMG1s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 02:27:48 -0400
+Received: by iget9 with SMTP id t9so109821512ige.1
+        for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 23:27:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+In-Reply-To: <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
+References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
+	<1431465781-10753-3-git-send-email-hauke@hauke-m.de>
+Date: Wed, 13 May 2015 08:27:47 +0200
+Message-ID: <CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Scott Branden <sbranden@broadcom.com>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Liviu Dudau" <Liviu.Dudau@arm.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
- <20150505155346.GJ1550@arm.com> <20150506141859.GC26028@red-moon>
- <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
- <554ADCE0.8020603@amd.com>
-In-Reply-To: <554ADCE0.8020603@amd.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This driver adds support for the PCIe 2.0 controller found on the bcma
+> bus. This controller can be found on (mostly) all Broadcom BCM470X /
+> BCM5301X ARM SoCs.
+>
+> The driver found in the Broadcom SDK does some more stuff, like setting
+> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
+> PHY changes like "improving" the PCIe jitter and doing some special
+> initializations for the 3rd PCIe port.
+>
+> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
+> connected to them.
+>
+> PCI_DOMAINS is needed by this driver, because normally there is more
+> than one PCIe controller and without PCI_DOMAINS only the first
+> controller gets registered.
+> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Somehow, I didn't get your reply email from the ML. So, I've captured 
-your questions here, please see my reply below.
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
 
-On 5/6/2015 10:32 PM, Suravee Suthikulanit wrote:
-> Hi All,
->
-> I tested this patch series on the AMD Seattle w/o PCI_PROBE_ONLY mode
-> and that works fine. However, w/ PCI_PROBE_ONLY, I also run into the
-> resource not claimed issue (no surprise here).
->
-> So, I tried porting the pcibios_claim_one_bus() from
-> arch/alpha/kernel/pci.c as Lorenzo suggested, plus the a small change in
-> pci_claim_resource(), and it seems to work w/ PCI_PROBE_ONLY. (Please
-> see example patch below.)
->
-> The additional while loop is needed in the pci_claim_resource() since I
-> need to reference back to the resource in the root bus, which are
-> defined from the DT node. Does this sounds like a reasonable approach?
->
-> diff --git a/drivers/pci/host/pci-host-generic.c
-> b/drivers/pci/host/pci-host-generic.c
-> index e9cc559..0dfa23d 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -261,7 +261,10 @@ static int gen_pci_probe(struct platform_device *pdev)
->       if (!pci_has_flag(PCI_PROBE_ONLY)) {
->           pci_bus_size_bridges(bus);
->           pci_bus_assign_resources(bus);
-> +    } else {
-> +        pci_claim_one_bus(bus);
->       }
+
+> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+> +{
+> +       struct iproc_pcie *pcie;
+> +       LIST_HEAD(res);
+> +       struct resource res_mem;
+> +       int ret;
 > +
->       pci_bus_add_devices(bus);
->
->       /* Configure PCI Express settings */
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 232f925..d4b43b3 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -109,6 +109,7 @@ int pci_claim_resource(struct pci_dev *dev, int
-> resource)
->   {
->       struct resource *res = &dev->resource[resource];
->       struct resource *root, *conflict;
-> +    struct pci_dev *pdev = dev;
->
->       if (res->flags & IORESOURCE_UNSET) {
->           dev_info(&dev->dev, "can't claim BAR %d %pR: no address
-> assigned\n",
-> @@ -116,7 +117,18 @@ int pci_claim_resource(struct pci_dev *dev, int
-> resource)
->           return -EINVAL;
->       }
->
-> -    root = pci_find_parent_resource(dev, res);
-> +    while (pdev) {
-> +        root = pci_find_parent_resource(pdev, res);
-> +        if (root)
-> +            break;
+> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
+> +       if (!pcie)
+> +               return -ENOMEM;
 > +
-> +        if (pci_has_flag(PCI_PROBE_ONLY) &&
-> +            !pci_is_root_bus(pdev->bus))
-> +            pdev = pdev->bus->self;
-> +        else
-> +            break;
-> +    }
+> +       pcie->dev = &bdev->dev;
+> +       bcma_set_drvdata(bdev, pcie);
 > +
->       if (!root) {
->           dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible
-> bridge window\n",
->                resource, res);
+> +       pcie->base = bdev->io_addr;
+> +
+> +       res_mem.start = bdev->addr_s[0];
+> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+> +       res_mem.name = "PCIe MEM space";
+> +       res_mem.flags = IORESOURCE_MEM;
+> +       pci_add_resource(&res, &res_mem);
+> +
+> +       pcie->resources = &res;
+> +
+> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
+> +
+> +       ret = iproc_pcie_setup(pcie);
 
+I think I don't like this part of iproc design. It lefts
+pcie->resources pointing to some random memory after the setup/probe
+are done. Guess it should be a separated parameter or sth.
 
-[From Bjorn]
-I don't understand this new loop.  Apparently you have a device BAR, and
-the upstream bridge doesn't have a window that contains the BAR?  That
-sounds like a problem with the upstream bridge resources.
-
-Do you have an example that would make this more concrete, e.g., a host
-bridge, P2P bridge(s), and endpoint with their resources?
-
-[Suravee]
-Here is the information you were asking for. This information is setup 
-from the FW. In the PCI bridge (00:02.1), I see the prefetchable memory 
-behind bridge is already setup.
-
-OUTPUT from lspci -tv:
-
--[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD] Device 1a00
-            +-02.0  Advanced Micro Devices, Inc. [AMD] Device 1a01
-            \-02.1  PCI Bridge -[01]--+-00.0  Intel Corporation 82599ES 
-10-Gigabit SFI/SFP+ Network Connection
-                         \-00.1  Intel Corporation 82599ES 10-Gigabit 
-SFI/SFP+ Network Connection
-
-OUTPUT from lspci -vvv:
-
-00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 1a00
-	Subsystem: Advanced Micro Devices, Inc. [AMD] Device 1a00
-	Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-
-00:02.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Device 1a01
-	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-
-00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 1a02 
-(prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-	I/O behind bridge: 00fff000-00000fff
-	Memory behind bridge: fff00000-000fffff
-	Prefetchable memory behind bridge: 0000007fffe00000-0000007fffffffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-.......
-
-01:00.0 Ethernet controller: Intel Corporation 82599ES 10-Gigabit 
-SFI/SFP+ Network Connection (rev 01)
-	Subsystem: Intel Corporation Ethernet Server Adapter X520-2
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Interrupt: pin A routed to IRQ 46
-	Region 0: Memory at 7fffe80000 (64-bit, prefetchable) [size=512K]
-	Region 2: I/O ports at 0020 [size=32]
-	Region 4: Memory at 7ffff04000 (64-bit, prefetchable) [size=16K]
-.......
-
-01:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit 
-SFI/SFP+ Network Connection (rev 01)
-	Subsystem: Intel Corporation Ethernet Server Adapter X520-2
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Interrupt: pin B routed to IRQ 47
-	Region 0: Memory at 7fffe00000 (64-bit, prefetchable) [size=512K]
-	Region 2: I/O ports at 0000 [size=32]
-	Region 4: Memory at 7ffff00000 (64-bit, prefetchable) [size=16K]
-........
-
-Thanks,
-Suravee
-
+The patch is still OK, I just refer to generic iproc possible issue.
