@@ -1,67 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:40744 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750778AbbEAX3y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 May 2015 19:29:54 -0400
-Message-ID: <1430522976.7979.78.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:33603 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754161AbbEMJ3S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 05:29:18 -0400
+Received: by pdbnk13 with SMTP id nk13so45947770pdb.0
+        for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 02:29:18 -0700 (PDT)
+Message-ID: <55531967.70507@linaro.org>
+Date: Wed, 13 May 2015 17:29:11 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Sat, 02 May 2015 09:29:36 +1000
-In-Reply-To: <1430521038.7979.70.camel@kernel.crashing.org>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2015-05-02 at 08:57 +1000, Benjamin Herrenschmidt wrote:
+Hi Jiang,
 
-> > Overlay = an FDT blob to graft into a live running system. Sounds like
-> > the same thing.
-> > 
-> > > As for the details of Gavin implementation, I haven't looked at it in
-> > > details yet so there might be issues there, however I don't know what
-> > > you mean by "overlays", any pointer ?
-> > 
-> > CONFIG_OF_OVERLAY
-> > 
-> > http://events.linuxfoundation.org/sites/events/files/slides/dynamic-dt-keynote-v3.pdf
-> 
-> Well, that looks horrendously complicated, poorly documented and totally
-> unused in-tree outside of the unittest stuff, yay ! It has all sort of
-> "features" that I don't really care about.
+On 2015年05月05日 10:46, Jiang Liu wrote:
+> Introduce common interface acpi_pci_root_create() and related data
+> structures to create PCI root bus for ACPI PCI host bridges. It will
+> be used to kill duplicated arch specific code for IA64 and x86. It may
+> also help ARM64 in future.
+>
+[...]
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index a965efa52152..a292ee33d74b 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -52,6 +52,30 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>   	return ACPI_HANDLE(dev);
+>   }
+>
+> +struct acpi_pci_root;
+> +struct acpi_pci_root_ops;
+> +
+> +struct acpi_pci_root_info_common {
+> +	struct pci_controller		controller;
 
-Looking a bit more at it, I don't quite see how I can attach a subtree
-using that stuff.
+There is another problem that this patch will lead to
+compile error on ARM64 since ARM64 has basic ACPI support
+in 4.1.
 
-Instead, each node in the overlay seems to need extra nodes and
-properties to refer to the original.
+struct pci_controller		controller is not available
+on ARM64, that's the reason why compile errors happens on ARM64.
 
-So the FW would essentially have to create something a lot more complex
-than just reflattening a bit of its internal tree. For each internal
-node, it will need to add all those __overlay__ nodes and properties.
+How about move struct pci_controller to this head file?
 
-That is not going to fly for me at all. It's order of magnitudes more
-complex than the solution we are pursuing.
+because all the related file you changed in this patch set
+are only compiled when CONFI_ACPI=y, so for x86,
 
-So I think for our use case, we should continue in the direction of
-having a helper to unflatten a piece of FDT underneath an existing
-node. I don't like the "HYBRID" stuff though, we should not refer to
-the original FDT, we should just make them normal dynamic nodes.
+struct pci_controller {
+#ifdef CONFIG_ACPI
+         struct acpi_device *companion;  /* ACPI companion device */
+#endif
+#ifdef CONFIG_X86_64
+         void            *iommu;         /* IOMMU private data */
+#endif
+         int             segment;        /* PCI domain */
+         int             node;           /* NUMA node */
+};
 
-Ben.
+I'm sure #ifdef CONFIG_ACPI .. #endif can be removed
+with no harm, and for *iommu, we can remove the #ifdef CONFIG_X86_64
+with introducing little more memory on x86_32, after
+that, the struct pci_controller is almost the same as ia64:
 
+struct pci_controller {
+         struct acpi_device *companion;
+         void *iommu;
+         int segment;
+         int node;               /* nearest node with memory or 
+NUMA_NO_NODE for global allocation */
 
+         void *platform_data;
+};
 
+except void *platform_data;
+
+On ARM64, the structure is almost the same, so how about
+introduce
+
+struct pci_controller {
+         struct acpi_device *companion;  /* ACPI companion device */
+         void            *iommu;         /* IOMMU private data */
+         int             segment;        /* PCI domain */
+         int             node;           /* NUMA node */
+#ifdef CONFIG_IA64	
+	void *platform_data;
+#endif
+};
+
+in this file, then can be used for all architectures?
+
+Thanks
+Hanjun
