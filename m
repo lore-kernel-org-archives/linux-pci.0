@@ -1,57 +1,196 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 13 May 2015 08:41:55 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v6 1/2] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150513081101-mutt-send-email-mst@redhat.com>
+References: <1431431730-25164-1-git-send-email-mst@redhat.com>
+ <1431431730-25164-2-git-send-email-mst@redhat.com>
+ <871tilmwiq.fsf@x220.int.ebiederm.org>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
-References: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
- <20150519224452.GT31666@google.com> <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 May 2015 18:02:26 -0500
-Message-ID: <CAErSpo6B3_vRq-4YTSPg4f927WChZ4MXnZRY7wWCvQgZJ=9eOQ@mail.gmail.com>
-Subject: Re: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <871tilmwiq.fsf@x220.int.ebiederm.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[-cc Venkatesh (bouncing)
+On Tue, May 12, 2015 at 02:22:05PM -0500, Eric W. Biederman wrote:
+> "Michael S. Tsirkin" <mst@redhat.com> writes:
+> 
+> > d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
+> > v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
+> >
+> > The change made by the above commit is no longer necessary: it was
+> > superceded by commit d5dea7d95c48 ("PCI: msi: Disable msi interrupts
+> > when we initialize a pci device") which makes sure the original kexec
+> > problem is solved in the new kernel, and commit b566a22c23 ("PCI:
+> > disable Bus Master on PCI device shutdown") which makes sure device does
+> > not send MSI interrupts (MSI is a memory write and so is suppressed when
+> > bus master is cleared).
+> >
+> > On the contrary, disabling MSI makes it *more* likely that the device
+> > will cause mischief since unlike MSI, INT#x interrupts are not
+> > suppressed by clearing bus mastering.
+> >
+> > One example of such mischief is that after we disable MSI, the device
+> > may assert INT#x (remember, cleaning bus mastering does not disable
+> > INT#x interrupts), and if the driver hasn't registered an interrupt
+> > handler for it, the interrupt is never deasserted which causes an "irq
+> > %d: nobody cared" message, with irq being subsequently disabled. This is
+> > actually not hard to observe with virtio devices.  Not a huge problem,
+> > but ugly, and might in theory cause other problems, e.g. if the irq
+> > being disabled is shared with another device that attempts to use it in
+> > its shutdown callback, or if irq debugging was explicitly disabled on
+> > the kernel command line.
+> 
+> And disabling irq debugging is stupid, we should probably delete that
+> option.  We poll disabled irqs periodically to keep the disabled ones
+> from completely killing your system even if they are shared.
+> 
+> > Another theoretical problem is that if the driver does not flush MSI
+> > interrupts in the shutdown callback, MSI interrupt handler will run at
+> > the same time as the INT#x handler, which doesn't normally happen
+> > outside the shutdown path; Depending on the driver, the two handlers
+> > might conflict. I did not go looking for such driver bugs but this seems
+> > plausible.
+> 
+> Again a buggy driver issue.
+> 
+> > virtio specifically has another issue: register functions change between
+> > msi enabled and disabled modes, so disabling MSI while driver is doing
+> > things (e.g. from a kthread) will make the device confused.
+> 
+> Huh??? Virtio is virtual hardware.  We are talking about real hardware.
+> How do the two mix?  Is there a pass through going on and we let the
+> virtual machine get away with putting the hardware in a nasty state,
+> and don't clean it up in the real driver?
 
-On Tue, May 19, 2015 at 5:46 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Tue, May 19, 2015 at 3:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Yes pass through can mix real hardware and virtio.
+We are talking about shutdown within the VM so the hypervisor
+does not get a chance to run and clean up anything.
+
+> This sounds like a case for fixing whatever insanity is happening in the
+> virtio driver.
+> 
+> This also sounds like a case for implementing a shutdown callback and
+> disabling things properly.  A properly shutdown driver should have
+> already disabled MSI's.  A driver is responsible for enabling MSIs so it
+> should be responsible for disabling it.  The core disabling MSIs is
+> mostly to catch the handful of lazy drivers that forget.
+
+
+Okay! And I am saying that if the driver did forget,
+we are better off not disabling it - leave it enabled
+until kexec starts and disables it.
+
+
+> The bottom line is that there are a few things that are standard
+> behavior that we can do in the generic code, but at the end of the day
+> it is the responsibility of the driver to shut things down and whatever
+> driver you are dealing with clearly has a bunch of bugs and you aren't
+> fixing it. 
+
+So please let us get on with fixing it in driver and stop
+playing with device in core.
+
+
+> > Of course, some of the above specific issues can be solved by
+> > implementing a shutdown callback in the driver: this callback would have
+> > to suppress further activity from both the driver and the device, and
+> > flush outstanding handlers. This is a non-trivial amount of code that
+> > can trigger at any time, so needs careful thought to avoid race
+> > conditions causing bugs, and that's only running on shutdown, so isn't
+> > well tested.
+> 
+> Agreed.  However the code should already exist in your drivers remove
+> method.  So with a little careful factoring you should be able to
+> use a well tested code path.
 >
-> Thanks! Who's tree should this go through?
+> If you aren't happy with the separation between remove and shutdown
+> please take it up with whoever maintains the driver API these days.
+> I lost that fight the first time and I haven't had the energy to take it
+> any time since. 
+> 
+> Also we aren't talking about kexec-on-panic here.  So no, it can not
+> trigger at any time.  We are talking about kexec in as an orderly
+> transition to another kernel.  So it should be possible to perform an
+> orderly shutdown.
 
-I don't know.  This is the only patch that went to linux-pci, so I
-haven't seen the rest.
+Why aren't we talking about kexec-on-panic? That one doesn't
+trigger shutdown callbacks?
 
-Bjorn
+> If you can't figure out in the driver how to create an orderly shutdown
+> I know we can't figure out how to do it in generic code outside of the
+> driver.  Especially not for every device.
+
+Right! So please let's stop pretending we do, touch the
+device as little as possible. This is exactly what my patches do:
+don't touch msi since we don't have to.
+
+> > Instead, stop disabling MSIs in PCI core at shutdown: it's simple, safe,
+> > removes code instead of adding more code, and needs no driver support.
+> 
+> I can maybe almost see an argument for disabling intx as well.
+> 
+> I really can not buy the argument you are sending. AKA "One day I met a
+> bugggy driver.  The driver was so buggy that my system did not work
+> properly.  Instead of fixing the driver let's do crazy things, to maybe
+> avoid some of the bugs in the driver"
+
+I am saying it is driver's responsibility to disable msi on shutdown.
+If it doesn't then it knows best. Don't second-guess it.
+
+> The thing is this is the same path that we use to transition to firmware
+> and the goal is to put the hardware in something closely resembly the
+> state it was in when the firmware gave us the hardware.  A state where
+> linux and potentially other OS's can initialize the hardware and make it
+> work.
+> 
+> The whole bus-master disable that happens on the kexec path is just
+> a best attempt to make things happen and it works in enough cases
+> it is worth doing.  Especially when the normal state of the hardware
+> from the boot firmware is with bus master disabled, and a good shutdown
+> routine will clear bus-master enable anyway.
+> 
+> Interrupts and intx are in a very different situation.  Typically
+> interrupts and intx are enabled when they come from the boot firmware.
+> Interrupts should not fire unless there is device activity. 
+> 
+> Most devices are just passive and don't have on-going activity so a
+> shutdown method is not particularly needed.  But clearly you have a
+> device that if you don't tell it to do something goes around sending
+> interrupts anyway.  So that driver needs to be told to shut-up and stop.
+
+So the same argument should have been applied instead of d52877c7b1af.
+Apparently for fusion io if you just disable msi and don't do anything
+else, things get rosy. But it's a device specific thing.  All I am
+saying doing this in pci core is wrong, pci core has no idea how to
+properly tell the device to shut-up and stop, it is driver's
+responsibility.
+
+
+> As far as leaving interrupts running and causing problems switch from
+> msi to intx is not particularly significant.  There is a window when
+> interrupts can fire and cause havoc.  By leaving msi enabled I don't see
+> the problem going away, just the kind of havoc changing.
+
+How can havoc happen? We disable bus master, no msi will be sent.
+
+> I would be a lot more inclined to figure out how to get the code that
+> calls shutdown methods to call a drivers remove method instead.  That
+> would simplify things.  Unfortunately the architects of the driver
+> callbacks wanted something complex that would not get well tested so we
+> have a bit of a mess.
+> 
+> Eric
+
+Really my patch is all about doing the minimal thing in core
+since we don't really know how to cleanup the device.
+
+-- 
+MST
