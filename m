@@ -1,52 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59053 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753066AbbETJjZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 May 2015 05:39:25 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5552E35D.8030501@linux.intel.com>
+Date: Wed, 13 May 2015 13:38:37 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+MIME-Version: 1.0
+To: Hanjun Guo <hanjun.guo@linaro.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: [Patch v2 04/14] sh, irq: Use accessor irq_data_get_node() to hide struct irq_data detail
-Date: Wed, 20 May 2015 17:40:35 +0800
-Message-Id: <1432114845-24304-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 6/7] x86/PCI/ACPI: Use common interface to support PCI
+ host bridge
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-7-git-send-email-jiang.liu@linux.intel.com> <5551EFC1.2010704@linaro.org>
+In-Reply-To: <5551EFC1.2010704@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use accessor irq_data_get_node() to hide struct irq_data implementation
-detail, so we could easily reconstruct struct irq_data later.
+On 2015/5/12 20:19, Hanjun Guo wrote:
+> [...]
+>>   struct pci_root_info {
+>> -    struct acpi_device *bridge;
+>> -    char name[16];
+>> -    struct pci_controller sd;
+>> +    struct acpi_pci_root_info_common common;
+>>   #ifdef    CONFIG_PCI_MMCONFIG
+>>       bool mcfg_added;
+>>       u16 segment;
+>> @@ -165,14 +164,17 @@ static int check_segment(u16 seg, struct device
+>> *dev, char *estr)
+>>       return 0;
+>>   }
+>>
+>> -static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
+>> -              u8 end, phys_addr_t addr)
+>> +static int setup_mcfg_map(struct acpi_pci_root_info_common *ci)
+>>   {
+>>       int result;
+>> -    struct device *dev = &info->bridge->dev;
+>> +    struct pci_root_info *info;
+>> +    struct acpi_pci_root *root = ci->root;
+>> +    struct device *dev = &ci->bridge->dev;
+>> +    int seg = ci->controller.segment;
+> 
+> ...
+> 
+>>
+>> -    info->start_bus = start;
+>> -    info->end_bus = end;
+>> +    info = container_of(ci, struct pci_root_info, common);
+>> +    info->start_bus = (u8)root->secondary.start;
+>> +    info->end_bus = (u8)root->secondary.end;
+>>       info->mcfg_added = false;
+> 
+> info->segment is not initialized here
+> 
+>>
+>>       /* return success if MMCFG is not in use */
+>> @@ -182,7 +184,8 @@ static int setup_mcfg_map(struct pci_root_info
+>> *info, u16 seg, u8 start,
+>>       if (!(pci_probe & PCI_PROBE_MMCONF))
+>>           return check_segment(seg, dev, "MMCONFIG is disabled,");
+>>
+>> -    result = pci_mmconfig_insert(dev, seg, start, end, addr);
+>> +    result = pci_mmconfig_insert(dev, seg, info->start_bus,
+>> info->end_bus,
+>> +                     root->mcfg_addr);
+>>       if (result == 0) {
+>>           /* enable MMCFG if it hasn't been enabled yet */
+>>           if (raw_pci_ext_ops == NULL)
+>> @@ -195,8 +198,11 @@ static int setup_mcfg_map(struct pci_root_info
+>> *info, u16 seg, u8 start,
+>>       return 0;
+>>   }
+>>
+>> -static void teardown_mcfg_map(struct pci_root_info *info)
+>> +static void teardown_mcfg_map(struct acpi_pci_root_info_common *ci)
+>>   {
+>> +    struct pci_root_info *info;
+>> +
+>> +    info = container_of(ci, struct pci_root_info, common);
+>>       if (info->mcfg_added) {
+>>           pci_mmconfig_delete(info->segment, info->start_bus,
+> 
+> But the segment is used here to delete mmconfig entry, it seems that
+> the domain is 0 so there will be no problem, did I miss something?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/sh/kernel/irq.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Good catch, we should use ci->controller.segment and kill info->segment.
 
-diff --git a/arch/sh/kernel/irq.c b/arch/sh/kernel/irq.c
-index eb10ff84015c..8dc677cc136b 100644
---- a/arch/sh/kernel/irq.c
-+++ b/arch/sh/kernel/irq.c
-@@ -227,7 +227,7 @@ void migrate_irqs(void)
- 	for_each_active_irq(irq) {
- 		struct irq_data *data = irq_get_irq_data(irq);
- 
--		if (data->node == cpu) {
-+		if (irq_data_get_node(data) == cpu) {
- 			unsigned int newcpu = cpumask_any_and(data->affinity,
- 							      cpu_online_mask);
- 			if (newcpu >= nr_cpu_ids) {
--- 
-1.7.10.4
-
+> 
+> Thanks
+> Hanjun
