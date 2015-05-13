@@ -1,69 +1,129 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: RE: [PATCH 03/16] ntb: Enable link training for RP mode in the
- driver probe
-Date: Thu, 21 May 2015 12:49:05 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D7825FAF6@MX104CL02.corp.emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
- <ae66adf68441cdaf893d2a562924615c229489c0.1432135631.git.Allen.Hubbe@emc.com>
- <CAErSpo5gf9VhegEGY5S+dak0UuMNEMDD29JT4TcTz_UPey3aNQ@mail.gmail.com>
- <40F65EF2B5E2254199711F58E3ACB84D7825D377@MX104CL02.corp.emc.com>
- <CAErSpo5WzQ86t5F2pfhHYipcUH3h2vv1DN1-Dpx_VPsOnbpu=w@mail.gmail.com>
- <40F65EF2B5E2254199711F58E3ACB84D7825DE9F@MX104CL02.corp.emc.com>
- <CAErSpo76T1noeTyKw7FZh-dhfSfqezU9Y4rBftOCdGC8-M7ySg@mail.gmail.com>
-In-Reply-To: <CAErSpo76T1noeTyKw7FZh-dhfSfqezU9Y4rBftOCdGC8-M7ySg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hauke-m.de ([5.39.93.123]:50640 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932364AbbEMSnu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 May 2015 14:43:50 -0400
+Message-ID: <55539B63.2060203@hauke-m.de>
+Date: Wed, 13 May 2015 20:43:47 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: Ray Jui <rjui@broadcom.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Scott Branden <sbranden@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
+References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>	<1431465781-10753-3-git-send-email-hauke@hauke-m.de>	<CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com>	<5553742E.7070204@broadcom.com> <CACna6rzT=218pQk9M6NJWH51wszn=p0LmHrizrvV9Xkn-=Om3Q@mail.gmail.com> <55537C43.4050606@broadcom.com>
+In-Reply-To: <55537C43.4050606@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1v
-d25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+IE9uIFdl
-ZCwgTWF5IDIwLCAyMDE1IGF0IDY6MDAgUE0sIEh1YmJlLCBBbGxlbiA8QWxsZW4uSHViYmVAZW1j
-LmNvbT4NCj4gd3JvdGU6DQo+ID4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFz
-QGdvb2dsZS5jb21dDQo+ID4+IE9uIFdlZCwgTWF5IDIwLCAyMDE1IGF0IDQ6NDYgUE0sIEh1YmJl
-LCBBbGxlbiA8QWxsZW4uSHViYmVAZW1jLmNvbT4NCj4gPj4gd3JvdGU6DQo+ID4+ID4gRnJvbTog
-Qmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+ID4+IFBsZWFz
-ZSBydW4gImdpdCBsb2cgLS1vbmVsaW5lIGRyaXZlcnMvbnRiIiBhbmQgbWFrZSB5b3VyIHN1Ympl
-Y3QNCj4gPj4gbGluZXMNCj4gPj4gPj4gY29uc2lzdGVudC4gIFRoZSBjb252ZW50aW9uIEkgdXNl
-IGluIFBDSSAoYW5kIHdoYXQgd2FzIHVzZWQgaW4gTlRCDQo+ID4+ID4+IHVudGlsIHJlY2VudGx5
-KSBpcw0KPiA+PiA+Pg0KPiA+PiA+PiAgIC0gQWNyb255bXMgYW5kIGluaXRpYWxpc21zIGFyZSBj
-YXBpdGFsaXplZA0KPiA+PiA+PiAgIC0gU3ViamVjdCBsaW5lIGlzIGEgc3Vic3lzdGVtIHByZWZp
-eCAoIlBDSToiLCAiTlRCOiIsIGV0Yy4pDQo+ID4+IGZvbGxvd2VkDQo+ID4+ID4+IGJ5IGEgY29t
-cGxldGUgc2VudGVuY2Ugc3RhcnRpbmcgd2l0aCBhIGNhcGl0YWxpemVkIHZlcmIsIHdpdGggbm8N
-Cj4gPj4gPj4gcGVyaW9kIGF0IHRoZSBlbmQNCj4gPj4gPg0KPiA+PiA+IFRoZXNlIGFyZSB0aGUg
-bmV3IHN1YmplY3QgbGluZXMgdGhhdCB3aWxsIGJlIGluIHRoZSB2MiBvZiB0aGlzIHNldC4NCj4g
-Pj4NCj4gPj4gVGhhdCBoZWxwcyBhIGxvdCwgdGhhbmtzLg0KPiA+Pg0KPiA+PiA+IE5UQjogRml4
-IHNtYWxsIGNvZGUgZm9ybWF0IGlzc3VlcyBpbiB0cmFuc3BvcnQNCj4gPj4gPiBOVEI6IERlZmF1
-bHQgdG8gQ1BVIG1lbWNweSBmb3IgcGVyZm9ybWFuY2UNCj4gPj4gPiBOVEI6IEltcHJvdmUgcGVy
-Zm9ybWFuY2Ugd2l0aCB3cml0ZSBjb21iaW5pbmcNCj4gPj4gPiBOVEI6IFVzZSBOVU1BIGF3YXJl
-IG1lbW9yeSBhbGxvY2F0aW9uDQo+ID4+ID4gTlRCOiBVc2UgTlVNQSBtZW1vcnkgYW5kIERNQSBj
-aGFuIGluIHRyYW5zcG9ydA0KPiA+PiA+IE5UQjogUmVzZXQgdHJhbnNwb3J0IFFQIGxpbmsgc3Rh
-dHMgb24gZG93bg0KPiA+PiA+IE5UQjogRG8gbm90IGFkdmFuY2UgdHJhbnNwb3J0IFJYIG9uIGxp
-bmsgZG93bg0KPiA+PiA+IE5UQjogRGlmZmVyZW50aWF0ZSB0cmFuc3BvcnQgbGluayBkb3duIG1l
-c3NhZ2VzDQo+ID4+ID4gTlRCOiBSYXRlIGxpbWl0IG50Yl9xcF9saW5rX3dvcmsNCj4gPj4gPiBO
-VEI6IEFkZCB0b29sIGNsaWVudA0KPiA+PiA+IE5UQjogQWRkIHBpbmcgcG9uZyBjbGllbnQNCj4g
-Pj4NCj4gPj4gSSB0aGluayB0aGVzZSBhcmUgdGVzdCBjYXNlcywgbm90IHBhcnQgb2YgdGhlIGtl
-cm5lbCBpdHNlbGYuICBJdCdkIGJlDQo+ID4+IG5pY2UgdG8ga25vdyB0aGF0IGZyb20gdGhlIHN1
-bW1hcnkuICBJIGRvbid0IGtub3cgd2hhdCB0aGUgcHJlY2VkZW50DQo+ID4+IGlzIGZvciB0aGF0
-IChpZiB0aGVyZSBpcyBvbmUpLg0KPiA+DQo+ID4gV291bGQgeW91IGNvbnNpZGVyIHRoaXMgYXMg
-cHJlY2VkZW50Og0KPiA+DQo+ID4gNGE3NzZmMCBkbWF0ZXN0OiBTaW1wbGUgRE1BIG1lbWNweSB0
-ZXN0IGNsaWVudA0KPiA+DQo+ID4+DQo+ID4+ID4gTlRCOiBJbnRlbCBOVEIgcGFyYW1zIGZvciBT
-TkIgQjJCIGFkZHJlc3Nlcw0KPiA+Pg0KPiA+PiBUaGlzIHNlbnRlbmNlIG5vIHZlcmIgOikgIE5v
-dCBzdXJlIHdoYXQgeW91J3JlIGRvaW5nIHdpdGggdGhvc2UNCj4gcGFyYW1zLg0KPiA+DQo+ID4g
-TlRCOiBBZGQgcGFyYW1ldGVycyBmb3IgSW50ZWwgU05CIEIyQiBhZGRyZXNzZXMNCj4gPg0KPiA+
-Pg0KPiA+PiA+IE5UQjogQ2hlY2sgdGhlIERJRCBmb3Igd29ya2Fyb3VuZCBlcnJvciBmbGFncw0K
-PiA+Pg0KPiA+PiBJIHRoaW5rIHRoZXJlJ3Mgcm9vbSB0byBzcGVsbCBvdXQgImRldmljZSBJRCIu
-DQo+ID4NCj4gPiBOVEI6IENoZWNrIHRoZSBkZXZpY2UgSUQgdG8gc2V0IGVycmF0YSBmbGFncw0K
-PiA+DQo+ID4gQWxzbywgYWRkIHRoaXMgcHJvc2UgZGVzY3JpcHRpb24gdG8gdGhpcyBjb21taXQ6
-DQo+ID4NCj4gPiBTZXQgZXJyYXRhIGZsYWdzIGZvciB0aGUgc3BlY2lmaWMgZGV2aWNlIElEcyB0
-byB3aGljaCB0aGV5IGFwcGx5LA0KPiA+IGluc3RlYWQgb2YgdGhlIHdob2xlIHhlb24gaGFyZHdh
-cmUgY2xhc3MuDQo+ID4NCj4gPj4NCj4gPj4gPiBOVEI6IEVuYWJsZSBsaW5rIHRyYWluaW5nIGZv
-ciBSUCBtb2RlIGluIHByb2JlDQo+ID4+DQo+ID4+IElzIHRoYXQgUm9vdCBQb3J0Pw0KPiA+DQo+
-ID4geWVzDQo+ID4NCj4gPj4NCj4gPj4gPiBOVEI6IEFkZCBOVEIgaGFyZHdhcmUgYWJzdHJhY3Rp
-b24gbGF5ZXINCj4gPj4gPiBOVEI6IE1vdmUgZmlsZXMgaW4gcHJlcGFyYXRpb24gZm9yIE5UQiBh
-YnN0cmFjdGlvbg0KPiANCj4gQWxsIGxvb2tzIGdvb2QgdG8gbWUhDQoNClRoYW5rcyENCg==
+On 05/13/2015 06:30 PM, Ray Jui wrote:
+> Hi Rafal,
+> 
+> On 5/13/2015 9:19 AM, Rafał Miłecki wrote:
+>> On 13 May 2015 at 17:56, Ray Jui <rjui@broadcom.com> wrote:
+>>> On 5/12/2015 11:27 PM, Rafał Miłecki wrote:
+>>>> On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>> This driver adds support for the PCIe 2.0 controller found on the bcma
+>>>>> bus. This controller can be found on (mostly) all Broadcom BCM470X /
+>>>>> BCM5301X ARM SoCs.
+>>>>>
+>>>>> The driver found in the Broadcom SDK does some more stuff, like setting
+>>>>> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
+>>>>> PHY changes like "improving" the PCIe jitter and doing some special
+>>>>> initializations for the 3rd PCIe port.
+>>>>>
+>>>>> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
+>>>>> connected to them.
+>>>>>
+>>>>> PCI_DOMAINS is needed by this driver, because normally there is more
+>>>>> than one PCIe controller and without PCI_DOMAINS only the first
+>>>>> controller gets registered.
+>>>>> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
+>>>>>
+>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>
+>>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+>>>>
+>>>>
+>>>>> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+>>>>> +{
+>>>>> +       struct iproc_pcie *pcie;
+>>>>> +       LIST_HEAD(res);
+>>>>> +       struct resource res_mem;
+>>>>> +       int ret;
+>>>>> +
+>>>>> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
+>>>>> +       if (!pcie)
+>>>>> +               return -ENOMEM;
+>>>>> +
+>>>>> +       pcie->dev = &bdev->dev;
+>>>>> +       bcma_set_drvdata(bdev, pcie);
+>>>>> +
+>>>>> +       pcie->base = bdev->io_addr;
+>>>>> +
+>>>>> +       res_mem.start = bdev->addr_s[0];
+>>>>> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+>>>>> +       res_mem.name = "PCIe MEM space";
+>>>>> +       res_mem.flags = IORESOURCE_MEM;
+>>>>> +       pci_add_resource(&res, &res_mem);
+>>>>> +
+>>>>> +       pcie->resources = &res;
+>>>>> +
+>>>>> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
+>>>>> +
+>>>>> +       ret = iproc_pcie_setup(pcie);
+>>>>
+>>>> I think I don't like this part of iproc design. It lefts
+>>>> pcie->resources pointing to some random memory after the setup/probe
+>>>> are done. Guess it should be a separated parameter or sth.
+>>>>
+>>>> The patch is still OK, I just refer to generic iproc possible issue.
+>>>>
+>>> Sorry Rafal, but could you please be more specific on this?
+>>
+>> iproc_pcie_pltfm_probe (and iproc_pcie_bcma_probe) have local "res"
+>> variable (each its own). They do:
+>> pcie->resources = &res;
+>> and then they call
+>> iproc_pcie_setup(pcie);
+>>
+>> After iproc_pcie_pltfm_probe / iproc_pcie_bcma_probe returns, the
+>> pointer pcie->resources is not valid anymore, yet pcie struct is still
+>> in use. Of course pcie->resources isn't used anymore, but still, it's
+>> some in-struct pointer (to the random memory since local variable is
+>> not accessible anymore).
+>>
+>> I think you should drop
+>> struct list_head *resources;
+>> from the struct iproc_pcie and use
+>> iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *resources)
+>>
+> 
+> Okay thanks. That makes sense.
+> 
+> Or I should keep a copy of the resources under pcie->resources. In the
+> current pcie-iproc.c, the resource is not used anywhere else except when
+> creating the root bus under iproc_pcie_setup. But in the future, I might
+> need to add more code to explicitly program the outbound/inbound windows
+> so this driver can work with some other iProc SoCs where the desired
+> windows do not match power-on-reset values.
+> 
+> I plan to change this along with the window programming patch in the
+> future. I also think Hauke's current patch is fine.
+> 
+> Thanks,
+> 
+> Ray
+> 
+I think parts of this resources are allocated and never freed.
+
+pci_add_resource() allocates some bytes, but I do not see where they are
+freed, this also applies to the platform driver.
+
+Hauke
