@@ -1,52 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:37761 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbbESWrO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 18:47:14 -0400
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27988 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752119AbbEMGhy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 02:37:54 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mohit Kumar <mohit.kumar@st.com>, Arnd Bergmann <arnd@arndb.de>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH] PCI: designware: Add 8 lanes support
+Date: Wed, 13 May 2015 14:44:34 +0800
+Message-ID: <1431499474-102380-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20150519224452.GT31666@google.com>
-References: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com> <20150519224452.GT31666@google.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 19 May 2015 15:46:52 -0700
-Message-ID: <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
-Subject: Re: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Airlie <airlied@linux.ie>, daniel.vetter@intel.com,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 3:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+This patch adds 8 lanes support. Following suggestion from Arnd, just split
+this patch from http://www.spinics.net/lists/linux-pci/msg40467.html
 
-Thanks! Who's tree should this go through?
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/host/pcie-designware.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-  Luis
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 2e9f84f..4ce0aa5 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -31,6 +31,7 @@
+ #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
+ #define PORT_LINK_MODE_2_LANES		(0x3 << 16)
+ #define PORT_LINK_MODE_4_LANES		(0x7 << 16)
++#define PORT_LINK_MODE_8_LANES		(0xf << 16)
+ 
+ #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
+ #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
+@@ -38,6 +39,7 @@
+ #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
+ #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
+ #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
++#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
+ 
+ #define PCIE_MSI_ADDR_LO		0x820
+ #define PCIE_MSI_ADDR_HI		0x824
+@@ -778,6 +780,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	case 4:
+ 		val |= PORT_LINK_MODE_4_LANES;
+ 		break;
++	case 8:
++		val |= PORT_LINK_MODE_8_LANES;
++		break;
+ 	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
+ 
+@@ -794,6 +799,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	case 4:
+ 		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
+ 		break;
++	case 8:
++		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
++		break;
+ 	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 
+-- 
+1.9.1
+
