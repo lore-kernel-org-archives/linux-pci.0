@@ -1,43 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59717 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750738AbbEFIQT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 May 2015 04:16:19 -0400
-Date: Wed, 6 May 2015 10:16:17 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Dave Young <dyoung@redhat.com>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150506081617.GB20611@8bytes.org>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
- <20150505060931.GB31063@dhcp-128-4.nay.redhat.com>
- <20150505152343.GP15736@8bytes.org>
- <20150506014649.GA14065@dhcp-128-4.nay.redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 14 May 2015 11:53:34 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v6 1/2] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150514113732-mutt-send-email-mst@redhat.com>
+References: <1431431730-25164-1-git-send-email-mst@redhat.com>
+ <1431431730-25164-2-git-send-email-mst@redhat.com>
+ <871tilmwiq.fsf@x220.int.ebiederm.org>
+ <20150513081101-mutt-send-email-mst@redhat.com>
+ <20150514075957-mutt-send-email-mst@redhat.com>
+ <46708A26-16CB-4417-BCFA-12F4C78FC2F7@xmission.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150506014649.GA14065@dhcp-128-4.nay.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <46708A26-16CB-4417-BCFA-12F4C78FC2F7@xmission.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 06, 2015 at 09:46:49AM +0800, Dave Young wrote:
-> For the original problem, the key issue is dmar faults cause kdump kernel
-> hang so that vmcore can not be saved. I do not know the reason why it hangs
-> I think it is acceptable if kdump kernel boot ok with some dma errors..
+On Thu, May 14, 2015 at 02:58:59AM -0500, Eric W. Biederman wrote:
+> 
+> 
+> On May 14, 2015 1:06:00 AM CDT, "Michael S. Tsirkin" <mst@redhat.com> wrote:
+> >On Wed, May 13, 2015 at 08:41:55AM +0200, Michael S. Tsirkin wrote:
+> >> > This also sounds like a case for implementing a shutdown callback
+> >and
+> >> > disabling things properly.  A properly shutdown driver should have
+> >> > already disabled MSI's.  A driver is responsible for enabling MSIs
+> >so it
+> >> > should be responsible for disabling it.  The core disabling MSIs is
+> >> > mostly to catch the handful of lazy drivers that forget.
+> >> 
+> >> 
+> >> Okay! And I am saying that if the driver did forget,
+> >> we are better off not disabling it - leave it enabled
+> >> until kexec starts and disables it.
+> >> 
+> >> 
+> >> > The bottom line is that there are a few things that are standard
+> >> > behavior that we can do in the generic code, but at the end of the
+> >day
+> >> > it is the responsibility of the driver to shut things down and
+> >whatever
+> >> > driver you are dealing with clearly has a bunch of bugs and you
+> >aren't
+> >> > fixing it. 
+> >> 
+> >> So please let us get on with fixing it in driver and stop
+> >> playing with device in core.
+> >
+> >Eric, does this argument make sense?  Drivers should do the right thing
+> >in their shutdown callback, let's not try to work around their bugs in
+> >core.
+> 
+> Not in context of this patch, as this change appears to
+> be to avoid fixing the driver.
 
-It hangs because some devices can't handle the DMAR faults and the kdump
-kernel can't initialize them and will hang itself. For that it doesn't
-matter whether the fault was caused by a read or write request.
+Not really. I do intend to work on adding shutdown to virtio: e.g. we
+really must change avoid running config change interrupts.
+but I would like the core to do the right thing, so I argue
+about what's best for general core to do, and what has the least
+chance to cause hangs.
 
+> Further this behavior in the core has existed for the
+> better part of a decade.
+>  Who knows what weird
+> behavior (called regressions) this will trigger with
+> other drivers in other situations.
 
-	Joerg
+That is also part of the argument. It used to be so, but
+now it really can not trigger any regressions because we
+have since added a bigger hammer: disabling bus mastering.
 
+Do you disagree with this? How can leaving msi on cause harm?
+
+> I do not see any reason to change the existing behavior here.
+> 
+> Especially as if you try and boot a non-linux kernel with
+> kexec
+
+First time I hear about this requirement. Does anyone do this? I find
+it hard to believe it works ...
+
+> you are almost certainly going to subject it to a
+> screaming MSI interrupt and there almost certainly will
+> not be code to disable MSIs as they are disabled by at
+> boot up by default.
+> 
+> Eric
+
+OTOH if you do disable MSI but leave device functioning you will just
+get screaming INT#x which is even worse because it will end up disabling
+INT#x which is shared, and so breaking multiple devices and not just
+this one.
+
+-- 
+MST
