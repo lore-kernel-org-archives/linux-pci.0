@@ -1,108 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:57381 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503AbbEXUhQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 24 May 2015 16:37:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: rjui@broadcom.com, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] PCI: iproc: directly add pci resources
-Date: Sun, 24 May 2015 22:37:02 +0200
-Message-Id: <1432499823-27369-1-git-send-email-hauke@hauke-m.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
+Subject: [Patch v3 3/7] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
+Date: Thu, 14 May 2015 16:56:39 +0800
+Message-Id: <1431593803-5213-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The resources member in the struct was pointing to a stack variable and
-is invalid after the the registration function returned. Remove this
-pointer and add it a a parameter to the function.
+Use common struct resource_entry to replace private
+struct iospace_resource.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pcie-iproc-bcma.c     | 4 +---
- drivers/pci/host/pcie-iproc-platform.c | 4 +---
- drivers/pci/host/pcie-iproc.c          | 4 ++--
- drivers/pci/host/pcie-iproc.h          | 3 +--
- 4 files changed, 5 insertions(+), 10 deletions(-)
+ arch/ia64/include/asm/pci.h |    5 -----
+ arch/ia64/pci/pci.c         |   17 ++++++++---------
+ 2 files changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-index c318f19..f96b39e 100644
---- a/drivers/pci/host/pcie-iproc-bcma.c
-+++ b/drivers/pci/host/pcie-iproc-bcma.c
-@@ -62,11 +62,9 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 	res_mem.flags = IORESOURCE_MEM;
- 	pci_add_resource(&res, &res_mem);
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 52af5ed9f60b..5c10e0ec48d4 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
  
--	pcie->resources = &res;
+-struct iospace_resource {
+-	struct list_head list;
+-	struct resource res;
+-};
 -
- 	pcie->map_irq = iproc_pcie_bcma_map_irq;
+ struct pci_controller {
+ 	struct acpi_device *companion;
+ 	void *iommu;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 23689d4c37ae..4af1b52c7a44 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
+ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 			struct resource_entry *entry)
+ {
+-	struct iospace_resource *iospace;
++	struct resource_entry *iospace;
+ 	struct resource *resource, *res = entry->res;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
  
--	ret = iproc_pcie_setup(pcie);
-+	ret = iproc_pcie_setup(pcie, &res);
- 	if (ret) {
- 		dev_err(pcie->dev, "PCIe controller setup failed\n");
- 		return ret;
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index c8aa06f..c5fe4c1 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -69,11 +69,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		return ret;
- 	}
+ 	len = strlen(info->name) + 32;
+-	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	iospace = resource_list_create_entry(NULL, len);
+ 	if (!iospace) {
+ 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
  
--	pcie->resources = &res;
--
- 	pcie->map_irq = of_irq_parse_and_map_pci;
+-	resource = &iospace->res;
++	resource = iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	entry->offset = base_port;
+ 	res->start = min + base_port;
+ 	res->end = max + base_port;
+-	list_add_tail(&iospace->list, &info->io_resources);
++	resource_list_add_tail(iospace, &info->io_resources);
  
--	ret = iproc_pcie_setup(pcie);
-+	ret = iproc_pcie_setup(pcie, &res);
- 	if (ret) {
- 		dev_err(pcie->dev, "PCIe controller setup failed\n");
- 		return ret;
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index cef31f6..d77481e 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -183,7 +183,7 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
- 	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
+ 	return 0;
+ 
+ free_resource:
+-	kfree(iospace);
++	resource_list_free_entry(iospace);
+ 	return -ENOSPC;
  }
  
--int iproc_pcie_setup(struct iproc_pcie *pcie)
-+int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
+ static void __release_pci_root_info(struct pci_root_info *info)
  {
- 	int ret;
- 	struct pci_bus *bus;
-@@ -211,7 +211,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie)
- 	pcie->sysdata.private_data = pcie;
+ 	struct resource *res;
+-	struct iospace_resource *iospace, *tmp;
+ 	struct resource_entry *entry, *tentry;
  
- 	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
--				  &pcie->sysdata, pcie->resources);
-+				  &pcie->sysdata, res);
- 	if (!bus) {
- 		dev_err(pcie->dev, "unable to create PCI root bus\n");
- 		ret = -ENOMEM;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index a333d4b..ba0a108 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -29,7 +29,6 @@
- struct iproc_pcie {
- 	struct device *dev;
- 	void __iomem *base;
--	struct list_head *resources;
- 	struct pci_sys_data sysdata;
- 	struct pci_bus *root_bus;
- 	struct phy *phy;
-@@ -37,7 +36,7 @@ struct iproc_pcie {
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
- };
+-	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
+-		release_resource(&iospace->res);
+-		kfree(iospace);
++	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
++		release_resource(entry->res);
++		resource_list_destroy_entry(entry);
+ 	}
  
--int iproc_pcie_setup(struct iproc_pcie *pcie);
-+int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
- 
- #endif /* _PCIE_IPROC_H */
+ 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
 -- 
-2.1.4
+1.7.10.4
 
