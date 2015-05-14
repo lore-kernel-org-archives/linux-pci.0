@@ -1,160 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:41714 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000AbbEKCiK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 May 2015 22:38:10 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 12:38:08 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E03B72BB0051
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:38:05 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B2buqf46202976
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:38:05 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B2bWm7004373
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:37:32 +1000
-Date: Mon, 11 May 2015 12:37:07 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 5/9] powerpc/eeh: create EEH_PE_VF for VF PE
-Message-ID: <20150511023707.GA8816@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from gate.crashing.org ([63.228.1.57]:51728 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751157AbbENHOl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 May 2015 03:14:41 -0400
+Message-ID: <1431587657.4160.37.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Pantelis Antoniou <panto@antoniou-consulting.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Thu, 14 May 2015 17:14:17 +1000
+In-Reply-To: <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+	 <1430493730.7979.58.camel@kernel.crashing.org>
+	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+	 <1430521038.7979.70.camel@kernel.crashing.org>
+	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+	 <1430774063.7979.139.camel@kernel.crashing.org>
+	 <1431560124.20218.91.camel@kernel.crashing.org>
+	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+	 <1431564871.4160.8.camel@kernel.crashing.org>
+	 <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
+	 <1431585994.4160.32.camel@kernel.crashing.org>
+	 <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 04, 2015 at 03:07:34PM +0800, Wei Yang wrote:
+On Thu, 2015-05-14 at 10:04 +0300, Pantelis Antoniou wrote:
 
-Please reorder PATCH[6] with this one because the EEH device is expected
-to be created before EEH PE.
-
->On powernv platform, VF PE is a special PE which is different from the Bus
->PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
->properly. For example, we need to create VF PE when VF's pci_dev is
->initialized in kernel. And add a flag to mark it is a VF PF.
-                                                       ^^^^^
+> Hmm, since you just want to transmit a whole subtree things are a bit
+> simpler.
+> 
+> You don’t need any of the fixups, and your target node is known.
+> 
+> So your overlay is simply:
+> 
+> / {
+> 	fragment@0 {
+> 		target-path = “/foo”;
+> 		__overlay__ {
+> 			/* contents of the slot */
+> 		};
+> 	}; 
+> };
 >
+> I think it’s possible to just bit-mangle a blob (in pseudo code).
+> 
+> 	const u8 template_overlay_blob[] = { <compiled blob of the above> };
+> 
+> 	flatten_slot(slot_blob);
+> 
+> 	overlay_blob = allocate_new_blob(template_overlay_blob, slot_blob);
+> 
+> 	overlay_node = find_node(overlay_blob, “/fragment@0/__overlay__);
+> 	target_prop = find_prop(overlay_blob, “/fragment@0/target-path”);
+> 
+> 	inject_slot_blob(overlay_blob, overlay_node, slot_blob);
+> 	modify_slot_target(overlay_blob, target_prop, slot_target);
+> 	
+> I don’t think you need to re-flatten anything, shuffling bits around with
+> memmove should work.
 
->From above commit log, my understanding is that you're adding a flag to
-identify VF PE, which is handled differently from bus PE. You missed the
-details on the difference between them and the speical treament to VF PE.
-Could you help add those information in the commit log to make it looks
-complete?
+Fairly gross :-)
 
->This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
->At the mean time, it creates the sysfs and address cache for VF PE.
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+But yeah generating the overlay doesn't necessarily scare me, I can
+generate a temp tree that is the overlay in which I "copy" the subtree
+(or in my internal ptr-based representation I could have a concept of
+alias which I follow while flattening).
 
-                   it creates the sysfs and address cache for VF PE at PCI
-device final fixup time.
+That leaves me with these problems:
 
->
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->---
-> arch/powerpc/include/asm/eeh.h               |    1 +
-> arch/powerpc/kernel/eeh_pe.c                 |   12 ++++++++++--
-> arch/powerpc/platforms/powernv/eeh-powernv.c |   12 ++++++++++++
-> 3 files changed, 23 insertions(+), 2 deletions(-)
->
->diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->index a52db28..56e8cd9 100644
->--- a/arch/powerpc/include/asm/eeh.h
->+++ b/arch/powerpc/include/asm/eeh.h
->@@ -70,6 +70,7 @@ struct pci_dn;
-> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
-> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
-> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
->+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
->
-> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
-> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
->diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
->index 35f0b62..edfe63a 100644
->--- a/arch/powerpc/kernel/eeh_pe.c
->+++ b/arch/powerpc/kernel/eeh_pe.c
->@@ -299,7 +299,12 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
-> 	 * EEH device already having associated PE, but
-> 	 * the direct parent EEH device doesn't have yet.
-> 	 */
->-	pdn = pdn ? pdn->parent : NULL;
->+#ifdef CONFIG_PCI_IOV
->+	if (edev->mode & EEH_DEV_VF)
->+		pdn = pci_get_pdn(edev->physfn);
->+	else
->+#endif
->+		pdn = pdn ? pdn->parent : NULL;
+ - No support for removing of nodes, so that needs to be added back to
+the format and to Linux unless I continue removing by hand in the PCI
+hotplug code itself
 
-[A]
+ - No support for "committing" the overlay which needs to be added as
+well.
 
-> 	while (pdn) {
-> 		/* We're poking out of PCI territory */
-> 		parent = pdn_to_eeh_dev(pdn);
->@@ -382,7 +387,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
-> 	}
->
-> 	/* Create a new EEH PE */
->-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->+	if (edev->mode & EEH_DEV_VF)
->+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
->+	else
->+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+> >>> Now we could consider that subtree as a changeset that can be undone,
+> >>> but that wouldn't work for boot time. And subsequent updates wouldn't
+> >>> have that concept of "undoing" anyway.
+> >>> 
+> >> 
+> >> I have posted another patch that does boot-time DT quirk which are
+> >> non-revertable.
+> >> 
+> >> https://lkml.org/lkml/2015/2/18/258
+> > 
+> > Not sure how that applies in my case ... I can't change the
+> > representation of the PCI subtree, this is standard OFW representation,
+> > I can't change the FW to make it an overlay-like thing at boot time,
+> > that would break existing kernels.
+> > 
+> 
+> The idea is to append the ‘quirk’ to the already booting device tree blob.
 
-You don't have CONFIG_PCI_IOV here to protect the code, but you had
-that at [A]. In order to keep the code look consistent, you either
-add it or remove it for all places. I prefer to remove it, which
-we don't need CONFIG_PCI_IOV.
- 
-> 	if (!pe) {
-> 		pr_err("%s: out of memory!\n", __func__);
-> 		return -ENOMEM;
->diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->index 622f08c..5447481 100644
->--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->@@ -1540,3 +1540,15 @@ static int __init eeh_powernv_init(void)
-> 	return ret;
-> }
-> machine_early_initcall(powernv, eeh_powernv_init);
->+
->+#ifdef CONFIG_PCI_IOV
->+static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
->+{
+I know but that's not how things work for me. At boot time the FW passes
+me one tree that contains all the PCI stuff it has probed.
 
-Please rename it to pnv_eeh_vf_final_fixup(). Names of all functions
-in this file expect prefix "pnv_eeh_". With "_final_", it's clearly
-to tell it's called on PCI device final fixup time.
+> Another idea floating around was to simple concatenate the booting blob with
+> any overlay blobs you want applied at boot time.
 
->+	/* sysfs files should only be added after devices are added */
+Sure but I don't get overlay blobs at boot time.
 
-It's nice to explain why here: sysfs for the PCI device isn't populated
-and the MMIO resource isn't finalized for the PCI device yet.
+> >>> IE. conceptually, what overlays do today is quite rooted around the idea
+> >>> of having a fixed "base" DT and some pre-compiled DTB overlays that
+> >>> get added/removed. The design completely ignore the idea of a FW that
+> >>> maintains a "live" tree which we want to keep in sync, which is what we
+> >>> want to do here, or what we could do with a "live" open firmware
+> >>> implementation.
+> >>> 
+> >>> Now we might be able to reconcile them, but it feels to me that the
+> >>> overlay/changeset stuff is too rooted in the first concept…
+> >>> 
+> >> 
+> >> The first DT overlays use case (beaglebone capes) is what got the concept
+> >> started.
+> >> 
+> >> Right now is a generic mechanism to apply modifications to the kernel
+> >> live tree, with the possibility to revert them.
+> > 
+> > Yes but as I said it's not really thought in term of keeping the kernel
+> > tree in sync with an external dynamically generated tree. Maybe we can
+> > fix it, but it's more complex…
+> > 
+> 
+> Yes it is, unfortunately.
 
->+	if (pdev->is_virtfn) {
->+		eeh_add_device_late(pdev);
->+		eeh_sysfs_add_device(pdev);
->+	}
->+}
+Right. Which makes the solution of just passing my bit of tree as a blob
+which I expand in Linux where I want it rather than an overlay tempting
+if we can make Gavin patch more palatable (removing the hybrid stuff
+etc...).
 
-The nested ifdef can be avoided as:
+Cheers,
+Ben.
 
-	if (!pdev->is_virtfn)
-		return;
+> > Ben.
+> > 
+> >>> Ben.
+> >>> 
+> >>> 
+> >> 
+> >> Regards
+> >> 
+> >> — Pantelis
+> > 
+> > 
+> 
+> Regards
+> 
+> — Pantelis
 
-	eeh_add_device_late(pdev);
-	eeh_sysfs_add_device(pdev);
-
->+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
->+#endif /* CONFIG_PCI_IOV */
-
-Thanks,
-Gavin
 
