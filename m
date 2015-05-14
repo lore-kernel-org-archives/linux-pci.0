@@ -1,115 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:54957 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473AbbEOFvL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:51:11 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:51:09 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 761482BB0047
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:07 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5ox0728966992
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:07 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5oYoM002761
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:35 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 05/11] powerpc/powernv: create/release eeh_dev for VF
-Date: Fri, 15 May 2015 13:46:20 +0800
-Message-Id: <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:36519 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298AbbENAZB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 20:25:01 -0400
+Received: by yhrr66 with SMTP id r66so18659418yhr.3
+        for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 17:25:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1431560124.20218.91.camel@kernel.crashing.org>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+ <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+ <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+ <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 13 May 2015 19:18:37 -0500
+Message-ID: <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH on powerpc platform needs eeh_dev structure to track the PCI device
-status. Since VFs are created/released dynamically, VF's eeh_dev is also
-dynamically created/released in system.
+On Wed, May 13, 2015 at 6:35 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Tue, 2015-05-05 at 07:14 +1000, Benjamin Herrenschmidt wrote:
+>> So the "trivial" way to do it (and the way we have implemented the FW
+>> side so far) is to have the FW simply "flatten" the subtree below the
+>> slot and pass it to Linux, with the intent of expanding it back below
+>> the slot node.
+>>
+>> This is what Gavin proposed patches do.
+>>
+>> The overlay mechanism adds all sorts of features that we don't seen to
+>> need and would make the above more complex.
+>
+> Guys, I never got a final answer from you on this. Are we ok with adding
+> the way to just expand a subtree or are you insistent we need to use the
+> overlap mechanism ?
 
-This patch creates/removes eeh_dev when pci_dn is created/removed for VFs,
-and marks it with EEH_DEV_VF type.
+I haven't decided really.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h |    1 +
- arch/powerpc/kernel/eeh.c      |    4 ++++
- arch/powerpc/kernel/pci_dn.c   |   11 +++++++++++
- 3 files changed, 16 insertions(+)
+The main thing with the current patch is I don't really like the added
+complexity to unflatten_dt_node. It is already a fairly complex
+function. Perhaps removing of "hybrid" as discussed will help?
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index a52db28..1b3614d 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -138,6 +138,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
- 
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 6c7ce1b..221e280 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1135,6 +1135,10 @@ void eeh_add_device_late(struct pci_dev *dev)
- 	}
- 
- 	edev->pdev = dev;
-+#ifdef CONFIG_PCI_IOV
-+	if (dev->is_virtfn)
-+		edev->physfn = dev->physfn;
-+#endif
- 	dev->dev.archdata.edev = edev;
- 
- 	if (eeh_has_flag(EEH_PROBE_MODE_DEV))
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index f771130..94806a4 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- {
- #ifdef CONFIG_PCI_IOV
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pci_dn *parent, *pdn;
-+	struct eeh_dev *edev;
- 	int i;
- 
- 	/* Only support IOV for now */
-@@ -206,6 +208,8 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 				 __func__, i);
- 			return NULL;
- 		}
-+		eeh_dev_init(pdn, hose);
-+		edev = pdn_to_eeh_dev(pdn);
- 	}
- #endif /* CONFIG_PCI_IOV */
- 
-@@ -254,10 +258,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
- 		list_for_each_entry_safe(pdn, tmp,
- 			&parent->child_list, list) {
-+			struct eeh_dev *edev;
- 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
- 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
- 				continue;
- 
-+			edev = pdn_to_eeh_dev(pdn);
-+			if (edev) {
-+				pdn->edev = NULL;
-+				kfree(edev);
-+			}
-+
- 			if (!list_empty(&pdn->list))
- 				list_del(&pdn->list);
- 
--- 
-1.7.9.5
+If there are things we can do to make overlays easier to use in your
+use case, I'd like to hear ideas. I don't really buy that being more
+complex than needed is an obstacle. That is very often the case to
+have common, scale-able solutions. I want to see a simple case be
+simple to support.
 
+Rob
