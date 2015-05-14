@@ -1,99 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35911 "EHLO mx1.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:50258 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750879AbbETAHM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 20:07:12 -0400
-Message-ID: <555BD029.7050803@redhat.com>
-Date: Tue, 19 May 2015 17:07:05 -0700
-From: Alexander Duyck <alexander.h.duyck@redhat.com>
-MIME-Version: 1.0
-To: Jesse Brandeburg <jesse.brandeburg@intel.com>
-CC: Mark D Rustad <mark.d.rustad@intel.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to protect
- VPD operations
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>	<555B78F7.60908@redhat.com> <20150519160158.00002cd6@unknown>
-In-Reply-To: <20150519160158.00002cd6@unknown>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	id S1423054AbbEOAKV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 May 2015 20:10:21 -0400
+Message-ID: <1431645953.4160.82.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Pantelis Antoniou <panto@antoniou-consulting.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Fri, 15 May 2015 09:25:53 +1000
+In-Reply-To: <A748C569-24CF-41B9-BA91-822A67132DA9@antoniou-consulting.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+	 <1430493730.7979.58.camel@kernel.crashing.org>
+	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+	 <1430521038.7979.70.camel@kernel.crashing.org>
+	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+	 <1430774063.7979.139.camel@kernel.crashing.org>
+	 <1431560124.20218.91.camel@kernel.crashing.org>
+	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+	 <1431564871.4160.8.camel@kernel.crashing.org>
+	 <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
+	 <1431585994.4160.32.camel@kernel.crashing.org>
+	 <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
+	 <1431587657.4160.37.camel@kernel.crashing.org>
+	 <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com>
+	 <1431588358.4160.42.camel@kernel.crashing.org>
+	 <D7FC0542-DD1A-42 8F-8E75-81620C6D83DC@antoniou-consulting.com>
+	 <1431589652.4160.49.camel@kernel.crashing.org>
+	 <A748C569-24CF-41B9-BA91-822A67132DA9@antoniou-consulting.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 2015-05-14 at 14:02 +0300, Pantelis Antoniou wrote:
+> Hi Ben,
+> 
+> > On May 14, 2015, at 10:47 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+> > 
+> 
+> [snip]
+> 
+> So I spend some time thinking about your use case and I think it boils down
+> to this:
+> 
+> I have a live tree in the firmware, I have made changes and I need to reflect
+> those changes to the live tree in the kernel.
+> 
+> Sounds like ‘how do I generate a patch for getting those two in sync'. No?
 
+More or less.
 
-On 05/19/2015 04:01 PM, Jesse Brandeburg wrote:
-> On Tue, 19 May 2015 10:55:03 -0700
-> Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
->
->> On 05/18/2015 05:00 PM, Mark D Rustad wrote:
->>> Some devices have a problem with concurrent VPD access to different
->>> functions of the same physical device, so move the protecting mutex
->>> from the pci_vpd structure to the pci_bus structure. There are a
->>> number of reports on support sites for a variety of devices from
->>> various vendors getting the "vpd r/w failed" message. This is likely
->>> to at least fix some of them. Thanks to Shannon Nelson for helping
->>> to come up with this approach.
->>>
->>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->>> Acked-by: Shannon Nelson <shannon.nelson@intel.com>
->>> Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> Instead of moving the mutex lock around you would be much better served
->> by simply removing the duplicate VPD entries for a given device in a
->> PCIe quirk.  Then you can save yourself the extra pain and effort of
->> having to deal with serialized VPD accesses for a multifunction device.
->>
->> The logic for the quirk should be fairly simple.
->>     1.  Scan for any other devices with VPD that share the same bus and
->> device number.
->>     2.  If bdf is equal to us keep searching.
->>     3.  If bdf is less than our bdf we release our VPD area and set VPD
->> pointer to NULL.
-> But Alex if you do this you're violating the principle of least
-> surprise, not to mention changing a user-space interface which should
-> not be done.
+> I can see where this might be useful for others as all.
+> 
+> I think we really need to create a liblivedt like we have libfdt since
+> we have a number of projects going about using/manipulating DT at runtime.
+> 
+> 1. The linux kernel, with it’s own live tree implementation.
+> 2. The device tree compiler (it has a live tree) custom implemented.
+> 3. Your weird and wonderful (or wacky) firmware.
+> 4. u-boot does use DT now, but it does with libfdt. I believe this is suboptimal.
+> 5. barebox does DT as well.
+> 
+> Most of what we want to do with DT can be abstracted in a library I think that
+> all of those projects can use.
+> 
+> What are your thoughts?
 
-I'm willing to back off on dropping the VPD info for those functions 
-entirely, but the lock should not be pushed to the bus.
+Well, we have at least two implementations, the kernel one and the one
+in our OPAL firmware:
 
-> Mark's solution is pretty graceful and solves the issue at heart, which
-> is that
-> 1) several Intel chips have this issue
-> 2) it appears that several other vendor's chips have this issue (or
-> similar) as well, but even if they don't Mark's fix will not change
-> their general operation, only make a small serializing effect when
-> multiple simultaneous reads are made.
+https://github.com/open-power/skiboot/blob/master/include/device.h
+https://github.com/open-power/skiboot/blob/master/core/device.c
 
-2 is based on a false premise.  The "vpd r/w failed" error is about as 
-common as dev_watchdog().  Just because it presents with a similar 
-symptom doesn't mean it is the same issue.
+The latter uses some nice Rusty tricks (tm) for multiple argument
+functions.
 
-> This is a reasonably small fix, with a small kernel footprint, which
-> does not require changing user expectations or violating user-space
-> semantics that are already established, so I support it as is.
+It would make sense to do a library somewhere yes. However, I need to
+cut my firmware API pretty much today so I think for now I'll stick
+to something Ad-Hoc for the PCI hotplug code that just passes the
+bit of FDT with the new devices and leave the "grand project" of live
+sync of the tree for later.
 
-I am not against the shared lock approach, but the bus is the wrong 
-place for this.  Sharing a bus does not mean that the devices are all a 
-part of the same chip, it only means they share a bus.  I would guess 
-that this fix has not been tested with any LOM parts such as e1000e, or 
-in a virtualization environment, as this would exhibit different 
-behavior with this patch.  For example does it make sense for an e1000e 
-LOM to be joined at the hip with a SATA or USB controller.  They could 
-all be from different manufacturers with different requirements.
+There are other implementations of live DT in various Open Firmware
+variants out there, most are in Forth which I suggest you don't bother
+with unless you enjoy pain, but I think at least one of these is
+actually in C.
 
-If the bug is in Intel Ethernet with VPD then I would suggest tweaking 
-the VPD logic and adding a Intel Ethernet PCI quirk.  It doesn't make 
-sense to assume based on one common error message that all of creation 
-has the same issue.
-
-If anything I believe Mark's patches have revealed a bigger issue. That 
-is the fact that the sysfs file is reading outside of the VPD area which 
-the PCI spec doesn't have a defined behavior for.  I suspect this is the 
-cause of a number of the issues being reported as Broadcom had to 
-specifically quirk to prevent it, and I found one discussion that 
-indicated something similar might be needed for Realtek.
-
-- Alex
-
-
+Cheers,
+Ben.
 
 
