@@ -1,86 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34823 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933130AbbEMNXh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 09:23:37 -0400
-Received: by pabtp1 with SMTP id tp1so50785909pab.2
-        for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 06:23:36 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Zhou Wang'" <wangzhou1@hisilicon.com>
-Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Mohit Kumar'" <mohit.kumar@st.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
-	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
-	"'Liguozhu'" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH] PCI: designware: Add 8 lanes support
-Date: Wed, 13 May 2015 22:23:29 +0900
-Message-ID: <000001d08d80$04aea8b0$0e0bfa10$@com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Received: from li42-95.members.linode.com ([209.123.162.95]:50538 "EHLO
+	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752797AbbENHTd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 May 2015 03:19:33 -0400
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+Content-Type: text/plain; charset=utf-8
+From: Pantelis Antoniou <panto@antoniou-consulting.com>
+In-Reply-To: <1431587657.4160.37.camel@kernel.crashing.org>
+Date: Thu, 14 May 2015 10:19:28 +0300
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Message-Id: <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org> <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com> <1431585994.4160.32.camel@kernel.crashing.org> <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com> <1431587657.4160.37.camel@kernel.crashing.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 13 May 2015 14:44:34 +0800, Zhou Wang wrote:
-> This patch adds 8 lanes support. Following suggestion from Arnd, just split
-> this patch from http://www.spinics.net/lists/linux-pci/msg40467.html
->
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Hi Ben,
 
-+cc: Pratyush Anand
+> On May 14, 2015, at 10:14 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+> 
+> On Thu, 2015-05-14 at 10:04 +0300, Pantelis Antoniou wrote:
+> 
+>> Hmm, since you just want to transmit a whole subtree things are a bit
+>> simpler.
+>> 
+>> You don’t need any of the fixups, and your target node is known.
+>> 
+>> So your overlay is simply:
+>> 
+>> / {
+>> 	fragment@0 {
+>> 		target-path = “/foo”;
+>> 		__overlay__ {
+>> 			/* contents of the slot */
+>> 		};
+>> 	}; 
+>> };
+>> 
+>> I think it’s possible to just bit-mangle a blob (in pseudo code).
+>> 
+>> 	const u8 template_overlay_blob[] = { <compiled blob of the above> };
+>> 
+>> 	flatten_slot(slot_blob);
+>> 
+>> 	overlay_blob = allocate_new_blob(template_overlay_blob, slot_blob);
+>> 
+>> 	overlay_node = find_node(overlay_blob, “/fragment@0/__overlay__);
+>> 	target_prop = find_prop(overlay_blob, “/fragment@0/target-path”);
+>> 
+>> 	inject_slot_blob(overlay_blob, overlay_node, slot_blob);
+>> 	modify_slot_target(overlay_blob, target_prop, slot_target);
+>> 	
+>> I don’t think you need to re-flatten anything, shuffling bits around with
+>> memmove should work.
+> 
+> Fairly gross :-)
+> 
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+You don’t want to know how sausages are made, but they are delicious :)
 
-Best regards,
-Jingoo Han
+> But yeah generating the overlay doesn't necessarily scare me, I can
+> generate a temp tree that is the overlay in which I "copy" the subtree
+> (or in my internal ptr-based representation I could have a concept of
+> alias which I follow while flattening).
+> 
+> That leaves me with these problems:
+> 
+> - No support for removing of nodes, so that needs to be added back to
+> the format and to Linux unless I continue removing by hand in the PCI
+> hotplug code itself
+> 
 
-> ---
->  drivers/pci/host/pcie-designware.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 2e9f84f..4ce0aa5 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -31,6 +31,7 @@
->  #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
->  #define PORT_LINK_MODE_2_LANES		(0x3 << 16)
->  #define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-> +#define PORT_LINK_MODE_8_LANES		(0xf << 16)
->  
->  #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
->  #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-> @@ -38,6 +39,7 @@
->  #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
->  #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
->  #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
-> +#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
->  
->  #define PCIE_MSI_ADDR_LO		0x820
->  #define PCIE_MSI_ADDR_HI		0x824
-> @@ -778,6 +780,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	case 4:
->  		val |= PORT_LINK_MODE_4_LANES;
->  		break;
-> +	case 8:
-> +		val |= PORT_LINK_MODE_8_LANES;
-> +		break;
->  	}
->  	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
->  
-> @@ -794,6 +799,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	case 4:
->  		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
->  		break;
-> +	case 8:
-> +		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
-> +		break;
->  	}
->  	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
->  
-> -- 
-> 1.9.1
+What kind of nodes/properties you need to remove at _application_ time?
+
+What you describe is inserting a bunch of properties and nodes under
+a slot’s device node. Reverting the overlay removes them all just fine.
+
+> - No support for "committing" the overlay which needs to be added as
+> well.
+> 
+
+That’s the easiest part.
+
+>>>>> Now we could consider that subtree as a changeset that can be undone,
+>>>>> but that wouldn't work for boot time. And subsequent updates wouldn't
+>>>>> have that concept of "undoing" anyway.
+>>>>> 
+>>>> 
+>>>> I have posted another patch that does boot-time DT quirk which are
+>>>> non-revertable.
+>>>> 
+>>>> https://lkml.org/lkml/2015/2/18/258
+>>> 
+>>> Not sure how that applies in my case ... I can't change the
+>>> representation of the PCI subtree, this is standard OFW representation,
+>>> I can't change the FW to make it an overlay-like thing at boot time,
+>>> that would break existing kernels.
+>>> 
+>> 
+>> The idea is to append the ‘quirk’ to the already booting device tree blob.
+> 
+> I know but that's not how things work for me. At boot time the FW passes
+> me one tree that contains all the PCI stuff it has probed.
+> 
+>> Another idea floating around was to simple concatenate the booting blob with
+>> any overlay blobs you want applied at boot time.
+> 
+> Sure but I don't get overlay blobs at boot time.
+> 
+>>>>> IE. conceptually, what overlays do today is quite rooted around the idea
+>>>>> of having a fixed "base" DT and some pre-compiled DTB overlays that
+>>>>> get added/removed. The design completely ignore the idea of a FW that
+>>>>> maintains a "live" tree which we want to keep in sync, which is what we
+>>>>> want to do here, or what we could do with a "live" open firmware
+>>>>> implementation.
+>>>>> 
+>>>>> Now we might be able to reconcile them, but it feels to me that the
+>>>>> overlay/changeset stuff is too rooted in the first concept…
+>>>>> 
+>>>> 
+>>>> The first DT overlays use case (beaglebone capes) is what got the concept
+>>>> started.
+>>>> 
+>>>> Right now is a generic mechanism to apply modifications to the kernel
+>>>> live tree, with the possibility to revert them.
+>>> 
+>>> Yes but as I said it's not really thought in term of keeping the kernel
+>>> tree in sync with an external dynamically generated tree. Maybe we can
+>>> fix it, but it's more complex…
+>>> 
+>> 
+>> Yes it is, unfortunately.
+> 
+> Right. Which makes the solution of just passing my bit of tree as a blob
+> which I expand in Linux where I want it rather than an overlay tempting
+> if we can make Gavin patch more palatable (removing the hybrid stuff
+> etc…)
+> .
+> 
+
+I see. Well, how about this?
+
+Who said you have to do the whole blob dance in the firmware?
+
+You can just as easily pass the blob as it is to the linux kernel and
+the kernel there can convert it to an overlay and apply it.
+
+> Cheers,
+> Ben.
+> 
+>>> Ben.
+>>> 
+>>>>> Ben.
+>>>>> 
+>>>>> 
+>>>> 
+>>>> Regards
+>>>> 
+>>>> — Pantelis
+>>> 
+>>> 
+>> 
+>> Regards
+>> 
+>> — Pantelis
+> 
+> 
+
+Regards
+
+— Pantelis
 
