@@ -1,49 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48893 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751388AbbESRzI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 13:55:08 -0400
-Message-ID: <555B78F7.60908@redhat.com>
-Date: Tue, 19 May 2015 10:55:03 -0700
-From: Alexander Duyck <alexander.h.duyck@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5553F5BF.2080802@linux.intel.com>
+Date: Thu, 14 May 2015 09:09:19 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Mark D Rustad <mark.d.rustad@intel.com>, bhelgaas@google.com
-CC: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to protect
- VPD operations
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Hanjun Guo <hanjun.guo@linaro.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org> <55534275.2040404@linux.intel.com> <555350B2.8050301@linaro.org>
+In-Reply-To: <555350B2.8050301@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 2015/5/13 21:25, Hanjun Guo wrote:
+> On 2015年05月13日 20:24, Jiang Liu wrote:
+>> On 2015/5/13 17:29, Hanjun Guo wrote:
+>>> Hi Jiang,
+>>>
+>>> On 2015年05月05日 10:46, Jiang Liu wrote:
+>>>
+>>> struct pci_controller {
+>>>          struct acpi_device *companion;
+>>>          void *iommu;
+>>>          int segment;
+>>>          int node;               /* nearest node with memory or
+>>> NUMA_NO_NODE for global allocation */
+>>>
+>>>          void *platform_data;
+>>> };
+>>>
+>>> except void *platform_data;
+>>>
+>>> On ARM64, the structure is almost the same, so how about
+>>> introduce
+>>>
+>>> struct pci_controller {
+>>>          struct acpi_device *companion;  /* ACPI companion device */
+>>>          void            *iommu;         /* IOMMU private data */
+>>>          int             segment;        /* PCI domain */
+>>>          int             node;           /* NUMA node */
+>>> #ifdef CONFIG_IA64
+>>>      void *platform_data;
+>>> #endif
+>>> };
+>>>
+>>> in this file, then can be used for all architectures?
+>> Current mode is that architecture defines its own version of
+>> struct pci_controller. It would be better to keep this pattern.
+> 
+> OK, thanks for the clarify :) So how about add my basic
+> PCI support patch for ARM64 on top of you patch set to fix
+> this problem?
 
+Sure, please send me the patches and I will send out v3 to
+cover your review comments.
+Thanks!
 
-On 05/18/2015 05:00 PM, Mark D Rustad wrote:
-> Some devices have a problem with concurrent VPD access to different
-> functions of the same physical device, so move the protecting mutex
-> from the pci_vpd structure to the pci_bus structure. There are a
-> number of reports on support sites for a variety of devices from
-> various vendors getting the "vpd r/w failed" message. This is likely
-> to at least fix some of them. Thanks to Shannon Nelson for helping
-> to come up with this approach.
->
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> Acked-by: Shannon Nelson <shannon.nelson@intel.com>
-> Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-
-Instead of moving the mutex lock around you would be much better served 
-by simply removing the duplicate VPD entries for a given device in a 
-PCIe quirk.  Then you can save yourself the extra pain and effort of 
-having to deal with serialized VPD accesses for a multifunction device.
-
-The logic for the quirk should be fairly simple.
-   1.  Scan for any other devices with VPD that share the same bus and 
-device number.
-   2.  If bdf is equal to us keep searching.
-   3.  If bdf is less than our bdf we release our VPD area and set VPD 
-pointer to NULL.
-
-- Alex
-
+> 
+> Thanks
+> Hanjun
+> 
+> 
