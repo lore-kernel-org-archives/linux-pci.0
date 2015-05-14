@@ -1,63 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:24023 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964846AbbEEB65 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 21:58:57 -0400
-From: Jayachandran C <jchandra@broadcom.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v2 2/2] PCI: generic: add arm64 support
-Date: Tue, 5 May 2015 07:32:13 +0530
-Message-ID: <1430791333-26013-2-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:37549 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932313AbbENIfd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2015 04:35:33 -0400
+Message-ID: <55545D0E.3080802@huawei.com>
+Date: Thu, 14 May 2015 16:30:06 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Yijing Wang <wangyijing@huawei.com>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
+	<rwhite@pobox.com>, <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2] PCI: Fix NULL pointer when find parent pcie_link_state
+References: <1429858791-26331-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1429858791-26331-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make pci-host-generic driver available on arm64. This needs
-drivers/pci/setup-irq.o to be built for the arm64 as well.
+Ping... ?
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/pci/Makefile     | 1 +
- drivers/pci/host/Kconfig | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+On 2015/4/24 14:59, Yijing Wang wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
+> in ATCA platform, system had unusual pcie topology:
+> 
+> (root port)   (downstream port)   (upstream port)
+> +-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
+> |                               +-01.0-[05]-- (downstream port)
+> |                               +-02.0-[06]--
+> |                               +-03.0-[07]--
+> |                               +-08.0-[08]--
+> |                               +-09.0-[09]--
+> |                               \-0a.0-[0a]--
+> We assumed root port and downstream port always
+> have external link, and downstream port always has a
+> upstream port. So in this case, when we allocated
+> pcie_link_state for downstream port 02:00.0, it try
+> to get parent bus pcie_link_state,
+> parent = pdev->bus->parent->self->link_state;
+> because root bus self is NULL, system will crash here.
+> 
+> This patch fix this issue based on the following
+> assumption suggested by Bjorn.
+> 1. Root port is always on the upstream end of a link.
+> 2. The pcie hierarchy should alternate between links
+> and internal switch logic, there should be no adjacent
+> links or internal buses in pcie tree.
+> 
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pcie/aspm.c |   23 +++++++++++++++++++++--
+>  1 files changed, 21 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 7d4fcdc..61b9d3f 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -546,6 +546,25 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>  	return link;
+>  }
+>  
+> +/*
+> + * We assume root port is always on the upstream end of
+> + * a link, and the pcie hierarchy should alternate
+> + * between links and internal switch logic.
+> + */
+> +static bool pcie_has_external_link(struct pci_dev *pdev)
+> +{
+> +	if (!pci_is_pcie(pdev))
+> +		return false;
+> +
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+> +		return true;
+> +
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
+> +		if (!pdev->bus->self->link_state)
+> +			return true;
+> +
+> +	return false;
+> +}
+>  /*
+>   * pcie_aspm_init_link_state: Initiate PCI express link state.
+>   * It is called after the pcie and its children devices are scanned.
+> @@ -561,8 +580,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  
+>  	if (!pci_is_pcie(pdev) || pdev->link_state)
+>  		return;
+> -	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
+> -	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
+> +
+> +	if (!pcie_has_external_link(pdev))
+>  		return;
+>  
+>  	/* VIA has a strange chipset, root port is under a bridge */
+> 
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 73e4af4..be3f631 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -33,6 +33,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
- #
- obj-$(CONFIG_ALPHA) += setup-irq.o
- obj-$(CONFIG_ARM) += setup-irq.o
-+obj-$(CONFIG_ARM64) += setup-irq.o
- obj-$(CONFIG_UNICORE32) += setup-irq.o
- obj-$(CONFIG_SUPERH) += setup-irq.o
- obj-$(CONFIG_MIPS) += setup-irq.o
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 1dfb567..51741ad 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -53,7 +53,7 @@ config PCI_RCAR_GEN2_PCIE
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
--	depends on ARM && OF
-+	depends on (ARM || ARM64) && OF
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
+
 -- 
-1.9.1
+Thanks!
+Yijing
 
