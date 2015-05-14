@@ -1,185 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0133.outbound.protection.outlook.com ([65.55.169.133]:35863
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932501AbbERTpS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 May 2015 15:45:18 -0400
-Message-ID: <555A4137.7040000@amd.com>
-Date: Mon, 18 May 2015 14:44:55 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from gate.crashing.org ([63.228.1.57]:51334 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932530AbbENAyx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 May 2015 20:54:53 -0400
+Message-ID: <1431564871.4160.8.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Arnd Bergmann" <arnd@arndb.de>, Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Russell King" <linux@arm.linux.org.uk>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"Simon Horman" <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [RFC/RFT PATCH 2/2] ARM64: kernel: pci: implement PCI device
- resources claiming
-References: <1431614537-16136-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1431614537-16136-2-git-send-email-lorenzo.pieralisi@arm.com>
- <5555553F.9070608@amd.com> <20150518173818.GA20028@red-moon>
-In-Reply-To: <20150518173818.GA20028@red-moon>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Thu, 14 May 2015 10:54:31 +1000
+In-Reply-To: <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+	 <1430493730.7979.58.camel@kernel.crashing.org>
+	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+	 <1430521038.7979.70.camel@kernel.crashing.org>
+	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+	 <1430774063.7979.139.camel@kernel.crashing.org>
+	 <1431560124.20218.91.camel@kernel.crashing.org>
+	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/18/2015 12:38 PM, Lorenzo Pieralisi wrote:
->> Lorenzo/Bjorn,
->> >
->> >I have tested this patch on top of Jayachandran's V2 patch series
->> >(http://www.spinics.net/lists/linux-pci/msg40811.html) on AMD Seattle
->> >(w/ PROBE_ONLY and non-PROBE_ONLY mode), and your changes here works
->> >with additional changes below.
->> >
->> >It seems that when booting w/ PROBE_ONLY case, we need to call
->> >pci_read_bridge_bases() at some point before claiming the resources of
->> >devices underneath the bridge. This is needed to determine the bridge
->> >bases (i.e. bridge io, mmio and mmio_pref bases), and update bridge
->> >resources accordingly.
-> Thanks for testing, I will give it a go on Seattle, if you can drop
-> the log you get on PROBE_ONLY (without your patch below) that would be
-> great so that I can have a look at the issue.
->
-> Thanks,
-> Lorenzo
->
+On Wed, 2015-05-13 at 19:18 -0500, Rob Herring wrote:
 
-Lorenzo,
+> I haven't decided really.
+> 
+> The main thing with the current patch is I don't really like the added
+> complexity to unflatten_dt_node. It is already a fairly complex
+> function. Perhaps removing of "hybrid" as discussed will help?
 
-Here is the log w/ PROBE_ONLY and w/o the changes I proposed:
+I agree, we should be able to make that much simpler, I was planning on
+sorting that out with Gavin.
 
-# dmesg
-.....
-PCI host bridge /smb/pcie@f0000000 ranges:
-    IO 0xefff0000..0xefffffff -> 0x00000000
-   MEM 0x40000000..0xbfffffff -> 0x40000000
-   MEM 0x100000000..0x7fffffffff -> 0x100000000
-pci-host-generic f0000000.pcie: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [bus 00-7f]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-pci_bus 0000:00: root bus resource [mem 0x40000000-0xbfffffff]
-pci_bus 0000:00: root bus resource [mem 0x100000000-0x7fffffffff]
-pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-19
-pci 0000:00:02.0: of_irq_parse_pci() failed with rc=-19
-pci 0000:01:00.0: can't claim BAR 0 [mem 0xbfe80000-0xbfefffff 64bit 
-pref]: no compatible bridge window
-pci 0000:01:00.0: can't claim BAR 2 [io  0x0020-0x003f]: no compatible 
-bridge window
-pci 0000:01:00.0: can't claim BAR 4 [mem 0xbff04000-0xbff07fff 64bit 
-pref]: no compatible bridge window
-pci 0000:01:00.1: can't claim BAR 0 [mem 0xbfe00000-0xbfe7ffff 64bit 
-pref]: no compatible bridge window
-pci 0000:01:00.1: can't claim BAR 2 [io  0x0000-0x001f]: no compatible 
-bridge window
-pci 0000:01:00.1: can't claim BAR 4 [mem 0xbff00000-0xbff03fff 64bit 
-pref]: no compatible bridge window
-.....
+> If there are things we can do to make overlays easier to use in your
+> use case, I'd like to hear ideas. I don't really buy that being more
+> complex than needed is an obstacle. That is very often the case to
+> have common, scale-able solutions. I want to see a simple case be
+> simple to support.
 
-# dmesg | grep ixgbe
-[    7.189232] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - 
-version 4.0.1-k
-[    7.195580] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
-[    7.195638] ixgbe 0000:01:00.0: can't enable device: BAR 0 [mem size 
-0x00080000 64bit pref] not assigned
-[    7.195645] ixgbe: probe of 0000:01:00.0 failed with error -22
-[    7.195660] ixgbe 0000:01:00.1: can't enable device: BAR 0 [mem size 
-0x00080000 64bit pref] not assigned
-[    7.195664] ixgbe: probe of 0000:01:00.1 failed with error -22
+Well, it's a LOT more complex from the FW perspective for a bunch of
+features we don't really need, in a way because the DT update in our
+case is just purely informational to avoid keeping wrong/outdated DT
+bits, it has little functional impact (it might have a bit for interrupt
+routing through bridges though).
 
-Also, here is the bridge configuration. Please note that the change I 
-added tries to setup the bridge resource with information in 
-_Prefetchable memory behind_ region.
+However, I am also pursuing an approach on FW side using a generation
+count in our nodes and properties which we could use to generate
+arbitrary overlays if we know what generation linux has.
 
-# lspci -vvv -s 0:2.1
-00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Device 1a02 
-(prog-if 00 [Normal decode])
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-         Latency: 0
-         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-         I/O behind bridge: 00fff000-00000fff
-         Memory behind bridge: fff00000-000fffff
-         Prefetchable memory behind bridge: 
-00000000bfe00000-00000000bfffffff
-         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort+ <SERR- <PERR-
-         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-         Capabilities: [50] Power Management version 3
-                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
-PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-         Capabilities: [58] Express (v2) Root Port (Slot+), MSI 00
-                 DevCap: MaxPayload 512 bytes, PhantFunc 0
-                         ExtTag+ RBE+
-                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- 
-Unsupported-
-                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                         MaxPayload 512 bytes, MaxReadReq 512 bytes
-                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- 
-AuxPwr- TransPend-
-                 LnkCap: Port #0, Speed 5GT/s, Width x8, ASPM L0s L1, 
-Exit Latency L0s <512ns, L1 <64us
-                         ClockPM- Surprise- LLActRep+ BwNot-
-                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                 LnkSta: Speed 5GT/s, Width x4, TrErr- Train- SlotClk+ 
-DLActive+ BWMgmt- ABWMgmt-
-                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- 
-HotPlug- Surprise-
-                         Slot #0, PowerLimit 0.000W; Interlock- NoCompl+
-                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- 
-HPIrq- LinkChg-
-                         Control: AttnInd Unknown, PwrInd Unknown, 
-Power- Interlock-
-                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- 
-PresDet+ Interlock-
-                         Changed: MRL- PresDet- LinkState-
-                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- 
-PMEIntEna- CRSVisible+
-                 RootCap: CRSVisible-
-                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, 
-LTR-, OBFF Not Supported ARIFwd+
-                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, 
-LTR-, OBFF Disabled ARIFwd+
-                 LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- 
-SpeedDis-
-                          Transmit Margin: Normal Operating Range, 
-EnterModifiedCompliance- ComplianceSOS-
-                          Compliance De-emphasis: -6dB
-                 LnkSta2: Current De-emphasis Level: -6dB, 
-EqualizationComplete-, EqualizationPhase1-
-                          EqualizationPhase2-, EqualizationPhase3-, 
-LinkEqualizationRequest-
-         Capabilities: [a0] MSI: Enable- Count=1/1 Maskable- 64bit+
-                 Address: 0000000000000000  Data: 0000
-         Capabilities: [c0] Subsystem: Advanced Micro Devices, Inc. 
-[AMD] Device 1234
-         Capabilities: [c8] HyperTransport: MSI Mapping Enable+ Fixed+
-         Capabilities: [100 v1] Vendor Specific Information: ID=0001 
-Rev=1 Len=010 <?>
-         Capabilities: [270 v1] #19
+There might actual be a usage scenario for a generic way for our
+firwmare to convey DT updates to Linux for other reasons.
 
-Thanks,
+A few things that I don't find in the overlay code (but maybe I haven't
+looked at it hard enough):
 
-Suravee
+ - Can it remove nodes/properties ?
+
+ - Can it "commit" a changeset so it's permanently part of the main DT ?
+We will never have a concept of "revertable" changesets, if we need a
+subsequent update, we will get a new overlay from FW that will remove
+what needs to be removed and add what needs to be added.
+
+IE, our current mechanism without overlay is fairly simple:
+
+  - On PCI unplug, we remove all nodes below the slot (from linux),
+the FW does the equivalent internally.
+
+  - On PCI re-plug, the FW internally builds new nodes and sends a
+new subtree as an FDT that we can expand/attach.
+
+Now we could consider that subtree as a changeset that can be undone,
+but that wouldn't work for boot time. And subsequent updates wouldn't
+have that concept of "undoing" anyway.
+
+IE. conceptually, what overlays do today is quite rooted around the idea
+of having a fixed "base" DT and some pre-compiled DTB overlays that
+get added/removed. The design completely ignore the idea of a FW that
+maintains a "live" tree which we want to keep in sync, which is what we
+want to do here, or what we could do with a "live" open firmware
+implementation.
+
+Now we might be able to reconcile them, but it feels to me that the
+overlay/changeset stuff is too rooted in the first concept...
+
+Ben.
+
 
