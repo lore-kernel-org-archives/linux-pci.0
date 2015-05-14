@@ -1,40 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5552AD1B.6030208@hp.com>
-Date: Wed, 13 May 2015 09:47:07 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:42824 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752341AbbENJg1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2015 05:36:27 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 14 May 2015 19:36:25 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 6D945357804F
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 19:36:22 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4E9aDkV38076472
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 19:36:22 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4E9ZnO6027343
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 19:35:49 +1000
+Date: Thu, 14 May 2015 17:35:31 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V3 9/9] powerpc/eeh: handle VF PE properly
+Message-ID: <20150514093531.GA12847@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1430723258-21299-10-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150513011630.GA8973@gwshan>
 MIME-Version: 1.0
-To: Dave Young <dyoung@redhat.com>
-CC: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v11 05/10] iommu/vt-d: Add functions to load and save
- old re
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com> <1431337974-545-6-git-send-email-zhen-hual@hp.com> <20150512083745.GE4561@localhost.localdomain>
-In-Reply-To: <20150512083745.GE4561@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150513011630.GA8973@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/12/2015 04:37 PM, Dave Young wrote:
-> Seems the subject was truncated? Maybe "re" means root entry? Then please fix it
+On Wed, May 13, 2015 at 11:16:30AM +1000, Gavin Shan wrote:
+>On Mon, May 04, 2015 at 03:07:38PM +0800, Wei Yang wrote:
 >
-> On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
->> Add functions to load root entry table from old kernel, and to save updated
->> root entry table.
->> Add two member in struct intel_iommu, to store the RTA in old kernel, and
->> the mapped virt address of it.
+>	if (!edev->physfn) {
+>		pr_warn("%s: EEH dev %04x:%02x:%02x:%01x not for VF\n",
+>			edev->phb->global_number, pdn->busno,
+>			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+>		return NULL;
+>	}
 >
-> Please explain a bit what is "RTA" in patch log, it is unclear to most of people
-> who do not know iommu details.
+>>+
+>>+	driver = eeh_pcid_get(dev);
+>>+	if (driver) {
+>>+		eeh_pcid_put(dev);
+>>+		if (driver->err_handler)
+>>+			return NULL;
+>>+	}
 >
->>
+>dev and driver are NULL for those VFs that have been unplugged. For those
+>VFs weren't unplugged, driver and err_handler should be valid. The code
+>looks correct. However, for consistence, please use EEH_DEV_DISCONNECTED
+>that has been marked to those EEH devices which were unplugged. Do you
+>think it would be better?
+>
+>	if (!(dev->flags & EEH_DEV_DISCONNECTED))
+>		return NULL;
+>
 
-If people want to understand this patchset, I assume they have read the 
-vt-d specs. RTA is defined clearly in this spec.
+Hi, Gavin,
+
+I think this is a nice idea, while this may not work.
+
+We mark the DISCONNECTED flag when remove a PCI device, while before we do the
+hot plug we will detach it from the tree and remove this flag in
+eeh_pe_detach_dev().
+
+This will leads to the VF not be hot plugged.
+
+
+-- 
+Richard Yang
+Help you, Help me
 
