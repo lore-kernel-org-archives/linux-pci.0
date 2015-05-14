@@ -1,49 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:42148 "EHLO theia.8bytes.org"
+Received: from gate.crashing.org ([63.228.1.57]:54737 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751030AbbEDQXV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 12:23:21 -0400
-Date: Mon, 4 May 2015 18:23:18 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Dave Young <dyoung@redhat.com>
-Cc: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
-	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150504162318.GH15736@8bytes.org>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
- <20150415005731.GC19051@localhost.localdomain>
- <552DFB56.1070600@hp.com>
- <20150415064803.GF19051@localhost.localdomain>
- <20150424080147.GC4458@dhcp-16-116.nay.redhat.com>
- <20150424082528.GA23912@dhcp-128-91.nay.redhat.com>
- <20150424083530.GD4458@dhcp-16-116.nay.redhat.com>
- <20150424084957.GC23912@dhcp-128-91.nay.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150424084957.GC23912@dhcp-128-91.nay.redhat.com>
+	id S932361AbbENH3X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 May 2015 03:29:23 -0400
+Message-ID: <1431588544.4160.43.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Pantelis Antoniou <panto@antoniou-consulting.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Thu, 14 May 2015 17:29:04 +1000
+In-Reply-To: <1431588358.4160.42.camel@kernel.crashing.org>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+	 <1430493730.7979.58.camel@kernel.crashing.org>
+	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+	 <1430521038.7979.70.camel@kernel.crashing.org>
+	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+	 <1430774063.7979.139.camel@kernel.crashing.org>
+	 <1431560124.20218.91.camel@kernel.crashing.org>
+	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+	 <1431564871.4160.8.camel@kernel.crashing.org>
+	 <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
+	 <1431585994.4160.32.camel@kernel.crashing.org>
+	 <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
+	 <1431587657.4160.37.camel@kernel.crashing.org>
+	 <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com>
+	 <1431588358.4160.42.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 24, 2015 at 04:49:57PM +0800, Dave Young wrote:
-> I'm more than happy to see this issue can be fixed in the patchset, I
-> do not agree to add the code there with such problems. OTOH, for now
-> seems there's no way to fix it.
 
-And that's the point. We discuss this issue and possible solutions for
-years by now, and what ZhenHua implemented is what we agreed to be the
-best-effort on what we can do in the kdump case with IOMMU enabled.
+> So I would have to do a special case on unplug:
+> 
+> 	if (slot->dt_is_overlay) /* set to false at boot */
+> 		remove_subtree_myself();
+> 	else
+> 		undo_overlay(slot->overlay);
 
-Of course there are still failure scenarios left, but that is not
-different from systems without any IOMMU.
+Of course I just inverted the polarity of the if () in the example :-)
 
+But you get the idea...
 
-	Joerg
 
