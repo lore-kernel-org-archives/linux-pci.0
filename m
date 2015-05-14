@@ -1,84 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 00/16] ntb: NTB Abstraction Layer
-Date: Wed, 20 May 2015 11:41:01 -0400
-Message-Id: <cover.1432135631.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55541F17.5060005@linaro.org>
+Date: Thu, 14 May 2015 12:05:43 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org> <55534275.2040404@linux.intel.com> <555350B2.8050301@linaro.org> <5553F5BF.2080802@linux.intel.com>
+In-Reply-To: <5553F5BF.2080802@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The NTB drivers currently support only one hardware driver, and one client
-type.  This patch set adds an abstraction layer, enabling different hardware
-drivers by other vendors, and clients other than ntb_transport.
+On 2015年05月14日 09:09, Jiang Liu wrote:
+> On 2015/5/13 21:25, Hanjun Guo wrote:
+>> On 2015年05月13日 20:24, Jiang Liu wrote:
+>>> On 2015/5/13 17:29, Hanjun Guo wrote:
+>>>> Hi Jiang,
+>>>>
+>>>> On 2015年05月05日 10:46, Jiang Liu wrote:
+>>>>
+>>>> struct pci_controller {
+>>>>           struct acpi_device *companion;
+>>>>           void *iommu;
+>>>>           int segment;
+>>>>           int node;               /* nearest node with memory or
+>>>> NUMA_NO_NODE for global allocation */
+>>>>
+>>>>           void *platform_data;
+>>>> };
+>>>>
+>>>> except void *platform_data;
+>>>>
+>>>> On ARM64, the structure is almost the same, so how about
+>>>> introduce
+>>>>
+>>>> struct pci_controller {
+>>>>           struct acpi_device *companion;  /* ACPI companion device */
+>>>>           void            *iommu;         /* IOMMU private data */
+>>>>           int             segment;        /* PCI domain */
+>>>>           int             node;           /* NUMA node */
+>>>> #ifdef CONFIG_IA64
+>>>>       void *platform_data;
+>>>> #endif
+>>>> };
+>>>>
+>>>> in this file, then can be used for all architectures?
+>>> Current mode is that architecture defines its own version of
+>>> struct pci_controller. It would be better to keep this pattern.
+>>
+>> OK, thanks for the clarify :) So how about add my basic
+>> PCI support patch for ARM64 on top of you patch set to fix
+>> this problem?
+>
+> Sure, please send me the patches and I will send out v3 to
+> cover your review comments.
 
-The commits in this set may also be pulled from:
-github.com/allenbh/linux
-in the branch ntb-abh, or tag ntb-abh-v1
+OK, I need to rework my patches because my patch set is dependent
+on top of another MMCFG refactor patch set [1], so I need to remove
+MMCONFIG first then will speed up the upstream process of your patch
+set, will send you the patches soon.
 
-Allen Hubbe (12):
-  Move files in preparation for NTB Abstraction
-  NTB Abstraction Layer
-  Intel NTB params for snb b2b addresses
-  NTB Pingpong Client
-  NTB Tool Client
-  ntb_transport: rate limit ntb_qp_link_work
-  ntb_transport: differentiate link down messages
-  ntb_transport: don't advance rx on link down
-  ntb_transport: reset qp link stats on down
-  ntb_transport: numa aware memory and dma chan
-  ntb_hw_intel: numa aware memory allocation
-  ntb_transport: fix small code format issues
+[1]: https://lkml.org/lkml/2015/4/17/29
 
-Dave Jiang (4):
-  ntb: Enable link training for RP mode in the driver probe
-  Check the DID for certain workaround error flags to be set.
-  ntb: performance improvement by write combining
-  ntb: default to cpu memcpy for performance
-
- Documentation/ntb.txt               |  127 ++
- MAINTAINERS                         |   16 +-
- drivers/net/ntb_netdev.c            |   58 +-
- drivers/ntb/Kconfig                 |   22 +-
- drivers/ntb/Makefile                |    4 +-
- drivers/ntb/hw/Kconfig              |    1 +
- drivers/ntb/hw/Makefile             |    1 +
- drivers/ntb/hw/intel/Kconfig        |    8 +
- drivers/ntb/hw/intel/Makefile       |    1 +
- drivers/ntb/hw/intel/ntb_hw_intel.c | 2222 +++++++++++++++++++++++++++++++++++
- drivers/ntb/hw/intel/ntb_hw_intel.h |  342 ++++++
- drivers/ntb/ntb.c                   |  251 ++++
- drivers/ntb/ntb_hw.c                | 1896 ------------------------------
- drivers/ntb/ntb_hw.h                |  256 ----
- drivers/ntb/ntb_regs.h              |  177 ---
- drivers/ntb/ntb_transport.c         | 1018 +++++++++-------
- drivers/ntb/test/Kconfig            |   21 +
- drivers/ntb/test/Makefile           |    2 +
- drivers/ntb/test/ntb_pingpong.c     |  251 ++++
- drivers/ntb/test/ntb_tool.c         |  557 +++++++++
- include/linux/ntb.h                 |  969 ++++++++++++++-
- include/linux/ntb_transport.h       |   85 ++
- 22 files changed, 5486 insertions(+), 2799 deletions(-)
- create mode 100644 Documentation/ntb.txt
- create mode 100644 drivers/ntb/hw/Kconfig
- create mode 100644 drivers/ntb/hw/Makefile
- create mode 100644 drivers/ntb/hw/intel/Kconfig
- create mode 100644 drivers/ntb/hw/intel/Makefile
- create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.c
- create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.h
- create mode 100644 drivers/ntb/ntb.c
- delete mode 100644 drivers/ntb/ntb_hw.c
- delete mode 100644 drivers/ntb/ntb_hw.h
- delete mode 100644 drivers/ntb/ntb_regs.h
- create mode 100644 drivers/ntb/test/Kconfig
- create mode 100644 drivers/ntb/test/Makefile
- create mode 100644 drivers/ntb/test/ntb_pingpong.c
- create mode 100644 drivers/ntb/test/ntb_tool.c
- create mode 100644 include/linux/ntb_transport.h
-
--- 
-2.4.0.rc0.43.gcf8a8c6
-
+Thanks
+Hanjun
