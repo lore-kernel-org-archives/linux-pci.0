@@ -1,170 +1,281 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:33335 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbbESXnE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:43:04 -0400
-Received: by igbpi8 with SMTP id pi8so120339999igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:43:03 -0700 (PDT)
-Date: Tue, 19 May 2015 18:43:00 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wdavis@nvidia.com
-Cc: joro@8bytes.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, tripperda@nvidia.com,
-	jhubbard@nvidia.com, jglisse@redhat.com, konrad.wilk@oracle.com,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-Message-ID: <20150519234300.GA31666@google.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
- <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch v3 5/7] PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
+Date: Thu, 14 May 2015 16:56:41 +0800
+Message-Id: <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Dave, Jonathan]
+Introduce common interface acpi_pci_root_create() and related data
+structures to create PCI root bus for ACPI PCI host bridges. It will
+be used to kill duplicated arch specific code for IA64 and x86. It may
+also help ARM64 in future.
 
-On Mon, May 18, 2015 at 01:25:01PM -0500, wdavis@nvidia.com wrote:
-> From: Will Davis <wdavis@nvidia.com>
-> 
-> Add references to both the general API documentation as well as the HOWTO.
-> 
-> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> ---
->  Documentation/DMA-API-HOWTO.txt | 39 +++++++++++++++++++++++++++++++++++++--
->  Documentation/DMA-API.txt       | 36 +++++++++++++++++++++++++++++++-----
->  2 files changed, 68 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-> index 0f7afb2..89bd730 100644
-> --- a/Documentation/DMA-API-HOWTO.txt
-> +++ b/Documentation/DMA-API-HOWTO.txt
-> @@ -138,6 +138,10 @@ What about block I/O and networking buffers?  The block I/O and
->  networking subsystems make sure that the buffers they use are valid
->  for you to DMA from/to.
->  
-> +In some systems, it may also be possible to DMA to and/or from a peer
-> +device's MMIO region, as described by a 'struct resource'. This is
-> +referred to as a peer-to-peer mapping.
-> +
->  			DMA addressing limitations
->  
->  Does your device have any DMA addressing limitations?  For example, is
-> @@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
->  counterpart, because the bus address space is a shared resource and
->  you could render the machine unusable by consuming all bus addresses.
->  
-> +Peer-to-peer DMA mappings can be obtained using dma_map_resource() to map
-> +another device's MMIO region for the given device:
-> +
-> +	struct resource *peer_mmio_res = &other_dev->resource[0];
-> +	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
-> +						 offset, size, direction);
-> +	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
-> +	{
-> +		/*
-> +		 * If dma_handle == 0, dma_map_resource() is not
-> +		 * implemented, and peer-to-peer transactions will not
-> +		 * work.
-> +		 */
-> +		goto map_error_handling;
-> +	}
-> +
-> +	...
-> +
-> +	dma_unmap_resource(dev, dma_handle, size, direction);
-> +
-> +Here, "offset" means byte offset within the given resource.
-> +
-> +You should both check for a 0 return value and call dma_mapping_error(),
-> +as dma_map_resource() can either be not implemented or fail and return
-> +error as outlined under the dma_map_single() discussion.
-> +
-> +You should call dma_unmap_resource() when DMA activity is finished, e.g.,
-> +from the interrupt which told you that the DMA transfer is done.
-> +
->  If you need to use the same streaming DMA region multiple times and touch
->  the data in between the DMA transfers, the buffer needs to be synced
->  properly in order for the CPU and device to see the most up-to-date and
-> @@ -765,8 +798,8 @@ failure can be determined by:
->  
->  - checking if dma_alloc_coherent() returns NULL or dma_map_sg returns 0
->  
-> -- checking the dma_addr_t returned from dma_map_single() and dma_map_page()
-> -  by using dma_mapping_error():
-> +- checking the dma_addr_t returned from dma_map_single(), dma_map_resource(),
-> +  and dma_map_page() by using dma_mapping_error():
->  
->  	dma_addr_t dma_handle;
->  
-> @@ -780,6 +813,8 @@ failure can be determined by:
->  		goto map_error_handling;
->  	}
->  
-> +- checking if dma_map_resource() returns 0
-> +
->  - unmap pages that are already mapped, when mapping error occurs in the middle
->    of a multiple page mapping attempt. These example are applicable to
->    dma_map_page() as well.
-> diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-> index 5208840..c25c549 100644
-> --- a/Documentation/DMA-API.txt
-> +++ b/Documentation/DMA-API.txt
-> @@ -283,14 +283,40 @@ and <size> parameters are provided to do partial page mapping, it is
->  recommended that you never use these unless you really know what the
->  cache width is.
->  
-> +dma_addr_t
-> +dma_map_resource(struct device *dev, struct resource *res,
-> +		 unsigned long offset, size_t size,
-> +		 enum dma_data_direction_direction)
-> +
-> +API for mapping resources. This API allows a driver to map a peer
-> +device's resource for DMA. All the notes and warnings for the other
-> +APIs apply here. Also, the success of this API does not validate or
-> +guarantee that peer-to-peer transactions between the device and its
-> +peer will be functional. They only grant access so that if such
-> +transactions are possible, an IOMMU will not prevent them from
-> +succeeding.
+Tested-by: Tony Luck <tony.luck@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/pci_root.c  |  200 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |   23 ++++++
+ 2 files changed, 223 insertions(+)
 
-If the driver can't tell whether peer-to-peer accesses will actually work,
-this seems like sort of a dubious API.  I'm trying to imagine how a driver
-would handle this.  I guess whether peer-to-peer works depends on the
-underlying platform (not the devices themselves)?  If we run the driver on
-a platform where peer-to-peer *doesn't* work, what happens?  The driver
-can't tell, so we just rely on the user to say "this isn't working as
-expected"?
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 1b5569c092c6..22d0cb799ef1 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -656,6 +656,206 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 	kfree(root);
+ }
+ 
++static void acpi_pci_root_validate_resources(struct device *dev,
++					     struct list_head *resources,
++					     unsigned long type)
++{
++	LIST_HEAD(list);
++	struct resource *res1, *res2, *root = NULL;
++	struct resource_entry *tmp, *entry, *entry2;
++
++	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
++	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
++
++	list_splice_init(resources, &list);
++	resource_list_for_each_entry_safe(entry, tmp, &list) {
++		bool free = false;
++		resource_size_t end;
++
++		res1 = entry->res;
++		if (!(res1->flags & type))
++			goto next;
++
++		/* Exclude non-addressable range or non-addressable portion */
++		end = min(res1->end, root->end);
++		if (end <= res1->start) {
++			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
++				 res1);
++			free = true;
++			goto next;
++		} else if (res1->end != end) {
++			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
++				 res1, (unsigned long long)end + 1,
++				 (unsigned long long)res1->end);
++			res1->end = end;
++		}
++
++		resource_list_for_each_entry(entry2, resources) {
++			res2 = entry2->res;
++			if (!(res2->flags & type))
++				continue;
++
++			/*
++			 * I don't like throwing away windows because then
++			 * our resources no longer match the ACPI _CRS, but
++			 * the kernel resource tree doesn't allow overlaps.
++			 */
++			if (resource_overlaps(res1, res2)) {
++				res2->start = min(res1->start, res2->start);
++				res2->end = max(res1->end, res2->end);
++				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
++					 res2, res1);
++				free = true;
++				goto next;
++			}
++		}
++
++next:
++		resource_list_del(entry);
++		if (free)
++			resource_list_free_entry(entry);
++		else
++			resource_list_add_tail(entry, resources);
++	}
++}
++
++static int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
++{
++	int ret;
++	struct list_head *list = &info->resources;
++	struct acpi_device *device = info->bridge;
++	struct resource_entry *entry, *tmp;
++	unsigned long flags;
++
++	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
++	ret = acpi_dev_get_resources(device, list,
++				     acpi_dev_filter_resource_type_cb,
++				     (void *)flags);
++	if (ret < 0)
++		dev_warn(&device->dev,
++			 "failed to parse _CRS method, error code %d\n", ret);
++	else if (ret == 0)
++		dev_dbg(&device->dev,
++			"no IO and memory resources present in _CRS\n");
++	else {
++		resource_list_for_each_entry_safe(entry, tmp, list) {
++			if (entry->res->flags & IORESOURCE_DISABLED)
++				resource_list_destroy_entry(entry);
++			else
++				entry->res->name = info->name;
++		}
++		acpi_pci_root_validate_resources(&device->dev, list,
++						 IORESOURCE_MEM);
++		acpi_pci_root_validate_resources(&device->dev, list,
++						 IORESOURCE_IO);
++	}
++
++	return ret;
++}
++
++static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
++{
++	struct resource_entry *entry, *tmp;
++	struct resource *res, *conflict, *root = NULL;
++
++	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
++		res = entry->res;
++		if (res->flags & IORESOURCE_MEM)
++			root = &iomem_resource;
++		else if (res->flags & IORESOURCE_IO)
++			root = &ioport_resource;
++		else
++			continue;
++
++		conflict = insert_resource_conflict(root, res);
++		if (conflict) {
++			dev_info(&info->bridge->dev,
++				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
++				 res, conflict->name, conflict);
++			resource_list_destroy_entry(entry);
++		}
++	}
++}
++
++static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
++{
++	struct resource *res;
++	struct resource_entry *entry, *tmp;
++
++	if (!info)
++		return;
++
++	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
++		res = entry->res;
++		if (res->parent &&
++		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			release_resource(res);
++		resource_list_destroy_entry(entry);
++	}
++
++	info->ops->release_info(info);
++}
++
++static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
++{
++	struct resource *res;
++	struct resource_entry *entry;
++
++	resource_list_for_each_entry(entry, &bridge->windows) {
++		res = entry->res;
++		if (res->parent &&
++		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			release_resource(res);
++	}
++	__acpi_pci_root_release_info(bridge->release_data);
++}
++
++struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
++				     struct acpi_pci_root_ops *ops,
++				     struct acpi_pci_root_info *info)
++{
++	int ret, busnum = root->secondary.start;
++	struct acpi_device *device = root->device;
++	struct pci_bus *bus;
++
++	info->controller.segment = root->segment;
++	info->controller.node = acpi_get_node(device->handle);
++	info->controller.companion = device;
++	info->root = root;
++	info->bridge = device;
++	info->ops = ops;
++	INIT_LIST_HEAD(&info->resources);
++	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
++		 info->controller.segment, busnum);
++
++	if (ops->init_info && ops->init_info(info))
++		goto out_release_info;
++	ret = acpi_pci_probe_root_resources(info);
++	if (ops->prepare_resources)
++		ret = ops->prepare_resources(info, ret);
++	if (ret < 0)
++		goto out_release_info;
++	else if (ret > 0)
++		pci_acpi_root_add_resources(info);
++	pci_add_resource(&info->resources, &root->secondary);
++
++	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
++				  &info->controller, &info->resources);
++	if (bus) {
++		pci_scan_child_bus(bus);
++		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
++					    acpi_pci_root_release_info, info);
++		if (info->controller.node != NUMA_NO_NODE)
++			dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n",
++				   info->controller.node);
++		return bus;
++	}
++
++out_release_info:
++	__acpi_pci_root_release_info(info);
++	return NULL;
++}
++
+ void __init acpi_pci_root_init(void)
+ {
+ 	acpi_hest_init();
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index a965efa52152..685ccc4c3170 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -52,6 +52,29 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+ 	return ACPI_HANDLE(dev);
+ }
+ 
++struct acpi_pci_root;
++struct acpi_pci_root_ops;
++
++struct acpi_pci_root_info {
++	struct pci_controller		controller;
++	struct acpi_pci_root		*root;
++	struct acpi_device		*bridge;
++	struct acpi_pci_root_ops	*ops;
++	struct list_head		resources;
++	char				name[16];
++};
++
++struct acpi_pci_root_ops {
++	struct pci_ops *pci_ops;
++	int (*init_info)(struct acpi_pci_root_info *info);
++	void (*release_info)(struct acpi_pci_root_info *info);
++	int (*prepare_resources)(struct acpi_pci_root_info *info, int status);
++};
++
++extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
++					    struct acpi_pci_root_ops *ops,
++					    struct acpi_pci_root_info *info);
++
+ void acpi_pci_add_bus(struct pci_bus *bus);
+ void acpi_pci_remove_bus(struct pci_bus *bus);
+ 
+-- 
+1.7.10.4
 
-> +If this API is not provided by the underlying implementation, 0 is
-> +returned and the driver must take appropriate action. Otherwise, the
-> +DMA address is returned, and that DMA address should be checked by
-> +the driver (see dma_mapping_error() below).
-> +
-> +void
-> +dma_unmap_resource(struct device *dev, dma_addr_t dma_address, size_t size,
-> +		   enum dma_data_direction direction)
-> +
-> +Unmaps the resource previously mapped. All the parameters passed in
-> +must be identical to those passed in to (and returned by) the mapping
-> +API.
-> +
->  int
->  dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
->  
-> -In some circumstances dma_map_single() and dma_map_page() will fail to create
-> -a mapping. A driver can check for these errors by testing the returned
-> -DMA address with dma_mapping_error(). A non-zero return value means the mapping
-> -could not be created and the driver should take appropriate action (e.g.
-> -reduce current DMA mapping usage or delay and try again later).
-> +In some circumstances dma_map_single(), dma_map_page() and dma_map_resource()
-> +will fail to create a mapping. A driver can check for these errors by testing
-> +the returned DMA address with dma_mapping_error(). A non-zero return value
-> +means the mapping could not be created and the driver should take appropriate
-> +action (e.g. reduce current DMA mapping usage or delay and try again later).
->  
->  	int
->  	dma_map_sg(struct device *dev, struct scatterlist *sg,
-> -- 
-> 2.4.0
-> 
