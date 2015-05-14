@@ -1,88 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34481 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932997AbbESOQh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 10:16:37 -0400
-Message-ID: <555B452D.9020802@oracle.com>
-Date: Tue, 19 May 2015 10:14:05 -0400
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-MIME-Version: 1.0
-To: Tina Ruchandani <ruchandani.tina@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-CC: y2038@lists.linaro.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
+Received: from gate.crashing.org ([63.228.1.57]:47586 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752391AbbENHrw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 May 2015 03:47:52 -0400
+Message-ID: <1431589652.4160.49.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Pantelis Antoniou <panto@antoniou-consulting.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] xen/pcifront: Remove usage of struct timeval
-References: <20150519060809.GA27777@tinar>
-In-Reply-To: <20150519060809.GA27777@tinar>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Date: Thu, 14 May 2015 17:47:32 +1000
+In-Reply-To: <D7FC0542-DD1A-428F-8E75-81620C6D83DC@antoniou-consulting.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+	 <1430493730.7979.58.camel@kernel.crashing.org>
+	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+	 <1430521038.7979.70.camel@kernel.crashing.org>
+	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+	 <1430774063.7979.139.camel@kernel.crashing.org>
+	 <1431560124.20218.91.camel@kernel.crashing.org>
+	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+	 <1431564871.4160.8.camel@kernel.crashing.org>
+	 <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
+	 <1431585994.4160.32.camel@kernel.crashing.org>
+	 <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
+	 <1431587657.4160.37.camel@kernel.crashing.org>
+	 <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com>
+	 <1431588358.4160.42.camel@kernel.crashing.org>
+	 <D7FC0542-DD1A-428F-8E75-81620C6D83DC@antoniou-consulting.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/19/2015 02:08 AM, Tina Ruchandani wrote:
-> struct timeval uses a 32-bit field for representing seconds,
-> which will overflow in the year 2038 and beyond. This patch replaces
-> struct timeval with 64-bit ktime_t which is 2038 safe.
-> The patch is part of a larger effort to remove instances of
-> 32-bit timekeeping variables (timeval, time_t and timespec)
-> from the kernel.
->
-> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
+On Thu, 2015-05-14 at 10:34 +0300, Pantelis Antoniou wrote:
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> >> What you describe is inserting a bunch of properties and nodes under
+> >> a slot’s device node. Reverting the overlay removes them all just fine.
+> > 
+> > Except that still doesn't work for boot time :-)
+> > 
+> > So I would have to do a special case on unplug:
+> > 
+> > 	if (slot->dt_is_overlay) /* set to false at boot */
+> > 		remove_subtree_myself();
+> > 	else
+> > 		undo_overlay(slot->overlay);
+> > 
+> 
+> OK, in that case you do require removal. But in any case it’s the ‘negative’
+> of an already applied one, either at boot time or not.
 
+Sort-of, unless we have a way in the overlay to simply specify node
+removal statements so we don't have to explicitly remove all properties
+(or even all children).
 
-> --
-> Changes in v2:
-> - Use monotonic time (ktime_get_ns()) instead of real time
-> since we only care about elapsed delta here.
-> - Use macro ktime_get_ns() instead of getting ktime_t and
-> converting it to ns.
-> ---
->   drivers/pci/xen-pcifront.c | 8 +++-----
->   1 file changed, 3 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index 7cfd2db..c4796c8 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -20,6 +20,7 @@
->   #include <linux/workqueue.h>
->   #include <linux/bitops.h>
->   #include <linux/time.h>
-> +#include <linux/ktime.h>
->   #include <xen/platform_pci.h>
->   
->   #include <asm/xen/swiotlb-xen.h>
-> @@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->   	evtchn_port_t port = pdev->evtchn;
->   	unsigned irq = pdev->irq;
->   	s64 ns, ns_timeout;
-> -	struct timeval tv;
->   
->   	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
->   
-> @@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->   	 * (in the latter case we end up continually re-executing poll() with a
->   	 * timeout in the past). 1s difference gives plenty of slack for error.
->   	 */
-> -	do_gettimeofday(&tv);
-> -	ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
-> +	ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
->   
->   	xen_clear_irq_pending(irq);
->   
-> @@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->   			(unsigned long *)&pdev->sh_info->flags)) {
->   		xen_poll_irq_timeout(irq, jiffies + 3*HZ);
->   		xen_clear_irq_pending(irq);
-> -		do_gettimeofday(&tv);
-> -		ns = timeval_to_ns(&tv);
-> +		ns = ktime_get_ns();
->   		if (ns > ns_timeout) {
->   			dev_err(&pdev->xdev->dev,
->   				"pciback not responding!!!\n");
+> Modifying the overlay code to apply a ‘negative’ property should do the trick.
+> 
+> Is that correct?
+
+I would do negatives node and let Linux imply the properties (or even
+children).
+
+But yes, that would probably do.
+
+ .../...
+
+> I will probably need that generation count myself for my PCI use case.
+> 
+> > However that requires supporting removal of nodes/properties. So I'm
+> > tempted to keep that feature on the back burner and go with an ad-hoc
+> > interface for PCI for now.
+> > 
+> 
+> I see. Bonne chance :)
+
+Merci :)
+
+Cheers,
+Ben.
+
 
