@@ -1,94 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:33155 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbbETNQq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 09:16:46 -0400
-Received: by qcblr10 with SMTP id lr10so22265716qcb.0
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 06:16:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150519060809.GA27777@tinar>
-References: <20150519060809.GA27777@tinar>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 May 2015 08:16:24 -0500
-Message-ID: <CAErSpo47yMfPREFOTCiL8Pa=xbqgsSWk90Ge=u2YeTkUgdFESQ@mail.gmail.com>
-Subject: Re: [PATCH v2] xen/pcifront: Remove usage of struct timeval
-To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from li42-95.members.linode.com ([209.123.162.95]:44309 "EHLO
+	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751536AbbENHEn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 May 2015 03:04:43 -0400
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+Content-Type: text/plain; charset=utf-8
+From: Pantelis Antoniou <panto@antoniou-consulting.com>
+In-Reply-To: <1431585994.4160.32.camel@kernel.crashing.org>
+Date: Thu, 14 May 2015 10:04:37 +0300
+Cc: Rob Herring <robherring2@gmail.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Message-Id: <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org> <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com> <1431585994.4160.32.camel@kernel.crashing.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 1:08 AM, Tina Ruchandani
-<ruchandani.tina@gmail.com> wrote:
-> struct timeval uses a 32-bit field for representing seconds,
-> which will overflow in the year 2038 and beyond. This patch replaces
-> struct timeval with 64-bit ktime_t which is 2038 safe.
-> The patch is part of a larger effort to remove instances of
-> 32-bit timekeeping variables (timeval, time_t and timespec)
-> from the kernel.
->
-> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Hi Ben,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> On May 14, 2015, at 09:46 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+> 
+> On Thu, 2015-05-14 at 09:23 +0300, Pantelis Antoniou wrote:
+> 
+>>> A few things that I don't find in the overlay code (but maybe I haven't
+>>> looked at it hard enough):
+>>> 
+>>> - Can it remove nodes/properties ?
+>>> 
+>> 
+>> Yes.
+> 
+> Ok, I've missed that when looking at the overlay code then, I'll have to
+> give it a closer look.
+> 
 
-This isn't PCI-related, so I expect Konrad, Boris, or David will merge this.
+Ok, let me be more specific. It used to be able to do it ;)
+The problem was the format used (a ‘-‘ prefix to the name).
 
-> --
-> Changes in v2:
-> - Use monotonic time (ktime_get_ns()) instead of real time
-> since we only care about elapsed delta here.
-> - Use macro ktime_get_ns() instead of getting ktime_t and
-> converting it to ns.
-> ---
->  drivers/pci/xen-pcifront.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index 7cfd2db..c4796c8 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -20,6 +20,7 @@
->  #include <linux/workqueue.h>
->  #include <linux/bitops.h>
->  #include <linux/time.h>
-> +#include <linux/ktime.h>
->  #include <xen/platform_pci.h>
->
->  #include <asm/xen/swiotlb-xen.h>
-> @@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->         evtchn_port_t port = pdev->evtchn;
->         unsigned irq = pdev->irq;
->         s64 ns, ns_timeout;
-> -       struct timeval tv;
->
->         spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
->
-> @@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->          * (in the latter case we end up continually re-executing poll() with a
->          * timeout in the past). 1s difference gives plenty of slack for error.
->          */
-> -       do_gettimeofday(&tv);
-> -       ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
-> +       ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
->
->         xen_clear_irq_pending(irq);
->
-> @@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
->                         (unsigned long *)&pdev->sh_info->flags)) {
->                 xen_poll_irq_timeout(irq, jiffies + 3*HZ);
->                 xen_clear_irq_pending(irq);
-> -               do_gettimeofday(&tv);
-> -               ns = timeval_to_ns(&tv);
-> +               ns = ktime_get_ns();
->                 if (ns > ns_timeout) {
->                         dev_err(&pdev->xdev->dev,
->                                 "pciback not responding!!!\n");
-> --
-> 2.2.0.rc0.207.ga3a616c
->
+Since I didn’t have clear use for it, I was asked to drop it by Grant.
+
+The removal capability is of-course there for the revert case.
+
+>>> - Can it "commit" a changeset so it's permanently part of the main DT ?
+>>> We will never have a concept of "revertable" changesets, if we need a
+>>> subsequent update, we will get a new overlay from FW that will remove
+>>> what needs to be removed and add what needs to be added.
+>>> 
+>> 
+>> The overlay when applied is a part of the kernel DT tree.
+>> It is trivial to add a mechanism that simply commits everything and
+>> tosses away the revert information.
+>> 
+>> Note that in that case you have to make provisions for the unflatten
+>> blob to not be freed or for the device tree nodes/properties to be
+>> dynamically allocated.
+> 
+> I think it makes sense to do the dynamic thing anyway...
+> 
+>>> IE, our current mechanism without overlay is fairly simple:
+>>> 
+>>> - On PCI unplug, we remove all nodes below the slot (from linux),
+>>> the FW does the equivalent internally.
+>>> 
+>> 
+>> If you use an overlay, you just revert it and everything would
+>> be as it was before, without anything hanging below the slot node.
+> 
+> Except that doesn't work for the boot time content which we get
+> from the firmware as part of the initial FDT (and we can't change that
+> without breaking backward compatibility).
+> 
+
+OK
+
+>> Note that the ‘remove all nodes below the slot’ does not work for my case.
+>> 
+>> That is because there are devices being instantiated under the slot
+>> (i2c busses, i2c devices, FPGAs etc) that need to be removed from the
+>> system.
+> 
+> Right while in my case, there isn't, it's just the standard OF PCI
+> representation generated by FW, the main thing is that it might have
+> some enriched properties for some known cable cards of external drawers
+> that are good to have.
+> 
+
+I see.
+
+>>> - On PCI re-plug, the FW internally builds new nodes and sends a
+>>> new subtree as an FDT that we can expand/attach.
+>>> 
+>> 
+>> You can easily send a DT blob containing an overlay from firmware.
+> 
+> Sending one is easy. Building it is not :-)
+> 
+
+Heh, true ;)
+
+>> It can be even easy, since you might not have to recreate the full blob
+>> each time, but instead using flat device tree methods to populate the
+>> few properties that change each time.
+> 
+> No, we basically have our internal tree in the firmware in a format
+> similar to Linux, ie, a pointer based tree. We can "flatten" it of
+> course, but generating an overlay is trickier. We can, it's just more
+> work and we are running out of time (I basically have to cut that FW in
+> the next few days, then we'll be stuck with whatever interfaces we
+> created, I have a big of time to fix bugs after that but that's about
+> it).
+> 
+
+Hmm, since you just want to transmit a whole subtree things are a bit
+simpler.
+
+You don’t need any of the fixups, and your target node is known.
+
+So your overlay is simply:
+
+/ {
+	fragment@0 {
+		target-path = “/foo”;
+		__overlay__ {
+			/* contents of the slot */
+		};
+	}; 
+};
+
+I think it’s possible to just bit-mangle a blob (in pseudo code).
+
+	const u8 template_overlay_blob[] = { <compiled blob of the above> };
+
+	flatten_slot(slot_blob);
+
+	overlay_blob = allocate_new_blob(template_overlay_blob, slot_blob);
+
+	overlay_node = find_node(overlay_blob, “/fragment@0/__overlay__);
+	target_prop = find_prop(overlay_blob, “/fragment@0/target-path”);
+
+	inject_slot_blob(overlay_blob, overlay_node, slot_blob);
+	modify_slot_target(overlay_blob, target_prop, slot_target);
+	
+I don’t think you need to re-flatten anything, shuffling bits around with
+memmove should work.
+
+>>> Now we could consider that subtree as a changeset that can be undone,
+>>> but that wouldn't work for boot time. And subsequent updates wouldn't
+>>> have that concept of "undoing" anyway.
+>>> 
+>> 
+>> I have posted another patch that does boot-time DT quirk which are
+>> non-revertable.
+>> 
+>> https://lkml.org/lkml/2015/2/18/258
+> 
+> Not sure how that applies in my case ... I can't change the
+> representation of the PCI subtree, this is standard OFW representation,
+> I can't change the FW to make it an overlay-like thing at boot time,
+> that would break existing kernels.
+> 
+
+The idea is to append the ‘quirk’ to the already booting device tree blob.
+
+Another idea floating around was to simple concatenate the booting blob with
+any overlay blobs you want applied at boot time.
+
+>>> IE. conceptually, what overlays do today is quite rooted around the idea
+>>> of having a fixed "base" DT and some pre-compiled DTB overlays that
+>>> get added/removed. The design completely ignore the idea of a FW that
+>>> maintains a "live" tree which we want to keep in sync, which is what we
+>>> want to do here, or what we could do with a "live" open firmware
+>>> implementation.
+>>> 
+>>> Now we might be able to reconcile them, but it feels to me that the
+>>> overlay/changeset stuff is too rooted in the first concept…
+>>> 
+>> 
+>> The first DT overlays use case (beaglebone capes) is what got the concept
+>> started.
+>> 
+>> Right now is a generic mechanism to apply modifications to the kernel
+>> live tree, with the possibility to revert them.
+> 
+> Yes but as I said it's not really thought in term of keeping the kernel
+> tree in sync with an external dynamically generated tree. Maybe we can
+> fix it, but it's more complex…
+> 
+
+Yes it is, unfortunately.
+
+> Ben.
+> 
+>>> Ben.
+>>> 
+>>> 
+>> 
+>> Regards
+>> 
+>> — Pantelis
+> 
+> 
+
+Regards
+
+— Pantelis
+
