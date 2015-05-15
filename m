@@ -1,78 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:34027 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753013AbbEZMxD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 08:53:03 -0400
-Received: by pdbki1 with SMTP id ki1so48622485pdb.1
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 05:50:48 -0700 (PDT)
-From: Hanjun Guo <hanjun.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH 09/11] pci, acpi, mcfg: Share ACPI PCI config space accessors.
-Date: Tue, 26 May 2015 20:49:22 +0800
-Message-Id: <1432644564-24746-10-git-send-email-hanjun.guo@linaro.org>
-In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Received: from mail-bl2on0135.outbound.protection.outlook.com ([65.55.169.135]:47488
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752701AbbEOSeO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 14:34:14 -0400
+From: Bhushan Bharat <Bharat.Bhushan@freescale.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+CC: Bansal Ayushi <Ayushi.Bansal@freescale.com>
+Subject: RE: Crash at vfio_intx_handler for PCI device 
+Date: Fri, 15 May 2015 17:00:18 +0000
+Message-ID: <CY1PR0301MB12761E3A28E4D4F1F72B2EFB90C70@CY1PR0301MB1276.namprd03.prod.outlook.com>
+References: <BY2PR03MB1606C055D54CC65D00DE8EAFBC70@BY2PR03MB160.namprd03.prod.outlook.com>
+In-Reply-To: <BY2PR03MB1606C055D54CC65D00DE8EAFBC70@BY2PR03MB160.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Hi All,
 
-MCFG can be used perfectly for all architectures which support ACPI.
-ACPI mandates MCFG to describe PCI config space ranges which means
-we should use MMCONFIG accessors by default.
+We are direct assigning the intel ixgbe device on Freescale T4240QDS-2 using VFIO. We are getting below crash when running QEMU.
+When we set the flag 'nointxmask', the issue resolved. 
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/acpi/mcfg.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Here is the info of lspci -vvvxxx for that PCI device:
 
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 745b83e..90c81fa 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -12,6 +12,26 @@
- 
- #define	PREFIX	"MCFG: "
- 
-+/*
-+ * raw_pci_read/write - ACPI PCI config space accessors.
-+ *
-+ * ACPI spec defines MCFG table as the way we can describe access to PCI config
-+ * space, so let MCFG be default (__weak).
-+ *
-+ * If platform needs more fancy stuff, should provides its own implementation.
-+ */
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
-+			unsigned int devfn, int reg, int len, u32 *val)
-+{
-+	return pci_mmcfg_read(domain, bus, devfn, reg, len, val);
-+}
-+
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
-+			 unsigned int devfn, int reg, int len, u32 val)
-+{
-+	return pci_mmcfg_write(domain, bus, devfn, reg, len, val);
-+}
-+
- int __init acpi_parse_mcfg(struct acpi_table_header *header)
- {
- 	struct acpi_table_mcfg *mcfg;
--- 
-1.9.1
+0001:01:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+                Subsystem: Intel Corporation Ethernet Server Adapter X520-2
+                Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+                Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+                Latency: 0, Cache Line Size: 32 bytes
+                Interrupt: pin B routed to IRQ 17
+                Region 0: Memory at c40100000 (64-bit, non-prefetchable) [size=512K]
+                Region 2: I/O ports at 1020 [disabled] [size=32]
+                Region 4: Memory at c40180000 (64-bit, non-prefetchable) [size=16K]
+                [virtual] Expansion ROM at c40280000 [disabled] [size=512K]
+                Capabilities: [40] Power Management version 3
+                                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
+                                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+                Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
+                                Address: 0000000000000000  Data: 0000
+                                Masking: 00000000  Pending: 00000000
+                Capabilities: [70] MSI-X: Enable+ Count=64 Masked-
+                                Vector table: BAR=4 offset=00000000
+                                PBA: BAR=4 offset=00002000
+                Capabilities: [a0] Express (v2) Endpoint, MSI 00
+                                DevCap:               MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                                                ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+                                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                                                RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+                                                MaxPayload 128 bytes, MaxReadReq 512 bytes
+                                DevSta:                CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                                LnkCap:                Port #4, Speed 5GT/s, Width x8, ASPM L0s, Exit Latency L0s <512ns, L1 <4us
+                                                ClockPM- Surprise- LLActRep- BwNot-
+                                LnkCtl:  ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+                                                ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported
+                                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+                                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+                                                EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+                Capabilities: [e0] Vital Product Data
+                                Unknown small resource type 00, will not decode more.
+                Capabilities: [100 v1] Advanced Error Reporting
+                                UESta:   DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                                UEMsk:                DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                                CESta:   RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                                CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                                AERCap:               First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+                Capabilities: [140 v1] Device Serial Number 00-1b-21-ff-ff-89-81-88
+                Capabilities: [150 v1] Alternative Routing-ID Interpretation (ARI)
+                                ARICap:                MFVC- ACS-, Next Function: 0
+                                ARICtl:  MFVC- ACS-, Function Group: 0
+                Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
+                                IOVCap:               Migration-, Interrupt Message Number: 000
+                                IOVCtl:  Enable- Migration- Interrupt- MSE- ARIHierarchy-
+                                IOVSta: Migration-
+                                Initial VFs: 64, Total VFs: 64, Number of VFs: 0, Function Dependency Link: 01
+                                VF offset: 384, stride: 2, Device ID: 10ed
+                                Supported Page Size: 00000553, System Page Size: 00000001
+                                Region 0: Memory at 00000000e0500000 (64-bit, non-prefetchable)
+                                Region 3: Memory at 00000000e0600000 (64-bit, non-prefetchable)
+                                VF Migration: offset: 00000000, BIR: 0
+                Kernel driver in use: vfio-pci
+00: 86 80 fb 10 06 04 10 00 01 00 00 02 08 00 80 00
+10: 04 00 10 e0 00 00 00 00 21 10 00 00 00 00 00 00
+20: 04 00 18 e0 00 00 00 00 00 00 00 00 86 80 11 7a
+30: 00 00 00 00 40 00 00 00 00 00 00 00 00 02 00 00
+40: 01 50 23 48 00 20 00 2b 00 00 00 00 00 00 00 00
+50: 05 70 80 01 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 11 a0 3f 80 04 00 00 00 04 20 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 10 e0 02 00 c2 8c 00 10 10 28 00 00 82 34 01 04
+b0: 40 00 41 10 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 1f 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 03 00 00 80 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
+
+Thanks
+-Bharat
