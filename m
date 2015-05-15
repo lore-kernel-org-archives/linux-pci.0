@@ -1,84 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5552E2C8.70307@linux.intel.com>
-Date: Wed, 13 May 2015 13:36:08 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <5550B056.2080608@linaro.org>
-In-Reply-To: <5550B056.2080608@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:59876 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752507AbbEOFtb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:49:31 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:49:29 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 3A3C62BB0051
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:27 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5nIe425100356
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:26 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5msEG000835
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:48:54 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 01/11] pci/iov: rename and export virtfn_add/virtfn_remove
+Date: Fri, 15 May 2015 13:46:16 +0800
+Message-Id: <1431668786-30371-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/11 21:36, Hanjun Guo wrote:
-> Hi Jiang,
-> 
-> I have comments inline.
-> 
-> On 2015年05月05日 10:46, Jiang Liu wrote:
->> Introduce common interface acpi_pci_root_create() and related data
->> structures to create PCI root bus for ACPI PCI host bridges. It will
->> be used to kill duplicated arch specific code for IA64 and x86. It may
->> also help ARM64 in future.
->>
->> Tested-by: Tony Luck <tony.luck@intel.com>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->> +                     struct acpi_pci_root_ops *ops,
->> +                     size_t extra_size)
->> +{
->> +    int ret, busnum = root->secondary.start;
->> +    struct acpi_device *device = root->device;
->> +    struct acpi_pci_root_info_common *info;
->> +    struct pci_bus *bus;
->> +
->> +    info = kzalloc(sizeof(*info) + extra_size, GFP_KERNEL);
-> 
-> For x86, the memory is allocated on its local numa node if memory
-> is available by using kzalloc_node(), and if
-> node = acpi_get_node(device->handle) is NUMA_NO_NODE, the code will
-> get the numa node info by using x86_pci_root_bus_node() (which you
-> consolidate them as a function pci_acpi_root_get_node() in later
-> patch).
-> 
-> but the code here just ignore that information, so the code
-> here has functional change for x86 code since you didn't use numa
-> information.
-> 
-> I'm not sure how frequently used for the info after init, so
-> not sure about the performance impact, but I think we should
-> keep consistence with the code behavior as before.
-Hi Hanjun,
-	Good catch, will change code to respect NUMA node
-info when allocating memory.
+During the EEH recovery, when a device's driver is not EEH aware or no
+driver is bound with a device, EEH core would do hotplug on this device.
+While it isn't feasible for a VF with usual hotplug procedure. During
+removal of a VF, virtual bus should be removed if necessary. During the
+re-creation, the pci_scan_slot() doesn't work on a VF.
 
-> 
-> Further more, there is a implicit cast for
-> struct acpi_pci_root_info_common *info to arch specific
-> struct pci_root_info *info by using extra size, it's not
-> easy to understand (at least for me :) ), so how about
-> alloc the memory in arch specific function, and pass
-> struct acpi_pci_root_info_common *info fr this function?
-Good suggestion.
-Thanks!
-Gerry
+This patch exports two functions to handle the hotplug case for VF
+properly. They will be invoked when the EEH core does the hotplug case for
+VFs.
 
-> other than that, this code is pretty good, I reworked ARM64
-> ACPI based PCI host bridge init code, and this patch simplified
-> the coed a lot, will have a test tomorrow and let you know
-> the result.
-> 
-> Thanks
-> Hanjun
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/iov.c   |   10 +++++-----
+ include/linux/pci.h |    2 ++
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 47daf2f..f353e6f 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -106,7 +106,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+ }
+ 
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -181,7 +181,7 @@ failed:
+ 	return rc;
+ }
+ 
+-static void virtfn_remove(struct pci_dev *dev, int id, int reset)
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+ 	struct pci_dev *virtfn;
+ 
+@@ -302,7 +302,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = pci_iov_virtfn_add(dev, i, 0);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -314,7 +314,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ failed:
+ 	for (j = 0; j < i; j++)
+-		virtfn_remove(dev, j, 0);
++		pci_iov_virtfn_remove(dev, j, 0);
+ 
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+@@ -343,7 +343,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		return;
+ 
+ 	for (i = 0; i < iov->num_VFs; i++)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_virtfn_remove(dev, i, 0);
+ 
+ 	pcibios_sriov_disable(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..94bacfa 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+-- 
+1.7.9.5
+
