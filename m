@@ -1,115 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:35228 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755144AbbETUq2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 16:46:28 -0400
-Received: by qgew3 with SMTP id w3so29796358qge.2
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 13:46:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150520172903.GJ11498@arm.com>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
- <20150505155346.GJ1550@arm.com> <20150512000746.GA31418@jayachandranc.netlogicmicro.com>
- <20150519230918.GW31666@google.com> <20150520172903.GJ11498@arm.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:33406 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934365AbbEOWLx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 18:11:53 -0400
+Received: by igbpi8 with SMTP id pi8so49930212igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:11:52 -0700 (PDT)
+Date: Fri, 15 May 2015 17:11:49 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 May 2015 15:46:06 -0500
-Message-ID: <CAErSpo7r6cwztxNW-92LT_AT_moufQAQO_OJein7qOQjdszKUg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-To: Will Deacon <will.deacon@arm.com>
-Cc: "Jayachandran C." <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+To: Guenter Roeck <groeck@juniper.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: BAR 7 io space assignment errors
+Message-ID: <20150515221149.GA31666@google.com>
+References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
+ <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
+ <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 12:29 PM, Will Deacon <will.deacon@arm.com> wrote:
-> On Wed, May 20, 2015 at 12:09:18AM +0100, Bjorn Helgaas wrote:
->> On Tue, May 12, 2015 at 05:37:47AM +0530, Jayachandran C. wrote:
->> > On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
->> > > On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
->> > > > The current code in pci-host-generic.c uses pci_common_init_dev()
->> > > > from the arch/arm/ to do a part of the PCI initialization, and this
->> > > > prevents it from being used on arm64.
->> > > >
->> > > > The initialization done by pci_common_init_dev() that is really
->> > > > needed by pci-host-generic.c can be done in the same file without
->> > > > using the hw_pci API of ARM.
->> > > >
->> > > > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
->> > > > this is be handled by setting up 'struct gen_pci' to embed a
->> > > > pci_sys_data variable as the first element on the ARM platform.
->> > > >
->> > > > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
->> > > > ---
->> > > > Here's v2 of the patches, this enables use of pci-host-generic on
->> > > > arm64.
->> > > >
->> > > > This has been tested on both qemu and fast model for arm64, and on
->> > > > qemu for arm32.
->> > > >
->> > > > v1->v2
->> > > >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
->> > > >     - move contents of gen_pci_init to gen_pci_probe
->> > > >     - assign resources only when !probe_only
->> > > >  - tested on ARM32 with qemu option -M virt
->> > >
->> > > I tried this with an arm64 kernel running under kvmtool, but I get the
->> > > following errors (a 32-bit ARM kernel does seem to work):
->> > >
->> > >   PCI host bridge /pci ranges:
->> > >      IO 0x00000000..0x0000ffff -> 0x00000000
->> > >     MEM 0x41000000..0x7fffffff -> 0x41000000
->> > >   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
->> > >   pci_bus 0000:00: root bus resource [bus 00-01]
->> > >   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->> > >   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
->> > >   pci_bus 0000:00: scanning bus
->> > >   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
->> > >   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
->> > >   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
->> > >   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
->> > >   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
->> > >   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
->> > >   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
->> > >   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
->> > >   pci_bus 0000:00: fixups for bus
->> > >   pci_bus 0000:00: bus scan returning with max=00
->> > >   pci 0000:00:00.0: fixup irq: got 10
->> > >   pci 0000:00:00.0: assigning IRQ 10
->> > >   pci 0000:00:01.0: fixup irq: got 11
->> > >   pci 0000:00:01.0: assigning IRQ 11
->> > >   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
->> > >   virtio-pci: probe of 0000:00:00.0 failed with error -22
->> > >   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
->> > >   virtio-pci: probe of 0000:00:01.0 failed with error -22
->> >
->> > PCI_PROBE_ONLY does not work yet for arm64, this will need further changes
->> > in either arm64 or pci as noted by Lorenzo. This is not due to a problem with
->> > this patch per se.
->> >
->> > More importantly, this does not change the current arm32 behavior and adds
->> > support for arm64 for two very useful cases
->> >  - we can use "pci-host-ecam-generic" for a host bridge controller that is
->> >    initialized by firmware, without adding a custom driver.
->> >  - qemu virt platform works on arm64
->> >
->> > If you think there are any furhter changes needed in this patchset please
->> > let me know.
->>
->> I'm waiting for at least an ack from Will.
->
-> I'm not too keen on the current state of this patch. Firstly, I'd really
-> like to see the PROBE_ONLY case addressed at the same time as this port
-> (Lorenzo and Suravee are working on this). Secondly, the hack to put
-> pci_sys_data as the first member of gen_pci is ugly at best and probably
-> makes it difficult to support MSIs on ARM.
+On Fri, May 15, 2015 at 01:04:22PM -0700, Guenter Roeck wrote:
+> Hi Bjorn,
+> 
+> On Fri, May 15, 2015 at 02:25:34PM -0500, Bjorn Helgaas wrote:
+> > [+cc Yinghai]
+> > 
+> > Hi Guenter,
+> > 
+> > On Fri, May 15, 2015 at 12:28 PM, Guenter Roeck <groeck@juniper.net> wrote:
+> > > Hi all,
+> > >
+> > > ever since 3.18(ish), we see lots of pcie io range allocation error messages
+> > > when booting our systems.
+> > >
+> > > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
+> > > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+> > > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+> > >
+> > > This is repeated for each port.
+> > >
+> > > What we atually _want_ is no IO address range, but so far I have not been able to
+> > > tell this to the code (or to the bridge).
+> > 
+> > What information does the core have that we could use to figure out
+> > that you want no I/O space?  For example, does the host bridge have no
+> > I/O apertures?  Or are there no devices below 02:00.0 that require I/O
+> > space?  If you can post a complete dmesg log, that should contain this
+> > information.
+> > 
+> We know that we don't need IO space behind the bridge.
+> 
+> Question would be what information the core would need. I have tried
+> to pre-program PCI_IO_BASE and PCI_IO_LIMIT on the bridge ports,
+> but that doesn't seem to be the right solution (and it was just a
+> wild shot anyway ;-).
 
-Thanks, Will.  I'll wait for another iteration that addresses these.
+The core tries to assign address space before drivers start claiming
+devices because it's very difficult to move devices after drivers are
+attached.  To avoid assigning I/O space to a bridge, the core would have to
+know that (1) no devices below the bridge have I/O BARs, and (2) there's no
+hotplug slot where a new device could be added below the bridge.
+
+In your specific case, I suspect that you have hotplug bridges, but you
+*know* exactly what devices can be "hot-plugged" and you know they don't
+need I/O space.  But there's no good way to tell that to the PCI core.
+
+> > Is the problem that some device doesn't work, or is it just extra
+> > annoying messages.  We should fix something in either case, of course,
+> > but it's more urgent if a device used to work but no longer does.
+> > 
+> Just the extra annoying messages. The messages below are just the beginning;
+> there are many more when the actual devices behind the bridge ports come
+> online.
+
+This sounds like an interesting topology.  A device coming online later is
+a hotplug event from the core's point of view.  Since the core can't tell
+what a hot-added device is going to be, it allocates a default amount of
+space (pci_hotplug_io_size) to accomodate it.  You can influence that with
+the "pci=hpiosize=" boot parameter.  Maybe "pci=hpiosize=0" would help in
+your case, but we'd still have the problem that the messages don't make
+sense to the average user (including me).
+
+  fsl-pci fff70a000.pcie: PCI host bridge to bus 0000:00
+  pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+  pci 0000:00:00.0: PCI bridge to [bus 01-ff]      # Root Port
+  pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
+
+The host bridge does have an I/O aperture, and it looks like firmware set
+up the 00:00.0 bridge with a small piece of that.  That's sort of a waste:
+supposedly we have 64K of I/O space available on bus 00, and 4K of that is
+routed to [bus 01-ff].  The other 60K could be used by other devices on bus
+00, but it doesn't look like there *are* any, so it is wasted.
+
+  pci 0000:01:00.0: PCI bridge to [bus 02-ff]      # Upstream Port
+  pci 0000:02:00.0: PCI bridge to [bus 40-4f]      # Downstream Port 0x0
+  ...
+  pci 0000:02:0d.0: PCI bridge to [bus a0-af]      # Downstream Port 0xa
+
+  pci 0000:02:00.0: bridge window [io  0x1000-0x0fff] to [bus 40-4f] add_size 1000
+  ...
+  pci 0000:02:0d.0: bridge window [io  0x1000-0x0fff] to [bus a0-af] add_size 1000
+
+I'm guessing these Downstream Ports all have "is_hotplug_bridge" set
+because they have the "Hot-Plug Capable" bit set in their Slot Capabilities
+register.  We're trying to allocate 0x1000 I/O ports for each, and there
+are 0xb of them, so we'd need 0xb000 I/O ports at the 01:00.0 bridge:
+
+  pci 0000:01:00.0: bridge window [io  0x1000-0x0fff] to [bus 02-ff] add_size b000
+
+pci_hotplug_io_size defaults to 256, but standard PCI bridges don't support
+I/O windows smaller than 4K, so they all got rounded up to 4K (0x1000).
+
+I would love it if somebody would clean up those messages and make them all
+consistent.  There's useful information there, so I'm not sure we want to
+get rid of them, but I think there's some redundancy we might be able to
+fix.
 
 Bjorn
