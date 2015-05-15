@@ -1,68 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55477B86.70705@linux.intel.com>
-Date: Mon, 04 May 2015 22:00:38 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:33406 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161046AbbEOW5r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 18:57:47 -0400
+Received: by igbpi8 with SMTP id pi8so50517343igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:57:46 -0700 (PDT)
+Date: Fri, 15 May 2015 17:57:43 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	donald.d.dugger@intel.com
+Subject: Re: [PATCH] PCI: ACS quirks for Intel 9-series PCH root ports
+Message-ID: <20150515225743.GB31666@google.com>
+References: <20150501191925.1863.71223.stgit@gimli.home>
 MIME-Version: 1.0
-To: Amir Vadai <amirv@mellanox.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Hadar Hen Zion <hadarh@mellanox.com>,
-	Eran Ben Elisha <eranbe@mellanox.com>,
-	Joe Perches <joe@perches.com>,
-	Saeed Mahameed <saeedm@mellanox.com>,
-	Matan Barak <matanb@mellanox.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of
- irq_desc
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>	<1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com> <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
-In-Reply-To: <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150501191925.1863.71223.stgit@gimli.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/4 20:10, Amir Vadai wrote:
-> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> The field 'affinity' in irq_desc won't change once the irq_desc data
->> structure is created. So cache irq_desc->affinity instead of irq_desc.
->> This also helps to hide struct irq_desc from device drivers.
+On Fri, May 01, 2015 at 01:20:13PM -0600, Alex Williamson wrote:
+> Intel confirms that 9-series chipset root ports provide ACS-equivalent
+> isolation when configured via the existing Intel PCH ACS quirk setup.
 > 
-> Hi Jiang,
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Don Dugger <donald.d.dugger@intel.com>
+
+Applied with Don's ack to pci/virtualization for v4.2, thanks!
+
+> ---
+>  drivers/pci/quirks.c |    2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> I might not understand the new changes irq core, but up until now
-> affinity was changed when the user changed it through
-> /proc/irq/<IRQ>/smp_affinity.
-> This code is monitoring the affinity from the napi_poll context to
-> detect affinity changes, and prevent napi from keep running on the
-> wrong CPU.
-> Therefore, the affinity can't be cached at the beginning. Please
-> revert this caching.
-Hi Amir,
-	Thanks for review:) We want to hide irq_desc implementation
-details from device drivers, so made these changes.
-	Function irq_get_affinity_mask() returns 'struct cpumask *'
-and we cache the returned pointer. On the other hand, user may change
-IRQ affinity through /proc/irq/<IRQ>/smp_affinity, but that only
-changes the bitmap pointed to by the cached pointer and won't change
-the pointer itself. So it should always return the latest affinity
-setting by calling cpumask_test_cpu(cpu_curr, cq->irq_affinity).
-Or am I missing something here?
-Thanks!
-Gerry
-> 
-> Thanks,
-> Amir
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index c6dc1df..f126bd6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3740,6 +3740,8 @@ static const u16 pci_quirk_intel_pch_acs_ids[] = {
+>  	/* Wellsburg (X99) PCH */
+>  	0x8d10, 0x8d11, 0x8d12, 0x8d13, 0x8d14, 0x8d15, 0x8d16, 0x8d17,
+>  	0x8d18, 0x8d19, 0x8d1a, 0x8d1b, 0x8d1c, 0x8d1d, 0x8d1e,
+> +	/* Lynx Point (9 series) PCH */
+> +	0x8c90, 0x8c92, 0x8c94, 0x8c96, 0x8c98, 0x8c9a, 0x8c9c, 0x8c9e,
+>  };
+>  
+>  static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
 > 
