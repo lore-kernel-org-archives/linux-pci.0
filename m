@@ -1,140 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:18123 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbbEASpW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 14:45:22 -0400
-From: <wdavis@nvidia.com>
-To: joro@8bytes.org
-CC: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 1/6] dma-debug: add checking for map/unmap_resource
-Date: Fri, 1 May 2015 13:32:13 -0500
-Message-ID: <1430505138-2877-2-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34409 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161002AbbEOXD6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 19:03:58 -0400
+Received: by ieczm2 with SMTP id zm2so61249477iec.1
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:03:58 -0700 (PDT)
+Date: Fri, 15 May 2015 18:03:54 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Pratyush Anand <panand@redhat.com>
+Cc: jg1.han@samsung.com, linux-pci@vger.kernel.org,
+	mohit.kumar.dhaka@gmail.com,
+	Pratyush Anand <pratyush.anand@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update SPEAr13xx and Designware PCIe
+ maintainer
+Message-ID: <20150515230354.GC31666@google.com>
+References: <dd210909090e843e8f7cfc84479af7baa2250d33.1430366548.git.panand@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <dd210909090e843e8f7cfc84479af7baa2250d33.1430366548.git.panand@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+On Thu, Apr 30, 2015 at 09:46:07AM +0530, Pratyush Anand wrote:
+> From: Pratyush Anand <pratyush.anand@gmail.com>
+> 
+> Didn't add myself as Maintainer earlier, as I was moving out of ST
+> and didn't had a board to test. But learnt recently that, its fine being
+> in MAINTAINERS in such situations, at least I can review the patches.
+> 
+> So, let me add myself.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@gmail.com>
 
-Add debug callbacks for the new dma_map_resource and dma_unmap_resource
-functions.
+Applied with Jingoo's ack to for-linus for v4.1, thanks!
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- include/linux/dma-debug.h | 20 ++++++++++++++++++++
- lib/dma-debug.c           | 48 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 68 insertions(+)
-
-diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
-index fe8cb61..19f328c 100644
---- a/include/linux/dma-debug.h
-+++ b/include/linux/dma-debug.h
-@@ -44,6 +44,13 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
- extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- 				 size_t size, int direction, bool map_single);
- 
-+extern void debug_dma_map_resource(struct device *dev, struct resource *res,
-+				   size_t offset, size_t size, int direction,
-+				   dma_addr_t dma_addr);
-+
-+extern void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
-+				     size_t size, int direction);
-+
- extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 			     int nents, int mapped_ents, int direction);
- 
-@@ -120,6 +127,19 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- {
- }
- 
-+static inline void debug_dma_map_resource(struct device *dev,
-+					  struct resource *res, size_t offset,
-+					  size_t size, int direction,
-+					  dma_addr_t dma_addr)
-+{
-+}
-+
-+static inline void debug_dma_unmap_resource(struct device *dev,
-+					    dma_addr_t addr, size_t size,
-+					    int direction)
-+{
-+}
-+
- static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 				    int nents, int mapped_ents, int direction)
- {
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index ae4b65e..0ef092f 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -43,6 +43,7 @@ enum {
- 	dma_debug_page,
- 	dma_debug_sg,
- 	dma_debug_coherent,
-+	dma_debug_resource,
- };
- 
- enum map_err_types {
-@@ -1348,6 +1349,53 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- }
- EXPORT_SYMBOL(debug_dma_unmap_page);
- 
-+void debug_dma_map_resource(struct device *dev, struct resource *resource,
-+			    size_t offset, size_t size, int direction,
-+			    dma_addr_t dma_addr)
-+{
-+	struct dma_debug_entry *entry;
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	if (dma_mapping_error(dev, dma_addr))
-+		return;
-+
-+	entry = dma_entry_alloc();
-+	if (!entry)
-+		return;
-+
-+	entry->dev       = dev;
-+	entry->type      = dma_debug_resource;
-+	entry->pfn       = resource->start >> PAGE_SHIFT;
-+	entry->offset    = offset,
-+	entry->dev_addr  = dma_addr;
-+	entry->size      = size;
-+	entry->direction = direction;
-+	entry->map_err_type = MAP_ERR_NOT_CHECKED;
-+
-+	add_dma_entry(entry);
-+}
-+EXPORT_SYMBOL(debug_dma_map_resource);
-+
-+void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
-+			      size_t size, int direction)
-+{
-+	struct dma_debug_entry ref = {
-+		.type           = dma_debug_resource,
-+		.dev            = dev,
-+		.dev_addr       = addr,
-+		.size           = size,
-+		.direction      = direction,
-+	};
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	check_unmap(&ref);
-+}
-+EXPORT_SYMBOL(debug_dma_unmap_resource);
-+
- void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 		      int nents, int mapped_ents, int direction)
- {
--- 
-2.3.7
-
+> ---
+>  MAINTAINERS | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 68e96ee0d58c..69ce49782ff9 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -7553,6 +7553,7 @@ F:	drivers/pci/host/pci-exynos.c
+>  
+>  PCI DRIVER FOR SYNOPSIS DESIGNWARE
+>  M:	Jingoo Han <jg1.han@samsung.com>
+> +M:	Pratyush Anand <pratyush.anand@gmail.com>
+>  L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/pci/host/*designware*
+> @@ -7566,8 +7567,9 @@ F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>  F:	drivers/pci/host/pci-host-generic.c
+>  
+>  PCIE DRIVER FOR ST SPEAR13XX
+> +M:	Pratyush Anand <pratyush.anand@gmail.com>
+>  L:	linux-pci@vger.kernel.org
+> -S:	Orphan
+> +S:	Maintained
+>  F:	drivers/pci/host/*spear*
+>  
+>  PCMCIA SUBSYSTEM
+> -- 
+> 2.1.0
+> 
