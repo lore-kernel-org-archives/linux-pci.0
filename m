@@ -1,86 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out03.mta.xmission.com ([166.70.13.233]:52395 "EHLO
-	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbbEGA6T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 20:58:19 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Michael S. Tsirkin" <mst@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>
-References: <20150410223533.20848.95316.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150426084739-mutt-send-email-mst@kernel.org>
-	<20150506210327.GG24643@google.com>
-Date: Wed, 06 May 2015 19:53:48 -0500
-In-Reply-To: <20150506210327.GG24643@google.com> (Bjorn Helgaas's message of
-	"Wed, 6 May 2015 16:03:27 -0500")
-Message-ID: <871titfbs3.fsf@x220.int.ebiederm.org>
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:34554 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754815AbbEOTZz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 15:25:55 -0400
+Received: by qgfa7 with SMTP id a7so8724168qgf.1
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 12:25:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: [PATCH v6 00/10] PCI: Fix unhandled interrupt on shutdown
+In-Reply-To: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
+References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 15 May 2015 14:25:34 -0500
+Message-ID: <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
+Subject: Re: BAR 7 io space assignment errors
+To: Guenter Roeck <groeck@juniper.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+[+cc Yinghai]
 
-> On Sun, Apr 26, 2015 at 08:50:06AM +0200, Michael S. Tsirkin wrote:
->> On Fri, Apr 10, 2015 at 05:54:19PM -0500, Bjorn Helgaas wrote:
->> > Hi Michael,
->> > 
->> > I put your patches on my pci/msi branch and I hope to merge them for v4.1.
->> > I didn't apply the acks from Fam and Eric because I made changes to those
->> > patches that weren't completely trivial.  I think the end result is
->> > equivalent, though.  The diff attached to this cover letter is the
->> > difference between your v5 series and this v6 series.
->> > 
->> > As far as I'm concerned, this is ready to go except that I would like a
->> > little more info about the virtio kernel hang to include in the changelog
->> > for "PCI/MSI: Don't disable MSI/MSI-X at shutdown".
->> 
->> 
->> Hi Bjorn,
->> do you have eveything you need to merge this?
+Hi Guenter,
+
+On Fri, May 15, 2015 at 12:28 PM, Guenter Roeck <groeck@juniper.net> wrote:
+> Hi all,
 >
-> No.  I made the minor changelog edits you suggested and the result is on
-> my pci/msi-v7 branch.  But I still have these open issues:
+> ever since 3.18(ish), we see lots of pcie io range allocation error messages
+> when booting our systems.
 >
->   - The last thing I heard from Eric was that "not disabling MSI/MSI-X at
->     shutdown is the wrong fix, and someone needs to fix a buggy driver."
->     I want to hear Eric say "OK, we need to leave MSI/MSI-X enabled at
->     shutdown for this case."
-
-So far this just sounds like a device that needs a shutdown method.
-
->   - One changelog says "Stop disabling MSIs at shutdown to avoid
->     conflicting with drivers."  But I don't know what the conflict is.
+> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
+> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
 >
->   - The bugzilla has no dmesg log or detailed analysis.  Fam said the
->     scenario I came up with
->     (http://lkml.kernel.org/r/20150416194245.GB20701@google.com)
->     was fairly close, but it took me a lot of work to derive that.  Fixing
->     any errors in it and putting it in the bugzilla would be a big step.
->     The bugzilla should have the raw data and the analysis, so someone else
->     can validate the analysis and conclude that this patch is a reasonable
->     fix for it.  That's currently impossible because the bugzilla really
->     only contains the fix as a fait accompli.
+> This is repeated for each port.
+>
+> What we atually _want_ is no IO address range, but so far I have not been able to
+> tell this to the code (or to the bridge).
 
-What I saw in the bugzilla was:
+What information does the core have that we could use to figure out
+that you want no I/O space?  For example, does the host bridge have no
+I/O apertures?  Or are there no devices below 02:00.0 that require I/O
+space?  If you can post a complete dmesg log, that should contain this
+information.
 
-An interrupt was stuck on, and being reasserted as quickly as we could
-call iret for that interrupt.
+I think we currently will try to assign enough I/O space for any I/O
+BARs below the bridge.  Or, if the bridge supports hotplug, we will
+try to assign at least pci_hotplug_io_size, which defaults to 256.
 
-We did not disable that interrupt because irq debugging was explicitly
-disabled on the kernel command line.
+> The IO space "0x1000-0xfff" gives an indication of what is going on, at least
+> to some degree. The io range is calculated in pbus_size_io() as
+>         b_res->start = min_align;
+>         b_res->end = b_res->start + size0 - 1;
+> with size0 == 0, so end < start.
+>
+> Searching for the get_res_add_size and the BAR7 message suggests that many
+> others see the problem as well, so it appears that we are not alone.
+> I have not been able to find a solution, though.
+>
+> Any idea what we may have to do to fix the problem, or in other words
+> what may be wrong ?
 
-The irq was asserted because the the device did not have a shutdown
-method to stop the device doing things.
+Is the problem that some device doesn't work, or is it just extra
+annoying messages.  We should fix something in either case, of course,
+but it's more urgent if a device used to work but no longer does.
 
-There is an argument that disabling bus mastering should have disabled
-whatever the interrupting condition was (and thus there may also be a
-bug in the qemu device emulation).
-
-So I read this as the driver and maybe the "hardware" is buggy not that
-the linux pci layer is buggy.
-
-Eric
-
+Bjorn
