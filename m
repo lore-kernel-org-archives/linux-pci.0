@@ -1,95 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mark Rutland <mark.rutland@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v10 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
-Date: Fri, 29 May 2015 11:24:28 -0700
-Message-Id: <cover.1432922451.git.dhdang@apm.com>
-In-Reply-To: <5566CC58.8080400@arm.com>
-References: <5566CC58.8080400@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:47745 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934359AbbEONjS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:39:18 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 23:39:17 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A5BB42CE804E
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:39:14 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDd6as28442868
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:39:14 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDcfZ2010857
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:38:41 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V5 03/10] powerpc/pci: remove PCI devices in reverse order
+Date: Fri, 15 May 2015 21:36:57 +0800
+Message-Id: <1431697024-5710-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
-APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
-to GIC V2M specification for MSI Termination.
+As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
+when removing PCI devices on a bus which has VFs, we need to remove them
+in the reverse order.
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
-This MSI block supports 2048 MSI termination ports coalesced into 16 physical
-HW IRQ lines and shared across all 5 PCIe ports. Starting from version 5 of
-this patch series, the total MSI vectors this driver supports is reduced to 256
-to maintain the correct set_affinity behavior for each MSI.
+This patch applies this pattern to the hotplug removal code for the powerpc
+arch.
 
-v10 changes:
-	1. Remove inline in helper functions
-	2. Simplify hwirq_to_cpu implementation
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-v9 changes:
-        1. Add more helpers for manipulating MSI messages
-        2. Improve code readability
-        3. Make PCI_XGENE_MSI selectable
-
-v8 changes:
-        1. Add helper to read MSI registers
-        2. Resample interrupt status of the same group after handling interrupts
-           in that group
-        3. Error handling in case fail to allocate CPU mask for affinity setting
-
-v7 changes:
-        1. Add more error handling cases
-        2. Clear spurious interrupts that may happen during driver probe
-        3. Not using free_irq for chained irqs
-        4. Improve GIC IRQ number look up in chained handler
-
-v6 changes:
-        1. Correctly allocate MSI with bitmap_find_next_zero_area
-        2. Add notifier for CPU hotplug case
-        3. Driver clean up
-        4. Add more detailed information into device tree binding document
-           and move the device tree binding patch before the driver/dts patch
-
-v5 changes:
-        1. Implement set_affinity for each MSI by statically allocating 2
-	   MSI GIC IRQs for each X-Gene CPU core and moving MSI vectors around
-	   these GIC IRQs to steer them to target CPU core. As a consequence,
-	   the total MSI vectors that X-Gene v1 supports is reduced to 256.
-
-v4 changes:
-        1. Remove affinity setting for each MSI
-        2. Add description about register layout, MSI termination address
-	   and data
-        3. Correct total number of MSI vectors to 2048
-        4. Clean up error messages
-        5. Remove unused module code
-
-v3 changes:
-        1. Implement MSI support using PCI MSI IRQ domain
-        2. Only use msi_controller to store IRQ domain
-
-v2 changes:
-        1. Use msi_controller structure
-        2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
-
- .../devicetree/bindings/pci/xgene-pci-msi.txt      |  68 +++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 +
- drivers/pci/host/Kconfig                           |  10 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-xgene-msi.c                   | 595 +++++++++++++++++++++
- drivers/pci/host/pci-xgene.c                       |  21 +
- 7 files changed, 730 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- create mode 100644 drivers/pci/host/pci-xgene-msi.c
-
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7ed85a6..98f84ed 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
 -- 
-1.9.1
+1.7.9.5
 
