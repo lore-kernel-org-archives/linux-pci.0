@@ -1,196 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:33759 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbbEOJT2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 05:19:28 -0400
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:33988 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934304AbbEONiA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:38:00 -0400
 Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 19:19:26 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B5937357804C
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 19:19:24 +1000 (EST)
+	Fri, 15 May 2015 23:37:58 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B69F12BB004D
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:37:56 +1000 (EST)
 Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F9JGNW28049570
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 19:19:24 +1000
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDbmks49742020
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:37:56 +1000
 Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F9Ipbm016687
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 19:18:52 +1000
-Date: Fri, 15 May 2015 17:18:33 +0800
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDbNNx009864
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:37:24 +1000
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 08/11] powerpc/powernv: Support PCI config restore for
- VFs
-Message-ID: <20150515091833.GA31276@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431668786-30371-9-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150515072752.GA5829@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150515072752.GA5829@gwshan>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V5 00/10] VF EEH on Power8
+Date: Fri, 15 May 2015 21:36:54 +0800
+Message-Id: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 05:27:52PM +1000, Gavin Shan wrote:
->On Fri, May 15, 2015 at 01:46:23PM +0800, Wei Yang wrote:
->>Since skiboot firmware is not aware of VFs, the restore action for VF
->>should be done in kernel.
->>
->>The patch introduces function pnv_eeh_restore_vf_config() to restore PCI
->>config space for VFs after reset.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>---
->> arch/powerpc/include/asm/pci-bridge.h        |    1 +
->> arch/powerpc/platforms/powernv/eeh-powernv.c |   59 +++++++++++++++++++++++++-
->> arch/powerpc/platforms/powernv/pci.c         |   16 +++++++
->> 3 files changed, 75 insertions(+), 1 deletion(-)
->>
->>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->>index d78afe4..168b991 100644
->>--- a/arch/powerpc/include/asm/pci-bridge.h
->>+++ b/arch/powerpc/include/asm/pci-bridge.h
->>@@ -205,6 +205,7 @@ struct pci_dn {
->> 	int     m64_per_iov;
->> #define IODA_INVALID_M64        (-1)
->> 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
->>+	int	mps;
->> #endif /* CONFIG_PCI_IOV */
->> #endif
->> 	struct list_head child_list;
->>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>index 61f1a55..e200ed1 100644
->>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>@@ -1601,6 +1601,59 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
->> 	return ret;
->> }
->>
->>+#ifdef CONFIG_PCI_IOV
->>+static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
->>+{
->>+	int pcie_cap, aer_cap, old_mps;
->>+	u32 devctl, cmd, cap2, aer_capctl;
->>+
->
->It's worthy to check if PCIE cap is valid or not.
->
->>+	/* Restore MPS */
->>+	pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
->>+	if (pcie_cap) {
->>+		old_mps = (ffs(pdn->mps) - 8) << 5;
->>+		eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
->>+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
->>+		devctl |= old_mps;
->>+		eeh_ops->write_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
->>+	}
->>+
->>+	/* Disable Completion Timeout */
->>+	if (pcie_cap) {
->>+		eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
->>+		if (cap2 & 0x10) {
->
->There should have one macro for "0x10" in pci_regs.h. If so, please use that one.
+This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+VF edev and VF PE and handle them properly.
 
-Actually, no.
+Different from the Bus PE, VF PE just contain one VF. This introduces the
+difference of EEH error handling on a VF PE. Generally, it has several
+differences.
 
-I have checked the kernel, it doesn't has this field. That's why I put it
-here.
+First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+relationship between its PF. This is not proper to enumerate a VF by usual
+scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+set.
 
->
->>+			eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
->>+			cap2 |= 0x10;
->>+			eeh_ops->write_config(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
->>+		}
->>+	}
->>+
->>+	/* Enable SERR and parity checking */
->>+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
->>+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
->>+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
->>+
->>+	/* Enable report various errors */
->>+	if (pcie_cap) {
->>+		eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
->>+		devctl &= ~PCI_EXP_DEVCTL_CERE;
->>+		devctl |= (PCI_EXP_DEVCTL_NFERE |
->>+			   PCI_EXP_DEVCTL_FERE |
->>+			   PCI_EXP_DEVCTL_URRE);
->>+		eeh_ops->write_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
->>+	}
->>+
->>+	/* Enable ECRC generation and check */
->>+	if (pcie_cap) {
->>+		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
->
->The AER cap should have been cached in eeh-powernv.c::pnv_eeh_probe(). Similar
->to the case of PCIE cap, you need check if the AER cap is valid or not.
->
->>+		eeh_ops->read_config(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
->>+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
->>+		eeh_ops->write_config(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
->>+	}
->>+
->>+	return 0;
->>+}
->>+#endif /* CONFIG_PCI_IOV */
->>+
->> static int pnv_eeh_restore_config(struct pci_dn *pdn)
->> {
->> 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
->>@@ -1611,7 +1664,11 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
->> 		return -EEXIST;
->>
->> 	phb = edev->phb->private_data;
->>-	ret = opal_pci_reinit(phb->opal_id,
->>+	/* FW is not VF aware, we rely on OS to restore it */
->
->Please change the comment to:
->
->	/*
->	 * We have to restore the PCI config space after reset since
->	 * the firmware can't see SRIOV VFs.
->	 */
->
->>+	if (edev->physfn)
->>+		ret = pnv_eeh_restore_vf_config(pdn);
->>+	else
->>+		ret = opal_pci_reinit(phb->opal_id,
->> 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
->> 	if (ret) {
->> 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
->>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->>index bca2aeb..31d0258 100644
->>--- a/arch/powerpc/platforms/powernv/pci.c
->>+++ b/arch/powerpc/platforms/powernv/pci.c
->>@@ -781,3 +781,19 @@ machine_subsys_initcall_sync(powernv, tce_iommu_bus_notifier_init);
->> struct pci_controller_ops pnv_pci_controller_ops = {
->> 	.dma_dev_setup = pnv_pci_dma_dev_setup,
->> };
->>+
->>+static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
->>+{
->>+	struct pci_dn *pdn = pci_get_pdn(pdev);
->>+	int parent_mps;
->>+
->>+	if (!pdev->is_virtfn)
->>+		return;
->>+
->>+	/* Synchronize MPS for VF and PF */
->>+	parent_mps = pcie_get_mps(pdev->physfn);
->>+	if ((128 << pdev->pcie_mpss) >= parent_mps)
->>+		pcie_set_mps(pdev, parent_mps);
->>+	pdn->mps = pcie_get_mps(pdev);
->>+}
->>+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
->
->Thanks,
->Gavin
+Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+the VF, this means the usual reset function done in FW will not work. One of
+the patch will imitate the reset/restore function in kernel space.
+
+Third, the VF may be removed during the PF's error_detected function. In this
+case, the original error_detected->slot_reset->resume sequence is not proper
+to those removed VFs, since they are re-created by PF in a fresh state. A flag
+in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+track whether this device needs to be reset or not.
+
+This has been tested both on host and in guest on Power8 with latest kernel
+version.
+
+v5:
+   * remove the compound field, iterate on Master VF PE instead
+   * some code refine on PCI config restore and reset on VF
+     the wait time for assert and deassert
+     PCI device address format
+     check on edev->pcie_cap and edev->aer_cap before access them
+v4:
+   * refine the change logs, comment and code style
+   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
+     CONFIG_PCI_IOV macro
+   * reorder patch 5/6 to make the logic more reasonable
+   * remove remove_dev_pci_data()
+   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
+     remove related CONFIG_PCI_IOV macro
+   * add the option for VF reset
+   * fix the pnv_eeh_cfg_blocked() logic
+   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
+     pnv_eeh_vf_restore_config()
+   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
+   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
+     to arch/powerpc/platforms/powernv/pci.c
+   * add a field compound in pnv_ioda_pe to link compound PEs
+   * handle compound PE for VF PEs
+v3:
+   * add back vf_index in pci_dn to track the VF's index
+   * rename ppdev in eeh_dev to physfn for consistency
+   * move edev->physfn assignment before dev->dev.archdata.edev is set
+   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
+   * more clear and detail in commit log and comment in code
+   * merge eeh_rmv_virt_device() with eeh_rmv_device()
+   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
+     pnv_eeh_cfg_blocked()
+   * move the vf reset/restore logic into its own patch, two patches are
+     created.
+     powerpc/powernv: Support PCI config restore for VFs
+     powerpc/powernv: Support EEH reset for VFs
+   * simplify the vf reset logic
+v2:
+   * add prefix pci_iov_ to virtfn_add/virtfn_remove
+   * use EEH_DEV_VF as a flag for a VF's eeh_dev
+   * use eeh_dev instead of edev in change log
+   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
+   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
+     well initialized
+   * do FLR to reset a VF PE
+   * imitate the restore function in FW for VF
+   * remove the reverse order patch, since it is still under discussion
+
+Wei Yang (10):
+  pci/iov: rename and export virtfn_add/virtfn_remove
+  powerpc/pci_dn: cache vf_index in pci_dn
+  powerpc/pci: remove PCI devices in reverse order
+  powerpc/eeh: cache address range just for normal device
+  powerpc/powernv: create/release eeh_dev for VF
+  powerpc/eeh: create EEH_PE_VF for VF PE
+  powerpc/powernv: Support EEH reset for VFs
+  powerpc/powernv: Support PCI config restore for VFs
+  powerpc/eeh: handle VF PE properly
+  powerpc/powernv: compound PE for VFs
+
+ arch/powerpc/include/asm/eeh.h               |    4 +
+ arch/powerpc/include/asm/pci-bridge.h        |    2 +
+ arch/powerpc/kernel/eeh.c                    |   13 ++
+ arch/powerpc/kernel/eeh_cache.c              |    2 +-
+ arch/powerpc/kernel/eeh_driver.c             |  105 ++++++++++---
+ arch/powerpc/kernel/eeh_pe.c                 |   13 +-
+ arch/powerpc/kernel/pci-hotplug.c            |    2 +-
+ arch/powerpc/kernel/pci_dn.c                 |   13 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  216 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci-ioda.c    |   50 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   33 +++-
+ drivers/pci/iov.c                            |   10 +-
+ include/linux/pci.h                          |    2 +
+ 13 files changed, 424 insertions(+), 41 deletions(-)
 
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
