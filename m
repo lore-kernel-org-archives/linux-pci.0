@@ -1,62 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11620 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbbEGQKW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 12:10:22 -0400
-From: William Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	"John Hubbard" <jhubbard@nvidia.com>,
-	"jglisse@redhat.com" <jglisse@redhat.com>
-Subject: RE: [PATCH 2/6] DMA-API: Introduce dma_(un)map_resource
-Date: Thu, 7 May 2015 16:10:21 +0000
-Message-ID: <9b2e409d18174a80bd255349d798aac8@HQMAIL106.nvidia.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
- <1430505138-2877-3-git-send-email-wdavis@nvidia.com>
- <20150507150950.GK24643@google.com>
-In-Reply-To: <20150507150950.GK24643@google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:38998 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744AbbEOFuw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:50:52 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:50:50 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 2BA072BB0047
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:49 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5oeAr23593042
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:48 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5oGjF002393
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:16 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 04/11] powerpc/eeh: cache address range just for normal device
+Date: Fri, 15 May 2015 13:46:19 +0800
+Message-Id: <1431668786-30371-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The address cache is used to find the related eeh_dev for a given MMIO
+address.  From the definition of pci_dev.resource[], it keeps MMIO address
+in following order: 6 normal BAR, ROM BAR, 6 IOV BAR, 4 Bridge window.
 
+In the address cache, first it doesn't cache bridge device, second the IOV
+BAR range should map to their own VFs separately. This means it just need
+to cache the first 7 BARs for a normal device.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Thursday, May 7, 2015 10:10 AM
-> To: William Davis
-> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
-> pci@vger.kernel.org; Terence Ripperda; John Hubbard; jglisse@redhat.com
-> Subject: Re: [PATCH 2/6] DMA-API: Introduce dma_(un)map_resource
-> 
-> On Fri, May 01, 2015 at 01:32:14PM -0500, wdavis@nvidia.com wrote:
-> > From: Will Davis <wdavis@nvidia.com>
-> >
-> > Add functions to DMA-map and -unmap a resource for a given device.
-> > This will allow devices to DMA-map a peer device's resource (for
-> > example, another device's BAR region on PCI) to enable peer-to-peer
-> transactions.
-> >
-> > Signed-off-by: Will Davis <wdavis@nvidia.com>
-> > Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-> > Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-> > ---
-> >  include/asm-generic/dma-mapping-broken.h |  9 +++++++++
-> > include/asm-generic/dma-mapping-common.h | 34
-> ++++++++++++++++++++++++++++++++
-> >  include/linux/dma-mapping.h              |  7 +++++++
-> 
-> You should document these new interfaces in Documentation/DMA-API-*
-> 
+This patch restricts the address cache to save the first 7 BARs for a pci
+device.
 
-Will do.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/eeh_cache.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Will
+diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+index a1e86e1..f0ce2a3 100644
+--- a/arch/powerpc/kernel/eeh_cache.c
++++ b/arch/powerpc/kernel/eeh_cache.c
+@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ 	}
+ 
+ 	/* Walk resources on this device, poke them into the tree */
+-	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		resource_size_t start = pci_resource_start(dev,i);
+ 		resource_size_t end = pci_resource_end(dev,i);
+ 		unsigned long flags = pci_resource_flags(dev,i);
+-- 
+1.7.9.5
 
---
-nvpublic
