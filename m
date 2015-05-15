@@ -1,33 +1,58 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 28 May 2015 13:35:32 -0600
-From: Jonathan Corbet <corbet@lwn.net>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mingo@elte.hu, gnomes@lxorguk.ukuu.org.uk,
-	gregkh@linuxfoundation.org, jkosina@suse.cz, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
-	bp@suse.de
-Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
-Message-ID: <20150528133532.7b80729c@lwn.net>
-In-Reply-To: <20150528191844.GU23057@wotan.suse.de>
-References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
-	<20150528130923.42f34540@lwn.net>
-	<20150528191844.GU23057@wotan.suse.de>
+Date: Fri, 15 May 2015 22:48:36 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?ISO-8859-15?Q?S=F6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+	James Hogan <james.hogan@imgtec.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Manuel Lauss <manuel.lauss@gmail.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	x86@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-ia64@vger.kernel.org, linux-mips@linux-mips.org,
+	linux-gpio@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-metag@vger.kernel.org
+Subject: Re: [RFC v1 11/11] genirq: Pass irq_data to helper function
+ __irq_set_chip_handler_name_locked()
+In-Reply-To: <1430709339-29083-12-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1505152247280.4225@nanos>
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-12-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 May 2015 21:18:44 +0200
-"Luis R. Rodriguez" <mcgrof@suse.com> wrote:
+On Mon, 4 May 2015, Jiang Liu wrote:
+>  /* caller has locked the irq_desc and both params are valid */
+>  static inline void
+> -__irq_set_chip_handler_name_locked(unsigned int irq, struct irq_chip *chip,
+> +__irq_set_chip_handler_name_locked(struct irq_data *data, struct irq_chip *chip,
+>  				   irq_flow_handler_t handler, const char *name)
+>  {
+>  	struct irq_desc *desc;
+>  
+> -	desc = irq_to_desc(irq);
+> -	irq_desc_get_irq_data(desc)->chip = chip;
+> +	desc = irq_to_desc(data->irq);
 
-> > As a nit, I would take out "have a preference to".  
-> 
-> Fine by me, do you need a new submission on my part of can you amend yourself?
-
-I can tweak it on the way in.
+We should have a irq_data_to_desc() helper and use that instead of
+going through a full lookup again.
 
 Thanks,
 
-jon
+	tglx
