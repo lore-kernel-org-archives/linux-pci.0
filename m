@@ -1,223 +1,297 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp120.ord1c.emailsrvr.com ([108.166.43.120]:60830 "EHLO
-	smtp120.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752300AbbETUHf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 16:07:35 -0400
-Message-ID: <555CE97A.1030805@compro.net>
-Date: Wed, 20 May 2015 16:07:22 -0400
-From: Mark Hounschell <markh@compro.net>
-Reply-To: markh@compro.net
-MIME-Version: 1.0
-To: William Davis <wdavis@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	"jglisse@redhat.com" <jglisse@redhat.com>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com> <1431973504-5903-5-git-send-email-wdavis@nvidia.com> <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net> <ea891abe867444d193742030348a6ad1@HQMAIL106.nvidia.com> <555CDD6F.40304@compro.net> <202fc76456cf4f3aac02034d5366780c@HQMAIL106.nvidia.com>
-In-Reply-To: <202fc76456cf4f3aac02034d5366780c@HQMAIL106.nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:34338 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422697AbbEONlb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:41:31 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 23:41:30 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E91253578048
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:27 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDfJlN31719426
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:27 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDet7P012899
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:40:55 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V5 09/10] powerpc/eeh: handle VF PE properly
+Date: Fri, 15 May 2015 21:37:03 +0800
+Message-Id: <1431697024-5710-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/20/2015 03:51 PM, William Davis wrote:
->
->
->> -----Original Message-----
->> From: Mark Hounschell [mailto:markh@compro.net]
->> Sent: Wednesday, May 20, 2015 2:16 PM
->> To: William Davis; Bjorn Helgaas
->> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
->> pci@vger.kernel.org; Terence Ripperda; John Hubbard; jglisse@redhat.com;
->> konrad.wilk@oracle.com; Jonathan Corbet; David S. Miller
->> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
->> documentation
->>
->> On 05/20/2015 01:30 PM, William Davis wrote:
->>>
->>>
->>>> -----Original Message-----
->>>> From: Mark Hounschell [mailto:markh@compro.net]
->>>> Sent: Wednesday, May 20, 2015 7:11 AM
->>>> To: Bjorn Helgaas; William Davis
->>>> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
->>>> pci@vger.kernel.org; Terence Ripperda; John Hubbard;
->>>> jglisse@redhat.com; konrad.wilk@oracle.com; Jonathan Corbet; David S.
->>>> Miller
->>>> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
->>>> documentation
->>>>
->>>> On 05/19/2015 07:43 PM, Bjorn Helgaas wrote:
->>>>> [+cc Dave, Jonathan]
->>>>>
->>>>> On Mon, May 18, 2015 at 01:25:01PM -0500, wdavis@nvidia.com wrote:
->>>>>> From: Will Davis <wdavis@nvidia.com>
->>>>>>
->>>>>> Add references to both the general API documentation as well as the
->>>> HOWTO.
->>>>>>
->>>>>> Signed-off-by: Will Davis <wdavis@nvidia.com>
->>>>>> ---
->>>>>>     Documentation/DMA-API-HOWTO.txt | 39
->>>> +++++++++++++++++++++++++++++++++++++--
->>>>>>     Documentation/DMA-API.txt       | 36
->> +++++++++++++++++++++++++++++++--
->>>> ---
->>>>>>     2 files changed, 68 insertions(+), 7 deletions(-)
->>>>>>
->>>>>> diff --git a/Documentation/DMA-API-HOWTO.txt
->>>>>> b/Documentation/DMA-API-HOWTO.txt index 0f7afb2..89bd730 100644
->>>>>> --- a/Documentation/DMA-API-HOWTO.txt
->>>>>> +++ b/Documentation/DMA-API-HOWTO.txt
->>>>>> @@ -138,6 +138,10 @@ What about block I/O and networking buffers?
->>>>>> The
->>>> block I/O and
->>>>>>     networking subsystems make sure that the buffers they use are valid
->>>>>>     for you to DMA from/to.
->>>>>>
->>>>>> +In some systems, it may also be possible to DMA to and/or from a
->>>>>> +peer device's MMIO region, as described by a 'struct resource'.
->>>>>> +This is referred to as a peer-to-peer mapping.
->>>>>> +
->>>>>>     			DMA addressing limitations
->>>>>>
->>>>>>     Does your device have any DMA addressing limitations?  For
->>>>>> example, is @@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call
->>>>>> should have its
->>>> dma_unmap_{single,sg}()
->>>>>>     counterpart, because the bus address space is a shared resource and
->>>>>>     you could render the machine unusable by consuming all bus
->> addresses.
->>>>>>
->>>>>> +Peer-to-peer DMA mappings can be obtained using dma_map_resource()
->>>>>> +to map another device's MMIO region for the given device:
->>>>>> +
->>>>>> +	struct resource *peer_mmio_res = &other_dev->resource[0];
->>>>>> +	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
->>>>>> +						 offset, size, direction);
->>>>>> +	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
->>>>>> +	{
->>>>>> +		/*
->>>>>> +		 * If dma_handle == 0, dma_map_resource() is not
->>>>>> +		 * implemented, and peer-to-peer transactions will not
->>>>>> +		 * work.
->>>>>> +		 */
->>>>>> +		goto map_error_handling;
->>>>>> +	}
->>>>>> +
->>>>>> +	...
->>>>>> +
->>>>>> +	dma_unmap_resource(dev, dma_handle, size, direction);
->>>>>> +
->>>>>> +Here, "offset" means byte offset within the given resource.
->>>>>> +
->>>>>> +You should both check for a 0 return value and call
->>>>>> +dma_mapping_error(), as dma_map_resource() can either be not
->>>>>> +implemented or fail and return error as outlined under the
->>>> dma_map_single() discussion.
->>>>>> +
->>>>>> +You should call dma_unmap_resource() when DMA activity is
->>>>>> +finished, e.g., from the interrupt which told you that the DMA
->> transfer is done.
->>>>>> +
->>>>>>     If you need to use the same streaming DMA region multiple times
->>>>>> and
->>>> touch
->>>>>>     the data in between the DMA transfers, the buffer needs to be
->> synced
->>>>>>     properly in order for the CPU and device to see the most
->>>>>> up-to-date and @@ -765,8 +798,8 @@ failure can be determined by:
->>>>>>
->>>>>>     - checking if dma_alloc_coherent() returns NULL or dma_map_sg
->>>>>> returns 0
->>>>>>
->>>>>> -- checking the dma_addr_t returned from dma_map_single() and
->>>>>> dma_map_page()
->>>>>> -  by using dma_mapping_error():
->>>>>> +- checking the dma_addr_t returned from dma_map_single(),
->>>>>> +dma_map_resource(),
->>>>>> +  and dma_map_page() by using dma_mapping_error():
->>>>>>
->>>>>>     	dma_addr_t dma_handle;
->>>>>>
->>>>>> @@ -780,6 +813,8 @@ failure can be determined by:
->>>>>>     		goto map_error_handling;
->>>>>>     	}
->>>>>>
->>>>>> +- checking if dma_map_resource() returns 0
->>>>>> +
->>>>>>     - unmap pages that are already mapped, when mapping error occurs
->>>>>> in
->>>> the middle
->>>>>>       of a multiple page mapping attempt. These example are applicable
->> to
->>>>>>       dma_map_page() as well.
->>>>>> diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
->>>>>> index 5208840..c25c549 100644
->>>>>> --- a/Documentation/DMA-API.txt
->>>>>> +++ b/Documentation/DMA-API.txt
->>>>>> @@ -283,14 +283,40 @@ and <size> parameters are provided to do
->>>>>> partial
->>>> page mapping, it is
->>>>>>     recommended that you never use these unless you really know what
->> the
->>>>>>     cache width is.
->>>>>>
->>>>>> +dma_addr_t
->>>>>> +dma_map_resource(struct device *dev, struct resource *res,
->>>>>> +		 unsigned long offset, size_t size,
->>>>>> +		 enum dma_data_direction_direction)
->>>>>> +
->>>>>> +API for mapping resources. This API allows a driver to map a peer
->>>>>> +device's resource for DMA. All the notes and warnings for the
->>>>>> +other APIs apply here. Also, the success of this API does not
->>>>>> +validate or guarantee that peer-to-peer transactions between the
->>>>>> +device and its peer will be functional. They only grant access so
->>>>>> +that if such transactions are possible, an IOMMU will not prevent
->>>>>> +them from succeeding.
->>>>>
->>>>> If the driver can't tell whether peer-to-peer accesses will actually
->>>>> work, this seems like sort of a dubious API.  I'm trying to imagine
->>>>> how a driver would handle this.  I guess whether peer-to-peer works
->>>>> depends on the underlying platform (not the devices themselves)?  If
->>>>> we run the driver on a platform where peer-to-peer *doesn't* work,
->>>>> what happens?  The driver can't tell, so we just rely on the user to
->>>>> say "this isn't working as expected"?
->>>>>
->>>>
->>>
->>> Yes, it's quite difficult to tell whether peer-to-peer will actually
->>> work, and it usually involves some probing and heuristics on the driver's
->> part.
->>> I wouldn't say that this makes it a dubious API - it's a piece of the
->>> puzzle that's absolutely necessary for a driver to set up peer-to-peer
->>> in an IOMMU environment.
->>>
->>
->> I currently just do
->>
->> page = virt_to_page(__va(bus_address));
->>
->> then just use the normal API. Works for writes anyway.
->>
->
-> What platform is this on? I don't understand how that could work for
-> peer-to-peer. As I understand it, there are no 'struct page's for MMIO
-> regions, and you could actually end up with a very different page as a
-> result of that unchecked translation (e.g., a "valid" struct page, but
-> not in the peer's MMIO range at all).
->
+Compared with Bus PE, VF PE just has one single pci function. This
+introduces the difference of error handling on a VF PE.
 
-This is an x86-64 AMD 990FX chip set. Works fine. Every time. I do have 
-the peers memory that is being written to mmap'd by the task that is 
-doing this, but this works.
+For example in the hotplug case, EEH needs to remove and re-create the VF
+properly. In the case when PF's error_detected() disable SRIOV, this patch
+introduces a flag to mark the eeh_dev of a VF to avoid the slot_reset() and
+resume(). Since the FW is not ware of the VF, this patch handles the VF
+restore/reset in kernel directly.
 
-Mark
+This patch is to handle the VF PE properly in these cases.
 
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h   |    1 +
+ arch/powerpc/kernel/eeh.c        |    9 ++++
+ arch/powerpc/kernel/eeh_driver.c |  105 ++++++++++++++++++++++++++++++--------
+ arch/powerpc/kernel/eeh_pe.c     |    3 +-
+ 4 files changed, 96 insertions(+), 22 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 3d64cf3..d24382c 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -140,6 +140,7 @@ struct eeh_dev {
+ 	struct pci_controller *phb;	/* Associated PHB		*/
+ 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+ 	struct pci_dev *pdev;		/* Associated PCI device	*/
++	int    in_error;		/* Error flag for eeh_dev	*/
+ 	struct pci_dev *physfn;		/* Associated PF PORT		*/
+ 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+ };
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 221e280..fac0a72 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -1226,6 +1226,15 @@ void eeh_remove_device(struct pci_dev *dev)
+ 	 * from the parent PE during the BAR resotre.
+ 	 */
+ 	edev->pdev = NULL;
++	/*
++	 * in_error is used to mark a eeh_dev is in error state.
++	 * It is set to 1, in eeh_report_error().
++	 * Then checked in eeh_report_reset() and eeh_report_resume(), if this
++	 * flag is not set, those eeh handlers are not invoked.
++	 * At last it is cleared in eeh_report_resume() or when the PCI device
++	 * is removed to mark the error state is cleared.
++	 * */
++	edev->in_error = 0;
+ 	dev->dev.archdata.edev = NULL;
+ 	if (!(edev->pe->state & EEH_PE_KEEP))
+ 		eeh_rmv_from_parent_pe(edev);
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 89eb4bc..5b81283 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
+ 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
+ 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
+ 
++	edev->in_error = 1;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->slot_reset ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		eeh_pcid_put(dev);
+ 		return NULL;
+ 	}
+@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->resume ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		edev->mode &= ~EEH_DEV_NO_HANDLER;
+-		eeh_pcid_put(dev);
+-		return NULL;
++		goto out;
+ 	}
+ 
+ 	driver->err_handler->resume(dev);
+ 
++out:
++	edev->in_error = 0;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -386,12 +390,40 @@ static void *eeh_report_failure(void *data, void *userdata)
+ 	return NULL;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static void *eeh_add_virt_device(void *data, void *userdata)
++{
++	struct pci_driver *driver;
++	struct eeh_dev *edev = (struct eeh_dev *)data;
++	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
++
++	if (!(edev->physfn)) {
++		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
++			__func__, edev->phb->global_number, pdn->busno,
++			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
++		return NULL;
++	}
++
++	driver = eeh_pcid_get(dev);
++	if (driver) {
++		eeh_pcid_put(dev);
++		if (driver->err_handler)
++			return NULL;
++	}
++
++	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
++	return NULL;
++}
++#endif /* CONFIG_PCI_IOV */
++
+ static void *eeh_rmv_device(void *data, void *userdata)
+ {
+ 	struct pci_driver *driver;
+ 	struct eeh_dev *edev = (struct eeh_dev *)data;
+ 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+ 	int *removed = (int *)userdata;
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+ 
+ 	/*
+ 	 * Actually, we should remove the PCI bridges as well.
+@@ -416,7 +448,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 	driver = eeh_pcid_get(dev);
+ 	if (driver) {
+ 		eeh_pcid_put(dev);
+-		if (driver->err_handler)
++		if (removed && driver->err_handler)
+ 			return NULL;
+ 	}
+ 
+@@ -425,11 +457,22 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 		 pci_name(dev));
+ 	edev->bus = dev->bus;
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+-	(*removed)++;
++	if (removed)
++		(*removed)++;
+ 
+-	pci_lock_rescan_remove();
+-	pci_stop_and_remove_bus_device(dev);
+-	pci_unlock_rescan_remove();
++	if (edev->physfn) {
++		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
++		edev->pdev = NULL;
++		/*
++		 * We have to set the VF PE number to invalid one, which is
++		 * required to plug the VF successfully.
++		 */
++		pdn->pe_number = IODA_INVALID_PE;
++	} else {
++		pci_lock_rescan_remove();
++		pci_stop_and_remove_bus_device(dev);
++		pci_unlock_rescan_remove();
++	}
+ 
+ 	return NULL;
+ }
+@@ -548,6 +591,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
+ 	struct timeval tstamp;
+ 	int cnt, rc, removed = 0;
++	struct eeh_dev *edev;
+ 
+ 	/* pcibios will clear the counter; save the value */
+ 	cnt = pe->freeze_count;
+@@ -561,12 +605,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+ 	if (bus) {
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(bus);
+-		pci_unlock_rescan_remove();
+-	} else if (frozen_bus) {
++		if (pe->type & EEH_PE_VF)
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++		else {
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(bus);
++			pci_unlock_rescan_remove();
++		}
++	} else if (frozen_bus)
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+-	}
+ 
+ 	/*
+ 	 * Reset the pci controller. (Asserts RST#; resets config space).
+@@ -607,14 +654,26 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 		 * PE. We should disconnect it so the binding can be
+ 		 * rebuilt when adding PCI devices.
+ 		 */
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(bus);
++#ifdef CONFIG_PCI_IOV
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++#endif
++			pcibios_add_pci_devices(bus);
+ 	} else if (frozen_bus && removed) {
+ 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+ 		ssleep(5);
+ 
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(frozen_bus);
++#ifdef CONFIG_PCI_IOV
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++#endif
++			pcibios_add_pci_devices(frozen_bus);
+ 	}
+ 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+ 
+@@ -792,11 +851,15 @@ perm_error:
+ 	 * the their PCI config any more.
+ 	 */
+ 	if (frozen_bus) {
+-		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+-
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(frozen_bus);
+-		pci_unlock_rescan_remove();
++		if (pe->type & EEH_PE_VF) {
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++		} else {
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(frozen_bus);
++			pci_unlock_rescan_remove();
++		}
+ 	}
+ }
+ 
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 260a701..5cde950 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
+ 	if (pe->type & EEH_PE_PHB) {
+ 		bus = pe->phb->bus;
+ 	} else if (pe->type & EEH_PE_BUS ||
+-		   pe->type & EEH_PE_DEVICE) {
++		   pe->type & EEH_PE_DEVICE ||
++		   pe->type & EEH_PE_VF) {
+ 		if (pe->bus) {
+ 			bus = pe->bus;
+ 			goto out;
+-- 
+1.7.9.5
 
