@@ -1,111 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Daniel J Blueman <daniel@numascale.com>
-Subject: [Patch v3] x86, irq: Allocate CPU vectors from device local CPUs if possible
-Date: Thu,  7 May 2015 10:53:56 +0800
-Message-Id: <1430967244-28905-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <alpine.DEB.2.11.1505061216390.4225@nanos>
-References: <alpine.DEB.2.11.1505061216390.4225@nanos>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:55263 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbbEOFyK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:54:10 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:54:08 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 04C442CE8050
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:06 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5rvfM45875448
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:05 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5rX6w006344
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:53:33 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 10/11] powerpc/powernv: use "compound" as the child's list_head for compound PE
+Date: Fri, 15 May 2015 13:46:25 +0800
+Message-Id: <1431668786-30371-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On NUMA systems, an IO device may be associated with a NUMA node.
-It may improve IO performance to allocate resources, such as memory
-and interrupts, from device local node.
+Commit 262af557dd75(powerpc/powernv: Enable M64 aperatus for PHB3)
+introduces the concept of compound PE, and they are linked together to
+master PE's slaves lish_head with the list field. While this field is
+usually used to linked to the phb->ioda.pe_list to represents the PE is
+used.
 
-This patch introduces a mechanism to support CPU vector allocation
-policies. It tries to allocate CPU vectors from CPUs on device local
-node first, and then fallback to all online(global) CPUs.
+This patch introduces a field "compound" to link those compound PEs.
 
-This mechanism may be used to support NumaConnect systems to allocate
-CPU vectors from device local node.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Daniel J Blueman <daniel@numascale.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
-Hi Thomas,
-	I feel this should be simpliest version now:)
-Thanks!
-Gerry
----
- arch/x86/kernel/apic/vector.c |   23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++----
+ arch/powerpc/platforms/powernv/pci.h      |    1 +
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 1c7dd42b98c1..eb65c6b98de0 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -210,6 +210,18 @@ static int assign_irq_vector(int irq, struct apic_chip_data *data,
- 	return err;
- }
- 
-+static int assign_irq_vector_policy(int irq, int node,
-+				    struct apic_chip_data *data,
-+				    struct irq_alloc_info *info)
-+{
-+	if (info && info->mask)
-+		return assign_irq_vector(irq, data, info->mask);
-+	if (node != NUMA_NO_NODE &&
-+	    assign_irq_vector(irq, data, cpumask_of_node(node)) == 0)
-+		return 0;
-+	return assign_irq_vector(irq, data, apic->target_cpus());
-+}
-+
- static void clear_irq_vector(int irq, struct apic_chip_data *data)
- {
- 	int cpu, vector;
-@@ -258,12 +270,6 @@ void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
- 		memset(dst, 0, sizeof(*dst));
- }
- 
--static inline const struct cpumask *
--irq_alloc_info_get_mask(struct irq_alloc_info *info)
--{
--	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
--}
--
- static void x86_vector_free_irqs(struct irq_domain *domain,
- 				 unsigned int virq, unsigned int nr_irqs)
- {
-@@ -289,7 +295,6 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- {
- 	struct irq_alloc_info *info = arg;
- 	struct apic_chip_data *data;
--	const struct cpumask *mask;
- 	struct irq_data *irq_data;
- 	int i, err;
- 
-@@ -300,7 +305,6 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	if ((info->flags & X86_IRQ_ALLOC_CONTIGUOUS_VECTORS) && nr_irqs > 1)
- 		return -ENOSYS;
- 
--	mask = irq_alloc_info_get_mask(info);
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
-@@ -318,7 +322,8 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 		irq_data->chip = &lapic_controller;
- 		irq_data->chip_data = data;
- 		irq_data->hwirq = virq + i;
--		err = assign_irq_vector(virq, data, mask);
-+		err = assign_irq_vector_policy(virq, irq_data->node, data,
-+					       info);
- 		if (err)
- 			goto error;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 920c252..843457b 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -344,7 +344,7 @@ done:
+ 		} else {
+ 			pe->flags |= PNV_IODA_PE_SLAVE;
+ 			pe->master = master_pe;
+-			list_add_tail(&pe->list, &master_pe->slaves);
++			list_add_tail(&pe->compound, &master_pe->slaves);
+ 		}
  	}
+ 
+@@ -428,7 +428,7 @@ static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
+ 	if (!(pe->flags & PNV_IODA_PE_MASTER))
+ 		return;
+ 
+-	list_for_each_entry(slave, &pe->slaves, list) {
++	list_for_each_entry(slave, &pe->slaves, compound) {
+ 		rc = opal_pci_eeh_freeze_set(phb->opal_id,
+ 					     slave->pe_number,
+ 					     OPAL_EEH_ACTION_SET_FREEZE_ALL);
+@@ -464,7 +464,7 @@ static int pnv_ioda_unfreeze_pe(struct pnv_phb *phb, int pe_no, int opt)
+ 		return 0;
+ 
+ 	/* Clear frozen state for slave PEs */
+-	list_for_each_entry(slave, &pe->slaves, list) {
++	list_for_each_entry(slave, &pe->slaves, compound) {
+ 		rc = opal_pci_eeh_freeze_clear(phb->opal_id,
+ 					     slave->pe_number,
+ 					     opt);
+@@ -516,7 +516,7 @@ static int pnv_ioda_get_pe_state(struct pnv_phb *phb, int pe_no)
+ 	if (!(pe->flags & PNV_IODA_PE_MASTER))
+ 		return state;
+ 
+-	list_for_each_entry(slave, &pe->slaves, list) {
++	list_for_each_entry(slave, &pe->slaves, compound) {
+ 		rc = opal_pci_eeh_freeze_status(phb->opal_id,
+ 						slave->pe_number,
+ 						&fstate,
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 070ee88..540ab1e 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -73,6 +73,7 @@ struct pnv_ioda_pe {
+ 	/* PEs in compound case */
+ 	struct pnv_ioda_pe	*master;
+ 	struct list_head	slaves;
++	struct list_head	compound;
+ 
+ 	/* Link in list of PE#s */
+ 	struct list_head	dma_link;
 -- 
-1.7.10.4
+1.7.9.5
 
