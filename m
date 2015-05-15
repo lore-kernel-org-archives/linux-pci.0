@@ -1,39 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to parent
-Date: Tue, 26 May 2015 00:27:48 +0200
-Message-ID: <8651379.9rUBgamt32@vostro.rjw.lan>
-In-Reply-To: <20150523014037.GL32152@google.com>
-References: <2001450.KHHLaZsp3O@vostro.rjw.lan> <20150523014037.GL32152@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40204 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbbEOFty (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:49:54 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:49:52 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id DDE982CE8050
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:49 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5nfG250462796
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:49 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5nGt6001146
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:17 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 02/11] powerpc/pci_dn: cache vf_index in pci_dn
+Date: Fri, 15 May 2015 13:46:17 +0800
+Message-Id: <1431668786-30371-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 22, 2015 08:40:37 PM Bjorn Helgaas wrote:
-> On Mon, Apr 13, 2015 at 04:23:36PM +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
-> > / nouveau: Fix VGA switcheroo problem related to hotplug) to propagate
-> > the ignore_hotplug setting of the device to its parent bridge in case
-> > hotplug notifications related to the graphics adapter switching are
-> > given for the bridge rather than for the device itself (the need to
-> > be ignored in both cases).
-> > 
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
-> > Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
-> > Reported-and-tested-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Applied to pci/hotplug for v4.2, thanks!
-> 
-> I marked it for stable and added a note to connect it to b440bde74f04
-> ("PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device")
+The patch caches the VF index in pci_dn, which can be used to calculate
+VF's bus, device and function number. Those information helps to locate
+the VF's PCI device instance when doing hotplug during EEH recovery if
+necessary.
 
-Thanks a lot!
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h |    1 +
+ arch/powerpc/kernel/pci_dn.c          |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 1811c44..d78afe4 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -199,6 +199,7 @@ struct pci_dn {
+ #ifdef CONFIG_PCI_IOV
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
++	int     vf_index;		/* VF index in the PF */
+ 	int     offset;			/* PE# for the first VF PE */
+ #define M64_PER_IOV 4
+ 	int     m64_per_iov;
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index b3b4df9..f771130 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ #ifdef CONFIG_PCI_IOV
+ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 					   struct pci_dev *pdev,
++					   int vf_index,
+ 					   int busno, int devfn)
+ {
+ 	struct pci_dn *pdn;
+@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 	pdn->parent = parent;
+ 	pdn->busno = busno;
+ 	pdn->devfn = devfn;
++	pdn->vf_index = vf_index;
+ #ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+ #endif
+@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ 		return NULL;
+ 
+ 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+-		pdn = add_one_dev_pci_data(parent, NULL,
++		pdn = add_one_dev_pci_data(parent, NULL, i,
+ 					   pci_iov_virtfn_bus(pdev, i),
+ 					   pci_iov_virtfn_devfn(pdev, i));
+ 		if (!pdn) {
+-- 
+1.7.9.5
 
