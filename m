@@ -1,140 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12597 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752380AbbERSic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:32 -0400
-From: <wdavis@nvidia.com>
-To: <joro@8bytes.org>, <bhelgaas@google.com>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
-	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v2 1/7] dma-debug: add checking for map/unmap_resource
-Date: Mon, 18 May 2015 13:24:58 -0500
-Message-ID: <1431973504-5903-2-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40365 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473AbbEOFva (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:51:30 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:51:29 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id DE5282BB0052
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:25 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5pHcg11993114
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:25 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5orO1003201
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:53 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 06/11] powerpc/eeh: create EEH_PE_VF for VF PE
+Date: Fri, 15 May 2015 13:46:21 +0800
+Message-Id: <1431668786-30371-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+On powernv platform, VF PE is a special PE which is different from the Bus
+PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
+properly. For example, we need to create VF PE when VF's pci_dev is
+initialized in kernel. And add a flag to mark it is a VF PE.
 
-Add debug callbacks for the new dma_map_resource and dma_unmap_resource
-functions.
+This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
+At the mean time, it creates the sysfs and address cache for VF PE at PCI
+device final fixup time.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- include/linux/dma-debug.h | 20 ++++++++++++++++++++
- lib/dma-debug.c           | 47 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 67 insertions(+)
+ arch/powerpc/include/asm/eeh.h               |    1 +
+ arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   14 ++++++++++++++
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
-index fe8cb61..19f328c 100644
---- a/include/linux/dma-debug.h
-+++ b/include/linux/dma-debug.h
-@@ -44,6 +44,13 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
- extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- 				 size_t size, int direction, bool map_single);
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 1b3614d..c1fde48 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -70,6 +70,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
  
-+extern void debug_dma_map_resource(struct device *dev, struct resource *res,
-+				   size_t offset, size_t size, int direction,
-+				   dma_addr_t dma_addr);
-+
-+extern void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
-+				     size_t size, int direction);
-+
- extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 			     int nents, int mapped_ents, int direction);
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 35f0b62..260a701 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
+ 	 */
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+ 	}
  
-@@ -120,6 +127,19 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- {
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 622f08c..31344a4 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1540,3 +1540,17 @@ static int __init eeh_powernv_init(void)
+ 	return ret;
  }
- 
-+static inline void debug_dma_map_resource(struct device *dev,
-+					  struct resource *res, size_t offset,
-+					  size_t size, int direction,
-+					  dma_addr_t dma_addr)
-+{
-+}
+ machine_early_initcall(powernv, eeh_powernv_init);
 +
-+static inline void debug_dma_unmap_resource(struct device *dev,
-+					    dma_addr_t addr, size_t size,
-+					    int direction)
++static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
 +{
-+}
-+
- static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 				    int nents, int mapped_ents, int direction)
- {
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index ae4b65e..a6d8fa7 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -43,6 +43,7 @@ enum {
- 	dma_debug_page,
- 	dma_debug_sg,
- 	dma_debug_coherent,
-+	dma_debug_resource,
- };
- 
- enum map_err_types {
-@@ -1348,6 +1349,52 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- }
- EXPORT_SYMBOL(debug_dma_unmap_page);
- 
-+void debug_dma_map_resource(struct device *dev, struct resource *resource,
-+			    size_t offset, size_t size, int direction,
-+			    dma_addr_t dma_addr)
-+{
-+	struct dma_debug_entry *entry;
-+
-+	if (unlikely(dma_debug_disabled()))
++	/*
++	 * The following operations will fail if VF's sysfs files aren't
++	 * created or its resources aren't finalized.
++	 */
++	if (!pdev->is_virtfn)
 +		return;
 +
-+	if (dma_mapping_error(dev, dma_addr))
-+		return;
-+
-+	entry = dma_entry_alloc();
-+	if (!entry)
-+		return;
-+
-+	entry->dev       = dev;
-+	entry->type      = dma_debug_resource;
-+	entry->pfn       = resource->start >> PAGE_SHIFT;
-+	entry->offset    = offset,
-+	entry->dev_addr  = dma_addr;
-+	entry->size      = size;
-+	entry->direction = direction;
-+
-+	add_dma_entry(entry);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
 +}
-+EXPORT_SYMBOL(debug_dma_map_resource);
-+
-+void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
-+			      size_t size, int direction)
-+{
-+	struct dma_debug_entry ref = {
-+		.type           = dma_debug_resource,
-+		.dev            = dev,
-+		.dev_addr       = addr,
-+		.size           = size,
-+		.direction      = direction,
-+	};
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	check_unmap(&ref);
-+}
-+EXPORT_SYMBOL(debug_dma_unmap_resource);
-+
- void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 		      int nents, int mapped_ents, int direction)
- {
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
 -- 
-2.4.0
+1.7.9.5
 
