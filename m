@@ -1,416 +1,437 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:48042 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbbEKGqz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 02:46:55 -0400
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:58118 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422751AbbEOB2U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2015 21:28:20 -0400
 Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 16:46:50 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 0CA603578054
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:46:47 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B6kcY630933226
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:46:46 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B6kCn4015256
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:46:14 +1000
-Date: Mon, 11 May 2015 16:45:47 +1000
+	Fri, 15 May 2015 11:28:17 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 1BE3A2CE8054
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 11:28:15 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F1S7iP32309454
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 11:28:15 +1000
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F1RfMi023293
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 11:27:42 +1000
+Date: Fri, 15 May 2015 11:27:16 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 09/21] powerpc/powernv: Use PCI slot reset
- infrastructure
-Message-ID: <20150511064547.GA8241@gwshan>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Message-ID: <20150515012716.GA4931@gwshan>
 Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
 References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-10-git-send-email-gwshan@linux.vnet.ibm.com>
- <554E0E71.2080200@ozlabs.ru>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554E0E71.2080200@ozlabs.ru>
+In-Reply-To: <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 09, 2015 at 11:41:05PM +1000, Alexey Kardashevskiy wrote:
->On 05/01/2015 04:02 PM, Gavin Shan wrote:
->>For PowerNV platform, running on top of skiboot, all PE level reset
->>should be routed to firmware if the bridge of the PE primary bus has
->>device-node property "ibm,reset-by-firmware". Otherwise, the kernel
->>has to issue hot reset on PE's primary bus despite the requested reset
->>types, which is the behaviour before the firmware supports PCI slot
->>reset. So the changes don't depend on the PCI slot reset capability
->>exposed from the firmware.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/include/asm/eeh.h               |   1 +
->>  arch/powerpc/include/asm/opal.h              |   4 +-
->>  arch/powerpc/platforms/powernv/eeh-powernv.c | 206 +++++++++++++--------------
->>  3 files changed, 102 insertions(+), 109 deletions(-)
->>
->>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>index c5eb86f..2793d24 100644
->>--- a/arch/powerpc/include/asm/eeh.h
->>+++ b/arch/powerpc/include/asm/eeh.h
->>@@ -190,6 +190,7 @@ enum {
->>  #define EEH_RESET_DEACTIVATE	0	/* Deactivate the PE reset	*/
->>  #define EEH_RESET_HOT		1	/* Hot reset			*/
->>  #define EEH_RESET_FUNDAMENTAL	3	/* Fundamental reset		*/
->>+#define EEH_RESET_COMPLETE	4	/* PHB complete reset           */
->>  #define EEH_LOG_TEMP		1	/* EEH temporary error log	*/
->>  #define EEH_LOG_PERM		2	/* EEH permanent error log	*/
->>
->>diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
->>index 042af1a..6d467df 100644
->>--- a/arch/powerpc/include/asm/opal.h
->>+++ b/arch/powerpc/include/asm/opal.h
->>@@ -129,7 +129,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
->>  int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
->>  					uint16_t dma_window_number, uint64_t pci_start_addr,
->>  					uint64_t pci_mem_size);
->>-int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
->>+int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
->>
->>  int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
->>  				   uint64_t diag_buffer_len);
->>@@ -145,7 +145,7 @@ int64_t opal_get_epow_status(__be64 *status);
->>  int64_t opal_set_system_attention_led(uint8_t led_action);
->>  int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
->>  			    __be16 *pci_error_type, __be16 *severity);
->>-int64_t opal_pci_poll(uint64_t phb_id);
->>+int64_t opal_pci_poll(uint64_t id, uint8_t *val);
->>  int64_t opal_return_cpu(void);
->>  int64_t opal_check_token(uint64_t token);
->>  int64_t opal_reinit_cpus(uint64_t flags);
->>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>index ce738ab..3c01095 100644
->>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>@@ -742,12 +742,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
->>  	return ret;
->>  }
->>
->>-static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
->>+static s64 pnv_eeh_poll(uint64_t id)
->>  {
->>  	s64 rc = OPAL_HARDWARE;
->>
->>  	while (1) {
->>-		rc = opal_pci_poll(phb->opal_id);
->>+		rc = opal_pci_poll(id, NULL);
->>  		if (rc <= 0)
->>  			break;
->>
->>@@ -763,84 +763,38 @@ static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
->>  int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
->>  {
->>  	struct pnv_phb *phb = hose->private_data;
->>+	uint8_t scope;
->>  	s64 rc = OPAL_HARDWARE;
->>
->>  	pr_debug("%s: Reset PHB#%x, option=%d\n",
->>  		 __func__, hose->global_number, option);
->>-
->>-	/* Issue PHB complete reset request */
->>-	if (option == EEH_RESET_FUNDAMENTAL ||
->>-	    option == EEH_RESET_HOT)
->>-		rc = opal_pci_reset(phb->opal_id,
->>-				    OPAL_RESET_PHB_COMPLETE,
->>-				    OPAL_ASSERT_RESET);
->>-	else if (option == EEH_RESET_DEACTIVATE)
->>-		rc = opal_pci_reset(phb->opal_id,
->>-				    OPAL_RESET_PHB_COMPLETE,
->>-				    OPAL_DEASSERT_RESET);
->>-	if (rc < 0)
->>-		goto out;
->>-
->>-	/*
->>-	 * Poll state of the PHB until the request is done
->>-	 * successfully. The PHB reset is usually PHB complete
->>-	 * reset followed by hot reset on root bus. So we also
->>-	 * need the PCI bus settlement delay.
->>-	 */
->>-	rc = pnv_eeh_phb_poll(phb);
->>-	if (option == EEH_RESET_DEACTIVATE) {
->>-		if (system_state < SYSTEM_RUNNING)
->>-			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
->>-		else
->>-			msleep(EEH_PE_RST_SETTLE_TIME);
+On Fri, May 01, 2015 at 04:03:06PM +1000, Gavin Shan wrote:
+>The requirement is raised when developing the PCI hotplug feature
+>for PowerPC PowerNV platform, which runs on top of skiboot firmware.
+>When plugging PCI adapter to one PCI slot, the firmware rescans the
+>slot and build FDT (Flat Device Tree) blob, which is sent to the
+>PowerNV PCI hotplug driver for processing. The new constructed device
+>nodes from the FDT blob are expected to be attached to the device
+>node of the PCI slot. Unfortunately, it seems we don't have a API
+>to support the scenario. The patch intends to support it by newly
+>introduced function of_fdt_add_subtree(), the design behind it is
+>shown as below:
 >
->
->These udelay() and msleep() are gone. How come they are not needed anymore?
->Worth commenting in the commit log or remove those in a separate patch.
->
->I just remember you mentioning some missing delays somewhere which caused
->NVIDIA device to issue EEH and I do not want those to disappear :)
+>   * When the sub-tree FDT blob, which is owned by firmware, is
+>     received by kernel. It's copied over to the blob, which is
+>     dynamically allocated. Since then, the FDT blob owned by
+>     firmware isn't touched.
+>   * Rework unflatten_dt_node() so that the device nodes in current
+>     and deeper depth have been constructed from the FDT blob. All
+>     device nodes are marked with flag OF_DYNAMIC_HYBIRD, which is
+>     similar to OF_DYNAMIC. However, device node with the flag set
+>     can be free'd, but in the way other than that for OF_DYNAMIC
+>     device nodes.
+>   * of_fdt_add_subtree() is the introduced API to do the work.
 >
 
-Yeah, I think you're correct that it's not safe to remove this yet because
-the old firmware (without corresponding PCI hotplug changes) doesn't have
-the required delays from opal_pci_poll() yet. I'll add this in next revision.
+There are already lots of discussion on how to reuse overlay for my case.
+Thanks to all for your time on this. I spend some time thinking about it
+last night and this morning. I would like to summarize it as below. It's
+for sure almost all ideas coming from your guys and I'm just documenting
+it. If there are obvious problems in the following summary, please let me
+know so that I can fix them as early as possible to save more time.
 
->
->>+	switch (option) {
->>+	case EEH_RESET_HOT:
->>+		scope = OPAL_RESET_PCI_HOT;
->>+		break;
->>+	case EEH_RESET_FUNDAMENTAL:
->>+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
->>+		break;
->>+	case EEH_RESET_COMPLETE:
->>+		scope = OPAL_RESET_PHB_COMPLETE;
->>+		break;
->>+	case EEH_RESET_DEACTIVATE:
->>+		return 0;
->>+	default:
->>+		pr_warn("%s: Unsupported option %d\n",
->>+			__func__, option);
->>+		return -EINVAL;
->>  	}
->>-out:
->>-	if (rc != OPAL_SUCCESS)
->>-		return -EIO;
->>
->>-	return 0;
->>-}
->>-
->>-static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
->>-{
->>-	struct pnv_phb *phb = hose->private_data;
->>-	s64 rc = OPAL_HARDWARE;
->>+	/* Issue reset and poll until it's completed */
->>+	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
->>+	if (rc > 0)
->>+		rc = pnv_eeh_poll(phb->opal_id);
->>
->>-	pr_debug("%s: Reset PHB#%x, option=%d\n",
->>-		 __func__, hose->global_number, option);
->>-
->>-	/*
->>-	 * During the reset deassert time, we needn't care
->>-	 * the reset scope because the firmware does nothing
->>-	 * for fundamental or hot reset during deassert phase.
->>-	 */
->>-	if (option == EEH_RESET_FUNDAMENTAL)
->>-		rc = opal_pci_reset(phb->opal_id,
->>-				    OPAL_RESET_PCI_FUNDAMENTAL,
->>-				    OPAL_ASSERT_RESET);
->>-	else if (option == EEH_RESET_HOT)
->>-		rc = opal_pci_reset(phb->opal_id,
->>-				    OPAL_RESET_PCI_HOT,
->>-				    OPAL_ASSERT_RESET);
->>-	else if (option == EEH_RESET_DEACTIVATE)
->>-		rc = opal_pci_reset(phb->opal_id,
->>-				    OPAL_RESET_PCI_HOT,
->>-				    OPAL_DEASSERT_RESET);
->>-	if (rc < 0)
->>-		goto out;
->>-
->>-	/* Poll state of the PHB until the request is done */
->>-	rc = pnv_eeh_phb_poll(phb);
->>-	if (option == EEH_RESET_DEACTIVATE)
->>-		msleep(EEH_PE_RST_SETTLE_TIME);
->>-out:
->>-	if (rc != OPAL_SUCCESS)
->>-		return -EIO;
->>-
->>-	return 0;
->>+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
->>  }
->>
->>-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>  {
->>  	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
->>  	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
->>@@ -891,14 +845,57 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>  	return 0;
->>  }
->>
->>+static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>+{
->>+	struct pci_controller *hose;
->>+	struct pnv_phb *phb;
->>+	struct device_node *dn = dev ? pci_device_to_OF_node(dev) : NULL;
->>+	uint64_t id = (0x1ul << 60);
->>+	uint8_t scope;
->>+	s64 rc;
->
->
->int64_t for @rc?
->
->
+================
+SKIBOOT & KERNEL
+================
 
-Yes.
+The idea came from Ben and I'm following to implement it as follows:
 
->>+
->>+	/*
->>+	 * If the firmware can't handle it, we will issue hot reset
->>+	 * on the secondary bus despite the requested reset type
->>+	 */
->>+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
->>+		return __pnv_eeh_bridge_reset(dev, option);
->>+
->>+	/* The firmware can handle the request */
->>+	switch (option) {
->>+	case EEH_RESET_HOT:
->>+		scope = OPAL_RESET_PCI_HOT;
->>+		break;
->>+	case EEH_RESET_FUNDAMENTAL:
->>+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
->>+		break;
->>+	case EEH_RESET_DEACTIVATE:
->>+		return 0;
->>+	case EEH_RESET_COMPLETE:
->>+	default:
->>+		pr_warn("%s: Unsupported option %d on device %s\n",
->>+			__func__, option, pci_name(dev));
->>+		return -EINVAL;
->>+	}
->
->
->This is the same switch as earlier in this patch (slightly different order).
->Move it and opal_pci_reset() into a helper and call it pnv_opal_pci_reset()?
->
->
+- One counter is mantained: cur_counter = 0;
+- PCI hot plugging happens happens as:
+  * Kernel gets skiboot's cur_counter with OPAL API, which is (x).
+  * Skiboot does hot plugging and rescans the slot, then populate
+    the device-tree nodes with (++cur_counter), which means the
+    counter is turned to (x+1).
+  * Kernel retrieves the FDT overlay blob on the device-tree changes
+    since last time/token ((x)). Kernel unflattens it and applies the
+    changes by overlay. The slot simply records the overlay (IDR) ID
+    for the device-tree change.
+- PCI hot unplugging happens as:
+  * Revert the changes simply if the slot had valid IDR ID. Otherwise,
+    the device nodes are flatten during bootup time, we just remove them
+    as we're doing now. Note that device nodes can't be free'd because
+    the memory chunks consumed by them are allocated from memblock or
+    reserved by skiboot.
+- Some questions/problems:
+  * I don't understand how kexec can figure out the device-tree with
+    applied changes from overlay. I assume kexec is simply using the
+    FDT blob from skiboot as seen by the first kernel during frest
+    boot.
 
-It sounds a good idea. I'll do accordingly.
+Kernel APIs:
+  * id = of_overlay_create(); of_overlay_destroy(id)
+Skiboot API:
+  * int64_t opal_get_overlay_dt(uint64_t *counter, void *blob, uint32_t len)
+    blob == NULL, get current counter.
+    blob != NULL, get overlay blob since (*counter). Skiboot also
+    returns the last counter.
+    The memory chunk for "blob" is always owned by kernel, which doesn't know
+    the memory size to hold the overlay FDT blob. So we have to try with
+    discret 64KB, which is PAGE_SIZE. After the overlay blob is unflatten
+    and applied, the memory chunk can be free. We don't have to keep it
+    for reverting the changes introduced by the overlay.
 
->>+
->>+	hose = pci_bus_to_host(dev->bus);
->>+	phb = hose->private_data;
->
->Previously you would initialize @hose and @phb where you declared those but
->not here. If you did the same thing as before, the patch could have been
->smaller and easier to read.
->
+=============================
+OVERLAY FDT BLOB FROM SKIBOOT
+=============================
 
-Sure.
+ROOT {
+   A {
+      target=<target node's phandle>
+      __overlay__ {
 
->>+	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
->>+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
->>+	if (rc > 0)
->>+		rc = pnv_eeh_poll(id);
->>+
->>+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
->>+}
->>+
->>  void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->>  {
->>  	struct pci_controller *hose;
->>
->>  	if (pci_is_root_bus(dev->bus)) {
->>  		hose = pci_bus_to_host(dev->bus);
->>-		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
->>-		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
->>+		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
->>+		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
->>  	} else {
->>  		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
->>  		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->>@@ -920,8 +917,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->>  static int pnv_eeh_reset(struct eeh_pe *pe, int option)
->>  {
->>  	struct pci_controller *hose = pe->phb;
->>+	struct pnv_phb *phb;
->>  	struct pci_bus *bus;
->>-	int ret;
->>+	s64 rc;
->>
->>  	/*
->>  	 * For PHB reset, we always have complete reset. For those PEs whose
->>@@ -937,43 +935,37 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
->>  	 * reset. The side effect is that EEH core has to clear the frozen
->>  	 * state explicitly after BAR restore.
->>  	 */
->>-	if (pe->type & EEH_PE_PHB) {
->>-		ret = pnv_eeh_phb_reset(hose, option);
->>-	} else {
->>-		struct pnv_phb *phb;
->>-		s64 rc;
->>+	if (pe->type & EEH_PE_PHB)
->
->I would keep "{" in the line above ....
->
->>+		return pnv_eeh_phb_reset(hose, EEH_RESET_COMPLETE);
->
->...put "} else {" here...
->
->and the chunk below would become 1) very small 2) very trivial... And then
->you could make a trivial patch which would do scope removal but without
->functional changes. Or vice versa.
->
+      }
+   }
 
-I intended to remove nested if(). If you really want me to change the code
-according to your comments, I'll do. Otherwise, I prefer to keep it as
-of being.
+   B {
+      target=<target node's phandle>
+      __overlay__ {
 
->>
->>-		/*
->>-		 * The frozen PE might be caused by PAPR error injection
->>-		 * registers, which are expected to be cleared after hitting
->>-		 * frozen PE as stated in the hardware spec. Unfortunately,
->>-		 * that's not true on P7IOC. So we have to clear it manually
->>-		 * to avoid recursive EEH errors during recovery.
->>-		 */
->>-		phb = hose->private_data;
->>-		if (phb->model == PNV_PHB_MODEL_P7IOC &&
->>-		    (option == EEH_RESET_HOT ||
->>-		    option == EEH_RESET_FUNDAMENTAL)) {
->>-			rc = opal_pci_reset(phb->opal_id,
->>-					    OPAL_RESET_PHB_ERROR,
->>-					    OPAL_ASSERT_RESET);
->>-			if (rc != OPAL_SUCCESS) {
->>-				pr_warn("%s: Failure %lld clearing "
->>-					"error injection registers\n",
->>-					__func__, rc);
->>-				return -EIO;
->>-			}
->>+	/*
->>+	 * The frozen PE might be caused by PAPR error injection
->>+	 * registers, which are expected to be cleared after hitting
->>+	 * frozen PE as stated in the hardware spec. Unfortunately,
->>+	 * that's not true on P7IOC. So we have to clear it manually
->>+	 * to avoid recursive EEH errors during recovery.
->>+	 */
->>+	phb = hose->private_data;
->>+	if (phb->model == PNV_PHB_MODEL_P7IOC &&
->>+	    (option == EEH_RESET_HOT ||
->>+	    option == EEH_RESET_FUNDAMENTAL)) {
->>+		rc = opal_pci_reset(phb->opal_id,
->>+				    OPAL_RESET_PHB_ERROR,
->>+				    OPAL_ASSERT_RESET);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("%s: Failure %lld clearing error "
->>+				"injection registers on PHB#%d\n",
->>+				__func__, rc, hose->global_number);
->>+			return -EIO;
->>  		}
->>-
->>-		bus = eeh_pe_bus_get(pe);
->>-		if (pci_is_root_bus(bus) ||
->>-			pci_is_root_bus(bus->parent))
->>-			ret = pnv_eeh_root_reset(hose, option);
->>-		else
->>-			ret = pnv_eeh_bridge_reset(bus->self, option);
->>  	}
->>
->>-	return ret;
->>+	/* Route the reset request to PHB or upstream bridge */
->>+	bus = eeh_pe_bus_get(pe);
->>+	if (pci_is_root_bus(bus))
->>+		return pnv_eeh_phb_reset(hose, option);
->>+
->>+	return pnv_eeh_bridge_reset(bus->self, option);
->>  }
->>
->>  /**
->>
+      }
+   }
+}
 
 Thanks,
 Gavin
+
+>Cc: Grant Likely <grant.likely@linaro.org>
+>Cc: Rob Herring <robh+dt@kernel.org>
+>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>---
+> drivers/of/dynamic.c   |  19 +++++--
+> drivers/of/fdt.c       | 133 ++++++++++++++++++++++++++++++++++++++++---------
+> include/linux/of.h     |   2 +
+> include/linux/of_fdt.h |   1 +
+> 4 files changed, 127 insertions(+), 28 deletions(-)
+>
+>diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+>index 3351ef4..f562080 100644
+>--- a/drivers/of/dynamic.c
+>+++ b/drivers/of/dynamic.c
+>@@ -330,13 +330,22 @@ void of_node_release(struct kobject *kobj)
+> 		return;
+> 	}
+>
+>-	if (!of_node_check_flag(node, OF_DYNAMIC))
+>+	/* Release the subtree */
+>+	if (node->subtree) {
+>+		kfree(node->subtree);
+>+		node->subtree = NULL;
+>+	}
+>+
+>+	if (!of_node_check_flag(node, OF_DYNAMIC) &&
+>+	    !of_node_check_flag(node, OF_DYNAMIC_HYBIRD))
+> 		return;
+>
+> 	while (prop) {
+> 		struct property *next = prop->next;
+>-		kfree(prop->name);
+>-		kfree(prop->value);
+>+		if (of_node_check_flag(node, OF_DYNAMIC)) {
+>+			kfree(prop->name);
+>+			kfree(prop->value);
+>+		}
+> 		kfree(prop);
+> 		prop = next;
+>
+>@@ -345,7 +354,9 @@ void of_node_release(struct kobject *kobj)
+> 			node->deadprops = NULL;
+> 		}
+> 	}
+>-	kfree(node->full_name);
+>+
+>+	if (of_node_check_flag(node, OF_DYNAMIC))
+>+		kfree(node->full_name);
+> 	kfree(node->data);
+> 	kfree(node);
+> }
+>diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+>index cde35c5d01..7659560 100644
+>--- a/drivers/of/fdt.c
+>+++ b/drivers/of/fdt.c
+>@@ -28,6 +28,10 @@
+> #include <asm/setup.h>  /* for COMMAND_LINE_SIZE */
+> #include <asm/page.h>
+>
+>+#include "of_private.h"
+>+
+>+static int cur_node_depth;
+>+
+> /*
+>  * of_fdt_limit_memory - limit the number of regions in the /memory node
+>  * @limit: maximum entries
+>@@ -168,20 +172,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+>  * @dad: Parent struct device_node
+>  * @fpsize: Size of the node path up at the current depth.
+>  */
+>-static void * unflatten_dt_node(void *blob,
+>-				void *mem,
+>-				int *poffset,
+>-				struct device_node *dad,
+>-				struct device_node **nodepp,
+>-				unsigned long fpsize,
+>-				bool dryrun)
+>+static void *unflatten_dt_node(void *blob,
+>+			       void *mem,
+>+			       int *poffset,
+>+			       struct device_node *dad,
+>+			       struct device_node **nodepp,
+>+			       unsigned long fpsize,
+>+			       bool dryrun,
+>+			       bool dynamic)
+> {
+> 	const __be32 *p;
+> 	struct device_node *np;
+> 	struct property *pp, **prev_pp = NULL;
+> 	const char *pathp;
+> 	unsigned int l, allocl;
+>-	static int depth = 0;
+> 	int old_depth;
+> 	int offset;
+> 	int has_name = 0;
+>@@ -219,12 +223,18 @@ static void * unflatten_dt_node(void *blob,
+> 		}
+> 	}
+>
+>-	np = unflatten_dt_alloc(&mem, sizeof(struct device_node) + allocl,
+>+	if (dynamic)
+>+		np = kzalloc(sizeof(struct device_node) + allocl, GFP_KERNEL);
+>+	else
+>+		np = unflatten_dt_alloc(&mem,
+>+				sizeof(struct device_node) + allocl,
+> 				__alignof__(struct device_node));
+> 	if (!dryrun) {
+> 		char *fn;
+> 		of_node_init(np);
+> 		np->full_name = fn = ((char *)np) + sizeof(*np);
+>+		if (dynamic)
+>+			of_node_set_flag(np, OF_DYNAMIC_HYBIRD);
+> 		if (new_format) {
+> 			/* rebuild full path for new format */
+> 			if (dad && dad->parent) {
+>@@ -267,8 +277,12 @@ static void * unflatten_dt_node(void *blob,
+> 		}
+> 		if (strcmp(pname, "name") == 0)
+> 			has_name = 1;
+>-		pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+>-					__alignof__(struct property));
+>+
+>+		if (dynamic)
+>+			pp = kzalloc(sizeof(struct property), GFP_KERNEL);
+>+		else
+>+			pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+>+						__alignof__(struct property));
+> 		if (!dryrun) {
+> 			/* We accept flattened tree phandles either in
+> 			 * ePAPR-style "phandle" properties, or the
+>@@ -309,8 +323,13 @@ static void * unflatten_dt_node(void *blob,
+> 		if (pa < ps)
+> 			pa = p1;
+> 		sz = (pa - ps) + 1;
+>-		pp = unflatten_dt_alloc(&mem, sizeof(struct property) + sz,
+>-					__alignof__(struct property));
+>+
+>+		if (dynamic)
+>+			pp = kzalloc(sizeof(struct property) + sz, GFP_KERNEL);
+>+		else
+>+			pp = unflatten_dt_alloc(&mem,
+>+						sizeof(struct property) + sz,
+>+						__alignof__(struct property));
+> 		if (!dryrun) {
+> 			pp->name = "name";
+> 			pp->length = sz;
+>@@ -334,13 +353,21 @@ static void * unflatten_dt_node(void *blob,
+> 			np->type = "<NULL>";
+> 	}
+>
+>-	old_depth = depth;
+>-	*poffset = fdt_next_node(blob, *poffset, &depth);
+>-	if (depth < 0)
+>-		depth = 0;
+>-	while (*poffset > 0 && depth > old_depth)
+>-		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+>-					fpsize, dryrun);
+>+	old_depth = cur_node_depth;
+>+	*poffset = fdt_next_node(blob, *poffset, &cur_node_depth);
+>+	while (*poffset > 0) {
+>+		if (cur_node_depth < old_depth)
+>+			break;
+>+
+>+		if (cur_node_depth == old_depth)
+>+			mem = unflatten_dt_node(blob, mem, poffset,
+>+						dad, NULL, fpsize,
+>+						dryrun, dynamic);
+>+		else if (cur_node_depth > old_depth)
+>+			mem = unflatten_dt_node(blob, mem, poffset,
+>+						np, NULL, fpsize,
+>+						dryrun, dynamic);
+>+	}
+>
+> 	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+> 		pr_err("unflatten: error %d processing FDT\n", *poffset);
+>@@ -379,8 +406,8 @@ static void * unflatten_dt_node(void *blob,
+>  * for the resulting tree
+>  */
+> static void __unflatten_device_tree(void *blob,
+>-			     struct device_node **mynodes,
+>-			     void * (*dt_alloc)(u64 size, u64 align))
+>+				struct device_node **mynodes,
+>+				void * (*dt_alloc)(u64 size, u64 align))
+> {
+> 	unsigned long size;
+> 	int start;
+>@@ -405,7 +432,9 @@ static void __unflatten_device_tree(void *blob,
+>
+> 	/* First pass, scan for size */
+> 	start = 0;
+>-	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+>+	cur_node_depth = 1;
+>+	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL,
+>+						NULL, 0, true, false);
+> 	size = ALIGN(size, 4);
+>
+> 	pr_debug("  size is %lx, allocating...\n", size);
+>@@ -420,7 +449,8 @@ static void __unflatten_device_tree(void *blob,
+>
+> 	/* Second pass, do actual unflattening */
+> 	start = 0;
+>-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+>+	cur_node_depth = 1;
+>+	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false, false);
+> 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+> 		pr_warning("End of tree marker overwritten: %08x\n",
+> 			   be32_to_cpup(mem + size));
+>@@ -448,6 +478,61 @@ void of_fdt_unflatten_tree(unsigned long *blob,
+> }
+> EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+>
+>+static void populate_sysfs_for_child_nodes(struct device_node *parent)
+>+{
+>+	struct device_node *child;
+>+
+>+	for_each_child_of_node(parent, child) {
+>+		__of_attach_node_sysfs(child);
+>+		populate_sysfs_for_child_nodes(child);
+>+	}
+>+}
+>+
+>+/**
+>+ * of_fdt_add_substree - Create sub-tree of device nodes
+>+ * @parent: parent device node to which the sub-tree will attach
+>+ * @blob: flat device tree blob representing the sub-tree
+>+ *
+>+ * Copy over the FDT blob, which passed from firmware, and then
+>+ * unflatten the sub-tree.
+>+ */
+>+void of_fdt_add_subtree(struct device_node *parent, void *blob)
+>+{
+>+	int start = 0;
+>+
+>+	/* Validate the header */
+>+	if (!blob || fdt_check_header(blob)) {
+>+		pr_err("%s: Invalid device-tree blob header at 0x%p\n",
+>+		       __func__, blob);
+>+		return;
+>+	}
+>+
+>+	/* Free the flat blob for last time lazily */
+>+	if (parent->subtree) {
+>+		kfree(parent->subtree);
+>+		parent->subtree = NULL;
+>+	}
+>+
+>+	/* Copy over the flat blob */
+>+	parent->subtree = kzalloc(fdt_totalsize(blob), GFP_KERNEL);
+>+	if (!parent->subtree) {
+>+		pr_err("%s: Cannot copy over device-tree blob\n",
+>+		       __func__);
+>+		return;
+>+	}
+>+
+>+	memcpy(parent->subtree, blob, fdt_totalsize(blob));
+>+
+>+	/* Unflatten it */
+>+	mutex_lock(&of_mutex);
+>+	cur_node_depth = 1;
+>+	unflatten_dt_node(parent->subtree, NULL, &start, parent, NULL,
+>+			  strlen(parent->full_name), false, true);
+>+	populate_sysfs_for_child_nodes(parent);
+>+	mutex_unlock(&of_mutex);
+>+}
+>+EXPORT_SYMBOL(of_fdt_add_subtree);
+>+
+> /* Everything below here references initial_boot_params directly. */
+> int __initdata dt_root_addr_cells;
+> int __initdata dt_root_size_cells;
+>diff --git a/include/linux/of.h b/include/linux/of.h
+>index ddeaae6..ac50b02 100644
+>--- a/include/linux/of.h
+>+++ b/include/linux/of.h
+>@@ -60,6 +60,7 @@ struct device_node {
+> 	struct	device_node *sibling;
+> 	struct	kobject kobj;
+> 	unsigned long _flags;
+>+	void	*subtree;
+> 	void	*data;
+> #if defined(CONFIG_SPARC)
+> 	const char *path_component_name;
+>@@ -222,6 +223,7 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
+> #define OF_DETACHED	2 /* node has been detached from the device tree */
+> #define OF_POPULATED	3 /* device already created for the node */
+> #define OF_POPULATED_BUS	4 /* of_platform_populate recursed to children of this node */
+>+#define OF_DYNAMIC_HYBIRD	5 /* similar to OF_DYNAMIC, but partially */
+>
+> #define OF_IS_DYNAMIC(x) test_bit(OF_DYNAMIC, &x->_flags)
+> #define OF_MARK_DYNAMIC(x) set_bit(OF_DYNAMIC, &x->_flags)
+>diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+>index 587ee50..1fb47d7 100644
+>--- a/include/linux/of_fdt.h
+>+++ b/include/linux/of_fdt.h
+>@@ -39,6 +39,7 @@ extern int of_fdt_match(const void *blob, unsigned long node,
+> 			const char *const *compat);
+> extern void of_fdt_unflatten_tree(unsigned long *blob,
+> 			       struct device_node **mynodes);
+>+extern void of_fdt_add_subtree(struct device_node *parent, void *blob);
+>
+> /* TBD: Temporary export of fdt globals - remove when code fully merged */
+> extern int __initdata dt_root_addr_cells;
+>-- 
+>2.1.0
+>
 
