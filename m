@@ -1,276 +1,285 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:45569 "EHLO extserv.mm-sol.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753283AbbEDMmZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 08:42:25 -0400
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: [PATCH v2 3/5] DT: PCI: qcom: Document PCIe devicetree bindings
-Date: Mon,  4 May 2015 15:42:16 +0300
-Message-Id: <1430743338-10441-4-git-send-email-svarbanov@mm-sol.com>
-In-Reply-To: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:39142 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753087AbbEOFwW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:52:22 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:52:21 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 1E8A23578048
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:52:19 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5qAXi17957100
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:52:18 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5pkGq004203
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:46 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 09/11] powerpc/eeh: handle VF PE properly
+Date: Fri, 15 May 2015 13:46:24 +0800
+Message-Id: <1431668786-30371-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document Qualcomm PCIe driver devicetree bindings.
+Compared with Bus PE, VF PE just has one single pci function. This
+introduces the difference of error handling on a VF PE.
 
-Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+For example in the hotplug case, EEH needs to remove and re-create the VF
+properly. In the case when PF's error_detected() disable SRIOV, this patch
+introduces a flag to mark the eeh_dev of a VF to avoid the slot_reset() and
+resume(). Since the FW is not ware of the VF, this patch handles the VF
+restore/reset in kernel directly.
+
+This patch is to handle the VF PE properly in these cases.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- .../devicetree/bindings/pci/qcom,pcie.txt          |  231 ++++++++++++++++++++
- 1 files changed, 231 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
+ arch/powerpc/include/asm/eeh.h   |    1 +
+ arch/powerpc/kernel/eeh.c        |    1 +
+ arch/powerpc/kernel/eeh_driver.c |  103 ++++++++++++++++++++++++++++++--------
+ arch/powerpc/kernel/eeh_pe.c     |    3 +-
+ 4 files changed, 85 insertions(+), 23 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-new file mode 100644
-index 0000000..dcf7348
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -0,0 +1,231 @@
-+* Qualcomm PCI express root complex
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 3d64cf3..d24382c 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -140,6 +140,7 @@ struct eeh_dev {
+ 	struct pci_controller *phb;	/* Associated PHB		*/
+ 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+ 	struct pci_dev *pdev;		/* Associated PCI device	*/
++	int    in_error;		/* Error flag for eeh_dev	*/
+ 	struct pci_dev *physfn;		/* Associated PF PORT		*/
+ 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+ };
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 221e280..077c3d1 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -1226,6 +1226,7 @@ void eeh_remove_device(struct pci_dev *dev)
+ 	 * from the parent PE during the BAR resotre.
+ 	 */
+ 	edev->pdev = NULL;
++	edev->in_error = 0;
+ 	dev->dev.archdata.edev = NULL;
+ 	if (!(edev->pe->state & EEH_PE_KEEP))
+ 		eeh_rmv_from_parent_pe(edev);
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 89eb4bc..292089e 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
+ 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
+ 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
+ 
++	edev->in_error = 1;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->slot_reset ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		eeh_pcid_put(dev);
+ 		return NULL;
+ 	}
+@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->resume ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		edev->mode &= ~EEH_DEV_NO_HANDLER;
+-		eeh_pcid_put(dev);
+-		return NULL;
++		goto out;
+ 	}
+ 
+ 	driver->err_handler->resume(dev);
+ 
++out:
++	edev->in_error = 0;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -386,12 +390,40 @@ static void *eeh_report_failure(void *data, void *userdata)
+ 	return NULL;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++static void *eeh_add_virt_device(void *data, void *userdata)
++{
++	struct pci_driver *driver;
++	struct eeh_dev *edev = (struct eeh_dev *)data;
++	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
 +
-+- compatible:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Value shall include
-+		    - "qcom,pcie-v0" for apq/ipq8064
-+		    - "qcom,pcie-v1" for apq8084
++	if (!(edev->physfn)) {
++		pr_warn("%s: EEH dev %04x:%02x:%02x:%01x not for VF\n",
++			__func__, edev->phb->global_number, pdn->busno,
++			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
++		return NULL;
++	}
 +
-+- reg:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: Register ranges as listed in the reg-names property
++	driver = eeh_pcid_get(dev);
++	if (driver) {
++		eeh_pcid_put(dev);
++		if (driver->err_handler)
++			return NULL;
++	}
 +
-+- reg-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Must include the following entries
-+		    - "parf"   Qualcomm specific registers
-+		    - "dbi"    Designware PCIe registers
-+		    - "elbi"   External local bus interface registers
-+		    - "config" PCIe configuration space
++	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
++	return NULL;
++}
++#endif /* CONFIG_PCI_IOV */
 +
-+- device_type:
-+	Usage: required
-+	Value type: <string>
-+	Definition: Should be "pci". As specified in designware-pcie.txt
+ static void *eeh_rmv_device(void *data, void *userdata)
+ {
+ 	struct pci_driver *driver;
+ 	struct eeh_dev *edev = (struct eeh_dev *)data;
+ 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+ 	int *removed = (int *)userdata;
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+ 
+ 	/*
+ 	 * Actually, we should remove the PCI bridges as well.
+@@ -416,7 +448,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 	driver = eeh_pcid_get(dev);
+ 	if (driver) {
+ 		eeh_pcid_put(dev);
+-		if (driver->err_handler)
++		if (removed && driver->err_handler)
+ 			return NULL;
+ 	}
+ 
+@@ -425,11 +457,18 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 		 pci_name(dev));
+ 	edev->bus = dev->bus;
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+-	(*removed)++;
+-
+-	pci_lock_rescan_remove();
+-	pci_stop_and_remove_bus_device(dev);
+-	pci_unlock_rescan_remove();
++	if (removed)
++		(*removed)++;
 +
-+- #address-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Should be set to 3. As specified in designware-pcie.txt
-+
-+- #size-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Should be set 2. As specified in designware-pcie.txt
-+
-+- ranges:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: As specified in designware-pcie.txt
-+
-+- interrupts:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: MSI interrupt
-+
-+- interrupt-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain "msi"
-+
-+- #interrupt-cells:
-+	Usage: required
-+	Value type: <u32>
-+	Definition: Should be 1. As specified in designware-pcie.txt
-+
-+- interrupt-map-mask:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: As specified in designware-pcie.txt
-+
-+- interrupt-map:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: As specified in designware-pcie.txt
-+
-+- clocks:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: List of phandle and clock specifier pairs as listed
-+		    in clock-names property
-+
-+- clock-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+		    * should be populated for v0 and v1
-+		    	- "iface"      Configuration AHB clock
-+
-+		    * should be populated for v0
-+		    	- "core"       Clocks the pcie hw block
-+		    	- "phy"        Clocks the pcie PHY block
-+
-+		    * should be populated for v1
-+			- "aux"        Auxiliary (AUX) clock
-+		    	- "bus_master" Master AXI clock
-+		    	- "bus_slave"  Slave AXI clock
-+
-+- resets:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: List of phandle and reset specifier pairs as listed
-+		    in reset-names property
-+
-+- reset-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+		    * should be populated for v0
-+			- "axi"  AXI reset
-+			- "ahb"  AHB reset
-+			- "por"  POR reset
-+			- "pci"  PCI reset
-+			- "phy"  PHY reset
-+
-+		    * should be populated for v1
-+			- "core" Core reset
-+
-+- power-domains:
-+	Usage: required (for v1 only)
-+	Value type: <prop-encoded-array>
-+	Definition: A phandle and power domain specifier pair to the
-+		    power domain which is responsible for collapsing
-+		    and restoring power to the peripheral
-+
-+- <name>-supply:
-+	Usage: required
-+	Value type: <phandle>
-+	Definition: List of phandles to the power supply regulator(s)
-+		    * should be populated for v0 and v1
-+			- "vdda"        core analog power supply
-+
-+		    * should be populated for v0
-+			- "vdda_phy"    analog power supply for PHY
-+			- "vdda_refclk" analog power supply for IC which generate
-+					reference clock
-+
-+- phys:
-+	Usage: required (for v1 only)
-+	Value type: <phandle>
-+	Definition: List of phandle(s) as listed in phy-names property
-+
-+- phy-names:
-+	Usage: required (for v1 only)
-+	Value type: <stringlist>
-+	Definition: Should contain "pciephy"
-+
-+- <name>-gpio:
-+	Usage: optional
-+	Value type: <prop-encoded-array>
-+	Definition: List of phandle and gpio specifier pairs. Should contain
-+		    - "perst"  PCIe endpoint reset signal line
-+		    - "pewake" PCIe endpoint wake signal line
-+
-+- pinctrl-0:
-+	Usage: required
-+	Value type: <phandle>
-+	Definition: List of phandles pointing at a pin(s) configuration
-+
-+- pinctrl-names
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: List of names of pinctrl-0 state
-+
-+* Example for v0
-+	pcie0: pci@1b500000 {
-+		compatible = "qcom,pcie-v0";
-+		reg = <0x1b500000 0x1000
-+		       0x1b502000 0x80
-+		       0x1b600000 0x100
-+		       0x0ff00000 0x100000>;
-+		reg-names = "dbi", "elbi", "parf", "config";
-+		device_type = "pci";
-+		linux,pci-domain = <0>;
-+		bus-range = <0x00 0xff>;
-+		num-lanes = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x81000000 0 0	  0x0fe00000 0 0x00100000   /* I/O */
-+			  0x82000000 0 0x00000000 0x08000000 0 0x07e00000>; /* memory */
-+		interrupts = <GIC_SPI 35 IRQ_TYPE_NONE>;
-+		interrupt-names = "msi";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc 0 36 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+				<0 0 0 2 &intc 0 37 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+				<0 0 0 3 &intc 0 38 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+				<0 0 0 4 &intc 0 39 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+		clocks = <&gcc PCIE_A_CLK>,
-+			 <&gcc PCIE_H_CLK>,
-+			 <&gcc PCIE_PHY_CLK>;
-+		clock-names = "core", "iface", "phy";
-+		resets = <&gcc PCIE_ACLK_RESET>,
-+			 <&gcc PCIE_HCLK_RESET>,
-+			 <&gcc PCIE_POR_RESET>,
-+			 <&gcc PCIE_PCI_RESET>,
-+			 <&gcc PCIE_PHY_RESET>;
-+		reset-names = "axi", "ahb", "por", "pci", "phy";
-+	};
-+
-+* Example for v1
-+	pcie0@fc520000 {
-+		compatible = "qcom,pcie-v1";
-+		reg = <0xfc520000 0x2000>,
-+		      <0xff000000 0x1000>,
-+		      <0xff001000 0x1000>,
-+		      <0xff002000 0x2000>;
-+		reg-names = "parf", "dbi", "elbi", "config";
-+		device_type = "pci";
-+		linux,pci-domain = <0>;
-+		bus-range = <0x00 0xff>;
-+		num-lanes = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x81000000 0 0          0xff200000 0 0x00100000   /* I/O */
-+			  0x82000000 0 0x00300000 0xff300000 0 0x00d00000>; /* memory */
-+		interrupts = <GIC_SPI 243 IRQ_TYPE_NONE>;
-+		interrupt-names = "msi";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc 0 244 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+				<0 0 0 2 &intc 0 245 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+				<0 0 0 3 &intc 0 247 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+				<0 0 0 4 &intc 0 248 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+		clocks = <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+			 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+			 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+			 <&gcc GCC_PCIE_0_AUX_CLK>;
-+		clock-names = "iface", "master_bus", "slave_bus", "aux";
-+		resets = <&gcc GCC_PCIE_0_BCR>;
-+		reset-names = "core";
-+		power-domains = <&gcc PCIE0_GDSC>;
-+		vdda-supply = <&pma8084_l3>;
-+		phys = <&pciephy0>;
-+		phy-names = "pciephy";
-+		perst-gpio = <&tlmm 70 GPIO_ACTIVE_LOW>;
-+		pinctrl-0 = <&pcie0_pins_default>;
-+		pinctrl-names = "default";
-+	};
++	if (edev->physfn) {
++		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
++		edev->pdev = NULL;
++		pdn->pe_number = IODA_INVALID_PE;
++	} else {
++		pci_lock_rescan_remove();
++		pci_stop_and_remove_bus_device(dev);
++		pci_unlock_rescan_remove();
++	}
+ 
+ 	return NULL;
+ }
+@@ -548,6 +587,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
+ 	struct timeval tstamp;
+ 	int cnt, rc, removed = 0;
++	struct eeh_dev *edev;
+ 
+ 	/* pcibios will clear the counter; save the value */
+ 	cnt = pe->freeze_count;
+@@ -561,12 +601,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+ 	if (bus) {
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(bus);
+-		pci_unlock_rescan_remove();
+-	} else if (frozen_bus) {
++		if (pe->type & EEH_PE_VF)
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++		else {
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(bus);
++			pci_unlock_rescan_remove();
++		}
++	} else if (frozen_bus)
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+-	}
+ 
+ 	/*
+ 	 * Reset the pci controller. (Asserts RST#; resets config space).
+@@ -607,14 +650,26 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 		 * PE. We should disconnect it so the binding can be
+ 		 * rebuilt when adding PCI devices.
+ 		 */
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(bus);
++#ifdef CONFIG_PCI_IOV
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++#endif
++			pcibios_add_pci_devices(bus);
+ 	} else if (frozen_bus && removed) {
+ 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+ 		ssleep(5);
+ 
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(frozen_bus);
++#ifdef CONFIG_PCI_IOV
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++#endif
++			pcibios_add_pci_devices(frozen_bus);
+ 	}
+ 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+ 
+@@ -792,11 +847,15 @@ perm_error:
+ 	 * the their PCI config any more.
+ 	 */
+ 	if (frozen_bus) {
+-		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+-
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(frozen_bus);
+-		pci_unlock_rescan_remove();
++		if (pe->type & EEH_PE_VF) {
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++		} else {
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(frozen_bus);
++			pci_unlock_rescan_remove();
++		}
+ 	}
+ }
+ 
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 260a701..5cde950 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
+ 	if (pe->type & EEH_PE_PHB) {
+ 		bus = pe->phb->bus;
+ 	} else if (pe->type & EEH_PE_BUS ||
+-		   pe->type & EEH_PE_DEVICE) {
++		   pe->type & EEH_PE_DEVICE ||
++		   pe->type & EEH_PE_VF) {
+ 		if (pe->bus) {
+ 			bus = pe->bus;
+ 			goto out;
 -- 
-1.7.0.4
+1.7.9.5
 
