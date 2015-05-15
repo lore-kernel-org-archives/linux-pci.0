@@ -1,93 +1,142 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: George McCollister <george.mccollister@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: I/O conflict on Versalogic Tiger (VL-EPM-24)
-Date: Thu, 07 May 2015 23:06:38 +0200
-Message-ID: <2829685.et1KqHBDfq@vostro.rjw.lan>
-In-Reply-To: <CAFSKS=PxJMwkhrswHTdE-vVJqocHkzWELO=BvKm12NjFRtfNew@mail.gmail.com>
-References: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com> <16669466.MatE2KDcHs@vostro.rjw.lan> <CAFSKS=PxJMwkhrswHTdE-vVJqocHkzWELO=BvKm12NjFRtfNew@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:53268 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932092AbbEOIy0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 04:54:26 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 18:54:24 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id CB66B357804C
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 18:54:21 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F8sDuu32178180
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 18:54:21 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F8rmwx009393
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 18:53:49 +1000
+Date: Fri, 15 May 2015 16:53:30 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 05/11] powerpc/powernv: create/release eeh_dev for VF
+Message-ID: <20150515085330.GA26681@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150515061916.GA29805@gwshan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150515061916.GA29805@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 07, 2015 08:28:35 AM George McCollister wrote:
-> On Wed, May 6, 2015 at 5:14 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Wednesday, May 06, 2015 02:15:15 PM George McCollister wrote:
-> >> On Wed, May 6, 2015 at 10:51 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> > [+cc Rafael]
+On Fri, May 15, 2015 at 04:19:16PM +1000, Gavin Shan wrote:
+>On Fri, May 15, 2015 at 01:46:20PM +0800, Wei Yang wrote:
+>>EEH on powerpc platform needs eeh_dev structure to track the PCI device
+>>status. Since VFs are created/released dynamically, VF's eeh_dev is also
+>>dynamically created/released in system.
+>>
+>>This patch creates/removes eeh_dev when pci_dn is created/removed for VFs,
+>>and marks it with EEH_DEV_VF type.
+>>
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>
+>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>
+>After removing the unnecessary line of code as below.
+>
+>>---
+>> arch/powerpc/include/asm/eeh.h |    1 +
+>> arch/powerpc/kernel/eeh.c      |    4 ++++
+>> arch/powerpc/kernel/pci_dn.c   |   11 +++++++++++
+>> 3 files changed, 16 insertions(+)
+>>
+>>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>>index a52db28..1b3614d 100644
+>>--- a/arch/powerpc/include/asm/eeh.h
+>>+++ b/arch/powerpc/include/asm/eeh.h
+>>@@ -138,6 +138,7 @@ struct eeh_dev {
+>> 	struct pci_controller *phb;	/* Associated PHB		*/
+>> 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+>> 	struct pci_dev *pdev;		/* Associated PCI device	*/
+>>+	struct pci_dev *physfn;		/* Associated PF PORT		*/
+>> 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+>> };
+>>
+>>diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+>>index 6c7ce1b..221e280 100644
+>>--- a/arch/powerpc/kernel/eeh.c
+>>+++ b/arch/powerpc/kernel/eeh.c
+>>@@ -1135,6 +1135,10 @@ void eeh_add_device_late(struct pci_dev *dev)
+>> 	}
+>>
+>> 	edev->pdev = dev;
+>>+#ifdef CONFIG_PCI_IOV
+>>+	if (dev->is_virtfn)
+>>+		edev->physfn = dev->physfn;
+>>+#endif
+>> 	dev->dev.archdata.edev = edev;
+>>
+>> 	if (eeh_has_flag(EEH_PROBE_MODE_DEV))
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index f771130..94806a4 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>> struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>> {
+>> #ifdef CONFIG_PCI_IOV
+>>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+>> 	struct pci_dn *parent, *pdn;
+>>+	struct eeh_dev *edev;
+>> 	int i;
+>>
+>> 	/* Only support IOV for now */
+>>@@ -206,6 +208,8 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+>> 				 __func__, i);
+>> 			return NULL;
+>> 		}
+>>+		eeh_dev_init(pdn, hose);
+>>+		edev = pdn_to_eeh_dev(pdn);
+>
+>Nothing is done to edev after getting it. So I think the last line of changes
+>here isn't needed. Could you check and remove it if I'm correct?
 
-[cut]
+You are right, removed.
 
-> >>
-> >> I think the key here is that the region needs to be requested before
-> >> bridge window is assigned.
-> >
-> > That's correct, so things don't happen in the right order now.
-> >
-> > Well, acpi_reserve_resources() is a device_initcall(), so its ordering with
-> > respect to other things is somewhat random.
-> >
-> > Does the patch below make any difference by any chance?
-> >
-> 
-> Yes, with this patch it boots with no problems.
-
-OK
-
-I'm queuing this one up as a fix for 4.1 and for -stable.
-
-Thanks for your report, it was a good one. :-)
-
-Bjorn, please let me know if you think there's a better place to call
-acpi_reserve_resources() from.
-
-
-> > ---
-> >  drivers/acpi/osl.c |    6 ++----
-> >  1 file changed, 2 insertions(+), 4 deletions(-)
-> >
-> > Index: linux-pm/drivers/acpi/osl.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/acpi/osl.c
-> > +++ linux-pm/drivers/acpi/osl.c
-> > @@ -182,7 +182,7 @@ static void __init acpi_request_region (
-> >                 request_mem_region(addr, length, desc);
-> >  }
-> >
-> > -static int __init acpi_reserve_resources(void)
-> > +static void __init acpi_reserve_resources(void)
-> >  {
-> >         acpi_request_region(&acpi_gbl_FADT.xpm1a_event_block, acpi_gbl_FADT.pm1_event_length,
-> >                 "ACPI PM1a_EVT_BLK");
-> > @@ -211,10 +211,7 @@ static int __init acpi_reserve_resources
-> >         if (!(acpi_gbl_FADT.gpe1_block_length & 0x1))
-> >                 acpi_request_region(&acpi_gbl_FADT.xgpe1_block,
-> >                                acpi_gbl_FADT.gpe1_block_length, "ACPI GPE1_BLK");
-> > -
-> > -       return 0;
-> >  }
-> > -device_initcall(acpi_reserve_resources);
-> >
-> >  void acpi_os_printf(const char *fmt, ...)
-> >  {
-> > @@ -1845,6 +1842,7 @@ acpi_status __init acpi_os_initialize(vo
-> >
-> >  acpi_status __init acpi_os_initialize1(void)
-> >  {
-> > +       acpi_reserve_resources();
-> >         kacpid_wq = alloc_workqueue("kacpid", 0, 1);
-> >         kacpi_notify_wq = alloc_workqueue("kacpi_notify", 0, 1);
-> >         kacpi_hotplug_wq = alloc_ordered_workqueue("kacpi_hotplug", 0);
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>Thanks,
+>Gavin
+>
+>> 	}
+>> #endif /* CONFIG_PCI_IOV */
+>>
+>>@@ -254,10 +258,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+>> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+>> 		list_for_each_entry_safe(pdn, tmp,
+>> 			&parent->child_list, list) {
+>>+			struct eeh_dev *edev;
+>> 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
+>> 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
+>> 				continue;
+>>
+>>+			edev = pdn_to_eeh_dev(pdn);
+>>+			if (edev) {
+>>+				pdn->edev = NULL;
+>>+				kfree(edev);
+>>+			}
+>>+
+>> 			if (!list_empty(&pdn->list))
+>> 				list_del(&pdn->list);
+>>
+>>-- 
+>>1.7.9.5
+>>
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Richard Yang
+Help you, Help me
+
