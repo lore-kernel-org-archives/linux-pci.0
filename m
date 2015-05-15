@@ -1,105 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:37280 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbbEZX54 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 19:57:56 -0400
-Received: by igbsb11 with SMTP id sb11so1765092igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 16:57:55 -0700 (PDT)
-Date: Tue, 26 May 2015 18:57:51 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, mjg59@coreos.com, rwhite@pobox.com,
-	alex.williamson@redhat.com
-Subject: Re: [PATCH v4 1/3] PCI: Add pdev->has_secondary_link to mark pcie
- link
-Message-ID: <20150526235751.GO32152@google.com>
-References: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:47388 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854AbbEOGUT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 02:20:19 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 16:20:17 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 4E1482CE804E
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:20:15 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F6K6QB30343252
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:20:15 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F6Jg5u017318
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:19:42 +1000
+Date: Fri, 15 May 2015 16:19:16 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 05/11] powerpc/powernv: create/release eeh_dev for VF
+Message-ID: <20150515061916.GA29805@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 21, 2015 at 03:05:02PM +0800, Yijing Wang wrote:
-> We assumed root port and downstream port always have
-> pcie link, downstream port always has a upstream port.
-> It's not always correct, In ATCA platform, system has
-> unusual pcie topology like:
-> 
-> (root port)   (downstream port)   (upstream port)
-> +-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
-> |                               +-01.0-[05]-- (downstream port)
-> |                               +-02.0-[06]--
-> |                               +-03.0-[07]--
-> |                               +-08.0-[08]--
-> |                               +-09.0-[09]--
-> |                               \-0a.0-[0a]--
-> 
-> In this pcie tree, downstream port 02:00.0 has no
-> pcie link, and upstream port 03:00.0 has a pcie link.
-> 
-> This patch introduced a new assumption suggested by Bjorn.
-> 1. Root port is always on the upstream end of a link.
-> 2. The pcie hierarchy should alternate between links
-> and internal switch logic, there should be no adjacent
-> links or internal buses in pcie tree.
-> 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Fri, May 15, 2015 at 01:46:20PM +0800, Wei Yang wrote:
+>EEH on powerpc platform needs eeh_dev structure to track the PCI device
+>status. Since VFs are created/released dynamically, VF's eeh_dev is also
+>dynamically created/released in system.
+>
+>This patch creates/removes eeh_dev when pci_dn is created/removed for VFs,
+>and marks it with EEH_DEV_VF type.
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Applied to pci/aspm for v4.2, thanks!
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-> ---
->  drivers/pci/probe.c |   16 ++++++++++++++++
->  include/linux/pci.h |    1 +
->  2 files changed, 17 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index a9c5e63..192c6b9 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -973,6 +973,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  {
->  	int pos;
->  	u16 reg16;
-> +	struct pci_dev *parent;
->  
->  	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
->  	if (!pos)
-> @@ -982,6 +983,21 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  	pdev->pcie_flags_reg = reg16;
->  	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
->  	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
-> +
-> +	/*
-> +	 * We assume root port is always on the upstream end of
-> +	 * a link, and the pcie hierarchy should alternate
-> +	 * between links and internal switch logic.
-> +	 */
-> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
-> +		pdev->has_secondary_link = 1;
-> +
-> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_UPSTREAM
-> +			|| pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
-> +		parent = pci_upstream_bridge(pdev);
-> +		if (!parent->has_secondary_link)
-> +			pdev->has_secondary_link = 1;
-> +	}
->  }
->  
->  void set_pcie_hotplug_bridge(struct pci_dev *pdev)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 50b7c7d..141fcc1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -355,6 +355,7 @@ struct pci_dev {
->  	unsigned int	broken_intx_masking:1;
->  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
->  	unsigned int	irq_managed:1;
-> +	unsigned int	has_secondary_link:1;
->  	pci_dev_flags_t dev_flags;
->  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
->  
-> -- 
-> 1.7.1
-> 
+After removing the unnecessary line of code as below.
+
+>---
+> arch/powerpc/include/asm/eeh.h |    1 +
+> arch/powerpc/kernel/eeh.c      |    4 ++++
+> arch/powerpc/kernel/pci_dn.c   |   11 +++++++++++
+> 3 files changed, 16 insertions(+)
+>
+>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>index a52db28..1b3614d 100644
+>--- a/arch/powerpc/include/asm/eeh.h
+>+++ b/arch/powerpc/include/asm/eeh.h
+>@@ -138,6 +138,7 @@ struct eeh_dev {
+> 	struct pci_controller *phb;	/* Associated PHB		*/
+> 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+> 	struct pci_dev *pdev;		/* Associated PCI device	*/
+>+	struct pci_dev *physfn;		/* Associated PF PORT		*/
+> 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+> };
+>
+>diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+>index 6c7ce1b..221e280 100644
+>--- a/arch/powerpc/kernel/eeh.c
+>+++ b/arch/powerpc/kernel/eeh.c
+>@@ -1135,6 +1135,10 @@ void eeh_add_device_late(struct pci_dev *dev)
+> 	}
+>
+> 	edev->pdev = dev;
+>+#ifdef CONFIG_PCI_IOV
+>+	if (dev->is_virtfn)
+>+		edev->physfn = dev->physfn;
+>+#endif
+> 	dev->dev.archdata.edev = edev;
+>
+> 	if (eeh_has_flag(EEH_PROBE_MODE_DEV))
+>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>index f771130..94806a4 100644
+>--- a/arch/powerpc/kernel/pci_dn.c
+>+++ b/arch/powerpc/kernel/pci_dn.c
+>@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+> struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+> {
+> #ifdef CONFIG_PCI_IOV
+>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+> 	struct pci_dn *parent, *pdn;
+>+	struct eeh_dev *edev;
+> 	int i;
+>
+> 	/* Only support IOV for now */
+>@@ -206,6 +208,8 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+> 				 __func__, i);
+> 			return NULL;
+> 		}
+>+		eeh_dev_init(pdn, hose);
+>+		edev = pdn_to_eeh_dev(pdn);
+
+Nothing is done to edev after getting it. So I think the last line of changes
+here isn't needed. Could you check and remove it if I'm correct?
+
+Thanks,
+Gavin
+
+> 	}
+> #endif /* CONFIG_PCI_IOV */
+>
+>@@ -254,10 +258,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+> 		list_for_each_entry_safe(pdn, tmp,
+> 			&parent->child_list, list) {
+>+			struct eeh_dev *edev;
+> 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
+> 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
+> 				continue;
+>
+>+			edev = pdn_to_eeh_dev(pdn);
+>+			if (edev) {
+>+				pdn->edev = NULL;
+>+				kfree(edev);
+>+			}
+>+
+> 			if (!list_empty(&pdn->list))
+> 				list_del(&pdn->list);
+>
+>-- 
+>1.7.9.5
+>
+
