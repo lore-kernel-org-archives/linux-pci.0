@@ -1,77 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:33337 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbbEGCld (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 22:41:33 -0400
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59520 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744AbbEOFu3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:50:29 -0400
 Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 7 May 2015 12:41:30 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5DB093578048
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2015 12:41:28 +1000 (EST)
+	Fri, 15 May 2015 15:50:27 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id C02C4357804F
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:26 +1000 (EST)
 Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t472fJDR23920752
-	for <linux-pci@vger.kernel.org>; Thu, 7 May 2015 12:41:28 +1000
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5oIUu33357872
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:50:26 +1000
 Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t472etwj032476
-	for <linux-pci@vger.kernel.org>; Thu, 7 May 2015 12:40:55 +1000
-Date: Thu, 7 May 2015 10:40:38 +0800
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5nrEk001852
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:54 +1000
 From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] pci/iov: return a reference to PF on destroying VF
-Message-ID: <20150507024038.GB6645@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150505212905.GB24643@google.com>
- <20150506072557.GA22377@richard>
- <CAErSpo7oTxbThDGj6UkbpsAKBakkzJsq104swqsZWkr=0+dNkA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7oTxbThDGj6UkbpsAKBakkzJsq104swqsZWkr=0+dNkA@mail.gmail.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 03/11] powerpc/pci: remove PCI devices in reverse order
+Date: Fri, 15 May 2015 13:46:18 +0800
+Message-Id: <1431668786-30371-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 06, 2015 at 10:23:26AM -0500, Bjorn Helgaas wrote:
->On Wed, May 6, 2015 at 2:25 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> On Tue, May 05, 2015 at 04:29:05PM -0500, Bjorn Helgaas wrote:
->
->>>It would be useful to mention a way to cause the leak.  I suspect writing
->>>to a VF's sysfs "remove" file is the easiest.
->>>
->>
->> Looks a VF don't support the remove now.
->>
->> static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
->>                                             struct attribute *a, int n)
->> {
->>         struct device *dev = container_of(kobj, struct device, kobj);
->>         struct pci_dev *pdev = to_pci_dev(dev);
->>
->>         if (pdev->is_virtfn)
->>                 return 0;
->>
->>         return a->mode;
->> }
->>
->> static struct attribute_group pci_dev_hp_attr_group = {
->>         .attrs = pci_dev_hp_attrs,
->>         .is_visible = pci_dev_hp_attrs_are_visible,
->> };
->
->Right, I forgot about this.  A VF has no "remove" file, so it can't be
->used to cause the leak.
+As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
+when removing PCI devices on a bus which has VFs, we need to remove them
+in the reverse order.
 
-Hmm, I see this is introduced in commit dfab88beda88, to prevent some memory
-leak.
+This patch applies this pattern to the hotplug removal code for the powerpc
+arch.
 
-Could we say, if we do the release properly like in this patch, we could
-re-enable this "remove"?
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7ed85a6..98f84ed 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
