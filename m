@@ -1,84 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12616 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754819AbbERSig (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:36 -0400
-From: <wdavis@nvidia.com>
-To: <joro@8bytes.org>, <bhelgaas@google.com>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
-	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v2 7/7] x86: add pci-nommu implementation of map_resource
-Date: Mon, 18 May 2015 13:25:04 -0500
-Message-ID: <1431973504-5903-8-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:49986 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422800AbbEONlO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:41:14 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 23:41:12 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0D00C2CE8050
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:10 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDf2U825952408
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:10 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDeb0M012553
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:40:37 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V5 08/10] powerpc/powernv: Support PCI config restore for VFs
+Date: Fri, 15 May 2015 21:37:02 +0800
+Message-Id: <1431697024-5710-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+Since skiboot firmware is not aware of VFs, the restore action for VF
+should be done in kernel.
 
-Lookup the bus address of the resource by finding the parent host bridge,
-which may be different than the parent host bridge of the target device.
+The patch introduces function pnv_eeh_restore_vf_config() to restore PCI
+config space for VFs after reset.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/x86/kernel/pci-nommu.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ arch/powerpc/include/asm/pci-bridge.h        |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   71 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         |   16 ++++++
+ 3 files changed, 87 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/pci-nommu.c b/arch/x86/kernel/pci-nommu.c
-index da15918..6384482 100644
---- a/arch/x86/kernel/pci-nommu.c
-+++ b/arch/x86/kernel/pci-nommu.c
-@@ -38,6 +38,37 @@ static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
- 	return bus;
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index d78afe4..168b991 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -205,6 +205,7 @@ struct pci_dn {
+ 	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
++	int	mps;
+ #endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 2a224b2..1393283 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1607,6 +1607,68 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
  }
  
-+static dma_addr_t nommu_map_resource(struct device *dev, struct resource *res,
-+				     unsigned long offset, size_t size,
-+				     enum dma_data_direction dir,
-+				     struct dma_attrs *attrs)
++#ifdef CONFIG_PCI_IOV
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
 +{
-+	struct pci_bus *bus;
-+	struct pci_host_bridge *bridge;
-+	struct resource_entry *window;
-+	resource_size_t bus_offset = 0;
-+	dma_addr_t dma_address;
++	int old_mps;
++	u32 devctl, cmd, cap2, aer_capctl;
++	struct eeh_dev *edev;
 +
-+	/* Find the parent host bridge of the resource, and determine the
-+	 * relative offset.
-+	 */
-+	list_for_each_entry(bus, &pci_root_buses, node) {
-+		bridge = to_pci_host_bridge(bus->bridge);
-+		resource_list_for_each_entry(window, &bridge->windows) {
-+			if (resource_contains(window->res, res))
-+				bus_offset = window->offset;
++	/* Restore MPS */
++	edev = pdn_to_eeh_dev(pdn);
++	if (edev->pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Disable Completion Timeout */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, cap2);
 +		}
 +	}
 +
-+	dma_address = (res->start - bus_offset) + offset;
-+	WARN_ON(size == 0);
-+	if (!check_addr("map_resource", dev, dma_address, size))
-+		return DMA_ERROR_CODE;
-+	flush_write_buffers();
-+	return dma_address;
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, aer_capctl);
++	}
++
++	return 0;
 +}
++#endif /* CONFIG_PCI_IOV */
 +
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1617,7 +1679,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
+ 
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 */
++	if (edev->physfn)
++		ret = pnv_eeh_restore_vf_config(pdn);
++	else
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index bca2aeb..31d0258 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -781,3 +781,19 @@ machine_subsys_initcall_sync(powernv, tce_iommu_bus_notifier_init);
+ struct pci_controller_ops pnv_pci_controller_ops = {
+ 	.dma_dev_setup = pnv_pci_dma_dev_setup,
+ };
 +
- /* Map a set of buffers described by scatterlist in streaming
-  * mode for DMA.  This is the scatter-gather version of the
-  * above pci_map_single interface.  Here the scatter gather list
-@@ -93,6 +124,7 @@ struct dma_map_ops nommu_dma_ops = {
- 	.free			= dma_generic_free_coherent,
- 	.map_sg			= nommu_map_sg,
- 	.map_page		= nommu_map_page,
-+	.map_resource		= nommu_map_resource,
- 	.sync_single_for_device = nommu_sync_single_for_device,
- 	.sync_sg_for_device	= nommu_sync_sg_for_device,
- 	.is_phys		= 1,
++static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
 -- 
-2.4.0
+1.7.9.5
 
