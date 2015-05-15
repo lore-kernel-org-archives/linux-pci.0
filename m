@@ -1,61 +1,134 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <555C8743.6020708@ti.com>
-Date: Wed, 20 May 2015 18:38:19 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:36069 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753584AbbEOG1s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 02:27:48 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 16:27:46 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E4E23357804F
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:27:44 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F6RaT731523032
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:27:44 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F6RBJw027749
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:27:12 +1000
+Date: Fri, 15 May 2015 16:26:47 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V4 06/11] powerpc/eeh: create EEH_PE_VF for VF PE
+Message-ID: <20150515062646.GA31660@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1431668786-30371-7-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-CC: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>, <linux-arm-msm@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com> <554783CD.50708@ti.com> <55478F1A.3000401@mm-sol.com> <20150519224143.GS31666@google.com>
-In-Reply-To: <20150519224143.GS31666@google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431668786-30371-7-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Wednesday 20 May 2015 04:11 AM, Bjorn Helgaas wrote:
-> On Mon, May 04, 2015 at 06:24:10PM +0300, Stanimir Varbanov wrote:
->> On 05/04/2015 05:35 PM, Kishon Vijay Abraham I wrote:
->>> Hi,
->>>
->>> On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
->>>> Add a PCIe PHY driver used by PCIe host controller driver
->>>> on Qualcomm SoCs like Snapdragon 805.
->>>>
->>>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
->>>> ---
->>>>    drivers/phy/Kconfig         |    9 ++
->>>>    drivers/phy/Makefile        |    1 +
->>>>    drivers/phy/phy-qcom-pcie.c |  291
->>>> +++++++++++++++++++++++++++++++++++++++++++
->>>
->>> Why do you need a new PHY driver for this? Why not use the existing QCOM
->>> PHY driver. I can see the registers used here in phy-qcom-ufs-qmp-14nm.h?
->>
->> I agree that on first glance there are similarities, but I'm not sure
->> does the PHYs are the same IP blocks. Or at least they are different
->> revisions which have too many differences. So trying to combine them
->> will lead to more code than now.
->>
->> Either way I will try to understand how many the differences are.
+On Fri, May 15, 2015 at 01:46:21PM +0800, Wei Yang wrote:
+>On powernv platform, VF PE is a special PE which is different from the Bus
+>PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
+>properly. For example, we need to create VF PE when VF's pci_dev is
+>initialized in kernel. And add a flag to mark it is a VF PE.
 >
-> Ping, where are we with this?  Should I wait for something else, or are you
-> convinced there's enough difference to warrant a new PHY driver, Kishon?
+>This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
+>At the mean time, it creates the sysfs and address cache for VF PE at PCI
+>device final fixup time.
+>
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-I'd like to wait to see if Stanimir can use existing driver instead of creating 
-a new driver.
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Cheers
-Kishon
+With one thing fixed as below.
+
+>---
+> arch/powerpc/include/asm/eeh.h               |    1 +
+> arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+> arch/powerpc/platforms/powernv/eeh-powernv.c |   14 ++++++++++++++
+> 3 files changed, 23 insertions(+), 2 deletions(-)
+>
+>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>index 1b3614d..c1fde48 100644
+>--- a/arch/powerpc/include/asm/eeh.h
+>+++ b/arch/powerpc/include/asm/eeh.h
+>@@ -70,6 +70,7 @@ struct pci_dn;
+> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+>+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>
+> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>index 35f0b62..260a701 100644
+>--- a/arch/powerpc/kernel/eeh_pe.c
+>+++ b/arch/powerpc/kernel/eeh_pe.c
+>@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+> 	 * EEH device already having associated PE, but
+> 	 * the direct parent EEH device doesn't have yet.
+> 	 */
+>-	pdn = pdn ? pdn->parent : NULL;
+>+	if (edev->physfn)
+>+		pdn = pci_get_pdn(edev->physfn);
+>+	else
+>+		pdn = pdn ? pdn->parent : NULL;
+> 	while (pdn) {
+> 		/* We're poking out of PCI territory */
+> 		parent = pdn_to_eeh_dev(pdn);
+>@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+> 	}
+>
+> 	/* Create a new EEH PE */
+>-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>+	if (edev->physfn)
+>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+>+	else
+>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+> 	if (!pe) {
+> 		pr_err("%s: out of memory!\n", __func__);
+> 		return -ENOMEM;
+>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>index 622f08c..31344a4 100644
+>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>@@ -1540,3 +1540,17 @@ static int __init eeh_powernv_init(void)
+> 	return ret;
+> }
+> machine_early_initcall(powernv, eeh_powernv_init);
+>+
+>+static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
+>+{
+>+	/*
+>+	 * The following operations will fail if VF's sysfs files aren't
+>+	 * created or its resources aren't finalized.
+>+	 */
+>+	if (!pdev->is_virtfn)
+>+		return;
+>+
+>+	eeh_add_device_late(pdev);
+>+	eeh_sysfs_add_device(pdev);
+
+It's worthy to have following code to make the logic here complete. Otherwise,
+we will run into problem quickly once the eeh_add_device_{early,late}() get
+changed in eeh.c:
+
+	eeh_add_device_early(pdn);
+	eeh_add_device_late(pdev);
+	eeh_sysfs_add_device(pdev);
+
+Thanks,
+Gavin
+
+>+}
+>+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
+>-- 
+>1.7.9.5
+>
+
