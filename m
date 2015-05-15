@@ -1,138 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:25083 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbbEHHaI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH Part3 v11 9/9] PCI: Remove pci_bus_assign_domain_nr()
-Date: Fri, 8 May 2015 15:22:59 +0800
-Message-ID: <1431069779-29346-10-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:60371 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbbEOFyv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:54:51 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 15:54:50 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9F43C2CE8040
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:48 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5se6w28966944
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:48 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5sFf2007306
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:16 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V4 11/11] powerpc/powernv: compound PE for VFs
+Date: Fri, 15 May 2015 13:46:26 +0800
+Message-Id: <1431668786-30371-12-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we save the domain number in pci_host_bridge,
-we could remove pci_bus_assign_domain_nr() and
-clean the domain member in pci_bus.
+When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
+which means those VFs in a group should form a compound PE.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+This patch links those VF PEs into compound PE in this case.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- drivers/pci/pci.c   |    5 -----
- drivers/pci/pci.h   |    9 ---------
- drivers/pci/probe.c |   11 +++--------
- include/linux/pci.h |    3 ---
- 4 files changed, 3 insertions(+), 25 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c |   27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2e2f429..a3cb571 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4558,11 +4558,6 @@ static int pci_assign_domain_nr(struct device *dev)
- 
- 	return domain;
- }
--
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
--{
--	bus->domain_nr = pci_assign_domain_nr(parent);
--}
- #endif
- #endif
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c2e1a6b..d8a4238 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -325,14 +325,5 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
- 
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
--#else
--static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
--{
--}
--#endif
--
- void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e4ef791..be60074 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -481,7 +481,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
-+static struct pci_bus *pci_alloc_bus(void)
- {
- 	struct pci_bus *b;
- 
-@@ -496,10 +496,6 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	INIT_LIST_HEAD(&b->resources);
- 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	if (parent)
--		b->domain_nr = parent->domain_nr;
--#endif
- 	return b;
- }
- 
-@@ -670,7 +666,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus(parent);
-+	child = pci_alloc_bus();
- 	if (!child)
- 		return NULL;
- 
-@@ -1936,7 +1932,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 		goto unregister_host;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 843457b..157305f 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1345,6 +1345,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 				vf_index < (vf_group + 1) * vf_per_group &&
+ 				vf_index < num_vfs;
+ 				vf_index++)
++
+ 				for (vf_index1 = vf_group * vf_per_group;
+ 					vf_index1 < (vf_group + 1) * vf_per_group &&
+ 					vf_index1 < num_vfs;
+@@ -1360,6 +1361,11 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 						__func__,
+ 						pdn->offset + vf_index1, rc);
+ 				}
++
++				/* Remove a Slave PE from Master PE */
++				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
++				if (pe->flags & PNV_IODA_PE_SLAVE)
++					list_del(&pe->compound);
  	}
  
--	b = pci_alloc_bus(NULL);
-+	b = pci_alloc_bus();
- 	if (!b)
- 		goto unregister_host;
+ 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
+@@ -1418,7 +1424,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+-	struct pnv_ioda_pe    *pe;
++	struct pnv_ioda_pe    *pe, *master_pe;
+ 	int                    pe_num;
+ 	u16                    vf_index;
+ 	struct pci_dn         *pdn;
+@@ -1480,10 +1486,29 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
  
-@@ -1944,7 +1940,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 	b->sysdata = sysdata;
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bus;
--	pci_bus_assign_domain_nr(b, parent);
- 
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 13ed681..f010042 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -460,9 +460,6 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
--	int		domain_nr;
--#endif
- 
- 	char		name[48];
- 
+ 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
++			master_pe = NULL;
++
+ 			for (vf_index = vf_group * vf_per_group;
+ 			     vf_index < (vf_group + 1) * vf_per_group &&
+ 			     vf_index < num_vfs;
+ 			     vf_index++) {
++
++				/*
++				 * Figure out the master PE and put all slave
++				 * PEs to master PE's list.
++				 */
++				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
++				if (!master_pe) {
++					pe->flags |= PNV_IODA_PE_MASTER;
++					INIT_LIST_HEAD(&pe->slaves);
++					master_pe = pe;
++				} else {
++					pe->flags |= PNV_IODA_PE_SLAVE;
++					pe->master = master_pe;
++					list_add_tail(&pe->compound,
++						&master_pe->slaves);
++				}
++
+ 				for (vf_index1 = vf_group * vf_per_group;
+ 				     vf_index1 < (vf_group + 1) * vf_per_group &&
+ 				     vf_index1 < num_vfs;
 -- 
-1.7.1
+1.7.9.5
 
