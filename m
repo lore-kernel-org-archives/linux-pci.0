@@ -1,96 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:36324 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753479AbbELTU4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 15:20:56 -0400
-Received: by qcbgy10 with SMTP id gy10so10283190qcb.3
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 12:20:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150512163412.GD16079@red-moon>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
- <20150505155346.GJ1550@arm.com> <20150506141859.GC26028@red-moon>
- <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
- <554ADCE0.8020603@amd.com> <20150512133431.GA2898@google.com> <20150512163412.GD16079@red-moon>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 May 2015 14:20:35 -0500
-Message-ID: <CAErSpo5zjbZaYsGBdt9C2MaBCa-4X9Ws+WGLCz+Pxmd6wTi1Mg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Ming Lei <ming.lei@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:47955 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422697AbbEONlu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 09:41:50 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 15 May 2015 23:41:48 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A87032CE8040
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:45 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4FDfb6u27787350
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:45 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4FDfC1Z013153
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 23:41:13 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V5 10/10] powerpc/powernv: compound PE for VFs
+Date: Fri, 15 May 2015 21:37:04 +0800
+Message-Id: <1431697024-5710-11-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431697024-5710-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 12, 2015 at 11:34 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, May 12, 2015 at 02:34:31PM +0100, Bjorn Helgaas wrote:
->
-> [...]
->
->> > +void pci_claim_one_bus(struct pci_bus *b)
->> > +{
->> > +   struct pci_dev *pdev;
->> > +   struct pci_bus *child_bus;
->> > +
->> > +   list_for_each_entry(pdev, &b->devices, bus_list) {
->> > +           int i;
->> > +
->> > +           for (i = 0; i < PCI_NUM_RESOURCES; i++) {
->> > +                   struct resource *r = &pdev->resource[i];
->> > +
->> > +                   if (r->parent || !r->start || !r->flags)
->> > +                           continue;
->> > +
->> > +                   if (pci_has_flag(PCI_PROBE_ONLY) ||
->> > +                       (r->flags & IORESOURCE_PCI_FIXED)) {
->> > +                           if (pci_claim_resource(pdev, i) == 0)
->> > +                                   continue;
->> > +
->> > +                           pci_claim_bridge_resource(pdev, i);
->> > +                   }
->> > +           }
->> > +   }
->> > +
->> > +   list_for_each_entry(child_bus, &b->children, node) {
->> > +           pci_claim_one_bus(child_bus);
->> > +   }
->> > +}
->> > +EXPORT_SYMBOL(pci_claim_one_bus);
->>
->> I'm not a fan of pci_claim_one_bus(), on the philosophical grounds that
->> claiming resources is a per-device thing, and I don't want to encourage
->> people to do it on a per-bus level.
->>
->> I'd rather claim them somewhere in the pci_device_add() path, as s390 does
->> in pcibios_add_device().  In fact, I'd *like* to do it even earlier, when
->> we read each BAR, so we could identify invalid or unassigned BARs
->> immediately.
->
-> You mean claiming the resources in __pci_read_base (and unset the resource
-> if claiming it fails ?) regardless of PCI_PROBE_ONLY ?
+When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
+which means those VFs in a group should form a compound PE.
 
-That's what I'm thinking, but only in the long term.  I doubt we're
-ready to go that far yet.  I was thinking more along the lines of just
-getting it uniformly into the core first, maybe even incrementally,
-and only after that moving it around inside the core.
+This patch links those VF PEs into compound PE in this case.
 
-I don't think it would work right now because I think we read device
-BARs before we read the apertures of the upstream bridge.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |   50 ++++++++++++++++++++++++++---
+ arch/powerpc/platforms/powernv/pci.c      |   17 ++++++++--
+ 2 files changed, 60 insertions(+), 7 deletions(-)
 
-> We could claim the resources in pcibios_add_device on arm64, but this
-> means arm code should be patched too since I am not happy at all to let
-> arm and arm64 diverge even more.
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 920c252..23fe8aa 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1345,6 +1345,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 				vf_index < (vf_group + 1) * vf_per_group &&
+ 				vf_index < num_vfs;
+ 				vf_index++)
++
+ 				for (vf_index1 = vf_group * vf_per_group;
+ 					vf_index1 < (vf_group + 1) * vf_per_group &&
+ 					vf_index1 < num_vfs;
+@@ -1363,9 +1364,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 	}
+ 
+ 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
++		struct pnv_ioda_pe *s, *sn;
+ 		if (pe->parent_dev != pdev)
+ 			continue;
+ 
++		if ((pe->flags & PNV_IODA_PE_MASTER) &&
++		    (pe->flags & PNV_IODA_PE_VF)) {
++			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
++				pnv_pci_ioda2_release_dma_pe(pdev, s);
++				list_del(&s->list);
++				pnv_ioda_deconfigure_pe(phb, s);
++				pnv_ioda_free_pe(phb, s->pe_number);
++			}
++		}
++
+ 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
+ 
+ 		/* Remove from list */
+@@ -1418,7 +1430,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
+-	struct pnv_ioda_pe    *pe;
++	struct pnv_ioda_pe    *pe, *master_pe;
+ 	int                    pe_num;
+ 	u16                    vf_index;
+ 	struct pci_dn         *pdn;
+@@ -1464,10 +1476,16 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 				GFP_KERNEL, hose->node);
+ 		pe->tce32_table->data = pe;
+ 
+-		/* Put PE to the list */
+-		mutex_lock(&phb->ioda.pe_list_mutex);
+-		list_add_tail(&pe->list, &phb->ioda.pe_list);
+-		mutex_unlock(&phb->ioda.pe_list_mutex);
++		/*
++		 * Put PE to the list,
++		 * or postpone this if we have Compound PE
++		 */
++		if ((pdn->m64_per_iov != M64_PER_IOV) ||
++		    (num_vfs <= M64_PER_IOV)) {
++			mutex_lock(&phb->ioda.pe_list_mutex);
++			list_add_tail(&pe->list, &phb->ioda.pe_list);
++			mutex_unlock(&phb->ioda.pe_list_mutex);
++		}
+ 
+ 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+ 	}
+@@ -1480,10 +1498,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
+ 
+ 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
++			master_pe = NULL;
++
+ 			for (vf_index = vf_group * vf_per_group;
+ 			     vf_index < (vf_group + 1) * vf_per_group &&
+ 			     vf_index < num_vfs;
+ 			     vf_index++) {
++
++				/*
++				 * Figure out the master PE and put all slave
++				 * PEs to master PE's list.
++				 */
++				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
++				if (!master_pe) {
++					pe->flags |= PNV_IODA_PE_MASTER;
++					INIT_LIST_HEAD(&pe->slaves);
++					master_pe = pe;
++					mutex_lock(&phb->ioda.pe_list_mutex);
++					list_add_tail(&pe->list, &phb->ioda.pe_list);
++					mutex_unlock(&phb->ioda.pe_list_mutex);
++				} else {
++					pe->flags |= PNV_IODA_PE_SLAVE;
++					pe->master = master_pe;
++					list_add_tail(&pe->list,
++						&master_pe->slaves);
++				}
++
+ 				for (vf_index1 = vf_group * vf_per_group;
+ 				     vf_index1 < (vf_group + 1) * vf_per_group &&
+ 				     vf_index1 < num_vfs;
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 31d0258..073caec 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -667,7 +667,7 @@ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	struct pnv_phb *phb = hose->private_data;
+ #ifdef CONFIG_PCI_IOV
+-	struct pnv_ioda_pe *pe;
++	struct pnv_ioda_pe *pe, *slave;
+ 	struct pci_dn *pdn;
+ 
+ 	/* Fix the VF pdn PE number */
+@@ -679,10 +679,23 @@ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+ 			    (pdev->devfn & 0xff))) {
+ 				pdn->pe_number = pe->pe_number;
+ 				pe->pdev = pdev;
+-				break;
++				goto found;
++			}
++
++			if ((pe->flags & PNV_IODA_PE_MASTER) &&
++			    (pe->flags & PNV_IODA_PE_VF)) {
++				list_for_each_entry(slave, &pe->slaves, list) {
++					if (slave->rid == ((pdev->bus->number << 8)
++					   | (pdev->devfn & 0xff))) {
++						pdn->pe_number = slave->pe_number;
++						slave->pdev = pdev;
++						goto found;
++					}
++				}
+ 			}
+ 		}
+ 	}
++found:
+ #endif /* CONFIG_PCI_IOV */
+ 
+ 	if (phb && phb->dma_dev_setup)
+-- 
+1.7.9.5
 
-I agree, it'd be nice to have arm and arm64 be similar, but from my
-point of view, they wouldn't have to be changed at the same time.  To
-me, they just look like two different arches.
-
-Bjorn
