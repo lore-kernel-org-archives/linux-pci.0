@@ -1,171 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 12/16] ntb_transport: numa aware memory and dma chan
-Date: Wed, 20 May 2015 11:41:13 -0400
-Message-Id: <db0ebeeb8be07891f04fc9fe0620d4b4f806fa9c.1432135632.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 16 May 2015 09:37:50 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jarod Wilson <jarod@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook G2
+Message-ID: <20150516143750.GG31666@google.com>
+References: <1431632038-39917-1-git-send-email-jarod@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431632038-39917-1-git-send-email-jarod@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allocate memory and request the dma channel for the same numa node as
-the ntb device.
+Hi Jarod,
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 46 +++++++++++++++++++++++++++++++--------------
- 1 file changed, 32 insertions(+), 14 deletions(-)
+On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
+> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
+> including at least BIOS revision 01.07, do not have an ACPI _RMV object
+> associated with their expresscard slots, so acpi-based hotplug-capable
+> slot detection fails. If we fall back to pcie-based detection, the systems
+> work just fine, so this uses dmi matching to do that. With luck, a future
+> BIOS will remedy this (I've let someone at HP know about the problem),
+> but for now, just use this for all existing versions.
+> 
+> Note: they *do* have a proper _RMV object for what I believe is their
+> thunderbolt ports.
+> 
+> Tested successfully on an HP ZBook 17 G2 and HP ZBook 15 G2.
+> 
+> CC: Len Brown <lenb@kernel.org>
+> CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: linux-acpi@vger.kernel.org
+> CC: linux-pci@vger.kernel.org
+> Signed-off-by: Jarod Wilson <jarod@redhat.com>
+> ---
+>  drivers/pci/hotplug/pciehp_acpi.c | 33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_acpi.c b/drivers/pci/hotplug/pciehp_acpi.c
+> index 93cc926..db38fb5 100644
+> --- a/drivers/pci/hotplug/pciehp_acpi.c
+> +++ b/drivers/pci/hotplug/pciehp_acpi.c
+> @@ -28,6 +28,7 @@
+>  #include <linux/pci_hotplug.h>
+>  #include <linux/slab.h>
+>  #include <linux/module.h>
+> +#include <linux/dmi.h>
+>  #include "pciehp.h"
+>  
+>  #define PCIEHP_DETECT_PCIE	(0)
+> @@ -109,10 +110,40 @@ static struct pcie_port_service_driver __initdata dummy_driver = {
+>  	.probe		= dummy_probe,
+>  };
+>  
+> +static int __init set_slot_detection_mode_pcie(const struct dmi_system_id *d)
+> +{
+> +	info("%s lacks ACPI _RMV object for expresscard\n", d->ident);
+> +	return 1;
+> +}
+> +
+> +static struct dmi_system_id __initdata missing_acpi_rmv[] = {
+> +	/* ZBook 17 through at least bios v01.07 */
+> +	{
+> +	 .callback = set_slot_detection_mode_pcie,
+> +	 .ident = "HP ZBook 17 G2 Mobile Workstation",
+> +	 .matches = {
+> +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+> +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 17 G2"),
+> +		},
+> +	},
+> +	/* ZBook 15 through at least bios v01.07 */
+> +	{
+> +	 .callback = set_slot_detection_mode_pcie,
+> +	 .ident = "HP ZBook 15 G2 Mobile Workstation",
+> +	 .matches = {
+> +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+> +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 15 G2"),
+> +		},
+> +	},
+> +	{ .ident = NULL }
+> +};
+> +
+>  static int __init select_detection_mode(void)
+>  {
+>  	struct dummy_slot *slot, *tmp;
+>  
+> +	if (dmi_check_system(missing_acpi_rmv))
+> +		return PCIEHP_DETECT_PCIE;
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index c76d8b9..91809fa 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -346,6 +346,7 @@ int ntb_transport_register_client_dev(char *device_name)
- {
- 	struct ntb_transport_client_dev *client_dev;
- 	struct ntb_transport_ctx *nt;
-+	int node;
- 	int rc, i = 0;
- 
- 	if (list_empty(&ntb_transport_list))
-@@ -354,8 +355,10 @@ int ntb_transport_register_client_dev(char *device_name)
- 	list_for_each_entry(nt, &ntb_transport_list, entry) {
- 		struct device *dev;
- 
--		client_dev = kzalloc(sizeof(*client_dev),
--				     GFP_KERNEL);
-+		node = dev_to_node(&nt->ndev->dev);
-+
-+		client_dev = kzalloc_node(sizeof(*client_dev),
-+				     GFP_KERNEL, node);
- 		if (!client_dev) {
- 			rc = -ENOMEM;
- 			goto err;
-@@ -949,6 +952,7 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 	struct ntb_transport_mw *mw;
- 	unsigned int mw_count, qp_count;
- 	u64 qp_bitmap;
-+	int node;
- 	int rc, i;
- 
- 	if (ntb_db_is_unsafe(ndev))
-@@ -958,7 +962,9 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 		dev_dbg(&ndev->dev,
- 			"scratchpad is unsafe, proceed anyway...\n");
- 
--	nt = kzalloc(sizeof(*nt), GFP_KERNEL);
-+	node = dev_to_node(&ndev->dev);
-+
-+	nt = kzalloc_node(sizeof(*nt), GFP_KERNEL, node);
- 	if (!nt)
- 		return -ENOMEM;
- 
-@@ -968,7 +974,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 
- 	nt->mw_count = mw_count;
- 
--	nt->mw_vec = kcalloc(mw_count, sizeof(*nt->mw_vec), GFP_KERNEL);
-+	nt->mw_vec = kzalloc_node(mw_count * sizeof(*nt->mw_vec),
-+				  GFP_KERNEL, node);
- 	if (!nt->mw_vec) {
- 		rc = -ENOMEM;
- 		goto err;
-@@ -1008,7 +1015,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 	nt->qp_bitmap = qp_bitmap;
- 	nt->qp_bitmap_free = qp_bitmap;
- 
--	nt->qp_vec = kcalloc(qp_count, sizeof(*nt->qp_vec), GFP_KERNEL);
-+	nt->qp_vec = kzalloc_node(qp_count * sizeof(*nt->qp_vec),
-+				  GFP_KERNEL, node);
- 	if (!nt->qp_vec) {
- 		rc = -ENOMEM;
- 		goto err2;
-@@ -1497,6 +1505,11 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 	ntb_qp_link_down_reset(qp);
- }
- 
-+static bool ntb_dma_filter_fn(struct dma_chan *chan, void *node)
-+{
-+	return dev_to_node(&chan->dev->device) == (int)(unsigned long)node;
-+}
-+
- /**
-  * ntb_transport_create_queue - Create a new NTB transport layer queue
-  * @rx_handler: receive callback function
-@@ -1522,12 +1535,16 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	struct ntb_transport_qp *qp;
- 	u64 qp_bit;
- 	unsigned int free_queue;
-+	dma_cap_mask_t dma_mask;
-+	int node;
- 	int i;
- 
- 	ndev = dev_ntb(client_dev->parent);
- 	pdev = ndev->pdev;
- 	nt = ndev->ctx;
- 
-+	node = dev_to_node(&ndev->dev);
-+
- 	free_queue = ffs(nt->qp_bitmap);
- 	if (!free_queue)
- 		goto err;
-@@ -1545,15 +1562,16 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	qp->tx_handler = handlers->tx_handler;
- 	qp->event_handler = handlers->event_handler;
- 
--	dmaengine_get();
--	qp->dma_chan = dma_find_channel(DMA_MEMCPY);
--	if (!qp->dma_chan) {
--		dmaengine_put();
-+	dma_cap_zero(dma_mask);
-+	dma_cap_set(DMA_MEMCPY, dma_mask);
-+
-+	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
-+					   (void *)(unsigned long)node);
-+	if (!qp->dma_chan)
- 		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
--	}
- 
- 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
--		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
-+		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
- 		if (!entry)
- 			goto err1;
- 
-@@ -1563,7 +1581,7 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	}
- 
- 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
--		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
-+		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
- 		if (!entry)
- 			goto err2;
- 
-@@ -1586,7 +1604,7 @@ err1:
- 	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
- 		kfree(entry);
- 	if (qp->dma_chan)
--		dmaengine_put();
-+		dma_release_channel(qp->dma_chan);
- 	nt->qp_bitmap_free |= qp_bit;
- err:
- 	return NULL;
-@@ -1623,7 +1641,7 @@ void ntb_transport_free_queue(struct ntb_transport_qp *qp)
- 		 */
- 		dma_sync_wait(chan, qp->last_cookie);
- 		dmaengine_terminate_all(chan);
--		dmaengine_put();
-+		dma_release_channel(chan);
- 	}
- 
- 	qp_bit = BIT_ULL(qp->qp_num);
--- 
-2.4.0.rc0.43.gcf8a8c6
+Oh, my goodness.  I forgot how terrible this path is.  Can anyone write a
+simple explanation of how we choose to use acpiphp or pciehp?  Module
+parameters?  A dummy driver that looks for duplicate slot numbers?  Looking
+for _ADR, _EJ0, _RMV?  This is just nuts.
 
+I can't really believe that we're doing this correctly.
+
+If I understand correctly, the ZBooks don't have _RMV, but we try to use
+acpiphp anyway, and acpiphp doesn't work?  That sounds more like a problem
+with our acpiphp/pciehp selection "algorithm" than a BIOS bug.
+
+Jarod, can you open a report at http://bugzilla.kernel.org and attach a
+complete dmesg log, "lspci -vv" output, and an acpidump?  I'm particularly
+interested in whether the BIOS granted us control over PCIe native hotplug.
+If it did, I wonder why we would even attempt to use acpiphp.
+
+Bjorn
+
+>  	if (pcie_port_service_register(&dummy_driver))
+>  		return PCIEHP_DETECT_ACPI;
+>  	pcie_port_service_unregister(&dummy_driver);
+> @@ -134,4 +165,6 @@ void __init pciehp_acpi_slot_detection_init(void)
+>  out:
+>  	if (slot_detection_mode == PCIEHP_DETECT_ACPI)
+>  		info("Using ACPI for slot detection.\n");
+> +	else if (slot_detection_mode == PCIEHP_DETECT_PCIE)
+> +		info("Using PCIE-based slot detection.\n");
+>  }
+> -- 
+> 1.8.3.1
+> 
