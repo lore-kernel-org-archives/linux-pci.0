@@ -1,86 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:34611 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbbEPQGs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 May 2015 12:06:48 -0400
+Received: by ieczm2 with SMTP id zm2so71282561iec.1
+        for <linux-pci@vger.kernel.org>; Sat, 16 May 2015 09:06:47 -0700 (PDT)
+Date: Sat, 16 May 2015 11:06:44 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhichang Yuan <yuanzhichang@hisilicon.com>
+Cc: grant.likely@linaro.org, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org, gabriele.paoloni@huawei.com,
+	Liviu.Dudau@arm.com
+Subject: Re: [PATCH v2] of/pci: fix a bug in function pci_pio_to_address
+Message-ID: <20150516160644.GL31666@google.com>
+References: <1429866309-202444-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <55477B86.70705@linux.intel.com>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-	<1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com>
-	<CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
-	<55477B86.70705@linux.intel.com>
-Date: Tue, 5 May 2015 12:07:08 +0300
-Message-ID: <CAPcc5PhU8oa1HCcpbjHNv0-4VT8EFtQb8HTxGUD_+G3i-uFRfg@mail.gmail.com>
-Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of irq_desc
-From: Amir Vadai <amirv@mellanox.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Amir Vadai <amirv@mellanox.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Hadar Hen Zion <hadarh@mellanox.com>,
-	Eran Ben Elisha <eranbe@mellanox.com>,
-	Joe Perches <joe@perches.com>,
-	Saeed Mahameed <saeedm@mellanox.com>,
-	Matan Barak <matanb@mellanox.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1429866309-202444-1-git-send-email-yuanzhichang@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 4, 2015 at 5:00 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> On 2015/5/4 20:10, Amir Vadai wrote:
->> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>> The field 'affinity' in irq_desc won't change once the irq_desc data
->>> structure is created. So cache irq_desc->affinity instead of irq_desc.
->>> This also helps to hide struct irq_desc from device drivers.
->>
->> Hi Jiang,
->>
->> I might not understand the new changes irq core, but up until now
->> affinity was changed when the user changed it through
->> /proc/irq/<IRQ>/smp_affinity.
->> This code is monitoring the affinity from the napi_poll context to
->> detect affinity changes, and prevent napi from keep running on the
->> wrong CPU.
->> Therefore, the affinity can't be cached at the beginning. Please
->> revert this caching.
-> Hi Amir,
->         Thanks for review:) We want to hide irq_desc implementation
-> details from device drivers, so made these changes.
->         Function irq_get_affinity_mask() returns 'struct cpumask *'
-> and we cache the returned pointer. On the other hand, user may change
-> IRQ affinity through /proc/irq/<IRQ>/smp_affinity, but that only
-> changes the bitmap pointed to by the cached pointer and won't change
-> the pointer itself. So it should always return the latest affinity
-> setting by calling cpumask_test_cpu(cpu_curr, cq->irq_affinity).
-> Or am I missing something here?
-No - you are completely right - I missed it.
+On Fri, Apr 24, 2015 at 05:05:09PM +0800, Zhichang Yuan wrote:
+> In the patch whose commit id is 41f8bba7f5552d0, function pci_pio_to_address
+> was modified to retieve the corresponding I/O port by CPU physical address.
+> But the convertion processing is not correct. It will return a wrong I/O port.
+> This patch will fix it.
 
-Anyway I tested it to make sure, and everything works as expected.
+Argh.  As I mentioned for v1, your patch changes pci_address_to_pio(),
+but your patch title and changelog mentions pci_pio_to_address().
 
-Acked-By: Amir Vadai <amirv@mellanox.com>
+I fixed it for you, added Liviu's ack, and applied it to pci/host-generic
+for v4.2.
 
-Thanks,
-Amir
+The original change (41f8bba7f555) went through my tree because it was part
+of a series that added arm64 PCI support, so maybe it makes sense for this
+fix to go through my tree, too.  But if you'd rather send it through the OF
+tree, that's fine with me.  Just let me know.
 
-
-> Thanks!
-> Gerry
->>
->> Thanks,
->> Amir
->>
+> Fixes: 41f8bba7f555 ("of/pci: Add pci_register_io_range() and pci_pio_to_address()")
+> CC: stable@vger.kernel.org
+> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> ---
+> changes since V1:
+> Improved commit message.
+> 
+>  drivers/of/address.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 78a7dcb..6906a3f 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -765,7 +765,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>  	spin_lock(&io_range_lock);
+>  	list_for_each_entry(res, &io_range_list, list) {
+>  		if (address >= res->start && address < res->start + res->size) {
+> -			addr = res->start - address + offset;
+> +			addr = address - res->start + offset;
+>  			break;
+>  		}
+>  		offset += res->size;
+> -- 
+> 1.9.1
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
