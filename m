@@ -1,214 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li42-95.members.linode.com ([209.123.162.95]:44309 "EHLO
-	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751536AbbENHEn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 03:04:43 -0400
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-From: Pantelis Antoniou <panto@antoniou-consulting.com>
-In-Reply-To: <1431585994.4160.32.camel@kernel.crashing.org>
-Date: Thu, 14 May 2015 10:04:37 +0300
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38751 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591AbbEPPXA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 May 2015 11:23:00 -0400
+Received: by igcau1 with SMTP id au1so19464006igc.1
+        for <linux-pci@vger.kernel.org>; Sat, 16 May 2015 08:22:59 -0700 (PDT)
+Date: Sat, 16 May 2015 10:22:56 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Miller <davem@davemloft.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org> <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com> <1431585994.4160.32.camel@kernel.crashing.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Anton Blanchard <anton@samba.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+ in of parsing
+Message-ID: <20150516152256.GI31666@google.com>
+References: <1428452669-24824-1-git-send-email-yinghai@kernel.org>
+ <1428464944.4947.69.camel@kernel.crashing.org>
+ <CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
+ <1428480074.18187.8.camel@kernel.crashing.org>
+ <CAE9FiQU=SHqopf_eZWBufD5-LNo_Lv_SH=iptOhFUuPGLgcxAw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU=SHqopf_eZWBufD5-LNo_Lv_SH=iptOhFUuPGLgcxAw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
-
-> On May 14, 2015, at 09:46 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+On Wed, Apr 08, 2015 at 03:38:42PM -0700, Yinghai Lu wrote:
+> On Wed, Apr 8, 2015 at 1:01 AM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
 > 
-> On Thu, 2015-05-14 at 09:23 +0300, Pantelis Antoniou wrote:
+> > Use a different flag to indicate the BAR policy or temporarily tweak a
+> > local copy of the resource flag during BAR assignment or whatever you
+> > prefer to fix the original problem but do *not* change the Linux overall
+> > view of that BAR to lie about prefetchability.
 > 
->>> A few things that I don't find in the overlay code (but maybe I haven't
->>> looked at it hard enough):
->>> 
->>> - Can it remove nodes/properties ?
->>> 
->> 
->> Yes.
-> 
-> Ok, I've missed that when looking at the overlay code then, I'll have to
-> give it a closer look.
-> 
+> ok, will give it a try.
 
-Ok, let me be more specific. It used to be able to do it ;)
-The problem was the format used (a ‘-‘ prefix to the name).
-
-Since I didn’t have clear use for it, I was asked to drop it by Grant.
-
-The removal capability is of-course there for the revert case.
-
->>> - Can it "commit" a changeset so it's permanently part of the main DT ?
->>> We will never have a concept of "revertable" changesets, if we need a
->>> subsequent update, we will get a new overlay from FW that will remove
->>> what needs to be removed and add what needs to be added.
->>> 
->> 
->> The overlay when applied is a part of the kernel DT tree.
->> It is trivial to add a mechanism that simply commits everything and
->> tosses away the revert information.
->> 
->> Note that in that case you have to make provisions for the unflatten
->> blob to not be freed or for the device tree nodes/properties to be
->> dynamically allocated.
-> 
-> I think it makes sense to do the dynamic thing anyway...
-> 
->>> IE, our current mechanism without overlay is fairly simple:
->>> 
->>> - On PCI unplug, we remove all nodes below the slot (from linux),
->>> the FW does the equivalent internally.
->>> 
->> 
->> If you use an overlay, you just revert it and everything would
->> be as it was before, without anything hanging below the slot node.
-> 
-> Except that doesn't work for the boot time content which we get
-> from the firmware as part of the initial FDT (and we can't change that
-> without breaking backward compatibility).
-> 
-
-OK
-
->> Note that the ‘remove all nodes below the slot’ does not work for my case.
->> 
->> That is because there are devices being instantiated under the slot
->> (i2c busses, i2c devices, FPGAs etc) that need to be removed from the
->> system.
-> 
-> Right while in my case, there isn't, it's just the standard OF PCI
-> representation generated by FW, the main thing is that it might have
-> some enriched properties for some known cable cards of external drawers
-> that are good to have.
-> 
-
-I see.
-
->>> - On PCI re-plug, the FW internally builds new nodes and sends a
->>> new subtree as an FDT that we can expand/attach.
->>> 
->> 
->> You can easily send a DT blob containing an overlay from firmware.
-> 
-> Sending one is easy. Building it is not :-)
-> 
-
-Heh, true ;)
-
->> It can be even easy, since you might not have to recreate the full blob
->> each time, but instead using flat device tree methods to populate the
->> few properties that change each time.
-> 
-> No, we basically have our internal tree in the firmware in a format
-> similar to Linux, ie, a pointer based tree. We can "flatten" it of
-> course, but generating an overlay is trickier. We can, it's just more
-> work and we are running out of time (I basically have to cut that FW in
-> the next few days, then we'll be stuck with whatever interfaces we
-> created, I have a big of time to fix bugs after that but that's about
-> it).
-> 
-
-Hmm, since you just want to transmit a whole subtree things are a bit
-simpler.
-
-You don’t need any of the fixups, and your target node is known.
-
-So your overlay is simply:
-
-/ {
-	fragment@0 {
-		target-path = “/foo”;
-		__overlay__ {
-			/* contents of the slot */
-		};
-	}; 
-};
-
-I think it’s possible to just bit-mangle a blob (in pseudo code).
-
-	const u8 template_overlay_blob[] = { <compiled blob of the above> };
-
-	flatten_slot(slot_blob);
-
-	overlay_blob = allocate_new_blob(template_overlay_blob, slot_blob);
-
-	overlay_node = find_node(overlay_blob, “/fragment@0/__overlay__);
-	target_prop = find_prop(overlay_blob, “/fragment@0/target-path”);
-
-	inject_slot_blob(overlay_blob, overlay_node, slot_blob);
-	modify_slot_target(overlay_blob, target_prop, slot_target);
-	
-I don’t think you need to re-flatten anything, shuffling bits around with
-memmove should work.
-
->>> Now we could consider that subtree as a changeset that can be undone,
->>> but that wouldn't work for boot time. And subsequent updates wouldn't
->>> have that concept of "undoing" anyway.
->>> 
->> 
->> I have posted another patch that does boot-time DT quirk which are
->> non-revertable.
->> 
->> https://lkml.org/lkml/2015/2/18/258
-> 
-> Not sure how that applies in my case ... I can't change the
-> representation of the PCI subtree, this is standard OFW representation,
-> I can't change the FW to make it an overlay-like thing at boot time,
-> that would break existing kernels.
-> 
-
-The idea is to append the ‘quirk’ to the already booting device tree blob.
-
-Another idea floating around was to simple concatenate the booting blob with
-any overlay blobs you want applied at boot time.
-
->>> IE. conceptually, what overlays do today is quite rooted around the idea
->>> of having a fixed "base" DT and some pre-compiled DTB overlays that
->>> get added/removed. The design completely ignore the idea of a FW that
->>> maintains a "live" tree which we want to keep in sync, which is what we
->>> want to do here, or what we could do with a "live" open firmware
->>> implementation.
->>> 
->>> Now we might be able to reconcile them, but it feels to me that the
->>> overlay/changeset stuff is too rooted in the first concept…
->>> 
->> 
->> The first DT overlays use case (beaglebone capes) is what got the concept
->> started.
->> 
->> Right now is a generic mechanism to apply modifications to the kernel
->> live tree, with the possibility to revert them.
-> 
-> Yes but as I said it's not really thought in term of keeping the kernel
-> tree in sync with an external dynamically generated tree. Maybe we can
-> fix it, but it's more complex…
-> 
-
-Yes it is, unfortunately.
-
-> Ben.
-> 
->>> Ben.
->>> 
->>> 
->> 
->> Regards
->> 
->> — Pantelis
-> 
-> 
-
-Regards
-
-— Pantelis
-
+Ping, any updates on this?
