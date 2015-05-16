@@ -1,148 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:16769 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755347AbbE2R2G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:06 -0400
-From: <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v3 1/7] dma-debug: add checking for map/unmap_resource
-Date: Fri, 29 May 2015 12:14:40 -0500
-Message-ID: <1432919686-32306-2-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:34013 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754370AbbEPPZl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 May 2015 11:25:41 -0400
+Received: by ieczm2 with SMTP id zm2so70895430iec.1
+        for <linux-pci@vger.kernel.org>; Sat, 16 May 2015 08:25:40 -0700 (PDT)
+Date: Sat, 16 May 2015 10:25:37 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	linux-pci@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
+Message-ID: <20150516152537.GJ31666@google.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+On Tue, Mar 31, 2015 at 07:57:46PM -0700, Yinghai Lu wrote:
+> Fix regression by commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to
+> fit in upstream windows").
+> 
+> That cause bridge bar get clipped wrongly.
+> 
+> The sparc64 dma_addr_t is 32-bit, we can not use it to check if we can
+> use 64bit bar, introduce pci_bus_addr_t.
+> 
+> sparc ofpci does not parse 64bit mem for root bus, add code to
+> make sure that we get correct resource for root.
+> 
+> Also there are device 64-bit res does not have pref bit flag, but bridges
+> do have pref bit set, that cause extra "no compatible window".
+> Set pref bit for them according to the errata.
 
-Add debug callbacks for the new dma_map_resource and dma_unmap_resource
-functions.
+Ping, any updates on this?  AFAICT, we should add a new pci_bus_addr_t
+distinct from dma_addr_t, but Ben raised an issue that needs to be
+resolved first.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- include/linux/dma-debug.h | 20 ++++++++++++++++++++
- lib/dma-debug.c           | 47 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 67 insertions(+)
-
-diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
-index fe8cb61..19f328c 100644
---- a/include/linux/dma-debug.h
-+++ b/include/linux/dma-debug.h
-@@ -44,6 +44,13 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
- extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- 				 size_t size, int direction, bool map_single);
- 
-+extern void debug_dma_map_resource(struct device *dev, struct resource *res,
-+				   size_t offset, size_t size, int direction,
-+				   dma_addr_t dma_addr);
-+
-+extern void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
-+				     size_t size, int direction);
-+
- extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 			     int nents, int mapped_ents, int direction);
- 
-@@ -120,6 +127,19 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- {
- }
- 
-+static inline void debug_dma_map_resource(struct device *dev,
-+					  struct resource *res, size_t offset,
-+					  size_t size, int direction,
-+					  dma_addr_t dma_addr)
-+{
-+}
-+
-+static inline void debug_dma_unmap_resource(struct device *dev,
-+					    dma_addr_t addr, size_t size,
-+					    int direction)
-+{
-+}
-+
- static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 				    int nents, int mapped_ents, int direction)
- {
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index ae4b65e..a6d8fa7 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -43,6 +43,7 @@ enum {
- 	dma_debug_page,
- 	dma_debug_sg,
- 	dma_debug_coherent,
-+	dma_debug_resource,
- };
- 
- enum map_err_types {
-@@ -1348,6 +1349,52 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- }
- EXPORT_SYMBOL(debug_dma_unmap_page);
- 
-+void debug_dma_map_resource(struct device *dev, struct resource *resource,
-+			    size_t offset, size_t size, int direction,
-+			    dma_addr_t dma_addr)
-+{
-+	struct dma_debug_entry *entry;
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	if (dma_mapping_error(dev, dma_addr))
-+		return;
-+
-+	entry = dma_entry_alloc();
-+	if (!entry)
-+		return;
-+
-+	entry->dev       = dev;
-+	entry->type      = dma_debug_resource;
-+	entry->pfn       = resource->start >> PAGE_SHIFT;
-+	entry->offset    = offset,
-+	entry->dev_addr  = dma_addr;
-+	entry->size      = size;
-+	entry->direction = direction;
-+
-+	add_dma_entry(entry);
-+}
-+EXPORT_SYMBOL(debug_dma_map_resource);
-+
-+void debug_dma_unmap_resource(struct device *dev, dma_addr_t addr,
-+			      size_t size, int direction)
-+{
-+	struct dma_debug_entry ref = {
-+		.type           = dma_debug_resource,
-+		.dev            = dev,
-+		.dev_addr       = addr,
-+		.size           = size,
-+		.direction      = direction,
-+	};
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	check_unmap(&ref);
-+}
-+EXPORT_SYMBOL(debug_dma_unmap_resource);
-+
- void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 		      int nents, int mapped_ents, int direction)
- {
--- 
-2.4.0
-
+Bjorn
