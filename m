@@ -1,124 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:5017 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753173AbbESQTb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 12:19:31 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.h.duyck@redhat.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
- Ethernet devices
-Date: Tue, 19 May 2015 16:19:23 +0000
-Message-ID: <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com>
-References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com>
- <555B5CBF.1090902@redhat.com>
-In-Reply-To: <555B5CBF.1090902@redhat.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_0EC29573-34CF-4539-8667-0C8BB8CA778C";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Received: from mail-bn1bon0136.outbound.protection.outlook.com ([157.56.111.136]:19728
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S2992629AbbEPCmi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 May 2015 22:42:38 -0400
+Date: Fri, 15 May 2015 19:27:13 -0700
+From: Guenter Roeck <groeck@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: BAR 7 io space assignment errors
+Message-ID: <20150516022713.GA4417@svl-evodev-groeck.juniper.net>
+References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
+ <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
+ <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
+ <20150515221149.GA31666@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20150515221149.GA31666@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_0EC29573-34CF-4539-8667-0C8BB8CA778C
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+On Fri, May 15, 2015 at 05:11:49PM -0500, Bjorn Helgaas wrote:
+> On Fri, May 15, 2015 at 01:04:22PM -0700, Guenter Roeck wrote:
+> > Hi Bjorn,
+> > 
+> > On Fri, May 15, 2015 at 02:25:34PM -0500, Bjorn Helgaas wrote:
+> > > [+cc Yinghai]
+> > > 
+> > > Hi Guenter,
+> > > 
+> > > On Fri, May 15, 2015 at 12:28 PM, Guenter Roeck <groeck@juniper.net> wrote:
+> > > > Hi all,
+> > > >
+> > > > ever since 3.18(ish), we see lots of pcie io range allocation error messages
+> > > > when booting our systems.
+> > > >
+> > > > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
+> > > > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+> > > > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+> > > >
+> > > > This is repeated for each port.
+> > > >
+> > > > What we atually _want_ is no IO address range, but so far I have not been able to
+> > > > tell this to the code (or to the bridge).
+> > > 
+> > > What information does the core have that we could use to figure out
+> > > that you want no I/O space?  For example, does the host bridge have no
+> > > I/O apertures?  Or are there no devices below 02:00.0 that require I/O
+> > > space?  If you can post a complete dmesg log, that should contain this
+> > > information.
+> > > 
+> > We know that we don't need IO space behind the bridge.
+> > 
+> > Question would be what information the core would need. I have tried
+> > to pre-program PCI_IO_BASE and PCI_IO_LIMIT on the bridge ports,
+> > but that doesn't seem to be the right solution (and it was just a
+> > wild shot anyway ;-).
+> 
+> The core tries to assign address space before drivers start claiming
+> devices because it's very difficult to move devices after drivers are
+> attached.  To avoid assigning I/O space to a bridge, the core would have to
+> know that (1) no devices below the bridge have I/O BARs, and (2) there's no
+> hotplug slot where a new device could be added below the bridge.
+> 
+> In your specific case, I suspect that you have hotplug bridges, but you
+> *know* exactly what devices can be "hot-plugged" and you know they don't
+> need I/O space.  But there's no good way to tell that to the PCI core.
+> 
+Yes, most of the devices are not really hotplug devices but ASICs
+or FPGAs which just come online later.
 
-> On May 19, 2015, at 8:54 AM, Alexander Duyck =
-<alexander.h.duyck@redhat.com> wrote:
->=20
-> On 05/18/2015 05:00 PM, Mark D Rustad wrote:
->> To save boot time and some memory, limit VPD size to the maximum
->> possible for all Intel Ethernet devices that have VPD, which is 1K.
->>=20
->> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->> Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> ---
->>  drivers/pci/quirks.c |    7 +++++--
->>  1 file changed, 5 insertions(+), 2 deletions(-)
->>=20
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index c6dc1dfd25d5..4fabbeda964a 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -1903,12 +1903,15 @@ static void quirk_netmos(struct pci_dev *dev)
->>  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
->>  			 PCI_CLASS_COMMUNICATION_SERIAL, 8, =
-quirk_netmos);
->>  -static void quirk_e100_interrupt(struct pci_dev *dev)
->> +static void quirk_intel_enet(struct pci_dev *dev)
->>  {
->>  	u16 command, pmcsr;
->>  	u8 __iomem *csr;
->>  	u8 cmd_hi;
->>  +	if (dev->vpd)
->> +		dev->vpd->len =3D 0x400;
->> +
->>  	switch (dev->device) {
->>  	/* PCI IDs taken from drivers/net/e100.c */
->>  	case 0x1029:
+> > > Is the problem that some device doesn't work, or is it just extra
+> > > annoying messages.  We should fix something in either case, of course,
+> > > but it's more urgent if a device used to work but no longer does.
+> > > 
+> > Just the extra annoying messages. The messages below are just the beginning;
+> > there are many more when the actual devices behind the bridge ports come
+> > online.
+> 
+> This sounds like an interesting topology.  A device coming online later is
+> a hotplug event from the core's point of view.  Since the core can't tell
+> what a hot-added device is going to be, it allocates a default amount of
+> space (pci_hotplug_io_size) to accomodate it.  You can influence that with
+> the "pci=hpiosize=" boot parameter.  Maybe "pci=hpiosize=0" would help in
+> your case, but we'd still have the problem that the messages don't make
+> sense to the average user (including me).
+> 
+Also, I don't really want to specify lots of boot parameters if I can avoid it.
 
-> I wasn't a fan of the first VPD patch and this clinches it.  What I =
-would recommend doing is identifying all of the functions for a given =
-device that share a VPD and then eliminate the VPD structure for all but =
-the first function.  By doing that the OS should treat the other =
-functions as though their VPD areas don't exist.
+>   fsl-pci fff70a000.pcie: PCI host bridge to bus 0000:00
+>   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>   pci 0000:00:00.0: PCI bridge to [bus 01-ff]      # Root Port
+>   pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
+> 
+> The host bridge does have an I/O aperture, and it looks like firmware set
+> up the 00:00.0 bridge with a small piece of that.  That's sort of a waste:
+> supposedly we have 64K of I/O space available on bus 00, and 4K of that is
+> routed to [bus 01-ff].  The other 60K could be used by other devices on bus
+> 00, but it doesn't look like there *are* any, so it is wasted.
+> 
+The problem is that I can not reprogram PCI_IO_BASE on 0000:00:00.0.
+Here is a debug log:
 
-Please, lets discuss only *this* patch in this thread. The patches are =
-not related except that they both have to do with VPD.
+pci 0000:00:00.0: io base written 0xe0f0 reads back as 0x0
+pci 0000:00:00.0: io base written 0xf000 reads back as 0x0
 
-<snip>
+The io ranges of ports behind it (ie the ones below) are programmable.
+I can try to find out if there is a means to program the io range
+on 0000:00:00.0, but I would prefer to just disable the io range for
+everything downstream of it.
 
-> Artificially limiting the size of the VPD does nothing but cut off =
-possibly useful data, you would be better of providing all of the data =
-on only the first function than providing only partial data on all =
-functions and adding extra lock overhead.
+>   pci 0000:01:00.0: PCI bridge to [bus 02-ff]      # Upstream Port
+>   pci 0000:02:00.0: PCI bridge to [bus 40-4f]      # Downstream Port 0x0
+>   ...
+>   pci 0000:02:0d.0: PCI bridge to [bus a0-af]      # Downstream Port 0xa
+> 
+>   pci 0000:02:00.0: bridge window [io  0x1000-0x0fff] to [bus 40-4f] add_size 1000
+>   ...
+>   pci 0000:02:0d.0: bridge window [io  0x1000-0x0fff] to [bus a0-af] add_size 1000
+> 
+> I'm guessing these Downstream Ports all have "is_hotplug_bridge" set
+> because they have the "Hot-Plug Capable" bit set in their Slot Capabilities
+> register.  We're trying to allocate 0x1000 I/O ports for each, and there
 
-This limit only limits the maximum that the OS will read to what is =
-architecturally possible in these devices. Yes, PCIe architecturally =
-provides for the possibility of more, but these devices do not. More =
-repeating data can be read, however slowly, but there is no possibility =
-of useful content beyond the first 1K. If this limit were set to 0x100, =
-which is more in line what the actual usage is, it would be an =
-artificial limit, but at 1K it is not. Oh and it does include devices =
-made by others that incorporate Intel Ethernet silicon, not just =
-Intel-built devices.
+Correct.
 
-Since this quirk function was already being run for every Intel Ethernet =
-device, this seemed like a trivial thing to do to speed up booting a =
-bit. It has the greatest effect with 82599 devices. Newer devices will =
-respond to reads faster.
+> are 0xb of them, so we'd need 0xb000 I/O ports at the 01:00.0 bridge:
+> 
 
---
-Mark Rustad, Networking Division, Intel Corporation
+>   pci 0000:01:00.0: bridge window [io  0x1000-0x0fff] to [bus 02-ff] add_size b000
+> 
+> pci_hotplug_io_size defaults to 256, but standard PCI bridges don't support
+> I/O windows smaller than 4K, so they all got rounded up to 4K (0x1000).
+> 
+> I would love it if somebody would clean up those messages and make them all
+> consistent.  There's useful information there, so I'm not sure we want to
+> get rid of them, but I think there's some redundancy we might be able to
+> fix.
+> 
+"bridge window [io  0x1000-0x0fff]" for sure looks odd. Maybe it means
+something to you, but for me it is just confusing.
 
-
---Apple-Mail=_0EC29573-34CF-4539-8667-0C8BB8CA778C
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVW2KMAAoJEDwO/+eO4+5u59MP/2fOMWi6ObrlnLrgE7MJI4hi
-t9jHHJK8WiOe+VVm9EbAf+g4Oubpg74mcCHunlJEyAz3ZgKlLD/Q3d00oNYKGt89
-aoANEC023ohkXhbIr7AU2/Yu0q6H+J5XsYZWVxN5A/tR/3heZromkVSi3+1ZVI4m
-8gMt1n0BO5q92uMlXa3RuQbLlwFGwXKJcXEgm9Lcjq00MAlYggxA850lSNGYrzps
-ZYaSUry4TdMVip7XYhSeUxwpL3X6wC07A0wmY0UGxMUF8pwDsbR4Ylopy2P9sOaL
-fUBJyFHoudE9hRS/powQ2uGZ8FSuMhlRprp3b7WuMe4/aVsIB4tdfm0kIo8tMGw8
-eYGDC6AYZxyhyBawBzodjQ6lJj563b+vo8TTNWBz+K1Ft1oQgEelQfKpIS/9Scdf
-+KRpYku1FChzKFDdVhrH2NXen7b7uyJUvkY+HAr5m0lxhchcCPnkVCDiWjDNJAPH
-FyN1mlCckhaTA8BUdvlcVDCYNoXPSRvExj0FM3A5kx7jsTNRET/9pAyaqbuizJRE
-67JdIK6Dy1IN66KDIhh8hqzsApANBGc9LWPtihhcFimGm8w5NfHlfq9NlmKtvyxh
-nABwd157/PKD0I+LhfGD9HdxBVnxrfsi5kbDsrdkq7Gq6/vZFvKE7wqxiFCl7Bt6
-1zOYJ/unOm8i6ZCtCF54
-=NYJd
------END PGP SIGNATURE-----
-
---Apple-Mail=_0EC29573-34CF-4539-8667-0C8BB8CA778C--
+Guenter
