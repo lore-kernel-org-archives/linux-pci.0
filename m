@@ -1,121 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:33406 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934365AbbEOWLx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 18:11:53 -0400
-Received: by igbpi8 with SMTP id pi8so49930212igb.0
-        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:11:52 -0700 (PDT)
-Date: Fri, 15 May 2015 17:11:49 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: BAR 7 io space assignment errors
-Message-ID: <20150515221149.GA31666@google.com>
-References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
- <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
- <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jarod Wilson <jarod@redhat.com>, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook G2
+Date: Mon, 18 May 2015 02:26:42 +0200
+Message-ID: <1481007.OlNlbgiUPd@vostro.rjw.lan>
+In-Reply-To: <20150516144155.GH31666@google.com>
+References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <20150516143750.GG31666@google.com> <20150516144155.GH31666@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150515200422.GA29321@svl-evodev-groeck.juniper.net>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 01:04:22PM -0700, Guenter Roeck wrote:
-> Hi Bjorn,
-> 
-> On Fri, May 15, 2015 at 02:25:34PM -0500, Bjorn Helgaas wrote:
-> > [+cc Yinghai]
+On Saturday, May 16, 2015 09:41:55 AM Bjorn Helgaas wrote:
+> [fix Rafael's email address]
+
+Thanks. :-)
+
+> On Sat, May 16, 2015 at 09:37:50AM -0500, Bjorn Helgaas wrote:
+> > Hi Jarod,
 > > 
-> > Hi Guenter,
+> > On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
+> > > The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
+> > > including at least BIOS revision 01.07, do not have an ACPI _RMV object
+> > > associated with their expresscard slots, so acpi-based hotplug-capable
+> > > slot detection fails. If we fall back to pcie-based detection, the systems
+> > > work just fine, so this uses dmi matching to do that. With luck, a future
+> > > BIOS will remedy this (I've let someone at HP know about the problem),
+> > > but for now, just use this for all existing versions.
+> > > 
+> > > Note: they *do* have a proper _RMV object for what I believe is their
+> > > thunderbolt ports.
+> > > 
+> > > Tested successfully on an HP ZBook 17 G2 and HP ZBook 15 G2.
+> > > 
+> > > CC: Len Brown <lenb@kernel.org>
+> > > CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+> > > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: linux-acpi@vger.kernel.org
+> > > CC: linux-pci@vger.kernel.org
+> > > Signed-off-by: Jarod Wilson <jarod@redhat.com>
+> > > ---
+> > >  drivers/pci/hotplug/pciehp_acpi.c | 33 +++++++++++++++++++++++++++++++++
+> > >  1 file changed, 33 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/hotplug/pciehp_acpi.c b/drivers/pci/hotplug/pciehp_acpi.c
+> > > index 93cc926..db38fb5 100644
+> > > --- a/drivers/pci/hotplug/pciehp_acpi.c
+> > > +++ b/drivers/pci/hotplug/pciehp_acpi.c
+> > > @@ -28,6 +28,7 @@
+> > >  #include <linux/pci_hotplug.h>
+> > >  #include <linux/slab.h>
+> > >  #include <linux/module.h>
+> > > +#include <linux/dmi.h>
+> > >  #include "pciehp.h"
+> > >  
+> > >  #define PCIEHP_DETECT_PCIE	(0)
+> > > @@ -109,10 +110,40 @@ static struct pcie_port_service_driver __initdata dummy_driver = {
+> > >  	.probe		= dummy_probe,
+> > >  };
+> > >  
+> > > +static int __init set_slot_detection_mode_pcie(const struct dmi_system_id *d)
+> > > +{
+> > > +	info("%s lacks ACPI _RMV object for expresscard\n", d->ident);
+> > > +	return 1;
+> > > +}
+> > > +
+> > > +static struct dmi_system_id __initdata missing_acpi_rmv[] = {
+> > > +	/* ZBook 17 through at least bios v01.07 */
+> > > +	{
+> > > +	 .callback = set_slot_detection_mode_pcie,
+> > > +	 .ident = "HP ZBook 17 G2 Mobile Workstation",
+> > > +	 .matches = {
+> > > +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+> > > +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 17 G2"),
+> > > +		},
+> > > +	},
+> > > +	/* ZBook 15 through at least bios v01.07 */
+> > > +	{
+> > > +	 .callback = set_slot_detection_mode_pcie,
+> > > +	 .ident = "HP ZBook 15 G2 Mobile Workstation",
+> > > +	 .matches = {
+> > > +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+> > > +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 15 G2"),
+> > > +		},
+> > > +	},
+> > > +	{ .ident = NULL }
+> > > +};
+> > > +
+> > >  static int __init select_detection_mode(void)
+> > >  {
+> > >  	struct dummy_slot *slot, *tmp;
+> > >  
+> > > +	if (dmi_check_system(missing_acpi_rmv))
+> > > +		return PCIEHP_DETECT_PCIE;
 > > 
-> > On Fri, May 15, 2015 at 12:28 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> > > Hi all,
-> > >
-> > > ever since 3.18(ish), we see lots of pcie io range allocation error messages
-> > > when booting our systems.
-> > >
-> > > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-> > > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> > > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
-> > >
-> > > This is repeated for each port.
-> > >
-> > > What we atually _want_ is no IO address range, but so far I have not been able to
-> > > tell this to the code (or to the bridge).
-> > 
-> > What information does the core have that we could use to figure out
-> > that you want no I/O space?  For example, does the host bridge have no
-> > I/O apertures?  Or are there no devices below 02:00.0 that require I/O
-> > space?  If you can post a complete dmesg log, that should contain this
-> > information.
-> > 
-> We know that we don't need IO space behind the bridge.
-> 
-> Question would be what information the core would need. I have tried
-> to pre-program PCI_IO_BASE and PCI_IO_LIMIT on the bridge ports,
-> but that doesn't seem to be the right solution (and it was just a
-> wild shot anyway ;-).
+> > Oh, my goodness.  I forgot how terrible this path is.  Can anyone write a
+> > simple explanation of how we choose to use acpiphp or pciehp?
 
-The core tries to assign address space before drivers start claiming
-devices because it's very difficult to move devices after drivers are
-attached.  To avoid assigning I/O space to a bridge, the core would have to
-know that (1) no devices below the bridge have I/O BARs, and (2) there's no
-hotplug slot where a new device could be added below the bridge.
+In theory, that should depend on the _OSC handshake in acpi_pci_root_add().
 
-In your specific case, I suspect that you have hotplug bridges, but you
-*know* exactly what devices can be "hot-plugged" and you know they don't
-need I/O space.  But there's no good way to tell that to the PCI core.
+If the firmware doesn't give us control of the PCIe features, we'll not use
+pciehp (or at least that's the idea).
 
-> > Is the problem that some device doesn't work, or is it just extra
-> > annoying messages.  We should fix something in either case, of course,
-> > but it's more urgent if a device used to work but no longer does.
-> > 
-> Just the extra annoying messages. The messages below are just the beginning;
-> there are many more when the actual devices behind the bridge ports come
-> online.
+acpiphp is used if pciehp doesn't claim the device, AFAICS.
 
-This sounds like an interesting topology.  A device coming online later is
-a hotplug event from the core's point of view.  Since the core can't tell
-what a hot-added device is going to be, it allocates a default amount of
-space (pci_hotplug_io_size) to accomodate it.  You can influence that with
-the "pci=hpiosize=" boot parameter.  Maybe "pci=hpiosize=0" would help in
-your case, but we'd still have the problem that the messages don't make
-sense to the average user (including me).
+Rafael
 
-  fsl-pci fff70a000.pcie: PCI host bridge to bus 0000:00
-  pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-  pci 0000:00:00.0: PCI bridge to [bus 01-ff]      # Root Port
-  pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
-
-The host bridge does have an I/O aperture, and it looks like firmware set
-up the 00:00.0 bridge with a small piece of that.  That's sort of a waste:
-supposedly we have 64K of I/O space available on bus 00, and 4K of that is
-routed to [bus 01-ff].  The other 60K could be used by other devices on bus
-00, but it doesn't look like there *are* any, so it is wasted.
-
-  pci 0000:01:00.0: PCI bridge to [bus 02-ff]      # Upstream Port
-  pci 0000:02:00.0: PCI bridge to [bus 40-4f]      # Downstream Port 0x0
-  ...
-  pci 0000:02:0d.0: PCI bridge to [bus a0-af]      # Downstream Port 0xa
-
-  pci 0000:02:00.0: bridge window [io  0x1000-0x0fff] to [bus 40-4f] add_size 1000
-  ...
-  pci 0000:02:0d.0: bridge window [io  0x1000-0x0fff] to [bus a0-af] add_size 1000
-
-I'm guessing these Downstream Ports all have "is_hotplug_bridge" set
-because they have the "Hot-Plug Capable" bit set in their Slot Capabilities
-register.  We're trying to allocate 0x1000 I/O ports for each, and there
-are 0xb of them, so we'd need 0xb000 I/O ports at the 01:00.0 bridge:
-
-  pci 0000:01:00.0: bridge window [io  0x1000-0x0fff] to [bus 02-ff] add_size b000
-
-pci_hotplug_io_size defaults to 256, but standard PCI bridges don't support
-I/O windows smaller than 4K, so they all got rounded up to 4K (0x1000).
-
-I would love it if somebody would clean up those messages and make them all
-consistent.  There's useful information there, so I'm not sure we want to
-get rid of them, but I think there's some redundancy we might be able to
-fix.
-
-Bjorn
