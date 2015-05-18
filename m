@@ -1,98 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51334 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932530AbbENAyx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 May 2015 20:54:53 -0400
-Message-ID: <1431564871.4160.8.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Thu, 14 May 2015 10:54:31 +1000
-In-Reply-To: <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
-	 <1430774063.7979.139.camel@kernel.crashing.org>
-	 <1431560124.20218.91.camel@kernel.crashing.org>
-	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5559F76E.5040203@redhat.com>
+Date: Mon, 18 May 2015 10:30:06 -0400
+From: Jarod Wilson <jarod@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook
+ G2
+References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <20150516143750.GG31666@google.com> <20150516144155.GH31666@google.com>
+In-Reply-To: <20150516144155.GH31666@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-05-13 at 19:18 -0500, Rob Herring wrote:
+On 5/16/2015 10:41 AM, Bjorn Helgaas wrote:
+> [fix Rafael's email address]
+>
+> On Sat, May 16, 2015 at 09:37:50AM -0500, Bjorn Helgaas wrote:
+>> Hi Jarod,
+>>
+>> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
+>>> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
+>>> including at least BIOS revision 01.07, do not have an ACPI _RMV object
+>>> associated with their expresscard slots, so acpi-based hotplug-capable
+>>> slot detection fails. If we fall back to pcie-based detection, the systems
+>>> work just fine, so this uses dmi matching to do that. With luck, a future
+>>> BIOS will remedy this (I've let someone at HP know about the problem),
+>>> but for now, just use this for all existing versions.
+>>>
+>>> Note: they *do* have a proper _RMV object for what I believe is their
+>>> thunderbolt ports.
+>>>
+>>> Tested successfully on an HP ZBook 17 G2 and HP ZBook 15 G2.
+>>>
+>>> CC: Len Brown <lenb@kernel.org>
+>>> CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: linux-acpi@vger.kernel.org
+>>> CC: linux-pci@vger.kernel.org
+>>> Signed-off-by: Jarod Wilson <jarod@redhat.com>
+>>> ---
+>>>   drivers/pci/hotplug/pciehp_acpi.c | 33 +++++++++++++++++++++++++++++++++
+>>>   1 file changed, 33 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/hotplug/pciehp_acpi.c b/drivers/pci/hotplug/pciehp_acpi.c
+>>> index 93cc926..db38fb5 100644
+>>> --- a/drivers/pci/hotplug/pciehp_acpi.c
+>>> +++ b/drivers/pci/hotplug/pciehp_acpi.c
+>>> @@ -28,6 +28,7 @@
+>>>   #include <linux/pci_hotplug.h>
+>>>   #include <linux/slab.h>
+>>>   #include <linux/module.h>
+>>> +#include <linux/dmi.h>
+>>>   #include "pciehp.h"
+>>>
+>>>   #define PCIEHP_DETECT_PCIE	(0)
+>>> @@ -109,10 +110,40 @@ static struct pcie_port_service_driver __initdata dummy_driver = {
+>>>   	.probe		= dummy_probe,
+>>>   };
+>>>
+>>> +static int __init set_slot_detection_mode_pcie(const struct dmi_system_id *d)
+>>> +{
+>>> +	info("%s lacks ACPI _RMV object for expresscard\n", d->ident);
+>>> +	return 1;
+>>> +}
+>>> +
+>>> +static struct dmi_system_id __initdata missing_acpi_rmv[] = {
+>>> +	/* ZBook 17 through at least bios v01.07 */
+>>> +	{
+>>> +	 .callback = set_slot_detection_mode_pcie,
+>>> +	 .ident = "HP ZBook 17 G2 Mobile Workstation",
+>>> +	 .matches = {
+>>> +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+>>> +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 17 G2"),
+>>> +		},
+>>> +	},
+>>> +	/* ZBook 15 through at least bios v01.07 */
+>>> +	{
+>>> +	 .callback = set_slot_detection_mode_pcie,
+>>> +	 .ident = "HP ZBook 15 G2 Mobile Workstation",
+>>> +	 .matches = {
+>>> +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+>>> +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 15 G2"),
+>>> +		},
+>>> +	},
+>>> +	{ .ident = NULL }
+>>> +};
+>>> +
+>>>   static int __init select_detection_mode(void)
+>>>   {
+>>>   	struct dummy_slot *slot, *tmp;
+>>>
+>>> +	if (dmi_check_system(missing_acpi_rmv))
+>>> +		return PCIEHP_DETECT_PCIE;
+>>
+>> Oh, my goodness.  I forgot how terrible this path is.  Can anyone write a
+>> simple explanation of how we choose to use acpiphp or pciehp?  Module
+>> parameters?  A dummy driver that looks for duplicate slot numbers?  Looking
+>> for _ADR, _EJ0, _RMV?  This is just nuts.
+>>
+>> I can't really believe that we're doing this correctly.
+>>
+>> If I understand correctly, the ZBooks don't have _RMV, but we try to use
+>> acpiphp anyway, and acpiphp doesn't work?
 
-> I haven't decided really.
-> 
-> The main thing with the current patch is I don't really like the added
-> complexity to unflatten_dt_node. It is already a fairly complex
-> function. Perhaps removing of "hybrid" as discussed will help?
+They do have an _RMV entry for another device, whatever is on 
+0000:00:1c.0, which appears to be the thunderbolt port, but I have yet 
+to verify that (no thunderbolt devices to play with yet). The 
+expresscard slot is 0000:3c:02.0.
 
-I agree, we should be able to make that much simpler, I was planning on
-sorting that out with Gavin.
+>> That sounds more like a problem
+>> with our acpiphp/pciehp selection "algorithm" than a BIOS bug.
+>>
+>> Jarod, can you open a report at http://bugzilla.kernel.org and attach a
+>> complete dmesg log, "lspci -vv" output, and an acpidump?  I'm particularly
+>> interested in whether the BIOS granted us control over PCIe native hotplug.
+>> If it did, I wonder why we would even attempt to use acpiphp.
 
-> If there are things we can do to make overlays easier to use in your
-> use case, I'd like to hear ideas. I don't really buy that being more
-> complex than needed is an obstacle. That is very often the case to
-> have common, scale-able solutions. I want to see a simple case be
-> simple to support.
+Done:
 
-Well, it's a LOT more complex from the FW perspective for a bunch of
-features we don't really need, in a way because the DT update in our
-case is just purely informational to avoid keeping wrong/outdated DT
-bits, it has little functional impact (it might have a bit for interrupt
-routing through bridges though).
+https://bugzilla.kernel.org/show_bug.cgi?id=98581
 
-However, I am also pursuing an approach on FW side using a generation
-count in our nodes and properties which we could use to generate
-arbitrary overlays if we know what generation linux has.
-
-There might actual be a usage scenario for a generic way for our
-firwmare to convey DT updates to Linux for other reasons.
-
-A few things that I don't find in the overlay code (but maybe I haven't
-looked at it hard enough):
-
- - Can it remove nodes/properties ?
-
- - Can it "commit" a changeset so it's permanently part of the main DT ?
-We will never have a concept of "revertable" changesets, if we need a
-subsequent update, we will get a new overlay from FW that will remove
-what needs to be removed and add what needs to be added.
-
-IE, our current mechanism without overlay is fairly simple:
-
-  - On PCI unplug, we remove all nodes below the slot (from linux),
-the FW does the equivalent internally.
-
-  - On PCI re-plug, the FW internally builds new nodes and sends a
-new subtree as an FDT that we can expand/attach.
-
-Now we could consider that subtree as a changeset that can be undone,
-but that wouldn't work for boot time. And subsequent updates wouldn't
-have that concept of "undoing" anyway.
-
-IE. conceptually, what overlays do today is quite rooted around the idea
-of having a fixed "base" DT and some pre-compiled DTB overlays that
-get added/removed. The design completely ignore the idea of a FW that
-maintains a "live" tree which we want to keep in sync, which is what we
-want to do here, or what we could do with a "live" open firmware
-implementation.
-
-Now we might be able to reconcile them, but it feels to me that the
-overlay/changeset stuff is too rooted in the first concept...
-
-Ben.
-
-
+-- 
+Jarod Wilson
+jarod@redhat.com
