@@ -1,384 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36138 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbbEINlM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 May 2015 09:41:12 -0400
-Received: by pabsx10 with SMTP id sx10so72799377pab.3
-        for <linux-pci@vger.kernel.org>; Sat, 09 May 2015 06:41:11 -0700 (PDT)
-Message-ID: <554E0E71.2080200@ozlabs.ru>
-Date: Sat, 09 May 2015 23:41:05 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-CC: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v4 09/21] powerpc/powernv: Use PCI slot reset infrastructure
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-10-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-10-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from exprod5og114.obsmtp.com ([64.18.0.28]:39976 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753360AbbERJzi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 05:55:38 -0400
+Received: by pacwv17 with SMTP id wv17so145246892pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 02:55:37 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v7 1/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node
+Date: Mon, 18 May 2015 02:55:18 -0700
+Message-Id: <4422f356934b17a2086889b642bde4d441814569.1431940313.git.dhdang@apm.com>
+In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
+References: <cover.1431940313.git.dhdang@apm.com>
+In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
+References: <20150422135002.1b407b98@why.wild-wind.fr.eu.org> <cover.1431940313.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2015 04:02 PM, Gavin Shan wrote:
-> For PowerNV platform, running on top of skiboot, all PE level reset
-> should be routed to firmware if the bridge of the PE primary bus has
-> device-node property "ibm,reset-by-firmware". Otherwise, the kernel
-> has to issue hot reset on PE's primary bus despite the requested reset
-> types, which is the behaviour before the firmware supports PCI slot
-> reset. So the changes don't depend on the PCI slot reset capability
-> exposed from the firmware.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/include/asm/eeh.h               |   1 +
->   arch/powerpc/include/asm/opal.h              |   4 +-
->   arch/powerpc/platforms/powernv/eeh-powernv.c | 206 +++++++++++++--------------
->   3 files changed, 102 insertions(+), 109 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-> index c5eb86f..2793d24 100644
-> --- a/arch/powerpc/include/asm/eeh.h
-> +++ b/arch/powerpc/include/asm/eeh.h
-> @@ -190,6 +190,7 @@ enum {
->   #define EEH_RESET_DEACTIVATE	0	/* Deactivate the PE reset	*/
->   #define EEH_RESET_HOT		1	/* Hot reset			*/
->   #define EEH_RESET_FUNDAMENTAL	3	/* Fundamental reset		*/
-> +#define EEH_RESET_COMPLETE	4	/* PHB complete reset           */
->   #define EEH_LOG_TEMP		1	/* EEH temporary error log	*/
->   #define EEH_LOG_PERM		2	/* EEH permanent error log	*/
->
-> diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-> index 042af1a..6d467df 100644
-> --- a/arch/powerpc/include/asm/opal.h
-> +++ b/arch/powerpc/include/asm/opal.h
-> @@ -129,7 +129,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
->   int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
->   					uint16_t dma_window_number, uint64_t pci_start_addr,
->   					uint64_t pci_mem_size);
-> -int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
-> +int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
->
->   int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
->   				   uint64_t diag_buffer_len);
-> @@ -145,7 +145,7 @@ int64_t opal_get_epow_status(__be64 *status);
->   int64_t opal_set_system_attention_led(uint8_t led_action);
->   int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
->   			    __be16 *pci_error_type, __be16 *severity);
-> -int64_t opal_pci_poll(uint64_t phb_id);
-> +int64_t opal_pci_poll(uint64_t id, uint8_t *val);
->   int64_t opal_return_cpu(void);
->   int64_t opal_check_token(uint64_t token);
->   int64_t opal_reinit_cpus(uint64_t flags);
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index ce738ab..3c01095 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -742,12 +742,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
->   	return ret;
->   }
->
-> -static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
-> +static s64 pnv_eeh_poll(uint64_t id)
->   {
->   	s64 rc = OPAL_HARDWARE;
->
->   	while (1) {
-> -		rc = opal_pci_poll(phb->opal_id);
-> +		rc = opal_pci_poll(id, NULL);
->   		if (rc <= 0)
->   			break;
->
-> @@ -763,84 +763,38 @@ static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
->   int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
->   {
->   	struct pnv_phb *phb = hose->private_data;
-> +	uint8_t scope;
->   	s64 rc = OPAL_HARDWARE;
->
->   	pr_debug("%s: Reset PHB#%x, option=%d\n",
->   		 __func__, hose->global_number, option);
-> -
-> -	/* Issue PHB complete reset request */
-> -	if (option == EEH_RESET_FUNDAMENTAL ||
-> -	    option == EEH_RESET_HOT)
-> -		rc = opal_pci_reset(phb->opal_id,
-> -				    OPAL_RESET_PHB_COMPLETE,
-> -				    OPAL_ASSERT_RESET);
-> -	else if (option == EEH_RESET_DEACTIVATE)
-> -		rc = opal_pci_reset(phb->opal_id,
-> -				    OPAL_RESET_PHB_COMPLETE,
-> -				    OPAL_DEASSERT_RESET);
-> -	if (rc < 0)
-> -		goto out;
-> -
-> -	/*
-> -	 * Poll state of the PHB until the request is done
-> -	 * successfully. The PHB reset is usually PHB complete
-> -	 * reset followed by hot reset on root bus. So we also
-> -	 * need the PCI bus settlement delay.
-> -	 */
-> -	rc = pnv_eeh_phb_poll(phb);
-> -	if (option == EEH_RESET_DEACTIVATE) {
-> -		if (system_state < SYSTEM_RUNNING)
-> -			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
-> -		else
-> -			msleep(EEH_PE_RST_SETTLE_TIME);
+X-Gene v1 PCIe MSI controller block provides PCIE MSI functionality for 5 X-Gene v1
+PCIE ports
 
+The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
 
-These udelay() and msleep() are gone. How come they are not needed anymore? 
-Worth commenting in the commit log or remove those in a separate patch.
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      | 68 ++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
 
-I just remember you mentioning some missing delays somewhere which caused 
-NVIDIA device to issue EEH and I do not want those to disappear :)
-
-
-> +	switch (option) {
-> +	case EEH_RESET_HOT:
-> +		scope = OPAL_RESET_PCI_HOT;
-> +		break;
-> +	case EEH_RESET_FUNDAMENTAL:
-> +		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-> +		break;
-> +	case EEH_RESET_COMPLETE:
-> +		scope = OPAL_RESET_PHB_COMPLETE;
-> +		break;
-> +	case EEH_RESET_DEACTIVATE:
-> +		return 0;
-> +	default:
-> +		pr_warn("%s: Unsupported option %d\n",
-> +			__func__, option);
-> +		return -EINVAL;
->   	}
-> -out:
-> -	if (rc != OPAL_SUCCESS)
-> -		return -EIO;
->
-> -	return 0;
-> -}
-> -
-> -static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
-> -{
-> -	struct pnv_phb *phb = hose->private_data;
-> -	s64 rc = OPAL_HARDWARE;
-> +	/* Issue reset and poll until it's completed */
-> +	rc = opal_pci_reset(phb->opal_id, scope, OPAL_ASSERT_RESET);
-> +	if (rc > 0)
-> +		rc = pnv_eeh_poll(phb->opal_id);
->
-> -	pr_debug("%s: Reset PHB#%x, option=%d\n",
-> -		 __func__, hose->global_number, option);
-> -
-> -	/*
-> -	 * During the reset deassert time, we needn't care
-> -	 * the reset scope because the firmware does nothing
-> -	 * for fundamental or hot reset during deassert phase.
-> -	 */
-> -	if (option == EEH_RESET_FUNDAMENTAL)
-> -		rc = opal_pci_reset(phb->opal_id,
-> -				    OPAL_RESET_PCI_FUNDAMENTAL,
-> -				    OPAL_ASSERT_RESET);
-> -	else if (option == EEH_RESET_HOT)
-> -		rc = opal_pci_reset(phb->opal_id,
-> -				    OPAL_RESET_PCI_HOT,
-> -				    OPAL_ASSERT_RESET);
-> -	else if (option == EEH_RESET_DEACTIVATE)
-> -		rc = opal_pci_reset(phb->opal_id,
-> -				    OPAL_RESET_PCI_HOT,
-> -				    OPAL_DEASSERT_RESET);
-> -	if (rc < 0)
-> -		goto out;
-> -
-> -	/* Poll state of the PHB until the request is done */
-> -	rc = pnv_eeh_phb_poll(phb);
-> -	if (option == EEH_RESET_DEACTIVATE)
-> -		msleep(EEH_PE_RST_SETTLE_TIME);
-> -out:
-> -	if (rc != OPAL_SUCCESS)
-> -		return -EIO;
-> -
-> -	return 0;
-> +	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
->   }
->
-> -static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-> +static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   {
->   	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
->   	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> @@ -891,14 +845,57 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   	return 0;
->   }
->
-> +static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-> +{
-> +	struct pci_controller *hose;
-> +	struct pnv_phb *phb;
-> +	struct device_node *dn = dev ? pci_device_to_OF_node(dev) : NULL;
-> +	uint64_t id = (0x1ul << 60);
-> +	uint8_t scope;
-> +	s64 rc;
-
-
-int64_t for @rc?
-
-
-> +
-> +	/*
-> +	 * If the firmware can't handle it, we will issue hot reset
-> +	 * on the secondary bus despite the requested reset type
-> +	 */
-> +	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
-> +		return __pnv_eeh_bridge_reset(dev, option);
-> +
-> +	/* The firmware can handle the request */
-> +	switch (option) {
-> +	case EEH_RESET_HOT:
-> +		scope = OPAL_RESET_PCI_HOT;
-> +		break;
-> +	case EEH_RESET_FUNDAMENTAL:
-> +		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-> +		break;
-> +	case EEH_RESET_DEACTIVATE:
-> +		return 0;
-> +	case EEH_RESET_COMPLETE:
-> +	default:
-> +		pr_warn("%s: Unsupported option %d on device %s\n",
-> +			__func__, option, pci_name(dev));
-> +		return -EINVAL;
-> +	}
-
-
-This is the same switch as earlier in this patch (slightly different 
-order). Move it and opal_pci_reset() into a helper and call it 
-pnv_opal_pci_reset()?
-
-
-> +
-> +	hose = pci_bus_to_host(dev->bus);
-> +	phb = hose->private_data;
-
-Previously you would initialize @hose and @phb where you declared those but 
-not here. If you did the same thing as before, the patch could have been 
-smaller and easier to read.
-
-
-
-> +	id |= (dev->bus->number << 24) | (dev->devfn << 16) | phb->opal_id;
-> +	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-> +	if (rc > 0)
-> +		rc = pnv_eeh_poll(id);
-> +
-> +	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-> +}
-> +
->   void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->   {
->   	struct pci_controller *hose;
->
->   	if (pci_is_root_bus(dev->bus)) {
->   		hose = pci_bus_to_host(dev->bus);
-> -		pnv_eeh_root_reset(hose, EEH_RESET_HOT);
-> -		pnv_eeh_root_reset(hose, EEH_RESET_DEACTIVATE);
-> +		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
-> +		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
->   	} else {
->   		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
->   		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
-> @@ -920,8 +917,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->   static int pnv_eeh_reset(struct eeh_pe *pe, int option)
->   {
->   	struct pci_controller *hose = pe->phb;
-> +	struct pnv_phb *phb;
->   	struct pci_bus *bus;
-> -	int ret;
-> +	s64 rc;
->
->   	/*
->   	 * For PHB reset, we always have complete reset. For those PEs whose
-> @@ -937,43 +935,37 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
->   	 * reset. The side effect is that EEH core has to clear the frozen
->   	 * state explicitly after BAR restore.
->   	 */
-> -	if (pe->type & EEH_PE_PHB) {
-> -		ret = pnv_eeh_phb_reset(hose, option);
-> -	} else {
-> -		struct pnv_phb *phb;
-> -		s64 rc;
-> +	if (pe->type & EEH_PE_PHB)
-
-I would keep "{" in the line above ....
-
-> +		return pnv_eeh_phb_reset(hose, EEH_RESET_COMPLETE);
-
-...put "} else {" here...
-
-and the chunk below would become 1) very small 2) very trivial... And then 
-you could make a trivial patch which would do scope removal but without 
-functional changes. Or vice versa.
-
->
-> -		/*
-> -		 * The frozen PE might be caused by PAPR error injection
-> -		 * registers, which are expected to be cleared after hitting
-> -		 * frozen PE as stated in the hardware spec. Unfortunately,
-> -		 * that's not true on P7IOC. So we have to clear it manually
-> -		 * to avoid recursive EEH errors during recovery.
-> -		 */
-> -		phb = hose->private_data;
-> -		if (phb->model == PNV_PHB_MODEL_P7IOC &&
-> -		    (option == EEH_RESET_HOT ||
-> -		    option == EEH_RESET_FUNDAMENTAL)) {
-> -			rc = opal_pci_reset(phb->opal_id,
-> -					    OPAL_RESET_PHB_ERROR,
-> -					    OPAL_ASSERT_RESET);
-> -			if (rc != OPAL_SUCCESS) {
-> -				pr_warn("%s: Failure %lld clearing "
-> -					"error injection registers\n",
-> -					__func__, rc);
-> -				return -EIO;
-> -			}
-> +	/*
-> +	 * The frozen PE might be caused by PAPR error injection
-> +	 * registers, which are expected to be cleared after hitting
-> +	 * frozen PE as stated in the hardware spec. Unfortunately,
-> +	 * that's not true on P7IOC. So we have to clear it manually
-> +	 * to avoid recursive EEH errors during recovery.
-> +	 */
-> +	phb = hose->private_data;
-> +	if (phb->model == PNV_PHB_MODEL_P7IOC &&
-> +	    (option == EEH_RESET_HOT ||
-> +	    option == EEH_RESET_FUNDAMENTAL)) {
-> +		rc = opal_pci_reset(phb->opal_id,
-> +				    OPAL_RESET_PHB_ERROR,
-> +				    OPAL_ASSERT_RESET);
-> +		if (rc != OPAL_SUCCESS) {
-> +			pr_warn("%s: Failure %lld clearing error "
-> +				"injection registers on PHB#%d\n",
-> +				__func__, rc, hose->global_number);
-> +			return -EIO;
->   		}
-> -
-> -		bus = eeh_pe_bus_get(pe);
-> -		if (pci_is_root_bus(bus) ||
-> -			pci_is_root_bus(bus->parent))
-> -			ret = pnv_eeh_root_reset(hose, option);
-> -		else
-> -			ret = pnv_eeh_bridge_reset(bus->self, option);
->   	}
->
-> -	return ret;
-> +	/* Route the reset request to PHB or upstream bridge */
-> +	bus = eeh_pe_bus_get(pe);
-> +	if (pci_is_root_bus(bus))
-> +		return pnv_eeh_phb_reset(hose, option);
-> +
-> +	return pnv_eeh_bridge_reset(bus->self, option);
->   }
->
->   /**
->
-
-
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+new file mode 100644
+index 0000000..36d881c
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+@@ -0,0 +1,68 @@
++* AppliedMicro X-Gene v1 PCIe MSI controller
++
++Required properties:
++
++- compatible: should be "apm,xgene1-msi" to identify
++	      X-Gene v1 PCIe MSI controller block.
++- msi-controller: indicates that this is X-Gene v1 PCIe MSI controller node
++- reg: physical base address (0x79000000) and length (0x900000) for controller
++       registers. These registers include the MSI termination address and data
++       registers as well as the MSI interrupt status registers.
++- reg-names: not required
++- interrupts: A list of 16 interrupt outputs of the controller, starting from
++	      interrupt number 0x10 to 0x1f.
++- interrupt-names: not required
++
++Each PCIe node needs to have property msi-parent that points to msi controller node
++
++Examples:
++
++SoC DTSI:
++
++	+ MSI node:
++	msi@79000000 {
++		compatible = "apm,xgene1-msi";
++		msi-controller;
++		reg = <0x00 0x79000000 0x0 0x900000>;
++		interrupts = 	<0x0 0x10 0x4>
++				<0x0 0x11 0x4>
++				<0x0 0x12 0x4>
++				<0x0 0x13 0x4>
++				<0x0 0x14 0x4>
++				<0x0 0x15 0x4>
++				<0x0 0x16 0x4>
++				<0x0 0x17 0x4>
++				<0x0 0x18 0x4>
++				<0x0 0x19 0x4>
++				<0x0 0x1a 0x4>
++				<0x0 0x1b 0x4>
++				<0x0 0x1c 0x4>
++				<0x0 0x1d 0x4>
++				<0x0 0x1e 0x4>
++				<0x0 0x1f 0x4>;
++	};
++
++	+ PCIe controller node with msi-parent property pointing to MSI node:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		dma-coherent;
++		clocks = <&pcie0clk 0>;
++		msi-parent= <&msi>;
++	};
 -- 
-Alexey
+1.9.1
+
