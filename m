@@ -1,380 +1,265 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Aaron Lu <aaron.lu@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <len.brown@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [PATCH] ACPI / PM: Rework device power management to follow ACPI 6
-Date: Fri, 15 May 2015 00:06:16 +0200
-Message-ID: <1589313.NW63o2eWqT@vostro.rjw.lan>
-In-Reply-To: <5141050.0s0C74Tu0K@vostro.rjw.lan>
-References: <5141050.0s0C74Tu0K@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g2t2353.austin.hp.com ([15.217.128.52]:36126 "EHLO
+	g2t2353.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbbERKG5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 06:06:57 -0400
+Message-ID: <5559B97B.5090805@hp.com>
+Date: Mon, 18 May 2015 18:05:47 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: joro@8bytes.org
+CC: "Li, ZhenHua" <zhen-hual@hp.com>, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, bhelgaas@google.com,
+	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, doug.hatch@hp.com,
+	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
+	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com
+Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com> <5552AEE9.80408@hp.com>
+In-Reply-To: <5552AEE9.80408@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 07, 2015 12:37:13 AM Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The ACPI 6 specification has made some changes in the device power
-> management area.  In particular:
-> 
->  * The D3hot power state is now supposed to be always available
->    (instead of D3cold) and D3cold is only regarded as valid if the
->    _PR3 object is present for the given device.
-> 
->  * The required ordering of transitions into power states deeper than
->    D0 is now such that for a transition into state Dx the _PSx method
->    is supposed to be executed first, if present, and the states of
->    the power resources the device depends on are supposed to be
->    changed after that.
-> 
->  * It is now explicitly forbidden to transition devices from
->    lower-power (deeper) into higher-power (shallower) power states
->    other than D0.
-> 
-> Those changes have been made so the specification reflects the
-> Windows' device power management code that the vast majority of
-> systems using ACPI is validated against.
-> 
-> To avoid artificial differences in ACPI device power management
-> between Windows and Linux, modify the ACPI device power management
-> code to follow the new specification.  Add comments explaining the
-> code flow in some unclear places.
-> 
-> This only may affect some real corner cases in which the OS behavior
-> expected by the firmware is different from the Windows one, but that's
-> quite unlikely.  The transition ordering change affects transitions
-> to D1 and D2 which are rarely used (if at all) and into D3hot and
-> D3cold for devices actually having _PR3, but those are likely to
-> be validated against Windows anyway.  The other changes may affect
-> code calling acpi_device_get_power() or acpi_device_update_power()
-> where ACPI_STATE_D3_HOT may be returned instead of ACPI_STATE_D3_COLD
-> (that's why the ACPI fan driver needs to be updated too) and since
-> transitions into ACPI_STATE_D3_HOT may remove power now, it is better
-> to avoid this one in acpi_pm_device_sleep_state() if the "no power
-> off" PM QoS flag is set.
-> 
-> The only existing user of acpi_device_can_poweroff() really cares
-> about the case when _PR3 is present, so the change in that function
-> should not cause any problems to happen too.
-> 
-> A plus is that PCI_D3hot can be mapped to ACPI_STATE_D3_HOT
-> now and the compatibility with older systems should be covered
-> automatically.
-> 
-> In any case, if any real problems result from this, it still will
-> be better to follow the Windows' behavior (which now is reflected
-> by the specification too) in general and handle the cases when it
-> doesn't work via quirks.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Joerg,
 
-OK, so it looks like nobody has any comments, which in particular means
-"no objections" to me.
+Testing from HP: passed.
+Testing from He Baoquan(Redhat): passed
 
-I'm going to queue up this patch for 4.2, then.
+The problem that dmar fault came again when running v10 with latest
+kernel is fixed.
+And I think there is no need to update the code to a new version now.
 
-> ---
->  drivers/acpi/device_pm.c |   97 ++++++++++++++++++++++++++++-------------------
->  drivers/acpi/fan.c       |    5 +-
->  drivers/acpi/power.c     |    3 -
->  drivers/acpi/scan.c      |   26 ++----------
->  drivers/pci/pci-acpi.c   |    2 
->  include/acpi/acpi_bus.h  |    3 -
->  6 files changed, 71 insertions(+), 65 deletions(-)
-> 
-> Index: linux-pm/drivers/acpi/power.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/power.c
-> +++ linux-pm/drivers/acpi/power.c
-> @@ -684,7 +684,8 @@ int acpi_power_get_inferred_state(struct
->  		}
->  	}
->  
-> -	*state = ACPI_STATE_D3_COLD;
-> +	*state = device->power.states[ACPI_STATE_D3_COLD].flags.valid ?
-> +		ACPI_STATE_D3_COLD : ACPI_STATE_D3_HOT;
->  	return 0;
->  }
->  
-> Index: linux-pm/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux-pm.orig/include/acpi/acpi_bus.h
-> +++ linux-pm/include/acpi/acpi_bus.h
-> @@ -272,7 +272,6 @@ struct acpi_device_power_flags {
->  struct acpi_device_power_state {
->  	struct {
->  		u8 valid:1;
-> -		u8 os_accessible:1;
->  		u8 explicit_set:1;	/* _PSx present? */
->  		u8 reserved:6;
->  	} flags;
-> @@ -602,7 +601,7 @@ static inline bool acpi_device_can_wakeu
->  
->  static inline bool acpi_device_can_poweroff(struct acpi_device *adev)
->  {
-> -	return adev->power.states[ACPI_STATE_D3_COLD].flags.os_accessible;
-> +	return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
->  }
->  
->  #else	/* CONFIG_ACPI */
-> Index: linux-pm/drivers/acpi/scan.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/scan.c
-> +++ linux-pm/drivers/acpi/scan.c
-> @@ -1766,15 +1766,9 @@ static void acpi_bus_init_power_state(st
->  	if (acpi_has_method(device->handle, pathname))
->  		ps->flags.explicit_set = 1;
->  
-> -	/*
-> -	 * State is valid if there are means to put the device into it.
-> -	 * D3hot is only valid if _PR3 present.
-> -	 */
-> -	if (!list_empty(&ps->resources)
-> -	    || (ps->flags.explicit_set && state < ACPI_STATE_D3_HOT)) {
-> +	/* State is valid if there are means to put the device into it. */
-> +	if (!list_empty(&ps->resources) || ps->flags.explicit_set)
->  		ps->flags.valid = 1;
-> -		ps->flags.os_accessible = 1;
-> -	}
->  
->  	ps->power = -1;		/* Unknown - driver assigned */
->  	ps->latency = -1;	/* Unknown - driver assigned */
-> @@ -1810,21 +1804,13 @@ static void acpi_bus_get_power_flags(str
->  		acpi_bus_init_power_state(device, i);
->  
->  	INIT_LIST_HEAD(&device->power.states[ACPI_STATE_D3_COLD].resources);
-> +	if (!list_empty(&device->power.states[ACPI_STATE_D3_HOT].resources))
-> +		device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
->  
-> -	/* Set defaults for D0 and D3 states (always valid) */
-> +	/* Set defaults for D0 and D3hot states (always valid) */
->  	device->power.states[ACPI_STATE_D0].flags.valid = 1;
->  	device->power.states[ACPI_STATE_D0].power = 100;
-> -	device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
-> -	device->power.states[ACPI_STATE_D3_COLD].power = 0;
-> -
-> -	/* Set D3cold's explicit_set flag if _PS3 exists. */
-> -	if (device->power.states[ACPI_STATE_D3_HOT].flags.explicit_set)
-> -		device->power.states[ACPI_STATE_D3_COLD].flags.explicit_set = 1;
-> -
-> -	/* Presence of _PS3 or _PRx means we can put the device into D3 cold */
-> -	if (device->power.states[ACPI_STATE_D3_HOT].flags.explicit_set ||
-> -			device->power.flags.power_resources)
-> -		device->power.states[ACPI_STATE_D3_COLD].flags.os_accessible = 1;
-> +	device->power.states[ACPI_STATE_D3_HOT].flags.valid = 1;
->  
->  	if (acpi_bus_init_power(device))
->  		device->flags.power_manageable = 0;
-> Index: linux-pm/drivers/acpi/device_pm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/device_pm.c
-> +++ linux-pm/drivers/acpi/device_pm.c
-> @@ -98,17 +98,16 @@ int acpi_device_get_power(struct acpi_de
->  
->  		/*
->  		 * The power resources settings may indicate a power state
-> -		 * shallower than the actual power state of the device.
-> +		 * shallower than the actual power state of the device, because
-> +		 * the same power resources may be referenced by other devices.
->  		 *
-> -		 * Moreover, on systems predating ACPI 4.0, if the device
-> -		 * doesn't depend on any power resources and _PSC returns 3,
-> -		 * that means "power off".  We need to maintain compatibility
-> -		 * with those systems.
-> +		 * For systems predating ACPI 4.0 we assume that D3hot is the
-> +		 * deepest state that can be supported.
->  		 */
->  		if (psc > result && psc < ACPI_STATE_D3_COLD)
->  			result = psc;
->  		else if (result == ACPI_STATE_UNKNOWN)
-> -			result = psc > ACPI_STATE_D2 ? ACPI_STATE_D3_COLD : psc;
-> +			result = psc > ACPI_STATE_D2 ? ACPI_STATE_D3_HOT : psc;
->  	}
->  
->  	/*
-> @@ -153,8 +152,8 @@ static int acpi_dev_pm_explicit_set(stru
->   */
->  int acpi_device_set_power(struct acpi_device *device, int state)
->  {
-> +	int target_state = state;
->  	int result = 0;
-> -	bool cut_power = false;
->  
->  	if (!device || !device->flags.power_manageable
->  	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
-> @@ -169,11 +168,21 @@ int acpi_device_set_power(struct acpi_de
->  		return 0;
->  	}
->  
-> -	if (!device->power.states[state].flags.valid) {
-> +	if (state == ACPI_STATE_D3_COLD) {
-> +		/*
-> +		 * For transitions to D3cold we need to execute _PS3 and then
-> +		 * possibly drop references to the power resources in use.
-> +		 */
-> +		state = ACPI_STATE_D3_HOT;
-> +		/* If _PR3 is not available, use D3hot as the target state. */
-> +		if (!device->power.states[ACPI_STATE_D3_COLD].flags.valid)
-> +			target_state = state;
-> +	} else if (!device->power.states[state].flags.valid) {
->  		dev_warn(&device->dev, "Power state %s not supported\n",
->  			 acpi_power_state_string(state));
->  		return -ENODEV;
->  	}
-> +
->  	if (!device->power.flags.ignore_parent &&
->  	    device->parent && (state < device->parent->power.state)) {
->  		dev_warn(&device->dev,
-> @@ -183,39 +192,38 @@ int acpi_device_set_power(struct acpi_de
->  		return -ENODEV;
->  	}
->  
-> -	/* For D3cold we should first transition into D3hot. */
-> -	if (state == ACPI_STATE_D3_COLD
-> -	    && device->power.states[ACPI_STATE_D3_COLD].flags.os_accessible) {
-> -		state = ACPI_STATE_D3_HOT;
-> -		cut_power = true;
-> -	}
-> -
-> -	if (state < device->power.state && state != ACPI_STATE_D0
-> -	    && device->power.state >= ACPI_STATE_D3_HOT) {
-> -		dev_warn(&device->dev,
-> -			 "Cannot transition to non-D0 state from D3\n");
-> -		return -ENODEV;
-> -	}
-> -
->  	/*
->  	 * Transition Power
->  	 * ----------------
-> -	 * In accordance with the ACPI specification first apply power (via
-> -	 * power resources) and then evaluate _PSx.
-> +	 * In accordance with ACPI 6, _PSx is executed before manipulating power
-> +	 * resources, unless the target state is D0, in which case _PS0 is
-> +	 * supposed to be executed after turning the power resources on.
->  	 */
-> -	if (device->power.flags.power_resources) {
-> -		result = acpi_power_transition(device, state);
-> +	if (state > ACPI_STATE_D0) {
-> +		/*
-> +		 * According to ACPI 6, devices cannot go from lower-power
-> +		 * (deeper) states to higher-power (shallower) states.
-> +		 */
-> +		if (state < device->power.state) {
-> +			dev_warn(&device->dev, "Cannot transition from %s to %s\n",
-> +				 acpi_power_state_string(device->power.state),
-> +				 acpi_power_state_string(state));
-> +			return -ENODEV;
-> +		}
-> +
-> +		result = acpi_dev_pm_explicit_set(device, state);
->  		if (result)
->  			goto end;
-> -	}
-> -	result = acpi_dev_pm_explicit_set(device, state);
-> -	if (result)
-> -		goto end;
->  
-> -	if (cut_power) {
-> -		device->power.state = state;
-> -		state = ACPI_STATE_D3_COLD;
-> -		result = acpi_power_transition(device, state);
-> +		if (device->power.flags.power_resources)
-> +			result = acpi_power_transition(device, target_state);
-> +	} else {
-> +		if (device->power.flags.power_resources) {
-> +			result = acpi_power_transition(device, ACPI_STATE_D0);
-> +			if (result)
-> +				goto end;
-> +		}
-> +		result = acpi_dev_pm_explicit_set(device, ACPI_STATE_D0);
->  	}
->  
->   end:
-> @@ -264,13 +272,24 @@ int acpi_bus_init_power(struct acpi_devi
->  		return result;
->  
->  	if (state < ACPI_STATE_D3_COLD && device->power.flags.power_resources) {
-> +		/* Reference count the power resources. */
->  		result = acpi_power_on_resources(device, state);
->  		if (result)
->  			return result;
->  
-> -		result = acpi_dev_pm_explicit_set(device, state);
-> -		if (result)
-> -			return result;
-> +		if (state == ACPI_STATE_D0) {
-> +			/*
-> +			 * If _PSC is not present and the state inferred from
-> +			 * power resources appears to be D0, it still may be
-> +			 * necessary to execute _PS0 at this point, because
-> +			 * another device using the same power resources may
-> +			 * have been put into D0 previously and that's why we
-> +			 * see D0 here.
-> +			 */
-> +			result = acpi_dev_pm_explicit_set(device, state);
-> +			if (result)
-> +				return result;
-> +		}
->  	} else if (state == ACPI_STATE_UNKNOWN) {
->  		/*
->  		 * No power resources and missing _PSC?  Cross fingers and make
-> @@ -603,12 +622,12 @@ int acpi_pm_device_sleep_state(struct de
->  	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3_COLD)
->  		return -EINVAL;
->  
-> -	if (d_max_in > ACPI_STATE_D3_HOT) {
-> +	if (d_max_in > ACPI_STATE_D2) {
->  		enum pm_qos_flags_status stat;
->  
->  		stat = dev_pm_qos_flags(dev, PM_QOS_FLAG_NO_POWER_OFF);
->  		if (stat == PM_QOS_FLAGS_ALL)
-> -			d_max_in = ACPI_STATE_D3_HOT;
-> +			d_max_in = ACPI_STATE_D2;
->  	}
->  
->  	adev = ACPI_COMPANION(dev);
-> Index: linux-pm/drivers/acpi/fan.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/fan.c
-> +++ linux-pm/drivers/acpi/fan.c
-> @@ -158,8 +158,9 @@ static int fan_get_state(struct acpi_dev
->  	if (result)
->  		return result;
->  
-> -	*state = (acpi_state == ACPI_STATE_D3_COLD ? 0 :
-> -		 (acpi_state == ACPI_STATE_D0 ? 1 : -1));
-> +	*state = acpi_state == ACPI_STATE_D3_COLD
-> +			|| acpi_state == ACPI_STATE_D3_HOT ?
-> +		0 : (acpi_state == ACPI_STATE_D0 ? 1 : -1);
->  	return 0;
->  }
->  
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -420,7 +420,7 @@ static int acpi_pci_set_power_state(stru
->  		[PCI_D0] = ACPI_STATE_D0,
->  		[PCI_D1] = ACPI_STATE_D1,
->  		[PCI_D2] = ACPI_STATE_D2,
-> -		[PCI_D3hot] = ACPI_STATE_D3_COLD,
-> +		[PCI_D3hot] = ACPI_STATE_D3_HOT,
->  		[PCI_D3cold] = ACPI_STATE_D3_COLD,
->  	};
->  	int error = -EINVAL;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So please tell me if there are still any code need to be changed.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thanks
+Zhenhua
+
+On 05/13/2015 09:54 AM, Li, ZhenHua wrote:
+> One thing must be pointed out:
+> There is a known issue that hpsa driver cannot work well in kdump
+> kernel. And this patchset is not intended to fix this problem.
+>
+> So this patchset cannot work with HP smart array devices which need hpsa
+> driver.
+>
+> On 05/11/2015 05:52 PM, Li, Zhen-Hua wrote:
+>> This patchset is an update of Bill Sumner's patchset, implements a fix
+>> for:
+>> If a kernel boots with intel_iommu=on on a system that supports intel
+>> vt-d,
+>> when a panic happens, the kdump kernel will boot with these faults:
+>>
+>>      dmar: DRHD: handling fault status reg 102
+>>      dmar: DMAR:[DMA Read] Request device [01:00.0] fault addr fff80000
+>>      DMAR:[fault reason 01] Present bit in root entry is clear
+>>
+>>      dmar: DRHD: handling fault status reg 2
+>>      dmar: INTR-REMAP: Request device [[61:00.0] fault index 42
+>>      INTR-REMAP:[fault reason 34] Present field in the IRTE entry is
+>> clear
+>>
+>> On some system, the interrupt remapping fault will also happen even if
+>> the
+>> intel_iommu is not set to on, because the interrupt remapping will be
+>> enabled
+>> when x2apic is needed by the system.
+>>
+>> The cause of the DMA fault is described in Bill's original version,
+>> and the
+>> INTR-Remap fault is caused by a similar reason. In short, the
+>> initialization
+>> of vt-d drivers causes the in-flight DMA and interrupt requests get wrong
+>> response.
+>>
+>> To fix this problem, we modifies the behaviors of the intel vt-d in the
+>> crashdump kernel:
+>>
+>> For DMA Remapping:
+>> 1. To accept the vt-d hardware in an active state,
+>> 2. Do not disable and re-enable the translation, keep it enabled.
+>> 3. Use the old root entry table, do not rewrite the RTA register.
+>> 4. Malloc and use new context entry table, copy data from the old ones
+>> that
+>>     used by the old kernel.
+>> 5. Keep using the old page tables before driver is loaded.
+>> 6. After device driver is loaded, when it issues the first dma_map
+>> command,
+>>     free the dmar_domain structure for this device, and generate a new
+>> one, so
+>>     that the device can be assigned a new and empty page table.
+>> 7. When a new context entry table is generated, we also save its
+>> address to
+>>     the old root entry table.
+>>
+>> For Interrupt Remapping:
+>> 1. To accept the vt-d hardware in an active state,
+>> 2. Do not disable and re-enable the interrupt remapping, keep it enabled.
+>> 3. Use the old interrupt remapping table, do not rewrite the IRTA
+>> register.
+>> 4. When ioapic entry is setup, the interrupt remapping table is
+>> changed, and
+>>     the updated data will be stored to the old interrupt remapping table.
+>>
+>> Advantages of this approach:
+>> 1. All manipulation of the IO-device is done by the Linux device-driver
+>>     for that device.
+>> 2. This approach behaves in a manner very similar to operation without an
+>>     active iommu.
+>> 3. Any activity between the IO-device and its RMRR areas is handled by
+>> the
+>>     device-driver in the same manner as during a non-kdump boot.
+>> 4. If an IO-device has no driver in the kdump kernel, it is simply
+>> left alone.
+>>     This supports the practice of creating a special kdump kernel without
+>>     drivers for any devices that are not required for taking a crashdump.
+>> 5. Minimal code-changes among the existing mainline intel vt-d code.
+>>
+>> Summary of changes in this patch set:
+>> 1. Added some useful function for root entry table in code intel-iommu.c
+>> 2. Added new members to struct root_entry and struct irte;
+>> 3. Functions to load old root entry table to iommu->root_entry from
+>> the memory
+>>     of old kernel.
+>> 4. Functions to malloc new context entry table and copy the data from
+>> the old
+>>     ones to the malloced new ones.
+>> 5. Functions to enable support for DMA remapping in kdump kernel.
+>> 6. Functions to load old irte data from the old kernel to the kdump
+>> kernel.
+>> 7. Some code changes that support other behaviours that have been listed.
+>> 8. In the new functions, use physical address as "unsigned long" type,
+>> not
+>>     pointers.
+>>
+>> Original version by Bill Sumner:
+>>      https://lkml.org/lkml/2014/1/10/518
+>>      https://lkml.org/lkml/2014/4/15/716
+>>      https://lkml.org/lkml/2014/4/24/836
+>>
+>> Zhenhua's updates:
+>>      https://lkml.org/lkml/2014/10/21/134
+>>      https://lkml.org/lkml/2014/12/15/121
+>>      https://lkml.org/lkml/2014/12/22/53
+>>      https://lkml.org/lkml/2015/1/6/1166
+>>      https://lkml.org/lkml/2015/1/12/35
+>>      https://lkml.org/lkml/2015/3/19/33
+>>      https://lkml.org/lkml/2015/4/10/135
+>>
+>> Changelog[v11]:
+>>      1. Fix some conflicts with the latest upstream kernel.
+>>         Add flush in iommu_context_addr
+>>
+>> Changelog[v10]:
+>>      1. Do not use CONFIG_CRASH_DUMP and is_kdump_kernel().
+>>         Use one flag which stores the te and ir status in last kernel:
+>>             iommu->pre_enabled_trans
+>>             iommu->pre_enabled_ir
+>>
+>> Changelog[v9]:
+>>      1. Add new function iommu_attach_domain_with_id.
+>>      2. Do not copy old page tables, keep using the old ones.
+>>      3. Remove functions:
+>>             intel_iommu_did_to_domain_values_entry
+>>             intel_iommu_get_dids_from_old_kernel
+>>             device_to_domain_id
+>>             copy_page_addr
+>>             copy_page_table
+>>             copy_context_entry
+>>             copy_context_entry_table
+>>      4. Add new function device_to_existing_context_entry.
+>>
+>> Changelog[v8]:
+>>      1. Add a missing __iommu_flush_cache in function copy_page_table.
+>>
+>> Changelog[v7]:
+>>      1. Use __iommu_flush_cache to flush the data to hardware.
+>>
+>> Changelog[v6]:
+>>      1. Use "unsigned long" as type of physical address.
+>>      2. Use new function unmap_device_dma to unmap the old dma.
+>>      3. Some small incorrect bits order for aw shift.
+>>
+>> Changelog[v5]:
+>>      1. Do not disable and re-enable traslation and interrupt remapping.
+>>      2. Use old root entry table.
+>>      3. Use old interrupt remapping table.
+>>      4. New functions to copy data from old kernel, and save to old
+>> kernel mem.
+>>      5. New functions to save updated root entry table and irte table.
+>>      6. Use intel_unmap to unmap the old dma;
+>>      7. Allocate new pages while driver is being loaded.
+>>
+>> Changelog[v4]:
+>>      1. Cut off the patches that move some defines and functions to
+>> new files.
+>>      2. Reduce the numbers of patches to five, make it more easier to
+>> read.
+>>      3. Changed the name of functions, make them consistent with
+>> current context
+>>         get/set functions.
+>>      4. Add change to function __iommu_attach_domain.
+>>
+>> Changelog[v3]:
+>>      1. Commented-out "#define DEBUG 1" to eliminate debug messages.
+>>      2. Updated the comments about changes in each version.
+>>      3. Fixed: one-line added to Copy-Translations patch to initialize
+>> the iovad
+>>            struct as recommended by Baoquan He [bhe@redhat.com]
+>>            init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
+>>
+>> Changelog[v2]:
+>>      The following series implements a fix for:
+>>      A kdump problem about DMA that has been discussed for a long
+>> time. That is,
+>>      when a kernel panics and boots into the kdump kernel, DMA started
+>> by the
+>>      panicked kernel is not stopped before the kdump kernel is booted
+>> and the
+>>      kdump kernel disables the IOMMU while this DMA continues.  This
+>> causes the
+>>      IOMMU to stop translating the DMA addresses as IOVAs and begin to
+>> treat
+>>      them as physical memory addresses -- which causes the DMA to either:
+>>          (1) generate DMAR errors or
+>>          (2) generate PCI SERR errors or
+>>          (3) transfer data to or from incorrect areas of memory. Often
+>> this
+>>              causes the dump to fail.
+>>
+>> Changelog[v1]:
+>>      The original version.
+>>
+>> Changed in this version:
+>> 1. Do not disable and re-enable traslation and interrupt remapping.
+>> 2. Use old root entry table.
+>> 3. Use old interrupt remapping table.
+>> 4. Use "unsigned long" as physical address.
+>> 5. Use intel_unmap to unmap the old dma;
+>>
+>> Baoquan He <bhe@redhat.com> helps testing this patchset.
+>> Takao Indoh <indou.takao@jp.fujitsu.com> gives valuable suggestions.
+>>
+>> Li, Zhen-Hua (10):
+>>    iommu/vt-d: New function to attach domain with id
+>>    iommu/vt-d: Items required for kdump
+>>    iommu/vt-d: Function to get existing context entry
+>>    iommu/vt-d: functions to copy data from old mem
+>>    iommu/vt-d: Add functions to load and save old re
+>>    iommu/vt-d: datatypes and functions used for kdump
+>>    iommu/vt-d: enable kdump support in iommu module
+>>    iommu/vt-d: assign new page table for dma_map
+>>    iommu/vt-d: Copy functions for irte
+>>    iommu/vt-d: Use old irte in kdump kernel
+>>
+>>   drivers/iommu/intel-iommu.c         | 536
+>> ++++++++++++++++++++++++++++++++++--
+>>   drivers/iommu/intel_irq_remapping.c |  96 ++++++-
+>>   include/linux/intel-iommu.h         |  16 ++
+>>   3 files changed, 623 insertions(+), 25 deletions(-)
+>>
+>
+
