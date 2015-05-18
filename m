@@ -1,82 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555427B2.4040204@linux.intel.com>
-Date: Thu, 14 May 2015 12:42:26 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:12616 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754819AbbERSig (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:36 -0400
+From: <wdavis@nvidia.com>
+To: <joro@8bytes.org>, <bhelgaas@google.com>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
+	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v2 7/7] x86: add pci-nommu implementation of map_resource
+Date: Mon, 18 May 2015 13:25:04 -0500
+Message-ID: <1431973504-5903-8-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org> <55534275.2040404@linux.intel.com> <555350B2.8050301@linaro.org> <5553F5BF.2080802@linux.intel.com> <55541F17.5060005@linaro.org>
-In-Reply-To: <55541F17.5060005@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/14 12:05, Hanjun Guo wrote:
-> On 2015年05月14日 09:09, Jiang Liu wrote:
->> On 2015/5/13 21:25, Hanjun Guo wrote:
->>> On 2015年05月13日 20:24, Jiang Liu wrote:
->>>> On 2015/5/13 17:29, Hanjun Guo wrote:
->>>>> Hi Jiang,
->>>>>
->>>>> On 2015年05月05日 10:46, Jiang Liu wrote:
->>>>>
->>>>> struct pci_controller {
->>>>>           struct acpi_device *companion;
->>>>>           void *iommu;
->>>>>           int segment;
->>>>>           int node;               /* nearest node with memory or
->>>>> NUMA_NO_NODE for global allocation */
->>>>>
->>>>>           void *platform_data;
->>>>> };
->>>>>
->>>>> except void *platform_data;
->>>>>
->>>>> On ARM64, the structure is almost the same, so how about
->>>>> introduce
->>>>>
->>>>> struct pci_controller {
->>>>>           struct acpi_device *companion;  /* ACPI companion device */
->>>>>           void            *iommu;         /* IOMMU private data */
->>>>>           int             segment;        /* PCI domain */
->>>>>           int             node;           /* NUMA node */
->>>>> #ifdef CONFIG_IA64
->>>>>       void *platform_data;
->>>>> #endif
->>>>> };
->>>>>
->>>>> in this file, then can be used for all architectures?
->>>> Current mode is that architecture defines its own version of
->>>> struct pci_controller. It would be better to keep this pattern.
->>>
->>> OK, thanks for the clarify :) So how about add my basic
->>> PCI support patch for ARM64 on top of you patch set to fix
->>> this problem?
->>
->> Sure, please send me the patches and I will send out v3 to
->> cover your review comments.
-> 
-> OK, I need to rework my patches because my patch set is dependent
-> on top of another MMCFG refactor patch set [1], so I need to remove
-> MMCONFIG first then will speed up the upstream process of your patch
-> set, will send you the patches soon.
-Hi Hanjun,
-	I will send out v3 soon , so you could rebase onto v3.
-There are changes which will affect your rebase.
-Thanks!
-Gerry
-> 
-> [1]: https://lkml.org/lkml/2015/4/17/29
-> 
-> Thanks
-> Hanjun
+From: Will Davis <wdavis@nvidia.com>
+
+Lookup the bus address of the resource by finding the parent host bridge,
+which may be different than the parent host bridge of the target device.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ arch/x86/kernel/pci-nommu.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/arch/x86/kernel/pci-nommu.c b/arch/x86/kernel/pci-nommu.c
+index da15918..6384482 100644
+--- a/arch/x86/kernel/pci-nommu.c
++++ b/arch/x86/kernel/pci-nommu.c
+@@ -38,6 +38,37 @@ static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
+ 	return bus;
+ }
+ 
++static dma_addr_t nommu_map_resource(struct device *dev, struct resource *res,
++				     unsigned long offset, size_t size,
++				     enum dma_data_direction dir,
++				     struct dma_attrs *attrs)
++{
++	struct pci_bus *bus;
++	struct pci_host_bridge *bridge;
++	struct resource_entry *window;
++	resource_size_t bus_offset = 0;
++	dma_addr_t dma_address;
++
++	/* Find the parent host bridge of the resource, and determine the
++	 * relative offset.
++	 */
++	list_for_each_entry(bus, &pci_root_buses, node) {
++		bridge = to_pci_host_bridge(bus->bridge);
++		resource_list_for_each_entry(window, &bridge->windows) {
++			if (resource_contains(window->res, res))
++				bus_offset = window->offset;
++		}
++	}
++
++	dma_address = (res->start - bus_offset) + offset;
++	WARN_ON(size == 0);
++	if (!check_addr("map_resource", dev, dma_address, size))
++		return DMA_ERROR_CODE;
++	flush_write_buffers();
++	return dma_address;
++}
++
++
+ /* Map a set of buffers described by scatterlist in streaming
+  * mode for DMA.  This is the scatter-gather version of the
+  * above pci_map_single interface.  Here the scatter gather list
+@@ -93,6 +124,7 @@ struct dma_map_ops nommu_dma_ops = {
+ 	.free			= dma_generic_free_coherent,
+ 	.map_sg			= nommu_map_sg,
+ 	.map_page		= nommu_map_page,
++	.map_resource		= nommu_map_resource,
+ 	.sync_single_for_device = nommu_sync_single_for_device,
+ 	.sync_sg_for_device	= nommu_sync_sg_for_device,
+ 	.is_phys		= 1,
+-- 
+2.4.0
+
