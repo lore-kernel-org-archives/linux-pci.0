@@ -1,47 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51418 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932689AbbELWFX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 18:05:23 -0400
-Message-ID: <55527919.2030206@broadcom.com>
-Date: Tue, 12 May 2015 15:05:13 -0700
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>, <bhelgaas@google.com>,
-	<arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <sbranden@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>, <zajec5@gmail.com>
-Subject: Re: [PATCH 0/2] PCI: iproc: add bcma PCIe 2.0 controller
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v7 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
+Date: Mon, 18 May 2015 02:55:17 -0700
+Message-Id: <cover.1431940313.git.dhdang@apm.com>
+In-Reply-To: <20150422135002.1b407b98@why.wild-wind.fr.eu.org>
+References: <20150422135002.1b407b98@why.wild-wind.fr.eu.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hauke,
+This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+to GIC V2M specification for MSI Termination.
 
-On 5/12/2015 2:22 PM, Hauke Mehrtens wrote:
-> After Ray submitted the PCIe controller for the iProc devices using 
-> pure device tree this adds support for the devices using bcma to scan 
-> the bus. This should replaces the driver I initially send for inclusion.
-> 
-> @Ray The driver found in the Broadcom SDK does some more stuff:
-> * setting up some DMA memory areas
-> * chaining MPS and MRRS to 512
-> * PHY changes:
->  * "improving" the PCIe jitter 
->  * some special initializations for the 3rd PCIe port
-> 
-> For me it works without these additions, but I haven't tested for 
-> performance or stability or 3rd port. Can you check if this is needed 
-> at all for the devices found on the market?
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports. This MSI
+block supports 2048 MSI termination ports coalesced into 16 physical HW IRQ lines
+and shared across all 5 PCIe ports. As the version 5 of this patch, the total MSI
+vectors this driver supports is reduced to 256 to maintain the correct set_affinity
+behavior for each MSI.
 
-Good work, Hauke!
+v7 changes:
+	1. Add more error handling cases
+	2. Clear spurious interrupts that may happen during driver probe
+	3. Not using free_irq for chained irqs
+	4. Improve GIC IRQ number look up in chained handler
 
-I'll eventually get to these. It may take a while but I'll eventually
-get to them.
+v6 changes:
+        1. Correctly allocate MSI with bitmap_find_next_zero_area
+        2. Add notifier for CPU hotplug case
+        3. Driver clean up
+        4. Add more detailed information into device tree binding document
+           and move the device tree binding patch before the driver/dts patch
 
-Thanks,
+v5 changes:
+        1. Implement set_affinity for each MSI by statically allocating 2 MSI GIC IRQs
+        for each X-Gene CPU core and moving MSI vectors around these GIC IRQs to steer
+        them to target CPU core. As a consequence, the total MSI vectors that X-Gene v1
+        supports is reduced to 256.
 
-Ray
+v4 changes:
+        1. Remove affinity setting for each MSI
+        2. Add description about register layout, MSI termination address and data
+        3. Correct total number of MSI vectors to 2048
+        4. Clean up error messages
+        5. Remove unused module code
+
+v3 changes:
+        1. Implement MSI support using PCI MSI IRQ domain
+        2. Only use msi_controller to store IRQ domain
+v2 changes:
+        1. Use msi_controller structure
+        2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
+ 
+
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      |  68 +++
+ MAINTAINERS                                        |   8 +
+ arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 +
+ drivers/pci/host/Kconfig                           |  10 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-xgene-msi.c                   | 550 +++++++++++++++++++++
+ drivers/pci/host/pci-xgene.c                       |  21 +
+ 7 files changed, 685 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ create mode 100644 drivers/pci/host/pci-xgene-msi.c
+
+-- 
+1.9.1
+
