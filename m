@@ -1,113 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55661F71.3090100@amd.com>
-Date: Wed, 27 May 2015 14:48:01 -0500
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:12612 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459AbbERSif (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:35 -0400
+From: <wdavis@nvidia.com>
+To: <joro@8bytes.org>, <bhelgaas@google.com>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
+	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v2 6/7] iommu/vt-d: implement (un)map_resource
+Date: Mon, 18 May 2015 13:25:03 -0500
+Message-ID: <1431973504-5903-7-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	"yasutake.koichi@jp.panasonic.com" <yasutake.koichi@jp.panasonic.com>,
-	Chris Zankel <chris@zankel.net>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Lucas Stach" <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	"Minghuan Lian" <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [RFC/RFT PATCH] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-References: <1432214067-2752-1-git-send-email-lorenzo.pieralisi@arm.com>
- <5565F40C.8010004@amd.com> <20150527175447.GA7914@red-moon>
-In-Reply-To: <20150527175447.GA7914@red-moon>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/27/2015 12:54 PM, Lorenzo Pieralisi wrote:
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> > >index 062fee6..335d9f2 100644
->>> > >--- a/drivers/pci/probe.c
->>> > >+++ b/drivers/pci/probe.c
->>> > >@@ -453,7 +453,11 @@ void pci_read_bridge_bases(struct pci_bus *child)
->>> > >   	struct resource *res;
->>> > >   	int i;
->>> > >
->>> > >-	if (pci_is_root_bus(child))	/* It's a host bus, nothing to read */
->>> > >+	/*
->>> > >+	 * If it is not a PCI bridge there is nothing to read
->>> > >+	 */
->>> > >+	if (pci_is_root_bus(child) || !dev ||
->>> > >+		!((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI))
->>> > >   		return;
->>> > >
->>> > >   	dev_info(&dev->dev, "PCI bridge to %pR%s\n",
->>> > >@@ -1878,6 +1882,11 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->>> > >   	 * all PCI-to-PCI bridges on this bus.
->>> > >   	 */
->>> > >   	if (!bus->is_added) {
->>> > >+		/*
->>> > >+		 * Read and initialize bridge resources.
->>> > >+		 */
->>> > >+		pci_read_bridge_bases(bus);
->>> > >+
->>> > >   		dev_dbg(&bus->dev, "fixups for bus\n");
->>> > >   		pcibios_fixup_bus(bus);
->>> > >   		bus->is_added = 1;
->>> > >
->> >
->> >So, I have tested the patch on ARM64 system w/ PROBE_ONLY mode, and
->> >noticed that we are calling pci_read_bridge_bases() after adding the
->> >devices on the slots. This is not soon enough since the downstream
->> >devices still failing to claim resources.
->> >
->> >However, do you think we can move pci_read_bridge_bases() before the
->> >pci_scan_slot() loop?
-> Right, how about moving it to pci_scan_bridge() before calling the
-> respective pci_scan_child_bus() ? I think it belongs there anyway.
->
-> Thanks,
+From: Will Davis <wdavis@nvidia.com>
 
-That seems reasonable. I test putting it here in pci_scan_bridge(),
-and it works.
+Implement 'map_resource' for the Intel IOMMU driver. Simply translate the
+resource to a physical address and route it to the same handlers used by
+the 'map_page' API.
 
-....
-	child = pci_find_bus(pci_domain_nr(bus), secondary);
-	if (!child) {
-		child = pci_add_new_bus(bus, dev, secondary);
-		if (!child)
-			goto out;
-		child->primary = primary;
-		pci_bus_insert_busn_res(child, secondary, subordinate);
-		child->bridge_ctl = bctl;
-		pci_read_bridge_bases(child);
-	}
+This allows a device to map another's resource, to enable peer-to-peer
+transactions.
 
-	cmax = pci_scan_child_bus(child);
-.....
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ drivers/iommu/intel-iommu.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Thanks,
-Suravee
-	
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 68d43be..0f49eff 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3095,6 +3095,15 @@ static dma_addr_t intel_map_page(struct device *dev, struct page *page,
+ 				  dir, *dev->dma_mask);
+ }
+ 
++static dma_addr_t intel_map_resource(struct device *dev, struct resource *res,
++				     unsigned long offset, size_t size,
++				     enum dma_data_direction dir,
++				     struct dma_attrs *attrs)
++{
++	return __intel_map_single(dev, res->start + offset, size,
++				  dir, *dev->dma_mask);
++}
++
+ static void flush_unmaps(void)
+ {
+ 	int i, j;
+@@ -3226,6 +3235,13 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
+ 	intel_unmap(dev, dev_addr);
+ }
+ 
++static void intel_unmap_resource(struct device *dev, dma_addr_t dev_addr,
++				 size_t size, enum dma_data_direction dir,
++				 struct dma_attrs *attrs)
++{
++	intel_unmap(dev, dev_addr);
++}
++
+ static void *intel_alloc_coherent(struct device *dev, size_t size,
+ 				  dma_addr_t *dma_handle, gfp_t flags,
+ 				  struct dma_attrs *attrs)
+@@ -3382,6 +3398,8 @@ struct dma_map_ops intel_dma_ops = {
+ 	.unmap_sg = intel_unmap_sg,
+ 	.map_page = intel_map_page,
+ 	.unmap_page = intel_unmap_page,
++	.map_resource = intel_map_resource,
++	.unmap_resource = intel_unmap_resource,
+ 	.mapping_error = intel_mapping_error,
+ };
+ 
+-- 
+2.4.0
 
