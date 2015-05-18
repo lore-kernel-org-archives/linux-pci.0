@@ -1,70 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:45572 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbbEDPKp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 11:10:45 -0400
-Date: Mon, 4 May 2015 17:10:26 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Amir Vadai <amirv@mellanox.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ido Shamay <idos@mellanox.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Hadar Hen Zion <hadarh@mellanox.com>,
-	Eran Ben Elisha <eranbe@mellanox.com>,
-	Joe Perches <joe@perches.com>,
-	Saeed Mahameed <saeedm@mellanox.com>,
-	Matan Barak <matanb@mellanox.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [RFC v1 07/11] net/mlx4: Cache irq_desc->affinity instead of
- irq_desc
-In-Reply-To: <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
-Message-ID: <alpine.DEB.2.11.1505041708190.4225@nanos>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-8-git-send-email-jiang.liu@linux.intel.com> <CAPcc5Ph4pk+4aL-PduvF67YU-A+vn2bfx6v3mr-tbY58zs7sZw@mail.gmail.com>
+Received: from mail-bl2on0072.outbound.protection.outlook.com ([65.55.169.72]:20683
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752057AbbERSZH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 May 2015 14:25:07 -0400
+Message-ID: <555A269F.4050907@caviumnetworks.com>
+Date: Mon, 18 May 2015 10:51:27 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>
+CC: Aleksey Makarov <aleksey.makarov@auriga.com>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH net-next v3 1/2] pci: Add Cavium PCI vendor id
+References: <CAErSpo4fLHEu_NOuy9CkrS9DOfSyCOkddPHEQz=pp6et8wa2AA@mail.gmail.com> <20150516.171444.245757401088795324.davem@davemloft.net> <CAErSpo61OUg7PS-rPpAMNBUg4MNtxUig21eWe0hewKpbdDrnEA@mail.gmail.com> <20150518.124152.558065488359768601.davem@davemloft.net> <CAErSpo4N=B1tF-cn8K_SUYcSkoUYUM_HyTKyFKCmbNFMG=KiFw@mail.gmail.com>
+In-Reply-To: <CAErSpo4N=B1tF-cn8K_SUYcSkoUYUM_HyTKyFKCmbNFMG=KiFw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 4 May 2015, Amir Vadai wrote:
+On 05/18/2015 10:26 AM, Bjorn Helgaas wrote:
+> On Mon, May 18, 2015 at 11:41 AM, David Miller <davem@davemloft.net> wrote:
+>> From: Bjorn Helgaas <bhelgaas@google.com>
+>> Date: Mon, 18 May 2015 11:35:20 -0500
+>>
+>>> [+cc Greg]
+>>>
+>>> On Sat, May 16, 2015 at 4:14 PM, David Miller <davem@davemloft.net> wrote:
+>>>> From: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Date: Sat, 16 May 2015 09:49:40 -0500
+>>>>
+>>>>> Hi Aleksey,
+>>>>>
+>>>>> On Fri, May 15, 2015 at 10:36 PM, Aleksey Makarov
+>>>>> <aleksey.makarov@auriga.com> wrote:
+>>>>>> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
+>>>>>> ---
+>>>>>>   include/linux/pci_ids.h | 2 ++
+>>>>>>   1 file changed, 2 insertions(+)
+>>>>>>
+>>>>>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>>>>>> index e63c02a..3633cc6 100644
+>>>>>> --- a/include/linux/pci_ids.h
+>>>>>> +++ b/include/linux/pci_ids.h
+>>>>>> @@ -2327,6 +2327,8 @@
+>>>>>>   #define PCI_DEVICE_ID_ALTIMA_AC9100    0x03ea
+>>>>>>   #define PCI_DEVICE_ID_ALTIMA_AC1003    0x03eb
+>>>>>>
+>>>>>> +#define PCI_VENDOR_ID_CAVIUM           0x177d
+>>>>>
+>>>>> Please read the note at the top of include/linux/pci_ids.h.  If this
+>>>>> definition is used in two or more drivers, mention that in the
+>>>>> changelog.  Otherwise, just use the bare hex value or a private
+>>>>> #define in your driver.
+>>>>
+>>>> It is referenced from two foo.c files in the same driver.
+>>>>
+>>>> I don't know what policy we want for situations like that.
+>>>
+>>> The current policy (1d4a433fc4e9 ("PCI: Document pci_ids.h addition
+>>> policy.")) predates me and I don't know the whole rationale.  I can
+>>> see that it might reduce backporting pain for distros.
+>>>
+>>> If two foo.c files in the same driver share the PCI ID, they likely
+>>> share other things as well, so there's likely a shared .h file where a
+>>> private PCI_VENDOR_ID_CAVIUM could go.
+>>>
+>>> But this is a vendor ID (not a device ID), and it seems likely that
+>>> there will be other devices from Cavium, so maybe it would make sense
+>>> to apply the policy to device IDs, and go ahead and add vendor IDs to
+>>> pci_ids.h.
+>>
+>> That makes sense to me, and therefore this change is probably fine as-is.
+>
+> OK.  I assume you'll take the whole series, so:
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
 
-> On Mon, May 4, 2015 at 6:15 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> > The field 'affinity' in irq_desc won't change once the irq_desc data
-> > structure is created. So cache irq_desc->affinity instead of irq_desc.
-> > This also helps to hide struct irq_desc from device drivers.
-> 
-> Hi Jiang,
-> 
-> I might not understand the new changes irq core, but up until now
-> affinity was changed when the user changed it through
-> /proc/irq/<IRQ>/smp_affinity.
-> This code is monitoring the affinity from the napi_poll context to
-> detect affinity changes, and prevent napi from keep running on the
-> wrong CPU.
-> Therefore, the affinity can't be cached at the beginning. Please
-> revert this caching.
+Thanks guys,
 
-Sigh. All of this is completely wrong. Polling in the internals of
-irq_desc is just crap.
+Just for the record, the Cavium ThunderX network controller driver (that 
+is part 2/2 of the series), is just the first user of the 
+PCI_VENDOR_ID_CAVIUM.  We have in the pipeline drivers/patches for USB 
+(xHCI), SATA (AHCI), GPIO, I2C, MMC, and maybe others that will also be 
+using this #define.
 
-irq_set_affinity_notifier() has been added for exactly this purpose.
+I also agree with the concept that the vendor ID has more if a place in 
+pci_ids.h than device IDs (which usually can go in the driver itself).
 
-Please get rid of your irq_desc abuse.
-
-Thanks,
-
-	tglx
+David Daney
 
 
