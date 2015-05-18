@@ -1,174 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:34499 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933103AbbELNef (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 09:34:35 -0400
-Received: by iecmd7 with SMTP id md7so617799iec.1
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 06:34:35 -0700 (PDT)
-Date: Tue, 12 May 2015 08:34:31 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from exprod5og108.obsmtp.com ([64.18.0.186]:52770 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753498AbbERJzm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 05:55:42 -0400
+Received: by pdea3 with SMTP id a3so141545579pde.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 02:55:40 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
 	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-Message-ID: <20150512133431.GA2898@google.com>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
- <20150505155346.GJ1550@arm.com>
- <20150506141859.GC26028@red-moon>
- <CAErSpo7z_Sf5QvMa8MBY0f7DQOmwhcpUnCFG=ZsmHuwT2HouQw@mail.gmail.com>
- <554ADCE0.8020603@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554ADCE0.8020603@amd.com>
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v7 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
+Date: Mon, 18 May 2015 02:55:20 -0700
+Message-Id: <2dafcf7d9a810804fa1616289e82d3ed86dd4980.1431940313.git.dhdang@apm.com>
+In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
+References: <cover.1431940313.git.dhdang@apm.com>
+In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
+References: <20150422135002.1b407b98@why.wild-wind.fr.eu.org> <cover.1431940313.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 06, 2015 at 10:32:48PM -0500, Suravee Suthikulanit wrote:
-> ...
-> I tested this patch series on the AMD Seattle w/o PCI_PROBE_ONLY
-> mode and that works fine. However, w/ PCI_PROBE_ONLY, I also run
-> into the resource not claimed issue (no surprise here).
-> 
-> So, I tried porting the pcibios_claim_one_bus() from
-> arch/alpha/kernel/pci.c as Lorenzo suggested, plus the a small
-> change in pci_claim_resource(), and it seems to work w/
-> PCI_PROBE_ONLY. (Please see example patch below.)
-> 
-> The additional while loop is needed in the pci_claim_resource()
-> since I need to reference back to the resource in the root bus,
-> which are defined from the DT node. Does this sounds like a
-> reasonable approach?
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c
-> b/drivers/pci/host/pci-host-generic.c
-> index e9cc559..0dfa23d 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -261,7 +261,10 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	if (!pci_has_flag(PCI_PROBE_ONLY)) {
->  		pci_bus_size_bridges(bus);
->  		pci_bus_assign_resources(bus);
-> +	} else {
-> +		pci_claim_one_bus(bus);
->  	}
-> +
->  	pci_bus_add_devices(bus);
-> 
->  	/* Configure PCI Express settings */
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 232f925..d4b43b3 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -109,6 +109,7 @@ int pci_claim_resource(struct pci_dev *dev, int
-> resource)
->  {
->  	struct resource *res = &dev->resource[resource];
->  	struct resource *root, *conflict;
-> +	struct pci_dev *pdev = dev;
-> 
->  	if (res->flags & IORESOURCE_UNSET) {
->  		dev_info(&dev->dev, "can't claim BAR %d %pR: no address assigned\n",
-> @@ -116,7 +117,18 @@ int pci_claim_resource(struct pci_dev *dev, int
-> resource)
->  		return -EINVAL;
->  	}
-> 
-> -	root = pci_find_parent_resource(dev, res);
-> +	while (pdev) {
-> +		root = pci_find_parent_resource(pdev, res);
-> +		if (root)
-> +			break;
-> +
-> +		if (pci_has_flag(PCI_PROBE_ONLY) &&
-> +		    !pci_is_root_bus(pdev->bus))
-> +			pdev = pdev->bus->self;
-> +		else
-> +			break;
-> +	}
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-I don't understand this new loop.  Apparently you have a device BAR, and
-the upstream bridge doesn't have a window that contains the BAR?  That
-sounds like a problem with the upstream bridge resources.
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-Do you have an example that would make this more concrete, e.g., a host
-bridge, P2P bridge(s), and endpoint with their resources?
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index f1ad9c2..4b719c9 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -354,6 +354,28 @@
+ 			};
+ 		};
+ 
++		msi: msi@79000000 {
++			compatible = "apm,xgene1-msi";
++			msi-controller;
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		pcie0: pcie@1f2b0000 {
+ 			status = "disabled";
+ 			device_type = "pci";
+@@ -375,6 +397,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie0clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie1: pcie@1f2c0000 {
+@@ -398,6 +421,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie1clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie2: pcie@1f2d0000 {
+@@ -421,6 +445,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie2clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie3: pcie@1f500000 {
+@@ -444,6 +469,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie3clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie4: pcie@1f510000 {
+@@ -467,6 +493,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie4clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+-- 
+1.9.1
 
-> +
->  	if (!root) {
->  		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge
-> window\n",
->  			 resource, res);
-> @@ -136,6 +148,36 @@ int pci_claim_resource(struct pci_dev *dev, int
-> resource)
->  }
->  EXPORT_SYMBOL(pci_claim_resource);
-> 
-> +void pci_claim_one_bus(struct pci_bus *b)
-> +{
-> +	struct pci_dev *pdev;
-> +	struct pci_bus *child_bus;
-> +
-> +	list_for_each_entry(pdev, &b->devices, bus_list) {
-> +		int i;
-> +
-> +		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +			struct resource *r = &pdev->resource[i];
-> +
-> +			if (r->parent || !r->start || !r->flags)
-> +				continue;
-> +
-> +			if (pci_has_flag(PCI_PROBE_ONLY) ||
-> +			    (r->flags & IORESOURCE_PCI_FIXED)) {
-> +				if (pci_claim_resource(pdev, i) == 0)
-> +					continue;
-> +
-> +				pci_claim_bridge_resource(pdev, i);
-> +			}
-> +		}
-> +	}
-> +
-> +	list_for_each_entry(child_bus, &b->children, node) {
-> +		pci_claim_one_bus(child_bus);
-> +	}
-> +}
-> +EXPORT_SYMBOL(pci_claim_one_bus);
-
-I'm not a fan of pci_claim_one_bus(), on the philosophical grounds that
-claiming resources is a per-device thing, and I don't want to encourage
-people to do it on a per-bus level.
-
-I'd rather claim them somewhere in the pci_device_add() path, as s390 does
-in pcibios_add_device().  In fact, I'd *like* to do it even earlier, when
-we read each BAR, so we could identify invalid or unassigned BARs
-immediately.
-
-> +
->  void pci_disable_bridge_window(struct pci_dev *dev)
->  {
->  	dev_info(&dev->dev, "disabling bridge mem windows\n");
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 353db8d..b59ad4b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1085,6 +1085,7 @@ void
-> pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
->  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
->  void pdev_enable_device(struct pci_dev *);
-> +void pci_claim_one_bus(struct pci_bus *b);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
->  		    int (*)(const struct pci_dev *, u8, u8));
-> -------- END PATCH ----
-> 
-> Thanks,
-> 
-> Suravee
-> 
