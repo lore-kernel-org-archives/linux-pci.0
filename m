@@ -1,86 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43411 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932478AbbEKSMX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 14:12:23 -0400
-Message-ID: <5550F0EA.7010906@ti.com>
-Date: Mon, 11 May 2015 14:11:54 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>
-CC: Lucas Stach <l.stach@pengutronix.de>, KISHON VIJAY <kishon@ti.com>,
+Received: from foss.arm.com ([217.140.101.70]:60512 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752497AbbERRi1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 May 2015 13:38:27 -0400
+Date: Mon, 18 May 2015 18:38:18 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit ST <mohit.kumar.dhaka@gmail.com>
-Subject: Re: [RFC] PCI: designware: missing *config* reg space
-References: <553E9B9A.5090000@ti.com> <CAHM4w1krq0vHd6EMpKV-NhHGggDBrrDGZw=V3XLcQDZ7XsXbsQ@mail.gmail.com>
-In-Reply-To: <CAHM4w1krq0vHd6EMpKV-NhHGggDBrrDGZw=V3XLcQDZ7XsXbsQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>
+Subject: Re: [RFC/RFT PATCH 2/2] ARM64: kernel: pci: implement PCI device
+ resources claiming
+Message-ID: <20150518173818.GA20028@red-moon>
+References: <1431614537-16136-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1431614537-16136-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <5555553F.9070608@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5555553F.9070608@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/10/2015 08:54 AM, Pratyush Anand wrote:
-> On Tue, Apr 28, 2015 at 1:57 AM, Murali Karicheri <m-karicheri2@ti.com> wrote:
->> All,
->>
->> I would like to take action to resolve the following print message thrown by
->> PCI designware core driver when kernel boots up on Keystone.
->>
->> [    0.415778] keystone-pcie 21801000.pcie: missing *config* reg space
->>
->> As per DT documentation introduced by commit
->> 4dd964df36d0e548e1806ec2ec275b62d4dc46e8 "PCI: designware: Look for
->> configuration space in 'reg', not 'ranges'
->>
->> This is introduced to stop abusing the range property for defining resource
->> for config space. However if the device binding doesn't have
->> reg-name = "config" defined, this throws out an unnecessary log message
->> at boot which seems to me not right. AFAIK, reg-names is not mandatory.
->> config space address in Keystone case is defined using index. So for
->> keystone this needs to be fixed.
->>
->> I propose to add the following check in the designware code to address
->> this. Keystone uses an older version of the Designware IP and doesn't have
->> the ATU support. So va_cfg0_base and va_cfg1_base are already set up in
->> ks_dw_pcie_host_init() before calling dw_pcie_host_init() and points to the
->> remote config space address (both same for keystone). I think for other DW
->> drivers, these variables are NULL. So add a check and avoid this error
->> message for Keystone. Any comments?
->>
-> or may be just following one liner should do the job for you.
->
-> diff --git a/drivers/pci/host/pcie-designware.c
-> b/drivers/pci/host/pcie-designware.c
-> index 2e9f84fdd9ce..4ff5308f0cc6 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -371,7 +371,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->                  addrp = of_get_address(np, index, NULL, NULL);
->                  pp->cfg0_mod_base = of_read_number(addrp, ns);
->                  pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
-> -       } else {
-> +       } else if (!pp->va_cfg0_base) {
->                  dev_err(pp->dev, "missing *config* reg space\n");
+Hi Suravee,
+
+On Fri, May 15, 2015 at 03:09:03AM +0100, Suravee Suthikulanit wrote:
+> On 5/14/2015 9:42 AM, Lorenzo Pieralisi wrote:
+> > When a device is scanned and added to the PCI bus, its resources
+> > should be claimed to validate the BARs configuration and to assign
+> > them a parent resource so that the resource hierarchy can be sanity
+> > checked.
+> >
+> > This patch adds code that carries out PCI device resources claiming to
+> > the ARM64 pcibios_add_device implementation so that device resources
+> > are claimed by the core PCI layer upon PCI device initialization on
+> > ARM64 systems.
+> >
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Liviu Dudau <liviu.dudau@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >   arch/arm64/kernel/pci.c | 10 ++++++++++
+> >   1 file changed, 10 insertions(+)
+> >
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index 4095379..c0a88ca 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -43,8 +43,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >    */
+> >   int pcibios_add_device(struct pci_dev *dev)
+> >   {
+> > +	struct resource *res;
+> > +	int i;
+> > +
+> >   	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> >
+> > +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> > +		res = &dev->resource[i];
+> > +		if (res->parent || !res->flags)
+> > +			continue;
+> > +		pci_claim_resource(dev, i);
+> > +	}
+> > +
+> >   	return 0;
+> >   }
+> >
+> >
+> 
+> Lorenzo/Bjorn,
+> 
+> I have tested this patch on top of Jayachandran's V2 patch series 
+> (http://www.spinics.net/lists/linux-pci/msg40811.html) on AMD Seattle 
+> (w/ PROBE_ONLY and non-PROBE_ONLY mode), and your changes here works 
+> with additional changes below.
+> 
+> It seems that when booting w/ PROBE_ONLY case, we need to call 
+> pci_read_bridge_bases() at some point before claiming the resources of 
+> devices underneath the bridge. This is needed to determine the bridge 
+> bases (i.e. bridge io, mmio and mmio_pref bases), and update bridge 
+> resources accordingly.
+
+Thanks for testing, I will give it a go on Seattle, if you can drop
+the log you get on PROBE_ONLY (without your patch below) that would be
+great so that I can have a look at the issue.
+
+Thanks,
+Lorenzo
+
+> ---- BEGIN PATCH -----
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index c0a88ca..57be6aa 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -48,6 +48,11 @@ int pcibios_add_device(struct pci_dev *dev)
+> 
+>          dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> 
+> +       if (pci_has_flag(PCI_PROBE_ONLY) &&
+> +           !pci_is_root_bus(dev->bus) &&
+> +           !pci_bridge_bases_is_read(dev->bus))
+> +               pci_read_bridge_bases(dev->bus);
+> +
+>          for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>                  res = &dev->resource[i];
+>                  if (res->parent || !res->flags)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6675a7a..6cab8be 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -447,6 +447,13 @@ static void pci_read_bridge_mmio_pref(struct 
+> pci_bus *child)
 >          }
-Yes. That will work. I will post a patch for this.
-
-Murali
->
-> ~Pratyush
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Murali Karicheri
-Linux Kernel, Keystone
-
+>   }
+> 
+> +bool pci_bridge_bases_is_read(struct pci_bus *bus)
+> +{
+> +       return (bus->resource[0]->start ||
+> +               bus->resource[1]->start ||
+> +               bus->resource[2]->start);
+> +}
+> +
+>   void pci_read_bridge_bases(struct pci_bus *child)
+>   {
+>          struct pci_dev *dev = child->self;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 353db8d..11c674d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -798,6 +798,7 @@ void pci_device_add(struct pci_dev *dev, struct 
+> pci_bus *bus);
+>   unsigned int pci_scan_child_bus(struct pci_bus *bus);
+>   void pci_bus_add_device(struct pci_dev *dev);
+>   void pci_read_bridge_bases(struct pci_bus *child);
+> +bool pci_bridge_bases_is_read(struct pci_bus *bus);
+>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>                                            struct resource *res);
+>   u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
+> ---- END PATCH -----
+> 
+> I'm not sure if this is the best place to be reading the bridge bases. 
+> I guess we should be able to do this when adding bridge devices.
+> 
+> Thanks,
+> 
+> Suravee
+> 
+> 
