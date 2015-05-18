@@ -1,254 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:41006 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbbETBf3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 21:35:29 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 20 May 2015 11:35:26 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B6B313578052
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 11:35:24 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4K1ZG1q13238514
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 11:35:24 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4K1YqTP002146
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 11:34:52 +1000
-Date: Wed, 20 May 2015 09:34:34 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V2] pci/iov: fix resource leak on destroying VF
-Message-ID: <20150520013434.GA10192@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150519230020.GU31666@google.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:4817 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499AbbERSif (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:35 -0400
+From: <wdavis@nvidia.com>
+To: <joro@8bytes.org>, <bhelgaas@google.com>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
+	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v2 5/7] iommu/amd: Implement (un)map_resource
+Date: Mon, 18 May 2015 13:25:02 -0500
+Message-ID: <1431973504-5903-6-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150519230020.GU31666@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 06:00:20PM -0500, Bjorn Helgaas wrote:
->On Fri, May 08, 2015 at 11:53:27AM +0800, Wei Yang wrote:
->> Beside pci_dev resources, VF has other resources between its PF, like
->> refcount to PF, sysfs link between them and the virtual bus. When a VF is
->> released in virtfn_remove(), those resources are released properly. But
->> in the hotplug case, they are not.
->> 
->> In hotplug case, VFs are removed by pci_stop_and_remove_bus_device()
->> instead of virtfn_remove(). This leads to some leak for resources.
->> 
->> This patch moves the resource release to pci_destroy_dev() to make sure
->> those resources are released when VF is destroyed.
->
->Earlier you mentioned a related commit, but you didn't reference it here.
->I thought you said this fixed a regression.  If so, we need information
->about it.  I know you said you'd like this patch to go to the stable
->kernel.  We need justification for that, too, e.g., a way to reproduce a
->problem and what the effect of the problem is.  I guess "hot-remove of
->an SR-IOV device" is probably the way to reproduce it, but I don't know
->what the effect is.  Does a subsequent hot-add fail?  Do we silently leak
->some memory?  If you could open a bugzilla with a dmesg log showing the
->problem, that would be great.
->
+From: Will Davis <wdavis@nvidia.com>
 
-I don't find an easy way to do "hot-remove" of an SR-IOV device. What I can
-think is to export the "remove" sysfs for a VF, then see the effect. While
-this needs to change the kernel to see the effect. Not sure this is
-acceptable.
+Implement 'map_resource' for the AMD IOMMU driver. Generalize the existing
+map_page implementation to operate on a physical address, and make both
+map_page and map_resource wrappers around that helper (and similiarly, for
+unmap_page and unmap_resource).
 
-The effect of the "hot-remove" is, (I guess, not tested yet)
-1. after VF removed, PF still has a link to VF in sysfs
-2. PF is not release cleanly when all VF and PF itself is removed
+This allows a device to map another's resource, to enable peer-to-peer
+transactions.
 
-Let me try to gather those information, if I could create this.
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ drivers/iommu/amd_iommu.c | 76 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 63 insertions(+), 13 deletions(-)
 
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/iov.c    |   42 +++++++++++++++++++++++-------------------
->>  drivers/pci/pci.h    |   10 ++++++++++
->>  drivers/pci/remove.c |   31 +++++++++++++++++++++++++++++++
->>  3 files changed, 64 insertions(+), 19 deletions(-)
->> 
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ee0ebff..47daf2f 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -17,8 +17,6 @@
->>  #include <linux/pci-ats.h>
->>  #include "pci.h"
->>  
->> -#define VIRTFN_ID_LEN	16
->> -
->>  int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
->>  {
->>  	if (!dev->is_physfn)
->> @@ -94,7 +92,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->>  	return child;
->>  }
->>  
->> -static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
->> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
->>  {
->>  	if (physbus != virtbus && list_empty(&virtbus->devices))
->>  		pci_remove_bus(virtbus);
->> @@ -185,9 +183,7 @@ failed:
->>  
->>  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->>  {
->> -	char buf[VIRTFN_ID_LEN];
->>  	struct pci_dev *virtfn;
->> -	struct pci_sriov *iov = dev->sriov;
->>  
->>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
->>  					     pci_iov_virtfn_bus(dev, id),
->> @@ -200,24 +196,10 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->>  		__pci_reset_function(virtfn);
->>  	}
->>  
->> -	sprintf(buf, "virtfn%u", id);
->> -	sysfs_remove_link(&dev->dev.kobj, buf);
->> -	/*
->> -	 * pci_stop_dev() could have been called for this virtfn already,
->> -	 * so the directory for the virtfn may have been removed before.
->> -	 * Double check to avoid spurious sysfs warnings.
->> -	 */
->> -	if (virtfn->dev.kobj.sd)
->> -		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
->> -
->> -	mutex_lock(&iov->dev->sriov->lock);
->>  	pci_stop_and_remove_bus_device(virtfn);
->> -	virtfn_remove_bus(dev->bus, virtfn->bus);
->> -	mutex_unlock(&iov->dev->sriov->lock);
->>  
->>  	/* balance pci_get_domain_bus_and_slot() */
->>  	pci_dev_put(virtfn);
->> -	pci_dev_put(dev);
->>  }
->>  
->>  int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
->> @@ -760,3 +742,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
->>  	return dev->sriov->total_VFs;
->>  }
->>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
->> +
->> +void pci_sriov_lock(struct pci_dev *dev)
->> +{
->> +	struct pci_sriov *iov;
->> +
->> +	if (!dev->is_physfn)
->> +		return;
->> +
->> +	iov = dev->sriov;
->> +	mutex_lock(&iov->dev->sriov->lock);
->> +}
->> +
->> +void pci_sriov_unlock(struct pci_dev *dev)
->> +{
->> +	struct pci_sriov *iov;
->> +
->> +	if (!dev->is_physfn)
->> +		return;
->> +
->> +	iov = dev->sriov;
->> +	mutex_unlock(&iov->dev->sriov->lock);
->> +}
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index 9bd762c2..a0323a2 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -260,6 +260,12 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
->>  #endif /* CONFIG_PCI_ATS */
->>  
->>  #ifdef CONFIG_PCI_IOV
->> +
->> +#define VIRTFN_ID_LEN	16
->> +void pci_sriov_lock(struct pci_dev *dev);
->> +void pci_sriov_unlock(struct pci_dev *dev);
->> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus);
->> +
->>  int pci_iov_init(struct pci_dev *dev);
->>  void pci_iov_release(struct pci_dev *dev);
->>  int pci_iov_resource_bar(struct pci_dev *dev, int resno);
->> @@ -268,6 +274,10 @@ void pci_restore_iov_state(struct pci_dev *dev);
->>  int pci_iov_bus_range(struct pci_bus *bus);
->>  
->>  #else
->> +static inline void pci_sriov_lock(struct pci_dev *dev) { }
->> +static inline void pci_sriov_unlock(struct pci_dev *dev) { }
->> +static inline void virtfn_remove_bus(struct pci_bus *physbus,
->> +		struct pci_bus *virtbus) { }
->
->This doesn't make sense to me.  You added calls to pci_sriov_lock(), etc.,
->but they are all under #ifdef CONFIG_PCI_IOV.  So why do you need stubs
->when CONFIG_PCI_IOV is not defined?
->
-
-Hmm, you are right.
-
->>  static inline int pci_iov_init(struct pci_dev *dev)
->>  {
->>  	return -ENODEV;
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index 8a280e9..f2a07bf 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -41,6 +41,37 @@ static void pci_destroy_dev(struct pci_dev *dev)
->>  	list_del(&dev->bus_list);
->>  	up_write(&pci_bus_sem);
->>  
->> +#ifdef CONFIG_PCI_IOV
->> +	if (dev->is_virtfn) {
->> +		char buf[VIRTFN_ID_LEN];
->> +		int id;
->> +		struct pci_dev *pdev = dev->physfn;
->> +
->> +		for (id = 0; id < pci_sriov_get_totalvfs(pdev); id++) {
->> +			if ((dev->bus->number == pci_iov_virtfn_bus(pdev, id))
->> +			   && (dev->devfn == pci_iov_virtfn_devfn(pdev, id))) {
->> +				sprintf(buf, "virtfn%u", id);
->> +				sysfs_remove_link(&pdev->dev.kobj, buf);
->> +				break;
->> +			}
->> +		}
->> +		/*
->> +		 * pci_stop_dev() could have been called for this virtfn
->> +		 * already, so the directory for the virtfn may have been
->> +		 * removed before.  Double check to avoid spurious sysfs
->> +		 * warnings.
->> +		 */
->> +		if (dev->dev.kobj.sd)
->> +			sysfs_remove_link(&dev->dev.kobj, "physfn");
->> +
->> +		pci_sriov_lock(pdev);
->> +		virtfn_remove_bus(pdev->bus, dev->bus);
->> +		pci_sriov_unlock(pdev);
->> +
->> +		pci_dev_put(dev->physfn);
->> +	}
->
->All this IOV-related code looks really out of place in pci_destroy_dev().
->Isn't there some way this code can be put in drivers/pci/iov.c?
->
-
-Currently, I didn't find a better solution.
-Let me take a look again.
-
->> +#endif
->> +
->>  	pci_free_resources(dev);
->>  	put_device(&dev->dev);
->>  }
->> -- 
->> 1.7.9.5
->> 
-
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index e43d489..ca2dac6 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -503,6 +503,8 @@ DECLARE_STATS_COUNTER(cnt_map_single);
+ DECLARE_STATS_COUNTER(cnt_unmap_single);
+ DECLARE_STATS_COUNTER(cnt_map_sg);
+ DECLARE_STATS_COUNTER(cnt_unmap_sg);
++DECLARE_STATS_COUNTER(cnt_map_resource);
++DECLARE_STATS_COUNTER(cnt_unmap_resource);
+ DECLARE_STATS_COUNTER(cnt_alloc_coherent);
+ DECLARE_STATS_COUNTER(cnt_free_coherent);
+ DECLARE_STATS_COUNTER(cross_page);
+@@ -541,6 +543,8 @@ static void amd_iommu_stats_init(void)
+ 	amd_iommu_stats_add(&cnt_unmap_single);
+ 	amd_iommu_stats_add(&cnt_map_sg);
+ 	amd_iommu_stats_add(&cnt_unmap_sg);
++	amd_iommu_stats_add(&cnt_map_resource);
++	amd_iommu_stats_add(&cnt_unmap_resource);
+ 	amd_iommu_stats_add(&cnt_alloc_coherent);
+ 	amd_iommu_stats_add(&cnt_free_coherent);
+ 	amd_iommu_stats_add(&cross_page);
+@@ -2752,20 +2756,16 @@ static void __unmap_single(struct dma_ops_domain *dma_dom,
+ }
+ 
+ /*
+- * The exported map_single function for dma_ops.
++ * Wrapper function that contains code common to mapping a physical address
++ * range from a page or a resource.
+  */
+-static dma_addr_t map_page(struct device *dev, struct page *page,
+-			   unsigned long offset, size_t size,
+-			   enum dma_data_direction dir,
+-			   struct dma_attrs *attrs)
++static dma_addr_t __map_phys(struct device *dev, phys_addr_t paddr,
++			     size_t size, enum dma_data_direction dir)
+ {
+ 	unsigned long flags;
+ 	struct protection_domain *domain;
+ 	dma_addr_t addr;
+ 	u64 dma_mask;
+-	phys_addr_t paddr = page_to_phys(page) + offset;
+-
+-	INC_STATS_COUNTER(cnt_map_single);
+ 
+ 	domain = get_domain(dev);
+ 	if (PTR_ERR(domain) == -EINVAL)
+@@ -2791,16 +2791,15 @@ out:
+ }
+ 
+ /*
+- * The exported unmap_single function for dma_ops.
++ * Wrapper function that contains code common to unmapping a physical address
++ * range from a page or a resource.
+  */
+-static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+-		       enum dma_data_direction dir, struct dma_attrs *attrs)
++static void __unmap_phys(struct device *dev, dma_addr_t dma_addr, size_t size,
++			 enum dma_data_direction dir)
+ {
+ 	unsigned long flags;
+ 	struct protection_domain *domain;
+ 
+-	INC_STATS_COUNTER(cnt_unmap_single);
+-
+ 	domain = get_domain(dev);
+ 	if (IS_ERR(domain))
+ 		return;
+@@ -2815,6 +2814,55 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+ }
+ 
+ /*
++ * The exported map_single function for dma_ops.
++ */
++static dma_addr_t map_page(struct device *dev, struct page *page,
++			   unsigned long offset, size_t size,
++			   enum dma_data_direction dir,
++			   struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_map_single);
++
++	return __map_phys(dev, page_to_phys(page) + offset, size, dir);
++}
++
++/*
++ * The exported unmap_single function for dma_ops.
++ */
++static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
++		       enum dma_data_direction dir, struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_unmap_single);
++
++	__unmap_phys(dev, dma_addr, size, dir);
++}
++
++/*
++ * The exported map_resource function for dma_ops.
++ */
++static dma_addr_t map_resource(struct device *dev, struct resource *res,
++			       unsigned long offset, size_t size,
++			       enum dma_data_direction dir,
++			       struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_map_resource);
++
++	return __map_phys(dev, res->start + offset, size, dir);
++}
++
++/*
++ * The exported unmap_resource function for dma_ops.
++ */
++static void unmap_resource(struct device *dev, dma_addr_t dma_addr,
++			   size_t size, enum dma_data_direction dir,
++			   struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_unmap_resource);
++
++	__unmap_phys(dev, dma_addr, size, dir);
++}
++
++/*
+  * The exported map_sg function for dma_ops (handles scatter-gather
+  * lists).
+  */
+@@ -3066,6 +3114,8 @@ static struct dma_map_ops amd_iommu_dma_ops = {
+ 	.unmap_page = unmap_page,
+ 	.map_sg = map_sg,
+ 	.unmap_sg = unmap_sg,
++	.map_resource = map_resource,
++	.unmap_resource = unmap_resource,
+ 	.dma_supported = amd_iommu_dma_supported,
+ };
+ 
 -- 
-Richard Yang
-Help you, Help me
+2.4.0
 
