@@ -1,52 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:36725 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440AbbE0Qps (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 12:45:48 -0400
-Received: by igbpi8 with SMTP id pi8so89837781igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2015 09:45:47 -0700 (PDT)
-Date: Wed, 27 May 2015 11:45:44 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, dja@axtens.net,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH Part1 v11 0/5] Some cleanup for pcie host drivers
-Message-ID: <20150527164544.GV32152@google.com>
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:35225 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752197AbbERR1I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 13:27:08 -0400
+Received: by qgew3 with SMTP id w3so45367701qge.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 10:27:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <20150518.124152.558065488359768601.davem@davemloft.net>
+References: <CAErSpo4fLHEu_NOuy9CkrS9DOfSyCOkddPHEQz=pp6et8wa2AA@mail.gmail.com>
+ <20150516.171444.245757401088795324.davem@davemloft.net> <CAErSpo61OUg7PS-rPpAMNBUg4MNtxUig21eWe0hewKpbdDrnEA@mail.gmail.com>
+ <20150518.124152.558065488359768601.davem@davemloft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 18 May 2015 12:26:47 -0500
+Message-ID: <CAErSpo4N=B1tF-cn8K_SUYcSkoUYUM_HyTKyFKCmbNFMG=KiFw@mail.gmail.com>
+Subject: Re: [PATCH net-next v3 1/2] pci: Add Cavium PCI vendor id
+To: David Miller <davem@davemloft.net>
+Cc: Aleksey Makarov <aleksey.makarov@auriga.com>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 28, 2015 at 03:01:34PM +0800, Yijing Wang wrote:
-> These patches are split out from patchset(patch 5 is new)
-> "Refine PCI scan interfaces and make generic pci host bridge".
-> They are independent of the series, pci_bus_add_devices()
-> has been ripped out from pci_scan_root_bus(), so we could
-> use pci_scan_root_bus() instead of pci_create_root_bus() + 
-> pci_scan_child_bus() for simplicity. Also this is the preparation
-> for the series.
-> 
-> Yijing Wang (5):
->   PCI: mvebu: Use pci_common_init_dev() to simplify code
->   PCI: tegra: Remove redundant tegra_pcie_scan_bus()
->   PCI: designware: Use pci_scan_root_bus() for simplicity
->   PCI: xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
+On Mon, May 18, 2015 at 11:41 AM, David Miller <davem@davemloft.net> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> Date: Mon, 18 May 2015 11:35:20 -0500
+>
+>> [+cc Greg]
+>>
+>> On Sat, May 16, 2015 at 4:14 PM, David Miller <davem@davemloft.net> wrote:
+>>> From: Bjorn Helgaas <bhelgaas@google.com>
+>>> Date: Sat, 16 May 2015 09:49:40 -0500
+>>>
+>>>> Hi Aleksey,
+>>>>
+>>>> On Fri, May 15, 2015 at 10:36 PM, Aleksey Makarov
+>>>> <aleksey.makarov@auriga.com> wrote:
+>>>>> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
+>>>>> ---
+>>>>>  include/linux/pci_ids.h | 2 ++
+>>>>>  1 file changed, 2 insertions(+)
+>>>>>
+>>>>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>>>>> index e63c02a..3633cc6 100644
+>>>>> --- a/include/linux/pci_ids.h
+>>>>> +++ b/include/linux/pci_ids.h
+>>>>> @@ -2327,6 +2327,8 @@
+>>>>>  #define PCI_DEVICE_ID_ALTIMA_AC9100    0x03ea
+>>>>>  #define PCI_DEVICE_ID_ALTIMA_AC1003    0x03eb
+>>>>>
+>>>>> +#define PCI_VENDOR_ID_CAVIUM           0x177d
+>>>>
+>>>> Please read the note at the top of include/linux/pci_ids.h.  If this
+>>>> definition is used in two or more drivers, mention that in the
+>>>> changelog.  Otherwise, just use the bare hex value or a private
+>>>> #define in your driver.
+>>>
+>>> It is referenced from two foo.c files in the same driver.
+>>>
+>>> I don't know what policy we want for situations like that.
+>>
+>> The current policy (1d4a433fc4e9 ("PCI: Document pci_ids.h addition
+>> policy.")) predates me and I don't know the whole rationale.  I can
+>> see that it might reduce backporting pain for distros.
+>>
+>> If two foo.c files in the same driver share the PCI ID, they likely
+>> share other things as well, so there's likely a shared .h file where a
+>> private PCI_VENDOR_ID_CAVIUM could go.
+>>
+>> But this is a vendor ID (not a device ID), and it seems likely that
+>> there will be other devices from Cavium, so maybe it would make sense
+>> to apply the policy to device IDs, and go ahead and add vendor IDs to
+>> pci_ids.h.
+>
+> That makes sense to me, and therefore this change is probably fine as-is.
 
-I applied the four patches above to pci/enumeration for v4.2, thanks.
+OK.  I assume you'll take the whole series, so:
 
->   PCI: iproc: Use pci_scan_root_bus() instead of pci_create_root_bus()
-> 
->  drivers/pci/host/pci-mvebu.c       |   18 +-----------------
->  drivers/pci/host/pci-tegra.c       |   16 ----------------
->  drivers/pci/host/pci-xgene.c       |    3 +--
->  drivers/pci/host/pcie-designware.c |    4 +---
->  drivers/pci/host/pcie-iproc.c      |    5 ++---
->  5 files changed, 5 insertions(+), 41 deletions(-)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
