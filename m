@@ -1,48 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33417 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752022AbbEMJBR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 May 2015 05:01:17 -0400
-Date: Wed, 13 May 2015 17:00:35 +0800
-From: Baoquan He <bhe@redhat.com>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old mem
-Message-ID: <20150513090035.GE3736@dhcp-128-28.nay.redhat.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
- <1431337974-545-5-git-send-email-zhen-hual@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431337974-545-5-git-send-email-zhen-hual@hp.com>
+Received: from exprod5og125.obsmtp.com ([64.18.0.245]:51320 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753507AbbERJzo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 05:55:44 -0400
+Received: by pdea3 with SMTP id a3so141546615pde.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 02:55:42 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v7 4/4] PCI: X-Gene: Add the MAINTAINERS entry for APM X-Gene v1 PCIe MSI driver
+Date: Mon, 18 May 2015 02:55:21 -0700
+Message-Id: <143384a3562d824c290b3228c9817d8d1a8f487f.1431940313.git.dhdang@apm.com>
+In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
+References: <cover.1431940313.git.dhdang@apm.com>
+In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
+References: <20150422135002.1b407b98@why.wild-wind.fr.eu.org> <cover.1431940313.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
-> Add some functions to copy the data from old kernel.
-> These functions are used to copy context tables and page tables.
-> 
-> To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
-> use a link here, store the pointers , and then use iounmap to free them in
-> another place.
+This patch adds information of maintainers for APM X-Gene v1 PCIe
+MSI/MSIX termination driver
 
-Hi Zhenhua,
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-I remember you mentioned iounmap will cause error inside
-spin_lock_irqsave. Do you know why it happened now? And could you also
-describe why avoid calling iounmap between
-spin_lock_irqsave/unlock_irqsave  is needed here and what's the status
-now? 
-
-I think other reviewer may want to know it too.
-
-Thanks
-Baoquan
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ddc5a8c..a1b119b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7490,6 +7490,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
+ 
++PCI MSI DRIVER FOR APPLIEDMICRO XGENE
++M:	Duc Dang <dhdang@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
++F:	drivers/pci/host/pci-xgene-msi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.9.1
 
