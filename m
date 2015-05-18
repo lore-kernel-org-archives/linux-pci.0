@@ -1,113 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5559554B.6090008@linux.intel.com>
+Date: Mon, 18 May 2015 10:58:19 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+MIME-Version: 1.0
+To: "Yun Wu (Abel)" <wuyun.wu@huawei.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Grant Likely <grant.likely@linaro.org>,
+	Kevin Cernekee <cernekee@gmail.com>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
-Subject: [RFC v2 3/7] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
-Date: Tue,  5 May 2015 10:46:06 +0800
-Message-Id: <1430793970-11159-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC v1 01/11] genirq: Introduce struct irq_common_data to host
+ shared irq data
+References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-2-git-send-email-jiang.liu@linux.intel.com> <554C1E3F.7050306@huawei.com>
+In-Reply-To: <554C1E3F.7050306@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common struct resource_entry to replace private
-struct iospace_resource.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/ia64/include/asm/pci.h |    5 -----
- arch/ia64/pci/pci.c         |   17 ++++++++---------
- 2 files changed, 8 insertions(+), 14 deletions(-)
-
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed9f60b..5c10e0ec48d4 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
--struct iospace_resource {
--	struct list_head list;
--	struct resource res;
--};
--
- struct pci_controller {
- 	struct acpi_device *companion;
- 	void *iommu;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 23689d4c37ae..4af1b52c7a44 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
- static int add_io_space(struct device *dev, struct pci_root_info *info,
- 			struct resource_entry *entry)
- {
--	struct iospace_resource *iospace;
-+	struct resource_entry *iospace;
- 	struct resource *resource, *res = entry->res;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
- 	len = strlen(info->name) + 32;
--	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	iospace = resource_list_create_entry(NULL, len);
- 	if (!iospace) {
- 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
- 			info->name);
-@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
--	resource = &iospace->res;
-+	resource = iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
-@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	entry->offset = base_port;
- 	res->start = min + base_port;
- 	res->end = max + base_port;
--	list_add_tail(&iospace->list, &info->io_resources);
-+	resource_list_add_tail(iospace, &info->io_resources);
- 
- 	return 0;
- 
- free_resource:
--	kfree(iospace);
-+	resource_list_free_entry(iospace);
- 	return -ENOSPC;
- }
- 
-@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
- static void __release_pci_root_info(struct pci_root_info *info)
- {
- 	struct resource *res;
--	struct iospace_resource *iospace, *tmp;
- 	struct resource_entry *entry, *tentry;
- 
--	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
--		release_resource(&iospace->res);
--		kfree(iospace);
-+	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
-+		release_resource(entry->res);
-+		resource_list_destroy_entry(entry);
- 	}
- 
- 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
--- 
-1.7.10.4
+On 2015/5/8 10:23, Yun Wu (Abel) wrote:
+> On 2015/5/4 11:15, Jiang Liu wrote:
+> 
+> [...]
+>> diff --git a/include/linux/irqdesc.h b/include/linux/irqdesc.h
+>> index dd1109fb241e..3010e99abf3e 100644
+>> --- a/include/linux/irqdesc.h
+>> +++ b/include/linux/irqdesc.h
+>> @@ -47,6 +47,7 @@ struct pt_regs;
+>>   * @name:		flow handler name for /proc/interrupts output
+>>   */
+>>  struct irq_desc {
+>> +	struct irq_common_data	irq_common_data;
+> 
+> Hi Gerry,
+> 
+> Please update description as well. :)
+Thanks, Abel!
 
