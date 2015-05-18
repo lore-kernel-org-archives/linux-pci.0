@@ -1,101 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: "Jiang, Dave" <dave.jiang@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jdmason@kudzu.us" <jdmason@kudzu.us>,
-	"linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>
-Subject: RE: [PATCH 04/16] Check the DID for certain workaround error flags
- to be set.
-Date: Wed, 20 May 2015 21:26:52 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D7825D318@MX104CL02.corp.emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com>
-	 <9c6ef6eec533bd94ddc6df96bb0b2d37baff75cf.1432135631.git.Allen.Hubbe@emc.com>
-	 <CAErSpo45RH8BA_GzGGTekDfM0fSMBPPs79NpFyYsvVPdhVSqGw@mail.gmail.com>
- <1432156539.19618.135.camel@intel.com>
-In-Reply-To: <1432156539.19618.135.camel@intel.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:12603 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499AbbERSid (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 14:38:33 -0400
+From: <wdavis@nvidia.com>
+To: <joro@8bytes.org>, <bhelgaas@google.com>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<tripperda@nvidia.com>, <jhubbard@nvidia.com>,
+	<jglisse@redhat.com>, <konrad.wilk@oracle.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v2 3/7] dma-mapping: pci: add pci_(un)map_resource
+Date: Mon, 18 May 2015 13:25:00 -0500
+Message-ID: <1431973504-5903-4-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogbGludXgtbnRiQGdvb2dsZWdyb3Vwcy5jb20gW21haWx0bzpsaW51eC1udGJAZ29vZ2xl
-Z3JvdXBzLmNvbV0gT24gQmVoYWxmIE9mIEppYW5nLCBEYXZlDQo+IE9uIFdlZCwgMjAxNS0wNS0y
-MCBhdCAxNjoxMSAtMDUwMCwgQmpvcm4gSGVsZ2FhcyB3cm90ZToNCj4gPiBPbiBXZWQsIE1heSAy
-MCwgMjAxNSBhdCAxMDo0MSBBTSwgQWxsZW4gSHViYmUgPEFsbGVuLkh1YmJlQGVtYy5jb20+DQo+
-IHdyb3RlOg0KPiA+ID4gRnJvbTogRGF2ZSBKaWFuZyA8ZGF2ZS5qaWFuZ0BpbnRlbC5jb20+DQo+
-ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogRGF2ZSBKaWFuZyA8ZGF2ZS5qaWFuZ0BpbnRlbC5j
-b20+DQo+ID4NCj4gPiBOZWVkcyBhIHRvcGljIGluIHRoZSBzdWJqZWN0IGxpbmUgYW5kIGEgY2hh
-bmdlbG9nLg0KPiA+DQo+ID4gSXQgYWxzbyBzZWVtcyB0byBkbyBhIGxvdCBtb3JlIHRoYW4ganVz
-dCBjaGVja2luZyBkZXZpY2UgSUQgKEkgYXNzdW1lDQo+ID4gdGhhdCdzIHdoYXQgIkRJRCIgbWVh
-bnMpLCBzbyB0aGlzIHNob3VsZCBwcm9iYWJseSBiZSBzcGxpdCBpbnRvDQo+ID4gc2V2ZXJhbCBw
-YXRjaGVzIHRoYXQgZWFjaCBkbyBvbmUgdGhpbmcuICBJIHNlZSBhdCBsZWFzdDoNCj4gPg0KPiA+
-ICAgLSBjb3NtZXRpYyBjb2RlIHJlc3RydWN0dXJpbmcNCj4gPiAgIC0gd29ya19zdHJ1Y3QvdGFz
-a2xldF9zdHJ1Y3QgY2hhbmdlcw0KPiA+ICAgLSBuZXcgI2RlZmluZXMgYW5kIGJhcjJfb2ZmKCkg
-Y2hhbmdlcw0KPiANCj4gSSB0aGluayB0aGlzIHBhdGNoIGdvdCBtYW5nbGVkIHdpdGggY291cGxl
-IG90aGVyIHBhdGNoZXMuIEFsbGVuPw0KDQpZZXMsIHRoZXJlIHdpbGwgYmUgYSB2MiB0byBmaXgg
-dGhlIG1hbmdsaW5nLiAgVGhlIGNvZGUgcmVzdHJ1Y3R1cmluZyBpcyBtZWFudCBmb3IgYSBkaWZm
-ZXJlbnQgcGF0Y2guDQoNClRoaXMgaXMgYWxsIHRoYXQgaXMgbWVhbnQgdG8gY2hhbmdlIGluIHRo
-aXMgcGF0Y2g6DQoNCj4gPiA+IEBAIC0xNzQ3LDI5ICsxNzIyLDY4IEBAIHN0YXRpYyBpbnQgc25i
-X2luaXRfZGV2KHN0cnVjdCBpbnRlbF9udGJfZGV2DQo+ICpuZGV2KQ0KPiA+ID4gICAgICAgICB1
-OCBwcGQ7DQo+ID4gPiAgICAgICAgIGludCByYywgbWVtOw0KPiA+ID4NCj4gPiA+ICsgICAgICAg
-cGRldiA9IG5kZXZfcGRldihuZGV2KTsNCj4gPiA+ICsNCj4gPiA+ICsgICAgICAgc3dpdGNoIChw
-ZGV2LT5kZXZpY2UpIHsNCj4gPiA+ICAgICAgICAgLyogVGhlcmUgaXMgYSBYZW9uIGhhcmR3YXJl
-IGVycmF0YSByZWxhdGVkIHRvIHdyaXRlcyB0bw0KPiBTRE9PUkJFTEwgb3INCj4gPiA+ICAgICAg
-ICAgICogQjJCRE9PUkJFTEwgaW4gY29uanVuY3Rpb24gd2l0aCBpbmJvdW5kIGFjY2VzcyB0byBO
-VEINCj4gTU1JTyBTcGFjZSwNCj4gPiA+ICAgICAgICAgICogd2hpY2ggbWF5IGhhbmcgdGhlIHN5
-c3RlbS4gIFRvIHdvcmthcm91bmQgdGhpcyB1c2UgdGhlDQo+IHNlY29uZCBtZW1vcnkNCj4gPiA+
-ICAgICAgICAgICogd2luZG93IHRvIGFjY2VzcyB0aGUgaW50ZXJydXB0IGFuZCBzY3JhdGNoIHBh
-ZCByZWdpc3RlcnMNCj4gb24gdGhlDQo+ID4gPiAgICAgICAgICAqIHJlbW90ZSBzeXN0ZW0uDQo+
-ID4gPiAgICAgICAgICAqLw0KPiA+ID4gLSAgICAgICBuZGV2LT5od2Vycl9mbGFncyB8PSBOVEJf
-SFdFUlJfU0RPT1JCRUxMX0xPQ0tVUDsNCj4gPiA+ICsgICAgICAgY2FzZSBQQ0lfREVWSUNFX0lE
-X0lOVEVMX05UQl9TU19KU0Y6DQo+ID4gPiArICAgICAgIGNhc2UgUENJX0RFVklDRV9JRF9JTlRF
-TF9OVEJfUFNfSlNGOg0KPiA+ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRC
-X0IyQl9KU0Y6DQo+ID4gPiArICAgICAgIGNhc2UgUENJX0RFVklDRV9JRF9JTlRFTF9OVEJfU1Nf
-U05COg0KPiA+ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRCX1BTX1NOQjoN
-Cj4gPiA+ICsgICAgICAgY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX05UQl9CMkJfU05COg0KPiA+
-ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRCX1NTX0lWVDoNCj4gPiA+ICsg
-ICAgICAgY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX05UQl9QU19JVlQ6DQo+ID4gPiArICAgICAg
-IGNhc2UgUENJX0RFVklDRV9JRF9JTlRFTF9OVEJfQjJCX0lWVDoNCj4gPiA+ICsgICAgICAgY2Fz
-ZSBQQ0lfREVWSUNFX0lEX0lOVEVMX05UQl9TU19IU1g6DQo+ID4gPiArICAgICAgIGNhc2UgUENJ
-X0RFVklDRV9JRF9JTlRFTF9OVEJfUFNfSFNYOg0KPiA+ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJ
-Q0VfSURfSU5URUxfTlRCX0IyQl9IU1g6DQo+ID4gPiArICAgICAgICAgICAgICAgbmRldi0+aHdl
-cnJfZmxhZ3MgfD0gTlRCX0hXRVJSX1NET09SQkVMTF9MT0NLVVA7DQo+ID4gPiArICAgICAgICAg
-ICAgICAgYnJlYWs7DQo+ID4gPiArICAgICAgIH0NCj4gPiA+DQo+ID4gPiArICAgICAgIHN3aXRj
-aCAocGRldi0+ZGV2aWNlKSB7DQo+ID4gPiAgICAgICAgIC8qIFRoZXJlIGlzIGEgaGFyZHdhcmUg
-ZXJyYXRhIHJlbGF0ZWQgdG8gYWNjZXNzaW5nIGFueQ0KPiByZWdpc3RlciBpbg0KPiA+ID4gICAg
-ICAgICAgKiBTQjAxQkFTRSBpbiB0aGUgcHJlc2VuY2Ugb2YgYmlkaXJlY3Rpb25hbCB0cmFmZmlj
-DQo+IGNyb3NzaW5nIHRoZSBOVEIuDQo+ID4gPiAgICAgICAgICAqLw0KPiA+ID4gLSAgICAgICBu
-ZGV2LT5od2Vycl9mbGFncyB8PSBOVEJfSFdFUlJfU0IwMUJBU0VfTE9DS1VQOw0KPiA+ID4gKyAg
-ICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRCX1NTX0lWVDoNCj4gPiA+ICsgICAgICAg
-Y2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX05UQl9QU19JVlQ6DQo+ID4gPiArICAgICAgIGNhc2Ug
-UENJX0RFVklDRV9JRF9JTlRFTF9OVEJfQjJCX0lWVDoNCj4gPiA+ICsgICAgICAgY2FzZSBQQ0lf
-REVWSUNFX0lEX0lOVEVMX05UQl9TU19IU1g6DQo+ID4gPiArICAgICAgIGNhc2UgUENJX0RFVklD
-RV9JRF9JTlRFTF9OVEJfUFNfSFNYOg0KPiA+ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJQ0VfSURf
-SU5URUxfTlRCX0IyQl9IU1g6DQo+ID4gPiArICAgICAgICAgICAgICAgbmRldi0+aHdlcnJfZmxh
-Z3MgfD0gTlRCX0hXRVJSX1NCMDFCQVNFX0xPQ0tVUDsNCj4gPiA+ICsgICAgICAgICAgICAgICBi
-cmVhazsNCj4gPiA+ICsgICAgICAgfQ0KPiA+ID4NCj4gPiA+ICsgICAgICAgc3dpdGNoIChwZGV2
-LT5kZXZpY2UpIHsNCj4gPiA+ICAgICAgICAgLyogSFcgRXJyYXRhIG9uIGJpdCAxNCBvZiBiMmJk
-b29yYmVsbCByZWdpc3Rlci4gIFdyaXRlcyB3aWxsDQo+IG5vdCBiZQ0KPiA+ID4gICAgICAgICAg
-KiBtaXJyb3JlZCB0byB0aGUgcmVtb3RlIHN5c3RlbS4gIFNocmluayB0aGUgbnVtYmVyIG9mIGJp
-dHMNCj4gYnkgb25lLA0KPiA+ID4gICAgICAgICAgKiBzaW5jZSBiaXQgMTQgaXMgdGhlIGxhc3Qg
-Yml0Lg0KPiA+ID4gICAgICAgICAgKi8NCj4gPiA+IC0gICAgICAgbmRldi0+aHdlcnJfZmxhZ3Mg
-fD0gTlRCX0hXRVJSX0IyQkRPT1JCRUxMX0JJVDE0Ow0KPiA+ID4gKyAgICAgICBjYXNlIFBDSV9E
-RVZJQ0VfSURfSU5URUxfTlRCX1NTX0pTRjoNCj4gPiA+ICsgICAgICAgY2FzZSBQQ0lfREVWSUNF
-X0lEX0lOVEVMX05UQl9QU19KU0Y6DQo+ID4gPiArICAgICAgIGNhc2UgUENJX0RFVklDRV9JRF9J
-TlRFTF9OVEJfQjJCX0pTRjoNCj4gPiA+ICsgICAgICAgY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVM
-X05UQl9TU19TTkI6DQo+ID4gPiArICAgICAgIGNhc2UgUENJX0RFVklDRV9JRF9JTlRFTF9OVEJf
-UFNfU05COg0KPiA+ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRCX0IyQl9T
-TkI6DQo+ID4gPiArICAgICAgIGNhc2UgUENJX0RFVklDRV9JRF9JTlRFTF9OVEJfU1NfSVZUOg0K
-PiA+ID4gKyAgICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRCX1BTX0lWVDoNCj4gPiA+
-ICsgICAgICAgY2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX05UQl9CMkJfSVZUOg0KPiA+ID4gKyAg
-ICAgICBjYXNlIFBDSV9ERVZJQ0VfSURfSU5URUxfTlRCX1NTX0hTWDoNCj4gPiA+ICsgICAgICAg
-Y2FzZSBQQ0lfREVWSUNFX0lEX0lOVEVMX05UQl9QU19IU1g6DQo+ID4gPiArICAgICAgIGNhc2Ug
-UENJX0RFVklDRV9JRF9JTlRFTF9OVEJfQjJCX0hTWDoNCj4gPiA+ICsgICAgICAgICAgICAgICBu
-ZGV2LT5od2Vycl9mbGFncyB8PSBOVEJfSFdFUlJfQjJCRE9PUkJFTExfQklUMTQ7DQo+ID4gPiAr
-ICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4gPiArICAgICAgIH0NCj4gPiA+DQo+ID4gPiAgICAg
-ICAgIG5kZXYtPnJlZyA9ICZzbmJfcmVnOw0KPiA+ID4NCj4gPiA+IC0gICAgICAgcGRldiA9IG5k
-ZXZfcGRldihuZGV2KTsNCj4gPiA+IC0NCj4gPiA+ICAgICAgICAgcmMgPSBwY2lfcmVhZF9jb25m
-aWdfYnl0ZShwZGV2LCBTTkJfUFBEX09GRlNFVCwgJnBwZCk7DQo+ID4gPiAgICAgICAgIGlmIChy
-YykNCj4gPiA+ICAgICAgICAgICAgICAgICByZXR1cm4gLUVJTzsNCg==
+From: Will Davis <wdavis@nvidia.com>
+
+Simply route these through to the new dma_(un)map_resource APIs.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+index c110843..ac4a4ad 100644
+--- a/include/asm-generic/pci-dma-compat.h
++++ b/include/asm-generic/pci-dma-compat.h
+@@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+ 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+ }
+ 
++static inline dma_addr_t
++pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
++		 unsigned long offset, size_t size, int direction)
++{
++	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
++}
++
++static inline void
++pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
++		   int direction)
++{
++	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
++}
++
+ static inline int
+ pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	   int nents, int direction)
+-- 
+2.4.0
+
