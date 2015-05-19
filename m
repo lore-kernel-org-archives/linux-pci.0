@@ -1,140 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:51379 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbbEKJyM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 05:54:12 -0400
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v11 02/10] iommu/vt-d: Items required for kdump
-Date: Mon, 11 May 2015 17:52:46 +0800
-Message-Id: <1431337974-545-3-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:49660 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754151AbbESKzb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:55:31 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 20:55:29 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 200A62BB0047
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:27 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAtJaY18612430
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:27 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAssm2001929
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:54 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 07/10] powerpc/powernv: Support EEH reset for VF PE
+Date: Tue, 19 May 2015 18:50:09 +0800
+Message-Id: <1432032612-21701-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add context entry functions needed for kdump.
+PEs for VFs don't have primary bus. So they have to have their own reset
+backend, which is used during EEH recovery. The patch implements the reset
+backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
+in the PE.
 
-Bill Sumner:
-    Original version;
-
-Li, Zhenhua:
-    Changed the name of new functions, make them consistent with current
-    context get/set functions.
-    Remove the structure dve which is not used in new version.
-
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/iommu/intel-iommu.c | 72 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 72 insertions(+)
+ arch/powerpc/include/asm/eeh.h               |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  134 +++++++++++++++++++++++++-
+ 2 files changed, 134 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index cb9d6cc..1e7ceb5 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -190,6 +190,31 @@ struct root_entry {
- };
- #define ROOT_ENTRY_NR (VTD_PAGE_SIZE/sizeof(struct root_entry))
- 
-+static inline bool root_present(struct root_entry *root)
-+{
-+	return (root->lo & 1);
-+}
-+
-+static inline void set_root_value(struct root_entry *root, unsigned long value)
-+{
-+	root->lo &= ~VTD_PAGE_MASK;
-+	root->lo |= value & VTD_PAGE_MASK;
-+}
-+
-+static inline struct context_entry *
-+get_context_addr_from_root(struct root_entry *root)
-+{
-+	return (struct context_entry *)
-+		(root_present(root)?phys_to_virt(
-+		root->lo & VTD_PAGE_MASK) :
-+		NULL);
-+}
-+
-+static inline unsigned long
-+get_context_phys_from_root(struct root_entry *root)
-+{
-+	return  root_present(root) ? (root->lo & VTD_PAGE_MASK) : 0;
-+}
- 
- /*
-  * low 64 bits:
-@@ -211,6 +236,32 @@ static inline bool context_present(struct context_entry *context)
- {
- 	return (context->lo & 1);
- }
-+
-+static inline int context_fault_enable(struct context_entry *c)
-+{
-+	return((c->lo >> 1) & 0x1);
-+}
-+
-+static inline int context_translation_type(struct context_entry *c)
-+{
-+	return((c->lo >> 2) & 0x3);
-+}
-+
-+static inline u64 context_address_root(struct context_entry *c)
-+{
-+	return((c->lo >> VTD_PAGE_SHIFT));
-+}
-+
-+static inline int context_address_width(struct context_entry *c)
-+{
-+	return((c->hi >> 0) & 0x7);
-+}
-+
-+static inline int context_domain_id(struct context_entry *c)
-+{
-+	return((c->hi >> 8) & 0xffff);
-+}
-+
- static inline void context_set_present(struct context_entry *context)
- {
- 	context->lo |= 1;
-@@ -296,6 +347,27 @@ static inline int first_pte_in_page(struct dma_pte *pte)
- 	return !((unsigned long)pte & ~VTD_PAGE_MASK);
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index c1fde48..3d64cf3 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -134,6 +134,7 @@ struct eeh_dev {
+ 	int pcix_cap;			/* Saved PCIx capability	*/
+ 	int pcie_cap;			/* Saved PCIe capability	*/
+ 	int aer_cap;			/* Saved AER capability		*/
++	int af_cap;			/* Saved AF capability		*/
+ 	struct eeh_pe *pe;		/* Associated PE		*/
+ 	struct list_head list;		/* Form link list in the PE	*/
+ 	struct pci_controller *phb;	/* Associated PHB		*/
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index c505036..7af3c1e 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -402,6 +402,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
+ 	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
+ 	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
+ 	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
++	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
+ 	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
+ 		edev->mode |= EEH_DEV_BRIDGE;
+ 		if (edev->pcie_cap) {
+@@ -891,6 +892,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
  }
  
++static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
++				     u16 mask, bool af_flr_rst)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	int status, i;
 +
-+/*
-+ * Fix Crashdump failure caused by leftover DMA through a hardware IOMMU
-+ *
-+ * Fixes the crashdump kernel to deal with an active iommu and legacy
-+ * DMA from the (old) panicked kernel in a manner similar to how legacy
-+ * DMA is handled when no hardware iommu was in use by the old kernel --
-+ * allow the legacy DMA to continue into its current buffers.
-+ *
-+ * In the crashdump kernel, this code:
-+ * 1. skips disabling the IOMMU's translating.
-+ * 2. Do not re-enable IOMMU's translating.
-+ * 3. In kdump kernel, use the old root entry table.
-+ * 4. Allocate pages for new context entry, copy data from old context entries
-+ *    in the old kernel to the new ones.
-+ *
-+ * In other kinds of kernel, for example, a kernel started by kexec,
-+ * do the same thing as crashdump kernel.
-+ */
++	/* Wait for Transaction Pending bit to be cleared */
++	for (i = 0; i < 4; i++) {
++		eeh_ops->read_config(pdn, pos, 2, &status);
++		if (!(status & mask))
++			return;
 +
++		msleep((1 << i) * 100);
++	}
 +
- /*
-  * This domain is a statically identity mapping domain.
-  *	1. This domain creats a static 1:1 mapping to all usable memory.
++	pr_warn("%s: Pending transaction while issuing %s FLR to "
++		"%04x:%02x:%02x.%01x\n",
++		__func__, af_flr_rst ? "AF" : "",
++		edev->phb->global_number, pdn->busno,
++		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
++}
++
++static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 reg;
++
++	if (!edev->pcie_cap)
++		return -ENOTTY;
++
++	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
++	if (!(reg & PCI_EXP_DEVCAP_FLR))
++		return -ENOTTY;
++
++	switch (option) {
++	case EEH_RESET_HOT:
++	case EEH_RESET_FUNDAMENTAL:
++		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
++					 PCI_EXP_DEVSTA_TRPND, false);
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     4, &reg);
++		reg |= PCI_EXP_DEVCTL_BCR_FLR;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      4, reg);
++		msleep(EEH_PE_RST_HOLD_TIME);
++		break;
++	case EEH_RESET_DEACTIVATE:
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     4, &reg);
++		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      4, reg);
++		msleep(EEH_PE_RST_SETTLE_TIME);
++		break;
++	}
++
++	return 0;
++}
++
++static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 cap;
++
++	if (!edev->af_cap)
++		return -ENOTTY;
++
++	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
++	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
++		return -ENOTTY;
++
++	switch (option) {
++	case EEH_RESET_HOT:
++	case EEH_RESET_FUNDAMENTAL:
++		/*
++		 * Wait for Transaction Pending bit to clear. A word-aligned
++		 * test is used, so we use the conrol offset rather than status
++		 * and shift the test bit to match.
++		 */
++		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
++					 PCI_AF_STATUS_TP << 8, true);
++		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
++				      1, PCI_AF_CTRL_FLR);
++		msleep(EEH_PE_RST_HOLD_TIME);
++		break;
++	case EEH_RESET_DEACTIVATE:
++		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
++		msleep(EEH_PE_RST_SETTLE_TIME);
++		break;
++	}
++
++	return 0;
++}
++
++static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
++{
++	int ret;
++
++	ret = pnv_eeh_do_flr(pdn, option);
++	if (ret)
++		return ret;
++
++	return pnv_eeh_do_af_flr(pdn, option);
++}
++
++static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
++{
++	struct eeh_dev *edev, *tmp;
++	struct pci_dn *pdn;
++	int ret;
++
++	eeh_pe_for_each_dev(pe, edev, tmp) {
++		pdn = eeh_dev_to_pdn(edev);
++		ret = pnv_eeh_reset_vf(pdn, option);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
+ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	struct pci_controller *hose;
+@@ -966,7 +1088,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+ 		}
+ 
+ 		bus = eeh_pe_bus_get(pe);
+-		if (pci_is_root_bus(bus) ||
++		if (pe->type & EEH_PE_VF)
++			ret = pnv_eeh_vf_pe_reset(pe, option);
++		else if (pci_is_root_bus(bus) ||
+ 			pci_is_root_bus(bus->parent))
+ 			ret = pnv_eeh_root_reset(hose, option);
+ 		else
+@@ -1106,6 +1230,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
+ 	if (!edev || !edev->pe)
+ 		return false;
+ 
++	/*
++	 * We will issue FLR or AF FLR to all VFs, which are contained
++	 * in VF PE. It relies on the EEH PCI config accessors. So we
++	 * can't block them during the window.
++	 */
++	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
++		return false;
++
+ 	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
+ 		return true;
+ 
 -- 
-2.0.0-rc0
+1.7.9.5
 
