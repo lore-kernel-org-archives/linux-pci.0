@@ -1,68 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38355 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750859AbbEDEvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 00:51:38 -0400
-Message-ID: <1430715075.7979.115.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Mon, 04 May 2015 14:51:15 +1000
-In-Reply-To: <20150504013012.GA15561@gwshan>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-	 <1430522976.7979.78.camel@kernel.crashing.org>
-	 <1430534906.7979.85.camel@kernel.crashing.org>
-	 <20150504013012.GA15561@gwshan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:35179 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378AbbESXWr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:22:47 -0400
+Received: by iesa3 with SMTP id a3so26478585ies.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:22:47 -0700 (PDT)
+Date: Tue, 19 May 2015 18:22:43 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	gabriele.paoloni@huawei.com, yuanzhichang@hisilicon.com,
+	zhangjukuo@huawei.com, liguozhu@hisilicon.com
+Subject: Re: [PATCH] PCI: designware: Add 8 lanes support
+Message-ID: <20150519232243.GY31666@google.com>
+References: <1431499474-102380-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431499474-102380-1-git-send-email-wangzhou1@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-05-04 at 11:30 +1000, Gavin Shan wrote:
-> Thanks, Ben. If we really need utilize overlay to support our case,
-> we need some one to parse the input (device-tree changes) from
-> firmware
-> and create "overlay" device node and "target" node as I mentioned
-> above.
-> It's not simpler than the way we had to support our case. I'm not sure
-> if we really need utilize overlay for our case.
+On Wed, May 13, 2015 at 02:44:34PM +0800, Zhou Wang wrote:
+> This patch adds 8 lanes support. Following suggestion from Arnd, just split
+> this patch from http://www.spinics.net/lists/linux-pci/msg40467.html
+> 
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-No, if we decide to go down that path, then the FW needs to create
-the overlay.
+Applied to pci/host-designware for v4.2, with acks from Jingoo and
+Pratyush.  Thanks!
 
-This could be done by having some kind of versioning to all nodes and
-properties using a global generation count.
-
-Ie, if we "know" what we passed to Linux, we can generate an overlay
-that contains everything that changed since then using the version
-numbers.
-
-However, we should probably encode the version in the tree itself and
-have specific APIs to retrieve "from" a given version to properly deal
-with kexec'ing a kernel since in that case, the new kernel will have
-something that isn't version 0 but version N where N is the latest
-applied overlay.
-
-Also I don't know how removing nodes works with overlay. IE the overlay
-system is designed around the idea of removing the overlay to retrieve
-the original tree.
-
-In our case, our overlays are meant to be fully committed, and I don't
-know whether there's a way to keep track. On unplug, we will just remove
-all the nodes below the slot.
-
-Cheers,
-Ben.
-
-
+> ---
+>  drivers/pci/host/pcie-designware.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2e9f84f..4ce0aa5 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -31,6 +31,7 @@
+>  #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
+>  #define PORT_LINK_MODE_2_LANES		(0x3 << 16)
+>  #define PORT_LINK_MODE_4_LANES		(0x7 << 16)
+> +#define PORT_LINK_MODE_8_LANES		(0xf << 16)
+>  
+>  #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
+>  #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
+> @@ -38,6 +39,7 @@
+>  #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
+>  #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
+>  #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
+> +#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
+>  
+>  #define PCIE_MSI_ADDR_LO		0x820
+>  #define PCIE_MSI_ADDR_HI		0x824
+> @@ -778,6 +780,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	case 4:
+>  		val |= PORT_LINK_MODE_4_LANES;
+>  		break;
+> +	case 8:
+> +		val |= PORT_LINK_MODE_8_LANES;
+> +		break;
+>  	}
+>  	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
+>  
+> @@ -794,6 +799,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	case 4:
+>  		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
+>  		break;
+> +	case 8:
+> +		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
+> +		break;
+>  	}
+>  	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
