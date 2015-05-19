@@ -1,178 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61720 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751730AbbEZRZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 May 2015 13:25:03 -0400
-Message-ID: <5564AC66.1030608@linux.intel.com>
-Date: Wed, 27 May 2015 01:24:54 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 11/11] ARM64 / PCI / ACPI: support for ACPI based PCI
- hostbridge init
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org> <20150526171350.GV1565@arm.com>
-In-Reply-To: <20150526171350.GV1565@arm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:48961 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbbESBgL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:36:11 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 11:36:07 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 518A72BB004D
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:36:04 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1ZujP19660860
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:36:04 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1ZV8c027740
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:35:31 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V6 00/10] VF EEH on Power8
+Date: Tue, 19 May 2015 09:35:02 +0800
+Message-Id: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/27 1:13, Will Deacon wrote:
-> On Tue, May 26, 2015 at 01:49:24PM +0100, Hanjun Guo wrote:
->> Based on Jiang Liu's common interface to support PCI host bridge
->> init and refactoring of MMCONFIG, this patch using information
->> from ACPI MCFG table and IO/irq resources from _CRS to init
->> ARM64 PCI hostbridge, then PCI will work on ARM64.
->>
->> This patch is based on Mark Salter and Tomasz Nowicki's work.
->>
->> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Arnd Bergmann <arnd@arndb.de>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Liviu Dudau <Liviu.Dudau@arm.com>
->> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
->> CC: Will Deacon <will.deacon@arm.com>
->> ---
->>  arch/arm64/Kconfig      |   7 ++
->>  arch/arm64/kernel/pci.c | 245 +++++++++++++++++++++++++++++++++++++++++++++---
->>  drivers/pci/pci.c       |  26 +++--
->>  3 files changed, 257 insertions(+), 21 deletions(-)
->>
->> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
->> index 9b80428..8e4b789 100644
->> --- a/arch/arm64/Kconfig
->> +++ b/arch/arm64/Kconfig
->> @@ -276,6 +276,13 @@ config PCI_DOMAINS_GENERIC
->>  config PCI_SYSCALL
->>         def_bool PCI
->>
->> +config PCI_MMCONFIG
->> +       def_bool y
->> +       select PCI_ECAM
->> +       select HAVE_PCI_ECAM
->> +       select GENERIC_PCI_ECAM
->> +       depends on ACPI
->> +
->>  source "drivers/pci/Kconfig"
->>  source "drivers/pci/pcie/Kconfig"
->>  source "drivers/pci/hotplug/Kconfig"
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index 4095379..d1629dc 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -11,12 +11,15 @@
->>   */
->>
->>  #include <linux/acpi.h>
->> +#include <linux/ecam.h>
->>  #include <linux/init.h>
->>  #include <linux/io.h>
->>  #include <linux/kernel.h>
->>  #include <linux/mm.h>
->> +#include <linux/of_address.h>
->>  #include <linux/of_pci.h>
->>  #include <linux/of_platform.h>
->> +#include <linux/pci-acpi.h>
->>  #include <linux/slab.h>
->>
->>  #include <asm/pci-bridge.h>
->> @@ -43,31 +46,251 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>   */
->>  int pcibios_add_device(struct pci_dev *dev)
->>  {
->> -       dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +       if (acpi_disabled)
->> +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->>
->>         return 0;
->>  }
->>
->> +#ifdef CONFIG_ACPI
->> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->> +{
->> +       struct pci_controller *sd = bridge->bus->sysdata;
->> +
->> +       ACPI_COMPANION_SET(&bridge->dev, sd->companion);
->> +       return 0;
->> +}
->> +
->> +void pcibios_add_bus(struct pci_bus *bus)
->> +{
->> +       acpi_pci_add_bus(bus);
->> +}
->> +
->> +void pcibios_remove_bus(struct pci_bus *bus)
->> +{
->> +       acpi_pci_remove_bus(bus);
->> +}
->> +
->> +int pcibios_enable_irq(struct pci_dev *dev)
->> +{
->> +       if (!pci_dev_msi_enabled(dev))
->> +               acpi_pci_irq_enable(dev);
->> +       return 0;
->> +}
->> +
->> +int pcibios_disable_irq(struct pci_dev *dev)
->> +{
->> +       if (!pci_dev_msi_enabled(dev))
->> +               acpi_pci_irq_disable(dev);
->> +       return 0;
->> +}
->> +
->> +int pcibios_enable_device(struct pci_dev *dev, int bars)
->> +{
->> +       int err;
->> +
->> +       err = pci_enable_resources(dev, bars);
->> +       if (err < 0)
->> +               return err;
->> +
->> +       return pcibios_enable_irq(dev);
->> +}
->> +
->> +static int __init pcibios_assign_resources(void)
->> +{
->> +       struct pci_bus *root_bus;
->> +
->> +       if (acpi_disabled)
->> +               return 0;
->> +
->> +       list_for_each_entry(root_bus, &pci_root_buses, node) {
->> +               pcibios_resource_survey_bus(root_bus);
->> +               pci_assign_unassigned_root_bus_resources(root_bus);
->> +       }
->> +       return 0;
->> +}
-> 
-> I'm starting to sound like a stuck record (and getting bored of it
-> myself!), but none of this looks arch-specific. Can it be moved into the
-> core?
-Hi Will,
-	Kindly reminder, there's a pending patch set to change the way
-to manage IRQ for pci devices, which affects
-pcibios_enable_irq()/pcibios_enable_device() and friends.
-Please refer to https://lkml.org/lkml/2015/5/6/989
-Thanks!
-Gerry
+This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+VF edev and VF PE and handle them properly.
 
-> 
-> Will
-> 
+Different from the Bus PE, VF PE just contain one VF. This introduces the
+difference of EEH error handling on a VF PE. Generally, it has several
+differences.
+
+First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+relationship between its PF. This is not proper to enumerate a VF by usual
+scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+set.
+
+Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+the VF, this means the usual reset function done in FW will not work. One of
+the patch will imitate the reset/restore function in kernel space.
+
+Third, the VF may be removed during the PF's error_detected function. In this
+case, the original error_detected->slot_reset->resume sequence is not proper
+to those removed VFs, since they are re-created by PF in a fresh state. A flag
+in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+track whether this device needs to be reset or not.
+
+This has been tested both on host and in guest on Power8 with latest kernel
+version.
+
+v6:
+   * code / commit log refactor by Gavin
+v5:
+   * remove the compound field, iterate on Master VF PE instead
+   * some code refine on PCI config restore and reset on VF
+     the wait time for assert and deassert
+     PCI device address format
+     check on edev->pcie_cap and edev->aer_cap before access them
+v4:
+   * refine the change logs, comment and code style
+   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
+     CONFIG_PCI_IOV macro
+   * reorder patch 5/6 to make the logic more reasonable
+   * remove remove_dev_pci_data()
+   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
+     remove related CONFIG_PCI_IOV macro
+   * add the option for VF reset
+   * fix the pnv_eeh_cfg_blocked() logic
+   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
+     pnv_eeh_vf_restore_config()
+   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
+   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
+     to arch/powerpc/platforms/powernv/pci.c
+   * add a field compound in pnv_ioda_pe to link compound PEs
+   * handle compound PE for VF PEs
+v3:
+   * add back vf_index in pci_dn to track the VF's index
+   * rename ppdev in eeh_dev to physfn for consistency
+   * move edev->physfn assignment before dev->dev.archdata.edev is set
+   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
+   * more clear and detail in commit log and comment in code
+   * merge eeh_rmv_virt_device() with eeh_rmv_device()
+   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
+     pnv_eeh_cfg_blocked()
+   * move the vf reset/restore logic into its own patch, two patches are
+     created.
+     powerpc/powernv: Support PCI config restore for VFs
+     powerpc/powernv: Support EEH reset for VFs
+   * simplify the vf reset logic
+v2:
+   * add prefix pci_iov_ to virtfn_add/virtfn_remove
+   * use EEH_DEV_VF as a flag for a VF's eeh_dev
+   * use eeh_dev instead of edev in change log
+   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
+   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
+     well initialized
+   * do FLR to reset a VF PE
+   * imitate the restore function in FW for VF
+   * remove the reverse order patch, since it is still under discussion
+
+Wei Yang (10):
+  PCI/IOV: Rename and export virtfn_add/virtfn_remove
+  powerpc/pci: Cache VF index in pci_dn
+  powerpc/pci: Remove VFs prior to PF
+  powerpc/eeh: Trace first 7 BARs in address cache
+  powerpc/powernv: EEH device for VF
+  powerpc/eeh: Create PE for VFs
+  powerpc/powernv: Support EEH reset for VF PE
+  powerpc/powernv: Support PCI config restore for VFs
+  powerpc/eeh: Support error recovery for VF PE
+  powerpc/powernv: compound PE for VFs
+
+ arch/powerpc/include/asm/eeh.h               |    4 +
+ arch/powerpc/include/asm/pci-bridge.h        |    2 +
+ arch/powerpc/kernel/eeh.c                    |    8 +
+ arch/powerpc/kernel/eeh_cache.c              |    2 +-
+ arch/powerpc/kernel/eeh_driver.c             |  100 +++++++++---
+ arch/powerpc/kernel/eeh_pe.c                 |   13 +-
+ arch/powerpc/kernel/pci-hotplug.c            |    2 +-
+ arch/powerpc/kernel/pci_dn.c                 |   16 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  221 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci-ioda.c    |   46 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   35 +++-
+ drivers/pci/iov.c                            |   10 +-
+ include/linux/pci.h                          |    2 +
+ 13 files changed, 420 insertions(+), 41 deletions(-)
+
+-- 
+1.7.9.5
+
