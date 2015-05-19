@@ -1,56 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50836 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755265AbbE1XKr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 May 2015 19:10:47 -0400
-Date: Fri, 29 May 2015 01:10:44 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, corbet@lwn.net,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mingo@elte.hu, gnomes@lxorguk.ukuu.org.uk,
-	gregkh@linuxfoundation.org, jkosina@suse.cz, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
-	bp@suse.de
-Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
-Message-ID: <20150528231044.GY23057@wotan.suse.de>
-References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
- <20150528200749.GD7232@ZenIV.linux.org.uk>
- <20150528211736.GV23057@wotan.suse.de>
- <20150528215618.GE7232@ZenIV.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150528215618.GE7232@ZenIV.linux.org.uk>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:41523 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbbESBiV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:38:21 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 11:38:19 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0DE372CE8052
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:38:17 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1c89A31195338
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:38:16 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1biFb030995
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:37:44 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V6 03/10] powerpc/pci: Remove VFs prior to PF
+Date: Tue, 19 May 2015 09:35:05 +0800
+Message-Id: <1431999312-10517-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 28, 2015 at 10:56:19PM +0100, Al Viro wrote:
-> On Thu, May 28, 2015 at 11:17:36PM +0200, Luis R. Rodriguez wrote:
-> > > ... while some of us consider that as pointless posturing and will refuse
-> > > to merge such exports regardless.
-> > 
-> > Can you elaborate why, for those maintainers not aware of such positions?
-> 
-> *shrug*
-> 
-> Either one states that all modules are derivative works of the kernel,
-> period (in which case attaching _GPL to specific exports is completely
-> pointless), or it's a claim that this specific export is something
-> special on its own, which is a fairly strong claim, completely unfounded
-> more often than not.  In the worst cases it's the former being misrepresented
-> as the latter.  That only serves to weaken our position in case of copyright
-> violations, IMO.  When obviously BS claims like "encoding and decoding
-> of UIDs between the numeric values as seen by userland and stored on
-> filesystem and opaque pointers as used by the userns stuff is so special
-> that its use alone is sufficient to change whether the code is derivative
-> of the kernel or not" are thrown around, we end up with weaker protection,
-> not stronger one.  If something like _that_ makes the difference between
-> derived and non-derived, the former can't be worth much...
+As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
+VFs, which might be hooked to same PCI bus as their PF should be removed
+before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+cause kernel crash.
 
-Great, thanks. This seems to be in alignment with those who have all along said
-they've used EXPORT_SYMBOL() to mean what EXPORT_SYMBOL_GPL() users now use it
-for. Nevertheless -- maintainers should know that some stubborn developers use
-EXPORT_SYMBOL_GPL() for its technical merit should violators abuse those
-symbols.
+The patch applies the above pattern to PowerPC PCI hotplug path.
 
-  Luis
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7ed85a6..98f84ed 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
+-- 
+1.7.9.5
+
