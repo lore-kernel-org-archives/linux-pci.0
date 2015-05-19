@@ -1,118 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48624 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40959 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933242AbbEMMYl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 May 2015 08:24:41 -0400
-Message-ID: <55534275.2040404@linux.intel.com>
-Date: Wed, 13 May 2015 20:24:21 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+	id S1751587AbbESUjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 16:39:22 -0400
+Message-ID: <555B9F74.3040004@redhat.com>
+Date: Tue, 19 May 2015 13:39:16 -0700
+From: Alexander Duyck <alexander.h.duyck@redhat.com>
 MIME-Version: 1.0
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org>
-In-Reply-To: <55531967.70507@linaro.org>
-Content-Type: text/plain; charset=utf-8
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
+ Ethernet devices
+References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com> <555B5CBF.1090902@redhat.com> <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com> <555B77E5.5060006@redhat.com> <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com>
+In-Reply-To: <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/13 17:29, Hanjun Guo wrote:
-> Hi Jiang,
-> 
-> On 2015年05月05日 10:46, Jiang Liu wrote:
->> Introduce common interface acpi_pci_root_create() and related data
->> structures to create PCI root bus for ACPI PCI host bridges. It will
->> be used to kill duplicated arch specific code for IA64 and x86. It may
->> also help ARM64 in future.
+
+
+On 05/19/2015 11:38 AM, Rustad, Mark D wrote:
+>> On May 19, 2015, at 10:50 AM, Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
 >>
-> [...]
->> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->> index a965efa52152..a292ee33d74b 100644
->> --- a/include/linux/pci-acpi.h
->> +++ b/include/linux/pci-acpi.h
->> @@ -52,6 +52,30 @@ static inline acpi_handle
->> acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->>       return ACPI_HANDLE(dev);
->>   }
->>
->> +struct acpi_pci_root;
->> +struct acpi_pci_root_ops;
->> +
->> +struct acpi_pci_root_info_common {
->> +    struct pci_controller        controller;
-> 
-> There is another problem that this patch will lead to
-> compile error on ARM64 since ARM64 has basic ACPI support
-> in 4.1.
-> 
-> struct pci_controller        controller is not available
-> on ARM64, that's the reason why compile errors happens on ARM64.
-> 
-> How about move struct pci_controller to this head file?
-> 
-> because all the related file you changed in this patch set
-> are only compiled when CONFI_ACPI=y, so for x86,
-> 
-> struct pci_controller {
-> #ifdef CONFIG_ACPI
->         struct acpi_device *companion;  /* ACPI companion device */
-> #endif
-> #ifdef CONFIG_X86_64
->         void            *iommu;         /* IOMMU private data */
-> #endif
->         int             segment;        /* PCI domain */
->         int             node;           /* NUMA node */
-> };
-> 
-> I'm sure #ifdef CONFIG_ACPI .. #endif can be removed
-> with no harm, and for *iommu, we can remove the #ifdef CONFIG_X86_64
-> with introducing little more memory on x86_32, after
-> that, the struct pci_controller is almost the same as ia64:
+>> These two patches are very much related.
+> They are only related because I saw an opportunity to do this while working on the other issue. That is the only relationship.
+>
+> <snip material on the other patch>
+>
+>>>> Artificially limiting the size of the VPD does nothing but cut off possibly useful data, you would be better of providing all of the data on only the first function than providing only partial data on all functions and adding extra lock overhead.
+>>> This limit only limits the maximum that the OS will read to what is architecturally possible in these devices. Yes, PCIe architecturally provides for the possibility of more, but these devices do not. More repeating data can be read, however slowly, but there is no possibility of useful content beyond the first 1K. If this limit were set to 0x100, which is more in line what the actual usage is, it would be an artificial limit, but at 1K it is not. Oh and it does include devices made by others that incorporate Intel Ethernet silicon, not just Intel-built devices.
+>> As per section 3.4.4 of the X540 datasheet the upper addressable range for the VPD section is 0xFFF which means the upper limit for the hardware is 0x1000, not 0x400.
+> Ok. I have no problem changing it to that. I had been looking at other specs, but 0x1000 really is a hard limit.
+>
+> <snip more material mostly relating to the other patch>
 
-On x86, struct pci_controller may be used when CONFIG_ACPI is disabled.
-So we can't move it into pci-acpi.h
+So how does this improve boot time anyway?  The original patch 
+description said this improved boot time and reduced memory usage but I 
+have yet to find where any of those gains would actually occur.  If you 
+can point me in that direction I might have a better idea of the 
+motivations behind this.
 
-> 
-> struct pci_controller {
->         struct acpi_device *companion;
->         void *iommu;
->         int segment;
->         int node;               /* nearest node with memory or
-> NUMA_NO_NODE for global allocation */
-> 
->         void *platform_data;
-> };
-> 
-> except void *platform_data;
-> 
-> On ARM64, the structure is almost the same, so how about
-> introduce
-> 
-> struct pci_controller {
->         struct acpi_device *companion;  /* ACPI companion device */
->         void            *iommu;         /* IOMMU private data */
->         int             segment;        /* PCI domain */
->         int             node;           /* NUMA node */
-> #ifdef CONFIG_IA64   
->     void *platform_data;
-> #endif
-> };
-> 
-> in this file, then can be used for all architectures?
-Current mode is that architecture defines its own version of
-struct pci_controller. It would be better to keep this pattern.
-Thanks!
-Gerry
+- Alex
 
-> 
-> Thanks
-> Hanjun
