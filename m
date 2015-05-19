@@ -1,161 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Daniel J Blueman <daniel@numascale.com>
-Subject: [Patch v2] x86, irq: Support CPU vector allocation policies
-Date: Wed,  6 May 2015 16:36:00 +0800
-Message-Id: <1430901368-20686-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <alpine.DEB.2.11.1505052116210.4225@nanos>
-References: <alpine.DEB.2.11.1505052116210.4225@nanos>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:48206 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbbESBkw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:40:52 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 11:40:50 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id CE16B3578048
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:47 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1edtr12189872
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:47 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1eFWc002948
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:15 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V6 04/10] powerpc/eeh: Trace first 7 BARs in address cache
+Date: Tue, 19 May 2015 09:35:06 +0800
+Message-Id: <1431999312-10517-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On NUMA systems, an IO device may be associated with a NUMA node.
-It may improve IO performance to allocate resources, such as memory
-and interrupts, from device local node.
+EEH address cache, which helps to locate the PCI device according to
+the given (physical) MMIO address, didn't cover PCI bridges. Also, it
+shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+should be returned.
 
-This patch introduces a mechanism to support CPU vector allocation
-policies. It tries to allocate CPU vectors from CPUs on device local
-node first, and then fallback to all online(global) CPUs.
+The patch restricts the address cache to cover first 7 BARs for the
+above purposes.
 
-This mechanism may be used to support NumaConnect systems to allocate
-CPU vectors from device local node.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Daniel J Blueman <daniel@numascale.com>
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
-Hi Thomas,
-	This is the simplified version, which removed the kernel parameter.
-Seems much simpler:)
+ arch/powerpc/kernel/eeh_cache.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
-Gerry
----
- arch/x86/kernel/apic/vector.c |   66 +++++++++++++++++++++++++++++++++++------
- 1 file changed, 57 insertions(+), 9 deletions(-)
-
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 1c7dd42b98c1..44363ccce9b5 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -28,6 +28,17 @@ struct apic_chip_data {
- 	u8			move_in_progress : 1;
- };
- 
-+enum {
-+	/* Allocate CPU vectors from CPUs on device local node */
-+	X86_VECTOR_POL_NODE = 0x1,
-+	/* Allocate CPU vectors from all online CPUs */
-+	X86_VECTOR_POL_GLOBAL = 0x2,
-+	/* Allocate CPU vectors from caller specified CPUs */
-+	X86_VECTOR_POL_CALLER = 0x4,
-+	X86_VECTOR_POL_MIN = X86_VECTOR_POL_NODE,
-+	X86_VECTOR_POL_MAX = X86_VECTOR_POL_CALLER,
-+};
-+
- struct irq_domain *x86_vector_domain;
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static cpumask_var_t vector_cpumask;
-@@ -258,12 +269,6 @@ void copy_irq_alloc_info(struct irq_alloc_info *dst, struct irq_alloc_info *src)
- 		memset(dst, 0, sizeof(*dst));
- }
- 
--static inline const struct cpumask *
--irq_alloc_info_get_mask(struct irq_alloc_info *info)
--{
--	return (!info || !info->mask) ? apic->target_cpus() : info->mask;
--}
--
- static void x86_vector_free_irqs(struct irq_domain *domain,
- 				 unsigned int virq, unsigned int nr_irqs)
- {
-@@ -284,12 +289,55 @@ static void x86_vector_free_irqs(struct irq_domain *domain,
+diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+index eeabeab..f6c5f05 100644
+--- a/arch/powerpc/kernel/eeh_cache.c
++++ b/arch/powerpc/kernel/eeh_cache.c
+@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
  	}
- }
  
-+static int assign_irq_vector_policy(int irq, int node,
-+				    struct apic_chip_data *data,
-+				    struct irq_alloc_info *info)
-+{
-+	int err = -EBUSY;
-+	unsigned int policy;
-+	const struct cpumask *mask;
-+
-+	if (info && info->mask)
-+		policy = X86_VECTOR_POL_CALLER;
-+	else
-+		policy = X86_VECTOR_POL_MIN;
-+
-+	for (; policy <= X86_VECTOR_POL_MAX; policy <<= 1) {
-+		switch (policy) {
-+		case X86_VECTOR_POL_NODE:
-+			if (node >= 0)
-+				mask = cpumask_of_node(node);
-+			else
-+				mask = NULL;
-+			break;
-+		case X86_VECTOR_POL_GLOBAL:
-+			mask = apic->target_cpus();
-+			break;
-+		case X86_VECTOR_POL_CALLER:
-+			if (info && info->mask)
-+				mask = info->mask;
-+			else
-+				mask = NULL;
-+			break;
-+		default:
-+			mask = NULL;
-+			break;
-+		}
-+		if (mask) {
-+			err = assign_irq_vector(irq, data, mask);
-+			if (!err)
-+				return 0;
-+		}
-+	}
-+
-+	return err;
-+}
-+
- static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 				 unsigned int nr_irqs, void *arg)
- {
- 	struct irq_alloc_info *info = arg;
- 	struct apic_chip_data *data;
--	const struct cpumask *mask;
- 	struct irq_data *irq_data;
- 	int i, err;
- 
-@@ -300,7 +348,6 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	if ((info->flags & X86_IRQ_ALLOC_CONTIGUOUS_VECTORS) && nr_irqs > 1)
- 		return -ENOSYS;
- 
--	mask = irq_alloc_info_get_mask(info);
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
-@@ -318,7 +365,8 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 		irq_data->chip = &lapic_controller;
- 		irq_data->chip_data = data;
- 		irq_data->hwirq = virq + i;
--		err = assign_irq_vector(virq, data, mask);
-+		err = assign_irq_vector_policy(virq, irq_data->node, data,
-+					       info);
- 		if (err)
- 			goto error;
- 	}
+ 	/* Walk resources on this device, poke them into the tree */
+-	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		unsigned long start = pci_resource_start(dev,i);
+ 		unsigned long end = pci_resource_end(dev,i);
+ 		unsigned int flags = pci_resource_flags(dev,i);
 -- 
-1.7.10.4
+1.7.9.5
 
