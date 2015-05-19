@@ -1,51 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4uZ09K7BSZyyhMtxFpuMCn6hxE01QFWw8nmo7snshutg@mail.gmail.com>
-References: <1432216352-8016-1-git-send-email-hanjun.guo@linaro.org>
- <CAErSpo6kFfXd9gFuL86qQWcVN6NYe11Ps+SoAefz1z2md8j_tA@mail.gmail.com>
- <555DF723.2000103@linaro.org> <CAErSpo4uZ09K7BSZyyhMtxFpuMCn6hxE01QFWw8nmo7snshutg@mail.gmail.com>
+In-Reply-To: <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
+References: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
+ <20150519224452.GT31666@google.com> <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 21 May 2015 10:53:24 -0500
-Message-ID: <CAErSpo4RebTb36xdXKK-qQ_btYgCQicbH6hF0AFNOmcBWoNRvA@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / PCI: remove stale list_head in struct acpi_prt_entry
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+Date: Tue, 19 May 2015 18:02:26 -0500
+Message-ID: <CAErSpo6B3_vRq-4YTSPg4f927WChZ4MXnZRY7wWCvQgZJ=9eOQ@mail.gmail.com>
+Subject: Re: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 21, 2015 at 10:21 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, May 21, 2015 at 10:17 AM, Hanjun Guo <hanjun.guo@linaro.org> wrote:
->> On 2015年05月21日 23:10, Bjorn Helgaas wrote:
->>>
->>> On Thu, May 21, 2015 at 8:52 AM, Hanjun Guo <hanjun.guo@linaro.org> wrote:
->>>>
->>>> list_head "list" in struct acpi_prt_entry was used to connect
->>>> _PRT entries for PCI irq, but after commit 181380b7 (PCI/ACPI:
->>>> Don't cache _PRT, and don't associate them with bus numbers),
->>>> the list head for _PRT entries was removed, but left "list" in
->>>> struct acpi_prt_entry which is useless and stale, remove it now.
->>>
->>>
->>> Please use the canonical commit reference format, i.e.,
->>>
->>> 181380b702ee ("PCI/ACPI: Don't cache _PRT, and don't associate them
->>> with bus numbers")
->>
->>
->> OK, now I know what is a canonical commit reference format :)
->
-> Yeah, it'd be nice if that were better documented.  checkpatch
-> complains about it (d311cd44545f ("checkpatch: add test for commit id
-> formatting style in commit log")), but unfortunately I don't think
-> it's mentioned anywhere in Documentation/
+[-cc Venkatesh (bouncing)
 
-I guess it actually *is* mentioned:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches#n171,
-but it's a little bit wishy-washy.  I'll propose a tweak.
+On Tue, May 19, 2015 at 5:46 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Tue, May 19, 2015 at 3:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Thanks! Who's tree should this go through?
+
+I don't know.  This is the only patch that went to linux-pci, so I
+haven't seen the rest.
 
 Bjorn
