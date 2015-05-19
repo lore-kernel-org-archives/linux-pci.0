@@ -1,106 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:60371 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbbEOFyv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:54:51 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:54:50 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9F43C2CE8040
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:48 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5se6w28966944
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:48 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5sFf2007306
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:54:16 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 11/11] powerpc/powernv: compound PE for VFs
-Date: Fri, 15 May 2015 13:46:26 +0800
-Message-Id: <1431668786-30371-12-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:33203 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbbESXPB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:15:01 -0400
+Received: by igbpi8 with SMTP id pi8so119930848igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:15:00 -0700 (PDT)
+Date: Tue, 19 May 2015 18:14:56 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Ray Jui <rjui@broadcom.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Scott Branden <sbranden@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
+Message-ID: <20150519231456.GX31666@google.com>
+References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
+ <1431465781-10753-3-git-send-email-hauke@hauke-m.de>
+ <CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com>
+ <5553742E.7070204@broadcom.com>
+ <CACna6rzT=218pQk9M6NJWH51wszn=p0LmHrizrvV9Xkn-=Om3Q@mail.gmail.com>
+ <55537C43.4050606@broadcom.com>
+ <55539B63.2060203@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <55539B63.2060203@hauke-m.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
-which means those VFs in a group should form a compound PE.
+On Wed, May 13, 2015 at 08:43:47PM +0200, Hauke Mehrtens wrote:
+> On 05/13/2015 06:30 PM, Ray Jui wrote:
+> > Hi Rafal,
+> > 
+> > On 5/13/2015 9:19 AM, Rafał Miłecki wrote:
+> >> On 13 May 2015 at 17:56, Ray Jui <rjui@broadcom.com> wrote:
+> >>> On 5/12/2015 11:27 PM, Rafał Miłecki wrote:
+> >>>> On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> >>>>> This driver adds support for the PCIe 2.0 controller found on the bcma
+> >>>>> bus. This controller can be found on (mostly) all Broadcom BCM470X /
+> >>>>> BCM5301X ARM SoCs.
+> >>>>>
+> >>>>> The driver found in the Broadcom SDK does some more stuff, like setting
+> >>>>> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
+> >>>>> PHY changes like "improving" the PCIe jitter and doing some special
+> >>>>> initializations for the 3rd PCIe port.
+> >>>>>
+> >>>>> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
+> >>>>> connected to them.
+> >>>>>
+> >>>>> PCI_DOMAINS is needed by this driver, because normally there is more
+> >>>>> than one PCIe controller and without PCI_DOMAINS only the first
+> >>>>> controller gets registered.
+> >>>>> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
+> >>>>>
+> >>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> >>>>
+> >>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+> >>>>
+> >>>>
+> >>>>> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+> >>>>> +{
+> >>>>> +       struct iproc_pcie *pcie;
+> >>>>> +       LIST_HEAD(res);
+> >>>>> +       struct resource res_mem;
+> >>>>> +       int ret;
+> >>>>> +
+> >>>>> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
+> >>>>> +       if (!pcie)
+> >>>>> +               return -ENOMEM;
+> >>>>> +
+> >>>>> +       pcie->dev = &bdev->dev;
+> >>>>> +       bcma_set_drvdata(bdev, pcie);
+> >>>>> +
+> >>>>> +       pcie->base = bdev->io_addr;
+> >>>>> +
+> >>>>> +       res_mem.start = bdev->addr_s[0];
+> >>>>> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+> >>>>> +       res_mem.name = "PCIe MEM space";
+> >>>>> +       res_mem.flags = IORESOURCE_MEM;
+> >>>>> +       pci_add_resource(&res, &res_mem);
+> >>>>> +
+> >>>>> +       pcie->resources = &res;
+> >>>>> +
+> >>>>> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
+> >>>>> +
+> >>>>> +       ret = iproc_pcie_setup(pcie);
+> >>>>
+> >>>> I think I don't like this part of iproc design. It lefts
+> >>>> pcie->resources pointing to some random memory after the setup/probe
+> >>>> are done. Guess it should be a separated parameter or sth.
+> >>>>
+> >>>> The patch is still OK, I just refer to generic iproc possible issue.
+> >>>>
+> >>> Sorry Rafal, but could you please be more specific on this?
+> >>
+> >> iproc_pcie_pltfm_probe (and iproc_pcie_bcma_probe) have local "res"
+> >> variable (each its own). They do:
+> >> pcie->resources = &res;
+> >> and then they call
+> >> iproc_pcie_setup(pcie);
+> >>
+> >> After iproc_pcie_pltfm_probe / iproc_pcie_bcma_probe returns, the
+> >> pointer pcie->resources is not valid anymore, yet pcie struct is still
+> >> in use. Of course pcie->resources isn't used anymore, but still, it's
+> >> some in-struct pointer (to the random memory since local variable is
+> >> not accessible anymore).
+> >>
+> >> I think you should drop
+> >> struct list_head *resources;
+> >> from the struct iproc_pcie and use
+> >> iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *resources)
+> >>
+> > 
+> > Okay thanks. That makes sense.
+> > 
+> > Or I should keep a copy of the resources under pcie->resources. In the
+> > current pcie-iproc.c, the resource is not used anywhere else except when
+> > creating the root bus under iproc_pcie_setup. But in the future, I might
+> > need to add more code to explicitly program the outbound/inbound windows
+> > so this driver can work with some other iProc SoCs where the desired
+> > windows do not match power-on-reset values.
+> > 
+> > I plan to change this along with the window programming patch in the
+> > future. I also think Hauke's current patch is fine.
+> > 
+> > Thanks,
+> > 
+> > Ray
+> > 
+> I think parts of this resources are allocated and never freed.
+> 
+> pci_add_resource() allocates some bytes, but I do not see where they are
+> freed, this also applies to the platform driver.
 
-This patch links those VF PEs into compound PE in this case.
+Where are we on this patch?  I see Ray's ack for [1/2], and a "I think the
+current patch is fine"; is that an ack for [2/2] as well?
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c |   27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 843457b..157305f 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1345,6 +1345,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 				vf_index < (vf_group + 1) * vf_per_group &&
- 				vf_index < num_vfs;
- 				vf_index++)
-+
- 				for (vf_index1 = vf_group * vf_per_group;
- 					vf_index1 < (vf_group + 1) * vf_per_group &&
- 					vf_index1 < num_vfs;
-@@ -1360,6 +1361,11 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 						__func__,
- 						pdn->offset + vf_index1, rc);
- 				}
-+
-+				/* Remove a Slave PE from Master PE */
-+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
-+				if (pe->flags & PNV_IODA_PE_SLAVE)
-+					list_del(&pe->compound);
- 	}
- 
- 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
-@@ -1418,7 +1424,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
--	struct pnv_ioda_pe    *pe;
-+	struct pnv_ioda_pe    *pe, *master_pe;
- 	int                    pe_num;
- 	u16                    vf_index;
- 	struct pci_dn         *pdn;
-@@ -1480,10 +1486,29 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
- 
- 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
-+			master_pe = NULL;
-+
- 			for (vf_index = vf_group * vf_per_group;
- 			     vf_index < (vf_group + 1) * vf_per_group &&
- 			     vf_index < num_vfs;
- 			     vf_index++) {
-+
-+				/*
-+				 * Figure out the master PE and put all slave
-+				 * PEs to master PE's list.
-+				 */
-+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
-+				if (!master_pe) {
-+					pe->flags |= PNV_IODA_PE_MASTER;
-+					INIT_LIST_HEAD(&pe->slaves);
-+					master_pe = pe;
-+				} else {
-+					pe->flags |= PNV_IODA_PE_SLAVE;
-+					pe->master = master_pe;
-+					list_add_tail(&pe->compound,
-+						&master_pe->slaves);
-+				}
-+
- 				for (vf_index1 = vf_group * vf_per_group;
- 				     vf_index1 < (vf_group + 1) * vf_per_group &&
- 				     vf_index1 < num_vfs;
--- 
-1.7.9.5
-
+Bjorn
