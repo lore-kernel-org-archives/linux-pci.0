@@ -1,100 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v11 10/10] iommu/vt-d: Use old irte in kdump kernel
-Date: Mon, 11 May 2015 17:52:54 +0800
-Message-Id: <1431337974-545-11-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:48278 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157AbbESBlc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:41:32 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 11:41:30 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D8AE52CE8050
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:41:27 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1fJcc21430478
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:41:27 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1et1L003822
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:55 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V6 06/10] powerpc/eeh: Create PE for VFs
+Date: Tue, 19 May 2015 09:35:08 +0800
+Message-Id: <1431999312-10517-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the intr-remapping fault.
+Current EEH recovery code works with the assumption: the PE has primary
+bus. Unfortunately, that's not true to VF PEs, which generally contains
+one or multiple VFs (for VF group case). The patch creates PEs for VFs
+at PCI final fixup time. Those PEs for VFs are indentified with newly
+introduced flag EEH_PE_VF so that we handle them differently during
+EEH recovery.
 
-[1.594890] dmar: DRHD: handling fault status reg 2
-[1.594894] dmar: INTR-REMAP: Request device [[41:00.0] fault index 4d
-[1.594894] INTR-REMAP:[fault reason 34] Present field in the IRTE entry
-is clear
-
-Use old irte in second kernel, do not disable and re-enable interrupt
-remapping.
-
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/iommu/intel_irq_remapping.c | 28 ++++++++++++++++++++++++----
- 1 file changed, 24 insertions(+), 4 deletions(-)
+ arch/powerpc/include/asm/eeh.h               |    1 +
+ arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
+ 3 files changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index c2a4406..46d80ad 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -197,6 +197,10 @@ static int modify_irte(int irq, struct irte *irte_modified)
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 1b3614d..c1fde48 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -70,6 +70,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
  
- 	set_64bit(&irte->low, irte_modified->low);
- 	set_64bit(&irte->high, irte_modified->high);
-+
-+	if (iommu->pre_enabled_ir)
-+		__iommu_update_old_irte(iommu, index);
-+
- 	__iommu_flush_cache(iommu, irte, sizeof(*irte));
- 
- 	rc = qi_flush_iec(iommu, index, 0);
-@@ -258,6 +262,9 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 	bitmap_release_region(iommu->ir_table->bitmap, index,
- 			      irq_iommu->irte_mask);
- 
-+	if (iommu->pre_enabled_ir)
-+		__iommu_update_old_irte(iommu, -1);
-+
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
- 
-@@ -657,11 +664,13 @@ static int __init intel_enable_irq_remapping(void)
- 		 */
- 		dmar_fault(-1, iommu);
- 
-+		iommu_check_pre_ir_status(iommu);
-+
- 		/*
--		 * Disable intr remapping and queued invalidation, if already
--		 * enabled prior to OS handover.
-+		 * Here we do not disable intr remapping,
-+		 * if already enabled prior to OS handover.
- 		 */
--		iommu_disable_irq_remapping(iommu);
-+		/* iommu_disable_irq_remapping(iommu); */
- 
- 		dmar_disable_qi(iommu);
- 	}
-@@ -697,7 +706,18 @@ static int __init intel_enable_irq_remapping(void)
- 	 * Setup Interrupt-remapping for all the DRHD's now.
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 35f0b62..260a701 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
  	 */
- 	for_each_iommu(iommu, drhd) {
--		iommu_set_irq_remapping(iommu, eim);
-+		if (iommu->pre_enabled_ir) {
-+			unsigned long long q;
-+
-+			q = dmar_readq(iommu->reg + DMAR_IRTA_REG);
-+			iommu->ir_table->base_old_phys = q & VTD_PAGE_MASK;
-+			iommu->ir_table->base_old_virt = ioremap_cache(
-+				iommu->ir_table->base_old_phys,
-+				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
-+			__iommu_load_old_irte(iommu);
-+		} else
-+			iommu_set_irq_remapping(iommu, eim);
-+
- 		setup = true;
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
  	}
  
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index ce738ab..c505036 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
+ 
++static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
++
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
 -- 
-2.0.0-rc0
+1.7.9.5
 
