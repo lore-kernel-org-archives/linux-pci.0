@@ -1,97 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:57166 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbbE0NaZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 09:30:25 -0400
-Message-ID: <5565C598.7020809@hisilicon.com>
-Date: Wed, 27 May 2015 21:24:40 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 19 May 2015 10:08:38 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC 2/4] PCI, MSI: Optionally free legacy PCI IRQ when enabling
+ MSI/MSI-X
+Message-ID: <20150519150838.GQ31666@google.com>
+References: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
+ <1430968374-29286-3-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Fabrice Gasnier <fabrice.gasnier@st.com>
-CC: Jingoo Han <jingoohan1@gmail.com>, <zhudacai@hisilicon.com>,
-	<devicetree@vger.kernel.org>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
-	<linux-pci@vger.kernel.org>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Liviu Dudau'" <liviu.dudau@arm.com>,
-	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
-	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
-	<qiuzhenfa@hisilicon.com>, "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
-	"'Liguozhu'" <liguozhu@hisilicon.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"'Lucas Stach'" <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-References: <000001d096a9$27bf43f0$773dcbd0$@com> <5562F0C9.4090007@hisilicon.com> <000001d096f1$93dca4e0$bb95eea0$@com> <5563451B.4050609@st.com> <5563DF4F.4080601@hisilicon.com> <556428C9.9080202@st.com>
-In-Reply-To: <556428C9.9080202@st.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430968374-29286-3-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/26 16:03, Fabrice Gasnier wrote:
-> Hi zhou,
+[+cc Michael]
+
+On Thu, May 07, 2015 at 11:12:52AM +0800, Jiang Liu wrote:
+> Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
+> make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
+> So optionally free legacy PCI IRQ when enabling MSI/MSI-X and reallocate
+> when disabling MSI/MSI-X.
 > 
-> On 05/26/2015 04:49 AM, Zhou Wang wrote:
->>>   struct pcie_port {
->>> >+#ifdef CONFIG_ARM
->>> >+    /*
->>> >+     * this is a temporary hack to let the driver work on
->>> >+     * both arm32 and arm64. it can be removed after the
->>> >+     * arm32 cleanup is complete and bios32.c has stopped
->>> >+     * referencing host->pci_sys_data.
->>> >+     */
->>> >+    struct pci_sys_data    dummy;
->>> >+#endif
->>> >      struct device        *dev;
->>> >
->>> >
->>> >This looks like necessary as bios32 is dereferencing sysdata:
->>> >struct pci_sys_data *sysdata = dev->bus->sysdata;
->>> >
->>> >Best Regards,
->>> >Fabrice
->>> >
->> Hi Fabrice,
->>
->> Firstly, many thanks for your test:)
->>
->> I am a little confused that pci_sys_data is still needed as we don't use the code
->> in bios32. What was the problem you met? Could you share me more information? Then
->> let's see how to solve the problem.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/pci/msi.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
-> This is not completely true: there is still code in bios32 that requires pci_sys_data.
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index c3e7dfcf9ff5..47cf72c669f0 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+>  	msi_set_enable(dev, 1);
+>  	dev->msi_enabled = 1;
+>  
+> +	pcibios_free_irq(dev);
 
-Right.
+>From the recent discussion about disabling MSI at shutdown, I seem to
+recall that turning off bus mastering also effectively disables MSI and
+causes at least some devices to revert to using INTx.
 
-> No matters pci_common_init_dev() is being called or not :
+So with this patch, do we now have a problem in the following scenario?
+
+    pci_enable_msi(dev);	/* now frees INTx IRQ */
+    pci_clear_master(dev);
+    <device interrupts>		/* uses INTx since bus mastering disabled */
+
+>  	dev->irq = entry->irq;
+>  	return 0;
+>  }
+> @@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
+>  	/* Set MSI-X enabled bits and unmask the function */
+>  	pci_intx_for_msi(dev, 0);
+>  	dev->msix_enabled = 1;
+> -
+>  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+>  
+> +	pcibios_free_irq(dev);
+> +
+>  	return 0;
+>  
+>  out_avail:
+> @@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+>  
+>  	/* Restore dev->irq to its default pin-assertion irq */
+>  	dev->irq = desc->msi_attrib.default_irq;
+> +	pcibios_alloc_irq(dev);
+>  }
+>  
+>  void pci_disable_msi(struct pci_dev *dev)
+> @@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+>  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+>  	pci_intx_for_msi(dev, 1);
+>  	dev->msix_enabled = 0;
+> +	pcibios_alloc_irq(dev);
+>  }
+>  
+>  void pci_disable_msix(struct pci_dev *dev)
+> -- 
+> 1.7.10.4
 > 
-> You can see pcibios_msi_controller() has a weak definition (in drivers/pci/msi.c).
-> But bios32 defines it for arm. Then it's being used.
-
-But here in dw_pcie_host_init, I directly set bus->msi = &dw_pcie_msi_chip. So in
-drivers/pci/msi.c, we will get the msi controller by dev->bus->msi in pci_msi_controller.
-It will not run into pcibios_msi_controller().
-
-Maybe there is still something I miss understood, if so, please let me know.
-
-Best Regards,
-Zhou
-
-> So, basically, pci_sys_data is still needed on arm. This is how above workaround proposed by Arnd takes care of it.
-> Without this, dereferencing the pointer as done in bios32, makes it hazardous and lead to crashes...
-> e.g. in pcibios_msi_controller(), pci_sys_data will point to "dev->bus->sysdata", aka "struct device *dev" above.
-> 
-> Best Regards,
-> Fabrice
->>
->> Thanks again and Best Regards,
->> Zhou
->>
-> 
-> 
-> .
-> 
-
-
