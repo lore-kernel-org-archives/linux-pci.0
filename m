@@ -1,128 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 16 May 2015 09:41:55 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jarod Wilson <jarod@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook G2
-Message-ID: <20150516144155.GH31666@google.com>
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com>
- <20150516143750.GG31666@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150516143750.GG31666@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:53927 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbbESBmP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:42:15 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 11:42:13 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4283D3578052
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:42:12 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1g3cO19923192
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:42:12 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1fdMR004973
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:41:39 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V6 08/10] powerpc/powernv: Support PCI config restore for VFs
+Date: Tue, 19 May 2015 09:35:10 +0800
+Message-Id: <1431999312-10517-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[fix Rafael's email address]
+After PE reset, OPAL API opal_pci_reinit() is called on all devices
+contained in the PE to reinitialize them. However, VFs can't be seen
+from skiboot firmware. We have to implement the functions, similar
+those in skiboot firmware, to reinitialize VFs after reset on PE
+for VFs.
 
-On Sat, May 16, 2015 at 09:37:50AM -0500, Bjorn Helgaas wrote:
-> Hi Jarod,
-> 
-> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
-> > The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
-> > including at least BIOS revision 01.07, do not have an ACPI _RMV object
-> > associated with their expresscard slots, so acpi-based hotplug-capable
-> > slot detection fails. If we fall back to pcie-based detection, the systems
-> > work just fine, so this uses dmi matching to do that. With luck, a future
-> > BIOS will remedy this (I've let someone at HP know about the problem),
-> > but for now, just use this for all existing versions.
-> > 
-> > Note: they *do* have a proper _RMV object for what I believe is their
-> > thunderbolt ports.
-> > 
-> > Tested successfully on an HP ZBook 17 G2 and HP ZBook 15 G2.
-> > 
-> > CC: Len Brown <lenb@kernel.org>
-> > CC: "Rafael J. Wysocki" <rjw@sisk.pl>
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > CC: linux-acpi@vger.kernel.org
-> > CC: linux-pci@vger.kernel.org
-> > Signed-off-by: Jarod Wilson <jarod@redhat.com>
-> > ---
-> >  drivers/pci/hotplug/pciehp_acpi.c | 33 +++++++++++++++++++++++++++++++++
-> >  1 file changed, 33 insertions(+)
-> > 
-> > diff --git a/drivers/pci/hotplug/pciehp_acpi.c b/drivers/pci/hotplug/pciehp_acpi.c
-> > index 93cc926..db38fb5 100644
-> > --- a/drivers/pci/hotplug/pciehp_acpi.c
-> > +++ b/drivers/pci/hotplug/pciehp_acpi.c
-> > @@ -28,6 +28,7 @@
-> >  #include <linux/pci_hotplug.h>
-> >  #include <linux/slab.h>
-> >  #include <linux/module.h>
-> > +#include <linux/dmi.h>
-> >  #include "pciehp.h"
-> >  
-> >  #define PCIEHP_DETECT_PCIE	(0)
-> > @@ -109,10 +110,40 @@ static struct pcie_port_service_driver __initdata dummy_driver = {
-> >  	.probe		= dummy_probe,
-> >  };
-> >  
-> > +static int __init set_slot_detection_mode_pcie(const struct dmi_system_id *d)
-> > +{
-> > +	info("%s lacks ACPI _RMV object for expresscard\n", d->ident);
-> > +	return 1;
-> > +}
-> > +
-> > +static struct dmi_system_id __initdata missing_acpi_rmv[] = {
-> > +	/* ZBook 17 through at least bios v01.07 */
-> > +	{
-> > +	 .callback = set_slot_detection_mode_pcie,
-> > +	 .ident = "HP ZBook 17 G2 Mobile Workstation",
-> > +	 .matches = {
-> > +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-> > +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 17 G2"),
-> > +		},
-> > +	},
-> > +	/* ZBook 15 through at least bios v01.07 */
-> > +	{
-> > +	 .callback = set_slot_detection_mode_pcie,
-> > +	 .ident = "HP ZBook 15 G2 Mobile Workstation",
-> > +	 .matches = {
-> > +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-> > +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 15 G2"),
-> > +		},
-> > +	},
-> > +	{ .ident = NULL }
-> > +};
-> > +
-> >  static int __init select_detection_mode(void)
-> >  {
-> >  	struct dummy_slot *slot, *tmp;
-> >  
-> > +	if (dmi_check_system(missing_acpi_rmv))
-> > +		return PCIEHP_DETECT_PCIE;
-> 
-> Oh, my goodness.  I forgot how terrible this path is.  Can anyone write a
-> simple explanation of how we choose to use acpiphp or pciehp?  Module
-> parameters?  A dummy driver that looks for duplicate slot numbers?  Looking
-> for _ADR, _EJ0, _RMV?  This is just nuts.
-> 
-> I can't really believe that we're doing this correctly.
-> 
-> If I understand correctly, the ZBooks don't have _RMV, but we try to use
-> acpiphp anyway, and acpiphp doesn't work?  That sounds more like a problem
-> with our acpiphp/pciehp selection "algorithm" than a BIOS bug.
-> 
-> Jarod, can you open a report at http://bugzilla.kernel.org and attach a
-> complete dmesg log, "lspci -vv" output, and an acpidump?  I'm particularly
-> interested in whether the BIOS granted us control over PCIe native hotplug.
-> If it did, I wonder why we would even attempt to use acpiphp.
-> 
-> Bjorn
-> 
-> >  	if (pcie_port_service_register(&dummy_driver))
-> >  		return PCIEHP_DETECT_ACPI;
-> >  	pcie_port_service_unregister(&dummy_driver);
-> > @@ -134,4 +165,6 @@ void __init pciehp_acpi_slot_detection_init(void)
-> >  out:
-> >  	if (slot_detection_mode == PCIEHP_DETECT_ACPI)
-> >  		info("Using ACPI for slot detection.\n");
-> > +	else if (slot_detection_mode == PCIEHP_DETECT_PCIE)
-> > +		info("Using PCIE-based slot detection.\n");
-> >  }
-> > -- 
-> > 1.8.3.1
-> > 
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h        |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
+ 3 files changed, 88 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index d78afe4..168b991 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -205,6 +205,7 @@ struct pci_dn {
+ 	int     m64_per_iov;
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
++	int	mps;
+ #endif /* CONFIG_PCI_IOV */
+ #endif
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 7af3c1e..33deb78 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
+ 
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
++
++	/* Restore MPS */
++	if (edev->pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Disable Completion Timeout */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
+ 
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 */
++	if (edev->physfn)
++		ret = pnv_eeh_restore_vf_config(pdn);
++	else
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index bca2aeb..10bc8c3 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
++#endif /* CONFIG_PCI_IOV */
++
+ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
+-- 
+1.7.9.5
+
