@@ -1,120 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36696 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863AbbESGIO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 02:08:14 -0400
+Received: by pabts4 with SMTP id ts4so9226433pab.3
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 23:08:14 -0700 (PDT)
+Date: Tue, 19 May 2015 11:38:09 +0530
+From: Tina Ruchandani <ruchandani.tina@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: y2038@lists.linaro.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2] xen/pcifront: Remove usage of struct timeval
+Message-ID: <20150519060809.GA27777@tinar>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7_ev1oYptvBObK2dS9_LXkU2_W_OMD825POE6L5Yh7Lw@mail.gmail.com>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
-	<20150505221646.GE24643@google.com>
-	<CAG374jAv9aHBPGV+x+xs2MyRGz+fw1ymwu78fqNXDPtPqehgZA@mail.gmail.com>
-	<CAErSpo7_ev1oYptvBObK2dS9_LXkU2_W_OMD825POE6L5Yh7Lw@mail.gmail.com>
-Date: Wed, 6 May 2015 15:40:39 +0200
-Message-ID: <CAG374jCfo1165cbMrip5SrYigjNkXPyc-dqgmRbTQ0Yaw3wmDA@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd, Bjorn,
+struct timeval uses a 32-bit field for representing seconds,
+which will overflow in the year 2038 and beyond. This patch replaces
+struct timeval with 64-bit ktime_t which is 2038 safe.
+The patch is part of a larger effort to remove instances of
+32-bit timekeeping variables (timeval, time_t and timespec)
+from the kernel.
 
-I agree with last reply of Arnd.
- I will mark the probe function as __init and use
-platform_driver_probe() to prevent the probe function from being
-deferred.
-And to prevent module unloading, i will use module_init only.
+Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+--
+Changes in v2:
+- Use monotonic time (ktime_get_ns()) instead of real time
+since we only care about elapsed delta here.
+- Use macro ktime_get_ns() instead of getting ktime_t and
+converting it to ns.
+---
+ drivers/pci/xen-pcifront.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Ok i will wait before sending a v4.
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 7cfd2db..c4796c8 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -20,6 +20,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/bitops.h>
+ #include <linux/time.h>
++#include <linux/ktime.h>
+ #include <xen/platform_pci.h>
+ 
+ #include <asm/xen/swiotlb-xen.h>
+@@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+ 	evtchn_port_t port = pdev->evtchn;
+ 	unsigned irq = pdev->irq;
+ 	s64 ns, ns_timeout;
+-	struct timeval tv;
+ 
+ 	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
+ 
+@@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+ 	 * (in the latter case we end up continually re-executing poll() with a
+ 	 * timeout in the past). 1s difference gives plenty of slack for error.
+ 	 */
+-	do_gettimeofday(&tv);
+-	ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
++	ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
+ 
+ 	xen_clear_irq_pending(irq);
+ 
+@@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+ 			(unsigned long *)&pdev->sh_info->flags)) {
+ 		xen_poll_irq_timeout(irq, jiffies + 3*HZ);
+ 		xen_clear_irq_pending(irq);
+-		do_gettimeofday(&tv);
+-		ns = timeval_to_ns(&tv);
++		ns = ktime_get_ns();
+ 		if (ns > ns_timeout) {
+ 			dev_err(&pdev->xdev->dev,
+ 				"pciback not responding!!!\n");
+-- 
+2.2.0.rc0.207.ga3a616c
 
-Thanks.
-Gabriel.
-
-On 6 May 2015 at 15:29, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, May 6, 2015 at 4:14 AM, Gabriel Fernandez
-> <gabriel.fernandez@linaro.org> wrote:
->> Hi Bjorn,
->>
->> On 6 May 2015 at 00:16, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Fri, Apr 10, 2015 at 11:12:46AM +0200, Gabriel FERNANDEZ wrote:
->>>> sti pcie is built around a Synopsis Designware PCIe IP.
->>>>
->>>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->>>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->>>
->>>> +/* ST PCIe driver does not allow module unload */
->>>
->>> Is there something that prevents module unload, or is it just untested?
->>>
->> Yes we haven't tested
->>
->>>> +static int __init pcie_init(void)
->>>> +{
->>>> +     return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
->>>> +}
->>>> +device_initcall(pcie_init);
->>>
->>> Can you use module_platform_driver_probe() or module_init() here?
->>>
->>
->> Yes we can use module_init() here.
->>
->> By the way if figure out i removed __init attribute on st_pcie_probe()
->> in previous version to follow Arnd's remark.
->> But st_pcie_probe calls hook_fault_code() that has __init attribute.
->> So I think we need to keep __init for probe routine ?
->> Also, we have to restrict bind/unbind with "suppress_bind_attrs" in
->> platform_driver structure.
->> This is the main reason to not allow module unload/reload.
->
-> I don't really care which solution you end up with here.  But please
-> do take a look at how the other drivers solve the same problem.  Using
-> "device_initcall()" is unique in drivers/pci/host, and I don't believe
-> the problem is unique.  If several drivers have the same issue, they
-> should solve it the same way.
->
->> If you are ok i will send a v4 ?
->
-> I think I'll have a few questions about the designware changes, too,
-> so you might want to wait a day or two.
->
->>>> +MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
->>>> +MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
->>>> +MODULE_LICENSE("GPL v2");
->>>> --
->>>> 1.9.1
->>>>
