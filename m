@@ -1,76 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:34544 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbbETSni (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 14:43:38 -0400
-Date: Wed, 20 May 2015 20:43:16 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Steve Longerbeam <slongerbeam@gmail.com>,
-	Gilad Avidov <gavidov@codeaurora.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC v1 25/25] genirq: Kill the first parameter 'irq' of
- irq_flow_handler_t
-In-Reply-To: <555CAD21.7040907@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1505202041280.4225@nanos>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-26-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201737510.4225@nanos> <555CAD21.7040907@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:33820 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753405AbbESKzK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:55:10 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 20:55:08 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 13D232CE804E
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:05 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAsusa18087982
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:05 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAsWoh001597
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:32 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
+Date: Tue, 19 May 2015 18:50:08 +0800
+Message-Id: <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Current EEH recovery code works with the assumption: the PE has primary
+bus. Unfortunately, that's not true to VF PEs, which generally contains
+one or multiple VFs (for VF group case). The patch creates PEs for VFs
+at PCI final fixup time. Those PEs for VFs are indentified with newly
+introduced flag EEH_PE_VF so that we handle them differently during
+EEH recovery.
 
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h               |    1 +
+ arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
+ 3 files changed, 26 insertions(+), 2 deletions(-)
 
-On Wed, 20 May 2015, Jiang Liu wrote:
-
-> On 2015/5/20 23:40, Thomas Gleixner wrote:
-> > On Wed, 20 May 2015, Jiang Liu wrote:
-> >>  /* Chained IRQ handler for IPU error interrupt */
-> >> -static void ipu_irq_err(unsigned int irq, struct irq_desc *desc)
-> >> +static void ipu_irq_err(struct irq_desc *desc)
-> >>  {
-> >> +	unsigned int irq = irq_desc_to_irq(desc);
-> > 
-> > Why initializing? It's overwritten in the loop.
-> Hi Thomas,
-> 
-> I'm not familiar with the hardware, but if src2map() returns 0
-> on the first call, we need to initialize irq. Otherwise
-> generic_handle_irq(irq) will use random value on the first call.
-> ---------------------------------------------------------
->                         map = src2map(32 * i + line);
->                         if (map)
->                                 irq = map->irq;
-
-You omitted the following code:
-
-                        raw_spin_unlock(&bank_lock);
-
-                        if (!map) {
-                                pr_err("IPU: Interrupt on unmapped source %u bank %d\n",
-                                       line, i);
-                                continue;
-			}
-
-So you it does not use irq if map is 0.
-
-Thanks,
-
-	tglx
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 1b3614d..c1fde48 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -70,6 +70,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+ 
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 35f0b62..260a701 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
+ 	 */
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+ 	}
+ 
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index ce738ab..c505036 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
+ 
++static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
++
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
+-- 
+1.7.9.5
 
