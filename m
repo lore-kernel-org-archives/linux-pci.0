@@ -1,68 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:35696 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768AbbEZMw3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 08:52:29 -0400
-Received: by pdea3 with SMTP id a3so90220881pde.2
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 05:50:15 -0700 (PDT)
-From: Hanjun Guo <hanjun.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH 02/11] x86, pci: Clean up comment about buggy MMIO config space access for AMD Fam10h CPUs.
-Date: Tue, 26 May 2015 20:49:15 +0800
-Message-Id: <1432644564-24746-3-git-send-email-hanjun.guo@linaro.org>
-In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:34481 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932997AbbESOQh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 10:16:37 -0400
+Message-ID: <555B452D.9020802@oracle.com>
+Date: Tue, 19 May 2015 10:14:05 -0400
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+MIME-Version: 1.0
+To: Tina Ruchandani <ruchandani.tina@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+CC: y2038@lists.linaro.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] xen/pcifront: Remove usage of struct timeval
+References: <20150519060809.GA27777@tinar>
+In-Reply-To: <20150519060809.GA27777@tinar>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+On 05/19/2015 02:08 AM, Tina Ruchandani wrote:
+> struct timeval uses a 32-bit field for representing seconds,
+> which will overflow in the year 2038 and beyond. This patch replaces
+> struct timeval with 64-bit ktime_t which is 2038 safe.
+> The patch is part of a larger effort to remove instances of
+> 32-bit timekeeping variables (timeval, time_t and timespec)
+> from the kernel.
+>
+> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+> Suggested-by: Arnd Bergmann <arnd@arndb.de>
 
-- fix typo
-- improve explanation
-- add reference to the related document
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- arch/x86/include/asm/pci_x86.h | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 164e3f8..eddf8f0 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -154,10 +154,13 @@ extern struct list_head pci_mmcfg_list;
- 
- /*
-  * AMD Fam10h CPUs are buggy, and cannot access MMIO config space
-- * on their northbrige except through the * %eax register. As such, you MUST
-- * NOT use normal IOMEM accesses, you need to only use the magic mmio-config
-+ * on their northbridge except through the * %eax register. As such, you MUST
-+ * NOT use normal IOMEM accesses, you need to only use the magic mmio_config_*
-  * accessor functions.
-- * In fact just use pci_config_*, nothing else please.
-+ *
-+ * Please refer to the following doc:
-+ * "BIOS and Kernel Developer's Guide (BKDG) For AMD Family 10h Processors",
-+ * rev. 3.48, sec 2.11.1, "MMIO Configuration Coding Requirements".
-  */
- static inline unsigned char mmio_config_readb(void __iomem *pos)
- {
--- 
-1.9.1
+> --
+> Changes in v2:
+> - Use monotonic time (ktime_get_ns()) instead of real time
+> since we only care about elapsed delta here.
+> - Use macro ktime_get_ns() instead of getting ktime_t and
+> converting it to ns.
+> ---
+>   drivers/pci/xen-pcifront.c | 8 +++-----
+>   1 file changed, 3 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 7cfd2db..c4796c8 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -20,6 +20,7 @@
+>   #include <linux/workqueue.h>
+>   #include <linux/bitops.h>
+>   #include <linux/time.h>
+> +#include <linux/ktime.h>
+>   #include <xen/platform_pci.h>
+>   
+>   #include <asm/xen/swiotlb-xen.h>
+> @@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>   	evtchn_port_t port = pdev->evtchn;
+>   	unsigned irq = pdev->irq;
+>   	s64 ns, ns_timeout;
+> -	struct timeval tv;
+>   
+>   	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
+>   
+> @@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>   	 * (in the latter case we end up continually re-executing poll() with a
+>   	 * timeout in the past). 1s difference gives plenty of slack for error.
+>   	 */
+> -	do_gettimeofday(&tv);
+> -	ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
+> +	ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
+>   
+>   	xen_clear_irq_pending(irq);
+>   
+> @@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>   			(unsigned long *)&pdev->sh_info->flags)) {
+>   		xen_poll_irq_timeout(irq, jiffies + 3*HZ);
+>   		xen_clear_irq_pending(irq);
+> -		do_gettimeofday(&tv);
+> -		ns = timeval_to_ns(&tv);
+> +		ns = ktime_get_ns();
+>   		if (ns > ns_timeout) {
+>   			dev_err(&pdev->xdev->dev,
+>   				"pciback not responding!!!\n");
 
