@@ -1,63 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:35437 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbbE0Q6m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 12:58:42 -0400
-Received: by iesa3 with SMTP id a3so18444159ies.2
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2015 09:58:41 -0700 (PDT)
-Date: Wed, 27 May 2015 11:58:38 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: break when finding the first smaller resource
-Message-ID: <20150527165838.GW32152@google.com>
-References: <1432016657-16816-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57279 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751132AbbESXmI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 19:42:08 -0400
+Message-ID: <555BCA4A.2080400@redhat.com>
+Date: Tue, 19 May 2015 16:42:02 -0700
+From: Alexander Duyck <alexander.h.duyck@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432016657-16816-1-git-send-email-weiyang@linux.vnet.ibm.com>
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
+ Ethernet devices
+References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com> <555B5CBF.1090902@redhat.com> <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com> <555B77E5.5060006@redhat.com> <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com> <555B9F74.3040004@redhat.com> <DA06AAB6-CE9B-4A27-B60D-8F55BB52A063@intel.com> <555BA850.1090901@gmail.com> <46CDD500-2A1B-4457-BE17-961AFC50769E@intel.com>
+In-Reply-To: <46CDD500-2A1B-4457-BE17-961AFC50769E@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 02:24:17PM +0800, Wei Yang wrote:
-> In commit d74b9027a4da(PCI: Consider additional PF's IOV BAR alignment in
-> sizing and assigning), it stores additional alignment in realloc_head and
-> take this into consideration for assignment.
-> 
-> After getting the additional alignment, it will re-order the head list to
-> make sure resources with bigger alignment is ahead of the resources with
-> smaller assignment in the head list. To make it happen, it iterate on the
-> head list and find a smaller alignment resource and insert ahead of it.
-> This should be done for the first occurrence, while the code now will
-> iterate on the whole list.
-> 
-> This patch fixes this behavior by break when finding the first smaller
-> resource in the head list.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Applied to for-linus for v4.1, thanks.
 
-> ---
->  drivers/pci/setup-bus.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 4fd0cac..aa281d9 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -435,9 +435,11 @@ static void __assign_resources_sorted(struct list_head *head,
->  			list_for_each_entry(dev_res2, head, list) {
->  				align = pci_resource_alignment(dev_res2->dev,
->  							       dev_res2->res);
-> -				if (add_align > align)
-> +				if (add_align > align) {
->  					list_move_tail(&dev_res->list,
->  						       &dev_res2->list);
-> +					break;
-> +				}
->  			}
->                 }
->  
-> -- 
-> 1.7.9.5
-> 
+On 05/19/2015 03:43 PM, Rustad, Mark D wrote:
+>> On May 19, 2015, at 2:17 PM, Alexander Duyck <alexander.duyck@gmail.com> wrote:
+>>
+>> Any chance you could point me toward the software in question?  Just wondering because it seems like what you are fixing with this is an implementation issue in the application since you really shouldn't be accessing areas outside the scope of the VPD data structure, and doing so is undefined in terms of what happens if you do.
+> I don't have it, but if you dump VPD via sysfs you will see it comes out as 32k in size. The kernel just blindly provides access to the full 32K space provided by the spec. I'm sure that we agree that the kernel should not go parse it and find the actual size. If it is read via stdio, say fread, the read access would be whatever buffer size it chooses to use.
+>
+> If you looked at the quirks, you might have noticed that Broadcom limited the VPD access for some devices for functional reasons. That is what gave me the idea for limiting access to what was possibly there. With the existing Intel Ethernet quirk, it seemed like a simple thing to do.
+
+Actually we probably should be parsing through the VPD data.  The PCIe 
+spec doesn't define what happens if you read past the end marker, and I 
+suspect most applications are probably performing sequential reads of 
+the data instead of just accessing offsets anyway since that is how this 
+is really meant to be accessed.  So if we moved this to a sequenced 
+interface instead of a memory mapped style interface it would probably 
+work out better anyway since we could perform multiple reads in sequence 
+instead of one at a time.
+
+- Alex
+
