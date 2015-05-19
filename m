@@ -1,87 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1484 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55010 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182AbbETJ6T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 May 2015 05:58:19 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Russell King <rmk+kernel@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC v1 01/25] ARM, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Wed, 20 May 2015 17:59:49 +0800
-Message-Id: <1432116013-25902-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1754452AbbESRuf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 13:50:35 -0400
+Message-ID: <555B77E5.5060006@redhat.com>
+Date: Tue, 19 May 2015 10:50:29 -0700
+From: Alexander Duyck <alexander.h.duyck@redhat.com>
+MIME-Version: 1.0
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
+ Ethernet devices
+References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com> <555B5CBF.1090902@redhat.com> <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com>
+In-Reply-To: <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-already have a pointer to corresponding irq_desc.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/arm/common/locomo.c   |    2 +-
- arch/arm/common/sa1111.c   |    2 +-
- arch/arm/plat-orion/gpio.c |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm/common/locomo.c b/arch/arm/common/locomo.c
-index b55c3625d7ee..02af4a07ceca 100644
---- a/arch/arm/common/locomo.c
-+++ b/arch/arm/common/locomo.c
-@@ -140,7 +140,7 @@ static struct locomo_dev_info locomo_devices[] = {
- 
- static void locomo_handler(unsigned int irq, struct irq_desc *desc)
- {
--	struct locomo *lchip = irq_get_chip_data(irq);
-+	struct locomo *lchip = irq_desc_get_chip_data(desc);
- 	int req, i;
- 
- 	/* Acknowledge the parent IRQ */
-diff --git a/arch/arm/common/sa1111.c b/arch/arm/common/sa1111.c
-index 5cc779c8e9c6..0d0844fa54c2 100644
---- a/arch/arm/common/sa1111.c
-+++ b/arch/arm/common/sa1111.c
-@@ -200,7 +200,7 @@ static void
- sa1111_irq_handler(unsigned int irq, struct irq_desc *desc)
- {
- 	unsigned int stat0, stat1, i;
--	struct sa1111 *sachip = irq_get_handler_data(irq);
-+	struct sa1111 *sachip = irq_desc_get_handler_data(desc);
- 	void __iomem *mapbase = sachip->base + SA1111_INTC;
- 
- 	stat0 = sa1111_readl(mapbase + SA1111_INTSTATCLR0);
-diff --git a/arch/arm/plat-orion/gpio.c b/arch/arm/plat-orion/gpio.c
-index 5168a52a17f9..caba04340619 100644
---- a/arch/arm/plat-orion/gpio.c
-+++ b/arch/arm/plat-orion/gpio.c
-@@ -409,7 +409,7 @@ static int gpio_irq_set_type(struct irq_data *d, u32 type)
- 
- static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
- {
--	struct orion_gpio_chip *ochip = irq_get_handler_data(irq);
-+	struct orion_gpio_chip *ochip = irq_desc_get_handler_data(desc);
- 	u32 cause, type;
- 	int i;
- 
--- 
-1.7.10.4
+On 05/19/2015 09:19 AM, Rustad, Mark D wrote:
+>> On May 19, 2015, at 8:54 AM, Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
+>>
+>> On 05/18/2015 05:00 PM, Mark D Rustad wrote:
+>>> To save boot time and some memory, limit VPD size to the maximum
+>>> possible for all Intel Ethernet devices that have VPD, which is 1K.
+>>>
+>>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>>> Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>>> ---
+>>>   drivers/pci/quirks.c |    7 +++++--
+>>>   1 file changed, 5 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index c6dc1dfd25d5..4fabbeda964a 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -1903,12 +1903,15 @@ static void quirk_netmos(struct pci_dev *dev)
+>>>   DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
+>>>   			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
+>>>   -static void quirk_e100_interrupt(struct pci_dev *dev)
+>>> +static void quirk_intel_enet(struct pci_dev *dev)
+>>>   {
+>>>   	u16 command, pmcsr;
+>>>   	u8 __iomem *csr;
+>>>   	u8 cmd_hi;
+>>>   +	if (dev->vpd)
+>>> +		dev->vpd->len = 0x400;
+>>> +
+>>>   	switch (dev->device) {
+>>>   	/* PCI IDs taken from drivers/net/e100.c */
+>>>   	case 0x1029:
+>> I wasn't a fan of the first VPD patch and this clinches it.  What I would recommend doing is identifying all of the functions for a given device that share a VPD and then eliminate the VPD structure for all but the first function.  By doing that the OS should treat the other functions as though their VPD areas don't exist.
+> Please, lets discuss only *this* patch in this thread. The patches are not related except that they both have to do with VPD.
+>
+> <snip>
+
+These two patches are very much related.  The fact is you are 
+implementing this due to "save boot time and memory" which implies that 
+VPD accesses are very slow.  One good reason why VPD accesses might be 
+slower is that accesses are now serialized per bus due to your earlier 
+patch.  This likely means that other vendors will want to do the same 
+thing which is why I would say that the first patch needs to be replaced.
+
+>> Artificially limiting the size of the VPD does nothing but cut off possibly useful data, you would be better of providing all of the data on only the first function than providing only partial data on all functions and adding extra lock overhead.
+> This limit only limits the maximum that the OS will read to what is architecturally possible in these devices. Yes, PCIe architecturally provides for the possibility of more, but these devices do not. More repeating data can be read, however slowly, but there is no possibility of useful content beyond the first 1K. If this limit were set to 0x100, which is more in line what the actual usage is, it would be an artificial limit, but at 1K it is not. Oh and it does include devices made by others that incorporate Intel Ethernet silicon, not just Intel-built devices.
+
+As per section 3.4.4 of the X540 datasheet the upper addressable range 
+for the VPD section is 0xFFF which means the upper limit for the 
+hardware is 0x1000, not 0x400.
+
+> Since this quirk function was already being run for every Intel Ethernet device, this seemed like a trivial thing to do to speed up booting a bit. It has the greatest effect with 82599 devices. Newer devices will respond to reads faster.
+
+This is run for EVERY Intel Ethernet device.  Not just some of the 1G or 
+10G server parts, everything.  This presents a very wide net and is 
+highly likely to introduce some sort of regression.  This includes every 
+3rd party part out there based on Intel silicon and messing with 
+something like this is kind of a big issue.  That is why I say you are 
+better off limiting the VPD access to 1 function instead of allowing 
+only partial access from any Intel Ethernet function.
+
+The fact is VPD is not vital.  It is simply product data for inventory 
+tracking and the like.  You are much better off simply limiting this to 
+one function for your parts since all of the Intel Ethernet silicon 
+implements on VPD which is shared between all functions in a device.
+
+- Alex
 
