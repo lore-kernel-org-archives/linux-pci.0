@@ -1,161 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:25063 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725AbbEHHaH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 03:30:07 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>, <x86@kernel.org>,
-	<linux-ia64@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH Part3 v11 7/9] PCI: Create pci host bridge prior to root bus
-Date: Fri, 8 May 2015 15:22:57 +0800
-Message-ID: <1431069779-29346-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-References: <1431069779-29346-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:57248 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754151AbbESK4A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:56:00 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 20:55:59 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 15E583578048
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:57 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAtnIR21430314
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:57 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAtORR002533
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:24 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 08/10] powerpc/powernv: Support PCI config restore for VFs
+Date: Tue, 19 May 2015 18:50:10 +0800
+Message-Id: <1432032612-21701-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci_host_bridge hold the domain number, we need
-to assign domain number prior to root bus creation,
-because root bus need to know the domain number
-to check whether it's alreay exist.
+After PE reset, OPAL API opal_pci_reinit() is called on all devices
+contained in the PE to reinitialize them. However, VFs can't be seen
+from skiboot firmware. We have to implement the functions, similar
+those in skiboot firmware, to reinitialize VFs after reset on PE
+for VFs.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/probe.c |   60 ++++++++++++++++++++++++++------------------------
- 1 files changed, 31 insertions(+), 29 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h        |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
+ 3 files changed, 88 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9ed8ab7..e4ef791 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -515,7 +515,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index c324882..ad60263 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -206,6 +206,7 @@ struct pci_dn {
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+ #endif /* CONFIG_PCI_IOV */
++	int	mps;
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 7af3c1e..33deb78 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
  }
  
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+static struct pci_host_bridge *pci_alloc_host_bridge(void)
- {
- 	struct pci_host_bridge *bridge;
- 
-@@ -524,7 +524,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
- 	return bridge;
- }
- 
-@@ -1902,48 +1901,51 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- {
- 	int error;
- 	struct pci_host_bridge *bridge;
--	struct pci_bus *b, *b2;
-+	struct pci_bus *b;
- 	struct resource_entry *window, *n;
- 	struct resource *res;
- 	resource_size_t offset;
- 	char bus_addr[64];
- 	char *fmt;
- 
--	b = pci_alloc_bus(NULL);
--	if (!b)
--		return NULL;
--
--	b->sysdata = sysdata;
--	b->ops = ops;
--	b->number = b->busn_res.start = bus;
--	pci_bus_assign_domain_nr(b, parent);
--	b2 = pci_find_bus(pci_domain_nr(b), bus);
--	if (b2) {
--		/* If we already got to this bus through a different bridge, ignore it */
--		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
--	}
--
--	bridge = pci_alloc_host_bridge(b);
-+	bridge = pci_alloc_host_bridge();
- 	if (!bridge)
--		goto err_out;
-+		return NULL;
- 
--	bridge->domain = domain;
- 	bridge->dev.parent = parent;
-+	pci_host_assign_domain_nr(bridge, domain);
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_drvdata(&bridge->dev, sysdata);
--	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain, bus);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error) {
- 		kfree(bridge);
--		goto err_out;
-+		return NULL;
- 	}
- 
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
--		goto err_out;
-+		return NULL;
- 	}
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
 +
-+	b = pci_find_bus(bridge->domain, bus);
-+	if (b) {
-+		/* If we already got to this bus through a different bridge, ignore it */
-+		dev_dbg(&b->dev, "bus already known\n");
-+		goto unregister_host;
++	/* Restore MPS */
++	if (edev->pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
 +	}
 +
-+	b = pci_alloc_bus(NULL);
-+	if (!b)
-+		goto unregister_host;
++	/* Disable Completion Timeout */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, cap2);
++		}
++	}
 +
-+	bridge->bus = b;
-+	b->sysdata = sysdata;
-+	b->ops = ops;
-+	b->number = b->busn_res.start = bus;
-+	pci_bus_assign_domain_nr(b, parent);
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
 +
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-@@ -1956,11 +1958,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bus_prepare(bridge);
- 	if (error)
--		goto class_dev_reg_err;
-+		goto free_bus;
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
  
- 	error = device_register(&b->dev);
- 	if (error)
--		goto class_dev_reg_err;
-+		goto free_bus;
- 
- 	pcibios_add_bus(b);
- 
-@@ -2000,11 +2002,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 
- 	return b;
- 
--class_dev_reg_err:
-+free_bus:
-+	kfree(b);
- 	put_device(&bridge->dev);
-+unregister_host:
- 	device_unregister(&bridge->dev);
--err_out:
--	kfree(b);
- 	return NULL;
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 */
++	if (edev->physfn)
++		ret = pnv_eeh_restore_vf_config(pdn);
++	else
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index bca2aeb..10bc8c3 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
  }
- EXPORT_SYMBOL_GPL(pci_create_root_bus);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
++#endif /* CONFIG_PCI_IOV */
++
+ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
 -- 
-1.7.1
+1.7.9.5
 
