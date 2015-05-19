@@ -1,110 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:17449 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54312 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754033AbbE0TLJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 May 2015 15:11:09 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	id S1751095AbbESXTm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 19:19:42 -0400
+Message-ID: <555BC509.8030108@redhat.com>
+Date: Tue, 19 May 2015 16:19:37 -0700
+From: Alexander Duyck <alexander.h.duyck@redhat.com>
+MIME-Version: 1.0
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
 	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] pci: Use a bus-global mutex to protect VPD operations
-Date: Wed, 27 May 2015 19:11:05 +0000
-Message-ID: <151DE2D4-7D19-48B1-8317-9470F03B400D@intel.com>
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
- <20150527172741.GX32152@google.com>
-In-Reply-To: <20150527172741.GX32152@google.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_2CAACB5C-A450-43BD-A92C-2F5701829C79";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
-MIME-Version: 1.0
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to protect
+ VPD operations
+References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com> <555B78F7.60908@redhat.com> <E9012788-257F-4C44-B7F1-789B94423924@intel.com> <555BA3F0.5030001@redhat.com> <DE578829-90CD-4CB0-A206-68A21D91AB0B@intel.com>
+In-Reply-To: <DE578829-90CD-4CB0-A206-68A21D91AB0B@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_2CAACB5C-A450-43BD-A92C-2F5701829C79
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-> On May 27, 2015, at 10:27 AM, Bjorn Helgaas <bhelgaas@google.com> =
-wrote:
->=20
-> It sounds like there are real problems here that would be fixed by =
-changing
-> the mutex strategy and limiting VPD read lengths, but that we don't =
-quite
-> have consensus on how to solve them yet.
-
-I have a new pair of patches that I am getting internal feedback on. I
-will be on vacation starting tomorrow and won't be back until Tuesday, =
-so
-I think it best to send them when I get back so that I will be available
-to respond. I could be convinced to send them now.
-
-> VPD is a bit of a tar pit.
-
-It sure is.
-
-> We've talked about limiting VPD read length
-> before (see links below), which requires interpreting the VPD contents
-> (just the tags & sizes) the kernel.  I think I'm OK with doing that,
-> provided we should audit existing users and make sure we don't break =
-them.
->=20
-> =
-http://lkml.kernel.org/r/c67cd7f4-8d8f-48fc-a63c-dbdafde873a2@CMEXHTCAS1.a=
-d.emulex.com
-> =
-http://lkml.kernel.org/r/1f6d7b6c-7189-4fe3-926b-42609724cab9@CMEXHTCAS2.a=
-d.emulex.com
->=20
-> I'd also like to include specifics, e.g., bugzillas with complete =
-dmesg and
-> lspci information, for the problems we're fixing.
-
-The issue I am addressing is for when the VPD Address/F and Data =
-registers
-are shared across multiple functions. My latest patch addresses this by
-always performing the access through function 0. I added a dev_flags bit
-to indicate when this should be done, so only devices that have a quirk
-that sets that bit will get that treatment.
-
-The patch I have still doesn't address the issue for direct-assigned
-devices. I have no answer to that, but will point out that most guests
-seem to use virtual machines that don't support extended config space
-anyway. Only those that do support extended config space and access VPD
-could be a source of trouble.
-
-I have to say that I haven't actually reproduced the failure, but given
-the design of the hardware it is clear that somehow a common mutex needs
-to protect those shared registers.
-
---
-Mark Rustad, Networking Division, Intel Corporation
 
 
---Apple-Mail=_2CAACB5C-A450-43BD-A92C-2F5701829C79
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
+On 05/19/2015 02:53 PM, Rustad, Mark D wrote:
+>> On May 19, 2015, at 1:58 PM, Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
+>>
+>> I think you are assuming too much.  Have you root caused the other devices?
+> It is possible that you are right, but I think it is much more likely that this is a common design problem with many devices.
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
+Well for example, can you explain to me how this can help a single 
+function device?  I see this issue reported with things such as an r8169 
+which last I knew was a single function interface.  I fail to see how 
+moving the lock would solve VPD issues reported on this part.
 
-iQIcBAEBCAAGBQJVZhbJAAoJEDwO/+eO4+5uf40QAKfoXP3qP/Tby1eKVA/I0mht
-lyCVAZBVOni7NWU93ERbXGM6wU6Vrx7JpxxYQbaDJ6zwPp6IWW5Sk6fBnxUWFmjc
-ARGXgQm+IYl8Zjrqw9SGQsQUJB+PuBWIVKbMqAQfbRFlPGmwQfFaQUxN5elZQpAg
-WEzLNUNSBUoKyz735cqqDPajUYRkD6kDbeMf8UkJQ+VOghwCTPG3WzSQThI61oSE
-EptUZdJa6ZKlrk+JtFV36/wX2TAX9Xw7fjlLCtEr8y8q6XFa/m0NQXKe9V0Y8Tur
-3dKd1tXdVWuJzGgUtWcUAWiPlkCbDzl+WJ1HF5vGr8dKQXfLTEBGchcccxGs1mnK
-l4s/0cbncPTQYwbD9eoe+hKhELersdPgXTXODOaJQkYkJkd75g2HKNptt5GJV/Sd
-N6iNVHgVxKMUyK6XN2ak2tVmF4ARW+GPUcFLT3uYWoHxZm27Y6J2u7traIwS+pwr
-707IUTlwuxFlNxmHo1Z198d7M7yoCZlIXTskISHw/BAnxGx9e7r+9c+dvvmq6AFC
-uyZQD9DVKd1G1+2mP7MLbKHhs3RmsKJaO4D9htKMV22zGXQ8aFk8LKlpLwjHR2Yz
-KS6JBEWF4uOPBomTtWEuoMNmoEc+6mCGKBonsN+qLL833R9pUoHrwivqtL2//c+m
-vCuQrJ9G7znvbNVZKQAV
-=iuey
------END PGP SIGNATURE-----
+>> All the "vpd r/w failed" means is that a given read or write timed out.  There are any number of possible reasons for that including VPD being unimplemented in firmware, a device falling off of the bus, and many others.  What you have is a common symptom, it doesn't mean it is a common ailment for all the other parts.
+> Yes, but it sure looks like many PCIe designers have shared the VPD registers across functions. It isn't just that the area they address is shared, it is that the register implementations are also shared across functions. That is the case with all the Intel devices (it is indicated in the datasheets) and I'm guessing that other designers have done the same thing. It is a guess at this point, but think it is a very good one.
 
---Apple-Mail=_2CAACB5C-A450-43BD-A92C-2F5701829C79--
+Hard to say unless you have also looked into a number of other devices 
+to verify this.  For example in the case of one of the HP parts out 
+there that the VPD issue was reported for they suggested installing 
+their configuration tools and writing the firmware as I am guessing they 
+had some bad images floating around out there.  The problem is it is a 
+very common symptom and I have seen it myself on several boards and I 
+can guarantee you the issue wasn't something that would be solved by a 
+shared lock on a single bus.
+
+>
+>>> If after doing that you still feel that this isn't the best solution, I can go and cook up something much bigger (I already had two much bigger patches that I abandoned in favor of this approach). Bear in mind that the quirk code is dead weight in all the kernels.
+>> The quirk code is there to deal with buggy hardware implementations and that is what it sounds like you have in this case.  I highly doubt all of the other vendors implemented the same mistake.  If they did then maybe you should implement a the quirk as a new function that can be used by any of the devices that implement VPD with the same limitation.
+> Just the device table to list the affected devices, even if Intel is the only vendor with this issue, will be very much larger than this patch and every kernel will carry that weight.
+
+The device table could be something like what you did in your other 
+patch.  Anything that is Intel and uses Ethernet is affected currently.  
+I think you might be over thinking it.  Don't try to fix other vendors 
+hardware unless you actually have root cause for the issues you are 
+seeing on it.  If you are aware of other vendors hardware that has the 
+same issue you should call it out and Cc the maintainers for those 
+drivers so that they can verify the fix on their hardware.
+
+>>> As you said in another message, VPD is not that vital. Given that, I would think that some possible needless synchronization that resolves real problems for many devices should be acceptable. If it was synchronizing all config space or something that would be different, but this is just VPD.
+>> The problem is it is needless synchronization, and it only resolves problems for some very specific devices.  The extra overhead for serializing what is already slow accesses can be very high so I am against it.
+> In any PCIe environment, it only serializes VPD access for one physical device's functions. That just isn't that bad.
+
+No, it serializes accesses on one bus.  So for example all of the 
+devices on a root complex would be affected including things like LAN 
+built into a motherboard.  The issue is that virtualization emulates 
+that as the default configuration so in the case of virtualization you 
+would be placing all of the devices on the same bus.
+
+>> For example it will likely have unintended consequences on things like virtual machines where all direct assigned devices end up on the same bus.
+> Direct-assigned devices to virtual machines have problems here that I can't address. Hypervisors would have to be involved in resolving that problem, if it is important enough to do. At present I could only suggest that virtual machines should never access VPD at all. This is a problem. At least VFs, which are more commonly assigned to guests, do not have VPD.
+
+If needed a quirk could probably be added for KVM but that would be a 
+separate patch.
+
+> Cutting off the VPD for non-zero functions will have consequences as well. Some may notice devices dropping out of their inventory. That can't be a good thing and could upset customers. I think that is a far larger problem with your approach. Arguably, that is a kernel interface change.
+
+The alternative if you don't want to free it would be to add a pointer 
+and reference count to pci_vpd_pci22 so that you could share the mutex 
+between multiple functions in the case of hardware that has this issue.  
+I just don't want things being grouped by bus as there are scenarios, 
+virtualization specifically, where that can get messy as you would be 
+combining multiple unrelated devices under the same lock.
+
+>> We know that all Intel Ethernet parts to date only implement one VPD area per EEPROM, and that all functions in a multi-function Ethernet part share the same EEPROM, so the fix is to only present one VPD area so that the data is still there, without the ability of multiple access.  It seems like function 0 would be the obvious choice in that case so if somebody wants to be able to do their inventory they can go through and pull inventory information from function 0.  Really this is how this should have probably been implemented in the hardware in the first place if they couldn't support multiple accesses.
+> No argument from me there, but I don't have a time machine to go back and try to change the thinking on VPD. I'm sure it would take more gates to make the functions different, just as it would take more gates to do it right. Which is why I think the problem is as widespread as the Google results suggest.
+>
+> Maybe I should send one of my big, ugly patches that only addresses the problem for Intel devices. This patch will look good in comparison.
+>
+> Isn't getting rid of scary messages that upset customers worth something?
+
+Getting rid of scary messages is one thing.  Hurting performance and 
+adding unnecessary locking overhead is another.  The problem with your 
+"fix" is that I feel you are applying far to wide of a net for this.  I 
+would understand if you applied it to all Intel Ethernet hardware and 
+grouped functions of the same device, but you are applying it to 
+everything that supports VPD and you are doing it by bus.
+
+The problem is specific to Intel Ethernet silicon.  Unless you can show 
+me another part that has the same issue I would say you should probably 
+just add a quirk for your part.
+
+Also you might try taking a look at the function 
+quirk_brcm_570x_limit_vpd().  It seems that there are parts that hang 
+for example if you read past the end marker for VPD.  I would find it 
+much more likely that this would be responsible for many of the hangs 
+reported out there since the driver is doing something that the PCI spec 
+does not define the behavior for.
+
+- Alex
+
+
+
+
