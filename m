@@ -1,98 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:35824 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbbEIOMZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 May 2015 10:12:25 -0400
-Received: by pdbqd1 with SMTP id qd1so110599114pdb.2
-        for <linux-pci@vger.kernel.org>; Sat, 09 May 2015 07:12:24 -0700 (PDT)
-Message-ID: <554E15C2.40506@ozlabs.ru>
-Date: Sun, 10 May 2015 00:12:18 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28504 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275AbbESXRY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:17:24 -0400
+Message-ID: <555BC482.9040902@broadcom.com>
+Date: Tue, 19 May 2015 16:17:22 -0700
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-CC: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH v4 10/21] powerpc/powernv: Fundamental reset for PCI bus
- reset
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-11-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1430460188-31343-11-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Scott Branden <sbranden@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
+Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
+References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de> <1431465781-10753-3-git-send-email-hauke@hauke-m.de> <CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com> <5553742E.7070204@broadcom.com> <CACna6rzT=218pQk9M6NJWH51wszn=p0LmHrizrvV9Xkn-=Om3Q@mail.gmail.com> <55537C43.4050606@broadcom.com> <55539B63.2060203@hauke-m.de> <20150519231456.GX31666@google.com>
+In-Reply-To: <20150519231456.GX31666@google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2015 04:02 PM, Gavin Shan wrote:
-> Function pnv_pci_reset_secondary_bus() is used to reset specified
-> PCI bus, which is leaded by root complex or PCI bridge. That means
-> the function shouldn't be called on PCI root bus and the patch
-> removes the logic for that case.
->
-> Also, some adapters beneath the indicated PCI bus may require
-> fundamental reset in order to successfully reload their firmwares
-> after the reset. The patch translates hot reset to fundamental reset
-> for that case.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
->   1 file changed, 26 insertions(+), 9 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index 3c01095..58e4dcf 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
->   }
->
-> -void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
 
 
-Why changing dev to pdev? Keeping "dev" could make the patch simpler.
+On 5/19/2015 4:14 PM, Bjorn Helgaas wrote:
+> On Wed, May 13, 2015 at 08:43:47PM +0200, Hauke Mehrtens wrote:
+>> On 05/13/2015 06:30 PM, Ray Jui wrote:
+>>> Hi Rafal,
+>>>
+>>> On 5/13/2015 9:19 AM, Rafał Miłecki wrote:
+>>>> On 13 May 2015 at 17:56, Ray Jui <rjui@broadcom.com> wrote:
+>>>>> On 5/12/2015 11:27 PM, Rafał Miłecki wrote:
+>>>>>> On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>>>> This driver adds support for the PCIe 2.0 controller found on the bcma
+>>>>>>> bus. This controller can be found on (mostly) all Broadcom BCM470X /
+>>>>>>> BCM5301X ARM SoCs.
+>>>>>>>
+>>>>>>> The driver found in the Broadcom SDK does some more stuff, like setting
+>>>>>>> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
+>>>>>>> PHY changes like "improving" the PCIe jitter and doing some special
+>>>>>>> initializations for the 3rd PCIe port.
+>>>>>>>
+>>>>>>> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
+>>>>>>> connected to them.
+>>>>>>>
+>>>>>>> PCI_DOMAINS is needed by this driver, because normally there is more
+>>>>>>> than one PCIe controller and without PCI_DOMAINS only the first
+>>>>>>> controller gets registered.
+>>>>>>> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
+>>>>>>>
+>>>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>>>
+>>>>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+>>>>>>
+>>>>>>
+>>>>>>> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+>>>>>>> +{
+>>>>>>> +       struct iproc_pcie *pcie;
+>>>>>>> +       LIST_HEAD(res);
+>>>>>>> +       struct resource res_mem;
+>>>>>>> +       int ret;
+>>>>>>> +
+>>>>>>> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
+>>>>>>> +       if (!pcie)
+>>>>>>> +               return -ENOMEM;
+>>>>>>> +
+>>>>>>> +       pcie->dev = &bdev->dev;
+>>>>>>> +       bcma_set_drvdata(bdev, pcie);
+>>>>>>> +
+>>>>>>> +       pcie->base = bdev->io_addr;
+>>>>>>> +
+>>>>>>> +       res_mem.start = bdev->addr_s[0];
+>>>>>>> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
+>>>>>>> +       res_mem.name = "PCIe MEM space";
+>>>>>>> +       res_mem.flags = IORESOURCE_MEM;
+>>>>>>> +       pci_add_resource(&res, &res_mem);
+>>>>>>> +
+>>>>>>> +       pcie->resources = &res;
+>>>>>>> +
+>>>>>>> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
+>>>>>>> +
+>>>>>>> +       ret = iproc_pcie_setup(pcie);
+>>>>>>
+>>>>>> I think I don't like this part of iproc design. It lefts
+>>>>>> pcie->resources pointing to some random memory after the setup/probe
+>>>>>> are done. Guess it should be a separated parameter or sth.
+>>>>>>
+>>>>>> The patch is still OK, I just refer to generic iproc possible issue.
+>>>>>>
+>>>>> Sorry Rafal, but could you please be more specific on this?
+>>>>
+>>>> iproc_pcie_pltfm_probe (and iproc_pcie_bcma_probe) have local "res"
+>>>> variable (each its own). They do:
+>>>> pcie->resources = &res;
+>>>> and then they call
+>>>> iproc_pcie_setup(pcie);
+>>>>
+>>>> After iproc_pcie_pltfm_probe / iproc_pcie_bcma_probe returns, the
+>>>> pointer pcie->resources is not valid anymore, yet pcie struct is still
+>>>> in use. Of course pcie->resources isn't used anymore, but still, it's
+>>>> some in-struct pointer (to the random memory since local variable is
+>>>> not accessible anymore).
+>>>>
+>>>> I think you should drop
+>>>> struct list_head *resources;
+>>>> from the struct iproc_pcie and use
+>>>> iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *resources)
+>>>>
+>>>
+>>> Okay thanks. That makes sense.
+>>>
+>>> Or I should keep a copy of the resources under pcie->resources. In the
+>>> current pcie-iproc.c, the resource is not used anywhere else except when
+>>> creating the root bus under iproc_pcie_setup. But in the future, I might
+>>> need to add more code to explicitly program the outbound/inbound windows
+>>> so this driver can work with some other iProc SoCs where the desired
+>>> windows do not match power-on-reset values.
+>>>
+>>> I plan to change this along with the window programming patch in the
+>>> future. I also think Hauke's current patch is fine.
+>>>
+>>> Thanks,
+>>>
+>>> Ray
+>>>
+>> I think parts of this resources are allocated and never freed.
+>>
+>> pci_add_resource() allocates some bytes, but I do not see where they are
+>> freed, this also applies to the platform driver.
+> 
+> Where are we on this patch?  I see Ray's ack for [1/2], and a "I think the
+> current patch is fine"; is that an ack for [2/2] as well?
+> 
+> Bjorn
+> 
 
+Yes, IMO, both patches from Hauke to extend the Iproc PCIe to support
+BCMA bus are fine.
 
-> +static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
->   {
-> -	struct pci_controller *hose;
-> +	int *freset = data;
->
-> -	if (pci_is_root_bus(dev->bus)) {
-> -		hose = pci_bus_to_host(dev->bus);
-> -		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
-> -		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
-> -	} else {
-> -		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
-> -		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
-> +	/*
-> +	 * Stop the iteration immediately if there is any
-> +	 * one PCI device requesting fundamental reset
-> +	 */
-> +	*freset |= pdev->needs_freset;
-> +	return *freset;
-> +}
-> +
-> +void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
-> +{
-> +	int option = EEH_RESET_HOT;
-> +	int freset = 0;
-> +
-> +	/* Check if there're any PCI devices asking for fundamental reset */
-> +	if (pdev->subordinate) {
-> +		pci_walk_bus(pdev->subordinate,
-> +			     pnv_pci_dev_reset_type,
-> +			     &freset);
-> +		if (freset)
-> +			option = EEH_RESET_FUNDAMENTAL;
->   	}
-> +
-> +	/* Issue the requested type of reset */
-> +	pnv_eeh_bridge_reset(pdev, option);
-> +	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
->   }
->
->   /**
->
+Thanks,
 
-
--- 
-Alexey
+Ray
