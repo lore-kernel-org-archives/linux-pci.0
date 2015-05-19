@@ -1,155 +1,215 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:57391 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752341AbbE0VLK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 17:11:10 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: [PATCH v0 08/13] PCI: Statically specify bus memory regions
-Date: Wed, 27 May 2015 20:59:21 +0000
-Message-ID: <810549603c0b4ccf8186f7d549a975c5@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34192 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbbESXA0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:00:26 -0400
+Received: by ieczm2 with SMTP id zm2so26132024iec.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:00:26 -0700 (PDT)
+Date: Tue, 19 May 2015 18:00:20 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2] pci/iov: fix resource leak on destroying VF
+Message-ID: <20150519230020.GU31666@google.com>
+References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the static enumeration profile, the user may override the memory
-space associated with a bus. This is needed so that when a PCI endpoint
-is later discovered, it can fit within its upstream bus's memory space
-without requiring that the bus's memory be resized (and hence other
-device potentially moved).
+On Fri, May 08, 2015 at 11:53:27AM +0800, Wei Yang wrote:
+> Beside pci_dev resources, VF has other resources between its PF, like
+> refcount to PF, sysfs link between them and the virtual bus. When a VF is
+> released in virtfn_remove(), those resources are released properly. But
+> in the hotplug case, they are not.
+> 
+> In hotplug case, VFs are removed by pci_stop_and_remove_bus_device()
+> instead of virtfn_remove(). This leads to some leak for resources.
+> 
+> This patch moves the resource release to pci_destroy_dev() to make sure
+> those resources are released when VF is destroyed.
 
-Signed-off-by: Jason Tang <jason.tang2@ngc.com>
----
- Documentation/kernel-parameters.txt |    2 ++
- drivers/pci/pci.h                   |    2 ++
- drivers/pci/pci_static_enum.c       |   47 +++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c                 |    3 +++
- 4 files changed, 54 insertions(+)
+Earlier you mentioned a related commit, but you didn't reference it here.
+I thought you said this fixed a regression.  If so, we need information
+about it.  I know you said you'd like this patch to go to the stable
+kernel.  We need justification for that, too, e.g., a way to reproduce a
+problem and what the effect of the problem is.  I guess "hot-remove of
+an SR-IOV device" is probably the way to reproduce it, but I don't know
+what the effect is.  Does a subsequent hot-add fail?  Do we silently leak
+some memory?  If you could open a bugzilla with a dmesg log showing the
+problem, that would be great.
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index af2ce92..5413155 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2773,6 +2773,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				and <option> is any combination of:
- 				B<secondary>-<subordinate> -
- 				  force secondary and subordinate bus numbers
-+				M<address>-<address> -
-+				  set MMIO memory range
- 				All values are in hexadecimal.
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 665c798..db710ac 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -327,6 +327,7 @@ int pci_static_enum_exists(void);
- void pci_static_enum_bus_nums(struct pci_bus *bus);
- int pci_static_enum_get_busnr(struct pci_bus *bus, struct pci_dev *dev,
- 			      int default_busnr);
-+void pci_static_enum_device(struct pci_dev *dev);
- /**
-  * pci_bus_subordinate() - return the subordinate bus number assigned
-  * to @dev by the static enumeration profile, or 0 if not set
-@@ -344,6 +345,7 @@ static inline int pci_static_enum_get_busnr(struct pci_bus *bus, struct pci_dev
- {
- 	return default_busnr;
- }
-+static inline void pci_static_enum_device(struct pci_dev *dev) { return; }
- static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
- {
- 	return 0;
-diff --git a/drivers/pci/pci_static_enum.c b/drivers/pci/pci_static_enum.c
-index dbdc973..9c9ea4a 100644
---- a/drivers/pci/pci_static_enum.c
-+++ b/drivers/pci/pci_static_enum.c
-@@ -28,6 +28,7 @@ struct pci_static_enum_setting {
- 	int devfn;
- 	unsigned char secondary_bus;
- 	unsigned char subordinate_bus;
-+	resource_size_t bridgemem_start, bridgemem_end;
- };
- 
- LIST_HEAD(settings_list);
-@@ -82,6 +83,7 @@ static int pci_static_enum_parse_options(void)
- 		struct pci_static_enum_setting *setting, *tmp;
- 		int seg, bus, slot, func;
- 		unsigned int secondary_bus, subordinate_bus;
-+		resource_size_t start, end;
- 		int count = 0, entry_found = 0;
- 
- 		if (strncmp(p, "off", 3) == 0) {
-@@ -133,6 +135,12 @@ static int pci_static_enum_parse_options(void)
- 				p += count;
- 				setting->secondary_bus = secondary_bus;
- 				setting->subordinate_bus = subordinate_bus;
-+			} else
-+			    if (sscanf(p, "M%llx-%llx%n", &start, &end, &count)
-+				== 2 && count > 0) {
-+				p += count;
-+				setting->bridgemem_start = start;
-+				setting->bridgemem_end = end;
- 			} else {
- 				pr_err(PREFIX "Invalid enum option: `%s'\n", p);
- 				return -1;
-@@ -249,3 +257,42 @@ int pci_static_enum_get_busnr(struct pci_bus *bus, struct pci_dev *dev,
- 		return setting->secondary_bus;
- 	return default_num;
- }
-+
-+/**
-+ * pci_static_enum_set_bridge_memory() - override a PCI bridge's
-+ * memory base and limit registers, according to its static
-+ * enumeration profile
-+ * @dev: PCI bridge device to override
-+ * @setting: device's static enumeration profile
-+ */
-+static void pci_static_enum_set_bridge_memory(struct pci_dev *dev, struct pci_static_enum_setting
-+					      *setting)
-+{
-+	u16 mem_base_lo, mem_limit_lo;
-+
-+	dev_info(&dev->dev, "Overriding memory base and limit to %pa-%pa\n",
-+		 &setting->bridgemem_start, &setting->bridgemem_end);
-+	mem_base_lo = setting->bridgemem_start >> 16;
-+	mem_limit_lo = (setting->bridgemem_end >> 16) & ~0xf;
-+	pci_write_config_word(dev, PCI_MEMORY_BASE, mem_base_lo);
-+	pci_write_config_word(dev, PCI_MEMORY_LIMIT, mem_limit_lo);
-+}
-+
-+/**
-+ * pci_static_enum_device() - override a device's memory
-+ * configuration, according to its static enumeration profile
-+ * @dev: PCI device to override
-+ */
-+void pci_static_enum_device(struct pci_dev *dev)
-+{
-+	struct pci_static_enum_setting *setting;
-+
-+	/* if dev is a bridge, set its memory regions */
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		setting = pci_static_enum_find_setting(pci_domain_nr(dev->bus),
-+						       dev->bus->number,
-+						       dev->devfn);
-+		if (setting && setting->bridgemem_start)
-+			pci_static_enum_set_bridge_memory(dev, setting);
-+	}
-+}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b3e7db4..418fb59 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -315,6 +315,9 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
- {
- 	unsigned int pos, reg;
- 
-+	/* Override any memory settings that BIOS may have assigned */
-+	pci_static_enum_device(dev);
-+
- 	for (pos = 0; pos < howmany; pos++) {
- 		struct resource *res = &dev->resource[pos];
- 		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
--- 
-1.7.9.5
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/iov.c    |   42 +++++++++++++++++++++++-------------------
+>  drivers/pci/pci.h    |   10 ++++++++++
+>  drivers/pci/remove.c |   31 +++++++++++++++++++++++++++++++
+>  3 files changed, 64 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee0ebff..47daf2f 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -17,8 +17,6 @@
+>  #include <linux/pci-ats.h>
+>  #include "pci.h"
+>  
+> -#define VIRTFN_ID_LEN	16
+> -
+>  int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+>  {
+>  	if (!dev->is_physfn)
+> @@ -94,7 +92,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>  	return child;
+>  }
+>  
+> -static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+>  {
+>  	if (physbus != virtbus && list_empty(&virtbus->devices))
+>  		pci_remove_bus(virtbus);
+> @@ -185,9 +183,7 @@ failed:
+>  
+>  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>  {
+> -	char buf[VIRTFN_ID_LEN];
+>  	struct pci_dev *virtfn;
+> -	struct pci_sriov *iov = dev->sriov;
+>  
+>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+>  					     pci_iov_virtfn_bus(dev, id),
+> @@ -200,24 +196,10 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>  		__pci_reset_function(virtfn);
+>  	}
+>  
+> -	sprintf(buf, "virtfn%u", id);
+> -	sysfs_remove_link(&dev->dev.kobj, buf);
+> -	/*
+> -	 * pci_stop_dev() could have been called for this virtfn already,
+> -	 * so the directory for the virtfn may have been removed before.
+> -	 * Double check to avoid spurious sysfs warnings.
+> -	 */
+> -	if (virtfn->dev.kobj.sd)
+> -		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+> -
+> -	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+> -	virtfn_remove_bus(dev->bus, virtfn->bus);
+> -	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	/* balance pci_get_domain_bus_and_slot() */
+>  	pci_dev_put(virtfn);
+> -	pci_dev_put(dev);
+>  }
+>  
+>  int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+> @@ -760,3 +742,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  	return dev->sriov->total_VFs;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+> +
+> +void pci_sriov_lock(struct pci_dev *dev)
+> +{
+> +	struct pci_sriov *iov;
+> +
+> +	if (!dev->is_physfn)
+> +		return;
+> +
+> +	iov = dev->sriov;
+> +	mutex_lock(&iov->dev->sriov->lock);
+> +}
+> +
+> +void pci_sriov_unlock(struct pci_dev *dev)
+> +{
+> +	struct pci_sriov *iov;
+> +
+> +	if (!dev->is_physfn)
+> +		return;
+> +
+> +	iov = dev->sriov;
+> +	mutex_unlock(&iov->dev->sriov->lock);
+> +}
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 9bd762c2..a0323a2 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -260,6 +260,12 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+>  #endif /* CONFIG_PCI_ATS */
+>  
+>  #ifdef CONFIG_PCI_IOV
+> +
+> +#define VIRTFN_ID_LEN	16
+> +void pci_sriov_lock(struct pci_dev *dev);
+> +void pci_sriov_unlock(struct pci_dev *dev);
+> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus);
+> +
+>  int pci_iov_init(struct pci_dev *dev);
+>  void pci_iov_release(struct pci_dev *dev);
+>  int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+> @@ -268,6 +274,10 @@ void pci_restore_iov_state(struct pci_dev *dev);
+>  int pci_iov_bus_range(struct pci_bus *bus);
+>  
+>  #else
+> +static inline void pci_sriov_lock(struct pci_dev *dev) { }
+> +static inline void pci_sriov_unlock(struct pci_dev *dev) { }
+> +static inline void virtfn_remove_bus(struct pci_bus *physbus,
+> +		struct pci_bus *virtbus) { }
+
+This doesn't make sense to me.  You added calls to pci_sriov_lock(), etc.,
+but they are all under #ifdef CONFIG_PCI_IOV.  So why do you need stubs
+when CONFIG_PCI_IOV is not defined?
+
+>  static inline int pci_iov_init(struct pci_dev *dev)
+>  {
+>  	return -ENODEV;
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 8a280e9..f2a07bf 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -41,6 +41,37 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  	list_del(&dev->bus_list);
+>  	up_write(&pci_bus_sem);
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +	if (dev->is_virtfn) {
+> +		char buf[VIRTFN_ID_LEN];
+> +		int id;
+> +		struct pci_dev *pdev = dev->physfn;
+> +
+> +		for (id = 0; id < pci_sriov_get_totalvfs(pdev); id++) {
+> +			if ((dev->bus->number == pci_iov_virtfn_bus(pdev, id))
+> +			   && (dev->devfn == pci_iov_virtfn_devfn(pdev, id))) {
+> +				sprintf(buf, "virtfn%u", id);
+> +				sysfs_remove_link(&pdev->dev.kobj, buf);
+> +				break;
+> +			}
+> +		}
+> +		/*
+> +		 * pci_stop_dev() could have been called for this virtfn
+> +		 * already, so the directory for the virtfn may have been
+> +		 * removed before.  Double check to avoid spurious sysfs
+> +		 * warnings.
+> +		 */
+> +		if (dev->dev.kobj.sd)
+> +			sysfs_remove_link(&dev->dev.kobj, "physfn");
+> +
+> +		pci_sriov_lock(pdev);
+> +		virtfn_remove_bus(pdev->bus, dev->bus);
+> +		pci_sriov_unlock(pdev);
+> +
+> +		pci_dev_put(dev->physfn);
+> +	}
+
+All this IOV-related code looks really out of place in pci_destroy_dev().
+Isn't there some way this code can be put in drivers/pci/iov.c?
+
+> +#endif
+> +
+>  	pci_free_resources(dev);
+>  	put_device(&dev->dev);
+>  }
+> -- 
+> 1.7.9.5
+> 
