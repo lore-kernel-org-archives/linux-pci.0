@@ -1,306 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:37799 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbbEKEir (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 00:38:47 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 14:38:44 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 8E97A2BB0040
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:38:40 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B4cVgN19464192
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:38:40 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B4c7VN004501
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 14:38:07 +1000
-Date: Mon, 11 May 2015 14:37:42 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 02/21] powerpc/powernv: Enable M64 on P7IOC
-Message-ID: <20150511043742.GA24743@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-3-git-send-email-gwshan@linux.vnet.ibm.com>
- <554D5262.2030109@ozlabs.ru>
+Received: from mx1.redhat.com ([209.132.183.28]:51508 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933156AbbESP0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 11:26:48 -0400
+Date: Tue, 19 May 2015 17:26:36 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [RFC 2/4] PCI, MSI: Optionally free legacy PCI IRQ when enabling
+ MSI/MSI-X
+Message-ID: <20150519172534-mutt-send-email-mst@redhat.com>
+References: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
+ <1430968374-29286-3-git-send-email-jiang.liu@linux.intel.com>
+ <20150519150838.GQ31666@google.com>
+ <20150519171518-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554D5262.2030109@ozlabs.ru>
+In-Reply-To: <20150519171518-mutt-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 09, 2015 at 10:18:42AM +1000, Alexey Kardashevskiy wrote:
->On 05/01/2015 04:02 PM, Gavin Shan wrote:
->>The patch enables M64 window on P7IOC, which has been enabled on
->>PHB3. Comparing to PHB3, there are 16 M64 BARs and each of them
->>are divided to 8 segments.
->
->"compared to something" means you will tell about PHB3 too :)
->
+On Tue, May 19, 2015 at 05:16:54PM +0200, Michael S. Tsirkin wrote:
+> On Tue, May 19, 2015 at 10:08:38AM -0500, Bjorn Helgaas wrote:
+> > [+cc Michael]
+> > 
+> > On Thu, May 07, 2015 at 11:12:52AM +0800, Jiang Liu wrote:
+> > > Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
+> > > make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
+> > > So optionally free legacy PCI IRQ when enabling MSI/MSI-X and reallocate
+> > > when disabling MSI/MSI-X.
+> > > 
+> > > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> > > ---
+> > >  drivers/pci/msi.c |    6 +++++-
+> > >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > > index c3e7dfcf9ff5..47cf72c669f0 100644
+> > > --- a/drivers/pci/msi.c
+> > > +++ b/drivers/pci/msi.c
+> > > @@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+> > >  	msi_set_enable(dev, 1);
+> > >  	dev->msi_enabled = 1;
+> > >  
+> > > +	pcibios_free_irq(dev);
+> > 
+> > >From the recent discussion about disabling MSI at shutdown, I seem to
+> > recall that turning off bus mastering also effectively disables MSI and
+> > causes at least some devices to revert to using INTx.
 
-Ok. I'll add something about PHB3 in next revision.
+So to stress this point, turning off bus mastering also effectively
+disables MSI without making devices revert to using INTx.
+This is why clearing bus master is the right thing to do
+if you don't want any interrupts at all.
 
->Do I understand correctly that IODA==IODA1==P7IOC  and P7IOC != IODA2? The
->code does not use "PHB3" or "P7IOC" acronym so it is a bit confusing.
->
->
 
-Your understanding is correct.
-
->>So each PHB can support 128 M64 segments.
->>Also, P7IOC has M64DT, which helps mapping one particular M64
->>segment# to arbitrary PE#. However, we just provide 128 M64 (16 BARs)
->>segments and fixed mapping between PE# and M64 segment# in order
->>to keep same logic to support M64 for PHB3 and P7IOC. In turn, we
->>just need different phb->init_m64() hooks for P7IOC and PHB3.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 115 ++++++++++++++++++++++++++----
->>  1 file changed, 103 insertions(+), 12 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index f8bc950..646962f 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -165,6 +165,67 @@ static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
->>  	clear_bit(pe, phb->ioda.pe_alloc);
->>  }
->>
->>+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
->>+{
->>+	struct resource *r;
->>+	int seg;
->>+	s64 rc;
->
->Here @rc is of the "s64" type.
->
-
-Ok. I'll have "int64_t rc" as you pointed in the following replies.
-
->>+
->>+	/* Each PHB supports 16 separate M64 BARs, each of which are
->>+	 * divided into 8 segments. So there are number of M64 segments
->>+	 * as total PE#, which is 128.
->>+	 */
->
->"there are as many M64 segments as a maximum number of PEs which is 128"?
->
-
-Thanks, your description is obviously more clear. I will have it in
-next revision.
-
->>+	for (seg = 0; seg < phb->ioda.total_pe; seg += 8) {
->>+		unsigned long base;
->>+
->>+		base = phb->ioda.m64_base + seg * phb->ioda.m64_segsize;
->>+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
->>+						 OPAL_M64_WINDOW_TYPE,
->>+						 seg / 8,
->>+						 base,
->>+						 0, /* unused */
->>+						 8 * phb->ioda.m64_segsize);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("  Failure %lld configuring M64 BAR#%d on PHB#%d\n",
->>+				rc, seg / 8, phb->hose->global_number);
->>+			goto fail;
->>+		}
->>+
->>+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
->>+					      OPAL_M64_WINDOW_TYPE,
->>+					      seg / 8,
->>+					      OPAL_ENABLE_M64_SPLIT);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("  Failure %lld enabling M64 BAR#%d on PHB#%d\n",
->>+				rc, seg / 8, phb->hose->global_number);
->>+			goto fail;
->>+		}
->>+	}
->>+
->>+	/* Strip of the segment used by the reserved PE, which
->>+	 * is expected to be 0 or last supported PE#
->>+	 */
->>+	r = &phb->hose->mem_resources[1];
->
->mem_resources[0] is IO, mem_resources[1] is MMIO, mem_resources[2] is for
->what? Would be nice to have this commented somewhere.
->
-
-The fixed layout is determined by skiboot firmware. mem_resource[2] is for
-64-bits prefetchable MMIO. I'll see if I can put some comments about them
-somewhere in next revision.
-
->>+	if (phb->ioda.reserved_pe == 0)
->>+		r->start += phb->ioda.m64_segsize;
->>+	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
->>+		r->end -= phb->ioda.m64_segsize;
->>+	else
->>+		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
->>+			phb->ioda.reserved_pe);
->>+
->>+	return 0;
->>+
->>+fail:
->>+	for ( ; seg >= 0; seg -= 8)
->>+		opal_pci_phb_mmio_enable(phb->opal_id,
->>+					 OPAL_M64_WINDOW_TYPE,
->>+					 seg / 8,
->>+					 OPAL_DISABLE_M64);
->
->Out of curiosity - is not there a counterpart for
->opal_pci_set_phb_mem_window() for cleanup?
->
->
-
-No.
-
->>+
->>+	return -EIO;
->>+}
->>+
->>  /* The default M64 BAR is shared by all PEs */
->>  static int pnv_ioda2_init_m64(struct pnv_phb *phb)
->>  {
->>@@ -222,7 +283,7 @@ fail:
->>  	return -EIO;
->>  }
->>
->>-static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
->>+static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb)
->>  {
->>  	resource_size_t sgsz = phb->ioda.m64_segsize;
->>  	struct pci_dev *pdev;
->>@@ -248,8 +309,8 @@ static void pnv_ioda2_reserve_m64_pe(struct pnv_phb *phb)
->>  	}
->>  }
->>
->>-static int pnv_ioda2_pick_m64_pe(struct pnv_phb *phb,
->>-				 struct pci_bus *bus, int all)
->>+static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
->>+				struct pci_bus *bus, int all)
->>  {
->>  	resource_size_t segsz = phb->ioda.m64_segsize;
->>  	struct pci_dev *pdev;
->>@@ -346,6 +407,28 @@ done:
->>  			pe->master = master_pe;
->>  			list_add_tail(&pe->list, &master_pe->slaves);
->>  		}
->>+
->>+		/* P7IOC supports M64DT, which helps mapping M64 segment
->>+		 * to one particular PE#. Unfortunately, PHB3 has fixed
->
->Why is it "Unfortunately"? This is just the way it is :)
->
-
-It's true that PHB3 is designed without M64DT while P7IOC has. I think
-it's a nice thing providing more flexibility: Arbitrary M64 segment
-can be mapped to any one PE# with its help. So I said "unfortunately" :-)
-
->>+		 * mapping between M64 segment and PE#. In order for same
->>+		 * logic for P7IOC and PHB3, we enforce fixed mapping
->>+		 * between M64 segment and PE# on P7IOC.
->>+		 */
->>+		if (phb->type == PNV_PHB_IODA1) {
->>+			int64_t rc;
->
->Here @rc is of the "int64_t" type. And this one and the one above are used
->for return code from OPAL API. Make them the same (int64_t or long, up to
->you).
->
-
-Yep. It will be "int64_t rc" as I said above.
-
->>+
->>+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>+							 pe->pe_number,
->>+							 OPAL_M64_WINDOW_TYPE,
->>+							 pe->pe_number / 8,
->>+							 pe->pe_number % 8);
->>+			if (rc != OPAL_SUCCESS)
->>+				pr_warn("%s: Failure %lld mapping "
->>+					"M64 for PHB#%d-PE#%d\n",
->>+					__func__, rc,
->>+					phb->hose->global_number,
->>+					pe->pe_number);
->>+		}
->>  	}
->>
->>  	kfree(pe_alloc);
->>@@ -360,12 +443,6 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
->>  	const u32 *r;
->>  	u64 pci_addr;
->>
->>-	/* FIXME: Support M64 for P7IOC */
->>-	if (phb->type != PNV_PHB_IODA2) {
->>-		pr_info("  Not support M64 window\n");
->>-		return;
->>-	}
->>-
->>  	if (!firmware_has_feature(FW_FEATURE_OPALv3)) {
->>  		pr_info("  Firmware too old to support M64 window\n");
->>  		return;
->>@@ -394,9 +471,23 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
->>
->>  	/* Use last M64 BAR to cover M64 window */
->>  	phb->ioda.m64_bar_idx = 15;
->>-	phb->init_m64 = pnv_ioda2_init_m64;
->>-	phb->reserve_m64_pe = pnv_ioda2_reserve_m64_pe;
->>-	phb->pick_m64_pe = pnv_ioda2_pick_m64_pe;
->>+	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
->
->
->reserve_m64_pe() is called once from pnv_pci_ioda_setup_PEs() so it is
->IODA-only and in this case reserve_m64_pe != NULL and
->pnv_ioda_reserve_m64_pe() will be called always.
->
->In general, it feels like pnv_phb has too many callbacks while they could be
->just direct calls.
->
-
-We will have another type of IODA compatible PHB soon. I'm not sure if it's
-legal to reveal its name now. The new PHB won't have M64 support. I do think
-callbacks give us more flexibility (for supporting M64 or not). Lets keep it.
-
->>+	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
->>+	switch (phb->type) {
->>+	case PNV_PHB_IODA1:
->>+		phb->init_m64 = pnv_ioda1_init_m64;
->>+		break;
->>+	case PNV_PHB_IODA2:
->>+		phb->init_m64 = pnv_ioda2_init_m64;
->>+		break;
->>+	default:
->>+		phb->init_m64 = NULL;
->>+		phb->reserve_m64_pe = NULL;
->>+		phb->pick_m64_pe = NULL;
->>+		phb->ioda.m64_size = 0;
->>+		phb->ioda.m64_segsize = 0;
->>+		phb->ioda.m64_base = 0;
->
->There are just 2 PHB types - IODA1 and IODA2, right? And the fields you reset
->after "default" - they have to be zeroes already, no? And on what hardware
->would the default branch actuall work? None?
->
-
-Yeah, you're right those piece of garbage can be removed in next revision.
-
-Thanks,
-Gavin
-
->
->>+	}
->>  }
->>
->>  static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
->>
->
->
->-- 
->Alexey
->
-
+> > So with this patch, do we now have a problem in the following scenario?
+> 
+> Can't say, I didn't follow the discussion. But I'll address the
+> comment below:
+> 
+> >     pci_enable_msi(dev);	/* now frees INTx IRQ */
+> >     pci_clear_master(dev);
+> >     <device interrupts>		/* uses INTx since bus mastering disabled */
+> 
+> Not really, this does not use INTx. Disabling bus master shuts down MSI
+> but does not enable INTx, you effectively get no interrupts at all: MSI
+> disabled INTx and bus master disabled MSI.
+> 
+> 
+> > >  	dev->irq = entry->irq;
+> > >  	return 0;
+> > >  }
+> > > @@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
+> > >  	/* Set MSI-X enabled bits and unmask the function */
+> > >  	pci_intx_for_msi(dev, 0);
+> > >  	dev->msix_enabled = 1;
+> > > -
+> > >  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+> > >  
+> > > +	pcibios_free_irq(dev);
+> > > +
+> > >  	return 0;
+> > >  
+> > >  out_avail:
+> > > @@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+> > >  
+> > >  	/* Restore dev->irq to its default pin-assertion irq */
+> > >  	dev->irq = desc->msi_attrib.default_irq;
+> > > +	pcibios_alloc_irq(dev);
+> > >  }
+> > >  
+> > >  void pci_disable_msi(struct pci_dev *dev)
+> > > @@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+> > >  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+> > >  	pci_intx_for_msi(dev, 1);
+> > >  	dev->msix_enabled = 0;
+> > > +	pcibios_alloc_irq(dev);
+> > >  }
+> > >  
+> > >  void pci_disable_msix(struct pci_dev *dev)
+> > > -- 
+> > > 1.7.10.4
+> > > 
