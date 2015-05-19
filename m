@@ -1,55 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 May 2015 14:41:10 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150512064110.GE29874@localhost.localdomain>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
- <20150507135600.GB4559@localhost.localdomain>
- <20150511101124.GG20611@8bytes.org>
- <20150512055707.GB29874@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150512055707.GB29874@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:59908 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753405AbbESKyh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:54:37 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 20:54:35 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 0BA322BB004D
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:33 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAsOZ817498184
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:33 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAs07G000905
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:00 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 05/10] powerpc/powernv: EEH device for VF
+Date: Tue, 19 May 2015 18:50:07 +0800
+Message-Id: <1432032612-21701-6-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/12/15 at 01:57pm, Dave Young wrote:
-> On 05/11/15 at 12:11pm, Joerg Roedel wrote:
-> > On Thu, May 07, 2015 at 09:56:00PM +0800, Dave Young wrote:
-> > > Joreg, I can not find the last reply from you, so just reply here about
-> > > my worries here.
-> > > 
-> > > I said that the patchset will cause more problems, let me explain about
-> > > it more here:
-> > > 
-> > > Suppose page table was corrupted, ie. original mapping iova1 -> page 1
-> > > it was changed to iova1 -> page 2 accidently while crash happening,
-> > > thus future dma will read/write page 2 instead page 1, right?
-> > 
-> > When the page-table is corrupted then it is a left-over from the old
-> > kernel. When the kdump kernel boots the situation can at least not get
-> > worse. For the page tables it is also hard to detect wrong mappings (if
-> > this would be possible the hardware could already do it), so any checks
-> > we could do there are of limited use anyway.
-> 
-> Joerg, since both of you guys do not think it is a problem I will object it 
+VFs and their corresponding pci_dn instances are created and released
+dynamically as their PF's SRIOV capability is enabled and disabled.
+The patch creates and releases EEH devices for VFs when creating and
+releasing their pci_dn instances, which means EEH devices and pci_dn
+instances have same life cycle. Also, VF's EEH device is identified
+by (struct eeh_dev::physfn).
 
-s/will object/will not object
+[gwshan: changelog and removed CONFIG_PCI_IOV]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h |    1 +
+ arch/powerpc/kernel/pci_dn.c   |   12 ++++++++++++
+ 2 files changed, 13 insertions(+)
 
-> any more though I still do not like reusing the old page tables. So let's
-> leave it as a future issue.
-> 
-> Thanks
-> Dave
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index a52db28..1b3614d 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -138,6 +138,7 @@ struct eeh_dev {
+ 	struct pci_controller *phb;	/* Associated PHB		*/
+ 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+ 	struct pci_dev *pdev;		/* Associated PCI device	*/
++	struct pci_dev *physfn;		/* Associated PF PORT		*/
+ 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+ };
+ 
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index f771130..f0ddde7 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ {
+ #ifdef CONFIG_PCI_IOV
++	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	struct pci_dn *parent, *pdn;
++	struct eeh_dev *edev;
+ 	int i;
+ 
+ 	/* Only support IOV for now */
+@@ -206,6 +208,9 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ 				 __func__, i);
+ 			return NULL;
+ 		}
++		eeh_dev_init(pdn, hose);
++		edev = pdn_to_eeh_dev(pdn);
++		edev->physfn = pdev;
+ 	}
+ #endif /* CONFIG_PCI_IOV */
+ 
+@@ -254,10 +259,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+ 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+ 		list_for_each_entry_safe(pdn, tmp,
+ 			&parent->child_list, list) {
++			struct eeh_dev *edev;
+ 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
+ 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
+ 				continue;
+ 
++			edev = pdn_to_eeh_dev(pdn);
++			if (edev) {
++				pdn->edev = NULL;
++				kfree(edev);
++			}
++
+ 			if (!list_empty(&pdn->list))
+ 				list_del(&pdn->list);
+ 
+-- 
+1.7.9.5
+
