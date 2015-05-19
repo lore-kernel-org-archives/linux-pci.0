@@ -1,136 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <40F65EF2B5E2254199711F58E3ACB84D7825D377@MX104CL02.corp.emc.com>
-References: <cover.1432135631.git.Allen.Hubbe@emc.com> <ae66adf68441cdaf893d2a562924615c229489c0.1432135631.git.Allen.Hubbe@emc.com>
- <CAErSpo5gf9VhegEGY5S+dak0UuMNEMDD29JT4TcTz_UPey3aNQ@mail.gmail.com> <40F65EF2B5E2254199711F58E3ACB84D7825D377@MX104CL02.corp.emc.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 May 2015 17:20:18 -0500
-Message-ID: <CAErSpo5WzQ86t5F2pfhHYipcUH3h2vv1DN1-Dpx_VPsOnbpu=w@mail.gmail.com>
-Subject: Re: [PATCH 03/16] ntb: Enable link training for RP mode in the driver probe
-To: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-Cc: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:16414 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751261AbbESVxt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 17:53:49 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alexander Duyck <alexander.h.duyck@redhat.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to
+ protect VPD operations
+Date: Tue, 19 May 2015 21:53:27 +0000
+Message-ID: <DE578829-90CD-4CB0-A206-68A21D91AB0B@intel.com>
+References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
+ <555B78F7.60908@redhat.com> <E9012788-257F-4C44-B7F1-789B94423924@intel.com>
+ <555BA3F0.5030001@redhat.com>
+In-Reply-To: <555BA3F0.5030001@redhat.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_6C7E5418-F0F0-406E-A448-83C2E466583A";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 4:46 PM, Hubbe, Allen <Allen.Hubbe@emc.com> wrote:
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Please run "git log --oneline drivers/ntb" and make your subject lines
->> consistent.  The convention I use in PCI (and what was used in NTB
->> until recently) is
->>
->>   - Acronyms and initialisms are capitalized
->>   - Subject line is a subsystem prefix ("PCI:", "NTB:", etc.) followed
->> by a complete sentence starting with a capitalized verb, with no
->> period at the end
->
-> These are the new subject lines that will be in the v2 of this set.
+--Apple-Mail=_6C7E5418-F0F0-406E-A448-83C2E466583A
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
-That helps a lot, thanks.
+> On May 19, 2015, at 1:58 PM, Alexander Duyck =
+<alexander.h.duyck@redhat.com> wrote:
+>=20
+> I think you are assuming too much.  Have you root caused the other =
+devices?
 
-> NTB: Fix small code format issues in transport
-> NTB: Default to CPU memcpy for performance
-> NTB: Improve performance with write combining
-> NTB: Use NUMA aware memory allocation
-> NTB: Use NUMA memory and DMA chan in transport
-> NTB: Reset transport QP link stats on down
-> NTB: Do not advance transport RX on link down
-> NTB: Differentiate transport link down messages
-> NTB: Rate limit ntb_qp_link_work
-> NTB: Add tool client
-> NTB: Add ping pong client
+It is possible that you are right, but I think it is much more likely =
+that this is a common design problem with many devices.
 
-I think these are test cases, not part of the kernel itself.  It'd be
-nice to know that from the summary.  I don't know what the precedent
-is for that (if there is one).
+> All the "vpd r/w failed" means is that a given read or write timed =
+out.  There are any number of possible reasons for that including VPD =
+being unimplemented in firmware, a device falling off of the bus, and =
+many others.  What you have is a common symptom, it doesn't mean it is a =
+common ailment for all the other parts.
 
-> NTB: Intel NTB params for SNB B2B addresses
+Yes, but it sure looks like many PCIe designers have shared the VPD =
+registers across functions. It isn't just that the area they address is =
+shared, it is that the register implementations are also shared across =
+functions. That is the case with all the Intel devices (it is indicated =
+in the datasheets) and I'm guessing that other designers have done the =
+same thing. It is a guess at this point, but think it is a very good =
+one.
 
-This sentence no verb :)  Not sure what you're doing with those params.
+>> If after doing that you still feel that this isn't the best solution, =
+I can go and cook up something much bigger (I already had two much =
+bigger patches that I abandoned in favor of this approach). Bear in mind =
+that the quirk code is dead weight in all the kernels.
+>=20
+> The quirk code is there to deal with buggy hardware implementations =
+and that is what it sounds like you have in this case.  I highly doubt =
+all of the other vendors implemented the same mistake.  If they did then =
+maybe you should implement a the quirk as a new function that can be =
+used by any of the devices that implement VPD with the same limitation.
 
-> NTB: Check the DID for workaround error flags
+Just the device table to list the affected devices, even if Intel is the =
+only vendor with this issue, will be very much larger than this patch =
+and every kernel will carry that weight.
 
-I think there's room to spell out "device ID".
+>> As you said in another message, VPD is not that vital. Given that, I =
+would think that some possible needless synchronization that resolves =
+real problems for many devices should be acceptable. If it was =
+synchronizing all config space or something that would be different, but =
+this is just VPD.
+>=20
+> The problem is it is needless synchronization, and it only resolves =
+problems for some very specific devices.  The extra overhead for =
+serializing what is already slow accesses can be very high so I am =
+against it.
 
-> NTB: Enable link training for RP mode in probe
+In any PCIe environment, it only serializes VPD access for one physical =
+device's functions. That just isn't that bad.
 
-Is that Root Port?
+> For example it will likely have unintended consequences on things like =
+virtual machines where all direct assigned devices end up on the same =
+bus.
 
-> NTB: Add NTB hardware abstraction layer
-> NTB: Move files in preparation for NTB abstraction
+Direct-assigned devices to virtual machines have problems here that I =
+can't address. Hypervisors would have to be involved in resolving that =
+problem, if it is important enough to do. At present I could only =
+suggest that virtual machines should never access VPD at all. This is a =
+problem. At least VFs, which are more commonly assigned to guests, do =
+not have VPD.
 
-Of course, none of this has anything to do with the patches
-themselves, which I don't intend to review because they're out of my
-area :)
+Cutting off the VPD for non-zero functions will have consequences as =
+well. Some may notice devices dropping out of their inventory. That =
+can't be a good thing and could upset customers. I think that is a far =
+larger problem with your approach. Arguably, that is a kernel interface =
+change.
 
->>
->> On Wed, May 20, 2015 at 10:41 AM, Allen Hubbe <Allen.Hubbe@emc.com>
->> wrote:
->> > From: Dave Jiang <dave.jiang@intel.com>
->> >
->> > Link training for RP should be enabled in the driver probe. We should
->> > not have to wait for transport loaded for this to hapen. Otherwise the
->>
->> s/hapen/happen/
->>
->> > device will not show up on the transparent bridge side.
->> >
->> > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
->> > ---
->> >  drivers/ntb/hw/intel/ntb_hw_intel.c | 10 ++++++++++
->> >  1 file changed, 10 insertions(+)
->> >
->> > diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c
->> b/drivers/ntb/hw/intel/ntb_hw_intel.c
->> > index 05c4b77..d162f22 100644
->> > --- a/drivers/ntb/hw/intel/ntb_hw_intel.c
->> > +++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
->> > @@ -1333,6 +1333,9 @@ static int snb_poll_link(struct intel_ntb_dev
->> *ndev)
->> >
->> >  static int snb_link_is_up(struct intel_ntb_dev *ndev)
->> >  {
->> > +       if (ndev->ntb.topo == NTB_TOPO_SEC)
->> > +               return 1;
->> > +
->> >         return NTB_LNK_STA_ACTIVE(ndev->lnk_sta);
->> >  }
->> >
->> > @@ -1642,6 +1645,7 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev
->> *ndev,
->> >  static int snb_init_ntb(struct intel_ntb_dev *ndev)
->> >  {
->> >         int rc;
->> > +       u32 ntb_ctl;
->> >
->> >         if (ndev->bar4_split)
->> >                 ndev->mw_count = HSX_SPLIT_BAR_MW_COUNT;
->> > @@ -1658,6 +1662,12 @@ static int snb_init_ntb(struct intel_ntb_dev
->> *ndev)
->> >                         dev_err(ndev_dev(ndev), "NTB Primary config
->> disabled\n");
->> >                         return -EINVAL;
->> >                 }
->> > +
->> > +               /* enable link to allow secondary side device to
->> appear */
->> > +               ntb_ctl = ioread32(ndev->self_mmio + ndev->reg-
->> >ntb_ctl);
->> > +               ntb_ctl &= ~NTB_CTL_DISABLE;
->> > +               iowrite32(ntb_ctl, ndev->self_mmio + ndev->reg-
->> >ntb_ctl);
->> > +
->> >                 /* use half the spads for the peer */
->> >                 ndev->spad_count >>= 1;
->> >                 ndev->self_reg = &snb_pri_reg;
->> > --
->> > 2.4.0.rc0.43.gcf8a8c6
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> We know that all Intel Ethernet parts to date only implement one VPD =
+area per EEPROM, and that all functions in a multi-function Ethernet =
+part share the same EEPROM, so the fix is to only present one VPD area =
+so that the data is still there, without the ability of multiple access. =
+ It seems like function 0 would be the obvious choice in that case so if =
+somebody wants to be able to do their inventory they can go through and =
+pull inventory information from function 0.  Really this is how this =
+should have probably been implemented in the hardware in the first place =
+if they couldn't support multiple accesses.
+
+No argument from me there, but I don't have a time machine to go back =
+and try to change the thinking on VPD. I'm sure it would take more gates =
+to make the functions different, just as it would take more gates to do =
+it right. Which is why I think the problem is as widespread as the =
+Google results suggest.
+
+Maybe I should send one of my big, ugly patches that only addresses the =
+problem for Intel devices. This patch will look good in comparison.
+
+Isn't getting rid of scary messages that upset customers worth =
+something?
+
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_6C7E5418-F0F0-406E-A448-83C2E466583A
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJVW7DWAAoJEDwO/+eO4+5uEWsP/2/Z70ASEvn3sesTaGhUECE6
+5NPGThqc8E4BUO5bpIi6b6NiU92XJuy8C2UANR8HWpXJ98HVZbpUQhD7iDgeVRA4
+NUl1qDF3gW1MaxGBjZqssTz+InLUzYaxmvg/hzL+m6FOSErcj9WMaQyN9Z6eQ5RL
+IVW9B5i2lfXtEzEPzlvjSXTQL6u5HrSVZIXErzatAo73QyA0ewmCQUvS/QegNGn9
+7D0tWraLAbdMV0CrXhlvyMq0tID/fhzbi4HRdVLvohrxcLw9sFfpop1tL0nF3APa
+95VY1fgDKN2l1lYNrLrPE8Ih8ijd55AqabtExEzyqlpY/NVRUpC/qAebGldXZxR6
+3t/0w60XxGwBaRBL5Ly4eMdsieap0F0oGvNcZcJxA5U/Mot0lkEvd9IoiKf4cURr
+TReJgZ2cvrmlg7zAtyqHKKuadO35aAOYL0oUkvmu3GtH0bXHRdX1O9XgtWM1L0+1
+UkLVwADgYODxiulfzDEWARAlCPDR72eyBzLqU9VzbjJAjIDUgRK0BawdxV8jvoei
+Ec/tN4GLsyOpNbbK6DkIZbZ2xndFaEweJ6fmHh3f8xSEjTgv6d7aF+Blc2gjvriR
+8Rn5AED4BfQwCJGN706Os4hsirrXYSh0E4d+gE+D90D/oy/C5U6+ysdS6CTW3qE+
+flXMuN68CU8ZhKdjZyPb
+=Inh9
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_6C7E5418-F0F0-406E-A448-83C2E466583A--
