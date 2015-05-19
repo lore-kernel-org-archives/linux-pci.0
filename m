@@ -1,109 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56773 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751394AbbEGOZT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 May 2015 10:25:19 -0400
-Message-ID: <554B75D6.1060204@redhat.com>
-Date: Thu, 07 May 2015 10:25:26 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:38748 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbbESXJW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:09:22 -0400
+Received: by igcau1 with SMTP id au1so26601822igc.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:09:22 -0700 (PDT)
+Date: Tue, 19 May 2015 18:09:18 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Jayachandran C." <jchandra@broadcom.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150519230918.GW31666@google.com>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com>
+ <20150512000746.GA31418@jayachandranc.netlogicmicro.com>
 MIME-Version: 1.0
-To: Dave Young <dyoung@redhat.com>
-CC: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
-	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, alex.williamson@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com> <20150403084031.GF22579@dhcp-128-53.nay.redhat.com> <551E56F6.60503@hp.com> <20150403092111.GG22579@dhcp-128-53.nay.redhat.com> <20150405015453.GB1562@dhcp-17-102.nay.redhat.com> <20150407034622.GB7213@localhost.localdomain> <5523E5DB.2090001@redhat.com> <20150507140029.GC4559@localhost.localdomain>
-In-Reply-To: <20150507140029.GC4559@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150512000746.GA31418@jayachandranc.netlogicmicro.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/07/2015 10:00 AM, Dave Young wrote:
-> On 04/07/15 at 10:12am, Don Dutile wrote:
->> On 04/06/2015 11:46 PM, Dave Young wrote:
->>> On 04/05/15 at 09:54am, Baoquan He wrote:
->>>> On 04/03/15 at 05:21pm, Dave Young wrote:
->>>>> On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
->>>>>> Hi Dave,
->>>>>>
->>>>>> There may be some possibilities that the old iommu data is corrupted by
->>>>>> some other modules. Currently we do not have a better solution for the
->>>>>> dmar faults.
->>>>>>
->>>>>> But I think when this happens, we need to fix the module that corrupted
->>>>>> the old iommu data. I once met a similar problem in normal kernel, the
->>>>>> queue used by the qi_* functions was written again by another module.
->>>>>> The fix was in that module, not in iommu module.
->>>>>
->>>>> It is too late, there will be no chance to save vmcore then.
->>>>>
->>>>> Also if it is possible to continue corrupt other area of oldmem because
->>>>> of using old iommu tables then it will cause more problems.
->>>>>
->>>>> So I think the tables at least need some verifycation before being used.
->>>>>
->>>>
->>>> Yes, it's a good thinking anout this and verification is also an
->>>> interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
->>>> and then verify this again when panic happens in purgatory. This checks
->>>> whether any code stomps into region reserved for kexec/kernel and corrupt
->>>> the loaded kernel.
->>>>
->>>> If this is decided to do it should be an enhancement to current
->>>> patchset but not a approach change. Since this patchset is going very
->>>> close to point as maintainers expected maybe this can be merged firstly,
->>>> then think about enhancement. After all without this patchset vt-d often
->>>> raised error message, hung.
->>>
->>> It does not convince me, we should do it right at the beginning instead of
->>> introduce something wrong.
->>>
->>> I wonder why the old dma can not be remap to a specific page in kdump kernel
->>> so that it will not corrupt more memory. But I may missed something, I will
->>> looking for old threads and catch up.
->>>
->>> Thanks
->>> Dave
->>>
->> The (only) issue is not corruption, but once the iommu is re-configured, the old,
->> not-stopped-yet, dma engines will use iova's that will generate dmar faults, which
->> will be enabled when the iommu is re-configured (even to a single/simple paging scheme)
->> in the kexec kernel.
->>
->
-> Don, so if iommu is not reconfigured then these faults will not happen?
->
-Well, if iommu is not reconfigured, then if the crash isn't caused by
-an IOMMU fault (some systems have firmware-first catch the IOMMU fault & convert
-them into NMI_IOCK), then the DMA's will continue into the old kernel memory space.
+On Tue, May 12, 2015 at 05:37:47AM +0530, Jayachandran C. wrote:
+> On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
+> > On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
+> > > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > > from the arch/arm/ to do a part of the PCI initialization, and this
+> > > prevents it from being used on arm64.
+> > > 
+> > > The initialization done by pci_common_init_dev() that is really
+> > > needed by pci-host-generic.c can be done in the same file without
+> > > using the hw_pci API of ARM.
+> > > 
+> > > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > > this is be handled by setting up 'struct gen_pci' to embed a
+> > > pci_sys_data variable as the first element on the ARM platform.
+> > > 
+> > > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > > ---
+> > > Here's v2 of the patches, this enables use of pci-host-generic on
+> > > arm64.
+> > > 
+> > > This has been tested on both qemu and fast model for arm64, and on
+> > > qemu for arm32.
+> > > 
+> > > v1->v2
+> > >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
+> > >     - move contents of gen_pci_init to gen_pci_probe
+> > >     - assign resources only when !probe_only
+> > >  - tested on ARM32 with qemu option -M virt
+> > 
+> > I tried this with an arm64 kernel running under kvmtool, but I get the
+> > following errors (a 32-bit ARM kernel does seem to work):
+> > 
+> >   PCI host bridge /pci ranges:
+> >      IO 0x00000000..0x0000ffff -> 0x00000000
+> >     MEM 0x41000000..0x7fffffff -> 0x41000000
+> >   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
+> >   pci_bus 0000:00: root bus resource [bus 00-01]
+> >   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> >   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
+> >   pci_bus 0000:00: scanning bus
+> >   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
+> >   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
+> >   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
+> >   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
+> >   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
+> >   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
+> >   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
+> >   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
+> >   pci_bus 0000:00: fixups for bus
+> >   pci_bus 0000:00: bus scan returning with max=00
+> >   pci 0000:00:00.0: fixup irq: got 10
+> >   pci 0000:00:00.0: assigning IRQ 10
+> >   pci 0000:00:01.0: fixup irq: got 11
+> >   pci 0000:00:01.0: assigning IRQ 11
+> >   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
+> >   virtio-pci: probe of 0000:00:00.0 failed with error -22
+> >   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
+> >   virtio-pci: probe of 0000:00:01.0 failed with error -22
+> 
+> PCI_PROBE_ONLY does not work yet for arm64, this will need further changes
+> in either arm64 or pci as noted by Lorenzo. This is not due to a problem with
+> this patch per se.
+> 
+> More importantly, this does not change the current arm32 behavior and adds
+> support for arm64 for two very useful cases
+>  - we can use "pci-host-ecam-generic" for a host bridge controller that is
+>    initialized by firmware, without adding a custom driver.
+>  - qemu virt platform works on arm64
+> 
+> If you think there are any furhter changes needed in this patchset please
+> let me know.
 
-> Baoquan and me has a confusion below today about iommu=off/intel_iommu=off:
->
-> intel_iommu_init()
-> {
-> ...
->
->         dmar_table_init();
->
->         disable active iommu translations;
->
->         if (no_iommu || dmar_disabled)
->                  goto out_free_dmar;
->
-> ...
-> }
->
-> Any reason not move no_iommu check to the begining of intel_iommu_init function?
->
-What does that do/help?
+I'm waiting for at least an ack from Will.
 
-> Thanks
-> Dave
->
-
+Bjorn
