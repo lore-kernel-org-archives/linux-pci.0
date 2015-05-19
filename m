@@ -1,89 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1432114845-24304-12-git-send-email-jiang.liu@linux.intel.com>
-References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com> <1432114845-24304-12-git-send-email-jiang.liu@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 May 2015 08:08:59 -0500
-Message-ID: <CAErSpo4xdOAQ4P7qBGSKuib=HzvqD+trmtjvtM8Rygv-6hijMA@mail.gmail.com>
-Subject: Re: [Patch v2 11/14] genirq: Rename irq_data_get_msi() as irq_data_get_msi_desc()
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:32255 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751512AbbESXB7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 19:01:59 -0400
+Date: Tue, 19 May 2015 16:01:58 -0700
+From: Jesse Brandeburg <jesse.brandeburg@intel.com>
+To: Alexander Duyck <alexander.h.duyck@redhat.com>
+Cc: Mark D Rustad <mark.d.rustad@intel.com>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <intel-wired-lan@lists.osuosl.org>,
+	<netdev@vger.kernel.org>, jesse.brandeburg@intel.com
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to
+ protect VPD operations
+Message-ID: <20150519160158.00002cd6@unknown>
+In-Reply-To: <555B78F7.60908@redhat.com>
+References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
+	<555B78F7.60908@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 4:40 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Rename irq_data_get_msi() as irq_data_get_msi_desc() to keep consistency
-> with other irq_data access helpers.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+On Tue, 19 May 2015 10:55:03 -0700
+Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> On 05/18/2015 05:00 PM, Mark D Rustad wrote:
+> > Some devices have a problem with concurrent VPD access to different
+> > functions of the same physical device, so move the protecting mutex
+> > from the pci_vpd structure to the pci_bus structure. There are a
+> > number of reports on support sites for a variety of devices from
+> > various vendors getting the "vpd r/w failed" message. This is likely
+> > to at least fix some of them. Thanks to Shannon Nelson for helping
+> > to come up with this approach.
+> >
+> > Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> > Acked-by: Shannon Nelson <shannon.nelson@intel.com>
+> > Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> 
+> Instead of moving the mutex lock around you would be much better served 
+> by simply removing the duplicate VPD entries for a given device in a 
+> PCIe quirk.  Then you can save yourself the extra pain and effort of 
+> having to deal with serialized VPD accesses for a multifunction device.
+> 
+> The logic for the quirk should be fairly simple.
+>    1.  Scan for any other devices with VPD that share the same bus and 
+> device number.
+>    2.  If bdf is equal to us keep searching.
+>    3.  If bdf is less than our bdf we release our VPD area and set VPD 
+> pointer to NULL.
 
-I assume Thomas will handle this whole series.
+But Alex if you do this you're violating the principle of least
+surprise, not to mention changing a user-space interface which should
+not be done.
 
-> ---
->  drivers/pci/host/pcie-designware.c |    2 +-
->  drivers/pci/msi.c                  |    2 +-
->  include/linux/irq.h                |    2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 2e9f84fdd9ce..7b3432d331fd 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -309,7 +309,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
->  static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
->  {
->         struct irq_data *data = irq_get_irq_data(irq);
-> -       struct msi_desc *msi = irq_data_get_msi(data);
-> +       struct msi_desc *msi = irq_data_get_msi_desc(data);
->         struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
->
->         clear_irq_range(pp, irq, 1, data->hwirq);
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c3e7dfcf9ff5..be6034cf5c21 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -270,7 +270,7 @@ static void msix_mask_irq(struct msi_desc *desc, u32 flag)
->
->  static void msi_set_mask_bit(struct irq_data *data, u32 flag)
->  {
-> -       struct msi_desc *desc = irq_data_get_msi(data);
-> +       struct msi_desc *desc = irq_data_get_msi_desc(data);
->
->         if (desc->msi_attrib.is_msix) {
->                 msix_mask_irq(desc, flag);
-> diff --git a/include/linux/irq.h b/include/linux/irq.h
-> index e33cc0b040f2..05b2266572ce 100644
-> --- a/include/linux/irq.h
-> +++ b/include/linux/irq.h
-> @@ -625,7 +625,7 @@ static inline struct msi_desc *irq_get_msi_desc(unsigned int irq)
->         return d ? d->msi_desc : NULL;
->  }
->
-> -static inline struct msi_desc *irq_data_get_msi(struct irq_data *d)
-> +static inline struct msi_desc *irq_data_get_msi_desc(struct irq_data *d)
->  {
->         return d->msi_desc;
->  }
-> --
-> 1.7.10.4
->
+Mark's solution is pretty graceful and solves the issue at heart, which
+is that
+1) several Intel chips have this issue
+2) it appears that several other vendor's chips have this issue (or
+similar) as well, but even if they don't Mark's fix will not change
+their general operation, only make a small serializing effect when
+multiple simultaneous reads are made.
+
+This is a reasonably small fix, with a small kernel footprint, which
+does not require changing user expectations or violating user-space
+semantics that are already established, so I support it as is.
