@@ -1,61 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:48206 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbbESBkw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:40:52 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 11:40:50 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id CE16B3578048
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:47 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1edtr12189872
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:47 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1eFWc002948
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:40:15 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V6 04/10] powerpc/eeh: Trace first 7 BARs in address cache
-Date: Tue, 19 May 2015 09:35:06 +0800
-Message-Id: <1431999312-10517-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:14891 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752556AbbESDan (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 23:30:43 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
+	<rwhite@pobox.com>, <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3 2/2] PCI: Use pdev->has_secondary_link to identify pcie link
+Date: Tue, 19 May 2015 11:27:03 +0800
+Message-ID: <1432006023-9808-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH address cache, which helps to locate the PCI device according to
-the given (physical) MMIO address, didn't cover PCI bridges. Also, it
-shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
-should be returned.
+We assumed pcie root port and downstream port always have
+pcie link, but in some unusual pcie topology platform like
+ATCA, it may has the following pcie tree:
 
-The patch restricts the address cache to cover first 7 BARs for the
-above purposes.
+root port ---- downstream port -----upstream port
+                                   |
+                                   |downstream port
+Now we introduce a flag pdev->has_secondary_link to tag
+a device whether has pcie link, use it instead.
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/kernel/eeh_cache.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pcie/aer/aerdrv_core.c |    3 +--
+ drivers/pci/probe.c                |    2 +-
+ drivers/pci/vc.c                   |    3 +--
+ 3 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-index eeabeab..f6c5f05 100644
---- a/arch/powerpc/kernel/eeh_cache.c
-+++ b/arch/powerpc/kernel/eeh_cache.c
-@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
- 	}
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 5653ea9..9803e3d 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -425,8 +425,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
  
- 	/* Walk resources on this device, poke them into the tree */
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		unsigned long start = pci_resource_start(dev,i);
- 		unsigned long end = pci_resource_end(dev,i);
- 		unsigned int flags = pci_resource_flags(dev,i);
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+-	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM ||
+-		pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT) {
++	} else if (udev->has_secondary_link) {
+ 		status = default_reset_link(udev);
+ 	} else {
+ 		dev_printk(KERN_DEBUG, &dev->dev,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ad26ff2..d2627d3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1641,7 +1641,7 @@ static int only_one_child(struct pci_bus *bus)
+ 		return 0;
+ 	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+ 		return 1;
+-	if (pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM &&
++	if (parent->has_secondary_link &&
+ 	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 1;
+ 	return 0;
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index 7e1304d..dfbab61 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -108,8 +108,7 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ 	struct pci_dev *link = NULL;
+ 
+ 	/* Enable VCs from the downstream device */
+-	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)
++	if (!dev->has_secondary_link)
+ 		return;
+ 
+ 	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
 -- 
-1.7.9.5
+1.7.1
 
