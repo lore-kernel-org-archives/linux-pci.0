@@ -1,46 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:38751 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751591AbbEPPXA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 May 2015 11:23:00 -0400
-Received: by igcau1 with SMTP id au1so19464006igc.1
-        for <linux-pci@vger.kernel.org>; Sat, 16 May 2015 08:22:59 -0700 (PDT)
-Date: Sat, 16 May 2015 10:22:56 -0500
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:35874 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933391AbbESO64 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 10:58:56 -0400
+Received: by obbkp3 with SMTP id kp3so14167007obb.3
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 07:58:56 -0700 (PDT)
+Date: Tue, 19 May 2015 09:58:53 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Miller <davem@davemloft.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
- in of parsing
-Message-ID: <20150516152256.GI31666@google.com>
-References: <1428452669-24824-1-git-send-email-yinghai@kernel.org>
- <1428464944.4947.69.camel@kernel.crashing.org>
- <CAE9FiQVwKpUB2Qh+_sqO363BfZz2ueoUxe=0ZYM1SE=ONquvdA@mail.gmail.com>
- <1428480074.18187.8.camel@kernel.crashing.org>
- <CAE9FiQU=SHqopf_eZWBufD5-LNo_Lv_SH=iptOhFUuPGLgcxAw@mail.gmail.com>
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v6 1/2] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150519145853.GP31666@google.com>
+References: <1431431730-25164-1-git-send-email-mst@redhat.com>
+ <1431431730-25164-2-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU=SHqopf_eZWBufD5-LNo_Lv_SH=iptOhFUuPGLgcxAw@mail.gmail.com>
+In-Reply-To: <1431431730-25164-2-git-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 08, 2015 at 03:38:42PM -0700, Yinghai Lu wrote:
-> On Wed, Apr 8, 2015 at 1:01 AM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> 
-> > Use a different flag to indicate the BAR policy or temporarily tweak a
-> > local copy of the resource flag during BAR assignment or whatever you
-> > prefer to fix the original problem but do *not* change the Linux overall
-> > view of that BAR to lie about prefetchability.
-> 
-> ok, will give it a try.
+On Tue, May 12, 2015 at 03:03:32PM +0200, Michael S. Tsirkin wrote:
+> d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
+> v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
+> ... 
 
-Ping, any updates on this?
+I know you're trying to put all the justification in the changelog, and
+that's great if it can be done.  But would you please just add the single
+link here to https://bugzilla.kernel.org/show_bug.cgi?id=96571 ?
+
+And please attach the dmesg log and instructions for reproducing the
+problem to the bugzilla.  I've asked for this before, and it seems like a
+simple request, but maybe there's a reason it's more complicated than it
+seems to me.  It's obvious to you how all this fits together, but I'd like
+it to be more concrete to the rest of us, too.
+
+The bugzilla says Ulrich Obergfell noticed this in RHEL7.  If there's a
+RHEL bugzilla, it'd be nice to have a link to it in the kernel.org
+bugzilla.  Informal hints are great right now, but they'll be useless after
+six months.
+
+Bjorn
+
+> Reported-by: Fam Zheng <famz@redhat.com>
+> Tested-by: Fam Zheng <famz@redhat.com>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> CC: Ulrich Obergfell <uobergfe@redhat.com>
+> CC: Rusty Russell <rusty@rustcorp.com.au>
+> ---
+>  drivers/pci/pci-driver.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 3cb2210..38a602c 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
+>  
+>  	if (drv && drv->shutdown)
+>  		drv->shutdown(pci_dev);
+> -	pci_msi_shutdown(pci_dev);
+> -	pci_msix_shutdown(pci_dev);
+>  
+>  #ifdef CONFIG_KEXEC
+>  	/*
+> -- 
+> MST
+> 
