@@ -1,62 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555F355E.7060706@linaro.org>
-Date: Fri, 22 May 2015 21:55:42 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-CC: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch v3 6/7] x86/PCI/ACPI: Use common interface to support
- PCI host bridge
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1431593803-5213-7-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:47072 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753628AbbESKxn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:53:43 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 20:53:41 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 430862BB004D
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:53:38 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JArTiA20119788
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:53:37 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAr5lC032557
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:53:05 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 03/10] powerpc/pci: Remove VFs prior to PF
+Date: Tue, 19 May 2015 18:50:05 +0800
+Message-Id: <1432032612-21701-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月14日 16:56, Jiang Liu wrote:
-> Use common interface to simplify ACPI PCI host bridge implementation.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   arch/x86/pci/acpi.c |  292 +++++++++++++++------------------------------------
->   1 file changed, 85 insertions(+), 207 deletions(-)
->
-[...]
-> -static void release_pci_root_info(struct pci_host_bridge *bridge)
-> +static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
->   {
-> -	struct resource *res;
-> -	struct resource_entry *entry;
-> -	struct pci_root_info *info = bridge->release_data;
-> -
-> -	resource_list_for_each_entry(entry, &bridge->windows) {
-> -		res = entry->res;
-> -		if (res->parent &&
-> -		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-> -			release_resource(res);
-> -	}
-> -
-> -	teardown_mcfg_map(info);
-> -	kfree(info);
-> +	teardown_mcfg_map(ci);
-> +	kfree(ci);
+As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
+VFs, which might be hooked to same PCI bus as their PF should be removed
+before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+cause kernel crash.
 
-Implicit pointer cast? I think add a comment here that %p of ci
-is same as %p of info would be helpful for review and easy understood.
+The patch applies the above pattern to PowerPC PCI hotplug path.
 
-other than that,
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7ed85a6..98f84ed 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+ 
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
+-- 
+1.7.9.5
 
-Thanks
-Hanjun
