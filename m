@@ -1,134 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:36069 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbbEOG1s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 02:27:48 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 16:27:46 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E4E23357804F
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:27:44 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F6RaT731523032
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:27:44 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F6RBJw027749
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 16:27:12 +1000
-Date: Fri, 15 May 2015 16:26:47 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 06/11] powerpc/eeh: create EEH_PE_VF for VF PE
-Message-ID: <20150515062646.GA31660@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431668786-30371-7-git-send-email-weiyang@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <555B2F98.4050906@redhat.com>
+Date: Tue, 19 May 2015 08:42:00 -0400
+From: Jarod Wilson <jarod@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431668786-30371-7-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCIe / hotplug: Drop pointless ACPI-based "slot detection"
+ check
+References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <555AA8CD.3010706@redhat.com> <2168334.DgvA03CWPi@vostro.rjw.lan> <6257210.QKy3yrBgEf@vostro.rjw.lan>
+In-Reply-To: <6257210.QKy3yrBgEf@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 01:46:21PM +0800, Wei Yang wrote:
->On powernv platform, VF PE is a special PE which is different from the Bus
->PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
->properly. For example, we need to create VF PE when VF's pci_dev is
->initialized in kernel. And add a flag to mark it is a VF PE.
+On 5/19/2015 7:43 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 >
->This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
->At the mean time, it creates the sysfs and address cache for VF PE at PCI
->device final fixup time.
+> Jarod Wilson reports that the expresscard hotplug setup doesn't work
+> on HP ZBook G2.  The problem turns out to be the ACPI-based "slot
+> detection" code called from pciehp_probe() which tries to use some
+> questionable heuristics based on what ACPI objects are present for
+> the PCIe port device at hand to figure out whether or not to register
+> a hotplug slot for that port.
 >
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-
-With one thing fixed as below.
-
->---
-> arch/powerpc/include/asm/eeh.h               |    1 +
-> arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
-> arch/powerpc/platforms/powernv/eeh-powernv.c |   14 ++++++++++++++
-> 3 files changed, 23 insertions(+), 2 deletions(-)
+> That code is used if there is at least one PCIe port having an ACPI
+> device configuration object related to hotplug (such as _EJ0 or _RMV)
+> and the Thunderbolt port on the affected machine has _RMV.  Of course,
+> Thunderbolt and PCIe native hotplug need not be mutually exclusive
+> (as they aren't on the machine in question), so that rule is simply
+> incorrect.
 >
->diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->index 1b3614d..c1fde48 100644
->--- a/arch/powerpc/include/asm/eeh.h
->+++ b/arch/powerpc/include/asm/eeh.h
->@@ -70,6 +70,7 @@ struct pci_dn;
-> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
-> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
-> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
->+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+> Moreover, the ACPI-based "slot detection" check does not add any
+> value if pciehp_probe() is called at all and the service type of the
+> device object it has been called for is PCIE_PORT_SERVICE_HP, because
+> PCIe hotplug services are only registered if the _OSC handshake in
+> acpi_pci_root_add() allows the kernel to control the PCIe native
+> hotplug feature.  No more checks need to be carried out to decide
+> whether or not to register a native PCIe hotlug slot in that case.
 >
-> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
-> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
->diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
->index 35f0b62..260a701 100644
->--- a/arch/powerpc/kernel/eeh_pe.c
->+++ b/arch/powerpc/kernel/eeh_pe.c
->@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
-> 	 * EEH device already having associated PE, but
-> 	 * the direct parent EEH device doesn't have yet.
-> 	 */
->-	pdn = pdn ? pdn->parent : NULL;
->+	if (edev->physfn)
->+		pdn = pci_get_pdn(edev->physfn);
->+	else
->+		pdn = pdn ? pdn->parent : NULL;
-> 	while (pdn) {
-> 		/* We're poking out of PCI territory */
-> 		parent = pdn_to_eeh_dev(pdn);
->@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
-> 	}
+> For the above reasons, make pciehp_probe() check if it has been
+> called for the right service type and drop the pointless ACPI-based
+> "slot detection" check from it.  Also remove the entire code whose
+> only user is that check (the entire pciehp_acpi.c file goes away
+> as a result) and drop function headers related to it from the
+> internal PCIeHP header file.
 >
-> 	/* Create a new EEH PE */
->-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->+	if (edev->physfn)
->+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
->+	else
->+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-> 	if (!pe) {
-> 		pr_err("%s: out of memory!\n", __func__);
-> 		return -ENOMEM;
->diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->index 622f08c..31344a4 100644
->--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->@@ -1540,3 +1540,17 @@ static int __init eeh_powernv_init(void)
-> 	return ret;
-> }
-> machine_early_initcall(powernv, eeh_powernv_init);
->+
->+static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
->+{
->+	/*
->+	 * The following operations will fail if VF's sysfs files aren't
->+	 * created or its resources aren't finalized.
->+	 */
->+	if (!pdev->is_virtfn)
->+		return;
->+
->+	eeh_add_device_late(pdev);
->+	eeh_sysfs_add_device(pdev);
-
-It's worthy to have following code to make the logic here complete. Otherwise,
-we will run into problem quickly once the eeh_add_device_{early,late}() get
-changed in eeh.c:
-
-	eeh_add_device_early(pdn);
-	eeh_add_device_late(pdev);
-	eeh_sysfs_add_device(pdev);
-
-Thanks,
-Gavin
-
->+}
->+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
->-- 
->1.7.9.5
+> Link: http://marc.info/?t=143163219300002&r=1&w=2
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=98581
+> Reported-by: Jarod Wilson <jarod@redhat.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
 >
+> Bjorn, that's -stable material I think.  It should be applicable at least
+> since commit 5ba113f7c4fb (PCI: acpiphp: Handle PCIe ports without native
+> hotplug capability) that was shipped in 3.10.
+>
+> Thanks!
 
+I believe you also want to rip the pciehp_acpi.o hunk out of 
+drivers/pci/hotplug/Makefile, but I made more or less the exact same 
+changes here, and am about to give them a spin on the ZBook 17.
+
+-- 
+Jarod Wilson
+jarod@redhat.com
