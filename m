@@ -1,176 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old mem
-Date: Mon, 11 May 2015 17:52:48 +0800
-Message-Id: <1431337974-545-5-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:39489 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755271AbbESAAy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 May 2015 20:00:54 -0400
+Subject: [PATCH] pci: Use a bus-global mutex to protect VPD operations
+From: Mark D Rustad <mark.d.rustad@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org
+Date: Mon, 18 May 2015 17:00:37 -0700
+Message-ID: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add some functions to copy the data from old kernel.
-These functions are used to copy context tables and page tables.
+Some devices have a problem with concurrent VPD access to different
+functions of the same physical device, so move the protecting mutex
+from the pci_vpd structure to the pci_bus structure. There are a
+number of reports on support sites for a variety of devices from
+various vendors getting the "vpd r/w failed" message. This is likely
+to at least fix some of them. Thanks to Shannon Nelson for helping
+to come up with this approach.
 
-To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
-use a link here, store the pointers , and then use iounmap to free them in
-another place.
-
-Li, Zhen-hua:
-    The functions and logics.
-
-Takao Indoh:
-    Check if pfn is ram:
-        if (page_is_ram(pfn))
-
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Acked-by: Shannon Nelson <shannon.nelson@intel.com>
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 ---
- drivers/iommu/intel-iommu.c | 102 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/intel-iommu.h |   6 +++
- 2 files changed, 108 insertions(+)
+ drivers/pci/access.c |   10 ++++------
+ drivers/pci/probe.c  |    1 +
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 07e6118..0b97c15 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -371,6 +371,17 @@ static struct context_entry *device_to_existing_context_entry(
- 				struct intel_iommu *iommu,
- 				u8 bus, u8 devfn);
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d9b64a175990..6a1c8d6f95f1 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -281,7 +281,6 @@ PCI_USER_WRITE_CONFIG(dword, u32)
  
-+/*
-+ * A structure used to store the address allocated by ioremap();
-+ * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
-+ */
-+struct iommu_remapped_entry {
-+	struct list_head list;
-+	void __iomem *mem;
-+};
-+static LIST_HEAD(__iommu_remapped_mem);
-+static DEFINE_MUTEX(__iommu_mem_list_lock);
-+
+ struct pci_vpd_pci22 {
+ 	struct pci_vpd base;
+-	struct mutex lock;
+ 	u16	flag;
+ 	bool	busy;
+ 	u8	cap;
+@@ -340,7 +339,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
+ 		return -EINVAL;
  
- /*
-  * This domain is a statically identity mapping domain.
-@@ -4833,3 +4844,94 @@ static struct context_entry *device_to_existing_context_entry(
- 	return ret;
+-	if (mutex_lock_killable(&vpd->lock))
++	if (mutex_lock_killable(&dev->bus->vpd_mutex))
+ 		return -EINTR;
+ 
+ 	ret = pci_vpd_pci22_wait(dev);
+@@ -376,7 +375,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 		}
+ 	}
+ out:
+-	mutex_unlock(&vpd->lock);
++	mutex_unlock(&dev->bus->vpd_mutex);
+ 	return ret ? ret : count;
  }
  
-+/*
-+ * Copy memory from a physically-addressed area into a virtually-addressed area
-+ */
-+int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
-+{
-+	unsigned long pfn;		/* Page Frame Number */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of to */
-+	void __iomem *virt_mem;
-+	struct iommu_remapped_entry *mapped;
-+
-+	pfn = from >> VTD_PAGE_SHIFT;
-+	offset = from & (~VTD_PAGE_MASK);
-+
-+	if (page_is_ram(pfn)) {
-+		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
-+	} else{
-+
-+		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-+				GFP_KERNEL);
-+		if (!mapped)
-+			return -ENOMEM;
-+
-+		virt_mem = ioremap_cache((unsigned long)from, size);
-+		if (!virt_mem) {
-+			kfree(mapped);
-+			return -ENOMEM;
-+		}
-+		memcpy(to, virt_mem, size);
-+
-+		mutex_lock(&__iommu_mem_list_lock);
-+		mapped->mem = virt_mem;
-+		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-+		mutex_unlock(&__iommu_mem_list_lock);
-+	}
-+	return size;
-+}
-+
-+/*
-+ * Copy memory from a virtually-addressed area into a physically-addressed area
-+ */
-+int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
-+{
-+	unsigned long pfn;		/* Page Frame Number */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of to */
-+	void __iomem *virt_mem;
-+	struct iommu_remapped_entry *mapped;
-+
-+	pfn = to >> VTD_PAGE_SHIFT;
-+	offset = to & (~VTD_PAGE_MASK);
-+
-+	if (page_is_ram(pfn)) {
-+		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
-+	} else{
-+		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-+				GFP_KERNEL);
-+		if (!mapped)
-+			return -ENOMEM;
-+
-+		virt_mem = ioremap_cache((unsigned long)to, size);
-+		if (!virt_mem) {
-+			kfree(mapped);
-+			return -ENOMEM;
-+		}
-+		memcpy(virt_mem, from, size);
-+		mutex_lock(&__iommu_mem_list_lock);
-+		mapped->mem = virt_mem;
-+		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-+		mutex_unlock(&__iommu_mem_list_lock);
-+	}
-+	return size;
-+}
-+
-+/*
-+ * Free the mapped memory for ioremap;
-+ */
-+int __iommu_free_mapped_mem(void)
-+{
-+	struct iommu_remapped_entry *mem_entry, *tmp;
-+
-+	mutex_lock(&__iommu_mem_list_lock);
-+	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
-+		iounmap(mem_entry->mem);
-+		list_del(&mem_entry->list);
-+		kfree(mem_entry);
-+	}
-+	mutex_unlock(&__iommu_mem_list_lock);
-+	return 0;
-+}
-+
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 796ef96..ced1fac 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -380,4 +380,10 @@ extern int dmar_ir_support(void);
+@@ -392,7 +391,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
+ 		return -EINVAL;
  
- extern const struct attribute_group *intel_iommu_groups[];
+-	if (mutex_lock_killable(&vpd->lock))
++	if (mutex_lock_killable(&dev->bus->vpd_mutex))
+ 		return -EINTR;
  
-+extern int __iommu_load_from_oldmem(void *to, unsigned long from,
-+					unsigned long size);
-+extern int __iommu_save_to_oldmem(unsigned long to, void *from,
-+					unsigned long size);
-+extern int __iommu_free_mapped_mem(void);
-+
- #endif
--- 
-2.0.0-rc0
+ 	ret = pci_vpd_pci22_wait(dev);
+@@ -424,7 +423,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 		pos += sizeof(u32);
+ 	}
+ out:
+-	mutex_unlock(&vpd->lock);
++	mutex_unlock(&dev->bus->vpd_mutex);
+ 	return ret ? ret : count;
+ }
+ 
+@@ -453,7 +452,6 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 
+ 	vpd->base.len = PCI_VPD_PCI22_SIZE;
+ 	vpd->base.ops = &pci_vpd_pci22_ops;
+-	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
+ 	dev->vpd = &vpd->base;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6675a7a1b9fc..40c2a5a751d0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -494,6 +494,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->devices);
+ 	INIT_LIST_HEAD(&b->slots);
+ 	INIT_LIST_HEAD(&b->resources);
++	mutex_init(&b->vpd_mutex);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8dc4c6e..f8a51d172255 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -454,6 +454,7 @@ struct pci_bus {
+ 	struct msi_controller *msi;	/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
++	struct mutex	vpd_mutex;	/* bus-wide VPD access mutex */
+ 
+ 	unsigned char	number;		/* bus number */
+ 	unsigned char	primary;	/* number of primary bridge */
 
