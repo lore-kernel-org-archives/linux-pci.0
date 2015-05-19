@@ -1,45 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 11 May 2015 12:11:24 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Dave Young <dyoung@redhat.com>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150511101124.GG20611@8bytes.org>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
- <20150507135600.GB4559@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57565 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750787AbbESDI3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 May 2015 23:08:29 -0400
+Message-ID: <555AA8CD.3010706@redhat.com>
+Date: Mon, 18 May 2015 23:06:53 -0400
+From: Jarod Wilson <jarod@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150507135600.GB4559@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook
+ G2
+References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <555A1093.40303@redhat.com> <555A4F68.1020208@redhat.com> <1948383.UKjRPomMUp@vostro.rjw.lan>
+In-Reply-To: <1948383.UKjRPomMUp@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 07, 2015 at 09:56:00PM +0800, Dave Young wrote:
-> Joreg, I can not find the last reply from you, so just reply here about
-> my worries here.
-> 
-> I said that the patchset will cause more problems, let me explain about
-> it more here:
-> 
-> Suppose page table was corrupted, ie. original mapping iova1 -> page 1
-> it was changed to iova1 -> page 2 accidently while crash happening,
-> thus future dma will read/write page 2 instead page 1, right?
+On 5/18/2015 7:06 PM, Rafael J. Wysocki wrote:
+> On Monday, May 18, 2015 04:45:28 PM Jarod Wilson wrote:
+...
+>>>>>>> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
+>>>>>>>> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
+>>>>>>>> including at least BIOS revision 01.07, do not have an ACPI _RMV
+>>>>>>>> object
+>>>>>>>> associated with their expresscard slots, so acpi-based
+>>>>>>>> hotplug-capable
+>>>>>>>> slot detection fails. If we fall back to pcie-based detection, the
+>>>>>>>> systems
+>>>>>>>> work just fine
+...
+>> Ah, I forgot some additional details. pciehp_probe() in
+>> drivers/pci/hotplug/pciehp_core.c fails on the
+>> pciehp_acpi_slot_detection_check() call for the expresscard slot, which
+>> is why the base pciehp doesn't bind. DEVICE_ACPI_HANDLE(&dev->dev) in
+>> the slot detection check is winding up with a NULL acpi device.
+>
+> So IMO the bug is that select_detection_mode() assumes that ACPI should be
+> used as the PCIe hotplug detection method if it has found at least one
+> device that looks like an "ACPI hotplug slot" (Thuderbolt breaks that "logic").
+>
+> To be honest, I'm not sure why we need the pciehp_acpi_slot_detection_check()
+> in pciehp_probe() at all.  It doesn't add any value as far as I can say.
+>
+> If pciehp_probe() is called at all, we have registered a PCIe port service
+> and if this is a "hotplug" service, we wouldn't have registered it if the
+> _OSC handshake had not given us contol over native hotplug.
+>
+> So I wonder if the patch below makes any difference.
 
-When the page-table is corrupted then it is a left-over from the old
-kernel. When the kdump kernel boots the situation can at least not get
-worse. For the page tables it is also hard to detect wrong mappings (if
-this would be possible the hardware could already do it), so any checks
-we could do there are of limited use anyway.
+Yeah, that also works, for the most part. You still get spew from 
+pciehp_acpi_slot_detection_init() saying "Using ACPI for slot 
+detection.", but in re-reading pciehp_acpi.c in its entirety... I can't 
+see anything productive that it actually does. I'm of the mind that the 
+entire file should just be nuked, the path from pciehp_core.c that your 
+patch alters was the only one that called 
+pciehp_acpi_slot_detection_check(), and everything else is basically the 
+dummy probe and fluff, nothing meaningful actually happens. I can whip 
+up a follow-up patch that neuters that file entirely in the morning. At 
+the very least, the "Using ACPI" bit needs to be beaten into submission, 
+since its not going to be accurate.
 
-
-	Joerg
-
+-- 
+Jarod Wilson
+jarod@redhat.com
