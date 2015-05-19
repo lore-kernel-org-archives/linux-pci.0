@@ -1,64 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:33974 "EHLO
-	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095AbbEUMKH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 08:10:07 -0400
-Received: by qkgx75 with SMTP id x75so51817820qkg.1
-        for <linux-pci@vger.kernel.org>; Thu, 21 May 2015 05:10:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <555D37B0.2080909@hisilicon.com>
-References: <000101d092fb$94dde100$be99a300$@com> <555D37B0.2080909@hisilicon.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 21 May 2015 07:09:46 -0500
-Message-ID: <CAErSpo7TEgY=oJvLU3jyh=FcZqgsSxLi1Cw1mo6w+5WSRkfPMQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 2/3] PCI: hisi: Add PCIe host support for Hisilicon
- Soc Hip05
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <liviu.dudau@arm.com>,
+Received: from mga14.intel.com ([192.55.52.115]:46152 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750862AbbESWnl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 18:43:41 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+CC: Alexander Duyck <alexander.h.duyck@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
+ Ethernet devices
+Date: Tue, 19 May 2015 22:43:39 +0000
+Message-ID: <46CDD500-2A1B-4457-BE17-961AFC50769E@intel.com>
+References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com>
+ <555B5CBF.1090902@redhat.com>
+ <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com>
+ <555B77E5.5060006@redhat.com>
+ <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com>
+ <555B9F74.3040004@redhat.com>
+ <DA06AAB6-CE9B-4A27-B60D-8F55BB52A063@intel.com> <555BA850.1090901@gmail.com>
+In-Reply-To: <555BA850.1090901@gmail.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 8:41 PM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
-> On 2015/5/20 20:50, Jingoo Han wrote:
->> On Wed, 20 May 2015 14:21:40 +0800, Zhou Wang wrote:
+--Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
->>> +/* Configure vmid/asid table in PCIe host */
->>> +static void hisi_pcie_config_context(struct hisi_pcie *pcie)
->>> +{
->>> +    int i;
->>> +
->>> +    hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
->>> +
->>> +    for (i = 0; i < 0x400; i++)
->>> +            hisi_pcie_apb_writel(pcie, 0x0, i * 4);
->>> +
->>> +    for (i = 0x400; i < 0x800; i++)
->>> +            hisi_pcie_apb_writel(pcie, 0x0, i * 4);
->>
->> How about the following?
->>
->> +     for (i = 0; i < 0x800; i++)
->> +             hisi_pcie_apb_writel(pcie, 0x0, i * 4);
->>
->
-> This is to configure init value of vmid and asid of each pcie device.
+> On May 19, 2015, at 2:17 PM, Alexander Duyck =
+<alexander.duyck@gmail.com> wrote:
+>=20
+> Any chance you could point me toward the software in question?  Just =
+wondering because it seems like what you are fixing with this is an =
+implementation issue in the application since you really shouldn't be =
+accessing areas outside the scope of the VPD data structure, and doing =
+so is undefined in terms of what happens if you do.
 
-But the combined loop looks functionally equivalent, i.e., I don't
-think the device can tell the difference.  Personally I wouldn't mind
-if you kept the two loops separate, but if you do, each one needs a
-comment immediately before it so the reader has a clue that they are
-doing semantically different things.  Otherwise it just looks like a
-mistake and the reader wonders why they are split.
+I don't have it, but if you dump VPD via sysfs you will see it comes out =
+as 32k in size. The kernel just blindly provides access to the full 32K =
+space provided by the spec. I'm sure that we agree that the kernel =
+should not go parse it and find the actual size. If it is read via =
+stdio, say fread, the read access would be whatever buffer size it =
+chooses to use.
 
-Bjorn
+If you looked at the quirks, you might have noticed that Broadcom =
+limited the VPD access for some devices for functional reasons. That is =
+what gave me the idea for limiting access to what was possibly there. =
+With the existing Intel Ethernet quirk, it seemed like a simple thing to =
+do.
+
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJVW7yaAAoJEDwO/+eO4+5uc/8QAITb0mh4u5YVVfHMyOLMh5yw
+JA8BFJmBfP0ufBxMS7vsMJw68gqiHKnoKcPG0cOT4HiKCxgRSwdZLXY99G/VGwE1
+VkwfIHe/hhPUROHJngO3V9NQveZ7OGhv/iJBqzl1v/DfDa56xYuhzuVto24ZVixK
+RziXaQnR1ISztjK4gJM79Jr4mXyFltTiO1PdjCSiKw0DIlGVCcnvdsEk4yknBLeq
+hgQEK8mH0nFBF/3Snj3ttuMZSKTN4McHptF8BNyrkZ+E2IjivQziBK6XOOK5MQ4k
+25FtyqRnDhG9czQEFRitVuIISUnLROIaKuGk6qv3sPM7280cUEXnUok9IA8u1NN7
++iq40BPRp3JaGR8VR2XLqTRwlCeaiCEiz3JXkBNzi6wdn40F6lx/WgpXxjxfHhLu
+mrG+QyOwy/YhlNotfXLFtIUFVM/Lu2x4RU08qmSoWeyZ/M+ABJdZSG+EVan8BQ1J
+qnYy6OcLAg1X4Gup/Tjj2VNZAcy2KD8MxZnt5ZUEgMkgPtY3nqDiAiIWobTYB5Y2
+6U0L750gRnoLtLMPdJUGYjTwSRCdhL+UjAsfLzgK8doghfJj2J2kWluAeUGM7K6m
+8/TdczdLztl6loFzrwmNr+F69u3bDr9F+GvEnFguZlAll3j7j2hUnOBPX0ecE4am
+jozxT1N0+FA0+1f7QOO4
+=1eme
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_EBDC4AEE-1FD3-4877-9518-6729D4EF91F0--
