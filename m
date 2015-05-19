@@ -1,80 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.restena.lu ([158.64.1.62]:45518 "EHLO
-	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbbE0GCY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 02:02:24 -0400
-Date: Wed, 27 May 2015 07:53:29 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Michael Marineau <michael.marineau@coreos.com>
-Cc: Darren Hart <dvhart@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	platform-driver-x86@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Petri Hodju <petrihodju@yahoo.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb
- changes
-Message-ID: <20150527075329.6df43854@pluto.restena.lu>
-In-Reply-To: <20150527044749.GB21644@fury.dvhart.com>
-References: <20150223215155.18444386@neptune.home>
-	<20150303172753.GF83894@vmdeb7>
-	<20150305232038.1873d380@neptune.home>
-	<20150306174254.GB19001@vmdeb7>
-	<20150307011546.0050279d@neptune.home>
-	<20150309225238.0b9ced4e@neptune.home>
-	<CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
-	<20150311223445.6af76f7c@neptune.home>
-	<CAGr1u3tKVtQno=hUrKemLFYG12dtvPjFVR7oFwDG5cewJGCnJQ@mail.gmail.com>
-	<20150527044749.GB21644@fury.dvhart.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:58643 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754289AbbESGZX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 02:25:23 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 16:25:20 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id E8F843578056
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:25:17 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J6PAxK27328616
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:25:18 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J6OjOo018595
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:24:45 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH] PCI: break when finding the first smaller resource
+Date: Tue, 19 May 2015 14:24:17 +0800
+Message-Id: <1432016657-16816-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michael,
+In commit d74b9027a4da(PCI: Consider additional PF's IOV BAR alignment in
+sizing and assigning), it stores additional alignment in realloc_head and
+take this into consideration for assignment.
 
-On Tue, 26 May 2015 21:47:49 -0700 Darren Hart wrote:
-> On Tue, May 26, 2015 at 12:10:48PM -0700, Michael Marineau wrote:
-> > FYI, this actually broke backlight controls on my MBP11,3 because the
-> > assumption the patch makes that gmux is always loaded before graphics
-> > drivers didn't hold true. At least for me dracut included the nouveau
-> > module in the initrd but not gmux, ensuring the ordering was wrong. No
-> > errors were reporting, and gmux still offered the backlight device, it
-> > just became inoperable. I worked around this for my kernel by building
-> > gmux into vmlinuz instead of as a module but that isn't going to in
-> > more general configs because there is an apple backlight driver which
-> > cannot be built at all in that configuration.
-> 
-> Thank you for reporting this Michael,
-> 
-> That is tough as nouveau doesn't have an explicit dependency on gmux, so we
-> could do something like a passive request_module(), but if it isn't in the
-> initrd image, it would still fail as you describe.
-> 
-> > Is there a way to make the ordering between nouveau and gmux more
-> > explicit/reliable? Can gmux complain loudly if the ordering is ever
-> > wrong?
-> 
-> It should print an error if the probe fails due to the IO already being in use
-> or if it can't be allocated. The disabled IO case is only info level though,
-> perhaps that should be higher priority. Printing something when failing to probe
-> seems like a reasonable thing to do.
-> 
-> Michael, which message do you get if you boot with "debug" or "loglevel=6" when
-> apple-gmux is not built-in?
+After getting the additional alignment, it will re-order the head list to
+make sure resources with bigger alignment is ahead of the resources with
+smaller assignment in the head list. To make it happen, it iterate on the
+head list and find a smaller alignment resource and insert ahead of it.
+This should be done for the first occurrence, while the code now will
+iterate on the whole list.
 
-A full kernel log up to including post-initrd loading of gmux would be
-useful.
+This patch fixes this behavior by break when finding the first smaller
+resource in the head list.
 
-As far as I have seen nouveau should not be doing unneeded vgaarb
-operations by itself (though userspace might be) as opposed to closed
-nvidia driver.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-If your systems allows, try booting to init=/bin/bash, then check for
-backlight, load nouveau, check for backlight and finally load gmux and
-check backlight (putting i915 in the mix where initrd/userspace puts
-it would be nice).
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4fd0cac..aa281d9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -435,9 +435,11 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			list_for_each_entry(dev_res2, head, list) {
+ 				align = pci_resource_alignment(dev_res2->dev,
+ 							       dev_res2->res);
+-				if (add_align > align)
++				if (add_align > align) {
+ 					list_move_tail(&dev_res->list,
+ 						       &dev_res2->list);
++					break;
++				}
+ 			}
+                }
+ 
+-- 
+1.7.9.5
 
-Thanks,
-Bruno
