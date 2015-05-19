@@ -1,182 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:10266 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755347AbbE2R2L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:11 -0400
-From: <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Jonathan Corbet" <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	"Dave Jiang" <dave.jiang@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v3 5/7] iommu/amd: Implement (un)map_resource
-Date: Fri, 29 May 2015 12:14:44 -0500
-Message-ID: <1432919686-32306-6-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:33285 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753405AbbESKvf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:51:35 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 19 May 2015 20:51:33 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id F01532CE804E
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:29 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JApLfH13959416
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:51:29 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAous9030407
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:50:57 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V7 01/10] PCI/IOV: Rename and export virtfn_add/virtfn_remove
+Date: Tue, 19 May 2015 18:50:03 +0800
+Message-Id: <1432032612-21701-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+During EEH recovery, hotplug is applied to the devices which don't
+have drivers or their drivers don't support EEH. However, the hotplug,
+which was implemented based on PCI bus, can't be applied to VF directly.
 
-Implement 'map_resource' for the AMD IOMMU driver. Generalize the existing
-map_page implementation to operate on a physical address, and make both
-map_page and map_resource wrappers around that helper (and similiarly, for
-unmap_page and unmap_resource).
+The patch renames virtn_{add,remove}() and exports them so that they
+can be used in PCI hotplug during EEH recovery.
 
-This allows a device to map another's resource, to enable peer-to-peer
-transactions.
-
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/iommu/amd_iommu.c | 76 +++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 63 insertions(+), 13 deletions(-)
+ drivers/pci/iov.c   |   10 +++++-----
+ include/linux/pci.h |    8 ++++++++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index e43d489..ca2dac6 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -503,6 +503,8 @@ DECLARE_STATS_COUNTER(cnt_map_single);
- DECLARE_STATS_COUNTER(cnt_unmap_single);
- DECLARE_STATS_COUNTER(cnt_map_sg);
- DECLARE_STATS_COUNTER(cnt_unmap_sg);
-+DECLARE_STATS_COUNTER(cnt_map_resource);
-+DECLARE_STATS_COUNTER(cnt_unmap_resource);
- DECLARE_STATS_COUNTER(cnt_alloc_coherent);
- DECLARE_STATS_COUNTER(cnt_free_coherent);
- DECLARE_STATS_COUNTER(cross_page);
-@@ -541,6 +543,8 @@ static void amd_iommu_stats_init(void)
- 	amd_iommu_stats_add(&cnt_unmap_single);
- 	amd_iommu_stats_add(&cnt_map_sg);
- 	amd_iommu_stats_add(&cnt_unmap_sg);
-+	amd_iommu_stats_add(&cnt_map_resource);
-+	amd_iommu_stats_add(&cnt_unmap_resource);
- 	amd_iommu_stats_add(&cnt_alloc_coherent);
- 	amd_iommu_stats_add(&cnt_free_coherent);
- 	amd_iommu_stats_add(&cross_page);
-@@ -2752,20 +2756,16 @@ static void __unmap_single(struct dma_ops_domain *dma_dom,
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..cc941dd 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
  }
  
- /*
-- * The exported map_single function for dma_ops.
-+ * Wrapper function that contains code common to mapping a physical address
-+ * range from a page or a resource.
-  */
--static dma_addr_t map_page(struct device *dev, struct page *page,
--			   unsigned long offset, size_t size,
--			   enum dma_data_direction dir,
--			   struct dma_attrs *attrs)
-+static dma_addr_t __map_phys(struct device *dev, phys_addr_t paddr,
-+			     size_t size, enum dma_data_direction dir)
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
  {
- 	unsigned long flags;
- 	struct protection_domain *domain;
- 	dma_addr_t addr;
- 	u64 dma_mask;
--	phys_addr_t paddr = page_to_phys(page) + offset;
--
--	INC_STATS_COUNTER(cnt_map_single);
- 
- 	domain = get_domain(dev);
- 	if (PTR_ERR(domain) == -EINVAL)
-@@ -2791,16 +2791,15 @@ out:
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -183,7 +183,7 @@ failed:
+ 	return rc;
  }
  
- /*
-- * The exported unmap_single function for dma_ops.
-+ * Wrapper function that contains code common to unmapping a physical address
-+ * range from a page or a resource.
-  */
--static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
--		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+static void __unmap_phys(struct device *dev, dma_addr_t dma_addr, size_t size,
-+			 enum dma_data_direction dir)
+-static void virtfn_remove(struct pci_dev *dev, int id, int reset)
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
  {
- 	unsigned long flags;
- 	struct protection_domain *domain;
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
  
--	INC_STATS_COUNTER(cnt_unmap_single);
--
- 	domain = get_domain(dev);
- 	if (IS_ERR(domain))
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = pci_iov_virtfn_add(dev, i, 0);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ failed:
+ 	for (j = 0; j < i; j++)
+-		virtfn_remove(dev, j, 0);
++		pci_iov_virtfn_remove(dev, j, 0);
+ 
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
  		return;
-@@ -2815,6 +2814,55 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
- }
  
- /*
-+ * The exported map_single function for dma_ops.
-+ */
-+static dma_addr_t map_page(struct device *dev, struct page *page,
-+			   unsigned long offset, size_t size,
-+			   enum dma_data_direction dir,
-+			   struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_map_single);
-+
-+	return __map_phys(dev, page_to_phys(page) + offset, size, dir);
-+}
-+
-+/*
-+ * The exported unmap_single function for dma_ops.
-+ */
-+static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
-+		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_unmap_single);
-+
-+	__unmap_phys(dev, dma_addr, size, dir);
-+}
-+
-+/*
-+ * The exported map_resource function for dma_ops.
-+ */
-+static dma_addr_t map_resource(struct device *dev, struct resource *res,
-+			       unsigned long offset, size_t size,
-+			       enum dma_data_direction dir,
-+			       struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_map_resource);
-+
-+	return __map_phys(dev, res->start + offset, size, dir);
-+}
-+
-+/*
-+ * The exported unmap_resource function for dma_ops.
-+ */
-+static void unmap_resource(struct device *dev, dma_addr_t dma_addr,
-+			   size_t size, enum dma_data_direction dir,
-+			   struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_unmap_resource);
-+
-+	__unmap_phys(dev, dma_addr, size, dir);
-+}
-+
-+/*
-  * The exported map_sg function for dma_ops (handles scatter-gather
-  * lists).
-  */
-@@ -3066,6 +3114,8 @@ static struct dma_map_ops amd_iommu_dma_ops = {
- 	.unmap_page = unmap_page,
- 	.map_sg = map_sg,
- 	.unmap_sg = unmap_sg,
-+	.map_resource = map_resource,
-+	.unmap_resource = unmap_resource,
- 	.dma_supported = amd_iommu_dma_supported,
- };
+ 	for (i = 0; i < iov->num_VFs; i++)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_virtfn_remove(dev, i, 0);
  
+ 	pcibios_sriov_disable(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..06aa5dd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+@@ -1696,6 +1698,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
++static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
++{
++	return -ENOSYS;
++}
++static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
++{ }
+ static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+ static inline int pci_vfs_assigned(struct pci_dev *dev)
+ { return 0; }
 -- 
-2.4.0
+1.7.9.5
 
