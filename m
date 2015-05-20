@@ -1,141 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:41100 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752742AbbEFH0x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 03:26:53 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 6 May 2015 17:26:51 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 75D662BB0047
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2015 17:26:48 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t467Qeqd19857458
-	for <linux-pci@vger.kernel.org>; Wed, 6 May 2015 17:26:48 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t467QFNs001071
-	for <linux-pci@vger.kernel.org>; Wed, 6 May 2015 17:26:15 +1000
-Date: Wed, 6 May 2015 15:25:57 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/iov: return a reference to PF on destroying VF
-Message-ID: <20150506072557.GA22377@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150505212905.GB24643@google.com>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:34395 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609AbbETNDN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 09:03:13 -0400
+Received: by qgez61 with SMTP id z61so19013650qge.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 06:03:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150505212905.GB24643@google.com>
+In-Reply-To: <20150520085656.GB29274@red-moon>
+References: <1431614537-16136-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1431614537-16136-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <5555553F.9070608@amd.com> <20150520085656.GB29274@red-moon>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 May 2015 08:02:52 -0500
+Message-ID: <CAErSpo4OY+mm4R34_1DG5tb+tTJVGQbjuQ75esSF26LUzNWL9A@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 2/2] ARM64: kernel: pci: implement PCI device
+ resources claiming
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 05, 2015 at 04:29:05PM -0500, Bjorn Helgaas wrote:
->On Fri, Apr 10, 2015 at 04:53:04PM +0800, Wei Yang wrote:
->> Each VF will get a reference to its PF, while it is not returned back in
->> all cases and leave a removed PF's pci_dev un-released.
->> 
->> As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
->> when removing devices on a bus, we do it in the reverse order. This means
->> we would remove VFs first, then PFs. After doing so, VF's removal is done
->> with pci_stop_and_remove_bus_device() instead of virtfn_remove().
->> virtfn_remove() returns the reference of its PF, while
->> pci_stop_and_remove_bus_device() doesn't.
+On Wed, May 20, 2015 at 3:56 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, May 15, 2015 at 03:09:03AM +0100, Suravee Suthikulanit wrote:
+>> On 5/14/2015 9:42 AM, Lorenzo Pieralisi wrote:
+>> > When a device is scanned and added to the PCI bus, its resources
+>> > should be claimed to validate the BARs configuration and to assign
+>> > them a parent resource so that the resource hierarchy can be sanity
+>> > checked.
+>> >
+>> > This patch adds code that carries out PCI device resources claiming to
+>> > the ARM64 pcibios_add_device implementation so that device resources
+>> > are claimed by the core PCI layer upon PCI device initialization on
+>> > ARM64 systems.
+>> >
+>> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> > Cc: Arnd Bergmann <arnd@arndb.de>
+>> > Cc: Will Deacon <will.deacon@arm.com>
+>> > Cc: Liviu Dudau <liviu.dudau@arm.com>
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > ---
+>> >   arch/arm64/kernel/pci.c | 10 ++++++++++
+>> >   1 file changed, 10 insertions(+)
+>> >
+>> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> > index 4095379..c0a88ca 100644
+>> > --- a/arch/arm64/kernel/pci.c
+>> > +++ b/arch/arm64/kernel/pci.c
+>> > @@ -43,8 +43,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>> >    */
+>> >   int pcibios_add_device(struct pci_dev *dev)
+>> >   {
+>> > +   struct resource *res;
+>> > +   int i;
+>> > +
+>> >     dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>> >
+>> > +   for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>> > +           res = &dev->resource[i];
+>> > +           if (res->parent || !res->flags)
+>> > +                   continue;
+>> > +           pci_claim_resource(dev, i);
+>> > +   }
+>> > +
+>> >     return 0;
+>> >   }
+>> >
+>> >
+>>
+>> Lorenzo/Bjorn,
+>>
+>> I have tested this patch on top of Jayachandran's V2 patch series
+>> (http://www.spinics.net/lists/linux-pci/msg40811.html) on AMD Seattle
+>> (w/ PROBE_ONLY and non-PROBE_ONLY mode), and your changes here works
+>> with additional changes below.
+>>
+>> It seems that when booting w/ PROBE_ONLY case, we need to call
+>> pci_read_bridge_bases() at some point before claiming the resources of
+>> devices underneath the bridge. This is needed to determine the bridge
+>> bases (i.e. bridge io, mmio and mmio_pref bases), and update bridge
+>> resources accordingly.
+>>
+>> ---- BEGIN PATCH -----
+>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> index c0a88ca..57be6aa 100644
+>> --- a/arch/arm64/kernel/pci.c
+>> +++ b/arch/arm64/kernel/pci.c
+>> @@ -48,6 +48,11 @@ int pcibios_add_device(struct pci_dev *dev)
+>>
+>>          dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>>
+>> +       if (pci_has_flag(PCI_PROBE_ONLY) &&
 >
->Please use conventional citation style (12-char SHA1).
+> Does it really matter if PCI_PROBE_ONLY is set ?
 >
->ac205b7bb72f appeared in v3.4.  Did that commit cause a regression?
->Should this patch be marked for stable?
+>> +           !pci_is_root_bus(dev->bus) &&
 >
->"After doing so, VF removal is done with pci_stop_and_remove_device() ..."
->After doing what?  After removing the VFs and PFs?  After commit
->ac205b7bb72f?
+> This check is useless, since pci_read_bridge_bases checks that already.
 >
->Prior to your patch, the VF reference was released in virtfn_remove(),
->which is only called via pci_disable_sriov().  This typically happens in
->a driver .remove() method.  The reference is *not* released if we call
->pci_stop_and_remove_bus_device(VF) directly, as we would via the
->remove_store() (sysfs "remove" file) or hot unplug paths, e.g.,
->pciehp_unconfigure_device().
->
->After your patch, the VF reference is released in pci_destroy_dev().  This
->is called from pci_disable_sriov(), so it happens in that path as before.
->But pci_destroy_dev() is called from pci_stop_and_remove_bus_device(), so
->the reference is now released for all the paths that use
->pci_stop_and_remove_bus_device().
->
->What about the other things done in virtfn_remove(), e.g., the sysfs link
->removal?  Your patch fixes a reference count leak, but don't we still have
->a sysfs link leak?
->
->It would be useful to mention a way to cause the leak.  I suspect writing
->to a VF's sysfs "remove" file is the easiest.
->
-
-Looks a VF don't support the remove now.
-
-static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
-					    struct attribute *a, int n)
-{
-	struct device *dev = container_of(kobj, struct device, kobj);
-	struct pci_dev *pdev = to_pci_dev(dev);
-
-	if (pdev->is_virtfn)
-		return 0;
-
-	return a->mode;
-}
-
-static struct attribute_group pci_dev_hp_attr_group = {
-	.attrs = pci_dev_hp_attrs,
-	.is_visible = pci_dev_hp_attrs_are_visible,
-};
-
-
->> This patches moves the return of PF's reference to pci_destroy_dev() to
->> make sure the PF's pci_dev is released in any case.
->> 
->> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/iov.c    |    1 -
->>  drivers/pci/remove.c |    5 +++++
->>  2 files changed, 5 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index 4b3a4ea..9b04bde 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -167,7 +167,6 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->>  
->>  	/* balance pci_get_domain_bus_and_slot() */
->>  	pci_dev_put(virtfn);
->> -	pci_dev_put(dev);
->>  }
->>  
->>  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index 8bd76c9..836ddf6 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -41,6 +41,11 @@ static void pci_destroy_dev(struct pci_dev *dev)
->>  	list_del(&dev->bus_list);
->>  	up_write(&pci_bus_sem);
->>  
->> +#ifdef CONFIG_PCI_IOV
->> +	if (dev->is_virtfn)
->> +		pci_dev_put(dev->physfn);
->> +#endif
+>> +           !pci_bridge_bases_is_read(dev->bus))
+>> +               pci_read_bridge_bases(dev->bus);
 >> +
->>  	pci_free_resources(dev);
->>  	put_device(&dev->dev);
->>  }
->> -- 
->> 1.7.9.5
->> 
+>
+> Ok. Most of the archs do that in pcibios_fixup_bus, I would like to
+> understand:
+>
+> 1) Should we do it on PCI_PROBE_ONLY only
+> 2) Can we move this to generic code - ie pci_scan_child_bus (I guess answer
+>    is no, because there are corner cases I am not aware of)
 
--- 
-Richard Yang
-Help you, Help me
+In my opinion, we should call pci_read_bridge_bases() in all cases,
+regardless of PCI_PROBE_ONLY.  pci_read_bridge_bases() doesn't
+*change* anything in the hardware; it only reads what's there.  (It
+should attempt writes to learn whether I/O and prefetchable memory
+apertures are implemented, but those should be done as in
+pci_bridge_check_ranges(), where the original value is restored.)
 
+I also think this should be done in generic code, since there's
+nothing architecture-specific about bridge operation.
+
+I've been hoping to get rid of pcibios_fixup_bus() completely for
+years, and doing pci_read_bridge_bases() in generic code would be a
+big step.
+
+No doubt there are corner cases we'll trip over, but I'm not aware of them yet.
+
+> If I add it to arm64 (in pcibios_fixup_bus) I have to add it to arm too, more
+> arch specific code that has nothing arch specific in it so I am not really
+> keen on that.
+>
+> Comments appreciated.
+>
+> Lorenzo
+>
+>>          for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+>>                  res = &dev->resource[i];
+>>                  if (res->parent || !res->flags)
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 6675a7a..6cab8be 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -447,6 +447,13 @@ static void pci_read_bridge_mmio_pref(struct
+>> pci_bus *child)
+>>          }
+>>   }
+>>
+>> +bool pci_bridge_bases_is_read(struct pci_bus *bus)
+>> +{
+>> +       return (bus->resource[0]->start ||
+>> +               bus->resource[1]->start ||
+>> +               bus->resource[2]->start);
+>> +}
+>> +
+>>   void pci_read_bridge_bases(struct pci_bus *child)
+>>   {
+>>          struct pci_dev *dev = child->self;
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 353db8d..11c674d 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -798,6 +798,7 @@ void pci_device_add(struct pci_dev *dev, struct
+>> pci_bus *bus);
+>>   unsigned int pci_scan_child_bus(struct pci_bus *bus);
+>>   void pci_bus_add_device(struct pci_dev *dev);
+>>   void pci_read_bridge_bases(struct pci_bus *child);
+>> +bool pci_bridge_bases_is_read(struct pci_bus *bus);
+>>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>>                                            struct resource *res);
+>>   u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
+>> ---- END PATCH -----
+>>
+>> I'm not sure if this is the best place to be reading the bridge bases.
+>> I guess we should be able to do this when adding bridge devices.
+>>
+>> Thanks,
+>>
+>> Suravee
+>>
+>>
