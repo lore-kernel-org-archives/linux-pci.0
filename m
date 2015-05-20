@@ -1,102 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li42-95.members.linode.com ([209.123.162.95]:48823 "EHLO
-	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751172AbbEDQuW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 12:50:22 -0400
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-From: Pantelis Antoniou <panto@antoniou-consulting.com>
-In-Reply-To: <1430521038.7979.70.camel@kernel.crashing.org>
-Date: Mon, 4 May 2015 19:41:59 +0300
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mga02.intel.com ([134.134.136.20]:27414 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752222AbbETJjC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 05:39:02 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 02/14] genirq: Introduce helper function irq_data_get_node()
+Date: Wed, 20 May 2015 17:40:33 +0800
+Message-Id: <1432114845-24304-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+Introduce helper function irq_data_get_node() and friends to hide
+struct irq_data implementation details.
 
-> On May 2, 2015, at 01:57 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
-> 
-> On Fri, 2015-05-01 at 13:46 -0500, Rob Herring wrote:
->> On Fri, May 1, 2015 at 10:22 AM, Benjamin Herrenschmidt
->> <benh@kernel.crashing.org> wrote:
->>> On Fri, 2015-05-01 at 07:54 -0500, Rob Herring wrote:
->>> 
->>>> The difference seems to be whether you allocate space or just point to
->>>> the FDT for various strings/data. Is that right?
->>>> 
->>>>>   * of_fdt_add_subtree() is the introduced API to do the work.
->>>> 
->>>> Have you looked at overlays and if so why do they not work for your purposes?
->>>> 
->>>> Why do you need to do this with the flattened tree?
->>> 
->>> The basic idea I asked Gavin to implement is that since the FW needs to
->>> provide a bunch of DT updates to Linux at runtime in the form of new
->>> nodes below an existing one, rather than doing it via some new/custom
->>> format, instead, have it send a bit of FDT blob to expand under an
->>> existing node.
->> 
->> Overlay = an FDT blob to graft into a live running system. Sounds like
->> the same thing.
->> 
->>> As for the details of Gavin implementation, I haven't looked at it in
->>> details yet so there might be issues there, however I don't know what
->>> you mean by "overlays", any pointer ?
->> 
->> CONFIG_OF_OVERLAY
->> 
->> http://events.linuxfoundation.org/sites/events/files/slides/dynamic-dt-keynote-v3.pdf
-> 
-> Well, that looks horrendously complicated, poorly documented and totally
-> unused in-tree outside of the unittest stuff, yay ! It has all sort of
-> "features" that I don't really care about.
-> 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irq.h    |    5 +++++
+ kernel/irq/internals.h |    5 +++++
+ kernel/irq/irqdesc.c   |    8 +-------
+ kernel/irq/irqdomain.c |    3 ++-
+ kernel/irq/manage.c    |    2 +-
+ kernel/irq/proc.c      |    2 +-
+ 6 files changed, 15 insertions(+), 10 deletions(-)
 
-If it was easy to get stuff in, it would get more of the real-use drivers
-in.
-
-> I still don't see what it buys me other than making my FW a lot more
-> complex having to generate all that additional fixup etc... crap that I
-> don't totally get yet.
-> 
-
-You don’t generate any additional fixups. You just compile with the option
-that generates all the fixups for you.
-
-> What's wrong with just unflattening the nodes in place ? The DT comes
-> from the FW in the first place so all the phandles are already good in
-> the new added blob. Internally, the FW created new nodes in its internal
-> representation and flattened the subtree and sends that subtree to
-> Linux.
-> 
-> I don't plan to play "revert" either, if you unplug, I do need to remove
-> what's under the slot but that's true of boot time devices, not just
-> "new" ones, so the overlay stuff won't do the trick and I certainly
-> don't want to keep track…
-> 
-
-You get all of the corner cases handled for free. Perhaps it works for your
-case too.
-
-Perhaps you can educate me on what you need supported and we can make sure
-it’s included.
-
-> Ben.
-> 
-> 
-
-Regards
-
-— Pantelis
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 3b6e0def7f5c..0de75a22b827 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -634,6 +634,11 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
+ 	return d ? irqd_get_trigger_type(d) : 0;
+ }
+ 
++static inline int irq_data_get_node(struct irq_data *d)
++{
++	return d->node;
++}
++
+ unsigned int arch_dynirq_lower_bound(unsigned int from);
+ 
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index ed84299788b3..d1f583543d40 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -199,6 +199,11 @@ static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *d
+ 	__this_cpu_inc(kstat.irqs_sum);
+ }
+ 
++static inline int irq_desc_get_node(struct irq_desc *desc)
++{
++	return irq_data_get_node(&desc->irq_data);
++}
++
+ #ifdef CONFIG_PM_SLEEP
+ bool irq_pm_check_wakeup(struct irq_desc *desc);
+ void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index eac1aac906ea..b18d3f1d73d9 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -59,16 +59,10 @@ static void desc_smp_init(struct irq_desc *desc, int node)
+ #endif
+ }
+ 
+-static inline int desc_node(struct irq_desc *desc)
+-{
+-	return desc->irq_data.node;
+-}
+-
+ #else
+ static inline int
+ alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
+ static inline void desc_smp_init(struct irq_desc *desc, int node) { }
+-static inline int desc_node(struct irq_desc *desc) { return 0; }
+ #endif
+ 
+ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
+@@ -300,7 +294,7 @@ static void free_desc(unsigned int irq)
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&desc->lock, flags);
+-	desc_set_defaults(irq, desc, desc_node(desc), NULL);
++	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ }
+ 
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 3552b8750efd..1b06dfed4574 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -830,7 +830,8 @@ static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
+ {
+ 	struct irq_data *irq_data;
+ 
+-	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
++	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL,
++				irq_data_get_node(child));
+ 	if (irq_data) {
+ 		child->parent_data = irq_data;
+ 		irq_data->irq = child->irq;
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index e68932bb308e..d206aa2c3378 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -332,7 +332,7 @@ static int
+ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
+ {
+ 	struct cpumask *set = irq_default_affinity;
+-	int node = desc->irq_data.node;
++	int node = irq_desc_get_node(desc);
+ 
+ 	/* Excludes PER_CPU and NO_BALANCE interrupts */
+ 	if (!irq_can_set_affinity(irq))
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index df2f4642d1e7..0e97c142ce40 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -241,7 +241,7 @@ static int irq_node_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct irq_desc *desc = irq_to_desc((long) m->private);
+ 
+-	seq_printf(m, "%d\n", desc->irq_data.node);
++	seq_printf(m, "%d\n", irq_desc_get_node(desc));
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
