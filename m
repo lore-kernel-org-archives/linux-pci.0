@@ -1,264 +1,254 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Grant Likely <grant.likely@linaro.org>,
-	Kevin Cernekee <cernekee@gmail.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: [RFC v1 02/11] genirq: Move field 'node' from struct irq_data into struct irq_common_data
-Date: Mon,  4 May 2015 11:15:30 +0800
-Message-Id: <1430709339-29083-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:41006 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865AbbETBf3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 21:35:29 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 20 May 2015 11:35:26 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B6B313578052
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 11:35:24 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4K1ZG1q13238514
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 11:35:24 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4K1YqTP002146
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 11:34:52 +1000
+Date: Wed, 20 May 2015 09:34:34 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2] pci/iov: fix resource leak on destroying VF
+Message-ID: <20150520013434.GA10192@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150519230020.GU31666@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150519230020.GU31666@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-NUMA node information is per-irq instead of per-irqchip, so move it into
-struct irq_common_data.
+On Tue, May 19, 2015 at 06:00:20PM -0500, Bjorn Helgaas wrote:
+>On Fri, May 08, 2015 at 11:53:27AM +0800, Wei Yang wrote:
+>> Beside pci_dev resources, VF has other resources between its PF, like
+>> refcount to PF, sysfs link between them and the virtual bus. When a VF is
+>> released in virtfn_remove(), those resources are released properly. But
+>> in the hotplug case, they are not.
+>> 
+>> In hotplug case, VFs are removed by pci_stop_and_remove_bus_device()
+>> instead of virtfn_remove(). This leads to some leak for resources.
+>> 
+>> This patch moves the resource release to pci_destroy_dev() to make sure
+>> those resources are released when VF is destroyed.
+>
+>Earlier you mentioned a related commit, but you didn't reference it here.
+>I thought you said this fixed a regression.  If so, we need information
+>about it.  I know you said you'd like this patch to go to the stable
+>kernel.  We need justification for that, too, e.g., a way to reproduce a
+>problem and what the effect of the problem is.  I guess "hot-remove of
+>an SR-IOV device" is probably the way to reproduce it, but I don't know
+>what the effect is.  Does a subsequent hot-add fail?  Do we silently leak
+>some memory?  If you could open a bugzilla with a dmesg log showing the
+>problem, that would be great.
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/sh/kernel/irq.c          |    2 +-
- arch/x86/kernel/apic/vector.c |    8 ++++----
- arch/x86/platform/uv/uv_irq.c |    2 +-
- include/linux/irq.h           |   20 ++++++++++++++++++--
- kernel/irq/internals.h        |    5 +++++
- kernel/irq/irqdesc.c          |   10 ++--------
- kernel/irq/irqdomain.c        |    4 ++--
- kernel/irq/manage.c           |    2 +-
- kernel/irq/proc.c             |    2 +-
- 9 files changed, 35 insertions(+), 20 deletions(-)
+I don't find an easy way to do "hot-remove" of an SR-IOV device. What I can
+think is to export the "remove" sysfs for a VF, then see the effect. While
+this needs to change the kernel to see the effect. Not sure this is
+acceptable.
 
-diff --git a/arch/sh/kernel/irq.c b/arch/sh/kernel/irq.c
-index eb10ff84015c..8dc677cc136b 100644
---- a/arch/sh/kernel/irq.c
-+++ b/arch/sh/kernel/irq.c
-@@ -227,7 +227,7 @@ void migrate_irqs(void)
- 	for_each_active_irq(irq) {
- 		struct irq_data *data = irq_get_irq_data(irq);
- 
--		if (data->node == cpu) {
-+		if (irq_data_get_node(data) == cpu) {
- 			unsigned int newcpu = cpumask_any_and(data->affinity,
- 							      cpu_online_mask);
- 			if (newcpu >= nr_cpu_ids) {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 96ce5068a926..983bea2a09ce 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -345,7 +345,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	struct irq_alloc_info *info = arg;
- 	struct apic_chip_data *data;
- 	struct irq_data *irq_data;
--	int i, err;
-+	int i, err, node;
- 
- 	if (disable_apic)
- 		return -ENXIO;
-@@ -357,12 +357,13 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_data = irq_domain_get_irq_data(domain, virq + i);
- 		BUG_ON(!irq_data);
-+		node = irq_data_get_node(irq_data);
- #ifdef	CONFIG_X86_IO_APIC
- 		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
- 			data = legacy_irq_data[virq + i];
- 		else
- #endif
--			data = alloc_apic_chip_data(irq_data->node);
-+			data = alloc_apic_chip_data(node);
- 		if (!data) {
- 			err = -ENOMEM;
- 			goto error;
-@@ -371,8 +372,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
- 		irq_data->chip = &lapic_controller;
- 		irq_data->chip_data = data;
- 		irq_data->hwirq = virq + i;
--		err = assign_irq_vector_policy(virq, irq_data->node, data,
--					       info);
-+		err = assign_irq_vector_policy(virq, node, data, info);
- 		if (err)
- 			goto error;
- 	}
-diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-index cdf86cd3fd97..bc992b7b041f 100644
---- a/arch/x86/platform/uv/uv_irq.c
-+++ b/arch/x86/platform/uv/uv_irq.c
-@@ -89,7 +89,7 @@ static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 		return -EINVAL;
- 
- 	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
--				 irq_data->node);
-+				 irq_data_get_node(irq_data));
- 	if (!chip_data)
- 		return -ENOMEM;
- 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 3b6e0def7f5c..3f999a0af713 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -129,9 +129,13 @@ struct irq_domain;
-  * struct irq_common_data - per irq data shared by all irqchips
-  * @state_use_accessors: status information for irq chip functions.
-  *			Use accessor functions to deal with it
-+ * @node:		node index useful for balancing
-  */
- struct irq_common_data {
- 	unsigned int		state_use_accessors;
-+#ifdef CONFIG_SMP
-+	unsigned int		node;
-+#endif
- };
- 
- /**
-@@ -139,7 +143,6 @@ struct irq_common_data {
-  * @mask:		precomputed bitmask for accessing the chip registers
-  * @irq:		interrupt number
-  * @hwirq:		hardware interrupt number, local to the interrupt domain
-- * @node:		node index useful for balancing
-  * @common:		point to data shared by all irqchips
-  * @chip:		low level interrupt hardware access
-  * @domain:		Interrupt translation domain; responsible for mapping
-@@ -160,7 +163,6 @@ struct irq_data {
- 	u32			mask;
- 	unsigned int		irq;
- 	unsigned long		hwirq;
--	unsigned int		node;
- 	struct irq_common_data	*common;
- 	struct irq_chip		*chip;
- 	struct irq_domain	*domain;
-@@ -634,6 +636,20 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
- 	return d ? irqd_get_trigger_type(d) : 0;
- }
- 
-+static inline int irq_common_data_get_node(struct irq_common_data *d)
-+{
-+#ifdef CONFIG_SMP
-+	return d->node;
-+#else
-+	return 0;
-+#endif
-+}
-+
-+static inline int irq_data_get_node(struct irq_data *d)
-+{
-+	return irq_common_data_get_node(d->common);
-+}
-+
- unsigned int arch_dynirq_lower_bound(unsigned int from);
- 
- int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index ed84299788b3..d82a77d39aeb 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -199,6 +199,11 @@ static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *d
- 	__this_cpu_inc(kstat.irqs_sum);
- }
- 
-+static inline int irq_desc_get_node(struct irq_desc *desc)
-+{
-+	return irq_common_data_get_node(&desc->irq_common_data);
-+}
-+
- #ifdef CONFIG_PM_SLEEP
- bool irq_pm_check_wakeup(struct irq_desc *desc);
- void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index eac1aac906ea..20773f073e24 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -52,23 +52,17 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- 
- static void desc_smp_init(struct irq_desc *desc, int node)
- {
--	desc->irq_data.node = node;
-+	desc->irq_common_data.node = node;
- 	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	cpumask_clear(desc->pending_mask);
- #endif
- }
- 
--static inline int desc_node(struct irq_desc *desc)
--{
--	return desc->irq_data.node;
--}
--
- #else
- static inline int
- alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
- static inline void desc_smp_init(struct irq_desc *desc, int node) { }
--static inline int desc_node(struct irq_desc *desc) { return 0; }
- #endif
- 
- static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
-@@ -300,7 +294,7 @@ static void free_desc(unsigned int irq)
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&desc->lock, flags);
--	desc_set_defaults(irq, desc, desc_node(desc), NULL);
-+	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- }
- 
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 3552b8750efd..93ef89059022 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -830,12 +830,12 @@ static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
- {
- 	struct irq_data *irq_data;
- 
--	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
-+	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL,
-+				irq_data_get_node(child));
- 	if (irq_data) {
- 		child->parent_data = irq_data;
- 		irq_data->irq = child->irq;
- 		irq_data->common = child->common;
--		irq_data->node = child->node;
- 		irq_data->domain = domain;
- 	}
- 
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index e68932bb308e..d206aa2c3378 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -332,7 +332,7 @@ static int
- setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
- {
- 	struct cpumask *set = irq_default_affinity;
--	int node = desc->irq_data.node;
-+	int node = irq_desc_get_node(desc);
- 
- 	/* Excludes PER_CPU and NO_BALANCE interrupts */
- 	if (!irq_can_set_affinity(irq))
-diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-index df2f4642d1e7..0e97c142ce40 100644
---- a/kernel/irq/proc.c
-+++ b/kernel/irq/proc.c
-@@ -241,7 +241,7 @@ static int irq_node_proc_show(struct seq_file *m, void *v)
- {
- 	struct irq_desc *desc = irq_to_desc((long) m->private);
- 
--	seq_printf(m, "%d\n", desc->irq_data.node);
-+	seq_printf(m, "%d\n", irq_desc_get_node(desc));
- 	return 0;
- }
- 
+The effect of the "hot-remove" is, (I guess, not tested yet)
+1. after VF removed, PF still has a link to VF in sysfs
+2. PF is not release cleanly when all VF and PF itself is removed
+
+Let me try to gather those information, if I could create this.
+
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/iov.c    |   42 +++++++++++++++++++++++-------------------
+>>  drivers/pci/pci.h    |   10 ++++++++++
+>>  drivers/pci/remove.c |   31 +++++++++++++++++++++++++++++++
+>>  3 files changed, 64 insertions(+), 19 deletions(-)
+>> 
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee0ebff..47daf2f 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -17,8 +17,6 @@
+>>  #include <linux/pci-ats.h>
+>>  #include "pci.h"
+>>  
+>> -#define VIRTFN_ID_LEN	16
+>> -
+>>  int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+>>  {
+>>  	if (!dev->is_physfn)
+>> @@ -94,7 +92,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>>  	return child;
+>>  }
+>>  
+>> -static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+>> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+>>  {
+>>  	if (physbus != virtbus && list_empty(&virtbus->devices))
+>>  		pci_remove_bus(virtbus);
+>> @@ -185,9 +183,7 @@ failed:
+>>  
+>>  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>>  {
+>> -	char buf[VIRTFN_ID_LEN];
+>>  	struct pci_dev *virtfn;
+>> -	struct pci_sriov *iov = dev->sriov;
+>>  
+>>  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+>>  					     pci_iov_virtfn_bus(dev, id),
+>> @@ -200,24 +196,10 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>>  		__pci_reset_function(virtfn);
+>>  	}
+>>  
+>> -	sprintf(buf, "virtfn%u", id);
+>> -	sysfs_remove_link(&dev->dev.kobj, buf);
+>> -	/*
+>> -	 * pci_stop_dev() could have been called for this virtfn already,
+>> -	 * so the directory for the virtfn may have been removed before.
+>> -	 * Double check to avoid spurious sysfs warnings.
+>> -	 */
+>> -	if (virtfn->dev.kobj.sd)
+>> -		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+>> -
+>> -	mutex_lock(&iov->dev->sriov->lock);
+>>  	pci_stop_and_remove_bus_device(virtfn);
+>> -	virtfn_remove_bus(dev->bus, virtfn->bus);
+>> -	mutex_unlock(&iov->dev->sriov->lock);
+>>  
+>>  	/* balance pci_get_domain_bus_and_slot() */
+>>  	pci_dev_put(virtfn);
+>> -	pci_dev_put(dev);
+>>  }
+>>  
+>>  int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>> @@ -760,3 +742,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>>  	return dev->sriov->total_VFs;
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+>> +
+>> +void pci_sriov_lock(struct pci_dev *dev)
+>> +{
+>> +	struct pci_sriov *iov;
+>> +
+>> +	if (!dev->is_physfn)
+>> +		return;
+>> +
+>> +	iov = dev->sriov;
+>> +	mutex_lock(&iov->dev->sriov->lock);
+>> +}
+>> +
+>> +void pci_sriov_unlock(struct pci_dev *dev)
+>> +{
+>> +	struct pci_sriov *iov;
+>> +
+>> +	if (!dev->is_physfn)
+>> +		return;
+>> +
+>> +	iov = dev->sriov;
+>> +	mutex_unlock(&iov->dev->sriov->lock);
+>> +}
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 9bd762c2..a0323a2 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -260,6 +260,12 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+>>  #endif /* CONFIG_PCI_ATS */
+>>  
+>>  #ifdef CONFIG_PCI_IOV
+>> +
+>> +#define VIRTFN_ID_LEN	16
+>> +void pci_sriov_lock(struct pci_dev *dev);
+>> +void pci_sriov_unlock(struct pci_dev *dev);
+>> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus);
+>> +
+>>  int pci_iov_init(struct pci_dev *dev);
+>>  void pci_iov_release(struct pci_dev *dev);
+>>  int pci_iov_resource_bar(struct pci_dev *dev, int resno);
+>> @@ -268,6 +274,10 @@ void pci_restore_iov_state(struct pci_dev *dev);
+>>  int pci_iov_bus_range(struct pci_bus *bus);
+>>  
+>>  #else
+>> +static inline void pci_sriov_lock(struct pci_dev *dev) { }
+>> +static inline void pci_sriov_unlock(struct pci_dev *dev) { }
+>> +static inline void virtfn_remove_bus(struct pci_bus *physbus,
+>> +		struct pci_bus *virtbus) { }
+>
+>This doesn't make sense to me.  You added calls to pci_sriov_lock(), etc.,
+>but they are all under #ifdef CONFIG_PCI_IOV.  So why do you need stubs
+>when CONFIG_PCI_IOV is not defined?
+>
+
+Hmm, you are right.
+
+>>  static inline int pci_iov_init(struct pci_dev *dev)
+>>  {
+>>  	return -ENODEV;
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index 8a280e9..f2a07bf 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -41,6 +41,37 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>>  	list_del(&dev->bus_list);
+>>  	up_write(&pci_bus_sem);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +	if (dev->is_virtfn) {
+>> +		char buf[VIRTFN_ID_LEN];
+>> +		int id;
+>> +		struct pci_dev *pdev = dev->physfn;
+>> +
+>> +		for (id = 0; id < pci_sriov_get_totalvfs(pdev); id++) {
+>> +			if ((dev->bus->number == pci_iov_virtfn_bus(pdev, id))
+>> +			   && (dev->devfn == pci_iov_virtfn_devfn(pdev, id))) {
+>> +				sprintf(buf, "virtfn%u", id);
+>> +				sysfs_remove_link(&pdev->dev.kobj, buf);
+>> +				break;
+>> +			}
+>> +		}
+>> +		/*
+>> +		 * pci_stop_dev() could have been called for this virtfn
+>> +		 * already, so the directory for the virtfn may have been
+>> +		 * removed before.  Double check to avoid spurious sysfs
+>> +		 * warnings.
+>> +		 */
+>> +		if (dev->dev.kobj.sd)
+>> +			sysfs_remove_link(&dev->dev.kobj, "physfn");
+>> +
+>> +		pci_sriov_lock(pdev);
+>> +		virtfn_remove_bus(pdev->bus, dev->bus);
+>> +		pci_sriov_unlock(pdev);
+>> +
+>> +		pci_dev_put(dev->physfn);
+>> +	}
+>
+>All this IOV-related code looks really out of place in pci_destroy_dev().
+>Isn't there some way this code can be put in drivers/pci/iov.c?
+>
+
+Currently, I didn't find a better solution.
+Let me take a look again.
+
+>> +#endif
+>> +
+>>  	pci_free_resources(dev);
+>>  	put_device(&dev->dev);
+>>  }
+>> -- 
+>> 1.7.9.5
+>> 
+
 -- 
-1.7.10.4
+Richard Yang
+Help you, Help me
 
