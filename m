@@ -1,225 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:49660 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754151AbbESKzb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:55:31 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:55:29 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 200A62BB0047
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:27 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAtJaY18612430
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:27 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAssm2001929
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:54 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 07/10] powerpc/powernv: Support EEH reset for VF PE
-Date: Tue, 19 May 2015 18:50:09 +0800
-Message-Id: <1432032612-21701-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:35228 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755144AbbETUq2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 16:46:28 -0400
+Received: by qgew3 with SMTP id w3so29796358qge.2
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 13:46:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150520172903.GJ11498@arm.com>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com> <20150512000746.GA31418@jayachandranc.netlogicmicro.com>
+ <20150519230918.GW31666@google.com> <20150520172903.GJ11498@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 May 2015 15:46:06 -0500
+Message-ID: <CAErSpo7r6cwztxNW-92LT_AT_moufQAQO_OJein7qOQjdszKUg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+To: Will Deacon <will.deacon@arm.com>
+Cc: "Jayachandran C." <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PEs for VFs don't have primary bus. So they have to have their own reset
-backend, which is used during EEH recovery. The patch implements the reset
-backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
-in the PE.
+On Wed, May 20, 2015 at 12:29 PM, Will Deacon <will.deacon@arm.com> wrote:
+> On Wed, May 20, 2015 at 12:09:18AM +0100, Bjorn Helgaas wrote:
+>> On Tue, May 12, 2015 at 05:37:47AM +0530, Jayachandran C. wrote:
+>> > On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
+>> > > On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
+>> > > > The current code in pci-host-generic.c uses pci_common_init_dev()
+>> > > > from the arch/arm/ to do a part of the PCI initialization, and this
+>> > > > prevents it from being used on arm64.
+>> > > >
+>> > > > The initialization done by pci_common_init_dev() that is really
+>> > > > needed by pci-host-generic.c can be done in the same file without
+>> > > > using the hw_pci API of ARM.
+>> > > >
+>> > > > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+>> > > > this is be handled by setting up 'struct gen_pci' to embed a
+>> > > > pci_sys_data variable as the first element on the ARM platform.
+>> > > >
+>> > > > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+>> > > > ---
+>> > > > Here's v2 of the patches, this enables use of pci-host-generic on
+>> > > > arm64.
+>> > > >
+>> > > > This has been tested on both qemu and fast model for arm64, and on
+>> > > > qemu for arm32.
+>> > > >
+>> > > > v1->v2
+>> > > >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
+>> > > >     - move contents of gen_pci_init to gen_pci_probe
+>> > > >     - assign resources only when !probe_only
+>> > > >  - tested on ARM32 with qemu option -M virt
+>> > >
+>> > > I tried this with an arm64 kernel running under kvmtool, but I get the
+>> > > following errors (a 32-bit ARM kernel does seem to work):
+>> > >
+>> > >   PCI host bridge /pci ranges:
+>> > >      IO 0x00000000..0x0000ffff -> 0x00000000
+>> > >     MEM 0x41000000..0x7fffffff -> 0x41000000
+>> > >   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
+>> > >   pci_bus 0000:00: root bus resource [bus 00-01]
+>> > >   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>> > >   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
+>> > >   pci_bus 0000:00: scanning bus
+>> > >   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
+>> > >   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
+>> > >   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
+>> > >   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
+>> > >   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
+>> > >   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
+>> > >   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
+>> > >   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
+>> > >   pci_bus 0000:00: fixups for bus
+>> > >   pci_bus 0000:00: bus scan returning with max=00
+>> > >   pci 0000:00:00.0: fixup irq: got 10
+>> > >   pci 0000:00:00.0: assigning IRQ 10
+>> > >   pci 0000:00:01.0: fixup irq: got 11
+>> > >   pci 0000:00:01.0: assigning IRQ 11
+>> > >   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
+>> > >   virtio-pci: probe of 0000:00:00.0 failed with error -22
+>> > >   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
+>> > >   virtio-pci: probe of 0000:00:01.0 failed with error -22
+>> >
+>> > PCI_PROBE_ONLY does not work yet for arm64, this will need further changes
+>> > in either arm64 or pci as noted by Lorenzo. This is not due to a problem with
+>> > this patch per se.
+>> >
+>> > More importantly, this does not change the current arm32 behavior and adds
+>> > support for arm64 for two very useful cases
+>> >  - we can use "pci-host-ecam-generic" for a host bridge controller that is
+>> >    initialized by firmware, without adding a custom driver.
+>> >  - qemu virt platform works on arm64
+>> >
+>> > If you think there are any furhter changes needed in this patchset please
+>> > let me know.
+>>
+>> I'm waiting for at least an ack from Will.
+>
+> I'm not too keen on the current state of this patch. Firstly, I'd really
+> like to see the PROBE_ONLY case addressed at the same time as this port
+> (Lorenzo and Suravee are working on this). Secondly, the hack to put
+> pci_sys_data as the first member of gen_pci is ugly at best and probably
+> makes it difficult to support MSIs on ARM.
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |  134 +++++++++++++++++++++++++-
- 2 files changed, 134 insertions(+), 1 deletion(-)
+Thanks, Will.  I'll wait for another iteration that addresses these.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index c1fde48..3d64cf3 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -134,6 +134,7 @@ struct eeh_dev {
- 	int pcix_cap;			/* Saved PCIx capability	*/
- 	int pcie_cap;			/* Saved PCIe capability	*/
- 	int aer_cap;			/* Saved AER capability		*/
-+	int af_cap;			/* Saved AF capability		*/
- 	struct eeh_pe *pe;		/* Associated PE		*/
- 	struct list_head list;		/* Form link list in the PE	*/
- 	struct pci_controller *phb;	/* Associated PHB		*/
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index c505036..7af3c1e 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -402,6 +402,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
- 	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
- 	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
- 	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
-+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
- 	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
- 		edev->mode |= EEH_DEV_BRIDGE;
- 		if (edev->pcie_cap) {
-@@ -891,6 +892,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
-+				     u16 mask, bool af_flr_rst)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	int status, i;
-+
-+	/* Wait for Transaction Pending bit to be cleared */
-+	for (i = 0; i < 4; i++) {
-+		eeh_ops->read_config(pdn, pos, 2, &status);
-+		if (!(status & mask))
-+			return;
-+
-+		msleep((1 << i) * 100);
-+	}
-+
-+	pr_warn("%s: Pending transaction while issuing %s FLR to "
-+		"%04x:%02x:%02x.%01x\n",
-+		__func__, af_flr_rst ? "AF" : "",
-+		edev->phb->global_number, pdn->busno,
-+		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+}
-+
-+static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 reg;
-+
-+	if (!edev->pcie_cap)
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
-+	if (!(reg & PCI_EXP_DEVCAP_FLR))
-+		return -ENOTTY;
-+
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+	case EEH_RESET_FUNDAMENTAL:
-+		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
-+					 PCI_EXP_DEVSTA_TRPND, false);
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     4, &reg);
-+		reg |= PCI_EXP_DEVCTL_BCR_FLR;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      4, reg);
-+		msleep(EEH_PE_RST_HOLD_TIME);
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     4, &reg);
-+		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      4, reg);
-+		msleep(EEH_PE_RST_SETTLE_TIME);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 cap;
-+
-+	if (!edev->af_cap)
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
-+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
-+		return -ENOTTY;
-+
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+	case EEH_RESET_FUNDAMENTAL:
-+		/*
-+		 * Wait for Transaction Pending bit to clear. A word-aligned
-+		 * test is used, so we use the conrol offset rather than status
-+		 * and shift the test bit to match.
-+		 */
-+		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
-+					 PCI_AF_STATUS_TP << 8, true);
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
-+				      1, PCI_AF_CTRL_FLR);
-+		msleep(EEH_PE_RST_HOLD_TIME);
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
-+		msleep(EEH_PE_RST_SETTLE_TIME);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
-+{
-+	int ret;
-+
-+	ret = pnv_eeh_do_flr(pdn, option);
-+	if (ret)
-+		return ret;
-+
-+	return pnv_eeh_do_af_flr(pdn, option);
-+}
-+
-+static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
-+{
-+	struct eeh_dev *edev, *tmp;
-+	struct pci_dn *pdn;
-+	int ret;
-+
-+	eeh_pe_for_each_dev(pe, edev, tmp) {
-+		pdn = eeh_dev_to_pdn(edev);
-+		ret = pnv_eeh_reset_vf(pdn, option);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	struct pci_controller *hose;
-@@ -966,7 +1088,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 		}
- 
- 		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
-+		if (pe->type & EEH_PE_VF)
-+			ret = pnv_eeh_vf_pe_reset(pe, option);
-+		else if (pci_is_root_bus(bus) ||
- 			pci_is_root_bus(bus->parent))
- 			ret = pnv_eeh_root_reset(hose, option);
- 		else
-@@ -1106,6 +1230,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
- 	if (!edev || !edev->pe)
- 		return false;
- 
-+	/*
-+	 * We will issue FLR or AF FLR to all VFs, which are contained
-+	 * in VF PE. It relies on the EEH PCI config accessors. So we
-+	 * can't block them during the window.
-+	 */
-+	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
-+		return false;
-+
- 	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
- 		return true;
- 
--- 
-1.7.9.5
-
+Bjorn
