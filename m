@@ -1,75 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:45321 "EHLO extserv.mm-sol.com"
+Received: from mga03.intel.com ([134.134.136.65]:59053 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301AbbEDMjV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 08:39:21 -0400
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
+	id S1753066AbbETJjZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 05:39:25 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Subject: [PATCH v2 0/5] Qualcomm PCIe and PCIe/PHY drivers
-Date: Mon,  4 May 2015 15:39:09 +0300
-Message-Id: <1430743154-10120-1-git-send-email-svarbanov@mm-sol.com>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [Patch v2 04/14] sh, irq: Use accessor irq_data_get_node() to hide struct irq_data detail
+Date: Wed, 20 May 2015 17:40:35 +0800
+Message-Id: <1432114845-24304-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stanimir Varbanov <stanimir.varbanov@linaro.org>
+Use accessor irq_data_get_node() to hide struct irq_data implementation
+detail, so we could easily reconstruct struct irq_data later.
 
-Hi,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/sh/kernel/irq.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Here is a v2 of the patchset. The chages since v1 are:
-
- - take into accoint the review comments from the inital version
- - add support for pcie IP found on Snapdragon 600 (ipq/apq8064)
-
-Version 1 of the patchset can be found at: 
-
-https://lkml.org/lkml/2014/12/12/557
-
-Commenst are welcome!
-
--------------------------------------------------------------------------------
-
-This patchset introduces a Qualcomm PCIe root complex driver for
-Snapdragon 805 (APQ8084). It also adds a PCIe PHY driver in generic
-phy framework. The PCIe hardware use Designware IP core plus
-Qualcomm application specific hw.
-
-The first two patches add a PHY driver binding document and the 
-PHY driver. Patches 3/5 and 4/5 add PCIe DT document and the driver.
-Last 5/5 adds APQ8084 in mach-qcom as next multiplatform Qualcomm
-SoC.
-
-Stanimir Varbanov (5):
-  DT: phy: qcom: Add PCIe PHY devicetree bindings
-  phy: qcom: Add Qualcomm PCIe PHY
-  DT: PCI: qcom: Document PCIe devicetree bindings
-  PCI: qcom: Add Qualcomm PCIe controller driver
-  ARM: qcom: Add Qualcomm APQ8084 SoC
-
- .../devicetree/bindings/pci/qcom,pcie.txt          |  231 +++++++
- .../devicetree/bindings/phy/qcom-pcie-phy.txt      |   60 ++
- MAINTAINERS                                        |    7 +
- arch/arm/mach-qcom/Kconfig                         |    7 +
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-qcom.c                       |  677 ++++++++++++++++++++
- drivers/phy/Kconfig                                |    9 +
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-qcom-pcie.c                        |  291 +++++++++
- 10 files changed, 1293 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
- create mode 100644 Documentation/devicetree/bindings/phy/qcom-pcie-phy.txt
- create mode 100644 drivers/pci/host/pcie-qcom.c
- create mode 100644 drivers/phy/phy-qcom-pcie.c
+diff --git a/arch/sh/kernel/irq.c b/arch/sh/kernel/irq.c
+index eb10ff84015c..8dc677cc136b 100644
+--- a/arch/sh/kernel/irq.c
++++ b/arch/sh/kernel/irq.c
+@@ -227,7 +227,7 @@ void migrate_irqs(void)
+ 	for_each_active_irq(irq) {
+ 		struct irq_data *data = irq_get_irq_data(irq);
+ 
+-		if (data->node == cpu) {
++		if (irq_data_get_node(data) == cpu) {
+ 			unsigned int newcpu = cpumask_any_and(data->affinity,
+ 							      cpu_online_mask);
+ 			if (newcpu >= nr_cpu_ids) {
+-- 
+1.7.10.4
 
