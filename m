@@ -1,109 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39156 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751378AbbEKCWI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 May 2015 22:22:08 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 12:22:05 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 5E9D6357804F
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:22:02 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B2Lsfd23462126
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:22:02 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B2LTbn023579
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:21:29 +1000
-Date: Mon, 11 May 2015 12:21:04 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 2/9] powerpc/pci_dn: cache vf_index in pci_dn
-Message-ID: <20150511022104.GA7459@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-3-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430723258-21299-3-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 15/16] ntb: default to cpu memcpy for performance
+Date: Wed, 20 May 2015 11:41:16 -0400
+Message-Id: <0979e7faf4814d1059640cd448a5ad8496604a98.1432135632.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 04, 2015 at 03:07:31PM +0800, Wei Yang wrote:
->This patch caches the index of a VF in its PF in pci_dn.
->
+From: Dave Jiang <dave.jiang@intel.com>
 
-At least you can mention the purpose of vf_index to make the commit log
-complete. The following message looks better?
+Disable DMA usage by default, since the CPU provides much better
+performance with write combining.  Provide a module parameter to enable
+DMA usage when offloading the memcpy is preferred.
 
-The patch caches the VF index in pci_dn, which can be used to calculate
-VF's bus, device and function number. Those information helps to locate
-the VF's PCI device instance when doing hotplug during EEH recovery if
-necessary.
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->---
-> arch/powerpc/include/asm/pci-bridge.h |    1 +
-> arch/powerpc/kernel/pci_dn.c          |    5 +++--
-> 2 files changed, 4 insertions(+), 2 deletions(-)
->
->diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->index 1811c44..9582aa2 100644
->--- a/arch/powerpc/include/asm/pci-bridge.h
->+++ b/arch/powerpc/include/asm/pci-bridge.h
->@@ -199,6 +199,7 @@ struct pci_dn {
-> #ifdef CONFIG_PCI_IOV
-> 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
-> 	u16     num_vfs;		/* number of VFs enabled*/
->+	int     vf_index;		/* Index to PF for VF dev */
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-					/* VF index in the PF */
-
-And I believe it can be "unsigned int", or u16. We should have
-non-negative vf_index, no?
-
-> 	int     offset;			/* PE# for the first VF PE */
-> #define M64_PER_IOV 4
-> 	int     m64_per_iov;
->diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->index b3b4df9..bf0fb873 100644
->--- a/arch/powerpc/kernel/pci_dn.c
->+++ b/arch/powerpc/kernel/pci_dn.c
->@@ -138,7 +138,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
->
-> #ifdef CONFIG_PCI_IOV
-> static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->-					   struct pci_dev *pdev,
->+					   struct pci_dev *pdev, int vf_index,
-
-					   struct pci_dev *pdev,
-					   int vf_index;
-
-> 					   int busno, int devfn)
-> {
-> 	struct pci_dn *pdn;
->@@ -157,6 +157,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
-> 	pdn->parent = parent;
-> 	pdn->busno = busno;
-> 	pdn->devfn = devfn;
->+	pdn->vf_index = vf_index;
-> #ifdef CONFIG_PPC_POWERNV
-> 	pdn->pe_number = IODA_INVALID_PE;
-> #endif
->@@ -196,7 +197,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
-> 		return NULL;
->
-> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
->-		pdn = add_one_dev_pci_data(parent, NULL,
->+		pdn = add_one_dev_pci_data(parent, NULL, i,
-> 					   pci_iov_virtfn_bus(pdev, i),
-> 					   pci_iov_virtfn_devfn(pdev, i));
-> 		if (!pdn) {
-
-Thanks,
-Gavin
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index cc0b7ff..237f76f 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -88,6 +88,10 @@ static unsigned int copy_bytes = 1024;
+ module_param(copy_bytes, uint, 0644);
+ MODULE_PARM_DESC(copy_bytes, "Threshold under which NTB will use the CPU to copy instead of DMA");
+ 
++static bool use_dma;
++module_param(use_dma, bool, 0644);
++MODULE_PARM_DESC(use_dma, "Use DMA engine to perform large data copy");
++
+ static struct dentry *nt_debugfs_dir;
+ 
+ struct ntb_queue_entry {
+@@ -1570,10 +1574,15 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	dma_cap_zero(dma_mask);
+ 	dma_cap_set(DMA_MEMCPY, dma_mask);
+ 
+-	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
+-					   (void *)(unsigned long)node);
+-	if (!qp->dma_chan)
+-		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
++	if (use_dma) {
++		qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
++						   (void *)(unsigned long)node);
++		if (!qp->dma_chan)
++			dev_info(&pdev->dev, "Unable to allocate DMA channel\n");
++	} else {
++		qp->dma_chan = NULL;
++	}
++	dev_dbg(&pdev->dev, "Using %s memcpy\n", qp->dma_chan ? "DMA" : "CPU");
+ 
+ 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
+ 		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
