@@ -1,43 +1,159 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 5 May 2015 17:31:58 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Dave Young <dyoung@redhat.com>
-Cc: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
-	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150505153157.GQ15736@8bytes.org>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
- <20150415005731.GC19051@localhost.localdomain>
- <552DFB56.1070600@hp.com>
- <20150415064803.GF19051@localhost.localdomain>
- <20150424080147.GC4458@dhcp-16-116.nay.redhat.com>
- <20150424082528.GA23912@dhcp-128-91.nay.redhat.com>
- <20150424083530.GD4458@dhcp-16-116.nay.redhat.com>
- <20150424084957.GC23912@dhcp-128-91.nay.redhat.com>
- <20150504162318.GH15736@8bytes.org>
- <20150505061423.GC31063@dhcp-128-4.nay.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150505061423.GC31063@dhcp-128-4.nay.redhat.com>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 05/16] Intel NTB params for snb b2b addresses
+Date: Wed, 20 May 2015 11:41:06 -0400
+Message-Id: <6126a5c4193d8a902c152dbe8e3da3cbdf939792.1432135632.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 05, 2015 at 02:14:23PM +0800, Dave Young wrote:
-> The failure is nothing different, but as I said in another reply the
-> difference is we could use corrupted data to possiblly cause more failure.
+Add module parameters for the addresses to be used in b2b topology.
 
-I still fail to see how things can get more worse than they already are
-by reusing the old data (we just reuse it, we do not modify anything
-there). Do you have any specific scenario in mind?
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ Documentation/ntb.txt               | 10 +++++
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 77 ++++++++++++++++++++++++++++---------
+ 2 files changed, 68 insertions(+), 19 deletions(-)
 
-
-	Joerg
+diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
+index 725ba1e..00a3f92 100644
+--- a/Documentation/ntb.txt
++++ b/Documentation/ntb.txt
+@@ -56,3 +56,13 @@ Module Parameters:
+ * b2b\_mw\_share - If the peer ntb is to be accessed via a memory window, and if
+ 	the memory window is large enough, still allow the client to use the
+ 	second half of the memory window for address translation to the peer.
++* snb\_b2b\_usd\_bar2\_addr64 - If using B2B topology on Xeon hardware, use this
++	64 bit address on the bus between the NTB devices for the window at
++	BAR2, on the upstream side of the link.
++* snb\_b2b\_usd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
++* snb\_b2b\_usd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
++* snb\_b2b\_usd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
++* snb\_b2b\_dsd\_bar2\_addr64 - See *snb\_b2b\_bar2\_addr64*.
++* snb\_b2b\_dsd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
++* snb\_b2b\_dsd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
++* snb\_b2b\_dsd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
+index 89fea50..7e19d46 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.c
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
+@@ -72,20 +72,6 @@ MODULE_AUTHOR("Intel Corporation");
+ #define bar0_off(base, bar) ((base) + ((bar) << 2))
+ #define bar2_off(base, bar) bar0_off(base, (bar) - 2)
+ 
+-static int b2b_mw_idx = -1;
+-module_param(b2b_mw_idx, int, 0644);
+-MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
+-		 "value of zero or positive starts from first mw idx, and a "
+-		 "negative value starts from last mw idx.  Both sides MUST "
+-		 "set the same value here!");
+-
+-static unsigned int b2b_mw_share;
+-module_param(b2b_mw_share, uint, 0644);
+-MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
+-		 "ntb so that the peer ntb only occupies the first half of "
+-		 "the mw, so the second half can still be used as a mw.  Both "
+-		 "sides MUST set the same value here!");
+-
+ static const struct intel_ntb_reg bwd_reg;
+ static const struct intel_ntb_alt_reg bwd_pri_reg;
+ static const struct intel_ntb_alt_reg bwd_sec_reg;
+@@ -98,14 +84,67 @@ static const struct intel_ntb_alt_reg snb_sec_reg;
+ static const struct intel_ntb_alt_reg snb_b2b_reg;
+ static const struct intel_ntb_xlat_reg snb_pri_xlat;
+ static const struct intel_ntb_xlat_reg snb_sec_xlat;
+-static const struct intel_b2b_addr snb_b2b_usd_addr;
+-static const struct intel_b2b_addr snb_b2b_dsd_addr;
+-
++static struct intel_b2b_addr snb_b2b_usd_addr;
++static struct intel_b2b_addr snb_b2b_dsd_addr;
+ static const struct ntb_dev_ops intel_ntb_ops;
+ 
+ static const struct file_operations intel_ntb_debugfs_info;
+ static struct dentry *debugfs_dir;
+ 
++static int b2b_mw_idx = -1;
++module_param(b2b_mw_idx, int, 0644);
++MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
++		 "value of zero or positive starts from first mw idx, and a "
++		 "negative value starts from last mw idx.  Both sides MUST "
++		 "set the same value here!");
++
++static unsigned int b2b_mw_share;
++module_param(b2b_mw_share, uint, 0644);
++MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
++		 "ntb so that the peer ntb only occupies the first half of "
++		 "the mw, so the second half can still be used as a mw.  Both "
++		 "sides MUST set the same value here!");
++
++module_param_named(snb_b2b_usd_bar2_addr64,
++		   snb_b2b_usd_addr.bar2_addr64, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
++		 "SNB B2B USD BAR 2 64-bit address");
++
++module_param_named(snb_b2b_usd_bar4_addr64,
++		   snb_b2b_usd_addr.bar4_addr64, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
++		 "SNB B2B USD BAR 4 64-bit address");
++
++module_param_named(snb_b2b_usd_bar4_addr32,
++		   snb_b2b_usd_addr.bar4_addr32, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
++		 "SNB B2B USD split-BAR 4 32-bit address");
++
++module_param_named(snb_b2b_usd_bar5_addr32,
++		   snb_b2b_usd_addr.bar5_addr32, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
++		 "SNB B2B USD split-BAR 5 32-bit address");
++
++module_param_named(snb_b2b_dsd_bar2_addr64,
++		   snb_b2b_dsd_addr.bar2_addr64, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
++		 "SNB B2B DSD BAR 2 64-bit address");
++
++module_param_named(snb_b2b_dsd_bar4_addr64,
++		   snb_b2b_dsd_addr.bar4_addr64, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
++		 "SNB B2B DSD BAR 4 64-bit address");
++
++module_param_named(snb_b2b_dsd_bar4_addr32,
++		   snb_b2b_dsd_addr.bar4_addr32, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
++		 "SNB B2B DSD split-BAR 4 32-bit address");
++
++module_param_named(snb_b2b_dsd_bar5_addr32,
++		   snb_b2b_dsd_addr.bar5_addr32, ullong, 0644);
++MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
++		 "SNB B2B DSD split-BAR 5 32-bit address");
++
+ #ifndef ioread64
+ #ifdef readq
+ #define ioread64 readq
+@@ -2086,14 +2125,14 @@ static const struct intel_ntb_xlat_reg snb_sec_xlat = {
+ 	.bar2_xlat		= SNB_SBAR23XLAT_OFFSET,
+ };
+ 
+-static const struct intel_b2b_addr snb_b2b_usd_addr = {
++static struct intel_b2b_addr snb_b2b_usd_addr = {
+ 	.bar2_addr64		= SNB_B2B_BAR2_USD_ADDR64,
+ 	.bar4_addr64		= SNB_B2B_BAR4_USD_ADDR64,
+ 	.bar4_addr32		= SNB_B2B_BAR4_USD_ADDR32,
+ 	.bar5_addr32		= SNB_B2B_BAR5_USD_ADDR32,
+ };
+ 
+-static const struct intel_b2b_addr snb_b2b_dsd_addr = {
++static struct intel_b2b_addr snb_b2b_dsd_addr = {
+ 	.bar2_addr64		= SNB_B2B_BAR2_DSD_ADDR64,
+ 	.bar4_addr64		= SNB_B2B_BAR4_DSD_ADDR64,
+ 	.bar4_addr32		= SNB_B2B_BAR4_DSD_ADDR32,
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
