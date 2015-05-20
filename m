@@ -1,109 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37331 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751716AbbETJQV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 May 2015 05:16:21 -0400
-Date: Wed, 20 May 2015 10:16:15 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 May 2015 22:00:32 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Thomas Gleixner <tglx@linutronix.de>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFC/RFT PATCH 2/2] ARM64: kernel: pci: implement PCI device
- resources claiming
-Message-ID: <20150520091615.GD29274@red-moon>
-References: <1431614537-16136-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1431614537-16136-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150519232531.GZ31666@google.com>
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+In-Reply-To: <alpine.DEB.2.11.1505201750280.4225@nanos>
+Message-ID: <alpine.DEB.2.10.1505202155420.2642@hadrien>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com>
+ <alpine.DEB.2.11.1505201750280.4225@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150519232531.GZ31666@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-On Wed, May 20, 2015 at 12:25:31AM +0100, Bjorn Helgaas wrote:
-> Hi Lorenzo,
-> 
-> On Thu, May 14, 2015 at 03:42:16PM +0100, Lorenzo Pieralisi wrote:
-> > When a device is scanned and added to the PCI bus, its resources
-> > should be claimed to validate the BARs configuration and to assign
-> > them a parent resource so that the resource hierarchy can be sanity
-> > checked.
-> > 
-> > This patch adds code that carries out PCI device resources claiming to
-> > the ARM64 pcibios_add_device implementation so that device resources
-> > are claimed by the core PCI layer upon PCI device initialization on
-> > ARM64 systems.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Liviu Dudau <liviu.dudau@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Seems like Suravee proposed a tweak?  Can you post a v2 with that
-> incorporated if necessary?
 
-I can post a v2, but I am not happy about that tweak, I want to
-understand why pci_read_bridge_bases has to be executed only on
-PCI_PROBE_ONLY systems and why it can't be done in generic code in the
-first place - ie pci_scan_child_bus(), I guess as I mentioned that in
-some archs this can trigger regressions, if you have an opinion please
-let me know, when we agree I will drop a v2 on the lists.
+On Wed, 20 May 2015, Thomas Gleixner wrote:
 
-Thanks,
-Lorenzo
+> B1;2802;0cOn Wed, 20 May 2015, Jiang Liu wrote:
+> > On 2015/5/20 23:25, Thomas Gleixner wrote:
+> > > On Wed, 20 May 2015, Jiang Liu wrote:
+> > >> --- a/include/linux/irqdesc.h
+> > >> +++ b/include/linux/irqdesc.h
+> > >> @@ -99,6 +99,11 @@ static inline struct irq_desc *irq_data_to_desc(struct irq_data *data)
+> > >>  	return container_of(data->common, struct irq_desc, irq_common_data);
+> > >>  }
+> > >>
+> > >> +static inline unsigned int irq_desc_get_irq(struct irq_desc *desc)
+> > >> +{
+> > >> +	return desc->irq_data.irq;
+> > >> +}
+> > >> +
+> > >
+> > > Does not apply either.
+> > Hi Thomas,
+> > 	Will check the base again.
+> > 	Please do not apply patch after [14/25]. There are here to
+> > ask for comments, there are still building issues with patch after
+> > [14/25]. Just help to comment whether it's on the right direction.
+> > If so, I will send another version for formal review.
+>
+> I think you are doing that conversion wrong. You should first change
+> all handlers which use the irq argument to:
+>
+>     handler(unsigned __irq, *desc)
+>
+> and add the local variable
+>
+>     unsigned irq;
+>
+> or
+>
+>     unsigned irq = irq_desc_get_irq(desc);
+>
+> for those.
+>
+> So that results in a pretty small series of patches.
+>
+> Once that is done, you can remove the irq argument in one go treewide.
+>
+> And you should do that with scripting aid. Coccinelle is the proper
+> tool for this. If you have problems with cocci, you can politely ask
+> Julia (Cc'ed) for help. She's the master of coccinelle :)
+>
+> The purpose of the script is to:
+>
+>     1) Identify all handlers
+>
+>        This can be done by analyzing the arguments of
+>
+>        	    __irq_set_handler()
+> 	    irq_set_handler()
+> 	    irq_set_chained_handler()
+> 	    irq_alloc_generic_chip()
+> 	    irq_alloc_domain_generic_chips()
+> 	    irq_set_chip_and_handler_name()
+> 	    irq_set_chip_and_handler()
+> 	    __irq_set_handler_locked()
+> 	    __irq_set_chip_handler_name_locked()
+> 	    __irq_set_preflow_handler()
+>
+> 	If the argument is a function local to the file step 2 can
+> 	take place.
+>
+> 	If it's a extern function, then the script should at least
+> 	print out the function names. Those are in most of the cases
+> 	the generic flow handler functions.
 
-> Bjorn
-> 
-> > ---
-> >  arch/arm64/kernel/pci.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index 4095379..c0a88ca 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -43,8 +43,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> >   */
-> >  int pcibios_add_device(struct pci_dev *dev)
-> >  {
-> > +	struct resource *res;
-> > +	int i;
-> > +
-> >  	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> >  
-> > +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> > +		res = &dev->resource[i];
-> > +		if (res->parent || !res->flags)
-> > +			continue;
-> > +		pci_claim_resource(dev, i);
-> > +	}
-> > +
-> >  	return 0;
-> >  }
-> >  
-> > -- 
-> > 2.2.1
-> > 
-> 
+Looks reasonable.
+
+>     2) Check the handlers whether they use the irq argument
+>
+>        For those which do:
+>
+>           Check whether they just use the argument instead of a local
+>        	  variable, i.e. the first usage is an assignment. In that
+>        	  case rename the argument to __irq and add a local variable
+>
+> 	      unsigned int irq;
+>
+> 	  If they use the irq argument for some computation or as
+>        	  argument to another function, then you need to rename the
+>        	  argument as well and add:
+>
+>        	      unsigned int irq = irq_get_desc_irq(desc);
+
+Scripting this may be a little complex, because the variable can be used
+in one way in one execution path (eg if branch) and another way (or not at
+all) in another.  Let me know if help is needed.
+
+julia
+
+> So this results in a series of patches which can be merged right
+> away. If that lot has hit Linus tree and right after -rc1, we run the
+> script again and find and fix stuff which got added throughout the
+> merge window. That might result in 0 to n patches.
+>
+> The last step is another script which does:
+>
+>     1) Identify all handlers
+>
+>     2) Remove the irq argument
+>
+> We can send that right after -rc1 so no new users can trickle in.
+>
+> It's really important to do that with scripts. It seems you try to do
+> it via compile testing. But that will fail as you CANNOT execute all
+> possible config combinations.
+>
+> Thanks,
+>
+> 	tglx
+>
+>
