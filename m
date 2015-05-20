@@ -1,126 +1,321 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 May 2015 15:39:36 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: David Airlie <airlied@redhat.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Airlie <airlied@linux.ie>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:24082 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbbETGPb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 02:15:31 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
-Subject: Re: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
-Message-ID: <20150520203936.GC32152@google.com>
-References: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
- <20150519224452.GT31666@google.com>
- <CAB=NE6VhdEpiTrxW=VqjsJ94pDzcL5XwEgJyJ07D3-14KAdt9g@mail.gmail.com>
- <CAErSpo6B3_vRq-4YTSPg4f927WChZ4MXnZRY7wWCvQgZJ=9eOQ@mail.gmail.com>
- <CAB=NE6U8Fg1TuU9ceVCBHJwR2j+DetDz+L3ZqcJzvSy3_wvPUA@mail.gmail.com>
- <1347189446.1486831.1432078140756.JavaMail.zimbra@redhat.com>
- <CAB=NE6VkAT7JidB4ty0C1tAWTc__-tgTvzHa5OdPazrDzCv0-g@mail.gmail.com>
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [RFC PATCH v1 2/3] PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
+Date: Wed, 20 May 2015 14:21:40 +0800
+Message-ID: <1432102901-186201-3-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1432102901-186201-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1432102901-186201-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6VkAT7JidB4ty0C1tAWTc__-tgTvzHa5OdPazrDzCv0-g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 04:45:30PM -0700, Luis R. Rodriguez wrote:
-> On Tue, May 19, 2015 at 4:29 PM, David Airlie <airlied@redhat.com> wrote:
-> >
-> >> On Tue, May 19, 2015 at 4:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> > [-cc Venkatesh (bouncing)
-> >> >
-> >> > On Tue, May 19, 2015 at 5:46 PM, Luis R. Rodriguez
-> >> > <mcgrof@do-not-panic.com> wrote:
-> >> >> On Tue, May 19, 2015 at 3:44 PM, Bjorn Helgaas <bhelgaas@google.com>
-> >> >> wrote:
-> >> >>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >> >>
-> >> >> Thanks! Who's tree should this go through?
-> >> >
-> >> > I don't know.  This is the only patch that went to linux-pci, so I
-> >> > haven't seen the rest.
-> >>
-> >> Oh I only rev'd a v5 for 1/5 as that's the only one that had feedback
-> >> asking for changes.
-> >>
-> >> Patch v4 2/5 was for "lib: devres: add pcim_iomap_wc() variants", you
-> >> had questions about EXPORT_SYMBOL_GPL() and the fact that this is not
-> >> yet used. I replied. This patch can then be ignored but again, I'd
-> >> hate for folks to go in and try to add a non EXPORT_SYMBOL_GPL()
-> >> symbol of this.
+This patch adds PCIe host support for Hisilicon Soc Hip05.
 
-I'm not really a fan of adding code before it's needed.
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/host/Kconfig     |   5 +
+ drivers/pci/host/Makefile    |   1 +
+ drivers/pci/host/pcie-hisi.c | 252 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 258 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-hisi.c
 
-But even when we have a user and that objection is resolved, I'd
-like to have a little more guidance on the difference between
-EXPORT_SYMBOL() and EXPORT_SYMBOL_GPL(), e.g., a patch to clarify
-what's in Documentation/DocBook/kernel-hacking.tmpl.  I can't
-evaluate that issue based on "current trends and reality"; I need
-something a little more formal.
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 1dfb567..486d822 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -125,4 +125,9 @@ config PCIE_IPROC_PLATFORM
+ 	  Say Y here if you want to use the Broadcom iProc PCIe controller
+ 	  through the generic platform bus interface
+ 
++config PCI_HISI
++	depends on OF && ARM64
++	bool "Hisilicon Soc HIP05 PCIe controller"
++	select PCIE_DW
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index f733b4e..562142e 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -15,3 +15,4 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
++obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+new file mode 100644
+index 0000000..3f8cb9a
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -0,0 +1,252 @@
++/*
++ * PCIe host controller driver for Hisilicon Hip05 SoCs
++ *
++ * Copyright (C) 2014 Hisilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
++
++#include "pcie-designware.h"
++
++#define PCIE_SUBCTRL_MODE_REG                           (0x2800)
++#define PCIE_SUBCTRL_SYS_STATE4_REG                     (0x6818)
++#define PCIE_SLV_DBI_MODE                               (0x0)
++#define PCIE_SLV_SYSCTRL_MODE                           (0x1)
++#define PCIE_SLV_CONTENT_MODE                           (0x2)
++#define PCIE_LTSSM_LINKUP_STATE                         (0x11)
++#define PCIE_LTSSM_STATE_MASK                           (0x3F)
++#define PCIE_MSI_CONTEXT_VALUE                          (0x1011000)
++#define PCIE_MSI_TRANS_ENABLE                           (0x1ff0)
++#define PCIE_MSI_LOW_ADDRESS                            (0x1b4)
++#define PCIE_MSI_HIGH_ADDRESS                           (0x1c4)
++
++#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
++
++struct hisi_pcie {
++	void __iomem *subctrl_base;
++	void __iomem *reg_base;
++	struct msi_controller *msi;
++	u32 port_id;
++	struct pcie_port pp;
++};
++
++static inline void hisi_pcie_subctrl_writel(struct hisi_pcie *pcie,
++					    u32 val, u32 reg)
++{
++	writel(val, pcie->subctrl_base + reg);
++}
++
++static inline u32 hisi_pcie_subctrl_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->subctrl_base + reg);
++}
++
++static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
++					u32 val, u32 reg)
++{
++	writel(val, pcie->reg_base + reg);
++}
++
++static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->reg_base + reg);
++}
++
++/*
++ * Change mode to indicate the same reg_base to base of PCIe host configure
++ * registers, base of RC configure space or base of vmid/asid context table
++ */
++static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
++{
++	u32 val;
++	u32 bit_mask;
++	u32 bit_shift;
++	u32 port_id = pcie->port_id;
++	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
++
++	if ((port_id == 1) || (port_id == 2)) {
++		bit_mask = 0xc;
++		bit_shift = 0x2;
++	} else {
++		bit_mask = 0x6;
++		bit_shift = 0x1;
++	}
++
++	val = hisi_pcie_subctrl_readl(pcie, reg);
++	val = (val & (~bit_mask)) | (mode << bit_shift);
++	hisi_pcie_subctrl_writel(pcie, val, reg);
++}
++
++/* Configure vmid/asid table in PCIe host */
++static void hisi_pcie_config_context(struct hisi_pcie *pcie)
++{
++	int i;
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
++
++	for (i = 0; i < 0x400; i++)
++		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
++
++	for (i = 0x400; i < 0x800; i++)
++		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	hisi_pcie_apb_writel(pcie, 0xb7010040, PCIE_MSI_LOW_ADDRESS);
++	hisi_pcie_apb_writel(pcie, 0x0, PCIE_MSI_HIGH_ADDRESS);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_CONTEXT_VALUE, 0x10);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, 0x1c8);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
++}
++
++static int hisi_pcie_link_up(struct pcie_port *pp)
++{
++	u32 val;
++
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	val = hisi_pcie_subctrl_readl(hisi_pcie, PCIE_SUBCTRL_SYS_STATE4_REG +
++				      0x100 * hisi_pcie->port_id);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static
++int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
++{
++	struct device_node *msi_node;
++	struct msi_controller *msi;
++	struct device_node *np = pp->dev->of_node;
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	msi_node = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_node) {
++		pr_err("failed to find msi-parent\n");
++		return -ENODEV;
++	}
++
++	msi = of_pci_find_msi_chip_by_node(msi_node);
++	hisi_pcie->msi = msi;
++
++	pp->irq_domain = msi->domain;
++
++	return 0;
++}
++
++static struct pcie_host_ops hisi_pcie_host_ops = {
++	.link_up = hisi_pcie_link_up,
++	.msi_host_init = hisi_pcie_msi_host_init,
++};
++
++static int __init hisi_add_pcie_port(struct pcie_port *pp,
++				     struct platform_device *pdev)
++{
++	int ret;
++	u32 port_id;
++	struct resource busn;
++
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
++		dev_err(&pdev->dev, "failed to read port-id\n");
++		return -EINVAL;
++	}
++	if (port_id > 3) {
++		dev_err(&pdev->dev, "Invalid port-id\n");
++		return -EINVAL;
++	}
++
++	hisi_pcie->port_id = port_id;
++
++	if (of_pci_parse_bus_range(pdev->dev.of_node, &busn)) {
++		dev_err(&pdev->dev, "failed to parse bus-ranges\n");
++		return -EINVAL;
++	}
++
++	pp->root_bus_nr = busn.start;
++	pp->ops = &hisi_pcie_host_ops;
++
++	hisi_pcie_config_context(hisi_pcie);
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init hisi_pcie_probe(struct platform_device *pdev)
++{
++	struct hisi_pcie *hisi_pcie;
++	struct pcie_port *pp;
++	struct resource *reg;
++	struct resource *subctrl;
++	int ret;
++
++	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
++	if (!hisi_pcie)
++		return -ENOMEM;
++
++	pp = &hisi_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	subctrl = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subctrl");
++	hisi_pcie->subctrl_base = devm_ioremap_nocache(&pdev->dev,
++					subctrl->start, resource_size(subctrl));
++	if (IS_ERR(hisi_pcie->subctrl_base)) {
++		dev_err(pp->dev, "cannot get subctrl base\n");
++		return PTR_ERR(hisi_pcie->subctrl_base);
++	}
++
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
++	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
++	if (IS_ERR(hisi_pcie->reg_base)) {
++		dev_err(pp->dev, "cannot get reg base\n");
++		return PTR_ERR(hisi_pcie->reg_base);
++	}
++
++	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
++
++	ret = hisi_add_pcie_port(pp, pdev);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, hisi_pcie);
++
++	return ret;
++}
++
++static const struct of_device_id hisi_pcie_of_match[] = {
++	{.compatible = "hisilicon,hip05-pcie",},
++	{},
++};
++
++MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
++
++static struct platform_driver hisi_pcie_driver = {
++	.probe  = hisi_pcie_probe,
++	.driver = {
++		   .name = "hisi-pcie",
++		   .owner = THIS_MODULE,
++		   .of_match_table = hisi_pcie_of_match,
++	},
++};
++
++module_platform_driver(hisi_pcie_driver);
++
++MODULE_AUTHOR("Zhou Wang <wangzhou1@huawei.com>");
++MODULE_AUTHOR("Dacai Zhu <zhudacai@huawei.com>");
++MODULE_LICENSE("GPL v2");
+-- 
+1.9.1
 
-If we want to allow non-GPL modules and we want to give them a
-consistent kernel interface, even though it might be lacking some
-implementation-specific things, I can follow that guideline.
-
-That's how I read the current kernel-hacking.tmpl text
-("[EXPORT_SYMBOL_GPL()] implies that the function is considered
-an internal implementation issue, and not really an interface"),
-and that would lead me to suggest EXPORT_SYMBOL() in this case.
-
-If we don't care about consistency, and EXPORT_SYMBOL_GPL()
-should be used at the developer's preference, I can follow that
-guideline instead, but it would be easier if it were made more
-explicit.
-
-> >> Patches v4 3-5 remain intact, I had addressed it to you, but failed to
-> >> Cc linux-pci, I'll go ahead and bounce those now.
-> >>
-> >> Just today Dave Arlie provided a Reviewed-by to some simple
-> >> framebuffer device driver changes. I wonder if these changes should go
-> >> through the framebuffer tree provided you already gave the Acked-by
-> >> for the PCI parts, or if the PCI parts should go in first and only
-> >> later (I guess we'd have to wait) then intake the driver changes that
-> >> use the symbol.
-> >>
-> >> What we decide should likely also apply to the series that adds
-> >> pci_ioremap_wc_bar() and makes use of it on drivers.
-> >>
-> >> Dave, Tomi, any preference?
-> >>
-> >
-> > Maybe send Bjorn a pull request with a tree with the pci changes, and the fb changes reviewed-by me and acked by Tomi.
-> >
-> > Seems like it could be the simplest path forward.
-> 
-> Works with me, Bjorn, are you OK with that?
-
-Can you incorporate the acks and just post a complete v6?  I don't like
-trying to assemble patches from different versions of a series; it's too
-much administrative hassle and too easy for me to screw up.
-
-Bjorn
