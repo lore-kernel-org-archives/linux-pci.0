@@ -1,174 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40751 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbbEKHlj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 03:41:39 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 17:41:37 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 13957357804F
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:41:34 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B7fP2N10682502
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:41:34 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B7f0ni031194
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:41:01 +1000
-Date: Mon, 11 May 2015 17:40:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 00/21] PowerPC/PowerNV: PCI Slot Management
-Message-ID: <20150511074035.GA17246@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <554D4DDD.6010607@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554D4DDD.6010607@ozlabs.ru>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:34146 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717AbbETXTQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 19:19:16 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: bhelgaas@google.com
+Cc: tomi.valkeinen@ti.com, airlied@linux.ie,
+	linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Subject: [PATCH v6 4/4] video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
+Date: Wed, 20 May 2015 16:08:13 -0700
+Message-Id: <1432163293-20965-5-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 09, 2015 at 09:59:25AM +1000, Alexey Kardashevskiy wrote:
->On 05/01/2015 04:02 PM, Gavin Shan wrote:
->>The series of patches intend to support PCI slot for PowerPC PowerNV platform,
->>which is running on top of skiboot firmware. The patchset requires corresponding
->>changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
->>for review. The PCI slots are exposed by skiboot with device node properties,
->>and kernel utilizes those properties to populated PCI slots accordingly.
->>
->>The original PCI infrastructure on PowerNV platform can't support hotplug
->>because the PE is assigned during PHB fixup time, which is called for once
->>during system boot time. For this, the PCI infrastructure on PowerNV platform
->>has been reworked for a lot. After that, the PE and its corresponding resources
->>(IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
->>PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
->>resources, on P8 strictly speaking).
->
->Out of curiosity - does this PCI scan happen when memory subsystem is
->initialized? More precisely, after these changes, won't
->pnv_pci_ioda2_setup_dma_pe() be called too early after boot so I won't be
->able to use kmalloc() to allocate iommu_table's?
->
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-PCI scan (enumeration) is invoked quite late during system bootup time by
-subsys_initcall(). When it's called, the slab should have been initialized.
+This driver uses the same area for MTRR as for the ioremap().
+Convert the driver from using the x86 specific MTRR code to
+the architecture agnostic arch_phys_wc_add(). arch_phys_wc_add()
+will avoid MTRR if write-combining is available, in order to
+take advantage of that also ensure the ioremap'd area is requested
+as write-combining.
 
->Also, checkpatch.pl failed multiple times on the series. Please fix.
->
+There are a few motivations for this:
 
-Thanks for pointing it out, I'll fix them one by one.
+a) Take advantage of PAT when available
 
->>Each PE will maintain a reference count,
->>which is (number of child PCI devices + 1). That indicates when last child PCI
->>device leaves the PE, the PE and its included resources will be relased and put
->>back into free pool again. With this design, the PE will be released when EEH PE
->>is released. PATCH[1 - 8] are related to this part.
->>
->> From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
->>resets to EEH. The kernel gets to know if skiboot supports various reset on one
->>particular PCI slot through device-tree node. If it does, EEH will utilize the
->>functionality provided by skiboot. Besides, the device-tree nodes have to change
->>in order to support PCI hotplug. For example, when one PCI adapter inserted to
->>one slot, its device-tree node should be added to the system dynamically. Conversely,
->>the device-tree node should be removed from the system when the PCI adapter is going
->>to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
->>they should be added/removed accordingly during PCI hotplug. Patch[9 - 20] are
->>doing the related work.
->>
->>The last patch is the standalone PCI hotplug driver for PowerNV platform. When
->>removing PCI adapter from one PCI slot, which is invoked by command in userland,
->>the skiboot will power off the slot to save power and remove all device-tree
->>nodes for all PCI devices behind the slot. Conversely, the Power to the slot
->>is turned on, the PCI devices behind the slot is rescanned, and the device-tree
->>nodes for those newly detected PCI devices will be built in skiboot. For both
->>of cases, one message will be sent to kernel by skiboot so that the kernel
->>can adjust the device-tree accordingly. At the same time, the kernel also have
->>to deallocate or allocate PE# and its related resources (PE# and so on) for the
->>removed/added PCI devices.
->>
->>Changelog
->>=========
->>v4:
->>    * Rebased to 4.1.RC1
->>    * Added API to unflatten FDT blob to device node sub-tree, which is attached
->>      the indicated parent device node. The original mechanism based on formatted
->>      string stream has been dropped.
->>    * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
->>      was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
->>      Support" depends on that.
->>v3:
->>    * Rebased to 4.1.RC0
->>    * PowerNV PCI infrasturcture is total refactored in order to support PCI
->>      hotplug. The PowerNV hotplug driver is also reworked a lot because of
->>      the changes in skiboot in order to support PCI hotplug.
->>
->>Gavin Shan (21):
->>   pci: Add pcibios_setup_bridge()
->>   powerpc/powernv: Enable M64 on P7IOC
->>   powerpc/powernv: M64 support improvement
->>   powerpc/powernv: Improve IO and M32 mapping
->>   powerpc/powernv: Improve DMA32 segment assignment
->>   powerpc/powernv: Create PEs dynamically
->>   powerpc/powernv: Release PEs dynamically
->>   powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
->>   powerpc/powernv: Use PCI slot reset infrastructure
->>   powerpc/powernv: Fundamental reset for PCI bus reset
->>   powerpc/pci: Don't scan empty slot
->>   powerpc/pci: Move pcibios_find_pci_bus() around
->>   powerpc/powernv: Introduce pnv_pci_poll()
->>   powerpc/powernv: Functions to get/reset PCI slot status
->>   powerpc/pci: Delay creating pci_dn
->>   powerpc/pci: Create eeh_dev while creating pci_dn
->>   powerpc/pci: Export traverse_pci_device_nodes()
->>   powerpc/pci: Update bridge windows on PCI plugging
->>   drivers/of: Support adding sub-tree
->>   powerpc/powernv: Select OF_DYNAMIC
->>   pci/hotplug: PowerPC PowerNV PCI hotplug driver
->>
->>  arch/powerpc/include/asm/eeh.h                 |    7 +-
->>  arch/powerpc/include/asm/opal-api.h            |    7 +-
->>  arch/powerpc/include/asm/opal.h                |    7 +-
->>  arch/powerpc/include/asm/pci-bridge.h          |    7 +-
->>  arch/powerpc/include/asm/pnv-pci.h             |    5 +
->>  arch/powerpc/include/asm/ppc-pci.h             |    7 +-
->>  arch/powerpc/kernel/eeh_dev.c                  |   20 +-
->>  arch/powerpc/kernel/pci-common.c               |   18 +-
->>  arch/powerpc/kernel/pci-hotplug.c              |   44 +-
->>  arch/powerpc/kernel/pci_dn.c                   |  119 +-
->>  arch/powerpc/platforms/maple/pci.c             |   35 +-
->>  arch/powerpc/platforms/pasemi/pci.c            |    3 -
->>  arch/powerpc/platforms/powermac/pci.c          |   39 +-
->>  arch/powerpc/platforms/powernv/Kconfig         |    1 +
->>  arch/powerpc/platforms/powernv/eeh-powernv.c   |  245 ++--
->>  arch/powerpc/platforms/powernv/opal-wrappers.S |    3 +
->>  arch/powerpc/platforms/powernv/pci-ioda.c      | 1657 +++++++++++++++---------
->>  arch/powerpc/platforms/powernv/pci.c           |   64 +-
->>  arch/powerpc/platforms/powernv/pci.h           |   52 +-
->>  arch/powerpc/platforms/pseries/msi.c           |    4 +-
->>  arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
->>  arch/powerpc/platforms/pseries/setup.c         |    9 +-
->>  drivers/of/dynamic.c                           |   19 +-
->>  drivers/of/fdt.c                               |  133 +-
->>  drivers/pci/hotplug/Kconfig                    |   12 +
->>  drivers/pci/hotplug/Makefile                   |    4 +
->>  drivers/pci/hotplug/powernv_php.c              |  146 +++
->>  drivers/pci/hotplug/powernv_php.h              |   78 ++
->>  drivers/pci/hotplug/powernv_php_slot.c         |  643 +++++++++
->>  drivers/pci/setup-bus.c                        |   12 +-
->>  include/linux/of.h                             |    2 +
->>  include/linux/of_fdt.h                         |    1 +
->>  include/linux/pci.h                            |    1 +
->>  33 files changed, 2473 insertions(+), 963 deletions(-)
->>  create mode 100644 drivers/pci/hotplug/powernv_php.c
->>  create mode 100644 drivers/pci/hotplug/powernv_php.h
->>  create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
->>
+b) Help bury MTRR code away, MTRR is architecture specific and on
+   x86 its replaced by PAT
 
-Thanks,
-Gavin
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()")
+
+The conversion done is expressed by the following Coccinelle
+SmPL patch, it additionally required manual intervention to
+address all the #ifdery and removal of redundant things which
+arch_phys_wc_add() already addresses such as verbose message
+about when MTRR fails and doing nothing when we didn't get
+an MTRR.
+
+@ mtrr_found @
+expression index, base, size;
+@@
+
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
+
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
+
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
+
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+Generated-by: Coccinelle SmPL
+Cc: Rob Clark <robdclark@gmail.com>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/video/fbdev/vt8623fb.c | 31 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/video/fbdev/vt8623fb.c b/drivers/video/fbdev/vt8623fb.c
+index ea7f056..60f24828 100644
+--- a/drivers/video/fbdev/vt8623fb.c
++++ b/drivers/video/fbdev/vt8623fb.c
+@@ -26,13 +26,9 @@
+ #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
+ #include <video/vga.h>
+ 
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
+-#endif
+-
+ struct vt8623fb_info {
+ 	char __iomem *mmio_base;
+-	int mtrr_reg;
++	int wc_cookie;
+ 	struct vgastate state;
+ 	struct mutex open_lock;
+ 	unsigned int ref_count;
+@@ -99,10 +95,7 @@ static struct svga_timing_regs vt8623_timing_regs     = {
+ /* Module parameters */
+ 
+ static char *mode_option = "640x480-8@60";
+-
+-#ifdef CONFIG_MTRR
+ static int mtrr = 1;
+-#endif
+ 
+ MODULE_AUTHOR("(c) 2006 Ondrej Zajicek <santiago@crfreenet.org>");
+ MODULE_LICENSE("GPL");
+@@ -112,11 +105,8 @@ module_param(mode_option, charp, 0644);
+ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ module_param_named(mode, mode_option, charp, 0);
+ MODULE_PARM_DESC(mode, "Default video mode e.g. '648x480-8@60' (deprecated)");
+-
+-#ifdef CONFIG_MTRR
+ module_param(mtrr, int, 0444);
+ MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
+ 
+ 
+ /* ------------------------------------------------------------------------- */
+@@ -710,7 +700,7 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	info->fix.mmio_len = pci_resource_len(dev, 1);
+ 
+ 	/* Map physical IO memory address into kernel space */
+-	info->screen_base = pci_iomap(dev, 0, 0);
++	info->screen_base = pci_iomap_wc(dev, 0, 0);
+ 	if (! info->screen_base) {
+ 		rc = -ENOMEM;
+ 		dev_err(info->device, "iomap for framebuffer failed\n");
+@@ -781,12 +771,9 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	/* Record a reference to the driver data */
+ 	pci_set_drvdata(dev, info);
+ 
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
++	if (mtrr)
++		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++						  info->fix.smem_len);
+ 
+ 	return 0;
+ 
+@@ -816,13 +803,7 @@ static void vt8623_pci_remove(struct pci_dev *dev)
+ 	if (info) {
+ 		struct vt8623fb_info *par = info->par;
+ 
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
+-
++		arch_phys_wc_del(par->wc_cookie);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
+ 
+-- 
+2.3.2.209.gd67f9d5.dirty
 
