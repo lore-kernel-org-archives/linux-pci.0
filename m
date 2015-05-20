@@ -1,128 +1,278 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:43659 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934025AbbELXRj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 19:17:39 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 13 May 2015 09:17:38 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 4BDDF2BB0052
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:17:35 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4CNHRuo39583890
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:17:35 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4CNH20T021615
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:17:02 +1000
-Date: Wed, 13 May 2015 09:16:37 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 8/9] powerpc/powernv: Support PCI config restore for
- VFs
-Message-ID: <20150512231637.GA8004@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-9-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150511042238.GA19629@gwshan>
- <20150512013134.GA5814@richard>
- <20150512063403.GA21256@gwshan>
- <20150512081645.GD16788@richard>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:4100 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbbETTvc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 15:51:32 -0400
+From: William Davis <wdavis@nvidia.com>
+To: "markh@compro.net" <markh@compro.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "joro@8bytes.org" <joro@8bytes.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Terence Ripperda <TRipperda@nvidia.com>,
+	"John Hubbard" <jhubbard@nvidia.com>,
+	"jglisse@redhat.com" <jglisse@redhat.com>,
+	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: RE: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+Date: Wed, 20 May 2015 19:51:30 +0000
+Message-ID: <202fc76456cf4f3aac02034d5366780c@HQMAIL106.nvidia.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+ <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
+ <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>
+ <ea891abe867444d193742030348a6ad1@HQMAIL106.nvidia.com>
+ <555CDD6F.40304@compro.net>
+In-Reply-To: <555CDD6F.40304@compro.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150512081645.GD16788@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 12, 2015 at 04:16:45PM +0800, Wei Yang wrote:
->On Tue, May 12, 2015 at 04:34:03PM +1000, Gavin Shan wrote:
->>>
->>>>>+	/* Disable Completion Timeout */
->>>>>+	if (pcie_cap) {
->>>>>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
->>>>>+		if (cap2 & 0x10) {
->>>>>+			pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
->>>>>+			cap2 |= 0x10;
->>>>>+			pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
->>>>>+		}
->>>>>+	}
->>>>>+
->>>>>+	/* Enable SERR and parity checking */
->>>>>+	pnv_pci_cfg_read(pdn, PCI_COMMAND, 2, &cmd);
->>>>>+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
->>>>>+	pnv_pci_cfg_write(pdn, PCI_COMMAND, 2, cmd);
->>>>>+
->>>>>+	/* Enable report various errors */
->>>>>+	if (pcie_cap) {
->>>>>+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
->>>>>+		devctl &= ~PCI_EXP_DEVCTL_CERE;
->>>>>+		devctl |= (PCI_EXP_DEVCTL_NFERE |
->>>>>+			   PCI_EXP_DEVCTL_FERE |
->>>>>+			   PCI_EXP_DEVCTL_URRE);
->>>>>+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
->>>>>+	}
->>>>>+
->>>>>+	/* Enable ECRC generation and check */
->>>>>+	if (pcie_cap) {
->>>>>+		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
->>>>>+		pnv_pci_cfg_read(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
->>>>>+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
->>>>>+		pnv_pci_cfg_write(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
->>>>>+	}
->>>>>+
->>>>>+	return 0;
->>>>>+}
->>>>>+#endif /* CONFIG_PCI_IOV */
->>>>>+
->>>>
->>>>The code is copied over from skiboot firmware. I still dislike the fact that
->>>>we have to maintain two sets of similar functions in skiboot/kernel. I still
->>>>believe the way I suggested can help: the firmware exports the error routing
->>>>rules and kernel has support it based on the rules. With it, the skiboot is
->>>>the source of the information to avoid mismatching between kernel/firmware.
->>>
->>>Yes, it looks we have duplicate code in kernel and skiboot.
->>>
->>>As you suggest, if we export some bit map from device node, we still have the
->>>real logic in kernel, until we remove that part in skiboot.
->>>
->>>By removing that part in skiboot, we may have some compatibility problem. For
->>>example, an old kernel may not run on the new version of skiboot.
->>>
->>
->>It's fine to keep two set code which bear with same rule, which is exported
->>from skiboot. In that case, the rule is the only thing we have to care. We
->>don't need care the code any more to avoid mismatch between kernel/firmware.
->>
->
->Ok, duplication is reasonable, then the major point for this is we need to
->have a clear rule for restoring configuration for a device.
->
 
-Well, I have to explain a bit more if I didn't make myself clear enough, then
-you change the code in another way, which will waste your time.
 
-- From skiboot, each PHB's device node maintains the rules, which *could* be
-  described as the data structures I have given in previous replies if you
-  can't figure out better data structures.
-- Skiboot will reinitialize those devices for the following 3 cases: PCI
-  enumeration, PCI config space restore requested from EEH, after PCI hotplug/reset.
-  Obviously, the code needs changes to utilize the rules in PHB's device node.
-- Kernel will do similiar thing as skiboot will do: Reinitialize VFs according
-  to the rules in PHB's device node.
+> -----Original Message-----
+> From: Mark Hounschell [mailto:markh@compro.net]
+> Sent: Wednesday, May 20, 2015 2:16 PM
+> To: William Davis; Bjorn Helgaas
+> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
+> pci@vger.kernel.org; Terence Ripperda; John Hubbard; jglisse@redhat.com;
+> konrad.wilk@oracle.com; Jonathan Corbet; David S. Miller
+> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
+> documentation
+> 
+> On 05/20/2015 01:30 PM, William Davis wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: Mark Hounschell [mailto:markh@compro.net]
+> >> Sent: Wednesday, May 20, 2015 7:11 AM
+> >> To: Bjorn Helgaas; William Davis
+> >> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
+> >> pci@vger.kernel.org; Terence Ripperda; John Hubbard;
+> >> jglisse@redhat.com; konrad.wilk@oracle.com; Jonathan Corbet; David S.
+> >> Miller
+> >> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
+> >> documentation
+> >>
+> >> On 05/19/2015 07:43 PM, Bjorn Helgaas wrote:
+> >>> [+cc Dave, Jonathan]
+> >>>
+> >>> On Mon, May 18, 2015 at 01:25:01PM -0500, wdavis@nvidia.com wrote:
+> >>>> From: Will Davis <wdavis@nvidia.com>
+> >>>>
+> >>>> Add references to both the general API documentation as well as the
+> >> HOWTO.
+> >>>>
+> >>>> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> >>>> ---
+> >>>>    Documentation/DMA-API-HOWTO.txt | 39
+> >> +++++++++++++++++++++++++++++++++++++--
+> >>>>    Documentation/DMA-API.txt       | 36
+> +++++++++++++++++++++++++++++++--
+> >> ---
+> >>>>    2 files changed, 68 insertions(+), 7 deletions(-)
+> >>>>
+> >>>> diff --git a/Documentation/DMA-API-HOWTO.txt
+> >>>> b/Documentation/DMA-API-HOWTO.txt index 0f7afb2..89bd730 100644
+> >>>> --- a/Documentation/DMA-API-HOWTO.txt
+> >>>> +++ b/Documentation/DMA-API-HOWTO.txt
+> >>>> @@ -138,6 +138,10 @@ What about block I/O and networking buffers?
+> >>>> The
+> >> block I/O and
+> >>>>    networking subsystems make sure that the buffers they use are valid
+> >>>>    for you to DMA from/to.
+> >>>>
+> >>>> +In some systems, it may also be possible to DMA to and/or from a
+> >>>> +peer device's MMIO region, as described by a 'struct resource'.
+> >>>> +This is referred to as a peer-to-peer mapping.
+> >>>> +
+> >>>>    			DMA addressing limitations
+> >>>>
+> >>>>    Does your device have any DMA addressing limitations?  For
+> >>>> example, is @@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call
+> >>>> should have its
+> >> dma_unmap_{single,sg}()
+> >>>>    counterpart, because the bus address space is a shared resource and
+> >>>>    you could render the machine unusable by consuming all bus
+> addresses.
+> >>>>
+> >>>> +Peer-to-peer DMA mappings can be obtained using dma_map_resource()
+> >>>> +to map another device's MMIO region for the given device:
+> >>>> +
+> >>>> +	struct resource *peer_mmio_res = &other_dev->resource[0];
+> >>>> +	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
+> >>>> +						 offset, size, direction);
+> >>>> +	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
+> >>>> +	{
+> >>>> +		/*
+> >>>> +		 * If dma_handle == 0, dma_map_resource() is not
+> >>>> +		 * implemented, and peer-to-peer transactions will not
+> >>>> +		 * work.
+> >>>> +		 */
+> >>>> +		goto map_error_handling;
+> >>>> +	}
+> >>>> +
+> >>>> +	...
+> >>>> +
+> >>>> +	dma_unmap_resource(dev, dma_handle, size, direction);
+> >>>> +
+> >>>> +Here, "offset" means byte offset within the given resource.
+> >>>> +
+> >>>> +You should both check for a 0 return value and call
+> >>>> +dma_mapping_error(), as dma_map_resource() can either be not
+> >>>> +implemented or fail and return error as outlined under the
+> >> dma_map_single() discussion.
+> >>>> +
+> >>>> +You should call dma_unmap_resource() when DMA activity is
+> >>>> +finished, e.g., from the interrupt which told you that the DMA
+> transfer is done.
+> >>>> +
+> >>>>    If you need to use the same streaming DMA region multiple times
+> >>>> and
+> >> touch
+> >>>>    the data in between the DMA transfers, the buffer needs to be
+> synced
+> >>>>    properly in order for the CPU and device to see the most
+> >>>> up-to-date and @@ -765,8 +798,8 @@ failure can be determined by:
+> >>>>
+> >>>>    - checking if dma_alloc_coherent() returns NULL or dma_map_sg
+> >>>> returns 0
+> >>>>
+> >>>> -- checking the dma_addr_t returned from dma_map_single() and
+> >>>> dma_map_page()
+> >>>> -  by using dma_mapping_error():
+> >>>> +- checking the dma_addr_t returned from dma_map_single(),
+> >>>> +dma_map_resource(),
+> >>>> +  and dma_map_page() by using dma_mapping_error():
+> >>>>
+> >>>>    	dma_addr_t dma_handle;
+> >>>>
+> >>>> @@ -780,6 +813,8 @@ failure can be determined by:
+> >>>>    		goto map_error_handling;
+> >>>>    	}
+> >>>>
+> >>>> +- checking if dma_map_resource() returns 0
+> >>>> +
+> >>>>    - unmap pages that are already mapped, when mapping error occurs
+> >>>> in
+> >> the middle
+> >>>>      of a multiple page mapping attempt. These example are applicable
+> to
+> >>>>      dma_map_page() as well.
+> >>>> diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+> >>>> index 5208840..c25c549 100644
+> >>>> --- a/Documentation/DMA-API.txt
+> >>>> +++ b/Documentation/DMA-API.txt
+> >>>> @@ -283,14 +283,40 @@ and <size> parameters are provided to do
+> >>>> partial
+> >> page mapping, it is
+> >>>>    recommended that you never use these unless you really know what
+> the
+> >>>>    cache width is.
+> >>>>
+> >>>> +dma_addr_t
+> >>>> +dma_map_resource(struct device *dev, struct resource *res,
+> >>>> +		 unsigned long offset, size_t size,
+> >>>> +		 enum dma_data_direction_direction)
+> >>>> +
+> >>>> +API for mapping resources. This API allows a driver to map a peer
+> >>>> +device's resource for DMA. All the notes and warnings for the
+> >>>> +other APIs apply here. Also, the success of this API does not
+> >>>> +validate or guarantee that peer-to-peer transactions between the
+> >>>> +device and its peer will be functional. They only grant access so
+> >>>> +that if such transactions are possible, an IOMMU will not prevent
+> >>>> +them from succeeding.
+> >>>
+> >>> If the driver can't tell whether peer-to-peer accesses will actually
+> >>> work, this seems like sort of a dubious API.  I'm trying to imagine
+> >>> how a driver would handle this.  I guess whether peer-to-peer works
+> >>> depends on the underlying platform (not the devices themselves)?  If
+> >>> we run the driver on a platform where peer-to-peer *doesn't* work,
+> >>> what happens?  The driver can't tell, so we just rely on the user to
+> >>> say "this isn't working as expected"?
+> >>>
+> >>
+> >
+> > Yes, it's quite difficult to tell whether peer-to-peer will actually
+> > work, and it usually involves some probing and heuristics on the driver's
+> part.
+> > I wouldn't say that this makes it a dubious API - it's a piece of the
+> > puzzle that's absolutely necessary for a driver to set up peer-to-peer
+> > in an IOMMU environment.
+> >
+> 
+> I currently just do
+> 
+> page = virt_to_page(__va(bus_address));
+> 
+> then just use the normal API. Works for writes anyway.
+> 
 
-Yes, we have duplicated code, not rules. Hopefully, I make myself clear enough.
+What platform is this on? I don't understand how that could work for
+peer-to-peer. As I understand it, there are no 'struct page's for MMIO
+regions, and you could actually end up with a very different page as a
+result of that unchecked translation (e.g., a "valid" struct page, but
+not in the peer's MMIO range at all).
 
->Than I suggest we could have another patch set to handle this. Define the rule
->clearly and restore the configuration in kernel when skiboot firmware export
->such rules.
->
+> >> Most currently available hardware doesn't allow reads but will allow
+> >> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+> >> this way. I'm pretty sure all Intel chipsets are this way also.
+> >
+> > Most != all. As an example, Mellanox offers the ability to do
+> > peer-to-peer
+> > transfers:
+> >
+> > http://www.mellanox.com/page/products_dyn?product_family=116
+> >
+> > which would indicate there is at least some platform out there which
+> > allows peer-to-peer reads. I don't think that that being a minority
+> > configuration should preclude it from support.
+> >
+> >> What happens with reads
+> >> is they are just dropped with no indication of error other than the
+> >> data will not be as expected. Supposedly the PCIe spec does not even
+> >> require any peer-to-peer support. Regular PCI there is no problem and
+> >> this API could be useful. However I doubt seriously you will find a
+> >> pure PCI motherboard that has an IOMMU.
+> >>
+> >> I don't understand the chipset manufactures reasoning for disabling
+> >> PCIe peer-to-peer reads. We would like to make PCIe versions of our
+> >> cards but their application requires  peer-to-peer reads and writes.
+> >> So we cannot develop PCIe versions of the cards.
+> >>
+> >> Again, Regular PCI there is no problem and this API could be useful.
+> >> IOMMU or not.
+> >> If we had a pure PCI with IOMMU env, how will this API handle when
+> >> the 2 devices are on the same PCI bus. There will be NO IOMMU between
+> >> the devices on the same bus. Does this API address that configuration?
+> >>
+> >
+> > What is the expected behavior in this configuration? That the "mapping"
+> > simply be the bus address (as in the nommu case)?
+> >
+> 
+> I suspect just using the bus address would sort of defeat one or more
+> purposes of the IOMMU. The bus address would certainly be what I would want
+> to use though.
+> 
+> > In an IOMMU environment, the DMA ops would be one of the IOMMU
+> > implementations, so these APIs would create a mapping for the peer
+> > device resource, even if it's on the same bus. Would a transaction
+> > targeting that mapping be forwarded upstream until it hits an IOMMU,
+> > which would then send the translated request back downstream? Or is my
+> > understanding of this configuration incorrect?
+> >
+> 
+> It's my understanding of the IOMMU that is lacking here. I have no idea if
+> that is actually what would happen. Does it?
 
-Sure.
+It's a mildly educated guess, but I haven't tested this configuration to
+know for sure.
 
 Thanks,
-Gavin
+Will
+
+--
+nvpublic
 
