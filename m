@@ -1,316 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:54163 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468AbbEKHWi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 03:22:38 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 17:22:36 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 915552CE8052
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:22:34 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B7MQvR20971542
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:22:34 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B7M1iY013742
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 17:22:02 +1000
-Date: Mon, 11 May 2015 17:21:36 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 15/21] powerpc/pci: Delay creating pci_dn
-Message-ID: <20150511072136.GA14711@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-16-git-send-email-gwshan@linux.vnet.ibm.com>
- <554E1FF7.5020203@ozlabs.ru>
+Received: from mga14.intel.com ([192.55.52.115]:39296 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751203AbbETAef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 May 2015 20:34:35 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alexander Duyck <alexander.h.duyck@redhat.com>
+CC: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to
+ protect VPD operations
+Date: Wed, 20 May 2015 00:34:33 +0000
+Message-ID: <F47DC49C-CCC5-4693-8905-20ABCE6F5993@intel.com>
+References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
+ <555B78F7.60908@redhat.com> <20150519160158.00002cd6@unknown>
+ <555BD029.7050803@redhat.com>
+In-Reply-To: <555BD029.7050803@redhat.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554E1FF7.5020203@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 10, 2015 at 12:55:51AM +1000, Alexey Kardashevskiy wrote:
->On 05/01/2015 04:03 PM, Gavin Shan wrote:
->>The pci_dn instances are allocated from memblock or bootmem when
->>creating PCI controller (hoses) in setup_arch(). The PCI hotplug,
->>which will be supported by proceeding patches, will release PCI
->>device nodes and their corresponding pci_dn on unplugging event.
->>The pci_dn instance memory chunks alloed from memblock or bootmem
->>are hard to reused after being released.
->>
->>The patch delay creating pci_dn so that they can be allocated from
->>slab. In turn, the memory chunks for them can be reused after being
->>released without problem. The creation of eeh_dev instances, which
->>depends on pci_dn, is delayed a bit as well.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/include/asm/ppc-pci.h     |  1 -
->>  arch/powerpc/kernel/eeh_dev.c          |  2 +-
->>  arch/powerpc/kernel/pci_dn.c           | 40 +++++++++++++++++++---------------
->>  arch/powerpc/platforms/maple/pci.c     | 35 +++++++++++++++++------------
->>  arch/powerpc/platforms/pasemi/pci.c    |  3 ---
->>  arch/powerpc/platforms/powermac/pci.c  | 39 ++++++++++++++++++++-------------
->>  arch/powerpc/platforms/powernv/pci.c   |  3 ---
->>  arch/powerpc/platforms/pseries/setup.c |  1 -
->>  8 files changed, 68 insertions(+), 56 deletions(-)
->>
->>diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
->>index 4122a86..7388316 100644
->>--- a/arch/powerpc/include/asm/ppc-pci.h
->>+++ b/arch/powerpc/include/asm/ppc-pci.h
->>@@ -40,7 +40,6 @@ void *traverse_pci_dn(struct pci_dn *root,
->>  		      void *(*fn)(struct pci_dn *, void *),
->>  		      void *data);
->>
->>-extern void pci_devs_phb_init(void);
->>  extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
->>
->>  /* From rtas_pci.h */
->>diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
->>index aabba94..f33ce5b 100644
->>--- a/arch/powerpc/kernel/eeh_dev.c
->>+++ b/arch/powerpc/kernel/eeh_dev.c
->>@@ -110,4 +110,4 @@ static int __init eeh_dev_phb_init(void)
->>  	return 0;
->>  }
->>
->>-core_initcall(eeh_dev_phb_init);
->>+core_initcall_sync(eeh_dev_phb_init);
->>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->>index b3b4df9..d3833af 100644
->>--- a/arch/powerpc/kernel/pci_dn.c
->>+++ b/arch/powerpc/kernel/pci_dn.c
->>@@ -277,7 +277,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
->>  	struct device_node *parent;
->>  	struct pci_dn *pdn;
->>
->>-	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
->>+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
->>  	if (pdn == NULL)
->>  		return NULL;
->>  	dn->data = pdn;
->>@@ -442,33 +442,37 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
->>  	traverse_pci_devices(dn, update_dn_pci_info, phb);
->>  }
->>
->>-/**
->>+static void pci_dev_pdn_setup(struct pci_dev *pdev)
->>+{
->>+	struct pci_dn *pdn;
->>+
->>+	if (pdev->dev.archdata.pci_data)
->>+		return;
->>+
->>+	/* Setup the fast path */
->>+	pdn = pci_get_pdn(pdev);
->>+	pdev->dev.archdata.pci_data = pdn;
->>+}
->>+DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
->
->
->How does moving of the chunk above help to "Delay creating pci_dn"?
->
+--Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
-It's already in "Delay creating pci_dn", isn't it? :-)
+> On May 19, 2015, at 5:07 PM, Alexander Duyck =
+<alexander.h.duyck@redhat.com> wrote:
+>=20
+>=20
+>=20
+> On 05/19/2015 04:01 PM, Jesse Brandeburg wrote:
 
->
->>+
->>+/*
->>   * pci_devs_phb_init - Initialize phbs and pci devs under them.
->>- *
->>- * This routine walks over all phb's (pci-host bridges) on the
->>- * system, and sets up assorted pci-related structures
->>+ *
->>+ * This routine walks over all phb's (pci-host bridges) on
->>+ * the system, and sets up assorted pci-related structures
->>   * (including pci info in the device node structs) for each
->>   * pci device found underneath.  This routine runs once,
->>   * early in the boot sequence.
->>   */
->>-void __init pci_devs_phb_init(void)
->>+static int __init pci_devs_phb_init(void)
->>  {
->>  	struct pci_controller *phb, *tmp;
->>
->>  	/* This must be done first so the device nodes have valid pci info! */
->>  	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
->>  		pci_devs_phb_init_dynamic(phb);
->>-}
->>-
->>-static void pci_dev_pdn_setup(struct pci_dev *pdev)
->>-{
->>-	struct pci_dn *pdn;
->>
->>-	if (pdev->dev.archdata.pci_data)
->>-		return;
->>-
->>-	/* Setup the fast path */
->>-	pdn = pci_get_pdn(pdev);
->>-	pdev->dev.archdata.pci_data = pdn;
->>+	return 0;
->>  }
->>-DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
->>+
->>+core_initcall(pci_devs_phb_init);
->>diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
->>index a923230..04a69a8 100644
->>--- a/arch/powerpc/platforms/maple/pci.c
->>+++ b/arch/powerpc/platforms/maple/pci.c
->>@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
->>  	DBG(" <- maple_pci_irq_fixup\n");
->>  }
->>
->>+static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
->>+{
->>+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
->>+	struct device_node *np, *child;
->>+
->>+	if (hose != u3_agp)
->>+		return 0;
->>+
->>+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
->>+	 * assume there is no P2P bridge on the AGP bus, which should be a
->>+	 * safe assumptions hopefully.
->>+	 */
->>+	np = hose->dn;
->>+	PCI_DN(np)->busno = 0xf0;
->>+	for_each_child_of_node(np, child)
->>+		PCI_DN(child)->busno = 0xf0;
->>+
->>+	return 0;
->>+}
->>+
->>  void __init maple_pci_init(void)
->>  {
->>  	struct device_node *np, *root;
->>@@ -605,20 +625,7 @@ void __init maple_pci_init(void)
->>  	if (ht && maple_add_bridge(ht) != 0)
->>  		of_node_put(ht);
->>
->>-	/* Setup the linkage between OF nodes and PHBs */
->>-	pci_devs_phb_init();
->>-
->>-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
->>-	 * assume there is no P2P bridge on the AGP bus, which should be a
->>-	 * safe assumptions hopefully.
->>-	 */
->>-	if (u3_agp) {
->>-		struct device_node *np = u3_agp->dn;
->>-		PCI_DN(np)->busno = 0xf0;
->>-		for (np = np->child; np; np = np->sibling)
->>-			PCI_DN(np)->busno = 0xf0;
->>-	}
->>-
->>+	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
->>  	/* Tell pci.c to not change any resource allocations.  */
->>  	pci_add_flags(PCI_PROBE_ONLY);
->>  }
->>diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
->>index f3a68a0..10c4e8f 100644
->>--- a/arch/powerpc/platforms/pasemi/pci.c
->>+++ b/arch/powerpc/platforms/pasemi/pci.c
->>@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
->>  			of_node_get(np);
->>
->>  	of_node_put(root);
->>-
->>-	/* Setup the linkage between OF nodes and PHBs */
->>-	pci_devs_phb_init();
->>  }
->>
->>  void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
->>diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
->>index 59ab16f..368716f 100644
->>--- a/arch/powerpc/platforms/powermac/pci.c
->>+++ b/arch/powerpc/platforms/powermac/pci.c
->>@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
->>  #endif /* CONFIG_PPC32 */
->>  }
->>
->>+#ifdef CONFIG_PPC64
->>+static int pmac_pci_root_bridge_prepare(struct pci_hot_bridge *bridge)
->>+{
->>+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
->>+	struct device_node *np, *child;
->>+
->>+	if (hose != u3_agp)
->>+		return 0;
->>+
->>+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
->>+	 * assume there is no P2P bridge on the AGP bus, which should be a
->>+	 * safe assumptions for now. We should do something better in the
->>+	 * future though
->>+	 */
->>+	np = hose->dn;
->>+	PCI_DN(np)->busno = 0xf0;
->>+	for_each_child_of_node(np, child)
->>+		PCI_DN(child)->busno = 0xf0;
->>+
->>+	return 0;
->>+}
->>+#endif /* CONFIG_PPC64 */
->>+
->>  void __init pmac_pci_init(void)
->>  {
->>  	struct device_node *np, *root;
->>@@ -914,22 +937,8 @@ void __init pmac_pci_init(void)
->>  	if (ht && pmac_add_bridge(ht) != 0)
->>  		of_node_put(ht);
->>
->>-	/* Setup the linkage between OF nodes and PHBs */
->>-	pci_devs_phb_init();
->>-
->>-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
->>-	 * assume there is no P2P bridge on the AGP bus, which should be a
->>-	 * safe assumptions for now. We should do something better in the
->>-	 * future though
->>-	 */
->>-	if (u3_agp) {
->>-		struct device_node *np = u3_agp->dn;
->>-		PCI_DN(np)->busno = 0xf0;
->>-		for (np = np->child; np; np = np->sibling)
->>-			PCI_DN(np)->busno = 0xf0;
->>-	}
->>  	/* pmac_check_ht_link(); */
->>-
->>+	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
->>  #else /* CONFIG_PPC64 */
->>  	init_p2pbridge();
->>  	init_second_ohare();
->>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->>index 60e6d65..21a4eb3 100644
->>--- a/arch/powerpc/platforms/powernv/pci.c
->>+++ b/arch/powerpc/platforms/powernv/pci.c
->>@@ -819,9 +819,6 @@ void __init pnv_pci_init(void)
->>  	for_each_compatible_node(np, NULL, "ibm,ioda2-phb")
->>  		pnv_pci_init_ioda2_phb(np);
->>
->>-	/* Setup the linkage between OF nodes and PHBs */
->>-	pci_devs_phb_init();
->>-
->>  	/* Configure IOMMU DMA hooks */
->>  	ppc_md.tce_build = pnv_tce_build_vm;
->>  	ppc_md.tce_free = pnv_tce_free_vm;
->>diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
->>index df6a704..5f80758 100644
->>--- a/arch/powerpc/platforms/pseries/setup.c
->>+++ b/arch/powerpc/platforms/pseries/setup.c
->>@@ -482,7 +482,6 @@ static void __init find_and_init_phbs(void)
->>  	}
->>
->>  	of_node_put(root);
->>-	pci_devs_phb_init();
->>
->>  	/*
->>  	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
->>
+>> But Alex if you do this you're violating the principle of least
+>> surprise, not to mention changing a user-space interface which should
+>> not be done.
+>=20
+> I'm willing to back off on dropping the VPD info for those functions =
+entirely, but the lock should not be pushed to the bus.
 
-Thanks,
-Gavin
+Yeah, I think suddenly dropping the VPD from non-0 functions would be =
+disruptive.
 
+>> Mark's solution is pretty graceful and solves the issue at heart, =
+which
+>> is that
+>> 1) several Intel chips have this issue
+>> 2) it appears that several other vendor's chips have this issue (or
+>> similar) as well, but even if they don't Mark's fix will not change
+>> their general operation, only make a small serializing effect when
+>> multiple simultaneous reads are made.
+>=20
+> 2 is based on a false premise.  The "vpd r/w failed" error is about as =
+common as dev_watchdog().  Just because it presents with a similar =
+symptom doesn't mean it is the same issue.
+
+I don't know if it is false, but it is possible that other devices could =
+have the same behavior. I didn't expect that it would fix them all by =
+any means, but I figured there would be some fellow travelers.
+
+> If the bug is in Intel Ethernet with VPD then I would suggest tweaking =
+the VPD logic and adding a Intel Ethernet PCI quirk.  It doesn't make =
+sense to assume based on one common error message that all of creation =
+has the same issue.
+
+> If anything I believe Mark's patches have revealed a bigger issue. =
+That is the fact that the sysfs file is reading outside of the VPD area =
+which the PCI spec doesn't have a defined behavior for.  I suspect this =
+is the cause of a number of the issues being reported as Broadcom had to =
+specifically quirk to prevent it, and I found one discussion that =
+indicated something similar might be needed for Realtek.
+
+It turns out that I missed something very important here - the state of =
+the F bit. Because of how that works, and how the kernel knows what the =
+last access was, it is vital to know which address/data registers are =
+shared and which ones aren't. This is going to result in a much bigger =
+fix. It will be necessary to positively know when this register sharing =
+is happening. This will result in significant changes to the VPD code in =
+order to model the behavior right. Essentially, devices with this issue =
+will need to have the vpd pointer point to the same structure. That =
+automatically fixes the locking issue. I will look into what can be done =
+for KVM while I am at it. It will be a big device table, but that is =
+unavoidable.
+
+Doggone it. It seemed too good to be true yesterday and now I know that =
+is because it is. So close. If only it weren't for VPD writes... I'm =
+going to start over now.
+
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJVW9aYAAoJEDwO/+eO4+5u8vMP/jBrOqxJTMZcuTktVyZ+rCXQ
+Xea3V/xMIY7xt5SeWovcZa/45Ft5lC4vZIdebT5R5FRpQoWC9S7qwhOJH+y9wGlS
+FroyrqNsNtBcrJVOAokCzj3PMAMNaPznsM34bTcfVWJQYqy7iVSy51V1kpKucl+U
+9ZH4LCmzWcqF+//N+Fig56nEO444YzgDsCkM09BVr+OxGcfNkW/A34xBuIF8Icfh
+Ib3/f+b1Q3icVNNlLuTLlDeOVqxE5jdsKX+644p8hIo+nWQ3ZIQDiVMk303Nnbyd
+b1SDTBUfRe8r0x1uQqd3/KPXRWZq8xCEH/3jGcTXrR+M5mBCg8P8ORf8X6+lvkGo
+/e7r6SE4gce7Wq4eJw4l8H/ceCQO2+3a+E7g+G6IYwrKoocTj2gDIP5fxTf0FGpC
+vrTy1lGJ8psh4O16x/4TOvlmmW2s5ps9pyXYbhVyhcqE9WzlYsdYT0p6rpZ2aeCP
+TsoYUgqJVewc9jZ1w/5gWco1b2wnHT5FYco769kzqBZngskeaLbAw2Yg5/fsKXg9
+tqX5HlY5P9E4YsDVC8GRZ9DTAJx8eL2VgPEpqrpoTS2zO6zqcGLXdTOjnrEK6oFi
+0+F8aS3h9FD6LH1ffbZvllrHdeFDq2dulDA1mybbI5UY/MMVUk3RHPR9l4gGzFe5
+5zAIjRAtkvskuhiJBXna
+=lTAI
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B--
