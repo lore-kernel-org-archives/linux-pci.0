@@ -1,58 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:42882 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756101AbbEVBlV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 21:41:21 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [PATCH v2] ACPI / PCI: remove stale list_head in struct acpi_prt_entry
-Date: Fri, 22 May 2015 04:06:43 +0200
-Message-ID: <46214942.PaRfZ23MiM@vostro.rjw.lan>
-In-Reply-To: <1432222166-9198-1-git-send-email-hanjun.guo@linaro.org>
-References: <1432222166-9198-1-git-send-email-hanjun.guo@linaro.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:35800 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753938AbbETTrx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 15:47:53 -0400
+Received: by igbyr2 with SMTP id yr2so111751996igb.0
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 12:47:53 -0700 (PDT)
+Date: Wed, 20 May 2015 14:47:49 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org
+Subject: e1000e pci_disable_link_state_locked() issues
+Message-ID: <20150520194749.GA10210@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 21, 2015 11:29:26 PM Hanjun Guo wrote:
-> list_head "list" in struct acpi_prt_entry was used to connect
-> _PRT entries for PCI irq, but after commit 181380b702ee ("PCI/ACPI:
-> Don't cache _PRT, and don't associate them with bus numbers"),
-> the list head for _PRT entries was removed, but left "list" in
-> struct acpi_prt_entry which is useless and stale, remove it now.
-> 
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Yinghai Lu <yinghai@kernel.org>
-> CC: Yijing Wang <wangyijing@huawei.com>
-> ---
-> 
-> v2:
-> use the canonical commit reference format as Bjorn suggested.
+I think we have some issues with the e1000e usage of
+pci_disable_link_state_locked(), which Yinghai added with 9f728f53dd70
+("PCI/e1000e: Add and use pci_disable_link_state_locked()").
 
-Queued up for 4.2, thanks!
+That fixed an AER deadlock in the following path, where pci_bus_sem is held
+by pci_walk_bus(), and we deadlocked when we tried to re-acquire it in
+pci_disable_link_state():
 
->  drivers/acpi/pci_irq.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> index b1def41..03e4b6c 100644
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -44,7 +44,6 @@
->  ACPI_MODULE_NAME("pci_irq");
->  
->  struct acpi_prt_entry {
-> -	struct list_head	list;
->  	struct acpi_pci_id	id;
->  	u8			pin;
->  	acpi_handle		link;
-> 
+  do_recovery
+    broadcast_error_message(..., report_slot_reset)
+      pci_walk_bus
+        down_read(&pci_bus_sem)
+          cb(...)                                       # report_slot_reset
+            report_slot_reset
+              dev->driver->err_handler->slot_reset      # e1000_io_slot_reset
+                e1000_io_slot_reset
+                  e1000e_disable_aspm
+                    pci_disable_link_state
+                      down_read(&pci_bus_sem)
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+9f728f53dd70 fixed that by changing e1000e_disable_aspm() to use
+pci_disable_link_state_locked() instead, which assumes pci_bus_sem is
+already held.
+
+That's fine for the e1000_io_slot_reset() path, where pci_bus_sem really
+*is* held.  But e1000e_disable_aspm() is also called from e1000_probe() and
+__e1000_resume(), and in those paths, we *don't* hold pci_bus_sem.
+
+In effect, the caller of pci_disable_link_state_locked() is promising that
+pci_bus_sem is held, and __pci_disable_link_state() relies on that promise
+for its locking.  But e1000e isn't upholding its end of the bargain.
+
+I'm not 100% sure __pci_disable_link_state() actually *needs* that locking:
+it is only called from a driver, and it should be impossible for a device
+or any upstream bridge to go away while a driver is bound to it.  If
+somebody wanted to analyze this further and propose a patch to remove the
+locking (if it seems safe), that would be great.
+
+But in any case, __pci_disable_link_state() should be able to rely on its
+callers following the rules, so I'd like to see an e1000e change to use
+pci_disable_link_state() from the paths where pci_bus_sem is not held.
+
+Bjorn
