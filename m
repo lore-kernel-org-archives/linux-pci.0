@@ -1,103 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:59908 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405AbbESKyh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:54:37 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:54:35 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 0BA322BB004D
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:33 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAsOZ817498184
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:33 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAs07G000905
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:54:00 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 05/10] powerpc/powernv: EEH device for VF
-Date: Tue, 19 May 2015 18:50:07 +0800
-Message-Id: <1432032612-21701-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from foss.arm.com ([217.140.101.70]:39095 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751655AbbETR3G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 13:29:06 -0400
+Date: Wed, 20 May 2015 18:29:03 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Jayachandran C." <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150520172903.GJ11498@arm.com>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
+ <20150505155346.GJ1550@arm.com>
+ <20150512000746.GA31418@jayachandranc.netlogicmicro.com>
+ <20150519230918.GW31666@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150519230918.GW31666@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFs and their corresponding pci_dn instances are created and released
-dynamically as their PF's SRIOV capability is enabled and disabled.
-The patch creates and releases EEH devices for VFs when creating and
-releasing their pci_dn instances, which means EEH devices and pci_dn
-instances have same life cycle. Also, VF's EEH device is identified
-by (struct eeh_dev::physfn).
+On Wed, May 20, 2015 at 12:09:18AM +0100, Bjorn Helgaas wrote:
+> On Tue, May 12, 2015 at 05:37:47AM +0530, Jayachandran C. wrote:
+> > On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
+> > > On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
+> > > > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > > > from the arch/arm/ to do a part of the PCI initialization, and this
+> > > > prevents it from being used on arm64.
+> > > > 
+> > > > The initialization done by pci_common_init_dev() that is really
+> > > > needed by pci-host-generic.c can be done in the same file without
+> > > > using the hw_pci API of ARM.
+> > > > 
+> > > > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
+> > > > this is be handled by setting up 'struct gen_pci' to embed a
+> > > > pci_sys_data variable as the first element on the ARM platform.
+> > > > 
+> > > > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > > > ---
+> > > > Here's v2 of the patches, this enables use of pci-host-generic on
+> > > > arm64.
+> > > > 
+> > > > This has been tested on both qemu and fast model for arm64, and on
+> > > > qemu for arm32.
+> > > > 
+> > > > v1->v2
+> > > >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
+> > > >     - move contents of gen_pci_init to gen_pci_probe
+> > > >     - assign resources only when !probe_only
+> > > >  - tested on ARM32 with qemu option -M virt
+> > > 
+> > > I tried this with an arm64 kernel running under kvmtool, but I get the
+> > > following errors (a 32-bit ARM kernel does seem to work):
+> > > 
+> > >   PCI host bridge /pci ranges:
+> > >      IO 0x00000000..0x0000ffff -> 0x00000000
+> > >     MEM 0x41000000..0x7fffffff -> 0x41000000
+> > >   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
+> > >   pci_bus 0000:00: root bus resource [bus 00-01]
+> > >   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> > >   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
+> > >   pci_bus 0000:00: scanning bus
+> > >   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
+> > >   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
+> > >   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
+> > >   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
+> > >   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
+> > >   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
+> > >   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
+> > >   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
+> > >   pci_bus 0000:00: fixups for bus
+> > >   pci_bus 0000:00: bus scan returning with max=00
+> > >   pci 0000:00:00.0: fixup irq: got 10
+> > >   pci 0000:00:00.0: assigning IRQ 10
+> > >   pci 0000:00:01.0: fixup irq: got 11
+> > >   pci 0000:00:01.0: assigning IRQ 11
+> > >   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
+> > >   virtio-pci: probe of 0000:00:00.0 failed with error -22
+> > >   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
+> > >   virtio-pci: probe of 0000:00:01.0 failed with error -22
+> > 
+> > PCI_PROBE_ONLY does not work yet for arm64, this will need further changes
+> > in either arm64 or pci as noted by Lorenzo. This is not due to a problem with
+> > this patch per se.
+> > 
+> > More importantly, this does not change the current arm32 behavior and adds
+> > support for arm64 for two very useful cases
+> >  - we can use "pci-host-ecam-generic" for a host bridge controller that is
+> >    initialized by firmware, without adding a custom driver.
+> >  - qemu virt platform works on arm64
+> > 
+> > If you think there are any furhter changes needed in this patchset please
+> > let me know.
+> 
+> I'm waiting for at least an ack from Will.
 
-[gwshan: changelog and removed CONFIG_PCI_IOV]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h |    1 +
- arch/powerpc/kernel/pci_dn.c   |   12 ++++++++++++
- 2 files changed, 13 insertions(+)
+I'm not too keen on the current state of this patch. Firstly, I'd really
+like to see the PROBE_ONLY case addressed at the same time as this port
+(Lorenzo and Suravee are working on this). Secondly, the hack to put
+pci_sys_data as the first member of gen_pci is ugly at best and probably
+makes it difficult to support MSIs on ARM.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index a52db28..1b3614d 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -138,6 +138,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
- 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index f771130..f0ddde7 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- {
- #ifdef CONFIG_PCI_IOV
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pci_dn *parent, *pdn;
-+	struct eeh_dev *edev;
- 	int i;
- 
- 	/* Only support IOV for now */
-@@ -206,6 +208,9 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 				 __func__, i);
- 			return NULL;
- 		}
-+		eeh_dev_init(pdn, hose);
-+		edev = pdn_to_eeh_dev(pdn);
-+		edev->physfn = pdev;
- 	}
- #endif /* CONFIG_PCI_IOV */
- 
-@@ -254,10 +259,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
- 		list_for_each_entry_safe(pdn, tmp,
- 			&parent->child_list, list) {
-+			struct eeh_dev *edev;
- 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
- 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
- 				continue;
- 
-+			edev = pdn_to_eeh_dev(pdn);
-+			if (edev) {
-+				pdn->edev = NULL;
-+				kfree(edev);
-+			}
-+
- 			if (!list_empty(&pdn->list))
- 				list_del(&pdn->list);
- 
--- 
-1.7.9.5
-
+Will
