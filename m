@@ -1,46 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52758 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751839AbbEGNZw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 May 2015 09:25:52 -0400
-Date: Thu, 7 May 2015 21:25:36 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150507132536.GA4559@localhost.localdomain>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
- <20150505060931.GB31063@dhcp-128-4.nay.redhat.com>
- <20150505152343.GP15736@8bytes.org>
- <20150506014649.GA14065@dhcp-128-4.nay.redhat.com>
- <20150506081617.GB20611@8bytes.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 May 2015 20:35:42 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+In-Reply-To: <555CA834.7080807@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1505201750280.4225@nanos>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150506081617.GB20611@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/06/15 at 10:16am, Joerg Roedel wrote:
-> On Wed, May 06, 2015 at 09:46:49AM +0800, Dave Young wrote:
-> > For the original problem, the key issue is dmar faults cause kdump kernel
-> > hang so that vmcore can not be saved. I do not know the reason why it hangs
-> > I think it is acceptable if kdump kernel boot ok with some dma errors..
-> 
-> It hangs because some devices can't handle the DMAR faults and the kdump
-> kernel can't initialize them and will hang itself. For that it doesn't
-> matter whether the fault was caused by a read or write request.
+B1;2802;0cOn Wed, 20 May 2015, Jiang Liu wrote:
+> On 2015/5/20 23:25, Thomas Gleixner wrote:
+> > On Wed, 20 May 2015, Jiang Liu wrote:
+> >> --- a/include/linux/irqdesc.h
+> >> +++ b/include/linux/irqdesc.h
+> >> @@ -99,6 +99,11 @@ static inline struct irq_desc *irq_data_to_desc(struct irq_data *data)
+> >>  	return container_of(data->common, struct irq_desc, irq_common_data);
+> >>  }
+> >>  
+> >> +static inline unsigned int irq_desc_get_irq(struct irq_desc *desc)
+> >> +{
+> >> +	return desc->irq_data.irq;
+> >> +}
+> >> +
+> > 
+> > Does not apply either.
+> Hi Thomas,
+> 	Will check the base again.
+> 	Please do not apply patch after [14/25]. There are here to
+> ask for comments, there are still building issues with patch after
+> [14/25]. Just help to comment whether it's on the right direction.
+> If so, I will send another version for formal review.
 
-Ok, thanks for explanation. so it explains sometimes kdump kernel boot ok
-with faults, sometimes it hangs instead.
+I think you are doing that conversion wrong. You should first change
+all handlers which use the irq argument to:
 
-Dave
+    handler(unsigned __irq, *desc)
+
+and add the local variable 
+
+    unsigned irq;
+
+or
+	
+    unsigned irq = irq_desc_get_irq(desc);
+
+for those.
+
+So that results in a pretty small series of patches.
+
+Once that is done, you can remove the irq argument in one go treewide.
+
+And you should do that with scripting aid. Coccinelle is the proper
+tool for this. If you have problems with cocci, you can politely ask
+Julia (Cc'ed) for help. She's the master of coccinelle :)
+
+The purpose of the script is to:
+
+    1) Identify all handlers
+
+       This can be done by analyzing the arguments of
+
+       	    __irq_set_handler()
+	    irq_set_handler()
+	    irq_set_chained_handler()
+	    irq_alloc_generic_chip()
+	    irq_alloc_domain_generic_chips()
+	    irq_set_chip_and_handler_name()
+	    irq_set_chip_and_handler()
+	    __irq_set_handler_locked()
+	    __irq_set_chip_handler_name_locked()
+	    __irq_set_preflow_handler()
+
+	If the argument is a function local to the file step 2 can
+	take place.
+
+	If it's a extern function, then the script should at least
+	print out the function names. Those are in most of the cases
+	the generic flow handler functions.
+
+    2) Check the handlers whether they use the irq argument
+
+       For those which do:
+
+          Check whether they just use the argument instead of a local
+       	  variable, i.e. the first usage is an assignment. In that
+       	  case rename the argument to __irq and add a local variable
+       	  
+	      unsigned int irq;
+
+	  If they use the irq argument for some computation or as
+       	  argument to another function, then you need to rename the
+       	  argument as well and add:
+
+       	      unsigned int irq = irq_get_desc_irq(desc);
+
+So this results in a series of patches which can be merged right
+away. If that lot has hit Linus tree and right after -rc1, we run the
+script again and find and fix stuff which got added throughout the
+merge window. That might result in 0 to n patches.
+
+The last step is another script which does:
+
+    1) Identify all handlers
+
+    2) Remove the irq argument
+
+We can send that right after -rc1 so no new users can trickle in.
+
+It's really important to do that with scripts. It seems you try to do
+it via compile testing. But that will fail as you CANNOT execute all
+possible config combinations.
+
+Thanks,
+
+	tglx
+
