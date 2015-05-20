@@ -1,147 +1,199 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 27 May 2015 18:54:47 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
 	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	"yasutake.koichi@jp.panasonic.com" <yasutake.koichi@jp.panasonic.com>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [RFC/RFT PATCH] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150527175447.GA7914@red-moon>
-References: <1432214067-2752-1-git-send-email-lorenzo.pieralisi@arm.com>
- <5565F40C.8010004@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5565F40C.8010004@amd.com>
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 10/14] genirq: Move field 'affinity' from struct irq_data into struct irq_common_data
+Date: Wed, 20 May 2015 17:40:41 +0800
+Message-Id: <1432114845-24304-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 05:42:52PM +0100, Suravee Suthikulanit wrote:
-> Hi Lorenzo,
-> 
-> Sorry for late reply.
-> 
-> On 5/21/2015 8:14 AM, Lorenzo Pieralisi wrote:
-> > When a PCI bus is scanned, upon PCI bridge detection the kernel
-> > has to read the bridge registers to set-up its resources so that
-> > the PCI resource hierarchy can be validated properly.
-> >
-> > Most if not all architectures read PCI bridge registers in the
-> > pcibios_fixup_bus hook, that is called by the PCI generic layer
-> > whenever a PCI bus is scanned.
-> >
-> > Since pci_read_bridge_bases is an arch agnostic operation (and it
-> > is carried out on all architectures) it can be moved to the generic
-> > PCI layer in order to consolidate code and remove the respective
-> > calls from the architectures back-ends.
-> >
-> > The PCI_PROBE_ONLY flag is not checked before calling
-> > pci_read_bridge_buses in the generic layer since reading the bridge
-> > bases is not related to resources assignment; this implies that it
-> > can be carried out safely on PCI_PROBE_ONLY systems too and should
-> > not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> > flag before reading the bridge bases.
-> >
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Ralf Baechle <ralf@linux-mips.org>
-> > Cc: James E.J. Bottomley <jejb@parisc-linux.org>
-> > Cc: Michael Ellerman <mpe@ellerman.id.au>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Richard Henderson <rth@twiddle.net>
-> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Cc: David Howells <dhowells@redhat.com>
-> > Cc: Russell King <linux@arm.linux.org.uk>
-> > Cc: Tony Luck <tony.luck@intel.com>
-> > Cc: David S. Miller <davem@davemloft.net>
-> > Cc: Ingo Molnar <mingo@redhat.com>
-> > Cc: Michal Simek <monstr@monstr.eu>
-> > Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-> > Cc: Chris Zankel <chris@zankel.net>
-> > ---
-> >   arch/alpha/kernel/pci.c          |  7 +------
-> >   arch/frv/mb93090-mb00/pci-vdk.c  |  2 --
-> >   arch/ia64/pci/pci.c              |  1 -
-> >   arch/microblaze/pci/pci-common.c |  9 +--------
-> >   arch/mips/pci/pci.c              |  6 ------
-> >   arch/mn10300/unit-asb2305/pci.c  |  1 -
-> >   arch/powerpc/kernel/pci-common.c |  8 +-------
-> >   arch/x86/pci/common.c            |  1 -
-> >   arch/xtensa/kernel/pci.c         |  4 ----
-> >   drivers/parisc/dino.c            |  3 ---
-> >   drivers/parisc/lba_pci.c         |  1 -
-> >   drivers/pci/probe.c              | 11 ++++++++++-
-> >   12 files changed, 13 insertions(+), 41 deletions(-)
-> >
-> > [.....]
->  >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 062fee6..335d9f2 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -453,7 +453,11 @@ void pci_read_bridge_bases(struct pci_bus *child)
-> >   	struct resource *res;
-> >   	int i;
-> >
-> > -	if (pci_is_root_bus(child))	/* It's a host bus, nothing to read */
-> > +	/*
-> > +	 * If it is not a PCI bridge there is nothing to read
-> > +	 */
-> > +	if (pci_is_root_bus(child) || !dev ||
-> > +		!((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI))
-> >   		return;
-> >
-> >   	dev_info(&dev->dev, "PCI bridge to %pR%s\n",
-> > @@ -1878,6 +1882,11 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
-> >   	 * all PCI-to-PCI bridges on this bus.
-> >   	 */
-> >   	if (!bus->is_added) {
-> > +		/*
-> > +		 * Read and initialize bridge resources.
-> > +		 */
-> > +		pci_read_bridge_bases(bus);
-> > +
-> >   		dev_dbg(&bus->dev, "fixups for bus\n");
-> >   		pcibios_fixup_bus(bus);
-> >   		bus->is_added = 1;
-> >
-> 
-> So, I have tested the patch on ARM64 system w/ PROBE_ONLY mode, and 
-> noticed that we are calling pci_read_bridge_bases() after adding the 
-> devices on the slots. This is not soon enough since the downstream 
-> devices still failing to claim resources.
-> 
-> However, do you think we can move pci_read_bridge_bases() before the 
-> pci_scan_slot() loop?
+Irq affinity mask is per-irq instead of per irqchip, so move it into
+struct irq_common_data.
 
-Right, how about moving it to pci_scan_bridge() before calling the
-respective pci_scan_child_bus() ? I think it belongs there anyway.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irq.h  |   12 ++++++------
+ kernel/irq/irqdesc.c |    9 +++++----
+ kernel/irq/manage.c  |   12 ++++++------
+ kernel/irq/proc.c    |    2 +-
+ 4 files changed, 18 insertions(+), 17 deletions(-)
 
-Thanks,
-Lorenzo
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 2eb82257aaee..e33cc0b040f2 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -110,8 +110,8 @@ enum {
+ /*
+  * Return value for chip->irq_set_affinity()
+  *
+- * IRQ_SET_MASK_OK	- OK, core updates irq_data.affinity
+- * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_data.affinity
++ * IRQ_SET_MASK_OK	- OK, core updates irq_common_data.affinity
++ * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_common_data.affinity
+  * IRQ_SET_MASK_OK_DONE	- Same as IRQ_SET_MASK_OK for core. Special code to
+  *			  support stacked irqchips, which indicates skipping
+  *			  all descendent irqchips.
+@@ -131,6 +131,7 @@ struct irq_domain;
+  *			Use accessor functions to deal with it
+  * @node:		node index useful for balancing
+  * @handler_data:	per-IRQ data for the irq_chip methods
++ * @affinity:		IRQ affinity on SMP
+  */
+ struct irq_common_data {
+ 	unsigned int		state_use_accessors;
+@@ -138,6 +139,7 @@ struct irq_common_data {
+ 	unsigned int		node;
+ #endif
+ 	void			*handler_data;
++	cpumask_var_t		affinity;
+ };
+ 
+ /**
+@@ -154,7 +156,6 @@ struct irq_common_data {
+  * @chip_data:		platform-specific per-chip private data for the chip
+  *			methods, to allow shared chip implementations
+  * @msi_desc:		MSI descriptor
+- * @affinity:		IRQ affinity on SMP
+  *
+  * The fields here need to overlay the ones in irq_desc until we
+  * cleaned up the direct references and switched everything over to
+@@ -172,7 +173,6 @@ struct irq_data {
+ #endif
+ 	void			*chip_data;
+ 	struct msi_desc		*msi_desc;
+-	cpumask_var_t		affinity;
+ };
+ 
+ /*
+@@ -654,12 +654,12 @@ static inline struct cpumask *irq_get_affinity_mask(int irq)
+ {
+ 	struct irq_data *d = irq_get_irq_data(irq);
+ 
+-	return d ? d->affinity : NULL;
++	return d ? d->common->affinity : NULL;
+ }
+ 
+ static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
+ {
+-	return d->affinity;
++	return d->common->affinity;
+ }
+ 
+ unsigned int arch_dynirq_lower_bound(unsigned int from);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 7f881792ad5f..2c39a203f78b 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -38,12 +38,13 @@ static void __init init_irq_default_affinity(void)
+ #ifdef CONFIG_SMP
+ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
+ {
+-	if (!zalloc_cpumask_var_node(&desc->irq_data.affinity, gfp, node))
++	if (!zalloc_cpumask_var_node(&desc->irq_common_data.affinity,
++				     gfp, node))
+ 		return -ENOMEM;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	if (!zalloc_cpumask_var_node(&desc->pending_mask, gfp, node)) {
+-		free_cpumask_var(desc->irq_data.affinity);
++		free_cpumask_var(desc->irq_common_data.affinity);
+ 		return -ENOMEM;
+ 	}
+ #endif
+@@ -52,7 +53,7 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
+ 
+ static void desc_smp_init(struct irq_desc *desc, int node)
+ {
+-	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
++	cpumask_copy(desc->irq_common_data.affinity, irq_default_affinity);
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	cpumask_clear(desc->pending_mask);
+ #endif
+@@ -124,7 +125,7 @@ static void free_masks(struct irq_desc *desc)
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	free_cpumask_var(desc->pending_mask);
+ #endif
+-	free_cpumask_var(desc->irq_data.affinity);
++	free_cpumask_var(desc->irq_common_data.affinity);
+ }
+ #else
+ static inline void free_masks(struct irq_desc *desc) { }
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index d206aa2c3378..7588bf87e8f3 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -190,7 +190,7 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	switch (ret) {
+ 	case IRQ_SET_MASK_OK:
+ 	case IRQ_SET_MASK_OK_DONE:
+-		cpumask_copy(data->affinity, mask);
++		cpumask_copy(desc->irq_common_data.affinity, mask);
+ 	case IRQ_SET_MASK_OK_NOCOPY:
+ 		irq_set_thread_affinity(desc);
+ 		ret = 0;
+@@ -271,7 +271,7 @@ static void irq_affinity_notify(struct work_struct *work)
+ 	if (irq_move_pending(&desc->irq_data))
+ 		irq_get_pending(cpumask, desc);
+ 	else
+-		cpumask_copy(cpumask, desc->irq_data.affinity);
++		cpumask_copy(cpumask, desc->irq_common_data.affinity);
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 
+ 	notify->notify(notify, cpumask);
+@@ -343,9 +343,9 @@ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
+ 	 * one of the targets is online.
+ 	 */
+ 	if (irqd_has_set(&desc->irq_data, IRQD_AFFINITY_SET)) {
+-		if (cpumask_intersects(desc->irq_data.affinity,
++		if (cpumask_intersects(desc->irq_common_data.affinity,
+ 				       cpu_online_mask))
+-			set = desc->irq_data.affinity;
++			set = desc->irq_common_data.affinity;
+ 		else
+ 			irqd_clear(&desc->irq_data, IRQD_AFFINITY_SET);
+ 	}
+@@ -796,8 +796,8 @@ irq_thread_check_affinity(struct irq_desc *desc, struct irqaction *action)
+ 	 * This code is triggered unconditionally. Check the affinity
+ 	 * mask pointer. For CPU_MASK_OFFSTACK=n this is optimized out.
+ 	 */
+-	if (desc->irq_data.affinity)
+-		cpumask_copy(mask, desc->irq_data.affinity);
++	if (desc->irq_common_data.affinity)
++		cpumask_copy(mask, desc->irq_common_data.affinity);
+ 	else
+ 		valid = false;
+ 	raw_spin_unlock_irq(&desc->lock);
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index 0e97c142ce40..e3a8c9577ba6 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -39,7 +39,7 @@ static struct proc_dir_entry *root_irq_dir;
+ static int show_irq_affinity(int type, struct seq_file *m, void *v)
+ {
+ 	struct irq_desc *desc = irq_to_desc((long)m->private);
+-	const struct cpumask *mask = desc->irq_data.affinity;
++	const struct cpumask *mask = desc->irq_common_data.affinity;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	if (irqd_is_setaffinity_pending(&desc->irq_data))
+-- 
+1.7.10.4
+
