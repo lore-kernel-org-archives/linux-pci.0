@@ -1,213 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:54108 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087AbbEOFvt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:51:49 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:51:47 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id CCF5B2BB0052
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:43 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5pZRe36962456
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:43 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5pATa003522
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:11 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 07/11] powerpc/powernv: Support EEH reset for VFs
-Date: Fri, 15 May 2015 13:46:22 +0800
-Message-Id: <1431668786-30371-8-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org
+Subject: [RFC v1 07/25] irqchip: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Wed, 20 May 2015 17:59:55 +0800
+Message-Id: <1432116013-25902-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before VF PE is introduced, there isn't a method to reset an individual PCI
-function. And since skiboot firmware is not aware of the VF, the VF's reset
-should be done in kernel.
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-This patch introduces a function pnv_eeh_vf_pe_reset() to do the FLR or AF
-FLR to a VF.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/include/asm/eeh.h               |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |  123 +++++++++++++++++++++++++-
- 2 files changed, 123 insertions(+), 1 deletion(-)
+ drivers/irqchip/exynos-combiner.c   |    4 ++--
+ drivers/irqchip/irq-armada-370-xp.c |    2 +-
+ drivers/irqchip/irq-dw-apb-ictl.c   |    4 ++--
+ drivers/irqchip/irq-gic.c           |    4 ++--
+ drivers/irqchip/irq-orion.c         |    2 +-
+ drivers/irqchip/irq-sunxi-nmi.c     |    2 +-
+ drivers/irqchip/spear-shirq.c       |    2 +-
+ 7 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index c1fde48..3d64cf3 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -134,6 +134,7 @@ struct eeh_dev {
- 	int pcix_cap;			/* Saved PCIx capability	*/
- 	int pcie_cap;			/* Saved PCIe capability	*/
- 	int aer_cap;			/* Saved AER capability		*/
-+	int af_cap;			/* Saved AF capability		*/
- 	struct eeh_pe *pe;		/* Associated PE		*/
- 	struct list_head list;		/* Form link list in the PE	*/
- 	struct pci_controller *phb;	/* Associated PHB		*/
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 31344a4..61f1a55 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -402,6 +402,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
- 	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
- 	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
- 	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
-+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
- 	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
- 		edev->mode |= EEH_DEV_BRIDGE;
- 		if (edev->pcie_cap) {
-@@ -891,6 +892,117 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
+diff --git a/drivers/irqchip/exynos-combiner.c b/drivers/irqchip/exynos-combiner.c
+index 5945223b73fa..039ceb46fcc0 100644
+--- a/drivers/irqchip/exynos-combiner.c
++++ b/drivers/irqchip/exynos-combiner.c
+@@ -62,8 +62,8 @@ static void combiner_unmask_irq(struct irq_data *data)
  
-+static int pnv_pci_wait_for_pending(struct pci_dn *pdn, int pos, u16 mask)
-+{
-+	int i;
-+
-+	/* Wait for Transaction Pending bit clean */
-+	for (i = 0; i < 4; i++) {
-+		u32 status;
-+		if (i)
-+			msleep((1 << (i - 1)) * 100);
-+
-+		eeh_ops->read_config(pdn, pos, 2, &status);
-+		if (!(status & mask))
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
-+{
-+	u32 cap;
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+
-+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &cap);
-+	if (!(cap & PCI_EXP_DEVCAP_FLR))
-+		return -ENOTTY;
-+
-+	if (!pnv_pci_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
-+			PCI_EXP_DEVSTA_TRPND))
-+		pr_err("%04x:%02x:%02x:%01x timed out waiting for pending "
-+		       "transaction; performing function level reset anyway\n",
-+			edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+
-+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL, 4, &cap);
-+	if (option == EEH_RESET_DEACTIVATE)
-+		cap &= ~PCI_EXP_DEVCTL_BCR_FLR;
-+	else
-+		cap |= PCI_EXP_DEVCTL_BCR_FLR;
-+	eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL, 4, cap);
-+	msleep(100);
-+	return 0;
-+}
-+
-+static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
-+{
-+	u32 cap;
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+
-+	if (!edev->af_cap)
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
-+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
-+		return -ENOTTY;
-+
-+	/*
-+	 * Wait for Transaction Pending bit to clear.  A word-aligned test
-+	 * is used, so we use the conrol offset rather than status and shift
-+	 * the test bit to match.
-+	 */
-+	if (!pnv_pci_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
-+				 PCI_AF_STATUS_TP << 8))
-+		pr_err("%04x:%02x:%02x:%01x timed out waiting for pending "
-+		    "transaction; performing AF function level reset anyway\n",
-+			edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+
-+	if (option == EEH_RESET_DEACTIVATE)
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
-+	else
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1,
-+				PCI_AF_CTRL_FLR);
-+	msleep(100);
-+	return 0;
-+}
-+
-+static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
-+{
-+	int rc;
-+
-+	might_sleep();
-+
-+	rc = pnv_eeh_do_flr(pdn, option);
-+	if (rc != -ENOTTY)
-+		goto done;
-+
-+	rc = pnv_eeh_do_af_flr(pdn, option);
-+	if (rc != -ENOTTY)
-+		goto done;
-+
-+done:
-+	return rc;
-+}
-+
-+static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
-+{
-+	struct eeh_dev *edev, *tmp;
-+	struct pci_dn *pdn;
-+	int ret = 0;
-+
-+	eeh_pe_for_each_dev(pe, edev, tmp) {
-+		pdn = eeh_dev_to_pdn(edev);
-+		ret |= pnv_eeh_reset_vf(pdn, option);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return ret;
-+}
-+
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ static void combiner_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
  {
- 	struct pci_controller *hose;
-@@ -966,7 +1078,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 		}
+-	struct combiner_chip_data *chip_data = irq_get_handler_data(irq);
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct combiner_chip_data *chip_data = irq_desc_get_handler_data(desc);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq, combiner_irq;
+ 	unsigned long status;
  
- 		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
-+		if (pe->type & EEH_PE_VF)
-+			ret = pnv_eeh_vf_pe_reset(pe, option);
-+		else if (pci_is_root_bus(bus) ||
- 			pci_is_root_bus(bus->parent))
- 			ret = pnv_eeh_root_reset(hose, option);
- 		else
-@@ -1106,6 +1220,13 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
- 	if (!edev || !edev->pe)
- 		return false;
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index daccc8bdbb42..40b5fe99a1d5 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -451,7 +451,7 @@ static void armada_370_xp_handle_msi_irq(struct pt_regs *r, bool b) {}
+ static void armada_370_xp_mpic_handle_cascade_irq(unsigned int irq,
+ 						  struct irq_desc *desc)
+ {
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned long irqmap, irqn, irqsrc, cpuid;
+ 	unsigned int cascade_irq;
  
-+	/*
-+	 * For VF's reset operation, we need to rely on the kernel to
-+	 * do those PCI config operations since firmware isn't aware of VFs.
-+	 */
-+	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
-+		return false;
-+
- 	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
- 		return true;
+diff --git a/drivers/irqchip/irq-dw-apb-ictl.c b/drivers/irqchip/irq-dw-apb-ictl.c
+index 53bb7326a60a..cddcd3b75f00 100644
+--- a/drivers/irqchip/irq-dw-apb-ictl.c
++++ b/drivers/irqchip/irq-dw-apb-ictl.c
+@@ -28,8 +28,8 @@
  
+ static void dw_apb_ictl_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_chip *chip = irq_get_chip(irq);
+-	struct irq_chip_generic *gc = irq_get_handler_data(irq);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct irq_chip_generic *gc = irq_desc_get_handler_data(desc);
+ 	struct irq_domain *d = gc->private;
+ 	u32 stat;
+ 	int n;
+diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+index 01999d74bd3a..6c8a5a7fb4a0 100644
+--- a/drivers/irqchip/irq-gic.c
++++ b/drivers/irqchip/irq-gic.c
+@@ -288,8 +288,8 @@ static void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
+ 
+ static void gic_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct gic_chip_data *chip_data = irq_get_handler_data(irq);
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct gic_chip_data *chip_data = irq_desc_get_handler_data(desc);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq, gic_irq;
+ 	unsigned long status;
+ 
+diff --git a/drivers/irqchip/irq-orion.c b/drivers/irqchip/irq-orion.c
+index ad0c0f6f1d65..58e034db0e7c 100644
+--- a/drivers/irqchip/irq-orion.c
++++ b/drivers/irqchip/irq-orion.c
+@@ -109,7 +109,7 @@ IRQCHIP_DECLARE(orion_intc, "marvell,orion-intc", orion_irq_init);
+ 
+ static void orion_bridge_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_domain *d = irq_get_handler_data(irq);
++	struct irq_domain *d = irq_desc_get_handler_data(desc);
+ 
+ 	struct irq_chip_generic *gc = irq_get_domain_generic_chip(d, 0);
+ 	u32 stat = readl_relaxed(gc->reg_base + ORION_BRIDGE_IRQ_CAUSE) &
+diff --git a/drivers/irqchip/irq-sunxi-nmi.c b/drivers/irqchip/irq-sunxi-nmi.c
+index 4a9ce5b50c5b..2eaa9d9df241 100644
+--- a/drivers/irqchip/irq-sunxi-nmi.c
++++ b/drivers/irqchip/irq-sunxi-nmi.c
+@@ -61,7 +61,7 @@ static inline u32 sunxi_sc_nmi_read(struct irq_chip_generic *gc, u32 off)
+ static void sunxi_sc_nmi_handle_irq(unsigned int irq, struct irq_desc *desc)
+ {
+ 	struct irq_domain *domain = irq_desc_get_handler_data(desc);
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int virq = irq_find_mapping(domain, 0);
+ 
+ 	chained_irq_enter(chip, desc);
+diff --git a/drivers/irqchip/spear-shirq.c b/drivers/irqchip/spear-shirq.c
+index 9c145a7cb056..fb68ee9c0424 100644
+--- a/drivers/irqchip/spear-shirq.c
++++ b/drivers/irqchip/spear-shirq.c
+@@ -185,7 +185,7 @@ static struct spear_shirq *spear320_shirq_blocks[] = {
+ 
+ static void shirq_handler(unsigned irq, struct irq_desc *desc)
+ {
+-	struct spear_shirq *shirq = irq_get_handler_data(irq);
++	struct spear_shirq *shirq = irq_desc_get_handler_data(desc);
+ 	u32 pend;
+ 
+ 	pend = readl(shirq->base + shirq->status_reg) & shirq->mask;
 -- 
-1.7.9.5
+1.7.10.4
 
