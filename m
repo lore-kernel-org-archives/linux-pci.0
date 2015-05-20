@@ -1,76 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55541F17.5060005@linaro.org>
-Date: Thu, 14 May 2015 12:05:43 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <555C8743.6020708@ti.com>
+Date: Wed, 20 May 2015 18:38:19 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC v2 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-6-git-send-email-jiang.liu@linux.intel.com> <55531967.70507@linaro.org> <55534275.2040404@linux.intel.com> <555350B2.8050301@linaro.org> <5553F5BF.2080802@linux.intel.com>
-In-Reply-To: <5553F5BF.2080802@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>
+CC: Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, <linux-arm-msm@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com> <554783CD.50708@ti.com> <55478F1A.3000401@mm-sol.com> <20150519224143.GS31666@google.com>
+In-Reply-To: <20150519224143.GS31666@google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月14日 09:09, Jiang Liu wrote:
-> On 2015/5/13 21:25, Hanjun Guo wrote:
->> On 2015年05月13日 20:24, Jiang Liu wrote:
->>> On 2015/5/13 17:29, Hanjun Guo wrote:
->>>> Hi Jiang,
+Hi Bjorn,
+
+On Wednesday 20 May 2015 04:11 AM, Bjorn Helgaas wrote:
+> On Mon, May 04, 2015 at 06:24:10PM +0300, Stanimir Varbanov wrote:
+>> On 05/04/2015 05:35 PM, Kishon Vijay Abraham I wrote:
+>>> Hi,
+>>>
+>>> On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
+>>>> Add a PCIe PHY driver used by PCIe host controller driver
+>>>> on Qualcomm SoCs like Snapdragon 805.
 >>>>
->>>> On 2015年05月05日 10:46, Jiang Liu wrote:
->>>>
->>>> struct pci_controller {
->>>>           struct acpi_device *companion;
->>>>           void *iommu;
->>>>           int segment;
->>>>           int node;               /* nearest node with memory or
->>>> NUMA_NO_NODE for global allocation */
->>>>
->>>>           void *platform_data;
->>>> };
->>>>
->>>> except void *platform_data;
->>>>
->>>> On ARM64, the structure is almost the same, so how about
->>>> introduce
->>>>
->>>> struct pci_controller {
->>>>           struct acpi_device *companion;  /* ACPI companion device */
->>>>           void            *iommu;         /* IOMMU private data */
->>>>           int             segment;        /* PCI domain */
->>>>           int             node;           /* NUMA node */
->>>> #ifdef CONFIG_IA64
->>>>       void *platform_data;
->>>> #endif
->>>> };
->>>>
->>>> in this file, then can be used for all architectures?
->>> Current mode is that architecture defines its own version of
->>> struct pci_controller. It would be better to keep this pattern.
+>>>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+>>>> ---
+>>>>    drivers/phy/Kconfig         |    9 ++
+>>>>    drivers/phy/Makefile        |    1 +
+>>>>    drivers/phy/phy-qcom-pcie.c |  291
+>>>> +++++++++++++++++++++++++++++++++++++++++++
+>>>
+>>> Why do you need a new PHY driver for this? Why not use the existing QCOM
+>>> PHY driver. I can see the registers used here in phy-qcom-ufs-qmp-14nm.h?
 >>
->> OK, thanks for the clarify :) So how about add my basic
->> PCI support patch for ARM64 on top of you patch set to fix
->> this problem?
+>> I agree that on first glance there are similarities, but I'm not sure
+>> does the PHYs are the same IP blocks. Or at least they are different
+>> revisions which have too many differences. So trying to combine them
+>> will lead to more code than now.
+>>
+>> Either way I will try to understand how many the differences are.
 >
-> Sure, please send me the patches and I will send out v3 to
-> cover your review comments.
+> Ping, where are we with this?  Should I wait for something else, or are you
+> convinced there's enough difference to warrant a new PHY driver, Kishon?
 
-OK, I need to rework my patches because my patch set is dependent
-on top of another MMCFG refactor patch set [1], so I need to remove
-MMCONFIG first then will speed up the upstream process of your patch
-set, will send you the patches soon.
+I'd like to wait to see if Stanimir can use existing driver instead of creating 
+a new driver.
 
-[1]: https://lkml.org/lkml/2015/4/17/29
-
-Thanks
-Hanjun
+Cheers
+Kishon
