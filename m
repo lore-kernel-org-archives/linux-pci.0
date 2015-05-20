@@ -1,106 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56964 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:36488 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119AbbEFWam (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 May 2015 18:30:42 -0400
-Message-ID: <1430951427.4472.529.camel@redhat.com>
-Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: wdavis@nvidia.com, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
-	Yijing Wang <wangyijing@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Wed, 06 May 2015 16:30:27 -0600
-In-Reply-To: <20150506221818.GH24643@google.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
-	 <20150506221818.GH24643@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751423AbbETKAu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 06:00:50 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC v1 11/25] keystone, irq: Use irq_data_get_xxx() to avoid redundant lookup of irq_data
+Date: Wed, 20 May 2015 17:59:59 +0800
+Message-Id: <1432116013-25902-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-05-06 at 17:18 -0500, Bjorn Helgaas wrote:
-> [+cc Yijing, Dave J, Dave M, Alex]
-> 
-> On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
-> > From: Will Davis <wdavis@nvidia.com>
-> > 
-> > Hi,
-> > 
-> > This patch series adds DMA APIs to map and unmap a struct resource to and from
-> > a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
-> > of these interfaces.
-> > 
-> > This solves a long-standing problem with the existing DMA-remapping interfaces,
-> > which require that a struct page be given for the region to be mapped into a
-> > device's IOVA domain. This requirement cannot support peer device BAR ranges,
-> > for which no struct pages exist.
-> > 
-> > The underlying implementations of map_page and map_sg convert the struct page
-> > into its physical address anyway, so we just need a way to route the physical
-> > address of the BAR region to these implementations. The new interfaces do this
-> > by taking the struct resource describing a device's BAR region, from which the
-> > physical address is derived.
-> > 
-> > The Intel and nommu versions have been verified on a dual Intel Xeon E5405
-> > workstation. I'm in the process of obtaining hardware to test the AMD version
-> > as well. Please review.
-> 
-> I think we currently assume there's no peer-to-peer traffic.
-> 
-> I don't know whether changing that will break anything, but I'm concerned
-> about these:
-> 
->   - PCIe MPS configuration (see pcie_bus_configure_settings()).
-> 
->   - PCIe ACS, e.g., pci_acs_enabled().  My guess is that this one is OK,
->     but Alex would know better.
+Use irq_data_get_xxx() to avoid redundant lookup of irq_data while we
+already have a pointer to corresponding irq_data.
 
-I think it should be OK too.  ACS will force the transaction upstream
-for IOMMU translation rather than possible allowing redirection lower in
-the topology, but that's sort of the price we pay for isolation.  The
-p2p context entries need to be present in the IOMMU, so without actually
-reading the patches, this does seem like something a driver might want
-to do via the DMA API.  The IOMMU API already allows us to avoid the
-struct page issue and create mappings for p2p in the IOMMU.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/host/pci-keystone-dw.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
->   - dma_addr_t.  Currently dma_addr_t is big enough to hold any address
->     returned from the DMA API.  That's not necessarily big enough to hold a
->     PCI bus address, e.g., a raw BAR value.
-> 
-> > Will Davis (6):
-> >   dma-debug: add checking for map/unmap_resource
-> >   DMA-API: Introduce dma_(un)map_resource
-> >   dma-mapping: pci: add pci_(un)map_resource
-> >   iommu/amd: Implement (un)map_resource
-> >   iommu/vt-d: implement (un)map_resource
-> >   x86: add pci-nommu implementation of map_resource
-> > 
-> >  arch/x86/kernel/pci-nommu.c              | 17 +++++++
-> >  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
-> >  drivers/iommu/intel-iommu.c              | 18 ++++++++
-> >  include/asm-generic/dma-mapping-broken.h |  9 ++++
-> >  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
-> >  include/asm-generic/pci-dma-compat.h     | 14 ++++++
-> >  include/linux/dma-debug.h                | 20 +++++++++
-> >  include/linux/dma-mapping.h              |  7 +++
-> >  lib/dma-debug.c                          | 48 ++++++++++++++++++++
-> >  9 files changed, 230 insertions(+), 13 deletions(-)
-> > 
-> > -- 
-> > 2.3.7
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index f34892e0edb4..e42d077039d3 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -104,14 +104,13 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
+ {
+ 	u32 offset, reg_offset, bit_pos;
+ 	struct keystone_pcie *ks_pcie;
+-	unsigned int irq = d->irq;
+ 	struct msi_desc *msi;
+ 	struct pcie_port *pp;
+ 
+-	msi = irq_get_msi_desc(irq);
++	msi = irq_data_get_msi_desc(d);
+ 	pp = sys_to_pcie(msi->dev->bus->sysdata);
+ 	ks_pcie = to_keystone_pcie(pp);
+-	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
++	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+ 
+ 	writel(BIT(bit_pos),
+@@ -142,15 +141,14 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
+ {
+ 	struct keystone_pcie *ks_pcie;
+-	unsigned int irq = d->irq;
+ 	struct msi_desc *msi;
+ 	struct pcie_port *pp;
+ 	u32 offset;
+ 
+-	msi = irq_get_msi_desc(irq);
++	msi = irq_data_get_msi_desc(d);
+ 	pp = sys_to_pcie(msi->dev->bus->sysdata);
+ 	ks_pcie = to_keystone_pcie(pp);
+-	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
++	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 
+ 	/* Mask the end point if PVM implemented */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+@@ -164,15 +162,14 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
+ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
+ {
+ 	struct keystone_pcie *ks_pcie;
+-	unsigned int irq = d->irq;
+ 	struct msi_desc *msi;
+ 	struct pcie_port *pp;
+ 	u32 offset;
+ 
+-	msi = irq_get_msi_desc(irq);
++	msi = irq_data_get_msi_desc(d);
+ 	pp = sys_to_pcie(msi->dev->bus->sysdata);
+ 	ks_pcie = to_keystone_pcie(pp);
+-	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
++	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 
+ 	/* Mask the end point if PVM implemented */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-- 
+1.7.10.4
 
