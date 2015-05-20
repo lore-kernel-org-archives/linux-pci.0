@@ -1,127 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:25554 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbbEZAcd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2015 20:32:33 -0400
-Message-ID: <5563BF30.2040106@broadcom.com>
-Date: Mon, 25 May 2015 17:32:48 -0700
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <555CA732.3050600@linux.intel.com>
+Date: Wed, 20 May 2015 23:24:34 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>, <zajec5@gmail.com>
-Subject: Re: [PATCH 1/2] PCI: iproc: directly add pci resources
-References: <1432499823-27369-1-git-send-email-hauke@hauke-m.de> <5563579E.80608@broadcom.com> <5563A6B3.2030600@hauke-m.de>
-In-Reply-To: <5563A6B3.2030600@hauke-m.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: Re: [RFC v1 10/25] sh: intc: Use irq_desc_get_xxx() to avoid redundant
+ lookup of irq_desc
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-11-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201705110.4225@nanos>
+In-Reply-To: <alpine.DEB.2.11.1505201705110.4225@nanos>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hauke,
-
-On 15-05-25 03:48 PM, Hauke Mehrtens wrote:
-> On 05/25/2015 07:10 PM, Ray Jui wrote:
->> Hi Hauke,
+On 2015/5/20 23:12, Thomas Gleixner wrote:
+> On Wed, 20 May 2015, Jiang Liu wrote:
+> 
+>> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+>> already have a pointer to corresponding irq_desc.
 >>
->> On 5/24/2015 1:37 PM, Hauke Mehrtens wrote:
->>> The resources member in the struct was pointing to a stack variable and
->>> is invalid after the the registration function returned. Remove this
->>> pointer and add it a a parameter to the function.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>>   drivers/pci/host/pcie-iproc-bcma.c     | 4 +---
->>>   drivers/pci/host/pcie-iproc-platform.c | 4 +---
->>>   drivers/pci/host/pcie-iproc.c          | 4 ++--
->>>   drivers/pci/host/pcie-iproc.h          | 3 +--
->>>   4 files changed, 5 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
->>> index c318f19..f96b39e 100644
->>> --- a/drivers/pci/host/pcie-iproc-bcma.c
->>> +++ b/drivers/pci/host/pcie-iproc-bcma.c
->>> @@ -62,11 +62,9 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->>>   	res_mem.flags = IORESOURCE_MEM;
->>>   	pci_add_resource(&res, &res_mem);
->>>
->>> -	pcie->resources = &res;
->>> -
->>>   	pcie->map_irq = iproc_pcie_bcma_map_irq;
->>>
->>> -	ret = iproc_pcie_setup(pcie);
->>> +	ret = iproc_pcie_setup(pcie, &res);
->>>   	if (ret) {
->>>   		dev_err(pcie->dev, "PCIe controller setup failed\n");
->>>   		return ret;
->>> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
->>> index c8aa06f..c5fe4c1 100644
->>> --- a/drivers/pci/host/pcie-iproc-platform.c
->>> +++ b/drivers/pci/host/pcie-iproc-platform.c
->>> @@ -69,11 +69,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
->>>   		return ret;
->>>   	}
->>>
->>> -	pcie->resources = &res;
->>> -
->>>   	pcie->map_irq = of_irq_parse_and_map_pci;
->>>
->>> -	ret = iproc_pcie_setup(pcie);
->>> +	ret = iproc_pcie_setup(pcie, &res);
->>>   	if (ret) {
->>>   		dev_err(pcie->dev, "PCIe controller setup failed\n");
->>>   		return ret;
->>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
->>> index cef31f6..d77481e 100644
->>> --- a/drivers/pci/host/pcie-iproc.c
->>> +++ b/drivers/pci/host/pcie-iproc.c
->>> @@ -183,7 +183,7 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
->>>   	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
->>>   }
->>>
->>> -int iproc_pcie_setup(struct iproc_pcie *pcie)
->>> +int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->>>   {
->>>   	int ret;
->>>   	struct pci_bus *bus;
->>> @@ -211,7 +211,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie)
->>>   	pcie->sysdata.private_data = pcie;
->>>
->>>   	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
->>> -				  &pcie->sysdata, pcie->resources);
->>> +				  &pcie->sysdata, res);
->>>   	if (!bus) {
->>>   		dev_err(pcie->dev, "unable to create PCI root bus\n");
->>>   		ret = -ENOMEM;
->>> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
->>> index a333d4b..ba0a108 100644
->>> --- a/drivers/pci/host/pcie-iproc.h
->>> +++ b/drivers/pci/host/pcie-iproc.h
->>> @@ -29,7 +29,6 @@
->>>   struct iproc_pcie {
->>>   	struct device *dev;
->>>   	void __iomem *base;
->>> -	struct list_head *resources;
+>> Also replace generic_handle_irq with generic_handle_irq_desc() to avoid
+>> looking up irq_desc again.
 >>
->> This means we do not want to keep a copy of the resources. In the
->> future, if we need to add support to explicitly set up the
->> inbound/outbound mapping window, we need to do it in iproc_pcie_setup.
->> Is that the intention?
->
-> I haven't really thought about where to configure the memory mapping,
-> but I thought it would be somewhere in iproc_pcie_setup() or an method
-> called from there.
-> If you need it after iproc_pcie_setup() finished we should embed the
-> list into the struct iproc_pcie, because currently this pointer points
-> to the stack.
->
-> Hauke
->
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  drivers/sh/intc/core.c |    2 +-
+>>  drivers/sh/intc/virq.c |   14 ++++++++------
+>>  2 files changed, 9 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/sh/intc/core.c b/drivers/sh/intc/core.c
+>> index 81f22980b2de..e4ca964ca840 100644
+>> --- a/drivers/sh/intc/core.c
+>> +++ b/drivers/sh/intc/core.c
+>> @@ -67,7 +67,7 @@ void intc_set_prio_level(unsigned int irq, unsigned int level)
+>>  
+>>  static void intc_redirect_irq(unsigned int irq, struct irq_desc *desc)
+>>  {
+>> -	generic_handle_irq((unsigned int)irq_get_handler_data(irq));
+>> +	generic_handle_irq_desc(irq, desc);
+> 
+> This looks wrong. It's a redirector of irq to some other irq.
+> 
+>      	redir_irq = (unsigned int)irq_get_handler_data(irq);
+> 
+> which should be:
+> 
+>         redir_irq = (unsigned int)irq_desc_get_irq_handler_data(desc);
+> 
+> And redir_irq is certainly not the same as irq. So this wants a
+> conversion to irq_desc_get_irq_handler_data() first. That makes the
+> irq argument unused.
 
-I think most likely I'll be adding the memory mapping logic in 
-iproc_pcie_setup(), so your current patch should be fine.
+Good catch, will fix it in next version.
 
-Reviewed-by: Ray Jui <rjui@broadcom.com>
-Tested-by: Ray Jui <rjui@broadcom.com>
-
-Thanks.
+> 
+> Thanks,
+> 
+> 	tglx
+> 
