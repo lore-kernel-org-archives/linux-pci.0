@@ -1,115 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og114.obsmtp.com ([64.18.0.28]:39976 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753360AbbERJzi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 05:55:38 -0400
-Received: by pacwv17 with SMTP id wv17so145246892pac.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2015 02:55:37 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v7 1/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node
-Date: Mon, 18 May 2015 02:55:18 -0700
-Message-Id: <4422f356934b17a2086889b642bde4d441814569.1431940313.git.dhdang@apm.com>
-In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
-References: <cover.1431940313.git.dhdang@apm.com>
-In-Reply-To: <cover.1431940313.git.dhdang@apm.com>
-References: <20150422135002.1b407b98@why.wild-wind.fr.eu.org> <cover.1431940313.git.dhdang@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: bhelgaas@google.com
+Cc: tomi.valkeinen@ti.com, airlied@linux.ie,
+	linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
+	david.vrabel@citrix.com, jbeulich@suse.com,
+	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
+Subject: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
+Date: Wed, 20 May 2015 16:08:10 -0700
+Message-Id: <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-X-Gene v1 PCIe MSI controller block provides PCIE MSI functionality for 5 X-Gene v1
-PCIE ports
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+This allows drivers to take advantage of write-combining
+when possible. The PCI specification does not allow for us
+to automatically identify a memory region which needs
+write-combining so drivers have to identify these areas
+on their own. There is IORESOURCE_PREFETCH but as clarified
+by Michael and confirmed later by Bjorn, PCI prefetch bit
+merely means bridges can combine writes and prefetch reads.
+Prefetch does not affect ordering rules and does not allow
+writes to be collapsed [0]. WC is stronger, it allows collapsing
+and changes ordering rules. WC can also hurt latency as small
+writes are buffered. Because of all this drivers needs to
+know what they are doing, we can't set a write-combining
+preference flag in the pci core automatically for drivers.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Lastly although there is also arch_phys_wc_add() this makes
+use of architecture specific write-combining *hacks* and
+the only one currently defined and used is MTRR for x86.
+MTRRs are legacy, limited in number, have restrictive size
+constraints, and are known to interact pooly with the BIOS.
+MTRRs should only really be considered on old video framebuffer
+drivers. If we made ioremap_wc() and similar calls start
+automatically adding MTRRs, then performance will vary wildly
+with the order of driver loading because we'll run out of MTRRs
+part-way through bootup.
+
+There are a few motivations for phasing out of MTRR and
+helping driver change over to use write-combining with PAT:
+
+a) Take advantage of PAT when available
+
+b) Help bury MTRR code away, MTRR is architecture specific and on
+   x86 its replaced by PAT
+
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()")
+
+[0] https://lkml.org/lkml/2015/4/21/714
+
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: venkatesh.pallipadi@intel.com
+Cc: Stefan Bader <stefan.bader@canonical.com>
+Cc: Ville Syrjälä <syrjala@sci.fi>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Davidlohr Bueso <dbueso@suse.de>
+Cc: konrad.wilk@oracle.com
+Cc: ville.syrjala@linux.intel.com
+Cc: david.vrabel@citrix.com
+Cc: jbeulich@suse.com
+Cc: Roger Pau Monné <roger.pau@citrix.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: xen-devel@lists.xensource.com
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- .../devicetree/bindings/pci/xgene-pci-msi.txt      | 68 ++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ include/asm-generic/pci_iomap.h | 14 ++++++++++
+ lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 75 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-new file mode 100644
-index 0000000..36d881c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-@@ -0,0 +1,68 @@
-+* AppliedMicro X-Gene v1 PCIe MSI controller
+diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
+index 7389c87..b1e17fc 100644
+--- a/include/asm-generic/pci_iomap.h
++++ b/include/asm-generic/pci_iomap.h
+@@ -15,9 +15,13 @@ struct pci_dev;
+ #ifdef CONFIG_PCI
+ /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
+ extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
++extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
+ extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
+ 				     unsigned long offset,
+ 				     unsigned long maxlen);
++extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
++					unsigned long offset,
++					unsigned long maxlen);
+ /* Create a virtual mapping cookie for a port on a given PCI device.
+  * Do not call this directly, it exists to make it easier for architectures
+  * to override */
+@@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
+ 	return NULL;
+ }
+ 
++static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
++{
++	return NULL;
++}
+ static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
+ 					    unsigned long offset,
+ 					    unsigned long maxlen)
+ {
+ 	return NULL;
+ }
++static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
++					       unsigned long offset,
++					       unsigned long maxlen)
++{
++	return NULL;
++}
+ #endif
+ 
+ #endif /* __ASM_GENERIC_IO_H */
+diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
+index bcce5f1..9604dcb 100644
+--- a/lib/pci_iomap.c
++++ b/lib/pci_iomap.c
+@@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
+ EXPORT_SYMBOL(pci_iomap_range);
+ 
+ /**
++ * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
++ * @dev: PCI device that owns the BAR
++ * @bar: BAR number
++ * @offset: map memory at the given offset in BAR
++ * @maxlen: max length of the memory to map
++ *
++ * Using this function you will get a __iomem address to your device BAR.
++ * You can access it using ioread*() and iowrite*(). These functions hide
++ * the details if this is a MMIO or PIO address space and will just do what
++ * you expect from them in the correct way. When possible write combining
++ * is used.
++ *
++ * @maxlen specifies the maximum length to map. If you want to get access to
++ * the complete BAR from offset to the end, pass %0 here.
++ * */
++void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
++				 int bar,
++				 unsigned long offset,
++				 unsigned long maxlen)
++{
++	resource_size_t start = pci_resource_start(dev, bar);
++	resource_size_t len = pci_resource_len(dev, bar);
++	unsigned long flags = pci_resource_flags(dev, bar);
 +
-+Required properties:
++	if (len <= offset || !start)
++		return NULL;
++	len -= offset;
++	start += offset;
++	if (maxlen && len > maxlen)
++		len = maxlen;
++	if (flags & IORESOURCE_IO)
++		return NULL;
++	if (flags & IORESOURCE_MEM)
++		return ioremap_wc(start, len);
++	/* What? */
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
 +
-+- compatible: should be "apm,xgene1-msi" to identify
-+	      X-Gene v1 PCIe MSI controller block.
-+- msi-controller: indicates that this is X-Gene v1 PCIe MSI controller node
-+- reg: physical base address (0x79000000) and length (0x900000) for controller
-+       registers. These registers include the MSI termination address and data
-+       registers as well as the MSI interrupt status registers.
-+- reg-names: not required
-+- interrupts: A list of 16 interrupt outputs of the controller, starting from
-+	      interrupt number 0x10 to 0x1f.
-+- interrupt-names: not required
++/**
+  * pci_iomap - create a virtual mapping cookie for a PCI BAR
+  * @dev: PCI device that owns the BAR
+  * @bar: BAR number
+@@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
+ 	return pci_iomap_range(dev, bar, 0, maxlen);
+ }
+ EXPORT_SYMBOL(pci_iomap);
 +
-+Each PCIe node needs to have property msi-parent that points to msi controller node
-+
-+Examples:
-+
-+SoC DTSI:
-+
-+	+ MSI node:
-+	msi@79000000 {
-+		compatible = "apm,xgene1-msi";
-+		msi-controller;
-+		reg = <0x00 0x79000000 0x0 0x900000>;
-+		interrupts = 	<0x0 0x10 0x4>
-+				<0x0 0x11 0x4>
-+				<0x0 0x12 0x4>
-+				<0x0 0x13 0x4>
-+				<0x0 0x14 0x4>
-+				<0x0 0x15 0x4>
-+				<0x0 0x16 0x4>
-+				<0x0 0x17 0x4>
-+				<0x0 0x18 0x4>
-+				<0x0 0x19 0x4>
-+				<0x0 0x1a 0x4>
-+				<0x0 0x1b 0x4>
-+				<0x0 0x1c 0x4>
-+				<0x0 0x1d 0x4>
-+				<0x0 0x1e 0x4>
-+				<0x0 0x1f 0x4>;
-+	};
-+
-+	+ PCIe controller node with msi-parent property pointing to MSI node:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		dma-coherent;
-+		clocks = <&pcie0clk 0>;
-+		msi-parent= <&msi>;
-+	};
++/**
++ * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
++ * @dev: PCI device that owns the BAR
++ * @bar: BAR number
++ * @maxlen: length of the memory to map
++ *
++ * Using this function you will get a __iomem address to your device BAR.
++ * You can access it using ioread*() and iowrite*(). These functions hide
++ * the details if this is a MMIO or PIO address space and will just do what
++ * you expect from them in the correct way. When possible write combining
++ * is used.
++ *
++ * @maxlen specifies the maximum length to map. If you want to get access to
++ * the complete BAR without checking for its length first, pass %0 here.
++ * */
++void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
++{
++	return pci_iomap_wc_range(dev, bar, 0, maxlen);
++}
++EXPORT_SYMBOL_GPL(pci_iomap_wc);
+ #endif /* CONFIG_PCI */
 -- 
-1.9.1
+2.3.2.209.gd67f9d5.dirty
 
