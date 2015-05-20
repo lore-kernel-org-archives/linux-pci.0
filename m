@@ -1,55 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:42348 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226AbbENIdR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2015 04:33:17 -0400
-Message-ID: <55545D81.7020105@huawei.com>
-Date: Thu, 14 May 2015 16:32:01 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <dja@axtens.net>,
+Received: from smtp06.smtpout.orange.fr ([80.12.242.128]:21690 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033AbbETSzq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 14:55:46 -0400
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Roland Stigge <stigge@antcom.de>,
+	Tony Lindgren <tony@atomide.com>,
+	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
+	Daniel Mack <daniel@zonque.org>,
+	Haojian Zhuang <haojian.zhuang@gmail.com>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH Part1 v11 0/5] Some cleanup for pcie host drivers
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org
+Subject: Re: [RFC v1 15/25] genirq: Kill the first parameter 'irq' of irq_flow_handler_t
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+	<1432116013-25902-16-git-send-email-jiang.liu@linux.intel.com>
+Date: Wed, 20 May 2015 20:54:12 +0200
+In-Reply-To: <1432116013-25902-16-git-send-email-jiang.liu@linux.intel.com>
+	(Jiang Liu's message of "Wed, 20 May 2015 18:00:03 +0800")
+Message-ID: <87mw0zhygb.fsf@belgarion.home>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, sorry to bother you, do you have time to look at these patches ?
+Jiang Liu <jiang.liu@linux.intel.com> writes:
 
-On 2015/4/28 15:01, Yijing Wang wrote:
-> These patches are split out from patchset(patch 5 is new)
-> "Refine PCI scan interfaces and make generic pci host bridge".
-> They are independent of the series, pci_bus_add_devices()
-> has been ripped out from pci_scan_root_bus(), so we could
-> use pci_scan_root_bus() instead of pci_create_root_bus() + 
-> pci_scan_child_bus() for simplicity. Also this is the preparation
-> for the series.
-> 
-> Yijing Wang (5):
->   PCI: mvebu: Use pci_common_init_dev() to simplify code
->   PCI: tegra: Remove redundant tegra_pcie_scan_bus()
->   PCI: designware: Use pci_scan_root_bus() for simplicity
->   PCI: xgene: Use pci_scan_root_bus() instead of pci_create_root_bus()
->   PCI: iproc: Use pci_scan_root_bus() instead of pci_create_root_bus()
-> 
->  drivers/pci/host/pci-mvebu.c       |   18 +-----------------
->  drivers/pci/host/pci-tegra.c       |   16 ----------------
->  drivers/pci/host/pci-xgene.c       |    3 +--
->  drivers/pci/host/pcie-designware.c |    4 +---
->  drivers/pci/host/pcie-iproc.c      |    5 ++---
->  5 files changed, 5 insertions(+), 41 deletions(-)
-> 
-> 
-> .
-> 
+> diff --git a/arch/arm/mach-pxa/pcm990-baseboard.c b/arch/arm/mach-pxa/pcm990-baseboard.c
+> index 2897da2a5df6..0d8331f8536e 100644
+> --- a/arch/arm/mach-pxa/pcm990-baseboard.c
+> +++ b/arch/arm/mach-pxa/pcm990-baseboard.c
+> @@ -287,6 +287,7 @@ static struct irq_chip pcm990_irq_chip = {
+>  static void pcm990_irq_handler(unsigned int irq, struct irq_desc *desc)
+>  {
+>  	unsigned long pending;
+> +	unsigned int irq;
+That doesn't look good, double irq definition.
 
+Cheers.
 
 -- 
-Thanks!
-Yijing
-
+Robert
