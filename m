@@ -1,60 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:41523 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787AbbESBiV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 May 2015 21:38:21 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 11:38:19 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0DE372CE8052
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:38:17 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4J1c89A31195338
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:38:16 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4J1biFb030995
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 11:37:44 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V6 03/10] powerpc/pci: Remove VFs prior to PF
-Date: Tue, 19 May 2015 09:35:05 +0800
-Message-Id: <1431999312-10517-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga01.intel.com ([192.55.52.88]:36488 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751928AbbETKAq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 06:00:46 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [RFC v1 10/25] sh: intc: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Wed, 20 May 2015 17:59:58 +0800
+Message-Id: <1432116013-25902-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
-VFs, which might be hooked to same PCI bus as their PF should be removed
-before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
-cause kernel crash.
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-The patch applies the above pattern to PowerPC PCI hotplug path.
+Also replace generic_handle_irq with generic_handle_irq_desc() to avoid
+looking up irq_desc again.
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/kernel/pci-hotplug.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/sh/intc/core.c |    2 +-
+ drivers/sh/intc/virq.c |   14 ++++++++------
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 7ed85a6..98f84ed 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+diff --git a/drivers/sh/intc/core.c b/drivers/sh/intc/core.c
+index 81f22980b2de..e4ca964ca840 100644
+--- a/drivers/sh/intc/core.c
++++ b/drivers/sh/intc/core.c
+@@ -67,7 +67,7 @@ void intc_set_prio_level(unsigned int irq, unsigned int level)
  
- 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
- 		 pci_domain_nr(bus),  bus->number);
--	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
- 		pr_debug("   Removing %s...\n", pci_name(dev));
- 		pci_stop_and_remove_bus_device(dev);
+ static void intc_redirect_irq(unsigned int irq, struct irq_desc *desc)
+ {
+-	generic_handle_irq((unsigned int)irq_get_handler_data(irq));
++	generic_handle_irq_desc(irq, desc);
+ }
+ 
+ static void __init intc_register_irq(struct intc_desc *desc,
+diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+index 3dbc21696924..8083882a91c0 100644
+--- a/drivers/sh/intc/virq.c
++++ b/drivers/sh/intc/virq.c
+@@ -109,7 +109,7 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+ 
+ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_data *data = irq_get_irq_data(irq);
++	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	struct intc_virq_list *entry, *vlist = irq_data_get_irq_handler_data(data);
+ 	struct intc_desc_int *d = get_intc_desc(irq);
+@@ -118,12 +118,14 @@ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
+ 
+ 	for_each_virq(entry, vlist) {
+ 		unsigned long addr, handle;
++		struct irq_desc *vdesc = irq_to_desc(entry->irq);
+ 
+-		handle = (unsigned long)irq_get_handler_data(entry->irq);
+-		addr = INTC_REG(d, _INTC_ADDR_E(handle), 0);
+-
+-		if (intc_reg_fns[_INTC_FN(handle)](addr, handle, 0))
+-			generic_handle_irq(entry->irq);
++		if (vdesc) {
++			handle = (unsigned long)irq_desc_get_handler_data(vdesc);
++			addr = INTC_REG(d, _INTC_ADDR_E(handle), 0);
++			if (intc_reg_fns[_INTC_FN(handle)](addr, handle, 0))
++				generic_handle_irq_desc(entry->irq, vdesc);
++		}
  	}
+ 
+ 	chip->irq_unmask(data);
 -- 
-1.7.9.5
+1.7.10.4
 
