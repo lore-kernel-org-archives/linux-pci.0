@@ -1,57 +1,64 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Stephen Boyd <sboyd@codeaurora.org>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 5/5] ARM: qcom: Add Qualcomm APQ8084 SoC
-Date: Fri, 22 May 2015 21:26:14 +0200
-Message-ID: <2504338.ikNh5XCYe2@wuerfel>
-In-Reply-To: <555F73FC.1030102@codeaurora.org>
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-6-git-send-email-svarbanov@mm-sol.com> <555F73FC.1030102@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: [PATCH 03/16] ntb: Enable link training for RP mode in the driver probe
+Date: Wed, 20 May 2015 11:41:04 -0400
+Message-Id: <ae66adf68441cdaf893d2a562924615c229489c0.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 22 May 2015 11:22:52 Stephen Boyd wrote:
-> > diff --git a/arch/arm/mach-qcom/Kconfig b/arch/arm/mach-qcom/Kconfig
-> > index 2256cd1..9cfebee 100644
-> > --- a/arch/arm/mach-qcom/Kconfig
-> > +++ b/arch/arm/mach-qcom/Kconfig
-> > @@ -22,4 +22,11 @@ config ARCH_MSM8974
-> >       bool "Enable support for MSM8974"
-> >       select HAVE_ARM_ARCH_TIMER
-> >  
-> > +config ARCH_APQ8084
-> > +     bool "Enable support for APQ8084"
-> > +     select HAVE_ARM_ARCH_TIMER
-> > +     select MIGHT_HAVE_PCI
-> > +     select PCI_DOMAINS if PCI
-> > +     select PCI_MSI if PCI
-> > +
-> >
-> 
-> Can we move these PCI selects up to ARCH_QCOM directly? Let's try to
-> avoid adding more SoC specific options under ARCH_QCOM.
+From: Dave Jiang <dave.jiang@intel.com>
 
-I thought we already select 'MIGHT_HAVE_PCI' and 'PCI_DOMAINS' for
-all ARMv7 platforms. If not, we probably should.
+Link training for RP should be enabled in the driver probe. We should
+not have to wait for transport loaded for this to hapen. Otherwise the
+device will not show up on the transparent bridge side.
 
-For PCI_MSI, I would leave that as user-selectable, there is no
-need to enforce that as far as I can tell. If the driver needs
-PCI_MSI support at compile-time, a dependency for that driver
-would make sense.
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-	Arnd
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
+index 05c4b77..d162f22 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.c
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
+@@ -1333,6 +1333,9 @@ static int snb_poll_link(struct intel_ntb_dev *ndev)
+ 
+ static int snb_link_is_up(struct intel_ntb_dev *ndev)
+ {
++	if (ndev->ntb.topo == NTB_TOPO_SEC)
++		return 1;
++
+ 	return NTB_LNK_STA_ACTIVE(ndev->lnk_sta);
+ }
+ 
+@@ -1642,6 +1645,7 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
+ static int snb_init_ntb(struct intel_ntb_dev *ndev)
+ {
+ 	int rc;
++	u32 ntb_ctl;
+ 
+ 	if (ndev->bar4_split)
+ 		ndev->mw_count = HSX_SPLIT_BAR_MW_COUNT;
+@@ -1658,6 +1662,12 @@ static int snb_init_ntb(struct intel_ntb_dev *ndev)
+ 			dev_err(ndev_dev(ndev), "NTB Primary config disabled\n");
+ 			return -EINVAL;
+ 		}
++
++		/* enable link to allow secondary side device to appear */
++		ntb_ctl = ioread32(ndev->self_mmio + ndev->reg->ntb_ctl);
++		ntb_ctl &= ~NTB_CTL_DISABLE;
++		iowrite32(ntb_ctl, ndev->self_mmio + ndev->reg->ntb_ctl);
++
+ 		/* use half the spads for the peer */
+ 		ndev->spad_count >>= 1;
+ 		ndev->self_reg = &snb_pri_reg;
+-- 
+2.4.0.rc0.43.gcf8a8c6
+
