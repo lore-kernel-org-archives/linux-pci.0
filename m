@@ -1,102 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:36104 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735AbbEFJO0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 05:14:26 -0400
-Received: by oift201 with SMTP id t201so2607639oif.3
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 02:14:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150505221646.GE24643@google.com>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
-	<20150505221646.GE24643@google.com>
-Date: Wed, 6 May 2015 11:14:25 +0200
-Message-ID: <CAG374jAv9aHBPGV+x+xs2MyRGz+fw1ymwu78fqNXDPtPqehgZA@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:25385 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751159AbbETJij (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 05:38:39 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 00/14] Split struct irq_data into common part and per-chip part
+Date: Wed, 20 May 2015 17:40:31 +0800
+Message-Id: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi all,
+	Now the irq core supports hierarchy irq and stacked irqchips,
+so there may be multiple irq_datas associated with the same irq. But
+some fields in struct irq_data are per-irq instance and duplicating
+those fields into multiple irq_data may cause troubles.
+	So this patch introduces a new data structure 'struct
+irq_common_data' to host per-irq instance data fields, and struct
+irq_data will only host per-chip data fields after the conversion.
 
-On 6 May 2015 at 00:16, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Apr 10, 2015 at 11:12:46AM +0200, Gabriel FERNANDEZ wrote:
->> sti pcie is built around a Synopsis Designware PCIe IP.
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->
->> +/* ST PCIe driver does not allow module unload */
->
-> Is there something that prevents module unload, or is it just untested?
->
-Yes we haven't tested
+It's based on tip/x86/apic.
 
->> +static int __init pcie_init(void)
->> +{
->> +     return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
->> +}
->> +device_initcall(pcie_init);
->
-> Can you use module_platform_driver_probe() or module_init() here?
->
+And it passes Fengguang's zeroday test suite.
 
-Yes we can use module_init() here.
+V1->V2:
+1) Patch "net/mlx4: Cache irq_desc->affinity instead of irq_desc" is
+   still kept to avoid build failure. It may be dropped if Amir Vadai
+   changed related code.
+2) Reorganize patches according to Thomas's suggestion.
+3) Rename irq_data_get_msi() as irq_data_get_msi_desc().
 
-By the way if figure out i removed __init attribute on st_pcie_probe()
-in previous version to follow Arnd's remark.
-But st_pcie_probe calls hook_fault_code() that has __init attribute.
-So I think we need to keep __init for probe routine ?
-Also, we have to restrict bind/unbind with "suppress_bind_attrs" in
-platform_driver structure.
-This is the main reason to not allow module unload/reload.
+Thanks!
+Gerry
 
-If you are ok i will send a v4 ?
+Jiang Liu (14):
+  genirq: Introduce struct irq_common_data to host shared irq data
+  genirq: Introduce helper function irq_data_get_node()
+  x86, irq: Use accessor irq_data_get_node() to hide struct irq_data
+    detail
+  sh, irq: Use accessor irq_data_get_node() to hide struct irq_data
+    detail
+  genirq: Move field 'node' from struct irq_data into struct
+    irq_common_data
+  genirq: Move field 'handler_data' from struct irq_data into struct
+    irq_common_data
+  mn10300: Fix incorrect use of data->affinity
+  genirq: Introduce helper function irq_data_get_affinity_mask()
+  net/mlx4: Cache irq_desc->affinity instead of irq_desc
+  genirq: Move field 'affinity' from struct irq_data into struct
+    irq_common_data
+  genirq: Rename irq_data_get_msi() as irq_data_get_msi_desc()
+  genirq: Use helper function to access irq_data->msi_desc
+  genirq: Move field 'msi_desc' from struct irq_data into struct
+    irq_common_data
+  genirq: Pass irq_data to helper function
+    __irq_set_chip_handler_name_locked()
 
-BR
-Gabriel
+ arch/alpha/kernel/irq.c                      |    2 +-
+ arch/arm/kernel/irq.c                        |    4 +-
+ arch/arm64/kernel/irq.c                      |    4 +-
+ arch/blackfin/mach-common/ints-priority.c    |    3 +-
+ arch/ia64/kernel/iosapic.c                   |    8 +-
+ arch/ia64/kernel/irq.c                       |    6 +-
+ arch/ia64/kernel/msi_ia64.c                  |    6 +-
+ arch/ia64/sn/kernel/msi_sn.c                 |    4 +-
+ arch/metag/kernel/irq.c                      |   10 ++-
+ arch/mips/alchemy/common/irq.c               |    4 +-
+ arch/mips/bcm63xx/irq.c                      |    2 +-
+ arch/mips/cavium-octeon/octeon-irq.c         |   14 ++--
+ arch/mips/pmcs-msp71xx/msp_irq_cic.c         |    3 +-
+ arch/mn10300/kernel/cevt-mn10300.c           |    2 +-
+ arch/mn10300/kernel/irq.c                    |   13 +--
+ arch/parisc/kernel/irq.c                     |   12 +--
+ arch/powerpc/kernel/irq.c                    |    2 +-
+ arch/powerpc/sysdev/xics/ics-opal.c          |    4 +-
+ arch/powerpc/sysdev/xics/ics-rtas.c          |    4 +-
+ arch/sh/kernel/irq.c                         |    9 ++-
+ arch/sparc/kernel/irq_64.c                   |   27 ++++---
+ arch/sparc/kernel/leon_kernel.c              |    6 +-
+ arch/sparc/kernel/sun4d_irq.c                |    4 +-
+ arch/sparc/kernel/sun4m_irq.c                |    6 +-
+ arch/tile/kernel/pci_gx.c                    |    2 +-
+ arch/x86/kernel/apic/io_apic.c               |    2 +-
+ arch/x86/kernel/apic/msi.c                   |    2 +-
+ arch/x86/kernel/apic/vector.c                |   13 ++-
+ arch/x86/kernel/hpet.c                       |    4 +-
+ arch/x86/kernel/irq.c                        |    5 +-
+ arch/x86/platform/uv/uv_irq.c                |    2 +-
+ arch/xtensa/kernel/irq.c                     |   10 ++-
+ drivers/gpio/gpio-davinci.c                  |    2 +-
+ drivers/gpio/gpio-zynq.c                     |    9 +--
+ drivers/irqchip/irq-metag-ext.c              |    5 +-
+ drivers/irqchip/irq-mips-gic.c               |   13 ++-
+ drivers/net/ethernet/mellanox/mlx4/en_cq.c   |    6 +-
+ drivers/net/ethernet/mellanox/mlx4/en_rx.c   |    5 +-
+ drivers/net/ethernet/mellanox/mlx4/mlx4_en.h |    2 +-
+ drivers/parisc/iosapic.c                     |    2 +-
+ drivers/pci/host/pcie-designware.c           |    2 +-
+ drivers/pci/msi.c                            |    4 +-
+ drivers/sh/intc/chip.c                       |    6 +-
+ drivers/sh/intc/virq.c                       |    4 +-
+ drivers/xen/events/events_base.c             |    4 +-
+ include/linux/irq.h                          |  111 +++++++++++++++++---------
+ include/linux/irqdesc.h                      |   19 +++--
+ kernel/irq/chip.c                            |    4 +-
+ kernel/irq/internals.h                       |   15 ++--
+ kernel/irq/irqdesc.c                         |   27 +++----
+ kernel/irq/irqdomain.c                       |    5 +-
+ kernel/irq/manage.c                          |   14 ++--
+ kernel/irq/proc.c                            |    4 +-
+ 53 files changed, 259 insertions(+), 203 deletions(-)
 
->> +MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
->> +MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
->> +MODULE_LICENSE("GPL v2");
->> --
->> 1.9.1
->>
+-- 
+1.7.10.4
+
