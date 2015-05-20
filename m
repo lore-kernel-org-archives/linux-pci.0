@@ -1,32 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 May 2015 22:12:03 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Julia Lawall <julia.lawall@lip6.fr>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+In-Reply-To: <alpine.DEB.2.10.1505202155420.2642@hadrien>
+Message-ID: <alpine.DEB.2.11.1505202209470.4225@nanos>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com> <alpine.DEB.2.11.1505201750280.4225@nanos>
+ <alpine.DEB.2.10.1505202155420.2642@hadrien>
 MIME-Version: 1.0
-In-Reply-To: <20150516152823.GK31666@google.com>
-References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
-	<20150516152537.GJ31666@google.com>
-	<20150516152823.GK31666@google.com>
-Date: Wed, 27 May 2015 16:27:19 -0700
-Message-ID: <CAE9FiQVeAJHv_T-O6g4zSTz19DP1LdyMo28tJX5zg4fmDuGxAw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 16, 2015 at 8:28 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> BTW, if it makes sense to add pci_bus_addr_t first, without the other
-> sparc64/prefetchability changes, that's fine with me.  But I think there
-> were some doc and maybe Kconfig updates related to that, so please fold
-> those in and repost it.
+On Wed, 20 May 2015, Julia Lawall wrote:
+> On Wed, 20 May 2015, Thomas Gleixner wrote:
+> > The purpose of the script is to:
+> >
+> >     1) Identify all handlers
+> >
+> >        This can be done by analyzing the arguments of
+> >
+> >        	    __irq_set_handler()
+> > 	    irq_set_handler()
+> > 	    irq_set_chained_handler()
+> > 	    irq_alloc_generic_chip()
+> > 	    irq_alloc_domain_generic_chips()
+> > 	    irq_set_chip_and_handler_name()
+> > 	    irq_set_chip_and_handler()
+> > 	    __irq_set_handler_locked()
+> > 	    __irq_set_chip_handler_name_locked()
+> > 	    __irq_set_preflow_handler()
+> >
+> > 	If the argument is a function local to the file step 2 can
+> > 	take place.
+> >
+> > 	If it's a extern function, then the script should at least
+> > 	print out the function names. Those are in most of the cases
+> > 	the generic flow handler functions.
+> 
+> Looks reasonable.
 
-Good to me, will repost that.
+Good.
+ 
+> >     2) Check the handlers whether they use the irq argument
+> >
+> >        For those which do:
+> >
+> >           Check whether they just use the argument instead of a local
+> >        	  variable, i.e. the first usage is an assignment. In that
+> >        	  case rename the argument to __irq and add a local variable
+> >
+> > 	      unsigned int irq;
+> >
+> > 	  If they use the irq argument for some computation or as
+> >        	  argument to another function, then you need to rename the
+> >        	  argument as well and add:
+> >
+> >        	      unsigned int irq = irq_get_desc_irq(desc);
+> 
+> Scripting this may be a little complex, because the variable can be used
+> in one way in one execution path (eg if branch) and another way (or not at
+> all) in another.  Let me know if help is needed.
 
-Thanks
+I feared that, but at least identifying all functions, where the irq
+argument is used inside the function itself is really key for such a
+massive rework.
 
-Yinghai
+Thanks for responding so quick!
+
+	tglx
+
+
