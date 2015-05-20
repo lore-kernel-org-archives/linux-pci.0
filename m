@@ -1,278 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:4100 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753053AbbETTvc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 15:51:32 -0400
-From: William Davis <wdavis@nvidia.com>
-To: "markh@compro.net" <markh@compro.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	"John Hubbard" <jhubbard@nvidia.com>,
-	"jglisse@redhat.com" <jglisse@redhat.com>,
-	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: RE: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-Date: Wed, 20 May 2015 19:51:30 +0000
-Message-ID: <202fc76456cf4f3aac02034d5366780c@HQMAIL106.nvidia.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
- <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
- <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>
- <ea891abe867444d193742030348a6ad1@HQMAIL106.nvidia.com>
- <555CDD6F.40304@compro.net>
-In-Reply-To: <555CDD6F.40304@compro.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Anatolij Gustschin <agust@denx.de>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	cbe-oss-dev@lists.ozlabs.org
+Subject: [RFC v1 04/25] powerpc, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Wed, 20 May 2015 17:59:52 +0800
+Message-Id: <1432116013-25902-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/powerpc/platforms/52xx/mpc52xx_gpt.c     |    2 +-
+ arch/powerpc/platforms/cell/axon_msi.c        |    2 +-
+ arch/powerpc/platforms/embedded6xx/hlwd-pic.c |    2 +-
+ arch/powerpc/sysdev/uic.c                     |    2 +-
+ arch/powerpc/sysdev/xics/xics-common.c        |    2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-> -----Original Message-----
-> From: Mark Hounschell [mailto:markh@compro.net]
-> Sent: Wednesday, May 20, 2015 2:16 PM
-> To: William Davis; Bjorn Helgaas
-> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
-> pci@vger.kernel.org; Terence Ripperda; John Hubbard; jglisse@redhat.com;
-> konrad.wilk@oracle.com; Jonathan Corbet; David S. Miller
-> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
-> documentation
-> 
-> On 05/20/2015 01:30 PM, William Davis wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: Mark Hounschell [mailto:markh@compro.net]
-> >> Sent: Wednesday, May 20, 2015 7:11 AM
-> >> To: Bjorn Helgaas; William Davis
-> >> Cc: joro@8bytes.org; iommu@lists.linux-foundation.org; linux-
-> >> pci@vger.kernel.org; Terence Ripperda; John Hubbard;
-> >> jglisse@redhat.com; konrad.wilk@oracle.com; Jonathan Corbet; David S.
-> >> Miller
-> >> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
-> >> documentation
-> >>
-> >> On 05/19/2015 07:43 PM, Bjorn Helgaas wrote:
-> >>> [+cc Dave, Jonathan]
-> >>>
-> >>> On Mon, May 18, 2015 at 01:25:01PM -0500, wdavis@nvidia.com wrote:
-> >>>> From: Will Davis <wdavis@nvidia.com>
-> >>>>
-> >>>> Add references to both the general API documentation as well as the
-> >> HOWTO.
-> >>>>
-> >>>> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> >>>> ---
-> >>>>    Documentation/DMA-API-HOWTO.txt | 39
-> >> +++++++++++++++++++++++++++++++++++++--
-> >>>>    Documentation/DMA-API.txt       | 36
-> +++++++++++++++++++++++++++++++--
-> >> ---
-> >>>>    2 files changed, 68 insertions(+), 7 deletions(-)
-> >>>>
-> >>>> diff --git a/Documentation/DMA-API-HOWTO.txt
-> >>>> b/Documentation/DMA-API-HOWTO.txt index 0f7afb2..89bd730 100644
-> >>>> --- a/Documentation/DMA-API-HOWTO.txt
-> >>>> +++ b/Documentation/DMA-API-HOWTO.txt
-> >>>> @@ -138,6 +138,10 @@ What about block I/O and networking buffers?
-> >>>> The
-> >> block I/O and
-> >>>>    networking subsystems make sure that the buffers they use are valid
-> >>>>    for you to DMA from/to.
-> >>>>
-> >>>> +In some systems, it may also be possible to DMA to and/or from a
-> >>>> +peer device's MMIO region, as described by a 'struct resource'.
-> >>>> +This is referred to as a peer-to-peer mapping.
-> >>>> +
-> >>>>    			DMA addressing limitations
-> >>>>
-> >>>>    Does your device have any DMA addressing limitations?  For
-> >>>> example, is @@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call
-> >>>> should have its
-> >> dma_unmap_{single,sg}()
-> >>>>    counterpart, because the bus address space is a shared resource and
-> >>>>    you could render the machine unusable by consuming all bus
-> addresses.
-> >>>>
-> >>>> +Peer-to-peer DMA mappings can be obtained using dma_map_resource()
-> >>>> +to map another device's MMIO region for the given device:
-> >>>> +
-> >>>> +	struct resource *peer_mmio_res = &other_dev->resource[0];
-> >>>> +	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
-> >>>> +						 offset, size, direction);
-> >>>> +	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
-> >>>> +	{
-> >>>> +		/*
-> >>>> +		 * If dma_handle == 0, dma_map_resource() is not
-> >>>> +		 * implemented, and peer-to-peer transactions will not
-> >>>> +		 * work.
-> >>>> +		 */
-> >>>> +		goto map_error_handling;
-> >>>> +	}
-> >>>> +
-> >>>> +	...
-> >>>> +
-> >>>> +	dma_unmap_resource(dev, dma_handle, size, direction);
-> >>>> +
-> >>>> +Here, "offset" means byte offset within the given resource.
-> >>>> +
-> >>>> +You should both check for a 0 return value and call
-> >>>> +dma_mapping_error(), as dma_map_resource() can either be not
-> >>>> +implemented or fail and return error as outlined under the
-> >> dma_map_single() discussion.
-> >>>> +
-> >>>> +You should call dma_unmap_resource() when DMA activity is
-> >>>> +finished, e.g., from the interrupt which told you that the DMA
-> transfer is done.
-> >>>> +
-> >>>>    If you need to use the same streaming DMA region multiple times
-> >>>> and
-> >> touch
-> >>>>    the data in between the DMA transfers, the buffer needs to be
-> synced
-> >>>>    properly in order for the CPU and device to see the most
-> >>>> up-to-date and @@ -765,8 +798,8 @@ failure can be determined by:
-> >>>>
-> >>>>    - checking if dma_alloc_coherent() returns NULL or dma_map_sg
-> >>>> returns 0
-> >>>>
-> >>>> -- checking the dma_addr_t returned from dma_map_single() and
-> >>>> dma_map_page()
-> >>>> -  by using dma_mapping_error():
-> >>>> +- checking the dma_addr_t returned from dma_map_single(),
-> >>>> +dma_map_resource(),
-> >>>> +  and dma_map_page() by using dma_mapping_error():
-> >>>>
-> >>>>    	dma_addr_t dma_handle;
-> >>>>
-> >>>> @@ -780,6 +813,8 @@ failure can be determined by:
-> >>>>    		goto map_error_handling;
-> >>>>    	}
-> >>>>
-> >>>> +- checking if dma_map_resource() returns 0
-> >>>> +
-> >>>>    - unmap pages that are already mapped, when mapping error occurs
-> >>>> in
-> >> the middle
-> >>>>      of a multiple page mapping attempt. These example are applicable
-> to
-> >>>>      dma_map_page() as well.
-> >>>> diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-> >>>> index 5208840..c25c549 100644
-> >>>> --- a/Documentation/DMA-API.txt
-> >>>> +++ b/Documentation/DMA-API.txt
-> >>>> @@ -283,14 +283,40 @@ and <size> parameters are provided to do
-> >>>> partial
-> >> page mapping, it is
-> >>>>    recommended that you never use these unless you really know what
-> the
-> >>>>    cache width is.
-> >>>>
-> >>>> +dma_addr_t
-> >>>> +dma_map_resource(struct device *dev, struct resource *res,
-> >>>> +		 unsigned long offset, size_t size,
-> >>>> +		 enum dma_data_direction_direction)
-> >>>> +
-> >>>> +API for mapping resources. This API allows a driver to map a peer
-> >>>> +device's resource for DMA. All the notes and warnings for the
-> >>>> +other APIs apply here. Also, the success of this API does not
-> >>>> +validate or guarantee that peer-to-peer transactions between the
-> >>>> +device and its peer will be functional. They only grant access so
-> >>>> +that if such transactions are possible, an IOMMU will not prevent
-> >>>> +them from succeeding.
-> >>>
-> >>> If the driver can't tell whether peer-to-peer accesses will actually
-> >>> work, this seems like sort of a dubious API.  I'm trying to imagine
-> >>> how a driver would handle this.  I guess whether peer-to-peer works
-> >>> depends on the underlying platform (not the devices themselves)?  If
-> >>> we run the driver on a platform where peer-to-peer *doesn't* work,
-> >>> what happens?  The driver can't tell, so we just rely on the user to
-> >>> say "this isn't working as expected"?
-> >>>
-> >>
-> >
-> > Yes, it's quite difficult to tell whether peer-to-peer will actually
-> > work, and it usually involves some probing and heuristics on the driver's
-> part.
-> > I wouldn't say that this makes it a dubious API - it's a piece of the
-> > puzzle that's absolutely necessary for a driver to set up peer-to-peer
-> > in an IOMMU environment.
-> >
-> 
-> I currently just do
-> 
-> page = virt_to_page(__va(bus_address));
-> 
-> then just use the normal API. Works for writes anyway.
-> 
-
-What platform is this on? I don't understand how that could work for
-peer-to-peer. As I understand it, there are no 'struct page's for MMIO
-regions, and you could actually end up with a very different page as a
-result of that unchecked translation (e.g., a "valid" struct page, but
-not in the peer's MMIO range at all).
-
-> >> Most currently available hardware doesn't allow reads but will allow
-> >> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
-> >> this way. I'm pretty sure all Intel chipsets are this way also.
-> >
-> > Most != all. As an example, Mellanox offers the ability to do
-> > peer-to-peer
-> > transfers:
-> >
-> > http://www.mellanox.com/page/products_dyn?product_family=116
-> >
-> > which would indicate there is at least some platform out there which
-> > allows peer-to-peer reads. I don't think that that being a minority
-> > configuration should preclude it from support.
-> >
-> >> What happens with reads
-> >> is they are just dropped with no indication of error other than the
-> >> data will not be as expected. Supposedly the PCIe spec does not even
-> >> require any peer-to-peer support. Regular PCI there is no problem and
-> >> this API could be useful. However I doubt seriously you will find a
-> >> pure PCI motherboard that has an IOMMU.
-> >>
-> >> I don't understand the chipset manufactures reasoning for disabling
-> >> PCIe peer-to-peer reads. We would like to make PCIe versions of our
-> >> cards but their application requires  peer-to-peer reads and writes.
-> >> So we cannot develop PCIe versions of the cards.
-> >>
-> >> Again, Regular PCI there is no problem and this API could be useful.
-> >> IOMMU or not.
-> >> If we had a pure PCI with IOMMU env, how will this API handle when
-> >> the 2 devices are on the same PCI bus. There will be NO IOMMU between
-> >> the devices on the same bus. Does this API address that configuration?
-> >>
-> >
-> > What is the expected behavior in this configuration? That the "mapping"
-> > simply be the bus address (as in the nommu case)?
-> >
-> 
-> I suspect just using the bus address would sort of defeat one or more
-> purposes of the IOMMU. The bus address would certainly be what I would want
-> to use though.
-> 
-> > In an IOMMU environment, the DMA ops would be one of the IOMMU
-> > implementations, so these APIs would create a mapping for the peer
-> > device resource, even if it's on the same bus. Would a transaction
-> > targeting that mapping be forwarded upstream until it hits an IOMMU,
-> > which would then send the translated request back downstream? Or is my
-> > understanding of this configuration incorrect?
-> >
-> 
-> It's my understanding of the IOMMU that is lacking here. I have no idea if
-> that is actually what would happen. Does it?
-
-It's a mildly educated guess, but I haven't tested this configuration to
-know for sure.
-
-Thanks,
-Will
-
---
-nvpublic
+diff --git a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+index c949ca055712..63016621aff8 100644
+--- a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
++++ b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+@@ -193,7 +193,7 @@ static struct irq_chip mpc52xx_gpt_irq_chip = {
+ 
+ void mpc52xx_gpt_irq_cascade(unsigned int virq, struct irq_desc *desc)
+ {
+-	struct mpc52xx_gpt_priv *gpt = irq_get_handler_data(virq);
++	struct mpc52xx_gpt_priv *gpt = irq_desc_get_handler_data(desc);
+ 	int sub_virq;
+ 	u32 status;
+ 
+diff --git a/arch/powerpc/platforms/cell/axon_msi.c b/arch/powerpc/platforms/cell/axon_msi.c
+index 623bd961465a..817d0e6747ea 100644
+--- a/arch/powerpc/platforms/cell/axon_msi.c
++++ b/arch/powerpc/platforms/cell/axon_msi.c
+@@ -95,7 +95,7 @@ static void msic_dcr_write(struct axon_msic *msic, unsigned int dcr_n, u32 val)
+ static void axon_msi_cascade(unsigned int irq, struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct axon_msic *msic = irq_get_handler_data(irq);
++	struct axon_msic *msic = irq_desc_get_handler_data(desc);
+ 	u32 write_offset, msi;
+ 	int idx;
+ 	int retry = 0;
+diff --git a/arch/powerpc/platforms/embedded6xx/hlwd-pic.c b/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
+index c269caee58f9..9dd154d6f89a 100644
+--- a/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
++++ b/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
+@@ -124,7 +124,7 @@ static void hlwd_pic_irq_cascade(unsigned int cascade_virq,
+ 				      struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct irq_domain *irq_domain = irq_get_handler_data(cascade_virq);
++	struct irq_domain *irq_domain = irq_desc_get_handler_data(desc);
+ 	unsigned int virq;
+ 
+ 	raw_spin_lock(&desc->lock);
+diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
+index 7c37157d4c24..e763fe215cf5 100644
+--- a/arch/powerpc/sysdev/uic.c
++++ b/arch/powerpc/sysdev/uic.c
+@@ -198,7 +198,7 @@ void uic_irq_cascade(unsigned int virq, struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct irq_data *idata = irq_desc_get_irq_data(desc);
+-	struct uic *uic = irq_get_handler_data(virq);
++	struct uic *uic = irq_desc_get_handler_data(desc);
+ 	u32 msr;
+ 	int src;
+ 	int subvirq;
+diff --git a/arch/powerpc/sysdev/xics/xics-common.c b/arch/powerpc/sysdev/xics/xics-common.c
+index 878a54036a25..76be7b00dd80 100644
+--- a/arch/powerpc/sysdev/xics/xics-common.c
++++ b/arch/powerpc/sysdev/xics/xics-common.c
+@@ -227,7 +227,7 @@ void xics_migrate_irqs_away(void)
+ 
+ 		/* Locate interrupt server */
+ 		server = -1;
+-		ics = irq_get_chip_data(virq);
++		ics = irq_desc_get_chip_data(desc);
+ 		if (ics)
+ 			server = ics->get_server(ics, irq);
+ 		if (server < 0) {
+-- 
+1.7.10.4
 
