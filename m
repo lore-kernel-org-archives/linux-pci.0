@@ -1,77 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41332 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932079AbbEHUVo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 May 2015 16:21:44 -0400
-Date: Fri, 8 May 2015 16:21:34 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: wdavis@nvidia.com
-Cc: joro@8bytes.org, jglisse@redhat.com, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, jhubbard@nvidia.com,
-	tripperda@nvidia.com
-Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
-Message-ID: <20150508202134.GB26795@l.oracle.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 May 2015 12:16:46 +0200
+From: Hans-Christian Egtvedt <egtvedt@samfundet.no>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Steven Miao <realmz6@gmail.com>,
+	Mark Salter <msalter@redhat.com>,
+	Aurelien Jacquiot <a-jacquiot@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>, x86@kernel.org,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Andreas Larsson <andreas@gaisler.com>,
+	Joe Perches <joe@perches.com>,
+	Christoph Lameter <cl@linux.com>,
+	Brian Gerst <brgerst@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, linux-alpha@vger.kernel.org,
+	adi-buildroot-devel@lists.sourceforge.net,
+	linux-c6x-dev@linux-c6x.org, sparclinux@vger.kernel.org,
+	lguest@lists.ozlabs.org
+Subject: Re: [RFC v1 20/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+Message-ID: <20150520101646.GB12898@samfundet.no>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+ <1432116013-25902-21-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1432116013-25902-21-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
-> From: Will Davis <wdavis@nvidia.com>
+Around Wed 20 May 2015 18:00:08 +0800 or thereabout, Jiang Liu wrote:
+> Now most IRQ flow handlers make no use of the first parameter 'irq'.
+> And for those who do make use of 'irq', we could easily get the irq
+> number through irq_desc->irq_data->irq. So kill the first parameter
+> 'irq' of irq_flow_handler_t.
 > 
-> Hi,
+> To ease review, I have split the changes into several parts, though
+> they should be merge as one to support bisecting.
 > 
-> This patch series adds DMA APIs to map and unmap a struct resource to and from
-> a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
-> of these interfaces.
-> 
-> This solves a long-standing problem with the existing DMA-remapping interfaces,
-> which require that a struct page be given for the region to be mapped into a
-> device's IOVA domain. This requirement cannot support peer device BAR ranges,
-> for which no struct pages exist.
-> 
-> The underlying implementations of map_page and map_sg convert the struct page
-> into its physical address anyway, so we just need a way to route the physical
-> address of the BAR region to these implementations. The new interfaces do this
-> by taking the struct resource describing a device's BAR region, from which the
-> physical address is derived.
-> 
-> The Intel and nommu versions have been verified on a dual Intel Xeon E5405
-> workstation. I'm in the process of obtaining hardware to test the AMD version
-> as well. Please review.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/alpha/kernel/irq.c             |    2 +-
+>  arch/avr32/mach-at32ap/extint.c     |    2 +-
+>  arch/avr32/mach-at32ap/pio.c        |    2 +-
 
-Does it work if you boot with 'iommu=soft swiotlb=force' which will mandate
-an strict usage of the DMA API?
+For the AVR32 related bits
 
-> 
-> Thanks,
-> Will
-> 
-> Will Davis (6):
->   dma-debug: add checking for map/unmap_resource
->   DMA-API: Introduce dma_(un)map_resource
->   dma-mapping: pci: add pci_(un)map_resource
->   iommu/amd: Implement (un)map_resource
->   iommu/vt-d: implement (un)map_resource
->   x86: add pci-nommu implementation of map_resource
-> 
->  arch/x86/kernel/pci-nommu.c              | 17 +++++++
->  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
->  drivers/iommu/intel-iommu.c              | 18 ++++++++
->  include/asm-generic/dma-mapping-broken.h |  9 ++++
->  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
->  include/asm-generic/pci-dma-compat.h     | 14 ++++++
->  include/linux/dma-debug.h                | 20 +++++++++
->  include/linux/dma-mapping.h              |  7 +++
->  lib/dma-debug.c                          | 48 ++++++++++++++++++++
->  9 files changed, 230 insertions(+), 13 deletions(-)
-> 
-> -- 
-> 2.3.7
-> 
-> _______________________________________________
-> iommu mailing list
-> iommu@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+Acked-by: Hans-Christian Egtvedt <egtvedt@samfundet.no>
+
+>  arch/blackfin/kernel/ipipe.c        |    4 ++--
+>  arch/c6x/platforms/megamod-pic.c    |    3 ++-
+>  arch/sparc/kernel/leon_kernel.c     |    2 +-
+>  arch/sparc/kernel/leon_pci_grpci1.c |    2 +-
+>  arch/sparc/kernel/leon_pci_grpci2.c |    2 +-
+>  arch/tile/kernel/pci_gx.c           |    4 ++--
+>  arch/unicore32/kernel/irq.c         |    3 ++-
+>  arch/x86/kernel/irq_64.c            |    2 +-
+>  arch/x86/lguest/boot.c              |    2 +-
+>  12 files changed, 16 insertions(+), 14 deletions(-)
+
+<snipp diff>
+
+-- 
+HcE
