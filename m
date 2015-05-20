@@ -1,156 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:40321 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723AbbEDHLG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:11:06 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 4 May 2015 17:11:04 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A26133578048
-	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:11:00 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t447Aq9u49414282
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:11:00 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t447ARTT003120
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:10:28 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V3 8/9] powerpc/powernv: Support PCI config restore for VFs
-Date: Mon,  4 May 2015 15:07:37 +0800
-Message-Id: <1430723258-21299-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <555C0091.6050301@linaro.org>
+Date: Wed, 20 May 2015 11:33:37 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [Patch v3 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com> <5559E44B.2010702@linaro.org> <555BFC72.3060703@linux.intel.com>
+In-Reply-To: <555BFC72.3060703@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since FW is not aware of VFs, the restore action for VF should be done in
-kernel.
++CC Suravee,
 
-This patch introduces pnv_eeh_vf_restore_config() for VF.
+On 2015年05月20日 11:16, Jiang Liu wrote:
+> On 2015/5/18 21:08, Hanjun Guo wrote:
+>> Hi Jiang,
+>>
+>> On 2015年05月14日 16:56, Jiang Liu wrote:
+>>> Introduce common interface acpi_pci_root_create() and related data
+>>> structures to create PCI root bus for ACPI PCI host bridges. It will
+>>> be used to kill duplicated arch specific code for IA64 and x86. It may
+>>> also help ARM64 in future.
+>>
+>> As I commented in previous version, this patch will introduce
+>> compile error on ACPI enabled ARM64 kernel because struct
+>> pci_controller is not defined for ARM64, so how about adding
+>> the following patch before this patch, or squash to this one,
+>> does it make sense?
+> Hi Hanjun,
+> 	Thanks for fixing this building issue for ARM64. The patch
+> is really what I want:). Will merge it into next version. With this
+> patch applied, are there any other issues from ARM64 side?
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h        |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |   77 +++++++++++++++++++++++++-
- 2 files changed, 77 insertions(+), 1 deletion(-)
+Suravee is testing ARM64 PCI on top of your patch set, he can confirm
+that if there are any other issues :) (Suravee has a real ARM64 hardware
+in hand)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 9582aa2..de55ef6 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -205,6 +205,7 @@ struct pci_dn {
- 	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
-+	int	mps;
- #endif /* CONFIG_PCI_IOV */
- #endif
- 	struct list_head child_list;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 1ad322f..6ba6d87 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1589,6 +1589,59 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static int pnv_eeh_vf_restore_config(struct pci_dn *pdn)
-+{
-+	int pcie_cap, aer_cap, old_mps;
-+	u32 devctl, cmd, cap2, aer_capctl;
-+
-+	/* Restore MPS */
-+	pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
-+	if (pcie_cap) {
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
-+	}
-+
-+	/* Disable Completion Timeout */
-+	if (pcie_cap) {
-+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
-+		if (cap2 & 0x10) {
-+			pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
-+			cap2 |= 0x10;
-+			pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	pnv_pci_cfg_read(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	pnv_pci_cfg_write(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (pcie_cap) {
-+		pnv_pci_cfg_read(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		pnv_pci_cfg_write(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (pcie_cap) {
-+		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
-+		pnv_pci_cfg_read(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		pnv_pci_cfg_write(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -1599,7 +1652,13 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EEXIST;
- 
- 	phb = edev->phb->private_data;
--	ret = opal_pci_reinit(phb->opal_id,
-+#ifdef CONFIG_PCI_IOV
-+	/* FW is not VF aware, we rely on OS to restore it */
-+	if (edev->mode & EEH_DEV_VF)
-+		ret = pnv_eeh_vf_restore_config(pdn);
-+	else
-+#endif
-+		ret = opal_pci_reinit(phb->opal_id,
- 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
- 	if (ret) {
- 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-@@ -1660,4 +1719,20 @@ static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
- 	}
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
-+
-+static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	int parent_mps;
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/* Synchronize MPS for VF and PF */
-+	parent_mps = pcie_get_mps(pdev->physfn);
-+	if ((128 << pdev->pcie_mpss) >= parent_mps)
-+		pcie_set_mps(pdev, parent_mps);
-+	pdn->mps = pcie_get_mps(pdev);
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
- #endif /* CONFIG_PCI_IOV */
--- 
-1.7.9.5
-
+Thanks
+Hanjun
