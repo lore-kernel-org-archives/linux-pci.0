@@ -1,142 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:53268 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932092AbbEOIy0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 04:54:26 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 18:54:24 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id CB66B357804C
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 18:54:21 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F8sDuu32178180
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 18:54:21 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F8rmwx009393
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 18:53:49 +1000
-Date: Fri, 15 May 2015 16:53:30 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 05/11] powerpc/powernv: create/release eeh_dev for VF
-Message-ID: <20150515085330.GA26681@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431668786-30371-6-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150515061916.GA29805@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150515061916.GA29805@gwshan>
+Received: from mga09.intel.com ([134.134.136.24]:1484 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751182AbbETJ6W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 05:58:22 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Hans-Christian Egtvedt <egtvedt@samfundet.no>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC v1 02/25] avr32, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Wed, 20 May 2015 17:59:50 +0800
+Message-Id: <1432116013-25902-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 04:19:16PM +1000, Gavin Shan wrote:
->On Fri, May 15, 2015 at 01:46:20PM +0800, Wei Yang wrote:
->>EEH on powerpc platform needs eeh_dev structure to track the PCI device
->>status. Since VFs are created/released dynamically, VF's eeh_dev is also
->>dynamically created/released in system.
->>
->>This patch creates/removes eeh_dev when pci_dn is created/removed for VFs,
->>and marks it with EEH_DEV_VF type.
->>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->
->Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->After removing the unnecessary line of code as below.
->
->>---
->> arch/powerpc/include/asm/eeh.h |    1 +
->> arch/powerpc/kernel/eeh.c      |    4 ++++
->> arch/powerpc/kernel/pci_dn.c   |   11 +++++++++++
->> 3 files changed, 16 insertions(+)
->>
->>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>index a52db28..1b3614d 100644
->>--- a/arch/powerpc/include/asm/eeh.h
->>+++ b/arch/powerpc/include/asm/eeh.h
->>@@ -138,6 +138,7 @@ struct eeh_dev {
->> 	struct pci_controller *phb;	/* Associated PHB		*/
->> 	struct pci_dn *pdn;		/* Associated PCI device node	*/
->> 	struct pci_dev *pdev;		/* Associated PCI device	*/
->>+	struct pci_dev *physfn;		/* Associated PF PORT		*/
->> 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
->> };
->>
->>diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
->>index 6c7ce1b..221e280 100644
->>--- a/arch/powerpc/kernel/eeh.c
->>+++ b/arch/powerpc/kernel/eeh.c
->>@@ -1135,6 +1135,10 @@ void eeh_add_device_late(struct pci_dev *dev)
->> 	}
->>
->> 	edev->pdev = dev;
->>+#ifdef CONFIG_PCI_IOV
->>+	if (dev->is_virtfn)
->>+		edev->physfn = dev->physfn;
->>+#endif
->> 	dev->dev.archdata.edev = edev;
->>
->> 	if (eeh_has_flag(EEH_PROBE_MODE_DEV))
->>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->>index f771130..94806a4 100644
->>--- a/arch/powerpc/kernel/pci_dn.c
->>+++ b/arch/powerpc/kernel/pci_dn.c
->>@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->> struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
->> {
->> #ifdef CONFIG_PCI_IOV
->>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
->> 	struct pci_dn *parent, *pdn;
->>+	struct eeh_dev *edev;
->> 	int i;
->>
->> 	/* Only support IOV for now */
->>@@ -206,6 +208,8 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
->> 				 __func__, i);
->> 			return NULL;
->> 		}
->>+		eeh_dev_init(pdn, hose);
->>+		edev = pdn_to_eeh_dev(pdn);
->
->Nothing is done to edev after getting it. So I think the last line of changes
->here isn't needed. Could you check and remove it if I'm correct?
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-You are right, removed.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/avr32/mach-at32ap/pio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
->Thanks,
->Gavin
->
->> 	}
->> #endif /* CONFIG_PCI_IOV */
->>
->>@@ -254,10 +258,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
->> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
->> 		list_for_each_entry_safe(pdn, tmp,
->> 			&parent->child_list, list) {
->>+			struct eeh_dev *edev;
->> 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
->> 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
->> 				continue;
->>
->>+			edev = pdn_to_eeh_dev(pdn);
->>+			if (edev) {
->>+				pdn->edev = NULL;
->>+				kfree(edev);
->>+			}
->>+
->> 			if (!list_empty(&pdn->list))
->> 				list_del(&pdn->list);
->>
->>-- 
->>1.7.9.5
->>
-
+diff --git a/arch/avr32/mach-at32ap/pio.c b/arch/avr32/mach-at32ap/pio.c
+index 903c7d81d0d5..2583e6cc44e9 100644
+--- a/arch/avr32/mach-at32ap/pio.c
++++ b/arch/avr32/mach-at32ap/pio.c
+@@ -286,7 +286,7 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+ 	struct pio_device	*pio = irq_desc_get_chip_data(desc);
+ 	unsigned		gpio_irq;
+ 
+-	gpio_irq = (unsigned) irq_get_handler_data(irq);
++	gpio_irq = (unsigned) irq_desc_get_handler_data(desc);
+ 	for (;;) {
+ 		u32		isr;
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.7.10.4
 
