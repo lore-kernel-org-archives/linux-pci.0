@@ -1,114 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:57988 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750802AbbEYWsV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 May 2015 18:48:21 -0400
-Message-ID: <5563A6B3.2030600@hauke-m.de>
-Date: Tue, 26 May 2015 00:48:19 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Ray Jui <rjui@broadcom.com>, bhelgaas@google.com
-CC: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, zajec5@gmail.com
-Subject: Re: [PATCH 1/2] PCI: iproc: directly add pci resources
-References: <1432499823-27369-1-git-send-email-hauke@hauke-m.de> <5563579E.80608@broadcom.com>
-In-Reply-To: <5563579E.80608@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-gpio@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC v1 05/25] gpio: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Wed, 20 May 2015 17:59:53 +0800
+Message-Id: <1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/25/2015 07:10 PM, Ray Jui wrote:
-> Hi Hauke,
-> 
-> On 5/24/2015 1:37 PM, Hauke Mehrtens wrote:
->> The resources member in the struct was pointing to a stack variable and
->> is invalid after the the registration function returned. Remove this
->> pointer and add it a a parameter to the function.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  drivers/pci/host/pcie-iproc-bcma.c     | 4 +---
->>  drivers/pci/host/pcie-iproc-platform.c | 4 +---
->>  drivers/pci/host/pcie-iproc.c          | 4 ++--
->>  drivers/pci/host/pcie-iproc.h          | 3 +--
->>  4 files changed, 5 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
->> index c318f19..f96b39e 100644
->> --- a/drivers/pci/host/pcie-iproc-bcma.c
->> +++ b/drivers/pci/host/pcie-iproc-bcma.c
->> @@ -62,11 +62,9 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->>  	res_mem.flags = IORESOURCE_MEM;
->>  	pci_add_resource(&res, &res_mem);
->>  
->> -	pcie->resources = &res;
->> -
->>  	pcie->map_irq = iproc_pcie_bcma_map_irq;
->>  
->> -	ret = iproc_pcie_setup(pcie);
->> +	ret = iproc_pcie_setup(pcie, &res);
->>  	if (ret) {
->>  		dev_err(pcie->dev, "PCIe controller setup failed\n");
->>  		return ret;
->> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
->> index c8aa06f..c5fe4c1 100644
->> --- a/drivers/pci/host/pcie-iproc-platform.c
->> +++ b/drivers/pci/host/pcie-iproc-platform.c
->> @@ -69,11 +69,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
->>  		return ret;
->>  	}
->>  
->> -	pcie->resources = &res;
->> -
->>  	pcie->map_irq = of_irq_parse_and_map_pci;
->>  
->> -	ret = iproc_pcie_setup(pcie);
->> +	ret = iproc_pcie_setup(pcie, &res);
->>  	if (ret) {
->>  		dev_err(pcie->dev, "PCIe controller setup failed\n");
->>  		return ret;
->> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
->> index cef31f6..d77481e 100644
->> --- a/drivers/pci/host/pcie-iproc.c
->> +++ b/drivers/pci/host/pcie-iproc.c
->> @@ -183,7 +183,7 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
->>  	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
->>  }
->>  
->> -int iproc_pcie_setup(struct iproc_pcie *pcie)
->> +int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->>  {
->>  	int ret;
->>  	struct pci_bus *bus;
->> @@ -211,7 +211,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie)
->>  	pcie->sysdata.private_data = pcie;
->>  
->>  	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
->> -				  &pcie->sysdata, pcie->resources);
->> +				  &pcie->sysdata, res);
->>  	if (!bus) {
->>  		dev_err(pcie->dev, "unable to create PCI root bus\n");
->>  		ret = -ENOMEM;
->> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
->> index a333d4b..ba0a108 100644
->> --- a/drivers/pci/host/pcie-iproc.h
->> +++ b/drivers/pci/host/pcie-iproc.h
->> @@ -29,7 +29,6 @@
->>  struct iproc_pcie {
->>  	struct device *dev;
->>  	void __iomem *base;
->> -	struct list_head *resources;
-> 
-> This means we do not want to keep a copy of the resources. In the
-> future, if we need to add support to explicitly set up the
-> inbound/outbound mapping window, we need to do it in iproc_pcie_setup.
-> Is that the intention?
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-I haven't really thought about where to configure the memory mapping,
-but I thought it would be somewhere in iproc_pcie_setup() or an method
-called from there.
-If you need it after iproc_pcie_setup() finished we should embed the
-list into the struct iproc_pcie, because currently this pointer points
-to the stack.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/gpio/gpio-bcm-kona.c   |    2 +-
+ drivers/gpio/gpio-dwapb.c      |    2 +-
+ drivers/gpio/gpio-mvebu.c      |    2 +-
+ drivers/gpio/gpio-mxc.c        |    6 +++---
+ drivers/gpio/gpio-mxs.c        |    2 +-
+ drivers/gpio/gpio-omap.c       |    2 +-
+ drivers/gpio/gpio-tegra.c      |    4 +---
+ drivers/gpio/gpio-timberdale.c |    2 +-
+ drivers/gpio/gpio-vf610.c      |    2 +-
+ drivers/gpio/gpio-zynq.c       |    2 +-
+ 10 files changed, 12 insertions(+), 14 deletions(-)
 
-Hauke
+diff --git a/drivers/gpio/gpio-bcm-kona.c b/drivers/gpio/gpio-bcm-kona.c
+index b164ce837b43..2e7a8c66fe57 100644
+--- a/drivers/gpio/gpio-bcm-kona.c
++++ b/drivers/gpio/gpio-bcm-kona.c
+@@ -432,7 +432,7 @@ static void bcm_kona_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	void __iomem *reg_base;
+ 	int bit, bank_id;
+ 	unsigned long sta;
+-	struct bcm_kona_gpio_bank *bank = irq_get_handler_data(irq);
++	struct bcm_kona_gpio_bank *bank = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+diff --git a/drivers/gpio/gpio-dwapb.c b/drivers/gpio/gpio-dwapb.c
+index 58faf04fce5d..649be07a845d 100644
+--- a/drivers/gpio/gpio-dwapb.c
++++ b/drivers/gpio/gpio-dwapb.c
+@@ -149,7 +149,7 @@ static u32 dwapb_do_irq(struct dwapb_gpio *gpio)
+ 
+ static void dwapb_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+-	struct dwapb_gpio *gpio = irq_get_handler_data(irq);
++	struct dwapb_gpio *gpio = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	dwapb_do_irq(gpio);
+diff --git a/drivers/gpio/gpio-mvebu.c b/drivers/gpio/gpio-mvebu.c
+index 1a54205860f5..a8c302ef7bc4 100644
+--- a/drivers/gpio/gpio-mvebu.c
++++ b/drivers/gpio/gpio-mvebu.c
+@@ -460,7 +460,7 @@ static int mvebu_gpio_irq_set_type(struct irq_data *d, unsigned int type)
+ 
+ static void mvebu_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct mvebu_gpio_chip *mvchip = irq_get_handler_data(irq);
++	struct mvebu_gpio_chip *mvchip = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	u32 cause, type;
+ 	int i;
+diff --git a/drivers/gpio/gpio-mxc.c b/drivers/gpio/gpio-mxc.c
+index 9f7446a7ac64..f10948c04f7c 100644
+--- a/drivers/gpio/gpio-mxc.c
++++ b/drivers/gpio/gpio-mxc.c
+@@ -275,8 +275,8 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
+ static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_stat;
+-	struct mxc_gpio_port *port = irq_get_handler_data(irq);
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct mxc_gpio_port *port = irq_desc_get_handler_data(desc);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+@@ -292,7 +292,7 @@ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_msk, irq_stat;
+ 	struct mxc_gpio_port *port;
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+diff --git a/drivers/gpio/gpio-mxs.c b/drivers/gpio/gpio-mxs.c
+index 84cbda6acdda..039c7d50e64f 100644
+--- a/drivers/gpio/gpio-mxs.c
++++ b/drivers/gpio/gpio-mxs.c
+@@ -157,7 +157,7 @@ static void mxs_flip_edge(struct mxs_gpio_port *port, u32 gpio)
+ static void mxs_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_stat;
+-	struct mxs_gpio_port *port = irq_get_handler_data(irq);
++	struct mxs_gpio_port *port = irq_desc_get_handler_data(desc);
+ 
+ 	desc->irq_data.chip->irq_ack(&desc->irq_data);
+ 
+diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
+index b232397ad7ec..acbf3feff1e2 100644
+--- a/drivers/gpio/gpio-omap.c
++++ b/drivers/gpio/gpio-omap.c
+@@ -719,7 +719,7 @@ static void omap_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	struct gpio_bank *bank;
+ 	int unmasked = 0;
+ 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+-	struct gpio_chip *chip = irq_get_handler_data(irq);
++	struct gpio_chip *chip = irq_desc_get_handler_data(desc);
+ 
+ 	chained_irq_enter(irqchip, desc);
+ 
+diff --git a/drivers/gpio/gpio-tegra.c b/drivers/gpio/gpio-tegra.c
+index 1741981d53c8..89ed8a56eb0b 100644
+--- a/drivers/gpio/gpio-tegra.c
++++ b/drivers/gpio/gpio-tegra.c
+@@ -268,16 +268,14 @@ static void tegra_gpio_irq_shutdown(struct irq_data *d)
+ 
+ static void tegra_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct tegra_gpio_bank *bank;
+ 	int port;
+ 	int pin;
+ 	int unmasked = 0;
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct tegra_gpio_bank *bank = irq_desc_get_handler_data(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+-	bank = irq_get_handler_data(irq);
+-
+ 	for (port = 0; port < 4; port++) {
+ 		int gpio = tegra_gpio_compose(bank->bank, port, 0);
+ 		unsigned long sta = tegra_gpio_readl(GPIO_INT_STA(gpio)) &
+diff --git a/drivers/gpio/gpio-timberdale.c b/drivers/gpio/gpio-timberdale.c
+index e8f97e03c9bb..d4e8cb4f2e53 100644
+--- a/drivers/gpio/gpio-timberdale.c
++++ b/drivers/gpio/gpio-timberdale.c
+@@ -194,7 +194,7 @@ out:
+ 
+ static void timbgpio_irq(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct timbgpio *tgpio = irq_get_handler_data(irq);
++	struct timbgpio *tgpio = irq_desc_get_handler_data(desc);
+ 	unsigned long ipr;
+ 	int offset;
+ 
+diff --git a/drivers/gpio/gpio-vf610.c b/drivers/gpio/gpio-vf610.c
+index 7bd9f209ffa8..fa344388f4da 100644
+--- a/drivers/gpio/gpio-vf610.c
++++ b/drivers/gpio/gpio-vf610.c
+@@ -120,7 +120,7 @@ static int vf610_gpio_direction_output(struct gpio_chip *chip, unsigned gpio,
+ 
+ static void vf610_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+-	struct vf610_gpio_port *port = irq_get_handler_data(irq);
++	struct vf610_gpio_port *port = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	int pin;
+ 	unsigned long irq_isfr;
+diff --git a/drivers/gpio/gpio-zynq.c b/drivers/gpio/gpio-zynq.c
+index aea6075e5b2e..70e3a568b1cb 100644
+--- a/drivers/gpio/gpio-zynq.c
++++ b/drivers/gpio/gpio-zynq.c
+@@ -499,7 +499,7 @@ static void zynq_gpio_irqhandler(unsigned int irq, struct irq_desc *desc)
+ {
+ 	u32 int_sts, int_enb;
+ 	unsigned int bank_num;
+-	struct zynq_gpio *gpio = irq_get_handler_data(irq);
++	struct zynq_gpio *gpio = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+ 
+ 	chained_irq_enter(irqchip, desc);
+-- 
+1.7.10.4
+
