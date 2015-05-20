@@ -1,51 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48253 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755944AbbEFBrJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 May 2015 21:47:09 -0400
-Date: Wed, 6 May 2015 09:46:49 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150506014649.GA14065@dhcp-128-4.nay.redhat.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
- <20150505060931.GB31063@dhcp-128-4.nay.redhat.com>
- <20150505152343.GP15736@8bytes.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <555CA929.3080306@linux.intel.com>
+Date: Wed, 20 May 2015 23:32:57 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150505152343.GP15736@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Roland Stigge <stigge@antcom.de>,
+	Tony Lindgren <tony@atomide.com>,
+	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
+	Daniel Mack <daniel@zonque.org>,
+	Haojian Zhuang <haojian.zhuang@gmail.com>,
+	Robert Jarzmik <robert.jarzmik@free.fr>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org
+Subject: Re: [RFC v1 15/25] genirq: Kill the first parameter 'irq' of irq_flow_handler_t
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-16-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201715380.4225@nanos>
+In-Reply-To: <alpine.DEB.2.11.1505201715380.4225@nanos>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/05/15 at 05:23pm, Joerg Roedel wrote:
-> On Tue, May 05, 2015 at 02:09:31PM +0800, Dave Young wrote:
-> > I agree that we can do nothing with the old corrupted data, but I worry
-> > about the future corruption after using the old corrupted data. I wonder
-> > if we can mark all the oldmem as readonly so that we can lower the risk.
-> > Is it resonable?
+On 2015/5/20 23:28, Thomas Gleixner wrote:
+> On Wed, 20 May 2015, Jiang Liu wrote:
+>> -static void locomo_handler(unsigned int irq, struct irq_desc *desc)
+>> +static void locomo_handler(struct irq_desc *desc)
+>>  {
+>>  	struct locomo *lchip = irq_desc_get_chip_data(desc);
+>> +	unsigned int irq;
+>>  	int req, i;
 > 
-> Do you mean marking it read-only for the devices? That will very likely
-> cause DMAR faults, re-introducing the problem this patch-set tries to
-> fix.
+> That leaves irq unitialized ....
+That should be OK, 'irq' here is just a local variable.
+Actually it may be changed as:
+        if (req) {
+                /* generate the next interrupt(s) */
+-                irq = lchip->irq_base;
++                unsigned int irq = lchip->irq_base;
+                for (i = 0; i <= 3; i++, irq++) {
+                        if (req & (0x0100 << i)) {
+                                generic_handle_irq(irq);
+                        }
 
-I means to block all dma write to oldmem, I believe it will cause DMA error.
-But all other DMA reading requests will continue and work. This will avoid
-future possible corruption. It will solve half of the problem at least?
+                }
+        }
 
-For the original problem, the key issue is dmar faults cause kdump kernel
-hang so that vmcore can not be saved. I do not know the reason why it hangs
-I think it is acceptable if kdump kernel boot ok with some dma errors..
-
-Thanks
-Dave
+> 
+> Thanks,
+> 
+> 	tglx
+> 
