@@ -1,61 +1,84 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 May 2015 21:47:49 -0700
-From: Darren Hart <dvhart@infradead.org>
-To: Michael Marineau <michael.marineau@coreos.com>
-Cc: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	platform-driver-x86@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Petri Hodju <petrihodju@yahoo.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb changes
-Message-ID: <20150527044749.GB21644@fury.dvhart.com>
-References: <20150223215155.18444386@neptune.home>
- <20150303172753.GF83894@vmdeb7>
- <20150305232038.1873d380@neptune.home>
- <20150306174254.GB19001@vmdeb7>
- <20150307011546.0050279d@neptune.home>
- <20150309225238.0b9ced4e@neptune.home>
- <CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
- <20150311223445.6af76f7c@neptune.home>
- <CAGr1u3tKVtQno=hUrKemLFYG12dtvPjFVR7oFwDG5cewJGCnJQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGr1u3tKVtQno=hUrKemLFYG12dtvPjFVR7oFwDG5cewJGCnJQ@mail.gmail.com>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 00/16] ntb: NTB Abstraction Layer
+Date: Wed, 20 May 2015 11:41:01 -0400
+Message-Id: <cover.1432135631.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 12:10:48PM -0700, Michael Marineau wrote:
-> FYI, this actually broke backlight controls on my MBP11,3 because the
-> assumption the patch makes that gmux is always loaded before graphics
-> drivers didn't hold true. At least for me dracut included the nouveau
-> module in the initrd but not gmux, ensuring the ordering was wrong. No
-> errors were reporting, and gmux still offered the backlight device, it
-> just became inoperable. I worked around this for my kernel by building
-> gmux into vmlinuz instead of as a module but that isn't going to in
-> more general configs because there is an apple backlight driver which
-> cannot be built at all in that configuration.
-> 
+The NTB drivers currently support only one hardware driver, and one client
+type.  This patch set adds an abstraction layer, enabling different hardware
+drivers by other vendors, and clients other than ntb_transport.
 
-Thank you for reporting this Michael,
+The commits in this set may also be pulled from:
+github.com/allenbh/linux
+in the branch ntb-abh, or tag ntb-abh-v1
 
-That is tough as nouveau doesn't have an explicit dependency on gmux, so we
-could do something like a passive request_module(), but if it isn't in the
-initrd image, it would still fail as you describe.
+Allen Hubbe (12):
+  Move files in preparation for NTB Abstraction
+  NTB Abstraction Layer
+  Intel NTB params for snb b2b addresses
+  NTB Pingpong Client
+  NTB Tool Client
+  ntb_transport: rate limit ntb_qp_link_work
+  ntb_transport: differentiate link down messages
+  ntb_transport: don't advance rx on link down
+  ntb_transport: reset qp link stats on down
+  ntb_transport: numa aware memory and dma chan
+  ntb_hw_intel: numa aware memory allocation
+  ntb_transport: fix small code format issues
 
-> Is there a way to make the ordering between nouveau and gmux more
-> explicit/reliable? Can gmux complain loudly if the ordering is ever
-> wrong?
+Dave Jiang (4):
+  ntb: Enable link training for RP mode in the driver probe
+  Check the DID for certain workaround error flags to be set.
+  ntb: performance improvement by write combining
+  ntb: default to cpu memcpy for performance
 
-It should print an error if the probe fails due to the IO already being in use
-or if it can't be allocated. The disabled IO case is only info level though,
-perhaps that should be higher priority. Printing something when failing to probe
-seems like a reasonable thing to do.
-
-Michael, which message do you get if you boot with "debug" or "loglevel=6" when
-apple-gmux is not built-in?
+ Documentation/ntb.txt               |  127 ++
+ MAINTAINERS                         |   16 +-
+ drivers/net/ntb_netdev.c            |   58 +-
+ drivers/ntb/Kconfig                 |   22 +-
+ drivers/ntb/Makefile                |    4 +-
+ drivers/ntb/hw/Kconfig              |    1 +
+ drivers/ntb/hw/Makefile             |    1 +
+ drivers/ntb/hw/intel/Kconfig        |    8 +
+ drivers/ntb/hw/intel/Makefile       |    1 +
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 2222 +++++++++++++++++++++++++++++++++++
+ drivers/ntb/hw/intel/ntb_hw_intel.h |  342 ++++++
+ drivers/ntb/ntb.c                   |  251 ++++
+ drivers/ntb/ntb_hw.c                | 1896 ------------------------------
+ drivers/ntb/ntb_hw.h                |  256 ----
+ drivers/ntb/ntb_regs.h              |  177 ---
+ drivers/ntb/ntb_transport.c         | 1018 +++++++++-------
+ drivers/ntb/test/Kconfig            |   21 +
+ drivers/ntb/test/Makefile           |    2 +
+ drivers/ntb/test/ntb_pingpong.c     |  251 ++++
+ drivers/ntb/test/ntb_tool.c         |  557 +++++++++
+ include/linux/ntb.h                 |  969 ++++++++++++++-
+ include/linux/ntb_transport.h       |   85 ++
+ 22 files changed, 5486 insertions(+), 2799 deletions(-)
+ create mode 100644 Documentation/ntb.txt
+ create mode 100644 drivers/ntb/hw/Kconfig
+ create mode 100644 drivers/ntb/hw/Makefile
+ create mode 100644 drivers/ntb/hw/intel/Kconfig
+ create mode 100644 drivers/ntb/hw/intel/Makefile
+ create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.c
+ create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.h
+ create mode 100644 drivers/ntb/ntb.c
+ delete mode 100644 drivers/ntb/ntb_hw.c
+ delete mode 100644 drivers/ntb/ntb_hw.h
+ delete mode 100644 drivers/ntb/ntb_regs.h
+ create mode 100644 drivers/ntb/test/Kconfig
+ create mode 100644 drivers/ntb/test/Makefile
+ create mode 100644 drivers/ntb/test/ntb_pingpong.c
+ create mode 100644 drivers/ntb/test/ntb_tool.c
+ create mode 100644 include/linux/ntb_transport.h
 
 -- 
-Darren Hart
-Intel Open Source Technology Center
+2.4.0.rc0.43.gcf8a8c6
+
