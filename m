@@ -1,58 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555CA834.7080807@linux.intel.com>
-Date: Wed, 20 May 2015 23:28:52 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:33155 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbbETNQq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 09:16:46 -0400
+Received: by qcblr10 with SMTP id lr10so22265716qcb.0
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2015 06:16:45 -0700 (PDT)
 MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
+In-Reply-To: <20150519060809.GA27777@tinar>
+References: <20150519060809.GA27777@tinar>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 May 2015 08:16:24 -0500
+Message-ID: <CAErSpo47yMfPREFOTCiL8Pa=xbqgsSWk90Ge=u2YeTkUgdFESQ@mail.gmail.com>
+Subject: Re: [PATCH v2] xen/pcifront: Remove usage of struct timeval
+To: Tina Ruchandani <ruchandani.tina@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of irq_flow_handler_t
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos>
-In-Reply-To: <alpine.DEB.2.11.1505201724260.4225@nanos>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/20 23:25, Thomas Gleixner wrote:
-> On Wed, 20 May 2015, Jiang Liu wrote:
->> --- a/include/linux/irqdesc.h
->> +++ b/include/linux/irqdesc.h
->> @@ -99,6 +99,11 @@ static inline struct irq_desc *irq_data_to_desc(struct irq_data *data)
->>  	return container_of(data->common, struct irq_desc, irq_common_data);
->>  }
->>  
->> +static inline unsigned int irq_desc_get_irq(struct irq_desc *desc)
->> +{
->> +	return desc->irq_data.irq;
->> +}
->> +
-> 
-> Does not apply either.
-Hi Thomas,
-	Will check the base again.
-	Please do not apply patch after [14/25]. There are here to
-ask for comments, there are still building issues with patch after
-[14/25]. Just help to comment whether it's on the right direction.
-If so, I will send another version for formal review.
-Thanks!
-Gerry
+On Tue, May 19, 2015 at 1:08 AM, Tina Ruchandani
+<ruchandani.tina@gmail.com> wrote:
+> struct timeval uses a 32-bit field for representing seconds,
+> which will overflow in the year 2038 and beyond. This patch replaces
+> struct timeval with 64-bit ktime_t which is 2038 safe.
+> The patch is part of a larger effort to remove instances of
+> 32-bit timekeeping variables (timeval, time_t and timespec)
+> from the kernel.
+>
+> Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+> Suggested-by: Arnd Bergmann <arnd@arndb.de>
 
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+This isn't PCI-related, so I expect Konrad, Boris, or David will merge this.
+
+> --
+> Changes in v2:
+> - Use monotonic time (ktime_get_ns()) instead of real time
+> since we only care about elapsed delta here.
+> - Use macro ktime_get_ns() instead of getting ktime_t and
+> converting it to ns.
+> ---
+>  drivers/pci/xen-pcifront.c | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 7cfd2db..c4796c8 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/workqueue.h>
+>  #include <linux/bitops.h>
+>  #include <linux/time.h>
+> +#include <linux/ktime.h>
+>  #include <xen/platform_pci.h>
+>
+>  #include <asm/xen/swiotlb-xen.h>
+> @@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>         evtchn_port_t port = pdev->evtchn;
+>         unsigned irq = pdev->irq;
+>         s64 ns, ns_timeout;
+> -       struct timeval tv;
+>
+>         spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
+>
+> @@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>          * (in the latter case we end up continually re-executing poll() with a
+>          * timeout in the past). 1s difference gives plenty of slack for error.
+>          */
+> -       do_gettimeofday(&tv);
+> -       ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
+> +       ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
+>
+>         xen_clear_irq_pending(irq);
+>
+> @@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+>                         (unsigned long *)&pdev->sh_info->flags)) {
+>                 xen_poll_irq_timeout(irq, jiffies + 3*HZ);
+>                 xen_clear_irq_pending(irq);
+> -               do_gettimeofday(&tv);
+> -               ns = timeval_to_ns(&tv);
+> +               ns = ktime_get_ns();
+>                 if (ns > ns_timeout) {
+>                         dev_err(&pdev->xdev->dev,
+>                                 "pciback not responding!!!\n");
+> --
+> 2.2.0.rc0.207.ga3a616c
+>
