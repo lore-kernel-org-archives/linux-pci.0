@@ -1,88 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:34141 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755292AbbE2AhA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 20:37:00 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150527200402.GS23057@wotan.suse.de>
-References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
- <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
- <20150521223321.GG32152@google.com> <20150522002341.GM23057@wotan.suse.de>
- <20150526174008.GN32152@google.com> <20150527200402.GS23057@wotan.suse.de>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 28 May 2015 17:36:38 -0700
-Message-ID: <CAB=NE6Xyd-THK2385W7VfS358PSJfkfHRnjoZRJWP_LFrzOWJA@mail.gmail.com>
-Subject: Re: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dave Airlie <airlied@linux.ie>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 11/16] ntb_transport: reset qp link stats on down
+Date: Wed, 20 May 2015 11:41:12 -0400
+Message-Id: <574bb412dc6ae6b3bcb5dd0823bd76f3f18854dd.1432135632.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 1:04 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> On Tue, May 26, 2015 at 12:40:08PM -0500, Bjorn Helgaas wrote:
->> On Fri, May 22, 2015 at 02:23:41AM +0200, Luis R. Rodriguez wrote:
->> > On Thu, May 21, 2015 at 05:33:21PM -0500, Bjorn Helgaas wrote:
->> > >
->> > > I tentatively put this (and the rest of the series) on a pci/resource
->> > > branch.  I'm hoping you'll propose some clarification about
->> > > EXPORT_SYMBOL_GPL().
->> >
->> > EXPORT_SYMBOL_GPL() also serves to ensure only GPL modules can
->> > only run that code. So for instance although we have "Dual BSD/GPL"
->> > tags for modules pure "BSD" tags do not exist for module tags and
->> > cannot run EXPORT_SYMBOL_GPL() code [0]. Also there is some folks
->> > who do believe tha at run time all kernel modules are GPL [1] [2].
->> > And to be precise even though the FSF may claim a list of licenses
->> > are GPL-compatible we cannot rely on this list alone for our own
->> > goals and if folks want to use our EXPORT_SYMBOL_GPL()s they must
->> > discuss this on lkml [2].
->>
->> By "propose some clarification," I meant that I hoped you would propose a
->> patch to Documentation/ that would give maintainers some guidance.
->
-> I *really really* would hate to do so but only because you insist, I'll look
-> into this...
+Reset the link stats when the link goes down.  In particular, the tx and
+rx index and count must be reset, or else the tx side will be sending
+packets to the rx side, where the rx side is not expecting them.  Reset
+all the stats, to be consistent.
 
-OK done. Please let me know if there is anything else I can do to
-help. Also as per review with Tomi, the framebuffer maintainer, he
-would prefer for only the required symbols to go through your tree.
-We'd then wait for the next merge window for them to perculate to
-Linus' tree and once there I'd send him a pull request for the
-framebuffer device driver changes alone. So this does mean we'll have
-no users of the symbols for a full release, but again, this is as per
-Tomi's preference. This strategy is also the preference then for the
-pci_iomap_wc() series as well. With that in mind, perhaps the lib
-patch can go in as we'd have no users but we do have a few future
-possible expected users.
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
 
- Luis
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 9b4e240..c76d8b9 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -647,18 +647,37 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	return 0;
+ }
+ 
++static void ntb_qp_link_down_reset(struct ntb_transport_qp *qp)
++{
++	qp->link_is_up = false;
++
++	qp->tx_index = 0;
++	qp->rx_index = 0;
++	qp->rx_bytes = 0;
++	qp->rx_pkts = 0;
++	qp->rx_ring_empty = 0;
++	qp->rx_err_no_buf = 0;
++	qp->rx_err_oflow = 0;
++	qp->rx_err_ver = 0;
++	qp->rx_memcpy = 0;
++	qp->rx_async = 0;
++	qp->tx_bytes = 0;
++	qp->tx_pkts = 0;
++	qp->tx_ring_full = 0;
++	qp->tx_err_no_buf = 0;
++	qp->tx_memcpy = 0;
++	qp->tx_async = 0;
++}
++
+ static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
+ {
+ 	struct ntb_transport_ctx *nt = qp->transport;
+ 	struct pci_dev *pdev = nt->ndev->pdev;
+ 
+-	if (qp->link_is_up) {
+-		cancel_delayed_work_sync(&qp->link_work);
+-		return;
+-	}
+-
+ 	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
+-	qp->link_is_up = false;
++
++	cancel_delayed_work_sync(&qp->link_work);
++	ntb_qp_link_down_reset(qp);
+ 
+ 	if (qp->event_handler)
+ 		qp->event_handler(qp->cb_data, qp->link_is_up);
+@@ -865,9 +884,9 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
+ 	qp->qp_num = qp_num;
+ 	qp->transport = nt;
+ 	qp->ndev = nt->ndev;
+-	qp->link_is_up = false;
+ 	qp->client_ready = false;
+ 	qp->event_handler = NULL;
++	ntb_qp_link_down_reset(qp);
+ 
+ 	if (qp_count % mw_count && mw_num + 1 < qp_count / mw_count)
+ 		num_qps_mw = qp_count / mw_count + 1;
+@@ -1453,7 +1472,6 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
+ 	if (!qp->link_is_up)
+ 		return;
+ 
+-	qp->link_is_up = false;
+ 	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
+ 
+ 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
+@@ -1475,6 +1493,8 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
+ 	if (rc)
+ 		dev_err(&pdev->dev, "ntb: QP%d unable to send linkdown msg\n",
+ 			qp->qp_num);
++
++	ntb_qp_link_down_reset(qp);
+ }
+ 
+ /**
+-- 
+2.4.0.rc0.43.gcf8a8c6
+
