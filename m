@@ -1,328 +1,545 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Manuel Lauss <manuel.lauss@gmail.com>,
-	Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Aleksey Makarov <aleksey.makarov@auriga.com>,
-	David Daney <david.daney@cavium.com>,
-	Christoph Lameter <cl@linux.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Tejun Heo <tj@kernel.org>, John Crispin <blogic@openwrt.org>,
-	Andrew Bresticker <abrestic@chromium.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-mips@linux-mips.org
-Subject: [RFC v1 17/25] genirq: Kill the first parameter 'irq' of irq_flow_handler_t
-Date: Wed, 20 May 2015 18:00:05 +0800
-Message-Id: <1432116013-25902-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwdur.emc.com ([128.221.224.79]:53266 "EHLO
+	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754674AbbETUmA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 16:42:00 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: [PATCH 04/16] Check the DID for certain workaround error flags to be set.
+Date: Wed, 20 May 2015 11:41:05 -0400
+Message-Id: <9c6ef6eec533bd94ddc6df96bb0b2d37baff75cf.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now most IRQ flow handlers make no use of the first parameter 'irq'.
-And for those who do make use of 'irq', we could easily get the irq
-number through irq_desc->irq_data->irq. So kill the first parameter
-'irq' of irq_flow_handler_t.
+From: Dave Jiang <dave.jiang@intel.com>
 
-To ease review, I have split the changes into several parts, though
-they should be merge as one to support bisecting.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- arch/mips/alchemy/common/irq.c          |    4 ++--
- arch/mips/alchemy/devboards/bcsr.c      |    3 ++-
- arch/mips/ath25/ar2315.c                |    2 +-
- arch/mips/ath25/ar5312.c                |    2 +-
- arch/mips/ath79/irq.c                   |   11 +++++++----
- arch/mips/cavium-octeon/octeon-irq.c    |    8 ++++----
- arch/mips/include/asm/netlogic/common.h |    4 ++--
- arch/mips/jz4740/gpio.c                 |    2 +-
- arch/mips/netlogic/common/smp.c         |    4 ++--
- arch/mips/pci/pci-ar2315.c              |    2 +-
- arch/mips/pci/pci-ar71xx.c              |    2 +-
- arch/mips/pci/pci-ar724x.c              |    2 +-
- arch/mips/pci/pci-rt3883.c              |    3 ++-
- arch/mips/ralink/irq.c                  |    2 +-
- 14 files changed, 28 insertions(+), 23 deletions(-)
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 196 +++++++++++++++++++-----------------
+ drivers/ntb/hw/intel/ntb_hw_intel.h |  24 ++++-
+ drivers/ntb/ntb_transport.c         |  16 +--
+ 3 files changed, 133 insertions(+), 103 deletions(-)
 
-diff --git a/arch/mips/alchemy/common/irq.c b/arch/mips/alchemy/common/irq.c
-index 026c4eed37d5..08b3e52adf1d 100644
---- a/arch/mips/alchemy/common/irq.c
-+++ b/arch/mips/alchemy/common/irq.c
-@@ -851,7 +851,7 @@ static struct syscore_ops alchemy_gpic_pmops = {
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
+index d162f22..89fea50 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.c
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
+@@ -503,7 +503,6 @@ static ssize_t ndev_debugfs_read(struct file *filp, char __user *ubuf,
+ 	size_t buf_size;
+ 	ssize_t ret, off;
+ 	union { u64 v64; u32 v32; u16 v16; } u;
+-	unsigned long reg;
  
- /* create chained handlers for the 4 IC requests to the MIPS IRQ ctrl */
- #define DISP(name, base, addr)						      \
--static void au1000_##name##_dispatch(unsigned int irq, struct irq_desc *d)    \
-+static void au1000_##name##_dispatch(struct irq_desc *d)		      \
- {									      \
- 	unsigned long r = __raw_readl((void __iomem *)KSEG1ADDR(addr));	      \
- 	if (likely(r))							      \
-@@ -865,7 +865,7 @@ DISP(ic0r1, AU1000_INTC0_INT_BASE, AU1000_IC0_PHYS_ADDR + IC_REQ1INT)
- DISP(ic1r0, AU1000_INTC1_INT_BASE, AU1000_IC1_PHYS_ADDR + IC_REQ0INT)
- DISP(ic1r1, AU1000_INTC1_INT_BASE, AU1000_IC1_PHYS_ADDR + IC_REQ1INT)
+ 	ndev = filp->private_data;
+ 	mmio = ndev->self_mmio;
+@@ -538,10 +537,10 @@ static ssize_t ndev_debugfs_read(struct file *filp, char __user *ubuf,
  
--static void alchemy_gpic_dispatch(unsigned int irq, struct irq_desc *d)
-+static void alchemy_gpic_dispatch(struct irq_desc *d)
- {
- 	int i = __raw_readl(AU1300_GPIC_ADDR + AU1300_GPIC_PRIENC);
- 	generic_handle_irq(ALCHEMY_GPIC_INT_BASE + i);
-diff --git a/arch/mips/alchemy/devboards/bcsr.c b/arch/mips/alchemy/devboards/bcsr.c
-index c98c9ea3372c..0f725ceccffc 100644
---- a/arch/mips/alchemy/devboards/bcsr.c
-+++ b/arch/mips/alchemy/devboards/bcsr.c
-@@ -85,8 +85,9 @@ EXPORT_SYMBOL_GPL(bcsr_mod);
- /*
-  * DB1200/PB1200 CPLD IRQ muxer
-  */
--static void bcsr_csc_handler(unsigned int irq, struct irq_desc *d)
-+static void bcsr_csc_handler(struct irq_desc *d)
- {
-+	unsigned int irq = irq_desc_get_irq(d);
- 	unsigned short bisr = __raw_readw(bcsr_virt + BCSR_REG_INTSTAT);
+ 	if (!ndev->reg->link_is_up(ndev)) {
+ 		off += scnprintf(buf + off, buf_size - off,
+-				 "Link Satus -\t\tDown\n");
++				 "Link Status -\t\tDown\n");
+ 	} else {
+ 		off += scnprintf(buf + off, buf_size - off,
+-				 "Link Satus -\t\tUp\n");
++				 "Link Status -\t\tUp\n");
+ 		off += scnprintf(buf + off, buf_size - off,
+ 				 "Link Speed -\t\tPCI-E Gen %u\n",
+ 				 NTB_LNK_STA_SPEED(ndev->lnk_sta));
+@@ -568,36 +567,30 @@ static ssize_t ndev_debugfs_read(struct file *filp, char __user *ubuf,
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "Doorbell Mask Cached -\t%#llx\n", ndev->db_mask);
  
- 	disable_irq_nosync(irq);
-diff --git a/arch/mips/ath25/ar2315.c b/arch/mips/ath25/ar2315.c
-index 8742e1cee492..b48128e64488 100644
---- a/arch/mips/ath25/ar2315.c
-+++ b/arch/mips/ath25/ar2315.c
-@@ -69,7 +69,7 @@ static struct irqaction ar2315_ahb_err_interrupt  = {
- 	.name		= "ar2315-ahb-error",
- };
+-	reg = ndev->self_reg->db_mask;
+-	u.v64 = ndev_db_read(ndev, mmio + reg);
++	u.v64 = ndev_db_read(ndev, mmio + ndev->self_reg->db_mask);
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "Doorbell Mask -\t\t%#llx\n", u.v64);
  
--static void ar2315_misc_irq_handler(unsigned irq, struct irq_desc *desc)
-+static void ar2315_misc_irq_handler(struct irq_desc *desc)
- {
- 	u32 pending = ar2315_rst_reg_read(AR2315_ISR) &
- 		      ar2315_rst_reg_read(AR2315_IMR);
-diff --git a/arch/mips/ath25/ar5312.c b/arch/mips/ath25/ar5312.c
-index 094b938fd603..db3c7b435e0c 100644
---- a/arch/mips/ath25/ar5312.c
-+++ b/arch/mips/ath25/ar5312.c
-@@ -73,7 +73,7 @@ static struct irqaction ar5312_ahb_err_interrupt  = {
- 	.name    = "ar5312-ahb-error",
- };
+-	reg = ndev->self_reg->db_bell;
+-	u.v64 = ndev_db_read(ndev, mmio + reg);
++	u.v64 = ndev_db_read(ndev, mmio + ndev->self_reg->db_bell);
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "Doorbell Bell -\t\t%#llx\n", u.v64);
  
--static void ar5312_misc_irq_handler(unsigned irq, struct irq_desc *desc)
-+static void ar5312_misc_irq_handler(struct irq_desc *desc)
- {
- 	u32 pending = ar5312_rst_reg_read(AR5312_ISR) &
- 		      ar5312_rst_reg_read(AR5312_IMR);
-diff --git a/arch/mips/ath79/irq.c b/arch/mips/ath79/irq.c
-index 6adae366f11a..92c143a11803 100644
---- a/arch/mips/ath79/irq.c
-+++ b/arch/mips/ath79/irq.c
-@@ -27,7 +27,7 @@
- static void (*ath79_ip2_handler)(void);
- static void (*ath79_ip3_handler)(void);
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "\nNTB Incoming XLAT:\n");
  
--static void ath79_misc_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void ath79_misc_irq_handler(struct irq_desc *desc)
- {
- 	void __iomem *base = ath79_reset_base;
- 	u32 pending;
-@@ -120,9 +120,10 @@ static void __init ath79_misc_irq_init(void)
- 	irq_set_chained_handler(ATH79_CPU_IRQ(6), ath79_misc_irq_handler);
- }
+-	reg = bar2_off(ndev->xlat_reg->bar2_xlat, 2);
+-	u.v64 = ioread64(mmio + reg);
++	u.v64 = ioread64(mmio + bar2_off(ndev->xlat_reg->bar2_xlat, 2));
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "XLAT23 -\t\t%#018llx\n", u.v64);
  
--static void ar934x_ip2_irq_dispatch(unsigned int irq, struct irq_desc *desc)
-+static void ar934x_ip2_irq_dispatch(struct irq_desc *desc)
- {
- 	u32 status;
-+	unsigned int irq = irq_desc_to_irq(desc);
+-	reg = bar2_off(ndev->xlat_reg->bar2_xlat, 4);
+-	u.v64 = ioread64(mmio + reg);
++	u.v64 = ioread64(mmio + bar2_off(ndev->xlat_reg->bar2_xlat, 4));
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "XLAT45 -\t\t%#018llx\n", u.v64);
  
- 	disable_irq_nosync(irq);
+-	reg = bar2_off(ndev->xlat_reg->bar2_limit, 2);
+-	u.v64 = ioread64(mmio + reg);
++	u.v64 = ioread64(mmio + bar2_off(ndev->xlat_reg->bar2_limit, 2));
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "LMT23 -\t\t\t%#018llx\n", u.v64);
  
-@@ -153,9 +154,10 @@ static void ar934x_ip2_irq_init(void)
- 	irq_set_chained_handler(ATH79_CPU_IRQ(2), ar934x_ip2_irq_dispatch);
- }
+-	reg = bar2_off(ndev->xlat_reg->bar2_limit, 4);
+-	u.v64 = ioread64(mmio + reg);
++	u.v64 = ioread64(mmio + bar2_off(ndev->xlat_reg->bar2_limit, 4));
+ 	off += scnprintf(buf + off, buf_size - off,
+ 			 "LMT45 -\t\t\t%#018llx\n", u.v64);
  
--static void qca955x_ip2_irq_dispatch(unsigned int irq, struct irq_desc *desc)
-+static void qca955x_ip2_irq_dispatch(struct irq_desc *desc)
- {
- 	u32 status;
-+	unsigned int irq = irq_desc_to_irq(desc);
+@@ -606,41 +599,34 @@ static ssize_t ndev_debugfs_read(struct file *filp, char __user *ubuf,
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "\nNTB Outgoing B2B XLAT:\n");
  
- 	disable_irq_nosync(irq);
+-			reg = bar2_off(SNB_PBAR2XLAT_OFFSET, 2);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_PBAR23XLAT_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "B2B XLAT23 -\t\t%#018llx\n", u.v64);
  
-@@ -181,9 +183,10 @@ enable:
- 	enable_irq(irq);
- }
+-			reg = bar2_off(SNB_PBAR2XLAT_OFFSET, 4);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_PBAR45XLAT_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "B2B XLAT45 -\t\t%#018llx\n", u.v64);
  
--static void qca955x_ip3_irq_dispatch(unsigned int irq, struct irq_desc *desc)
-+static void qca955x_ip3_irq_dispatch(struct irq_desc *desc)
- {
- 	u32 status;
-+	unsigned int irq = irq_desc_to_irq(desc);
+-			reg = bar2_off(SNB_PBAR2LMT_OFFSET, 2);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_PBAR23LMT_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "B2B LMT23 -\t\t%#018llx\n", u.v64);
  
- 	disable_irq_nosync(irq);
+-			reg = bar2_off(SNB_PBAR2LMT_OFFSET, 4);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_PBAR45LMT_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "B2B LMT45 -\t\t%#018llx\n", u.v64);
  
-diff --git a/arch/mips/cavium-octeon/octeon-irq.c b/arch/mips/cavium-octeon/octeon-irq.c
-index 18bf3dcb9d1b..6bca2f83766b 100644
---- a/arch/mips/cavium-octeon/octeon-irq.c
-+++ b/arch/mips/cavium-octeon/octeon-irq.c
-@@ -697,14 +697,14 @@ static void octeon_irq_ciu_gpio_ack(struct irq_data *data)
- 	cvmx_write_csr(CVMX_GPIO_INT_CLR, mask);
- }
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "\nNTB Secondary BAR:\n");
  
--static void octeon_irq_handle_trigger(unsigned int irq, struct irq_desc *desc)
-+static void octeon_irq_handle_trigger(struct irq_desc *desc)
- {
- 	struct irq_data *data = irq_desc_get_irq_data(desc);
+-			reg = bar0_off(SNB_SBAR0BASE_OFFSET, 0);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_SBAR0BASE_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "SBAR01 -\t\t%#018llx\n", u.v64);
  
- 	if (irqd_get_trigger_type(data) & IRQ_TYPE_EDGE_BOTH)
--		handle_edge_irq(irq, desc);
-+		handle_edge_irq(desc);
- 	else
--		handle_level_irq(irq, desc);
-+		handle_level_irq(desc);
- }
+-			reg = bar0_off(SNB_SBAR0BASE_OFFSET, 2);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_SBAR23BASE_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "SBAR23 -\t\t%#018llx\n", u.v64);
  
- #ifdef CONFIG_SMP
-@@ -2221,7 +2221,7 @@ static irqreturn_t octeon_irq_cib_handler(int my_irq, void *data)
- 			if (irqd_get_trigger_type(irq_data) &
- 				IRQ_TYPE_EDGE_BOTH)
- 				cvmx_write_csr(host_data->raw_reg, 1ull << i);
--			generic_handle_irq_desc(irq, desc);
-+			generic_handle_irq_desc(desc);
+-			reg = bar0_off(SNB_SBAR0BASE_OFFSET, 4);
+-			u.v64 = ioread64(mmio + reg);
++			u.v64 = ioread64(mmio + SNB_SBAR45BASE_OFFSET);
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "SBAR45 -\t\t%#018llx\n", u.v64);
  		}
+@@ -648,31 +634,30 @@ static ssize_t ndev_debugfs_read(struct file *filp, char __user *ubuf,
+ 		off += scnprintf(buf + off, buf_size - off,
+ 				 "\nSNB NTB Statistics:\n");
+ 
+-		reg = SNB_USMEMMISS_OFFSET;
+-		u.v16 = ioread16(mmio + reg);
++		u.v16 = ioread16(mmio + SNB_USMEMMISS_OFFSET);
+ 		off += scnprintf(buf + off, buf_size - off,
+ 				 "Upstream Memory Miss -\t%u\n", u.v16);
+ 
+ 		off += scnprintf(buf + off, buf_size - off,
+ 				 "\nSNB NTB Hardware Errors:\n");
+ 
+-		reg = SNB_DEVSTS_OFFSET;
+-		if (!pci_read_config_word(ndev->ntb.pdev, reg, &u.v16))
++		if (!pci_read_config_word(ndev->ntb.pdev,
++					  SNB_DEVSTS_OFFSET, &u.v16))
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "DEVSTS -\t\t%#06x\n", u.v16);
+ 
+-		reg = SNB_LINK_STATUS_OFFSET;
+-		if (!pci_read_config_word(ndev->ntb.pdev, reg, &u.v16))
++		if (!pci_read_config_word(ndev->ntb.pdev,
++					  SNB_LINK_STATUS_OFFSET, &u.v16))
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "LNKSTS -\t\t%#06x\n", u.v16);
+ 
+-		reg = SNB_UNCERRSTS_OFFSET;
+-		if (!pci_read_config_dword(ndev->ntb.pdev, reg, &u.v32))
++		if (!pci_read_config_dword(ndev->ntb.pdev,
++					   SNB_UNCERRSTS_OFFSET, &u.v32))
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "UNCERRSTS -\t\t%#06x\n", u.v32);
+ 
+-		reg = SNB_CORERRSTS_OFFSET;
+-		if (!pci_read_config_dword(ndev->ntb.pdev, reg, &u.v32))
++		if (!pci_read_config_dword(ndev->ntb.pdev,
++					   SNB_CORERRSTS_OFFSET, &u.v32))
+ 			off += scnprintf(buf + off, buf_size - off,
+ 					 "CORERRSTS -\t\t%#06x\n", u.v32);
+ 	}
+@@ -1388,7 +1373,6 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
+ {
+ 	struct pci_dev *pdev;
+ 	void __iomem *mmio;
+-	unsigned long off;
+ 	resource_size_t bar_size;
+ 	phys_addr_t bar_addr;
+ 	int b2b_bar;
+@@ -1484,9 +1468,6 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
+ 		dev_dbg(ndev_dev(ndev), "SBAR5SZ %#x\n", bar_sz);
  	}
  
-diff --git a/arch/mips/include/asm/netlogic/common.h b/arch/mips/include/asm/netlogic/common.h
-index 2a4c128277e4..be52c2125d71 100644
---- a/arch/mips/include/asm/netlogic/common.h
-+++ b/arch/mips/include/asm/netlogic/common.h
-@@ -57,8 +57,8 @@
- #include <asm/mach-netlogic/multi-node.h>
- 
- struct irq_desc;
--void nlm_smp_function_ipi_handler(unsigned int irq, struct irq_desc *desc);
--void nlm_smp_resched_ipi_handler(unsigned int irq, struct irq_desc *desc);
-+void nlm_smp_function_ipi_handler(struct irq_desc *desc);
-+void nlm_smp_resched_ipi_handler(struct irq_desc *desc);
- void nlm_smp_irq_init(int hwcpuid);
- void nlm_boot_secondary_cpus(void);
- int nlm_wakeup_secondary_cpus(void);
-diff --git a/arch/mips/jz4740/gpio.c b/arch/mips/jz4740/gpio.c
-index 00b798d2fb7c..1901178580fd 100644
---- a/arch/mips/jz4740/gpio.c
-+++ b/arch/mips/jz4740/gpio.c
-@@ -297,7 +297,7 @@ static void jz_gpio_check_trigger_both(struct jz_gpio_chip *chip, unsigned int i
- 	writel(mask, reg);
- }
- 
--static void jz_gpio_irq_demux_handler(unsigned int irq, struct irq_desc *desc)
-+static void jz_gpio_irq_demux_handler(struct irq_desc *desc)
- {
- 	uint32_t flag;
- 	unsigned int gpio_irq;
-diff --git a/arch/mips/netlogic/common/smp.c b/arch/mips/netlogic/common/smp.c
-index dc3e327fbbac..a167a9a14ee1 100644
---- a/arch/mips/netlogic/common/smp.c
-+++ b/arch/mips/netlogic/common/smp.c
-@@ -82,7 +82,7 @@ void nlm_send_ipi_mask(const struct cpumask *mask, unsigned int action)
- }
- 
- /* IRQ_IPI_SMP_FUNCTION Handler */
--void nlm_smp_function_ipi_handler(unsigned int irq, struct irq_desc *desc)
-+void nlm_smp_function_ipi_handler(struct irq_desc *desc)
- {
- 	clear_c0_eimr(irq);
- 	ack_c0_eirr(irq);
-@@ -91,7 +91,7 @@ void nlm_smp_function_ipi_handler(unsigned int irq, struct irq_desc *desc)
- }
- 
- /* IRQ_IPI_SMP_RESCHEDULE  handler */
--void nlm_smp_resched_ipi_handler(unsigned int irq, struct irq_desc *desc)
-+void nlm_smp_resched_ipi_handler(struct irq_desc *desc)
- {
- 	clear_c0_eimr(irq);
- 	ack_c0_eirr(irq);
-diff --git a/arch/mips/pci/pci-ar2315.c b/arch/mips/pci/pci-ar2315.c
-index dadb30306a0a..4fd04b0c0597 100644
---- a/arch/mips/pci/pci-ar2315.c
-+++ b/arch/mips/pci/pci-ar2315.c
-@@ -318,7 +318,7 @@ static int ar2315_pci_host_setup(struct ar2315_pci_ctrl *apc)
- 	return 0;
- }
- 
--static void ar2315_pci_irq_handler(unsigned irq, struct irq_desc *desc)
-+static void ar2315_pci_irq_handler(struct irq_desc *desc)
- {
- 	struct ar2315_pci_ctrl *apc = irq_desc_get_handler_data(desc);
- 	u32 pending = ar2315_pci_reg_read(apc, AR2315_PCI_ISR) &
-diff --git a/arch/mips/pci/pci-ar71xx.c b/arch/mips/pci/pci-ar71xx.c
-index dac6a07c45bf..d490b3d58ca5 100644
---- a/arch/mips/pci/pci-ar71xx.c
-+++ b/arch/mips/pci/pci-ar71xx.c
-@@ -226,7 +226,7 @@ static struct pci_ops ar71xx_pci_ops = {
- 	.write	= ar71xx_pci_write_config,
- };
- 
--static void ar71xx_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void ar71xx_pci_irq_handler(struct irq_desc *desc)
- {
- 	struct ar71xx_pci_controller *apc;
- 	void __iomem *base = ath79_reset_base;
-diff --git a/arch/mips/pci/pci-ar724x.c b/arch/mips/pci/pci-ar724x.c
-index 0af362b5af92..d7951621cd34 100644
---- a/arch/mips/pci/pci-ar724x.c
-+++ b/arch/mips/pci/pci-ar724x.c
-@@ -225,7 +225,7 @@ static struct pci_ops ar724x_pci_ops = {
- 	.write	= ar724x_pci_write,
- };
- 
--static void ar724x_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void ar724x_pci_irq_handler(struct irq_desc *desc)
- {
- 	struct ar724x_pci_controller *apc;
- 	void __iomem *base;
-diff --git a/arch/mips/pci/pci-rt3883.c b/arch/mips/pci/pci-rt3883.c
-index 80fafe646e74..1c2d5f49ef7a 100644
---- a/arch/mips/pci/pci-rt3883.c
-+++ b/arch/mips/pci/pci-rt3883.c
-@@ -129,7 +129,7 @@ static void rt3883_pci_write_cfg32(struct rt3883_pci_controller *rpc,
- 	rt3883_pci_w32(rpc, val, RT3883_PCI_REG_CFGDATA);
- }
- 
--static void rt3883_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void rt3883_pci_irq_handler(struct irq_desc *desc)
- {
- 	struct rt3883_pci_controller *rpc;
- 	u32 pending;
-@@ -145,6 +145,7 @@ static void rt3883_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
+-	/* setup incoming bar base addresses */
+-	off = SNB_SBAR0BASE_OFFSET;
+-
+ 	/* SBAR01 hit by first part of the b2b bar */
+ 	if (b2b_bar == 0) {
+ 		bar_addr = addr->bar0_addr;
+@@ -1504,7 +1485,7 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
  	}
  
- 	while (pending) {
-+		unsigned int irq;
- 		unsigned bit = __ffs(pending);
+ 	dev_dbg(ndev_dev(ndev), "SBAR01 %#018llx\n", bar_addr);
+-	iowrite64(bar_addr, mmio + bar0_off(off, 0));
++	iowrite64(bar_addr, mmio + SNB_SBAR0BASE_OFFSET);
  
- 		irq = irq_find_mapping(rpc->irq_domain, bit);
-diff --git a/arch/mips/ralink/irq.c b/arch/mips/ralink/irq.c
-index da301e0a2f1f..ae38a1348e70 100644
---- a/arch/mips/ralink/irq.c
-+++ b/arch/mips/ralink/irq.c
-@@ -95,7 +95,7 @@ unsigned int get_c0_compare_int(void)
- 	return CP0_LEGACY_COMPARE_IRQ;
+ 	/* Other SBAR are normally hit by the PBAR xlat, except for b2b bar.
+ 	 * The b2b bar is either disabled above, or configured half-size, and
+@@ -1512,102 +1493,96 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
+ 	 */
+ 
+ 	bar_addr = addr->bar2_addr64 + (b2b_bar == 2 ? ndev->b2b_off : 0);
+-	iowrite64(bar_addr, mmio + bar0_off(off, 2));
+-	bar_addr = ioread64(mmio + bar0_off(off, 2));
++	iowrite64(bar_addr, mmio + SNB_SBAR23BASE_OFFSET);
++	bar_addr = ioread64(mmio + SNB_SBAR23BASE_OFFSET);
+ 	dev_dbg(ndev_dev(ndev), "SBAR23 %#018llx\n", bar_addr);
+ 
+ 	if (!ndev->bar4_split) {
+ 		bar_addr = addr->bar4_addr64 +
+ 			(b2b_bar == 4 ? ndev->b2b_off : 0);
+-		iowrite64(bar_addr, mmio + bar0_off(off, 4));
+-		bar_addr = ioread64(mmio + bar0_off(off, 4));
++		iowrite64(bar_addr, mmio + SNB_SBAR45BASE_OFFSET);
++		bar_addr = ioread64(mmio + SNB_SBAR45BASE_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "SBAR45 %#018llx\n", bar_addr);
+ 	} else {
+ 		bar_addr = addr->bar4_addr32 +
+ 			(b2b_bar == 4 ? ndev->b2b_off : 0);
+-		iowrite32(bar_addr, mmio + bar0_off(off, 4));
+-		bar_addr = ioread32(mmio + bar0_off(off, 4));
++		iowrite32(bar_addr, mmio + SNB_SBAR4BASE_OFFSET);
++		bar_addr = ioread32(mmio + SNB_SBAR4BASE_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "SBAR4 %#010llx\n", bar_addr);
+ 
+ 		bar_addr = addr->bar5_addr32 +
+ 			(b2b_bar == 5 ? ndev->b2b_off : 0);
+-		iowrite32(bar_addr, mmio + bar0_off(off, 5));
+-		bar_addr = ioread32(mmio + bar0_off(off, 5));
++		iowrite32(bar_addr, mmio + SNB_SBAR5BASE_OFFSET);
++		bar_addr = ioread32(mmio + SNB_SBAR5BASE_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "SBAR5 %#010llx\n", bar_addr);
+ 	}
+ 
+ 	/* setup incoming bar limits == base addrs (zero length windows) */
+-	off = SNB_SBAR2LMT_OFFSET;
+ 
+ 	bar_addr = addr->bar2_addr64 + (b2b_bar == 2 ? ndev->b2b_off : 0);
+-	iowrite64(bar_addr, mmio + bar2_off(off, 2));
+-	bar_addr = ioread64(mmio + bar2_off(off, 2));
++	iowrite64(bar_addr, mmio + SNB_SBAR23LMT_OFFSET);
++	bar_addr = ioread64(mmio + SNB_SBAR23LMT_OFFSET);
+ 	dev_dbg(ndev_dev(ndev), "SBAR23LMT %#018llx\n", bar_addr);
+ 
+ 	if (!ndev->bar4_split) {
+ 		bar_addr = addr->bar4_addr64 +
+ 			(b2b_bar == 4 ? ndev->b2b_off : 0);
+-		iowrite64(bar_addr, mmio + bar2_off(off, 4));
+-		bar_addr = ioread64(mmio + bar2_off(off, 4));
++		iowrite64(bar_addr, mmio + SNB_SBAR45LMT_OFFSET);
++		bar_addr = ioread64(mmio + SNB_SBAR45LMT_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "SBAR45LMT %#018llx\n", bar_addr);
+ 	} else {
+ 		bar_addr = addr->bar4_addr32 +
+ 			(b2b_bar == 4 ? ndev->b2b_off : 0);
+-		iowrite32(bar_addr, mmio + bar2_off(off, 4));
+-		bar_addr = ioread32(mmio + bar2_off(off, 4));
++		iowrite32(bar_addr, mmio + SNB_SBAR4LMT_OFFSET);
++		bar_addr = ioread32(mmio + SNB_SBAR4LMT_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "SBAR4LMT %#010llx\n", bar_addr);
+ 
+ 		bar_addr = addr->bar5_addr32 +
+ 			(b2b_bar == 5 ? ndev->b2b_off : 0);
+-		iowrite32(bar_addr, mmio + bar2_off(off, 5));
+-		bar_addr = ioread32(mmio + bar2_off(off, 5));
++		iowrite32(bar_addr, mmio + SNB_SBAR5LMT_OFFSET);
++		bar_addr = ioread32(mmio + SNB_SBAR5LMT_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "SBAR5LMT %#05llx\n", bar_addr);
+ 	}
+ 
+ 	/* zero incoming translation addrs */
+-	off = SNB_SBAR2XLAT_OFFSET;
+-
+-	iowrite64(0, mmio + bar2_off(off, 2));
++	iowrite64(0, mmio + SNB_SBAR23XLAT_OFFSET);
+ 
+ 	if (!ndev->bar4_split) {
+-		iowrite64(0, mmio + bar2_off(off, 4));
++		iowrite64(0, mmio + SNB_SBAR45XLAT_OFFSET);
+ 	} else {
+-		iowrite32(0, mmio + bar2_off(off, 4));
+-		iowrite32(0, mmio + bar2_off(off, 5));
++		iowrite32(0, mmio + SNB_SBAR4XLAT_OFFSET);
++		iowrite32(0, mmio + SNB_SBAR5XLAT_OFFSET);
+ 	}
+ 
+ 	/* zero outgoing translation limits (whole bar size windows) */
+-	off = SNB_PBAR2LMT_OFFSET;
+-	iowrite64(0, mmio + bar2_off(off, 2));
++	iowrite64(0, mmio + SNB_PBAR23LMT_OFFSET);
+ 	if (!ndev->bar4_split) {
+-		iowrite64(0, mmio + bar2_off(off, 4));
++		iowrite64(0, mmio + SNB_PBAR45LMT_OFFSET);
+ 	} else {
+-		iowrite32(0, mmio + bar2_off(off, 4));
+-		iowrite32(0, mmio + bar2_off(off, 5));
++		iowrite32(0, mmio + SNB_PBAR4LMT_OFFSET);
++		iowrite32(0, mmio + SNB_PBAR5LMT_OFFSET);
+ 	}
+ 
+ 	/* set outgoing translation offsets */
+-	off = SNB_PBAR2XLAT_OFFSET;
+-
+ 	bar_addr = peer_addr->bar2_addr64;
+-	iowrite64(bar_addr, mmio + bar2_off(off, 2));
+-	bar_addr = ioread64(mmio + bar2_off(off, 2));
++	iowrite64(bar_addr, mmio + SNB_PBAR23XLAT_OFFSET);
++	bar_addr = ioread64(mmio + SNB_PBAR23XLAT_OFFSET);
+ 	dev_dbg(ndev_dev(ndev), "PBAR23XLAT %#018llx\n", bar_addr);
+ 
+ 	if (!ndev->bar4_split) {
+ 		bar_addr = peer_addr->bar4_addr64;
+-		iowrite64(bar_addr, mmio + bar2_off(off, 4));
+-		bar_addr = ioread64(mmio + bar2_off(off, 4));
++		iowrite64(bar_addr, mmio + SNB_PBAR45XLAT_OFFSET);
++		bar_addr = ioread64(mmio + SNB_PBAR45XLAT_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "PBAR45XLAT %#018llx\n", bar_addr);
+ 	} else {
+ 		bar_addr = peer_addr->bar2_addr64;
+-		iowrite32(bar_addr, mmio + bar2_off(off, 4));
+-		bar_addr = ioread32(mmio + bar2_off(off, 4));
++		iowrite32(bar_addr, mmio + SNB_PBAR4XLAT_OFFSET);
++		bar_addr = ioread32(mmio + SNB_PBAR4XLAT_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "PBAR4XLAT %#010llx\n", bar_addr);
+ 
+ 		bar_addr = peer_addr->bar2_addr64;
+-		iowrite32(bar_addr, mmio + bar2_off(off, 5));
+-		bar_addr = ioread32(mmio + bar2_off(off, 5));
++		iowrite32(bar_addr, mmio + SNB_PBAR5XLAT_OFFSET);
++		bar_addr = ioread32(mmio + SNB_PBAR5XLAT_OFFSET);
+ 		dev_dbg(ndev_dev(ndev), "PBAR5XLAT %#010llx\n", bar_addr);
+ 	}
+ 
+@@ -1747,29 +1722,68 @@ static int snb_init_dev(struct intel_ntb_dev *ndev)
+ 	u8 ppd;
+ 	int rc, mem;
+ 
++	pdev = ndev_pdev(ndev);
++
++	switch (pdev->device) {
+ 	/* There is a Xeon hardware errata related to writes to SDOORBELL or
+ 	 * B2BDOORBELL in conjunction with inbound access to NTB MMIO Space,
+ 	 * which may hang the system.  To workaround this use the second memory
+ 	 * window to access the interrupt and scratch pad registers on the
+ 	 * remote system.
+ 	 */
+-	ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
++	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
++		ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
++		break;
++	}
+ 
++	switch (pdev->device) {
+ 	/* There is a hardware errata related to accessing any register in
+ 	 * SB01BASE in the presence of bidirectional traffic crossing the NTB.
+ 	 */
+-	ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
++	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
++		ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
++		break;
++	}
+ 
++	switch (pdev->device) {
+ 	/* HW Errata on bit 14 of b2bdoorbell register.  Writes will not be
+ 	 * mirrored to the remote system.  Shrink the number of bits by one,
+ 	 * since bit 14 is the last bit.
+ 	 */
+-	ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
++	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
++		ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
++		break;
++	}
+ 
+ 	ndev->reg = &snb_reg;
+ 
+-	pdev = ndev_pdev(ndev);
+-
+ 	rc = pci_read_config_byte(pdev, SNB_PPD_OFFSET, &ppd);
+ 	if (rc)
+ 		return -EIO;
+@@ -2062,14 +2076,14 @@ static const struct intel_ntb_xlat_reg snb_pri_xlat = {
+ 	 * window by setting the limit equal to base, nor can it limit the size
+ 	 * of the memory window by setting the limit to base + size.
+ 	 */
+-	.bar2_limit		= SNB_PBAR2LMT_OFFSET,
+-	.bar2_xlat		= SNB_PBAR2XLAT_OFFSET,
++	.bar2_limit		= SNB_PBAR23LMT_OFFSET,
++	.bar2_xlat		= SNB_PBAR23XLAT_OFFSET,
+ };
+ 
+ static const struct intel_ntb_xlat_reg snb_sec_xlat = {
+ 	.bar0_base		= SNB_SBAR0BASE_OFFSET,
+-	.bar2_limit		= SNB_SBAR2LMT_OFFSET,
+-	.bar2_xlat		= SNB_SBAR2XLAT_OFFSET,
++	.bar2_limit		= SNB_SBAR23LMT_OFFSET,
++	.bar2_xlat		= SNB_SBAR23XLAT_OFFSET,
+ };
+ 
+ static const struct intel_b2b_addr snb_b2b_usd_addr = {
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.h b/drivers/ntb/hw/intel/ntb_hw_intel.h
+index 0224b1a..fec689d 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.h
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.h
+@@ -70,11 +70,27 @@
+ 
+ /* SNB hardware (and JSF, IVT, HSX) */
+ 
+-#define SNB_PBAR2LMT_OFFSET		0x0000
+-#define SNB_PBAR2XLAT_OFFSET		0x0010
+-#define SNB_SBAR2LMT_OFFSET		0x0020
+-#define SNB_SBAR2XLAT_OFFSET		0x0030
++#define SNB_PBAR23LMT_OFFSET		0x0000
++#define SNB_PBAR45LMT_OFFSET		0x0008
++#define SNB_PBAR4LMT_OFFSET		0x0008
++#define SNB_PBAR5LMT_OFFSET		0x000c
++#define SNB_PBAR23XLAT_OFFSET		0x0010
++#define SNB_PBAR45XLAT_OFFSET		0x0018
++#define SNB_PBAR4XLAT_OFFSET		0x0018
++#define SNB_PBAR5XLAT_OFFSET		0x001c
++#define SNB_SBAR23LMT_OFFSET		0x0020
++#define SNB_SBAR45LMT_OFFSET		0x0028
++#define SNB_SBAR4LMT_OFFSET		0x0028
++#define SNB_SBAR5LMT_OFFSET		0x002c
++#define SNB_SBAR23XLAT_OFFSET		0x0030
++#define SNB_SBAR45XLAT_OFFSET		0x0038
++#define SNB_SBAR4XLAT_OFFSET		0x0038
++#define SNB_SBAR5XLAT_OFFSET		0x003c
+ #define SNB_SBAR0BASE_OFFSET		0x0040
++#define SNB_SBAR23BASE_OFFSET		0x0048
++#define SNB_SBAR45BASE_OFFSET		0x0050
++#define SNB_SBAR4BASE_OFFSET		0x0050
++#define SNB_SBAR5BASE_OFFSET		0x0054
+ #define SNB_SBDF_OFFSET			0x005c
+ #define SNB_NTBCNTL_OFFSET		0x0058
+ #define SNB_PDOORBELL_OFFSET		0x0060
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index f1ed1b7..bb2eb85 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -204,8 +204,8 @@ struct ntb_transport_ctx {
+ 
+ 	bool link_is_up;
+ 	struct delayed_work link_work;
+-	struct work_struct db_work;
+ 	struct work_struct link_cleanup;
++	struct tasklet_struct db_work;
+ };
+ 
+ enum {
+@@ -241,7 +241,7 @@ enum {
+ #define NTB_QP_DEF_NUM_ENTRIES	100
+ #define NTB_LINK_DOWN_TIMEOUT	10
+ 
+-static void ntb_transport_doorbell_work(struct work_struct *ws);
++static void ntb_transport_doorbell_work(unsigned long data);
+ static const struct ntb_ctx_ops ntb_transport_ops;
+ static struct ntb_client ntb_transport_client;
+ 
+@@ -1002,8 +1002,9 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	}
+ 
+ 	INIT_DELAYED_WORK(&nt->link_work, ntb_transport_link_work);
+-	INIT_WORK(&nt->db_work, ntb_transport_doorbell_work);
+ 	INIT_WORK(&nt->link_cleanup, ntb_transport_link_cleanup_work);
++	tasklet_init(&nt->db_work, ntb_transport_doorbell_work,
++		     (unsigned long)nt);
+ 
+ 	rc = ntb_set_ctx(ndev, nt, &ntb_transport_ops);
+ 	if (rc)
+@@ -1044,7 +1045,7 @@ static void ntb_transport_free(struct ntb_client *self, struct ntb_dev *ndev)
+ 	int i;
+ 
+ 	ntb_transport_link_cleanup(nt);
+-	cancel_work_sync(&nt->db_work);
++	tasklet_disable(&nt->db_work);
+ 	cancel_work_sync(&nt->link_cleanup);
+ 	cancel_delayed_work_sync(&nt->link_work);
+ 
+@@ -1850,10 +1851,9 @@ unsigned int ntb_transport_max_size(struct ntb_transport_qp *qp)
+ }
+ EXPORT_SYMBOL_GPL(ntb_transport_max_size);
+ 
+-static void ntb_transport_doorbell_work(struct work_struct *work)
++static void ntb_transport_doorbell_work(unsigned long data)
+ {
+-	struct ntb_transport_ctx *nt = container_of(work,
+-			struct ntb_transport_ctx, db_work);
++	struct ntb_transport_ctx *nt = (void *)data;
+ 	struct ntb_transport_qp *qp;
+ 	u64 db_mask, db_bits, db_again;
+ 	unsigned int qp_num;
+@@ -1890,7 +1890,7 @@ static void ntb_transport_doorbell_callback(void *data, int vector)
+ 
+ 	ntb_db_set_mask(nt->ndev, ntb_db_valid_mask(nt->ndev));
+ 
+-	schedule_work(&nt->db_work);
++	tasklet_schedule(&nt->db_work);
  }
  
--static void ralink_intc_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void ralink_intc_irq_handler(struct irq_desc *desc)
- {
- 	u32 pending = rt_intc_r32(INTC_REG_STATUS0);
- 
+ static const struct ntb_ctx_ops ntb_transport_ops = {
 -- 
-1.7.10.4
+2.4.0.rc0.43.gcf8a8c6
 
