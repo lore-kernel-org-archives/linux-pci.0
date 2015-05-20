@@ -1,60 +1,86 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 May 2015 15:03:10 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: [PATCH v6 0/2] pci: drop msi disable on shutdown
-Message-ID: <1431431730-25164-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v2 03/14] x86, irq: Use accessor irq_data_get_node() to hide struct irq_data detail
+Date: Wed, 20 May 2015 17:40:34 +0800
+Message-Id: <1432114845-24304-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fam Zheng noticed that pci shutdown disables msi and msix of a device.  This
-was intended to fix kexec with fusion devices but is no longer necessary, and
-can in theory be harmful.
+Use accessor irq_data_get_node() to hide struct irq_data implementation
+detail, so we could easily reconstruct struct irq_data later.
 
-See individual patches for the detailed explanation.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/vector.c |    8 ++++----
+ arch/x86/platform/uv/uv_irq.c |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Please review, and consider for 4.2.
-
-Eric, I would especially appreciate your feedback - I did my best
-to update the commit logs with answers to questions you raised
-on v5.
-
-changes from v5:
-	rebased on top of pci/msi
-	fixed commit log, including comments by Bjorn
-	and adding explanation to address comments/questions by Eric
-	dropped stable Cc, this patch does not seem to qualify for stable
-changes from v4:
-        Yijing Wang <wangyijing@huawei.com> noted that
-        early fixups rely on pci_msi_off.
-        Split out the functionality and move off the
-        required part to run early during pci_device_setup.
-Changes from v3:
-        fix a copy-and-paste error in
-          pci: drop some duplicate code
-        other patches are unchanged
-        drop Cc stable for now
-Changes from v2:
-        move code from probe to device enumeration
-        add patches to unexport pci_msi_off
-
-
-Michael S. Tsirkin (2):
-  PCI/MSI: Don't disable MSI/MSI-X at shutdown
-  PCI/MSI: Make pci_msi_shutdown(), pci_msix_shutdown() static
-
- include/linux/pci.h      | 4 ----
- drivers/pci/msi.c        | 4 ++--
- drivers/pci/pci-driver.c | 2 --
- 3 files changed, 2 insertions(+), 8 deletions(-)
-
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 28eba2d38b15..9b62f690b0ff 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -296,7 +296,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	struct irq_alloc_info *info = arg;
+ 	struct apic_chip_data *data;
+ 	struct irq_data *irq_data;
+-	int i, err;
++	int i, err, node;
+ 
+ 	if (disable_apic)
+ 		return -ENXIO;
+@@ -308,12 +308,13 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
++		node = irq_data_get_node(irq_data);
+ #ifdef	CONFIG_X86_IO_APIC
+ 		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
+ 			data = legacy_irq_data[virq + i];
+ 		else
+ #endif
+-			data = alloc_apic_chip_data(irq_data->node);
++			data = alloc_apic_chip_data(node);
+ 		if (!data) {
+ 			err = -ENOMEM;
+ 			goto error;
+@@ -322,8 +323,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 		irq_data->chip = &lapic_controller;
+ 		irq_data->chip_data = data;
+ 		irq_data->hwirq = virq + i;
+-		err = assign_irq_vector_policy(virq, irq_data->node, data,
+-					       info);
++		err = assign_irq_vector_policy(virq, node, data, info);
+ 		if (err)
+ 			goto error;
+ 	}
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 8570abe68be1..e1c24631afbb 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -89,7 +89,7 @@ static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 		return -EINVAL;
+ 
+ 	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
+-				 irq_data->node);
++				 irq_data_get_node(irq_data));
+ 	if (!chip_data)
+ 		return -ENOMEM;
+ 
 -- 
-MST
+1.7.10.4
 
