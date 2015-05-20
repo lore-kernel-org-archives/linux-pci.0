@@ -1,181 +1,389 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37255 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752785AbbETI5D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 May 2015 04:57:03 -0400
-Date: Wed, 20 May 2015 09:56:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [RFC/RFT PATCH 2/2] ARM64: kernel: pci: implement PCI device
- resources claiming
-Message-ID: <20150520085656.GB29274@red-moon>
-References: <1431614537-16136-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1431614537-16136-2-git-send-email-lorenzo.pieralisi@arm.com>
- <5555553F.9070608@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5555553F.9070608@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 06/16] NTB Pingpong Client
+Date: Wed, 20 May 2015 11:41:07 -0400
+Message-Id: <c708a1b50b8137556fb327c313184855aeaf54e3.1432135632.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432135631.git.Allen.Hubbe@emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 03:09:03AM +0100, Suravee Suthikulanit wrote:
-> On 5/14/2015 9:42 AM, Lorenzo Pieralisi wrote:
-> > When a device is scanned and added to the PCI bus, its resources
-> > should be claimed to validate the BARs configuration and to assign
-> > them a parent resource so that the resource hierarchy can be sanity
-> > checked.
-> >
-> > This patch adds code that carries out PCI device resources claiming to
-> > the ARM64 pcibios_add_device implementation so that device resources
-> > are claimed by the core PCI layer upon PCI device initialization on
-> > ARM64 systems.
-> >
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Liviu Dudau <liviu.dudau@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >   arch/arm64/kernel/pci.c | 10 ++++++++++
-> >   1 file changed, 10 insertions(+)
-> >
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index 4095379..c0a88ca 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -43,8 +43,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> >    */
-> >   int pcibios_add_device(struct pci_dev *dev)
-> >   {
-> > +	struct resource *res;
-> > +	int i;
-> > +
-> >   	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> >
-> > +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> > +		res = &dev->resource[i];
-> > +		if (res->parent || !res->flags)
-> > +			continue;
-> > +		pci_claim_resource(dev, i);
-> > +	}
-> > +
-> >   	return 0;
-> >   }
-> >
-> >
-> 
-> Lorenzo/Bjorn,
-> 
-> I have tested this patch on top of Jayachandran's V2 patch series 
-> (http://www.spinics.net/lists/linux-pci/msg40811.html) on AMD Seattle 
-> (w/ PROBE_ONLY and non-PROBE_ONLY mode), and your changes here works 
-> with additional changes below.
-> 
-> It seems that when booting w/ PROBE_ONLY case, we need to call 
-> pci_read_bridge_bases() at some point before claiming the resources of 
-> devices underneath the bridge. This is needed to determine the bridge 
-> bases (i.e. bridge io, mmio and mmio_pref bases), and update bridge 
-> resources accordingly.
-> 
-> ---- BEGIN PATCH -----
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index c0a88ca..57be6aa 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -48,6 +48,11 @@ int pcibios_add_device(struct pci_dev *dev)
-> 
->          dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> 
-> +       if (pci_has_flag(PCI_PROBE_ONLY) &&
+This is a simple pingpong driver that exercises the scratchpads and
+doorbells of the ntb hardware.  This driver may be used to test that
+your ntb hardware and drivers are functioning at a basic level.
 
-Does it really matter if PCI_PROBE_ONLY is set ?
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ Documentation/ntb.txt           |  27 +++++
+ MAINTAINERS                     |   1 +
+ drivers/ntb/Kconfig             |   2 +
+ drivers/ntb/Makefile            |   2 +-
+ drivers/ntb/test/Kconfig        |   9 ++
+ drivers/ntb/test/Makefile       |   1 +
+ drivers/ntb/test/ntb_pingpong.c | 251 ++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 292 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/ntb/test/Kconfig
+ create mode 100644 drivers/ntb/test/Makefile
+ create mode 100644 drivers/ntb/test/ntb_pingpong.c
 
-> +           !pci_is_root_bus(dev->bus) &&
+diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
+index 00a3f92..e5d1591 100644
+--- a/Documentation/ntb.txt
++++ b/Documentation/ntb.txt
+@@ -37,6 +37,33 @@ Transport queue pair.  Network data is copied between socket buffers and the
+ Transport queue pair buffer.  The Transport client may be used for other things
+ besides Netdev, however no other applications have yet been written.
+ 
++### NTB Ping Pong Test Client (ntb\_pingpong)
++
++The Ping Pong test client serves as a demonstration to exercise the doorbell
++and scratchpad registers of NTB hardware, and as an example simple NTB client.
++Ping Pong enables the link when started, waits for the NTB link to come up, and
++then proceeds to read and write the doorbell scratchpad registers of the NTB.
++The peers interrupt each other using a bit mask of doorbell bits, which is
++shifted by one in each round, to test the behavior of multiple doorbell bits
++and interrupt vectors.  The Ping Pong driver also reads the first local
++scratchpad, and writes the value plus one to the first peer scratchpad, each
++round before writing the peer doorbell register.
++
++Module Parameters:
++
++* unsafe - Some hardware has known issues with scratchpad and doorbell
++	registers.  By default, Ping Pong will not attempt to exercise such
++	hardware.  You may override this behavior at your own risk by setting
++	unsafe=1.
++* delay\_ms - Specify the delay between receiving a doorbell
++	interrupt event and setting the peer doorbell register for the next
++	round.
++* init\_db - Specify the doorbell bits to start new series of rounds.  A new
++	series begins once all the doorbell bits have been shifted out of
++	range.
++* dyndbg - It is suggested to specify dyndbg=+p when loading this module, and
++	then to observe debugging output on the console.
++
+ ## NTB Hardware Drivers
+ 
+ NTB hardware drivers should register devices with the NTB core driver.  After
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2560e18..cbc9d3d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6952,6 +6952,7 @@ T:	git git://github.com/jonmason/ntb.git
+ F:	drivers/ntb/
+ F:	drivers/net/ntb_netdev.c
+ F:	drivers/ntb/ntb.c
++F:	drivers/ntb/ntb_pingpong.c
+ F:	drivers/ntb/ntb_transport.c
+ F:	include/linux/ntb.h
+ F:	include/linux/ntb_transport.h
+diff --git a/drivers/ntb/Kconfig b/drivers/ntb/Kconfig
+index 988b03d..c137eb7 100644
+--- a/drivers/ntb/Kconfig
++++ b/drivers/ntb/Kconfig
+@@ -14,6 +14,8 @@ if NTB
+ 
+ source "drivers/ntb/hw/Kconfig"
+ 
++source "drivers/ntb/test/Kconfig"
++
+ config NTB_TRANSPORT
+        tristate "NTB Transport Client"
+        depends on NTB
+diff --git a/drivers/ntb/Makefile b/drivers/ntb/Makefile
+index 671c4e6..c2d2982 100644
+--- a/drivers/ntb/Makefile
++++ b/drivers/ntb/Makefile
+@@ -1,3 +1,3 @@
+-obj-y += hw/
++obj-y += hw/ test/
+ obj-$(CONFIG_NTB) += ntb.o
+ obj-$(CONFIG_NTB_TRANSPORT) += ntb_transport.o
+diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
+new file mode 100644
+index 0000000..9b81c4c
+--- /dev/null
++++ b/drivers/ntb/test/Kconfig
+@@ -0,0 +1,9 @@
++config NTB_PINGPONG
++       tristate "NTB Simple Ping Pong Client"
++       depends on NTB
++       help
++        This is a simple ping pong driver that exercises the scratchpads and
++        doorbells of the ntb hardware.  This driver may be used to test that
++        your ntb hardware and drivers are functioning at a basic level.
++
++        If unsure, say N.
+diff --git a/drivers/ntb/test/Makefile b/drivers/ntb/test/Makefile
+new file mode 100644
+index 0000000..b323093
+--- /dev/null
++++ b/drivers/ntb/test/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_NTB_PINGPONG) += ntb_pingpong.o
+diff --git a/drivers/ntb/test/ntb_pingpong.c b/drivers/ntb/test/ntb_pingpong.c
+new file mode 100644
+index 0000000..a18f895
+--- /dev/null
++++ b/drivers/ntb/test/ntb_pingpong.c
+@@ -0,0 +1,251 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ *   redistributing this file, you may do so under either license.
++ *
++ *   GPL LICENSE SUMMARY
++ *
++ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
++ *
++ *   This program is free software; you can redistribute it and/or modify
++ *   it under the terms of version 2 of the GNU General Public License as
++ *   published by the Free Software Foundation.
++ *
++ *   This program is distributed in the hope that it will be useful, but
++ *   WITHOUT ANY WARRANTY; without even the implied warranty of
++ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *   General Public License for more details.
++ *
++ *   BSD LICENSE
++ *
++ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
++ *
++ *   Redistribution and use in source and binary forms, with or without
++ *   modification, are permitted provided that the following conditions
++ *   are met:
++ *
++ *     * Redistributions of source code must retain the above copyright
++ *       notice, this list of conditions and the following disclaimer.
++ *     * Redistributions in binary form must reproduce the above copy
++ *       notice, this list of conditions and the following disclaimer in
++ *       the documentation and/or other materials provided with the
++ *       distribution.
++ *     * Neither the name of Intel Corporation nor the names of its
++ *       contributors may be used to endorse or promote products derived
++ *       from this software without specific prior written permission.
++ *
++ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ * PCIe NTB Pingpong Linux driver
++ *
++ * Contact Information:
++ * Allen Hubbe <Allen.Hubbe@emc.com>
++ */
++
++/* Note: load this module with option 'dyndbg=+p' */
++
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++
++#include <linux/dma-mapping.h>
++#include <linux/pci.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++
++#include <linux/ntb.h>
++
++#define DRIVER_NAME			"ntb_pingpong"
++#define DRIVER_DESCRIPTION		"PCIe NTB Simple Pingpong Client"
++
++#define DRIVER_LICENSE			"Dual BSD/GPL"
++#define DRIVER_VERSION			"1.0"
++#define DRIVER_RELDATE			"24 March 2015"
++#define DRIVER_AUTHOR			"Allen Hubbe <Allen.Hubbe@emc.com>"
++
++MODULE_LICENSE(DRIVER_LICENSE);
++MODULE_VERSION(DRIVER_VERSION);
++MODULE_AUTHOR(DRIVER_AUTHOR);
++MODULE_DESCRIPTION(DRIVER_DESCRIPTION);
++
++static unsigned int unsafe;
++module_param(unsafe, uint, 0644);
++MODULE_PARM_DESC(unsafe, "Run even though ntb operations may be unsafe");
++
++static unsigned int delay_ms = 1000;
++module_param(delay_ms, uint, 0644);
++MODULE_PARM_DESC(delay_ms, "Milliseconds to delay the response to peer");
++
++static unsigned long db_init = 0x7;
++module_param(db_init, ulong, 0644);
++MODULE_PARM_DESC(delay_ms, "Initial doorbell bits to ring on the peer");
++
++struct pp_ctx {
++	struct ntb_dev			*ntb;
++	u64				db_bits;
++	/* synchronize access to db_bits by ping and pong */
++	spinlock_t			db_lock;
++	struct timer_list		db_timer;
++	unsigned long			db_delay;
++};
++
++static void pp_ping(unsigned long ctx)
++{
++	struct pp_ctx *pp = (void *)ctx;
++	unsigned long irqflags;
++	u64 db_bits, db_mask;
++	u32 spad_rd, spad_wr;
++
++	spin_lock_irqsave(&pp->db_lock, irqflags);
++	{
++		db_mask = ntb_db_valid_mask(pp->ntb);
++		db_bits = ntb_db_read(pp->ntb);
++
++		if (db_bits) {
++			dev_dbg(&pp->ntb->dev,
++				"Masked pongs %#llx\n",
++				db_bits);
++			ntb_db_clear(pp->ntb, db_bits);
++		}
++
++		db_bits = ((pp->db_bits | db_bits) << 1) & db_mask;
++
++		if (!db_bits)
++			db_bits = db_init;
++
++		spad_rd = ntb_spad_read(pp->ntb, 0);
++		spad_wr = spad_rd + 1;
++
++		dev_dbg(&pp->ntb->dev,
++			"Ping bits %#llx read %#x write %#x\n",
++			db_bits, spad_rd, spad_wr);
++
++		ntb_peer_spad_write(pp->ntb, 0, spad_wr);
++		ntb_peer_db_set(pp->ntb, db_bits);
++		ntb_db_clear_mask(pp->ntb, db_mask);
++
++		pp->db_bits = 0;
++	}
++	spin_unlock_irqrestore(&pp->db_lock, irqflags);
++}
++
++static void pp_link_event(void *ctx)
++{
++	struct pp_ctx *pp = ctx;
++
++	if (ntb_link_is_up(pp->ntb, NULL, NULL) == 1) {
++		dev_dbg(&pp->ntb->dev, "link is up\n");
++		pp_ping((unsigned long)pp);
++	} else {
++		dev_dbg(&pp->ntb->dev, "link is down\n");
++		del_timer(&pp->db_timer);
++	}
++}
++
++static void pp_db_event(void *ctx, int vec)
++{
++	struct pp_ctx *pp = ctx;
++	u64 db_bits, db_mask;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(&pp->db_lock, irqflags);
++	{
++		db_mask = ntb_db_vector_mask(pp->ntb, vec);
++		db_bits = db_mask & ntb_db_read(pp->ntb);
++		ntb_db_set_mask(pp->ntb, db_mask);
++		ntb_db_clear(pp->ntb, db_bits);
++
++		pp->db_bits |= db_bits;
++
++		mod_timer(&pp->db_timer, jiffies + pp->db_delay);
++
++		dev_dbg(&pp->ntb->dev,
++			"Pong vec %d bits %#llx\n",
++			vec, db_bits);
++	}
++	spin_unlock_irqrestore(&pp->db_lock, irqflags);
++}
++
++static const struct ntb_ctx_ops pp_ops = {
++	.link_event = pp_link_event,
++	.db_event = pp_db_event,
++};
++
++static int pp_probe(struct ntb_client *client,
++		    struct ntb_dev *ntb)
++{
++	struct pp_ctx *pp;
++	int rc;
++
++	if (ntb_db_is_unsafe(ntb)) {
++		dev_dbg(&ntb->dev, "doorbell is unsafe\n");
++		if (!unsafe) {
++			rc = -EINVAL;
++			goto err_pp;
++		}
++	}
++
++	if (ntb_spad_is_unsafe(ntb)) {
++		dev_dbg(&ntb->dev, "scratchpad is unsafe\n");
++		if (!unsafe) {
++			rc = -EINVAL;
++			goto err_pp;
++		}
++	}
++
++	pp = kmalloc(sizeof(*pp), GFP_KERNEL);
++	if (!pp) {
++		rc = -ENOMEM;
++		goto err_pp;
++	}
++
++	pp->ntb = ntb;
++	pp->db_bits = 0;
++	spin_lock_init(&pp->db_lock);
++	setup_timer(&pp->db_timer, pp_ping, (unsigned long)pp);
++	pp->db_delay = msecs_to_jiffies(delay_ms);
++
++	rc = ntb_set_ctx(ntb, pp, &pp_ops);
++	if (rc)
++		goto err_ctx;
++
++	ntb_link_enable(ntb, NTB_SPEED_AUTO, NTB_WIDTH_AUTO);
++	ntb_link_event(ntb);
++
++	return 0;
++
++err_ctx:
++	kfree(pp);
++err_pp:
++	return rc;
++}
++
++static void pp_remove(struct ntb_client *client,
++		      struct ntb_dev *ntb)
++{
++	struct pp_ctx *pp = ntb->ctx;
++
++	ntb_clear_ctx(ntb);
++	del_timer_sync(&pp->db_timer);
++	ntb_link_disable(ntb);
++
++	kfree(pp);
++}
++
++static struct ntb_client pp_client = {
++	.ops = {
++		.probe = pp_probe,
++		.remove = pp_remove,
++	},
++	.name = DRIVER_NAME,
++};
++module_ntb_client(pp_client);
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
-This check is useless, since pci_read_bridge_bases checks that already.
-
-> +           !pci_bridge_bases_is_read(dev->bus))
-> +               pci_read_bridge_bases(dev->bus);
-> +
-
-Ok. Most of the archs do that in pcibios_fixup_bus, I would like to
-understand:
-
-1) Should we do it on PCI_PROBE_ONLY only
-2) Can we move this to generic code - ie pci_scan_child_bus (I guess answer
-   is no, because there are corner cases I am not aware of)
-
-If I add it to arm64 (in pcibios_fixup_bus) I have to add it to arm too, more
-arch specific code that has nothing arch specific in it so I am not really
-keen on that.
-
-Comments appreciated.
-
-Lorenzo
-
->          for (i = 0; i < PCI_NUM_RESOURCES; i++) {
->                  res = &dev->resource[i];
->                  if (res->parent || !res->flags)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6675a7a..6cab8be 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -447,6 +447,13 @@ static void pci_read_bridge_mmio_pref(struct 
-> pci_bus *child)
->          }
->   }
-> 
-> +bool pci_bridge_bases_is_read(struct pci_bus *bus)
-> +{
-> +       return (bus->resource[0]->start ||
-> +               bus->resource[1]->start ||
-> +               bus->resource[2]->start);
-> +}
-> +
->   void pci_read_bridge_bases(struct pci_bus *child)
->   {
->          struct pci_dev *dev = child->self;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 353db8d..11c674d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -798,6 +798,7 @@ void pci_device_add(struct pci_dev *dev, struct 
-> pci_bus *bus);
->   unsigned int pci_scan_child_bus(struct pci_bus *bus);
->   void pci_bus_add_device(struct pci_dev *dev);
->   void pci_read_bridge_bases(struct pci_bus *child);
-> +bool pci_bridge_bases_is_read(struct pci_bus *bus);
->   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->                                            struct resource *res);
->   u8 pci_swizzle_interrupt_pin(const struct pci_dev *dev, u8 pin);
-> ---- END PATCH -----
-> 
-> I'm not sure if this is the best place to be reading the bridge bases. 
-> I guess we should be able to do this when adding bridge devices.
-> 
-> Thanks,
-> 
-> Suravee
-> 
-> 
