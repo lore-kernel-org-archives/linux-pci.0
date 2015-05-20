@@ -1,79 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-To: <dwmw2@infradead.org>, <indou.takao@jp.fujitsu.com>,
-	<bhe@redhat.com>, <joro@8bytes.org>, <vgoyal@redhat.com>,
-	<dyoung@redhat.com>
-Cc: <iommu@lists.linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kexec@lists.infradead.org>,
-	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
-	<ishii.hironobu@jp.fujitsu.com>, <bhelgaas@google.com>,
-	<doug.hatch@hp.com>, <jerry.hoemann@hp.com>, <tom.vaden@hp.com>,
-	<li.zhang6@hp.com>, <lisa.mitchell@hp.com>,
-	<billsumnerlinux@gmail.com>, <zhen-hual@hp.com>, <rwright@hp.com>
-Subject: [PATCH v11 01/10] iommu/vt-d: New function to attach domain with id
-Date: Mon, 11 May 2015 17:52:45 +0800
-Message-Id: <1431337974-545-2-git-send-email-zhen-hual@hp.com>
-In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 May 2015 20:35:47 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC v1 01/25] ARM, irq: Use irq_desc_get_xxx() to avoid
+ redundant lookup of irq_desc
+Message-ID: <20150520193547.GU2067@n2100.arm.linux.org.uk>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+ <1432116013-25902-2-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432116013-25902-2-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow specification of the domain-id for the new domain.
-This patch only adds a new function iommu_attach_domain_with_id, it is like
-the function iommu_attach_domain(), only adding a parameter "did".
+On Wed, May 20, 2015 at 05:59:49PM +0800, Jiang Liu wrote:
+> diff --git a/arch/arm/common/sa1111.c b/arch/arm/common/sa1111.c
+> index 5cc779c8e9c6..0d0844fa54c2 100644
+> --- a/arch/arm/common/sa1111.c
+> +++ b/arch/arm/common/sa1111.c
+> @@ -200,7 +200,7 @@ static void
+>  sa1111_irq_handler(unsigned int irq, struct irq_desc *desc)
+>  {
+>  	unsigned int stat0, stat1, i;
+> -	struct sa1111 *sachip = irq_get_handler_data(irq);
+> +	struct sa1111 *sachip = irq_desc_get_handler_data(desc);
+>  	void __iomem *mapbase = sachip->base + SA1111_INTC;
+>  
+>  	stat0 = sa1111_readl(mapbase + SA1111_INTSTATCLR0);
 
-Bill Sumner:
-    (In older versions) Add new 'did' parameter to iommu_attach_domain();
-    The caller of this function.
+For this one only,
 
-Li, Zhenhua:
-    New function iommu_attach_domain_with_id(), instead of updating function
-    iommu_attach_domain();
+Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
-Signed-off-by: Bill Sumner <billsumnerlinux@gmail.com>
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/iommu/intel-iommu.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+Other maintainers are responsible for the others...
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 68d43be..cb9d6cc 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1552,6 +1552,16 @@ static int iommu_attach_domain(struct dmar_domain *domain,
- 	return num;
- }
- 
-+static int iommu_attach_domain_with_id(struct dmar_domain *domain,
-+			       struct intel_iommu *iommu,
-+			       int domain_number)
-+{
-+	if (domain_number >= 0)
-+		return domain_number;
-+
-+	return iommu_attach_domain(domain, iommu);
-+}
-+
- static int iommu_attach_vm_domain(struct dmar_domain *domain,
- 				  struct intel_iommu *iommu)
- {
-@@ -2220,6 +2230,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	u16 dma_alias;
- 	unsigned long flags;
- 	u8 bus, devfn;
-+	int did = -1;   /* Default to "no domain_id supplied" */
- 
- 	domain = find_domain(dev);
- 	if (domain)
-@@ -2253,7 +2264,7 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
- 	domain = alloc_domain(0);
- 	if (!domain)
- 		return NULL;
--	domain->id = iommu_attach_domain(domain, iommu);
-+	domain->id = iommu_attach_domain_with_id(domain, iommu, did);
- 	if (domain->id < 0) {
- 		free_domain_mem(domain);
- 		return NULL;
+Thanks.
+
 -- 
-2.0.0-rc0
-
+FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
+according to speedtest.net.
