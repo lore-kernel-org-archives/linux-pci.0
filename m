@@ -1,287 +1,157 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <555F33D6.3030907@linaro.org>
-Date: Fri, 22 May 2015 21:49:10 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:41698 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753371AbbETKBC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 06:01:02 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch v3 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFC v1 13/25] genirq: Kill the parameter 'irq' of kstat_incr_irqs_this_cpu()
+Date: Wed, 20 May 2015 18:00:01 +0800
+Message-Id: <1432116013-25902-14-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月14日 16:56, Jiang Liu wrote:
-> Introduce common interface acpi_pci_root_create() and related data
-> structures to create PCI root bus for ACPI PCI host bridges. It will
-> be used to kill duplicated arch specific code for IA64 and x86. It may
-> also help ARM64 in future.
->
-> Tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   drivers/acpi/pci_root.c  |  200 ++++++++++++++++++++++++++++++++++++++++++++++
->   include/linux/pci-acpi.h |   23 ++++++
->   2 files changed, 223 insertions(+)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 1b5569c092c6..22d0cb799ef1 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -656,6 +656,206 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->   	kfree(root);
->   }
->
-> +static void acpi_pci_root_validate_resources(struct device *dev,
-> +					     struct list_head *resources,
-> +					     unsigned long type)
-> +{
-> +	LIST_HEAD(list);
-> +	struct resource *res1, *res2, *root = NULL;
-> +	struct resource_entry *tmp, *entry, *entry2;
-> +
-> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
-> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
-> +
-> +	list_splice_init(resources, &list);
-> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
-> +		bool free = false;
-> +		resource_size_t end;
-> +
-> +		res1 = entry->res;
-> +		if (!(res1->flags & type))
-> +			goto next;
-> +
-> +		/* Exclude non-addressable range or non-addressable portion */
-> +		end = min(res1->end, root->end);
-> +		if (end <= res1->start) {
-> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
-> +				 res1);
-> +			free = true;
-> +			goto next;
-> +		} else if (res1->end != end) {
-> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
-> +				 res1, (unsigned long long)end + 1,
-> +				 (unsigned long long)res1->end);
-> +			res1->end = end;
-> +		}
-> +
-> +		resource_list_for_each_entry(entry2, resources) {
-> +			res2 = entry2->res;
-> +			if (!(res2->flags & type))
-> +				continue;
-> +
-> +			/*
-> +			 * I don't like throwing away windows because then
-> +			 * our resources no longer match the ACPI _CRS, but
-> +			 * the kernel resource tree doesn't allow overlaps.
-> +			 */
-> +			if (resource_overlaps(res1, res2)) {
-> +				res2->start = min(res1->start, res2->start);
-> +				res2->end = max(res1->end, res2->end);
-> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
-> +					 res2, res1);
-> +				free = true;
-> +				goto next;
-> +			}
-> +		}
-> +
-> +next:
-> +		resource_list_del(entry);
-> +		if (free)
-> +			resource_list_free_entry(entry);
-> +		else
-> +			resource_list_add_tail(entry, resources);
-> +	}
-> +}
-> +
-> +static int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
-> +{
-> +	int ret;
-> +	struct list_head *list = &info->resources;
-> +	struct acpi_device *device = info->bridge;
-> +	struct resource_entry *entry, *tmp;
-> +	unsigned long flags;
-> +
-> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
-> +	ret = acpi_dev_get_resources(device, list,
-> +				     acpi_dev_filter_resource_type_cb,
-> +				     (void *)flags);
-> +	if (ret < 0)
-> +		dev_warn(&device->dev,
-> +			 "failed to parse _CRS method, error code %d\n", ret);
-> +	else if (ret == 0)
-> +		dev_dbg(&device->dev,
-> +			"no IO and memory resources present in _CRS\n");
-> +	else {
-> +		resource_list_for_each_entry_safe(entry, tmp, list) {
-> +			if (entry->res->flags & IORESOURCE_DISABLED)
-> +				resource_list_destroy_entry(entry);
-> +			else
-> +				entry->res->name = info->name;
-> +		}
-> +		acpi_pci_root_validate_resources(&device->dev, list,
-> +						 IORESOURCE_MEM);
-> +		acpi_pci_root_validate_resources(&device->dev, list,
-> +						 IORESOURCE_IO);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
-> +{
-> +	struct resource_entry *entry, *tmp;
-> +	struct resource *res, *conflict, *root = NULL;
-> +
-> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
-> +		res = entry->res;
-> +		if (res->flags & IORESOURCE_MEM)
-> +			root = &iomem_resource;
-> +		else if (res->flags & IORESOURCE_IO)
-> +			root = &ioport_resource;
-> +		else
-> +			continue;
-> +
-> +		conflict = insert_resource_conflict(root, res);
-> +		if (conflict) {
-> +			dev_info(&info->bridge->dev,
-> +				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
-> +				 res, conflict->name, conflict);
-> +			resource_list_destroy_entry(entry);
-> +		}
-> +	}
-> +}
-> +
-> +static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
-> +{
-> +	struct resource *res;
-> +	struct resource_entry *entry, *tmp;
-> +
-> +	if (!info)
-> +		return;
-> +
-> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
-> +		res = entry->res;
-> +		if (res->parent &&
-> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-> +			release_resource(res);
-> +		resource_list_destroy_entry(entry);
-> +	}
-> +
-> +	info->ops->release_info(info);
-> +}
-> +
-> +static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
-> +{
-> +	struct resource *res;
-> +	struct resource_entry *entry;
-> +
-> +	resource_list_for_each_entry(entry, &bridge->windows) {
-> +		res = entry->res;
-> +		if (res->parent &&
-> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-> +			release_resource(res);
-> +	}
-> +	__acpi_pci_root_release_info(bridge->release_data);
-> +}
-> +
-> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> +				     struct acpi_pci_root_ops *ops,
-> +				     struct acpi_pci_root_info *info)
-> +{
-> +	int ret, busnum = root->secondary.start;
-> +	struct acpi_device *device = root->device;
-> +	struct pci_bus *bus;
-> +
-> +	info->controller.segment = root->segment;
-> +	info->controller.node = acpi_get_node(device->handle);
-> +	info->controller.companion = device;
-> +	info->root = root;
-> +	info->bridge = device;
-> +	info->ops = ops;
-> +	INIT_LIST_HEAD(&info->resources);
-> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
-> +		 info->controller.segment, busnum);
-> +
-> +	if (ops->init_info && ops->init_info(info))
-> +		goto out_release_info;
-> +	ret = acpi_pci_probe_root_resources(info);
-> +	if (ops->prepare_resources)
-> +		ret = ops->prepare_resources(info, ret);
-> +	if (ret < 0)
-> +		goto out_release_info;
-> +	else if (ret > 0)
-> +		pci_acpi_root_add_resources(info);
-> +	pci_add_resource(&info->resources, &root->secondary);
-> +
-> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-> +				  &info->controller, &info->resources);
-> +	if (bus) {
-> +		pci_scan_child_bus(bus);
-> +		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
-> +					    acpi_pci_root_release_info, info);
-> +		if (info->controller.node != NUMA_NO_NODE)
-> +			dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n",
-> +				   info->controller.node);
-> +		return bus;
-> +	}
-> +
-> +out_release_info:
-> +	__acpi_pci_root_release_info(info);
-> +	return NULL;
-> +}
-> +
->   void __init acpi_pci_root_init(void)
->   {
->   	acpi_hest_init();
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index a965efa52152..685ccc4c3170 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -52,6 +52,29 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->   	return ACPI_HANDLE(dev);
->   }
->
-> +struct acpi_pci_root;
-> +struct acpi_pci_root_ops;
-> +
-> +struct acpi_pci_root_info {
-> +	struct pci_controller		controller;
-> +	struct acpi_pci_root		*root;
-> +	struct acpi_device		*bridge;
-> +	struct acpi_pci_root_ops	*ops;
-> +	struct list_head		resources;
-> +	char				name[16];
-> +};
-> +
-> +struct acpi_pci_root_ops {
-> +	struct pci_ops *pci_ops;
-> +	int (*init_info)(struct acpi_pci_root_info *info);
-> +	void (*release_info)(struct acpi_pci_root_info *info);
-> +	int (*prepare_resources)(struct acpi_pci_root_info *info, int status);
-> +};
-> +
-> +extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> +					    struct acpi_pci_root_ops *ops,
-> +					    struct acpi_pci_root_info *info);
-> +
->   void acpi_pci_add_bus(struct pci_bus *bus);
->   void acpi_pci_remove_bus(struct pci_bus *bus);
+The first parameter 'irq' is never used by kstat_incr_irqs_this_cpu(),
+so kill it. So one step further to kill the first parameter 'irq'
+of irq_flow_handler_t.
 
-As long as you added my ARM64 struct pci_controller patch,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ kernel/irq/chip.c      |   16 ++++++++--------
+ kernel/irq/handle.c    |    2 +-
+ kernel/irq/internals.h |    2 +-
+ kernel/irq/irqdesc.c   |    2 +-
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index d7a50974b77d..fada8daa6b19 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -315,7 +315,7 @@ void handle_nested_irq(unsigned int irq)
+ 	raw_spin_lock_irq(&desc->lock);
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	action = desc->action;
+ 	if (unlikely(!action || irqd_irq_disabled(&desc->irq_data))) {
+@@ -391,7 +391,7 @@ handle_simple_irq(unsigned int irq, struct irq_desc *desc)
+ 		goto out_unlock;
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	if (unlikely(!desc->action || irqd_irq_disabled(&desc->irq_data))) {
+ 		desc->istate |= IRQS_PENDING;
+@@ -443,7 +443,7 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
+ 		goto out_unlock;
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	/*
+ 	 * If its disabled or no action available
+@@ -515,7 +515,7 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
+ 		goto out;
+ 
+ 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	/*
+ 	 * If its disabled or no action available
+@@ -583,7 +583,7 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
+ 		goto out_unlock;
+ 	}
+ 
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	/* Start handling the irq */
+ 	desc->irq_data.chip->irq_ack(&desc->irq_data);
+@@ -646,7 +646,7 @@ void handle_edge_eoi_irq(unsigned int irq, struct irq_desc *desc)
+ 		goto out_eoi;
+ 	}
+ 
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	do {
+ 		if (unlikely(!desc->action))
+@@ -675,7 +675,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	if (chip->irq_ack)
+ 		chip->irq_ack(&desc->irq_data);
+@@ -705,7 +705,7 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
+ 	void *dev_id = raw_cpu_ptr(action->percpu_dev_id);
+ 	irqreturn_t res;
+ 
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 
+ 	if (chip->irq_ack)
+ 		chip->irq_ack(&desc->irq_data);
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index 635480270858..4d37b96343e9 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -30,7 +30,7 @@
+ void handle_bad_irq(unsigned int irq, struct irq_desc *desc)
+ {
+ 	print_irq_desc(irq, desc);
+-	kstat_incr_irqs_this_cpu(irq, desc);
++	kstat_incr_irqs_this_cpu(desc);
+ 	ack_bad_irq(irq);
+ }
+ 
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index d82a77d39aeb..ab675f282291 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -193,7 +193,7 @@ static inline bool irqd_has_set(struct irq_data *d, unsigned int mask)
+ 	return __irqd_to_state(d) & mask;
+ }
+ 
+-static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *desc)
++static inline void kstat_incr_irqs_this_cpu(struct irq_desc *desc)
+ {
+ 	__this_cpu_inc(*desc->kstat_irqs);
+ 	__this_cpu_inc(kstat.irqs_sum);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 358f620c035a..500e6fd11d78 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -586,7 +586,7 @@ int irq_set_percpu_devid(unsigned int irq)
+ 
+ void kstat_incr_irq_this_cpu(unsigned int irq)
+ {
+-	kstat_incr_irqs_this_cpu(irq, irq_to_desc(irq));
++	kstat_incr_irqs_this_cpu(irq_to_desc(irq));
+ }
+ 
+ /**
+-- 
+1.7.10.4
 
-Thanks
-Hanjun
