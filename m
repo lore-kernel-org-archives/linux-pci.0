@@ -1,136 +1,329 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:50334 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751843AbbELGRB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 May 2015 02:17:01 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 12 May 2015 16:16:58 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 84F5F2BB0040
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 16:16:57 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C6GmMq27394050
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 16:16:57 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C6GOmr023895
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 16:16:24 +1000
-Date: Tue, 12 May 2015 16:15:58 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 2/9] powerpc/pci_dn: cache vf_index in pci_dn
-Message-ID: <20150512061558.GA18734@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-3-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150511022104.GA7459@gwshan>
- <20150511055412.GA1632@richard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150511055412.GA1632@richard>
+Received: from mga14.intel.com ([192.55.52.115]:63770 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752531AbbETJkP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 May 2015 05:40:15 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"David S. Miller" <davem@davemloft.net>, x86@kernel.org,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	bob picco <bpicco@meloft.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: [Patch v2 06/14] genirq: Move field 'handler_data' from struct irq_data into struct irq_common_data
+Date: Wed, 20 May 2015 17:40:37 +0800
+Message-Id: <1432114845-24304-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 11, 2015 at 01:54:12PM +0800, Wei Yang wrote:
->On Mon, May 11, 2015 at 12:21:04PM +1000, Gavin Shan wrote:
->>On Mon, May 04, 2015 at 03:07:31PM +0800, Wei Yang wrote:
->>>This patch caches the index of a VF in its PF in pci_dn.
->>>
->>
->>At least you can mention the purpose of vf_index to make the commit log
->>complete. The following message looks better?
->>
->>The patch caches the VF index in pci_dn, which can be used to calculate
->>VF's bus, device and function number. Those information helps to locate
->>the VF's PCI device instance when doing hotplug during EEH recovery if
->>necessary.
->>
->
->Thanks, looks better. I added it in the log.
->
->>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>---
->>> arch/powerpc/include/asm/pci-bridge.h |    1 +
->>> arch/powerpc/kernel/pci_dn.c          |    5 +++--
->>> 2 files changed, 4 insertions(+), 2 deletions(-)
->>>
->>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->>>index 1811c44..9582aa2 100644
->>>--- a/arch/powerpc/include/asm/pci-bridge.h
->>>+++ b/arch/powerpc/include/asm/pci-bridge.h
->>>@@ -199,6 +199,7 @@ struct pci_dn {
->>> #ifdef CONFIG_PCI_IOV
->>> 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
->>> 	u16     num_vfs;		/* number of VFs enabled*/
->>>+	int     vf_index;		/* Index to PF for VF dev */
->>                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
->>
->>					/* VF index in the PF */
->
->Ok, changed in the code.
->
->>
->>And I believe it can be "unsigned int", or u16. We should have
->>non-negative vf_index, no?
->
->Take a look in the virtfn_add(), the index in drivers/pci/iov.c is int. So I
->copy that.
->
->>
->>> 	int     offset;			/* PE# for the first VF PE */
->>> #define M64_PER_IOV 4
->>> 	int     m64_per_iov;
->>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->>>index b3b4df9..bf0fb873 100644
->>>--- a/arch/powerpc/kernel/pci_dn.c
->>>+++ b/arch/powerpc/kernel/pci_dn.c
->>>@@ -138,7 +138,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
->>>
->>> #ifdef CONFIG_PCI_IOV
->>> static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->>>-					   struct pci_dev *pdev,
->>>+					   struct pci_dev *pdev, int vf_index,
->>
->>					   struct pci_dev *pdev,
->>					   int vf_index;
->
->Some reason for this comment?
->
->That does not exceed 80 characters.
->
+Handler data (handler_data) is per-irq instead of per irqchip, so move
+it into struct irq_common_data.
 
-No, it doesn't exceed 80 characters as you said. You take one of the following
-formats, not the one you're using:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/sparc/kernel/irq_64.c    |   15 +++++++++------
+ arch/sparc/kernel/sun4d_irq.c |    4 ++--
+ arch/sparc/kernel/sun4m_irq.c |    6 ++++--
+ arch/x86/kernel/apic/msi.c    |    2 +-
+ arch/x86/kernel/hpet.c        |    4 ++--
+ drivers/gpio/gpio-davinci.c   |    2 +-
+ drivers/sh/intc/virq.c        |    4 ++--
+ include/linux/irq.h           |    8 ++++----
+ include/linux/irqdesc.h       |    2 +-
+ kernel/irq/chip.c             |    2 +-
+ kernel/irq/irqdesc.c          |    3 ++-
+ 11 files changed, 29 insertions(+), 23 deletions(-)
 
-add_one_dev_pci_data(foo1, foo2,          add_one_dev_pci_data(foo1,
-                     foo3, foo4,                               foo2,
-                     foo5, foo6);                                :
-                                                               foo6);
-
->>> 					   int busno, int devfn)
->>> {
->>> 	struct pci_dn *pdn;
->>>@@ -157,6 +157,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
->>> 	pdn->parent = parent;
->>> 	pdn->busno = busno;
->>> 	pdn->devfn = devfn;
->>>+	pdn->vf_index = vf_index;
->>> #ifdef CONFIG_PPC_POWERNV
->>> 	pdn->pe_number = IODA_INVALID_PE;
->>> #endif
->>>@@ -196,7 +197,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
->>> 		return NULL;
->>>
->>> 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
->>>-		pdn = add_one_dev_pci_data(parent, NULL,
->>>+		pdn = add_one_dev_pci_data(parent, NULL, i,
->>> 					   pci_iov_virtfn_bus(pdev, i),
->>> 					   pci_iov_virtfn_devfn(pdev, i));
->>> 		if (!pdn) {
-
-Thanks,
-Gavin
+diff --git a/arch/sparc/kernel/irq_64.c b/arch/sparc/kernel/irq_64.c
+index 4033c23bdfa6..5130f6e3e68e 100644
+--- a/arch/sparc/kernel/irq_64.c
++++ b/arch/sparc/kernel/irq_64.c
+@@ -210,21 +210,21 @@ struct irq_handler_data {
+ 
+ static inline unsigned int irq_data_to_handle(struct irq_data *data)
+ {
+-	struct irq_handler_data *ihd = data->handler_data;
++	struct irq_handler_data *ihd = irq_data_get_irq_handler_data(data);
+ 
+ 	return ihd->dev_handle;
+ }
+ 
+ static inline unsigned int irq_data_to_ino(struct irq_data *data)
+ {
+-	struct irq_handler_data *ihd = data->handler_data;
++	struct irq_handler_data *ihd = irq_data_get_irq_handler_data(data);
+ 
+ 	return ihd->dev_ino;
+ }
+ 
+ static inline unsigned long irq_data_to_sysino(struct irq_data *data)
+ {
+-	struct irq_handler_data *ihd = data->handler_data;
++	struct irq_handler_data *ihd = irq_data_get_irq_handler_data(data);
+ 
+ 	return ihd->sysino;
+ }
+@@ -370,8 +370,9 @@ static int irq_choose_cpu(unsigned int irq, const struct cpumask *affinity)
+ 
+ static void sun4u_irq_enable(struct irq_data *data)
+ {
+-	struct irq_handler_data *handler_data = data->handler_data;
++	struct irq_handler_data *handler_data;
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (likely(handler_data)) {
+ 		unsigned long cpuid, imap, val;
+ 		unsigned int tid;
+@@ -393,8 +394,9 @@ static void sun4u_irq_enable(struct irq_data *data)
+ static int sun4u_set_affinity(struct irq_data *data,
+ 			       const struct cpumask *mask, bool force)
+ {
+-	struct irq_handler_data *handler_data = data->handler_data;
++	struct irq_handler_data *handler_data;
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (likely(handler_data)) {
+ 		unsigned long cpuid, imap, val;
+ 		unsigned int tid;
+@@ -438,8 +440,9 @@ static void sun4u_irq_disable(struct irq_data *data)
+ 
+ static void sun4u_irq_eoi(struct irq_data *data)
+ {
+-	struct irq_handler_data *handler_data = data->handler_data;
++	struct irq_handler_data *handler_data;
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (likely(handler_data))
+ 		upa_writeq(ICLR_IDLE, handler_data->iclr);
+ }
+diff --git a/arch/sparc/kernel/sun4d_irq.c b/arch/sparc/kernel/sun4d_irq.c
+index a1bb2675b280..a87d0e47c168 100644
+--- a/arch/sparc/kernel/sun4d_irq.c
++++ b/arch/sparc/kernel/sun4d_irq.c
+@@ -188,7 +188,7 @@ void sun4d_handler_irq(unsigned int pil, struct pt_regs *regs)
+ 
+ static void sun4d_mask_irq(struct irq_data *data)
+ {
+-	struct sun4d_handler_data *handler_data = data->handler_data;
++	struct sun4d_handler_data *handler_data = irq_data_get_irq_handler_data(data);
+ 	unsigned int real_irq;
+ #ifdef CONFIG_SMP
+ 	int cpuid = handler_data->cpuid;
+@@ -206,7 +206,7 @@ static void sun4d_mask_irq(struct irq_data *data)
+ 
+ static void sun4d_unmask_irq(struct irq_data *data)
+ {
+-	struct sun4d_handler_data *handler_data = data->handler_data;
++	struct sun4d_handler_data *handler_data = irq_data_get_irq_handler_data(data);
+ 	unsigned int real_irq;
+ #ifdef CONFIG_SMP
+ 	int cpuid = handler_data->cpuid;
+diff --git a/arch/sparc/kernel/sun4m_irq.c b/arch/sparc/kernel/sun4m_irq.c
+index 8bb3b3fddea7..da737c712fa8 100644
+--- a/arch/sparc/kernel/sun4m_irq.c
++++ b/arch/sparc/kernel/sun4m_irq.c
+@@ -188,9 +188,10 @@ static unsigned long sun4m_imask[0x50] = {
+ 
+ static void sun4m_mask_irq(struct irq_data *data)
+ {
+-	struct sun4m_handler_data *handler_data = data->handler_data;
++	struct sun4m_handler_data *handler_data;
+ 	int cpu = smp_processor_id();
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (handler_data->mask) {
+ 		unsigned long flags;
+ 
+@@ -206,9 +207,10 @@ static void sun4m_mask_irq(struct irq_data *data)
+ 
+ static void sun4m_unmask_irq(struct irq_data *data)
+ {
+-	struct sun4m_handler_data *handler_data = data->handler_data;
++	struct sun4m_handler_data *handler_data;
+ 	int cpu = smp_processor_id();
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (handler_data->mask) {
+ 		unsigned long flags;
+ 
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index ef516afa20bb..778743f64308 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -263,7 +263,7 @@ static inline int hpet_dev_id(struct irq_domain *domain)
+ 
+ static void hpet_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+-	hpet_msi_write(data->handler_data, msg);
++	hpet_msi_write(irq_data_get_irq_handler_data(data), msg);
+ }
+ 
+ static struct irq_chip hpet_msi_controller = {
+diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
+index e2449cf38b06..40cf79a55fe7 100644
+--- a/arch/x86/kernel/hpet.c
++++ b/arch/x86/kernel/hpet.c
+@@ -426,7 +426,7 @@ static struct irq_domain *hpet_domain;
+ 
+ void hpet_msi_unmask(struct irq_data *data)
+ {
+-	struct hpet_dev *hdev = data->handler_data;
++	struct hpet_dev *hdev = irq_data_get_irq_handler_data(data);
+ 	unsigned int cfg;
+ 
+ 	/* unmask it */
+@@ -437,7 +437,7 @@ void hpet_msi_unmask(struct irq_data *data)
+ 
+ void hpet_msi_mask(struct irq_data *data)
+ {
+-	struct hpet_dev *hdev = data->handler_data;
++	struct hpet_dev *hdev = irq_data_get_irq_handler_data(data);
+ 	unsigned int cfg;
+ 
+ 	/* mask it */
+diff --git a/drivers/gpio/gpio-davinci.c b/drivers/gpio/gpio-davinci.c
+index c5e05c82d67c..477d5b8616ab 100644
+--- a/drivers/gpio/gpio-davinci.c
++++ b/drivers/gpio/gpio-davinci.c
+@@ -396,7 +396,7 @@ static int gpio_irq_type_unbanked(struct irq_data *data, unsigned trigger)
+ 	struct davinci_gpio_regs __iomem *g;
+ 	u32 mask;
+ 
+-	d = (struct davinci_gpio_controller *)data->handler_data;
++	d = (struct davinci_gpio_controller *)irq_data_get_irq_handler_data(data);
+ 	g = (struct davinci_gpio_regs __iomem *)d->regs;
+ 	mask = __gpio_mask(data->irq - d->gpio_irq);
+ 
+diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+index f30ac9354ff2..3dbc21696924 100644
+--- a/drivers/sh/intc/virq.c
++++ b/drivers/sh/intc/virq.c
+@@ -87,8 +87,8 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+ 	struct irq_data *data = irq_get_irq_data(irq);
+ 
+ 	/* scan for duplicates */
+-	last = (struct intc_virq_list **)&data->handler_data;
+-	for_each_virq(entry, data->handler_data) {
++	last = (struct intc_virq_list **)&data->common->handler_data;
++	for_each_virq(entry, irq_data_get_irq_handler_data(data)) {
+ 		if (entry->irq == virq)
+ 			return 0;
+ 		last = &entry->next;
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 0138f046642c..43581e166298 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -130,12 +130,14 @@ struct irq_domain;
+  * @state_use_accessors: status information for irq chip functions.
+  *			Use accessor functions to deal with it
+  * @node:		node index useful for balancing
++ * @handler_data:	per-IRQ data for the irq_chip methods
+  */
+ struct irq_common_data {
+ 	unsigned int		state_use_accessors;
+ #ifdef CONFIG_NUMA
+ 	unsigned int		node;
+ #endif
++	void			*handler_data;
+ };
+ 
+ /**
+@@ -149,7 +151,6 @@ struct irq_common_data {
+  *			between hwirq number and linux irq number.
+  * @parent_data:	pointer to parent struct irq_data to support hierarchy
+  *			irq_domain
+- * @handler_data:	per-IRQ data for the irq_chip methods
+  * @chip_data:		platform-specific per-chip private data for the chip
+  *			methods, to allow shared chip implementations
+  * @msi_desc:		MSI descriptor
+@@ -169,7 +170,6 @@ struct irq_data {
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+ 	struct irq_data		*parent_data;
+ #endif
+-	void			*handler_data;
+ 	void			*chip_data;
+ 	struct msi_desc		*msi_desc;
+ 	cpumask_var_t		affinity;
+@@ -611,12 +611,12 @@ static inline void *irq_data_get_irq_chip_data(struct irq_data *d)
+ static inline void *irq_get_handler_data(unsigned int irq)
+ {
+ 	struct irq_data *d = irq_get_irq_data(irq);
+-	return d ? d->handler_data : NULL;
++	return d ? d->common->handler_data : NULL;
+ }
+ 
+ static inline void *irq_data_get_irq_handler_data(struct irq_data *d)
+ {
+-	return d->handler_data;
++	return d->common->handler_data;
+ }
+ 
+ static inline struct msi_desc *irq_get_msi_desc(unsigned int irq)
+diff --git a/include/linux/irqdesc.h b/include/linux/irqdesc.h
+index 1fcbaadab02e..f595fb193c8a 100644
+--- a/include/linux/irqdesc.h
++++ b/include/linux/irqdesc.h
+@@ -111,7 +111,7 @@ static inline void *irq_desc_get_chip_data(struct irq_desc *desc)
+ 
+ static inline void *irq_desc_get_handler_data(struct irq_desc *desc)
+ {
+-	return desc->irq_data.handler_data;
++	return desc->irq_common_data.handler_data;
+ }
+ 
+ static inline struct msi_desc *irq_desc_get_msi_desc(struct irq_desc *desc)
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index eb9a4ea394ab..46c487fc71dd 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -83,7 +83,7 @@ int irq_set_handler_data(unsigned int irq, void *data)
+ 
+ 	if (!desc)
+ 		return -EINVAL;
+-	desc->irq_data.handler_data = data;
++	desc->irq_common_data.handler_data = data;
+ 	irq_put_desc_unlock(desc, flags);
+ 	return 0;
+ }
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 0c3057e42906..7f881792ad5f 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -72,11 +72,12 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
+ {
+ 	int cpu;
+ 
++	desc->irq_common_data.handler_data = NULL;
++
+ 	desc->irq_data.common = &desc->irq_common_data;
+ 	desc->irq_data.irq = irq;
+ 	desc->irq_data.chip = &no_irq_chip;
+ 	desc->irq_data.chip_data = NULL;
+-	desc->irq_data.handler_data = NULL;
+ 	desc->irq_data.msi_desc = NULL;
+ 	irq_settings_clr_and_set(desc, ~0, _IRQ_DEFAULT_INIT_FLAGS);
+ 	irqd_set(&desc->irq_data, IRQD_IRQ_DISABLED);
+-- 
+1.7.10.4
 
