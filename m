@@ -1,86 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:37724 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751160AbbEDAYS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 May 2015 20:24:18 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 4 May 2015 10:24:16 +1000
-Date: Mon, 4 May 2015 10:23:14 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Message-ID: <20150504002314.GA12518@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
- <1430493730.7979.58.camel@kernel.crashing.org>
- <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
- <1430521038.7979.70.camel@kernel.crashing.org>
- <1430522976.7979.78.camel@kernel.crashing.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 May 2015 16:48:39 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"David S. Miller" <davem@davemloft.net>, x86@kernel.org,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	bob picco <bpicco@meloft.net>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: Re: [Patch v2 06/14] genirq: Move field 'handler_data' from struct
+ irq_data into struct irq_common_data
+In-Reply-To: <1432114845-24304-7-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1505201628400.4225@nanos>
+References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com> <1432114845-24304-7-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430522976.7979.78.camel@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 02, 2015 at 09:29:36AM +1000, Benjamin Herrenschmidt wrote:
->On Sat, 2015-05-02 at 08:57 +1000, Benjamin Herrenschmidt wrote:
->
->> > Overlay = an FDT blob to graft into a live running system. Sounds like
->> > the same thing.
->> > 
->> > > As for the details of Gavin implementation, I haven't looked at it in
->> > > details yet so there might be issues there, however I don't know what
->> > > you mean by "overlays", any pointer ?
->> > 
->> > CONFIG_OF_OVERLAY
->> > 
->> > http://events.linuxfoundation.org/sites/events/files/slides/dynamic-dt-keynote-v3.pdf
->> 
->> Well, that looks horrendously complicated, poorly documented and totally
->> unused in-tree outside of the unittest stuff, yay ! It has all sort of
->> "features" that I don't really care about.
->
->Looking a bit more at it, I don't quite see how I can attach a subtree
->using that stuff.
->
->Instead, each node in the overlay seems to need extra nodes and
->properties to refer to the original.
->
->So the FW would essentially have to create something a lot more complex
->than just reflattening a bit of its internal tree. For each internal
->node, it will need to add all those __overlay__ nodes and properties.
->
->That is not going to fly for me at all. It's order of magnitudes more
->complex than the solution we are pursuing.
->
->So I think for our use case, we should continue in the direction of
->having a helper to unflatten a piece of FDT underneath an existing
->node. I don't like the "HYBRID" stuff though, we should not refer to
->the original FDT, we should just make them normal dynamic nodes.
->
+On Wed, 20 May 2015, Jiang Liu wrote:
 
-The original FDT from firmware is copied over to the memory chunk
-allocated from slab by kernel. So we refer to the copy of the FDT,
-not original one. Yeah, "HYBRID" wouldn't be a good idea. If we
-want make all device nodes and properties of the sub-tree "DYNAMIC",
-the FDT hasn't to be copied over from skiboot to kernel, indicating
-those dynamic device nodes and properties in the subtree can be
-figured out directly from the FDT blob, which is owned by firmware.
+> Handler data (handler_data) is per-irq instead of per irqchip, so move
+> it into struct irq_common_data.
 
-Also, it just need small changes to code what we have. Not too much
-changes needed.
+For review and debugging sake, please do the same split as you did
+with node. Convert first and then move. 5 patches this time:
+
+Sparc: 
+>  arch/sparc/kernel/irq_64.c    |   15 +++++++++------
+>  arch/sparc/kernel/sun4d_irq.c |    4 ++--
+>  arch/sparc/kernel/sun4m_irq.c |    6 ++++--
+
+x86:
+>  arch/x86/kernel/apic/msi.c    |    2 +-
+>  arch/x86/kernel/hpet.c        |    4 ++--
+
+gpio:
+>  drivers/gpio/gpio-davinci.c   |    2 +-
+
+sh:
+>  drivers/sh/intc/virq.c        |    4 ++--
+
+Move:
+>  include/linux/irq.h           |    8 ++++----
+>  include/linux/irqdesc.h       |    2 +-
+>  kernel/irq/chip.c             |    2 +-
+>  kernel/irq/irqdesc.c          |    3 ++-
+
+> diff --git a/drivers/gpio/gpio-davinci.c b/drivers/gpio/gpio-davinci.c
+> index c5e05c82d67c..477d5b8616ab 100644
+> --- a/drivers/gpio/gpio-davinci.c
+> +++ b/drivers/gpio/gpio-davinci.c
+> @@ -396,7 +396,7 @@ static int gpio_irq_type_unbanked(struct irq_data *data, unsigned trigger)
+>  	struct davinci_gpio_regs __iomem *g;
+>  	u32 mask;
+>  
+> -	d = (struct davinci_gpio_controller *)data->handler_data;
+> +	d = (struct davinci_gpio_controller *)irq_data_get_irq_handler_data(data);
+
+This type cast is silly, handler_data is (void *)
+
+>  	g = (struct davinci_gpio_regs __iomem *)d->regs;
+>  	mask = __gpio_mask(data->irq - d->gpio_irq);
+>  
+> diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+> index f30ac9354ff2..3dbc21696924 100644
+> --- a/drivers/sh/intc/virq.c
+> +++ b/drivers/sh/intc/virq.c
+> @@ -87,8 +87,8 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+>  	struct irq_data *data = irq_get_irq_data(irq);
+>  
+>  	/* scan for duplicates */
+> -	last = (struct intc_virq_list **)&data->handler_data;
+> -	for_each_virq(entry, data->handler_data) {
+> +	last = (struct intc_virq_list **)&data->common->handler_data;
+
+That does not make sense. You convert the one below, but not that one
+to the accessor function.
+
+handler_data is a pointer to a struct intc_virq_list. So 
+
+	struct intc_virq_list **last, *entry, *head; 
+
+	head = irq_data_get_irq_handler_data(data);
+	last = &head;
+	
+	for_each_virq(entry, head) {
+		....
+	}
+
+Would be clean code and lets you convert all usage sites of
+data->handler_data before actually doing the move to common data.
 
 Thanks,
-Gavin
 
+	tglx
