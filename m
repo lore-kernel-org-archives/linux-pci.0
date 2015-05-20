@@ -1,190 +1,223 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 27 May 2015 19:23:32 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150528022332.GA23724@roeck-us.net>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150527210447.GY32152@google.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: bhelgaas@google.com
+Cc: tomi.valkeinen@ti.com, airlied@linux.ie,
+	linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>
+Subject: [PATCH v6 3/4] video: fbdev: s3fb: use arch_phys_wc_add() and pci_iomap_wc()
+Date: Wed, 20 May 2015 16:08:12 -0700
+Message-Id: <1432163293-20965-4-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 04:04:47PM -0500, Bjorn Helgaas wrote:
-> [+cc Lorenzo, Suravee, Will]
-> 
-> I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
-> pci_read_bases() from the PCI core instead of from arch code, and there are
-> likely some dependencies between these two things.
-> 
-> On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
-> > The PCI subsystem always assumes that I/O is supported on PCIe bridges
-> > and tries to assign an I/O window to each port even if that is not
-> > the case.
-> > 
-> > This may result in messages such as
-> > 
-> > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
-> > 					get_res_add_size add_size 1000
-> > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
-> > 
-> > for each bridge port, even if a port or its parent does not support
-> > I/O in the first place.
-> > 
-> > To avoid this message, check if a port supports I/O before trying to
-> > enable it. Also check if port's parent supports I/O, and only modify
-> > a port's I/O resource size if both the port and its parent support I/O.
-> > 
-> > If IO is disabled after the initial port scan, the IO base and size
-> > registers are set to 0x00f0 to indicate that IO is disabled. A later
-> > rescan interprets this as "IO supported" and enables the IO range,
-> > even if the parent does not support IO. Handle this situation as well.
-> > 
-> > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> > ---
-> >  drivers/pci/probe.c     | 14 ++++++++++++++
-> >  drivers/pci/setup-bus.c |  4 ++--
-> >  include/linux/pci.h     |  9 +++++++++
-> >  3 files changed, 25 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 6675a7a1b9fc..f4944ef45148 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
-> >  	base = (io_base_lo & io_mask) << 8;
-> >  	limit = (io_limit_lo & io_mask) << 8;
-> >  
-> > +	/* If necessary, check if the bridge supports an I/O aperture */
-> > +	if (!io_base_lo && !io_limit_lo) {
-> > +		u16 io;
-> > +
-> > +		if (!pci_parent_supports_io(child))
-> > +			return;
-> > +
-> > +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
-> > +		pci_read_config_word(dev, PCI_IO_BASE, &io);
-> > +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
-> > +		if (!io)
-> > +			return;
-> > +	}
-> 
-> I really like the idea of pushing this into pci_read_bridge_io().
-> 
-> I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
-> somehow get rid of pci_bridge_check_ranges() altogether?
-> 
-Sure, I just figured I'd start with IO, and do the rest after
-I have a better idea if I am going into the right direction.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-> I think I looked at doing that a while back, and it seems like there was
-> some wrinkle, but I don't remember what it was.
-> 
-> It does make sense that if the bridge supports an I/O aperture, but there's
-> no possibility of I/O resources on the primary side, we should pretend the
-> bridge has no I/O aperture.  But I think it might be nice to emit a
-> diagnostic about *why* we're ignoring it.  Otherwise there's a little
-> discrepancy between dmesg and lspci.
-> 
-Ok, makes sense. Would you want to see that message for every port ?
-Guess I can check how it looks like, to make sure that I don't end up
-getting a lot of noise again.
+This driver uses the same area for MTRR as for the ioremap().
+Convert the driver from using the x86 specific MTRR code to
+the architecture agnostic arch_phys_wc_add(). arch_phys_wc_add()
+will avoid MTRR if write-combining is available, in order to
+take advantage of that also ensure the ioremap'd area is requested
+as write-combining.
 
-> > +
-> >  	if ((io_base_lo & PCI_IO_RANGE_TYPE_MASK) == PCI_IO_RANGE_TYPE_32) {
-> >  		u16 io_base_hi, io_limit_hi;
-> >  
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index 4fd0cacf7ca0..963b31a109a9 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -750,12 +750,12 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> >  	b_res[1].flags |= IORESOURCE_MEM;
-> >  
-> >  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > -	if (!io) {
-> > +	if (!io && pci_parent_supports_io(bus)) {
-> >  		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> >  		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> >  		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> >  	}
-> > -	if (io)
-> > +	if (io && (io != 0x00f0 || pci_parent_supports_io(bus)))
-> 
-> I *think* this 0x00f0 depends on what pci_setup_bridge_io() writes to
-> PCI_IO_BASE when it disables an I/O aperture.  Depending on that particular
+There are a few motivations for this:
 
-Correct. I could have checked if io is disabled (limit < base),
-but at least for the time being I wanted the impact to be minimal.
-So far the code auto-enables IO if it was disabled (eg by the BIOS)
-but the bridge chip supports it. I only wanted to keep it disabled
-if it was likely that it was disabled by pci_setup_bridge_io().
+a) Take advantage of PAT when available
 
-Of course,
-	if (io && pci_parent_supports_io(bus))
-might just be sufficient.
+b) Help bury MTRR code away, MTRR is architecture specific and on
+   x86 its replaced by PAT
 
-> value here is sort of ugly and would need at least a comment if we can't
-> figure out a better way to do it.
-> 
-> But it would be ideal if we could get rid of pci_bridge_check_ranges()
-> altogether and have the rule that we read bridge window characteristics
-> (IORESOURCE_IO, IORESOURCE_MEM, IORESOURCE_PREFETCH, IORESOURCE_MEM_64)
-> once when we enumerate the bridge.  After that, the only changes would be
-> to change res->start and res->end and update the hardware correspondingly.
-> 
-Would be great - this should solve the above problem automatically.
-I was hesitant to do that, because I don't know if there would be side
-effects. I could take out the io handling from pci_bridge_check_ranges()
-and see what happens, but obviously my test coverage would be somewhat
-limited.
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()")
 
-> I'd like res->flags to reflect the capabilities of the hardware, not
-> whether the window is currently enabled.
-> 
-Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
-purpose, or could that cause conflicts elsewhere ?
+The conversion done is expressed by the following Coccinelle
+SmPL patch, it additionally required manual intervention to
+address all the #ifdery and removal of redundant things which
+arch_phys_wc_add() already addresses such as verbose message
+about when MTRR fails and doing nothing when we didn't get
+an MTRR.
 
-> >  		b_res[0].flags |= IORESOURCE_IO;
-> >  
-> >  	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 353db8dc4c6e..f3de9e24aab1 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -489,6 +489,15 @@ static inline bool pci_is_root_bus(struct pci_bus *pbus)
-> >  	return !(pbus->parent);
-> >  }
-> >  
-> > +/*
-> > + * Returns true if the parent bus supports an I/O aperture.
-> > + */
-> > +static inline bool pci_parent_supports_io(struct pci_bus *pbus)
-> > +{
-> > +	return pci_is_root_bus(pbus) || pci_is_root_bus(pbus->parent) ||
-> > +	       (pbus->parent->resource[0]->flags & IORESOURCE_IO);
-> 
-> This is not obvious to me.  There are host bridges that do not have I/O
-> apertures, so I don't see what the pci_is_root_bus() tests have to do with
-> this.  The resource[0]->flags & IORESOURCE_IO part does make sense to me.
-> 
-More a matter of me not knowing what I need to do. resource[0] is NULL
-for the root bus, at least on the powerpc system I used for testing.
+@ mtrr_found @
+expression index, base, size;
+@@
 
-> I think at the root bus, we'd have to iterate through all the host bridge
-> resources to figure out whether there are any I/O apertures.
-> 
-Can you give me a hint on how to do that, hopefully in a platform
-independent way ? Walk through bus->resources and search for an
-IO resource ? Or does resource[0] == NULL already indicate
-that there is no IO aperture ?
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
 
-Thanks,
-Guenter
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
+
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
+
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+Generated-by: Coccinelle SmPL
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/video/fbdev/s3fb.c | 35 ++++++-----------------------------
+ 1 file changed, 6 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/video/fbdev/s3fb.c b/drivers/video/fbdev/s3fb.c
+index f0ae61a..13b1090 100644
+--- a/drivers/video/fbdev/s3fb.c
++++ b/drivers/video/fbdev/s3fb.c
+@@ -28,13 +28,9 @@
+ #include <linux/i2c.h>
+ #include <linux/i2c-algo-bit.h>
+ 
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
+-#endif
+-
+ struct s3fb_info {
+ 	int chip, rev, mclk_freq;
+-	int mtrr_reg;
++	int wc_cookie;
+ 	struct vgastate state;
+ 	struct mutex open_lock;
+ 	unsigned int ref_count;
+@@ -154,11 +150,7 @@ static const struct svga_timing_regs s3_timing_regs     = {
+ 
+ 
+ static char *mode_option;
+-
+-#ifdef CONFIG_MTRR
+ static int mtrr = 1;
+-#endif
+-
+ static int fasttext = 1;
+ 
+ 
+@@ -170,11 +162,8 @@ module_param(mode_option, charp, 0444);
+ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ module_param_named(mode, mode_option, charp, 0444);
+ MODULE_PARM_DESC(mode, "Default video mode ('640x480-8@60', etc) (deprecated)");
+-
+-#ifdef CONFIG_MTRR
+ module_param(mtrr, int, 0444);
+ MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
+ 
+ module_param(fasttext, int, 0644);
+ MODULE_PARM_DESC(fasttext, "Enable S3 fast text mode (1=enable, 0=disable, default=1)");
+@@ -1168,7 +1157,7 @@ static int s3_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	info->fix.smem_len = pci_resource_len(dev, 0);
+ 
+ 	/* Map physical IO memory address into kernel space */
+-	info->screen_base = pci_iomap(dev, 0, 0);
++	info->screen_base = pci_iomap_wc(dev, 0, 0);
+ 	if (! info->screen_base) {
+ 		rc = -ENOMEM;
+ 		dev_err(info->device, "iomap for framebuffer failed\n");
+@@ -1365,12 +1354,9 @@ static int s3_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	/* Record a reference to the driver data */
+ 	pci_set_drvdata(dev, info);
+ 
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
++	if (mtrr)
++		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++						  info->fix.smem_len);
+ 
+ 	return 0;
+ 
+@@ -1405,14 +1391,7 @@ static void s3_pci_remove(struct pci_dev *dev)
+ 
+ 	if (info) {
+ 		par = info->par;
+-
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
+-
++		arch_phys_wc_del(par->wc_cookie);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
+ 
+@@ -1551,10 +1530,8 @@ static int  __init s3fb_setup(char *options)
+ 
+ 		if (!*opt)
+ 			continue;
+-#ifdef CONFIG_MTRR
+ 		else if (!strncmp(opt, "mtrr:", 5))
+ 			mtrr = simple_strtoul(opt + 5, NULL, 0);
+-#endif
+ 		else if (!strncmp(opt, "fasttext:", 9))
+ 			fasttext = simple_strtoul(opt + 9, NULL, 0);
+ 		else
+-- 
+2.3.2.209.gd67f9d5.dirty
+
