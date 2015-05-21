@@ -1,92 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:34169 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbbEFWSW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 18:18:22 -0400
-Received: by iedfl3 with SMTP id fl3so28876231ied.1
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 15:18:21 -0700 (PDT)
-Date: Wed, 6 May 2015 17:18:18 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wdavis@nvidia.com
-Cc: joro@8bytes.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, tripperda@nvidia.com,
-	jhubbard@nvidia.com, jglisse@redhat.com,
-	Yijing Wang <wangyijing@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
-Message-ID: <20150506221818.GH24643@google.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: RE: [PATCH 02/16] NTB Abstraction Layer
+Date: Thu, 21 May 2015 11:32:26 +0000
+Message-ID: <40F65EF2B5E2254199711F58E3ACB84D7825F98C@MX104CL02.corp.emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+	 <d653819e0ebc03241fe073c9239be36a52f5e265.1432135631.git.Allen.Hubbe@emc.com>
+ <1432198316.21715.135.camel@x220>
+In-Reply-To: <1432198316.21715.135.camel@x220>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yijing, Dave J, Dave M, Alex]
-
-On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
-> From: Will Davis <wdavis@nvidia.com>
-> 
-> Hi,
-> 
-> This patch series adds DMA APIs to map and unmap a struct resource to and from
-> a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
-> of these interfaces.
-> 
-> This solves a long-standing problem with the existing DMA-remapping interfaces,
-> which require that a struct page be given for the region to be mapped into a
-> device's IOVA domain. This requirement cannot support peer device BAR ranges,
-> for which no struct pages exist.
-> 
-> The underlying implementations of map_page and map_sg convert the struct page
-> into its physical address anyway, so we just need a way to route the physical
-> address of the BAR region to these implementations. The new interfaces do this
-> by taking the struct resource describing a device's BAR region, from which the
-> physical address is derived.
-> 
-> The Intel and nommu versions have been verified on a dual Intel Xeon E5405
-> workstation. I'm in the process of obtaining hardware to test the AMD version
-> as well. Please review.
-
-I think we currently assume there's no peer-to-peer traffic.
-
-I don't know whether changing that will break anything, but I'm concerned
-about these:
-
-  - PCIe MPS configuration (see pcie_bus_configure_settings()).
-
-  - PCIe ACS, e.g., pci_acs_enabled().  My guess is that this one is OK,
-    but Alex would know better.
-
-  - dma_addr_t.  Currently dma_addr_t is big enough to hold any address
-    returned from the DMA API.  That's not necessarily big enough to hold a
-    PCI bus address, e.g., a raw BAR value.
-
-> Will Davis (6):
->   dma-debug: add checking for map/unmap_resource
->   DMA-API: Introduce dma_(un)map_resource
->   dma-mapping: pci: add pci_(un)map_resource
->   iommu/amd: Implement (un)map_resource
->   iommu/vt-d: implement (un)map_resource
->   x86: add pci-nommu implementation of map_resource
-> 
->  arch/x86/kernel/pci-nommu.c              | 17 +++++++
->  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++------
->  drivers/iommu/intel-iommu.c              | 18 ++++++++
->  include/asm-generic/dma-mapping-broken.h |  9 ++++
->  include/asm-generic/dma-mapping-common.h | 34 ++++++++++++++
->  include/asm-generic/pci-dma-compat.h     | 14 ++++++
->  include/linux/dma-debug.h                | 20 +++++++++
->  include/linux/dma-mapping.h              |  7 +++
->  lib/dma-debug.c                          | 48 ++++++++++++++++++++
->  9 files changed, 230 insertions(+), 13 deletions(-)
-> 
-> -- 
-> 2.3.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+RnJvbTogUGF1bCBCb2xsZSBbbWFpbHRvOnBlYm9sbGVAdGlzY2FsaS5ubF0NCj4gT24gV2VkLCAy
+MDE1LTA1LTIwIGF0IDExOjQxIC0wNDAwLCBBbGxlbiBIdWJiZSB3cm90ZToNCg0KDQo+IA0KPiAo
+TXkgbWFpbGVyIHRlbGxzIG1lIHRoaXMgbWVzc2FnZSBpcyBvdmVyIDIwMEtCIGluIHNpemUuIERp
+ZCB5b3UgY29uc2lkZXINCj4gb2ZmZXJpbmcgYnJpYmVzIHRvIGdldCBwZW9wbGUgdG8gcmV2aWV3
+IHRoaXMgcGF0Y2g/KQ0KDQpJIHdvdWxkIGhhdmUgbGlrZWQgdG8gc2VuZCBzbWFsbGVyIHBhdGNo
+ZXMsIHRvby4NCg0KSSBhdHRlbXB0ZWQgdG8gc3BsaXQgdGhpcyBvbmUgaW4gdGhyZWU6DQoxKSBh
+ZGQgdGhlIG50YiBjb3JlIGRyaXZlciBhbmQgaGVhZGVyIGZpbGUNCjIpIGNoYW5nZSBudGJfaHdf
+aW50ZWwgZHJpdmVyIHRvIHVzZSBuZXcgYXBpDQozKSBjaGFuZ2UgbnRiX3RyYW5zcG9ydCBkcml2
+ZXIgdG8gdXNlIG5ldyBhcGkNCg0KVGhlIHByb2JsZW0gaXMsIGFueSBjaGFuZ2UgdG8gdGhlIG9s
+ZCBudGJfaHdfaW50ZWwgKHdhcyBudGIua28pLCBvciBudGJfdHJhbnNwb3J0LCBhbG9uZSB3aWxs
+IGNhdXNlIHRoZSBvdGhlciBub3QgdG8gd29yay4NCg0KPiANCj4gSSBqdXN0IHNwb3R0ZWQgdHdv
+IG5pdHMuDQo+IA0KPiA+IC0tLSBhL2RyaXZlcnMvbnRiL0tjb25maWcNCj4gPiArKysgYi9kcml2
+ZXJzL250Yi9LY29uZmlnDQo+ID4NCj4gPiAraWYgTlRCDQo+ID4gKw0KPiA+ICtzb3VyY2UgImRy
+aXZlcnMvbnRiL2h3L0tjb25maWciDQo+ID4gKw0KPiA+ICtjb25maWcgTlRCX1RSQU5TUE9SVA0K
+PiA+ICsgICAgICAgdHJpc3RhdGUgIk5UQiBUcmFuc3BvcnQgQ2xpZW50Ig0KPiA+ICsgICAgICAg
+ZGVwZW5kcyBvbiBOVEINCj4gDQo+IFN1cGVyZmx1b3VzIGRlcGVuZGVuY3kuDQoNCkkgd2lsbCBy
+ZW1vdmUgZGVwZW5kcyBOVEIgZnJvbSB0aGlzLCBhbmQgb3RoZXIgdGhpbmdzIHdpdGhpbiBpZiBO
+VEIuDQoNCkkgd2lsbCBhbHNvIGNoYW5nZSB0aGUgbGVhZGluZyBzcGFjZXMgdG8gdGFicy4NCg0K
+PiANCj4gPiArICAgICAgIGhlbHANCj4gPiArICAgICAgICBUaGlzIGlzIGEgdHJhbnNwb3J0IGRy
+aXZlciB0aGF0IGVuYWJsZXMgY29ubmVjdGVkIHN5c3RlbXMgdG8NCj4gZXhjaGFuZ2UNCj4gPiAr
+ICAgICAgICBtZXNzYWdlcyBvdmVyIHRoZSBudGIgaGFyZHdhcmUuICBUaGUgdHJhbnNwb3J0IGV4
+cG9zZXMgYQ0KPiBxdWV1ZSBwYWlyIGFwaQ0KPiA+ICsgICAgICAgIHRvIGNsaWVudCBkcml2ZXJz
+Lg0KPiA+ICsNCj4gPiArICAgICAgICBJZiB1bnN1cmUsIHNheSBOLg0KPiA+ICsNCj4gPiArZW5k
+aWYgIyBOVEINCj4gDQo+ID4gLS0tIC9kZXYvbnVsbA0KPiA+ICsrKyBiL2RyaXZlcnMvbnRiL2h3
+L2ludGVsL0tjb25maWcNCj4gDQo+ID4gK2NvbmZpZyBOVEJfSU5URUwNCj4gPiArICAgICAgIHRy
+aXN0YXRlICJJbnRlbCBOb24tVHJhbnNwYXJlbnQgQnJpZGdlIHN1cHBvcnQiDQo+ID4gKyAgICAg
+ICBkZXBlbmRzIG9uIE5UQg0KPiANCj4gRGl0dG8uDQo+IA0KPiA+ICsgICAgICAgZGVwZW5kcyBv
+biBYODYNCj4gPiArICAgICAgIGhlbHANCj4gPiArICAgICAgICBUaGlzIGRyaXZlciBzdXBwb3J0
+cyBJbnRlbCBOVEIgb24gY2FwYWJsZSBYZW9uIGFuZCBBdG9tDQo+IGhhcmR3YXJlLg0KPiA+ICsN
+Cj4gPiArICAgICAgICBJZiB1bnN1cmUsIHNheSBOLg0KPiANCj4gVGhhbmtzLA0KPiANCj4gDQo+
+IFBhdWwgQm9sbGUNCg0KVGhhbmtzLA0KQWxsZW4NCg==
