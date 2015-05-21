@@ -1,64 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC v2 0/7] Consolidate ACPI PCI root common code into ACPI core
-Date: Tue,  5 May 2015 10:46:03 +0800
-Message-Id: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nblzone-211-213.nblnetworks.fi ([83.145.211.213]:51910 "EHLO
+	hillosipuli.retiisi.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754853AbbEUVEk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 17:04:40 -0400
+From: Sakari Ailus <sakari.ailus@iki.fi>
+To: linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com
+Subject: [PATCH 1/1] PCI: Add function 1 DMA alias quirk for Marvell 9120
+Date: Fri, 22 May 2015 00:03:38 +0300
+Message-Id: <1432242218-28414-1-git-send-email-sakari.ailus@iki.fi>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set consolidates common code to support ACPI PCI root on x86
-and IA64 platforms into ACPI core, to reproduce duplicated code and
-simplify maintenance. The common code should also used to support PCI
-host bridge on ARM64 too, but I'm lacking of knowledge about PCIe host
-bridge implementation details on ARM64, so please help to review whether
-this is suitable for ARM64 too.
+Marvell 9120 SATA controller has the same issue as a number of others, use
+the same quirk for this one. The other quirks were added by patch
+"PCI: Add function 1 DMA alias quirk for Marvell devices"
+(commit id cc346a4714a59d08c118e8f33fd86692d3563133).
 
-It's based on latest mainstream kernel plus the patch to fix a regression
-at: http://lkml.org/lkml/2015/4/30/13
+Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
+---
+(Resending to linux-pci, was originally sent to linux-iommu list.)
 
-It passes Fengguang's 0day test suite and has been tested on two IA64
-platforms and one x86 platform.
+Hi,
 
-The patch set is available at:
-https://github.com/jiangliu/linux.git acpi_pci_root_v2
+I recently booted the v4.0.1 kernel with intel-iommu enabled and had similar
+issues as in the original bug report with Marvell 88SE9120 (rev 12). The
+same quirk appears to work for that one as well.
 
-Thanks!
-Gerry
+ drivers/pci/quirks.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Jiang Liu (7):
-  ACPI/PCI: Enhance ACPI core to support sparse IO space
-  ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
-    bridge
-  ia64/PCI: Use common struct resource_entry to replace struct
-    iospace_resource
-  x86/PCI: Rename struct pci_sysdata as struct pci_controller
-  PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
-  x86/PCI/ACPI: Use common interface to support PCI host bridge
-  ia64/PCI/ACPI: Use common interface to support PCI host bridge
-
- arch/ia64/include/asm/pci.h   |    5 -
- arch/ia64/pci/pci.c           |  373 +++++++++++------------------------------
- arch/x86/include/asm/pci.h    |   13 +-
- arch/x86/include/asm/pci_64.h |    4 +-
- arch/x86/pci/acpi.c           |  281 +++++++++----------------------
- arch/x86/pci/common.c         |    2 +-
- drivers/acpi/pci_root.c       |  214 +++++++++++++++++++++++
- drivers/acpi/resource.c       |    9 +-
- include/linux/ioport.h        |    1 +
- include/linux/pci-acpi.h      |   24 +++
- 10 files changed, 431 insertions(+), 495 deletions(-)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 85f247e..d4af5a8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3572,6 +3572,8 @@ static void quirk_dma_func1_alias(struct pci_dev *dev)
+  * SKUs this function is not present, making this a ghost requester.
+  * https://bugzilla.kernel.org/show_bug.cgi?id=42679
+  */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9120,
++			 quirk_dma_func1_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
+ 			 quirk_dma_func1_alias);
+ /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
 -- 
 1.7.10.4
 
