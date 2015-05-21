@@ -1,171 +1,160 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com>
-References: <CAFSKS=M8bODT8bLckwtGFziknPG=32Y1=8mz3Fq0H7JcA3GhjQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 May 2015 10:51:39 -0500
-Message-ID: <CAErSpo4YEUTyrFth3xVyeja0=cbk69+tSQgsOFCO5nvFK=suhw@mail.gmail.com>
-Subject: Re: I/O conflict on Versalogic Tiger (VL-EPM-24)
-To: George McCollister <george.mccollister@gmail.com>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: RE: [PATCH v2 00/17] NTB: Add NTB hardware abstraction layer
+Date: Thu, 21 May 2015 05:45:03 -0400
+Message-Id: <cover.1432196075.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+The patches in this set (v2) reply to a different message id than the 
+cover letter I sent.  Please pardon my mistake.  Other than that, I hope 
+the patches are ok this time around.
 
-On Wed, May 6, 2015 at 9:47 AM, George McCollister
-<george.mccollister@gmail.com> wrote:
-> We're using Versalogic Tiger (VL-EPM-24) SBCs in embedded systems
-> running linux 3.2.x without any problems. Recently, when testing the
-> latest mainline kernel I found the system hard locked during boot.
->
-> After some investigation I noticed that the kernel print time stamps
-> were bogus after one of the pcieports was enabled:
-> [    1.658879] io scheduler cfq registered (default)
-> [    1.663905] pcieport 0000:00:1c.0: enabling device (0004 -> 0007)
-> [    6.254134] Serial: 8250/16550 driver, 21 ports, IRQ sharing enabled
-> [    6.254134] 00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200)
-> is a 16550A
-> [    6.254134] 00:04: ttyS1 at I/O 0x2f8 (irq = 0, base_baud = 115200)
-> is a 16550A
-> [    6.254134] 00:05: ttyS2 at I/O 0x3e8 (irq = 0, base_baud = 115200)
-> is a 16550A
-> [    6.254134] 00:06: ttyS4 at I/O 0x238 (irq = 0, base_baud = 115200)
-> is a 16550A
->
-> I was surprised to find that the problem existed as far back as 3.11.
-> I checked to make sure we were using the latest BIOS and contacted the
-> vendor to see if they were aware of anyone else using recent versions
-> of the linux kernel. They stated that they were unaware of anyone
-> using recent kernel versions on this board and tired to convince me to
-> stick with an old version.
->
-> I then git bisected to this commit:
-> ac212b6980d8d5eda705864fc5a8ecddc6d6eacc ACPI / processor: Use common
-> hotplug infrastructure
->
-> After diffing the kernel output before and after this commit I noticed
-> that the I/O BAR assigned to the pcieport (same one as above) changed
-> from 0x1000 to 0x2000.
->
-> @@ -191,13 +191,13 @@
-> Switching to clocksource acpi_pm
-> pci 0000:00:1c.0: BAR 9: assigned [mem 0x80000000-0x801fffff pref]
-> pci 0000:00:1c.1: BAR 9: assigned [mem 0x80200000-0x803fffff pref]
-> -pci 0000:00:1c.0: BAR 7: assigned [io  0x1000-0x1fff]
-> +pci 0000:00:1c.0: BAR 7: assigned [io  0x2000-0x2fff]
-> pci 0000:02:01.0: PCI bridge to [bus 03]
-> pci 0000:02:01.0:   bridge window [mem 0xdff00000-0xdfffffff]
-> pci 0000:01:00.0: PCI bridge to [bus 02-03]
-> pci 0000:01:00.0:   bridge window [mem 0xdff00000-0xdfffffff]
-> pci 0000:00:1c.0: PCI bridge to [bus 01-03]
-> -pci 0000:00:1c.0:   bridge window [io  0x1000-0x1fff]
-> +pci 0000:00:1c.0:   bridge window [io  0x2000-0x2fff]
-> pci 0000:00:1c.0:   bridge window [mem 0xdff00000-0xdfffffff]
-> pci 0000:00:1c.0:   bridge window [mem 0x80000000-0x801fffff pref]
-> pci 0000:00:1c.1: PCI bridge to [bus 04]
->
-> I also noticed the kernel output 'ACPI: PM-Timer IO Port: 0x2008' and
-> made the connection that since acpi_pm was being used as the
-> clocksource and since the problems started when the BAR switched from
-> 0x1000 to 0x2000 an I/O conflict must be the source of the problems.
->
-> I did some reading into ACPI (since my understanding of it was novice
-> at the time) and dumped the DSDT. I found no reference to anything in
-> the 0x2xxx I/O range though I did find the following in the FADT:
-> PM1a_EVT_BLK at 0x2000-0x2003
-> PM1a_CNT_BLK at 0x2004-0x2005
-> PM_TMR at 0x2008-0x200b
->
-> I dumped the DSDT on other systems and found that some used PNP0C02 to
-> reserve I/O ranges used by the ACPI PM registers.
->
-> I added the following to the Versalogic Tiger dsdt.dsl under the PCI
-> bus, compiled it and and compiled into the linux kernel:
->             Device (PMIO)
->             {
->                 Name (_HID, EisaId ("PNP0C02") /* PNP Motherboard
-> Resources */)  // _HID: Hardware ID
->                 Name (_UID, 0x09)  // _UID: Unique ID
->                 Method (_CRS, 0, NotSerialized)  // _CRS: Current
-> Resource Settings
->                 {
->                     Name (BUF0, ResourceTemplate ()
->                     {
->                         IO (Decode16,
->                             0x2000,            // Range Minimum
->                             0x2000,            // Range Maximum
->                             0x01,              // Alignment
->                             0xC,               // Length
->                         )
->                         IO (Decode16,
->                             0x20C0,            // Range Minimum
->                             0x20C0,            // Range Maximum
->                             0x01,              // Alignment
->                             0x8,               // Length
->                         )
->                     })
->                     Return (BUF0)
->                 }
->             }
->
-> It booted just fine! (comment welcome on whether or not this looks
-> like the correct fix)
->
-> Unfortunately even if I get the vendor to release a new BIOS with the
-> DSDT modifications, rolling out BIOS updates to thousands of systems
-> in the field will be nearly impossible. When we roll out a new kernel
-> to the production systems we'll need it to work with the existing
-> BIOS.
->
-> I've been searching around the linux kernel for a way to apply a quirk
-> specific to this board.
-> I've found I can do something like the following and match the Poulsbo
-> Host bridge and that it'll fix the problem but I don't see a decent
-> way of restricting it to this board.
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 85f247e..1f16dbf 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -413,6 +413,17 @@ static void quirk_ati_exploding_mce(struct pci_dev *dev)
-> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,
-> PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
->
-> /*
-> + * Versa Logic Tiger
-> + */
-> +static void quirk_versa_logic_tiger(struct pci_dev *dev)
-> +{
-> +       dev_info(&dev->dev, "Versalogic Tiger, reserving I/O ports\n");
-> +       request_region(0x2000, 0x0C, "Versalogic Tiger");
-> +       request_region(0x20C0, 0x08, "Versalogic Tiger");
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x8100, quirk_versa_logic_tiger);
-> +
-> +/*
->
-> Any suggestions on what could be done to get a fix for this board
-> mainlined into the kernel? Should I give up hope and just apply a cute
-> embedded non-sense hack?
+I wrote the cover letter, and then kept the same copy after fixing a few 
+more things.  This has the email id of the cover letter generated before 
+the fixes.
 
-I think your DSDT tweak is on the right track.  We have some similar
-things in drivers/pnp/quirks.c.  Possibly a new region could be added
-to an existing PNP0C02 device, maybe via dmi_check_system() to limit
-it to this platform.
+I should have instead copied the subject line and body into the new cover 
+letter that was generated for the fixed patch set.  Now I have learned my 
+lesson.
 
-But I notice that board claims Windows compatibility, so I wonder if
-there's a smarter way.  I doubt that Windows would have a quirk for
-this specific board, so we should be able to make Linux work without a
-quirk, too.
+In addition to the email id, the diff stat is also for the patch set that 
+I didn't send, before the last fixes.  The diff stat doesn't differ by 
+much.  If anybody cares, here is the exact diff stat for the v2.
 
-Complete dmesg logs from pre- and post-ac212b6980d8 might have a clue
-about what changed.  It looks like your FADT should be enough to
-reserve those regions via acpi_reserve_resources().  But maybe there's
-something wrong there, or maybe we incorrectly use that for PCI space.
-Does  your post-ac212b6980d8 /proc/ioports show those regions?
+ Documentation/ntb.txt               |  127 +++
+ MAINTAINERS                         |   16 +-
+ drivers/net/ntb_netdev.c            |   58 +-
+ drivers/ntb/Kconfig                 |   39 +-
+ drivers/ntb/Makefile                |    4 +-
+ drivers/ntb/hw/Kconfig              |    1 +
+ drivers/ntb/hw/Makefile             |    1 +
+ drivers/ntb/hw/intel/Kconfig        |    7 +
+ drivers/ntb/hw/intel/Makefile       |    1 +
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 2222 
++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ntb/hw/intel/ntb_hw_intel.h |  342 +++++++
+ drivers/ntb/ntb.c                   |  251 +++++
+ drivers/ntb/ntb_hw.c                | 1896 ------------------------------
+--------
+ drivers/ntb/ntb_hw.h                |  256 ------
+ drivers/ntb/ntb_regs.h              |  177 ----
+ drivers/ntb/ntb_transport.c         | 1023 +++++++++++++--------
+ drivers/ntb/test/Kconfig            |   19 +
+ drivers/ntb/test/Makefile           |    2 +
+ drivers/ntb/test/ntb_pingpong.c     |  251 +++++
+ drivers/ntb/test/ntb_tool.c         |  557 ++++++++++++
+ include/linux/ntb.h                 |  969 +++++++++++++++++++-
+ include/linux/ntb_transport.h       |   85 ++
+ 22 files changed, 5494 insertions(+), 2810 deletions(-)
+ create mode 100644 Documentation/ntb.txt
+ create mode 100644 drivers/ntb/hw/Kconfig
+ create mode 100644 drivers/ntb/hw/Makefile
+ create mode 100644 drivers/ntb/hw/intel/Kconfig
+ create mode 100644 drivers/ntb/hw/intel/Makefile
+ create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.c
+ create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.h
+ create mode 100644 drivers/ntb/ntb.c
+ delete mode 100644 drivers/ntb/ntb_hw.c
+ delete mode 100644 drivers/ntb/ntb_hw.h
+ delete mode 100644 drivers/ntb/ntb_regs.h
+ create mode 100644 drivers/ntb/test/Kconfig
+ create mode 100644 drivers/ntb/test/Makefile
+ create mode 100644 drivers/ntb/test/ntb_pingpong.c
+ create mode 100644 drivers/ntb/test/ntb_tool.c
+ create mode 100644 include/linux/ntb_transport.h
 
-Bjorn
+Finally, I've faked the email id of this message, so the patches appear to 
+reply to this one.  I hope this will clean up any threading for people who 
+use that feature in their email clients.
+
+From: Allen Hubbe [mailto:Allen.Hubbe@emc.com]
+> The NTB drivers currently support only one hardware driver, and one
+> client type.  This patch set adds an abstraction layer, enabling
+> hardware drivers by other vendors, and clients other than ntb_transport.
+> 
+> The commits in this set may also be pulled from:
+> github.com/allenbh/linux
+> tagged ntb-abh-v2
+> 
+> The differences can be seen by comparing against the tag ntb-abh-v1.
+> 
+> Different in v2:
+>  - Rewrite shortlog descriptions for spelling and style
+>  - Remove extraneous NTB dependency from Kconfig files
+>  - Reindent Kconfig files with leading tabs
+>  - Reindent some lines in ntb_transport
+>  - Append patch NTB: Rename intel hw to proper platform names
+> 
+> Allen Hubbe (12):
+>   NTB: Move files in preparation for NTB abstraction
+>   NTB: Add NTB hardware abstraction layer
+>   NTB: Add parameters for Intel SNB B2B addresses
+>   NTB: Add ping pong test client
+>   NTB: Add tool test client
+>   NTB: Rate limit ntb_qp_link_work
+>   NTB: Differentiate transport link down messages
+>   NTB: Do not advance transport RX on link down
+>   NTB: Reset transport QP link stats on down
+>   NTB: Use NUMA memory and DMA chan in transport
+>   NTB: Use NUMA memory in Intel driver
+>   NTB: Fix small code format issues in transport
+> 
+> Dave Jiang (5):
+>   NTB: Enable link for Intel root port mode in probe
+>   NTB: Check the device ID to set errata flags
+>   NTB: Improve performance with write combining
+>   NTB: Default to CPU memcpy for performance
+>   NTB: Rename intel hw to proper platform names
+> 
+>  Documentation/ntb.txt               |  127 ++
+>  MAINTAINERS                         |   16 +-
+>  drivers/net/ntb_netdev.c            |   58 +-
+>  drivers/ntb/Kconfig                 |   39 +-
+>  drivers/ntb/Makefile                |    4 +-
+>  drivers/ntb/hw/Kconfig              |    1 +
+>  drivers/ntb/hw/Makefile             |    1 +
+>  drivers/ntb/hw/intel/Kconfig        |    7 +
+>  drivers/ntb/hw/intel/Makefile       |    1 +
+>  drivers/ntb/hw/intel/ntb_hw_intel.c | 2222
+> +++++++++++++++++++++++++++++++++++
+>  drivers/ntb/hw/intel/ntb_hw_intel.h |  342 ++++++
+>  drivers/ntb/ntb.c                   |  251 ++++
+>  drivers/ntb/ntb_hw.c                | 1896 ----------------------------
+> --
+>  drivers/ntb/ntb_hw.h                |  256 ----
+>  drivers/ntb/ntb_regs.h              |  177 ---
+>  drivers/ntb/ntb_transport.c         | 1018 +++++++++-------
+>  drivers/ntb/test/Kconfig            |   19 +
+>  drivers/ntb/test/Makefile           |    2 +
+>  drivers/ntb/test/ntb_pingpong.c     |  251 ++++
+>  drivers/ntb/test/ntb_tool.c         |  557 +++++++++
+>  include/linux/ntb.h                 |  969 ++++++++++++++-
+>  include/linux/ntb_transport.h       |   85 ++
+>  22 files changed, 5491 insertions(+), 2808 deletions(-)
+>  create mode 100644 Documentation/ntb.txt
+>  create mode 100644 drivers/ntb/hw/Kconfig
+>  create mode 100644 drivers/ntb/hw/Makefile
+>  create mode 100644 drivers/ntb/hw/intel/Kconfig
+>  create mode 100644 drivers/ntb/hw/intel/Makefile
+>  create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.c
+>  create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.h
+>  create mode 100644 drivers/ntb/ntb.c
+>  delete mode 100644 drivers/ntb/ntb_hw.c
+>  delete mode 100644 drivers/ntb/ntb_hw.h
+>  delete mode 100644 drivers/ntb/ntb_regs.h
+>  create mode 100644 drivers/ntb/test/Kconfig
+>  create mode 100644 drivers/ntb/test/Makefile
+>  create mode 100644 drivers/ntb/test/ntb_pingpong.c
+>  create mode 100644 drivers/ntb/test/ntb_tool.c
+>  create mode 100644 include/linux/ntb_transport.h
+> 
+> --
+> 2.4.0.rc0.43.gcf8a8c6
+
