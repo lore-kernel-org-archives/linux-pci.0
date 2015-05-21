@@ -1,105 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4860 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751932AbbESS2i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 14:28:38 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.h.duyck@redhat.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to
- protect VPD operations
-Date: Tue, 19 May 2015 18:28:36 +0000
-Message-ID: <E9012788-257F-4C44-B7F1-789B94423924@intel.com>
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
- <555B78F7.60908@redhat.com>
-In-Reply-To: <555B78F7.60908@redhat.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_9B7E90BA-BE9E-476E-BAC3-4C72E79E5243";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <555DF723.2000103@linaro.org>
+References: <1432216352-8016-1-git-send-email-hanjun.guo@linaro.org>
+ <CAErSpo6kFfXd9gFuL86qQWcVN6NYe11Ps+SoAefz1z2md8j_tA@mail.gmail.com> <555DF723.2000103@linaro.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 21 May 2015 10:21:08 -0500
+Message-ID: <CAErSpo4uZ09K7BSZyyhMtxFpuMCn6hxE01QFWw8nmo7snshutg@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / PCI: remove stale list_head in struct acpi_prt_entry
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_9B7E90BA-BE9E-476E-BAC3-4C72E79E5243
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+On Thu, May 21, 2015 at 10:17 AM, Hanjun Guo <hanjun.guo@linaro.org> wrote:
+> On 2015年05月21日 23:10, Bjorn Helgaas wrote:
+>>
+>> On Thu, May 21, 2015 at 8:52 AM, Hanjun Guo <hanjun.guo@linaro.org> wrote:
+>>>
+>>> list_head "list" in struct acpi_prt_entry was used to connect
+>>> _PRT entries for PCI irq, but after commit 181380b7 (PCI/ACPI:
+>>> Don't cache _PRT, and don't associate them with bus numbers),
+>>> the list head for _PRT entries was removed, but left "list" in
+>>> struct acpi_prt_entry which is useless and stale, remove it now.
+>>
+>>
+>> Please use the canonical commit reference format, i.e.,
+>>
+>> 181380b702ee ("PCI/ACPI: Don't cache _PRT, and don't associate them
+>> with bus numbers")
+>
+>
+> OK, now I know what is a canonical commit reference format :)
 
-> On May 19, 2015, at 10:55 AM, Alexander Duyck =
-<alexander.h.duyck@redhat.com> wrote:
->=20
-> On 05/18/2015 05:00 PM, Mark D Rustad wrote:
->> Some devices have a problem with concurrent VPD access to different
->> functions of the same physical device, so move the protecting mutex
->> from the pci_vpd structure to the pci_bus structure. There are a
->> number of reports on support sites for a variety of devices from
->> various vendors getting the "vpd r/w failed" message. This is likely
->> to at least fix some of them. Thanks to Shannon Nelson for helping
->> to come up with this approach.
->>=20
->> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->> Acked-by: Shannon Nelson <shannon.nelson@intel.com>
->> Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->=20
-> Instead of moving the mutex lock around you would be much better =
-served by simply removing the duplicate VPD entries for a given device =
-in a PCIe quirk.  Then you can save yourself the extra pain and effort =
-of having to deal with serialized VPD accesses for a multifunction =
-device.
->=20
-> The logic for the quirk should be fairly simple.
->  1.  Scan for any other devices with VPD that share the same bus and =
-device number.
->  2.  If bdf is equal to us keep searching.
->  3.  If bdf is less than our bdf we release our VPD area and set VPD =
-pointer to NULL.
+Yeah, it'd be nice if that were better documented.  checkpatch
+complains about it (d311cd44545f ("checkpatch: add test for commit id
+formatting style in commit log")), but unfortunately I don't think
+it's mentioned anywhere in Documentation/
 
-I could do that. If this issue only affected Intel devices, I would be =
-more inclined to consider something like that. I am avoiding discussing =
-other vendors directly, so please go and do a Google search on "vpd r/w =
-failed" and see if you really want to quirk all those devices. It isn't =
-just Intel and it isn't just networking.
-
-If after doing that you still feel that this isn't the best solution, I =
-can go and cook up something much bigger (I already had two much bigger =
-patches that I abandoned in favor of this approach). Bear in mind that =
-the quirk code is dead weight in all the kernels.
-
-As you said in another message, VPD is not that vital. Given that, I =
-would think that some possible needless synchronization that resolves =
-real problems for many devices should be acceptable. If it was =
-synchronizing all config space or something that would be different, but =
-this is just VPD.
-
---
-Mark Rustad, Networking Division, Intel Corporation
-
-
---Apple-Mail=_9B7E90BA-BE9E-476E-BAC3-4C72E79E5243
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVW4DTAAoJEDwO/+eO4+5ukCUP/13z2L/BrCT+npVmQAyviF9C
-oMASQ/BV8XYvy7pGB7XrrrlEUJW/YUIaOcpkPCgZmIzBmHf9fOggwreR8IUulPaE
-+zTA+V7Q0ccBmTpIv8Ka3G7WzSnjMH7U/VSNFNhAtNcxrd2xoRljlxdReTjenHeD
-dnEUrROXearADA8L6oxj6jzvWX/ktn6pww9wtwz+/F7HQ8Srow6XlujpOe18aODm
-8/Cce+Zfe8Pbm5GmjRft05XHT7z6C99g2V0fklGqpXj9DYz6PPb6ysMMU6snBmFc
-fpJayYTui7n89lhbiVzn7FGmMCPStl/Cdxfr6b/AF9EP+DherrBs6TB5Zcdy9+u0
-Kei7DKOOoDCC0qDCsZAxKMTVXb7nudcpr5phdJYc/hYc8yEJr4vuSDk48dVMFS2l
-JbyHPU4x4jYDVeJrinoAZZo2W5qWwFYduxbc7lJi6tewZOfg2pRj1b9myU+PyuA2
-JG27nZQigk/s3HRk4O8m8hi4ee3XJGEsawvjaV86DherVt2erCs9IUYuMoIrR85F
-pSYww9eE8nIOF/oi8S9j92n7ZnF3usUnBsHXGgC+qagsv7xBG3kywE1T79OLWpy8
-nWH1R00291KuTc7/dds6PfbpkWJ/QQnEzxNkTYUqYx4SIRYRRnpXHIoGr0I0GCVa
-APFLQQs9WkuFBFoIy+bU
-=eTfZ
------END PGP SIGNATURE-----
-
---Apple-Mail=_9B7E90BA-BE9E-476E-BAC3-4C72E79E5243--
+Bjorn
