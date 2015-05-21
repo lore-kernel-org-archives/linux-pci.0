@@ -1,47 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:37780 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649AbbE2QVx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 May 2015 12:21:53 -0400
-Date: Fri, 29 May 2015 18:21:51 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150529162151.GB20384@8bytes.org>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v2 08/17] NTB: Rate limit ntb_qp_link_work
+Date: Thu, 21 May 2015 04:20:52 -0400
+Message-Id: <7e222c8e1d900571b23291601e8034ae51448273.1432196075.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
+References: <cover.1432192681.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
+References: <cover.1432196075.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 11, 2015 at 05:52:44PM +0800, Li, Zhen-Hua wrote:
-> Li, Zhen-Hua (10):
->   iommu/vt-d: New function to attach domain with id
->   iommu/vt-d: Items required for kdump
->   iommu/vt-d: Function to get existing context entry
->   iommu/vt-d: functions to copy data from old mem
->   iommu/vt-d: Add functions to load and save old re
->   iommu/vt-d: datatypes and functions used for kdump
->   iommu/vt-d: enable kdump support in iommu module
->   iommu/vt-d: assign new page table for dma_map
->   iommu/vt-d: Copy functions for irte
->   iommu/vt-d: Use old irte in kdump kernel
-> 
->  drivers/iommu/intel-iommu.c         | 536 ++++++++++++++++++++++++++++++++++--
->  drivers/iommu/intel_irq_remapping.c |  96 ++++++-
->  include/linux/intel-iommu.h         |  16 ++
->  3 files changed, 623 insertions(+), 25 deletions(-)
+When the ntb transport is connecting and waiting for the peer, the debug
+console receives lots of debug level messages about the remote qp link
+status being down.  Rate limit those messages.
 
-Applied with a few minor changes, thanks.
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 80a35cb..e38e4f8 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -831,7 +831,7 @@ static void ntb_qp_link_work(struct work_struct *work)
+ 
+ 	/* query remote spad for qp ready bits */
+ 	ntb_peer_spad_read(nt->ndev, QP_LINKS);
+-	dev_dbg(&pdev->dev, "Remote QP link status = %x\n", val);
++	dev_dbg_ratelimited(&pdev->dev, "Remote QP link status = %x\n", val);
+ 
+ 	/* See if the remote side is up */
+ 	if (val & BIT(qp->qp_num)) {
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
