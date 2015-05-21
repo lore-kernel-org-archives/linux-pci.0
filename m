@@ -1,113 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mark Rutland <mark.rutland@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v10 1/4] documentation: dts: Add the device tree binding for APM X-Gene v1 PCIe MSI device tree node
-Date: Fri, 29 May 2015 11:24:29 -0700
-Message-Id: <2e6071ac3c663cee95e29d5c4606d049692ca9c2.1432922451.git.dhdang@apm.com>
-In-Reply-To: <cover.1432922451.git.dhdang@apm.com>
-References: <cover.1432922451.git.dhdang@apm.com>
-In-Reply-To: <cover.1432922451.git.dhdang@apm.com>
-References: <5566CC58.8080400@arm.com> <cover.1432922451.git.dhdang@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:33974 "EHLO
+	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754095AbbEUMKH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 08:10:07 -0400
+Received: by qkgx75 with SMTP id x75so51817820qkg.1
+        for <linux-pci@vger.kernel.org>; Thu, 21 May 2015 05:10:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <555D37B0.2080909@hisilicon.com>
+References: <000101d092fb$94dde100$be99a300$@com> <555D37B0.2080909@hisilicon.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 21 May 2015 07:09:46 -0500
+Message-ID: <CAErSpo7TEgY=oJvLU3jyh=FcZqgsSxLi1Cw1mo6w+5WSRkfPMQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 2/3] PCI: hisi: Add PCIe host support for Hisilicon
+ Soc Hip05
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-X-Gene v1 PCIe MSI controller block provides PCIE MSI functionality
-for 5 X-Gene v1 PCIE ports
+On Wed, May 20, 2015 at 8:41 PM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> On 2015/5/20 20:50, Jingoo Han wrote:
+>> On Wed, 20 May 2015 14:21:40 +0800, Zhou Wang wrote:
 
-The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+>>> +/* Configure vmid/asid table in PCIe host */
+>>> +static void hisi_pcie_config_context(struct hisi_pcie *pcie)
+>>> +{
+>>> +    int i;
+>>> +
+>>> +    hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
+>>> +
+>>> +    for (i = 0; i < 0x400; i++)
+>>> +            hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>>> +
+>>> +    for (i = 0x400; i < 0x800; i++)
+>>> +            hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>>
+>> How about the following?
+>>
+>> +     for (i = 0; i < 0x800; i++)
+>> +             hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>>
+>
+> This is to configure init value of vmid and asid of each pcie device.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
----
- .../devicetree/bindings/pci/xgene-pci-msi.txt      | 68 ++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+But the combined loop looks functionally equivalent, i.e., I don't
+think the device can tell the difference.  Personally I wouldn't mind
+if you kept the two loops separate, but if you do, each one needs a
+comment immediately before it so the reader has a clue that they are
+doing semantically different things.  Otherwise it just looks like a
+mistake and the reader wonders why they are split.
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-new file mode 100644
-index 0000000..36d881c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
-@@ -0,0 +1,68 @@
-+* AppliedMicro X-Gene v1 PCIe MSI controller
-+
-+Required properties:
-+
-+- compatible: should be "apm,xgene1-msi" to identify
-+	      X-Gene v1 PCIe MSI controller block.
-+- msi-controller: indicates that this is X-Gene v1 PCIe MSI controller node
-+- reg: physical base address (0x79000000) and length (0x900000) for controller
-+       registers. These registers include the MSI termination address and data
-+       registers as well as the MSI interrupt status registers.
-+- reg-names: not required
-+- interrupts: A list of 16 interrupt outputs of the controller, starting from
-+	      interrupt number 0x10 to 0x1f.
-+- interrupt-names: not required
-+
-+Each PCIe node needs to have property msi-parent that points to msi controller node
-+
-+Examples:
-+
-+SoC DTSI:
-+
-+	+ MSI node:
-+	msi@79000000 {
-+		compatible = "apm,xgene1-msi";
-+		msi-controller;
-+		reg = <0x00 0x79000000 0x0 0x900000>;
-+		interrupts = 	<0x0 0x10 0x4>
-+				<0x0 0x11 0x4>
-+				<0x0 0x12 0x4>
-+				<0x0 0x13 0x4>
-+				<0x0 0x14 0x4>
-+				<0x0 0x15 0x4>
-+				<0x0 0x16 0x4>
-+				<0x0 0x17 0x4>
-+				<0x0 0x18 0x4>
-+				<0x0 0x19 0x4>
-+				<0x0 0x1a 0x4>
-+				<0x0 0x1b 0x4>
-+				<0x0 0x1c 0x4>
-+				<0x0 0x1d 0x4>
-+				<0x0 0x1e 0x4>
-+				<0x0 0x1f 0x4>;
-+	};
-+
-+	+ PCIe controller node with msi-parent property pointing to MSI node:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
-+			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		dma-coherent;
-+		clocks = <&pcie0clk 0>;
-+		msi-parent= <&msi>;
-+	};
--- 
-1.9.1
-
+Bjorn
