@@ -1,99 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:45271 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2993511AbbEEQDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 May 2015 12:03:35 -0400
-Date: Tue, 5 May 2015 17:03:37 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-Message-ID: <20150505160337.GB23106@red-moon>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com>
- <20150505155346.GJ1550@arm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4173 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846AbbEUHJb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 03:09:31 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
+	<rwhite@pobox.com>, <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v4 3/3] PCI: Use pdev->has_secondary_link to identify pcie link
+Date: Thu, 21 May 2015 15:05:04 +0800
+Message-ID: <1432191904-16451-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
+References: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150505155346.GJ1550@arm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 05, 2015 at 04:53:46PM +0100, Will Deacon wrote:
-> On Tue, May 05, 2015 at 03:02:12AM +0100, Jayachandran C wrote:
-> > The current code in pci-host-generic.c uses pci_common_init_dev()
-> > from the arch/arm/ to do a part of the PCI initialization, and this
-> > prevents it from being used on arm64.
-> > 
-> > The initialization done by pci_common_init_dev() that is really
-> > needed by pci-host-generic.c can be done in the same file without
-> > using the hw_pci API of ARM.
-> > 
-> > The ARM platform requires a pci_sys_data as sysdata for the PCI bus,
-> > this is be handled by setting up 'struct gen_pci' to embed a
-> > pci_sys_data variable as the first element on the ARM platform.
-> > 
-> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> > ---
-> > Here's v2 of the patches, this enables use of pci-host-generic on
-> > arm64.
-> > 
-> > This has been tested on both qemu and fast model for arm64, and on
-> > qemu for arm32.
-> > 
-> > v1->v2
-> >  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
-> >     - move contents of gen_pci_init to gen_pci_probe
-> >     - assign resources only when !probe_only
-> >  - tested on ARM32 with qemu option -M virt
-> 
-> I tried this with an arm64 kernel running under kvmtool, but I get the
-> following errors (a 32-bit ARM kernel does seem to work):
-> 
->   PCI host bridge /pci ranges:
->      IO 0x00000000..0x0000ffff -> 0x00000000
->     MEM 0x41000000..0x7fffffff -> 0x41000000
->   pci-host-generic 40000000.pci: PCI host bridge to bus 0000:00
->   pci_bus 0000:00: root bus resource [bus 00-01]
->   pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->   pci_bus 0000:00: root bus resource [mem 0x41000000-0x7fffffff]
->   pci_bus 0000:00: scanning bus
->   pci 0000:00:00.0: [1af4:1009] type 00 class 0xff0000
->   pci 0000:00:00.0: reg 0x10: [mem 0x41000000-0x410003ff]
->   pci 0000:00:00.0: reg 0x14: [io  0x6200-0x65ff]
->   pci 0000:00:00.0: reg 0x18: [mem 0x41000400-0x410005ff]
->   pci 0000:00:01.0: [1af4:1009] type 00 class 0xff0000
->   pci 0000:00:01.0: reg 0x10: [mem 0x41000800-0x41000bff]
->   pci 0000:00:01.0: reg 0x14: [io  0x6600-0x69ff]
->   pci 0000:00:01.0: reg 0x18: [mem 0x41000c00-0x41000dff]
->   pci_bus 0000:00: fixups for bus
->   pci_bus 0000:00: bus scan returning with max=00
->   pci 0000:00:00.0: fixup irq: got 10
->   pci 0000:00:00.0: assigning IRQ 10
->   pci 0000:00:01.0: fixup irq: got 11
->   pci 0000:00:01.0: assigning IRQ 11
->   virtio-pci 0000:00:00.0: can't enable device: BAR 0 [mem 0x41000000-0x410003ff] not claimed
->   virtio-pci: probe of 0000:00:00.0 failed with error -22
->   virtio-pci 0000:00:01.0: can't enable device: BAR 0 [mem 0x41000800-0x41000bff] not claimed
->   virtio-pci: probe of 0000:00:01.0 failed with error -22
+We assumed pcie root port and downstream port always have
+pcie link, but in some unusual pcie topology platform like
+ATCA, it may has the following pcie tree:
 
-Yes, I already mentioned on v1 and comment was not taken into account,
-at the moment when we enable devices on arm64 we rely on the generic
+root port ---- downstream port -----upstream port
+                                   |
+                                   |downstream port
+Now we introduce a flag pdev->has_secondary_link to tag
+a device whether has pcie link, use it instead.
 
-pcibios_enable_device()
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aer/aerdrv_core.c |    3 +--
+ drivers/pci/probe.c                |    2 +-
+ drivers/pci/vc.c                   |    3 +--
+ 3 files changed, 3 insertions(+), 5 deletions(-)
 
-function that by enabling resources trigger that error on PROBE_ONLY
-systems.
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 5653ea9..9803e3d 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -425,8 +425,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+-	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM ||
+-		pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT) {
++	} else if (udev->has_secondary_link) {
+ 		status = default_reset_link(udev);
+ 	} else {
+ 		dev_printk(KERN_DEBUG, &dev->dev,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 192c6b9..eba4928 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1645,7 +1645,7 @@ static int only_one_child(struct pci_bus *bus)
+ 		return 0;
+ 	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+ 		return 1;
+-	if (pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM &&
++	if (parent->has_secondary_link &&
+ 	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 1;
+ 	return 0;
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index 7e1304d..dfbab61 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -108,8 +108,7 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ 	struct pci_dev *link = NULL;
+ 
+ 	/* Enable VCs from the downstream device */
+-	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)
++	if (!dev->has_secondary_link)
+ 		return;
+ 
+ 	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
+-- 
+1.7.1
 
-We could do what arm does, by checking the PROBE_ONLY flag
-and call pci_enable_resources only if !PROBE_ONLY (and do that in the
-generic drivers/pci/pci.c pcibios_enable_device function) but IIRC Bjorn
-did not like that much.
-
-Lorenzo
