@@ -1,94 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5550A82E.7040809@linaro.org>
-Date: Mon, 11 May 2015 21:01:34 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC v2 1/7] ACPI/PCI: Enhance ACPI core to support sparse IO
- space
-References: <1430793970-11159-1-git-send-email-jiang.liu@linux.intel.com> <1430793970-11159-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430793970-11159-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52634 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754189AbbEUOMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 May 2015 10:12:12 -0400
+Message-ID: <1432217531.11375.319.camel@redhat.com>
+Subject: Re: [PATCH 1/1] PCI: Add function 1 DMA alias quirk for Marvell 9120
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sakari Ailus <sakari.ailus@linux.intel.com>
+Cc: iommu@lists.linux-foundation.org,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 21 May 2015 08:12:11 -0600
+In-Reply-To: <555DAB52.5030401@linux.intel.com>
+References: <1430409392-32479-1-git-send-email-sakari.ailus@iki.fi>
+	 <555DAB52.5030401@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月05日 10:46, Jiang Liu wrote:
-> Enhance ACPI resource parsing interfaces to support sparse IO space,
-> which will be used to share common code between x86 and IA64 later.
->
-> Tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   drivers/acpi/resource.c |    9 ++++++---
->   include/linux/ioport.h  |    1 +
->   2 files changed, 7 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 8244f013f210..fdcc73dad2c1 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->   EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
->
->   static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-> -				      u8 io_decode)
-> +				      u8 io_decode, u8 translation_type)
->   {
->   	res->flags = IORESOURCE_IO;
->
-> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->
->   	if (io_decode == ACPI_DECODE_16)
->   		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
-> +		res->flags |= IORESOURCE_IO_SPARSE;
->   }
->
->   static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->   {
->   	res->start = start;
->   	res->end = start + len - 1;
-> -	acpi_dev_ioresource_flags(res, len, io_decode);
-> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
->   }
->
->   /**
-> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
->   		acpi_dev_memresource_flags(res, len, wp);
->   		break;
->   	case ACPI_IO_RANGE:
-> -		acpi_dev_ioresource_flags(res, len, iodec);
-> +		acpi_dev_ioresource_flags(res, len, iodec,
-> +					  addr->info.io.translation_type);
->   		break;
->   	case ACPI_BUS_NUMBER_RANGE:
->   		res->flags = IORESOURCE_BUS;
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 388e3ae94f7a..24bea087e7af 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -94,6 +94,7 @@ struct resource {
->   /* PnP I/O specific bits (IORESOURCE_BITS) */
->   #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
->   #define IORESOURCE_IO_FIXED		(1<<1)
-> +#define IORESOURCE_IO_SPARSE		(1<<2)
->
->   /* PCI ROM control bits (IORESOURCE_BITS) */
->   #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+On Thu, 2015-05-21 at 12:54 +0300, Sakari Ailus wrote:
+> Ping.
+> 
+> (Cc Alex.)
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+You can add my ack, but the linux-pci list is the proper list to get
+this upstream.  I suggest resending it there.  Thanks,
 
-Thanks
-hanjun
+Ale
+
+> Sakari Ailus wrote:
+> > Marvell 9120 SATA controller has the same issue as a number of others, use
+> > the same quirk for this one. The other quirks were added by patch
+> > "PCI: Add function 1 DMA alias quirk for Marvell devices"
+> > (commit id cc346a4714a59d08c118e8f33fd86692d3563133).
+> > 
+> > Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+
+
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
+
+
+> > ---
+> > Hi,
+> > 
+> > I just booted the v4.0.1 kernel with intel-iommu enabled and had similar
+> > issues as in the original bug report with Marvell 88SE9120 (rev 12). The
+> > same quirk appears to work for that one as well.
+> > 
+> >  drivers/pci/quirks.c |    2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 85f247e..d4af5a8 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3572,6 +3572,8 @@ static void quirk_dma_func1_alias(struct pci_dev *dev)
+> >   * SKUs this function is not present, making this a ghost requester.
+> >   * https://bugzilla.kernel.org/show_bug.cgi?id=42679
+> >   */
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9120,
+> > +			 quirk_dma_func1_alias);
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
+> >  			 quirk_dma_func1_alias);
+> >  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
+> > 
+> 
+> 
+
+
+
