@@ -1,129 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:45021 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752683AbbEDDR3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 3 May 2015 23:17:29 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tejun Heo <tj@kernel.org>, Joe Perches <joe@perches.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-ia64@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [RFC v1 09/11] genirq: Use helper function to access irq_data->msi_desc
-Date: Mon,  4 May 2015 11:15:37 +0800
-Message-Id: <1430709339-29083-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:12270 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075AbbEUBmP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 21:42:15 -0400
+Message-ID: <555D37B0.2080909@hisilicon.com>
+Date: Thu, 21 May 2015 09:41:04 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Jingoo Han <jingoohan1@gmail.com>
+CC: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Liviu Dudau'" <liviu.dudau@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, "'Zhang Jukuo'" <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, "'Liguozhu'" <liguozhu@hisilicon.com>
+Subject: Re: [RFC PATCH v1 2/3] PCI: hisi: Add PCIe host support for Hisilicon
+ Soc Hip05
+References: <000101d092fb$94dde100$be99a300$@com>
+In-Reply-To: <000101d092fb$94dde100$be99a300$@com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use helper function to access irq_data->msi_desc, so we could move
-msi_desc from struct irq_data into struct irq_common_data later.
+On 2015/5/20 20:50, Jingoo Han wrote:
+> On Wed, 20 May 2015 14:21:40 +0800, Zhou Wang wrote:
+>>
+>> This patch adds PCIe host support for Hisilicon Soc Hip05.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> 
+> Hi Zhou Wang,
+> 
+> I added some minor comments.
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/ia64/kernel/msi_ia64.c         |    2 +-
- arch/ia64/sn/kernel/msi_sn.c        |    2 +-
- arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
- arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
- arch/tile/kernel/pci_gx.c           |    2 +-
- drivers/pci/msi.c                   |    2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+Hi Jingoo,
 
-diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-index 6c50d332b7d7..591b66d21bd1 100644
---- a/arch/ia64/kernel/msi_ia64.c
-+++ b/arch/ia64/kernel/msi_ia64.c
-@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
- 	if (irq_prepare_move(irq, cpu))
- 		return -1;
- 
--	__get_cached_msi_msg(idata->msi_desc, &msg);
-+	__get_cached_msi_msg(irq_data_get_msi(idata), &msg);
- 
- 	addr = msg.address_lo;
- 	addr &= MSI_ADDR_DEST_ID_MASK;
-diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
-index 42b5a13af142..6ccc39b36947 100644
---- a/arch/ia64/sn/kernel/msi_sn.c
-+++ b/arch/ia64/sn/kernel/msi_sn.c
-@@ -175,7 +175,7 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
- 	 * Release XIO resources for the old MSI PCI address
- 	 */
- 
--	__get_cached_msi_msg(data->msi_desc, &msg);
-+	__get_cached_msi_msg(irq_data_get_msi(data), &msg);
- 	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
- 	pdev = sn_pdev->pdi_linux_pcidev;
- 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
-diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
-index 3996393c254d..a709d81f885a 100644
---- a/arch/powerpc/sysdev/xics/ics-opal.c
-+++ b/arch/powerpc/sysdev/xics/ics-opal.c
-@@ -72,7 +72,7 @@ static unsigned int ics_opal_startup(struct irq_data *d)
- 	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
- 	 * at that level, so we do it here by hand.
- 	 */
--	if (d->msi_desc)
-+	if (irq_data_get_msi(d))
- 		pci_msi_unmask_irq(d);
- #endif
- 
-diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
-index e2665a9dfc0f..f09a7b3136b2 100644
---- a/arch/powerpc/sysdev/xics/ics-rtas.c
-+++ b/arch/powerpc/sysdev/xics/ics-rtas.c
-@@ -75,7 +75,7 @@ static unsigned int ics_rtas_startup(struct irq_data *d)
- 	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
- 	 * at that level, so we do it here by hand.
- 	 */
--	if (d->msi_desc)
-+	if (irq_data_get_msi(d))
- 		pci_msi_unmask_irq(d);
- #endif
- 	/* unmask it */
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index b1df847d0686..1438c60e263d 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1442,7 +1442,7 @@ static struct pci_ops tile_cfg_ops = {
- /* MSI support starts here. */
- static unsigned int tilegx_msi_startup(struct irq_data *d)
- {
--	if (d->msi_desc)
-+	if (irq_data_get_msi(d))
- 		pci_msi_unmask_irq(d);
- 
- 	return 0;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfcf9ff5..74b48ea0cf26 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1178,7 +1178,7 @@ EXPORT_SYMBOL(pci_enable_msix_range);
-  */
- void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
- {
--	struct msi_desc *desc = irq_data->msi_desc;
-+	struct msi_desc *desc = irq_data_get_msi(irq_data);
- 
- 	/*
- 	 * For MSI-X desc->irq is always equal to irq_data->irq. For
--- 
-1.7.10.4
+>> ---
+>>  drivers/pci/host/Kconfig     |   5 +
+>>  drivers/pci/host/Makefile    |   1 +
+>>  drivers/pci/host/pcie-hisi.c | 252 +++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 258 insertions(+)
+>>  create mode 100644 drivers/pci/host/pcie-hisi.c
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index 1dfb567..486d822 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -125,4 +125,9 @@ config PCIE_IPROC_PLATFORM
+>>  	  Say Y here if you want to use the Broadcom iProc PCIe controller
+>>  	  through the generic platform bus interface
+>>  
+>> +config PCI_HISI
+>> +	depends on OF && ARM64
+>> +	bool "Hisilicon Soc HIP05 PCIe controller"
+>> +	select PCIE_DW
+>> +
+>>  endmenu
+>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+>> index f733b4e..562142e 100644
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
+>> @@ -15,3 +15,4 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>>  obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+>>  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+>>  obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+>> +obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+>> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+>> new file mode 100644
+>> index 0000000..3f8cb9a
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-hisi.c
+>> @@ -0,0 +1,252 @@
+>> +/*
+>> + * PCIe host controller driver for Hisilicon Hip05 SoCs
+>> + *
+>> + * Copyright (C) 2014 Hisilicon Co., Ltd. http://www.hisilicon.com
+> 
+> s/2014/2015
+> 
+
+Thanks, forgot to change this.
+
+>> + *
+>> + * Author: Zhou Wang <wangzhou1@hisilicon.com>
+>> + *         Dacai Zhu <zhudacai@hisilicon.com>
+> 
+> [.....]
+> 
+>> +#define PCIE_SUBCTRL_MODE_REG                           (0x2800)
+>> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     (0x6818)
+>> +#define PCIE_SLV_DBI_MODE                               (0x0)
+>> +#define PCIE_SLV_SYSCTRL_MODE                           (0x1)
+>> +#define PCIE_SLV_CONTENT_MODE                           (0x2)
+>> +#define PCIE_LTSSM_LINKUP_STATE                         (0x11)
+>> +#define PCIE_LTSSM_STATE_MASK                           (0x3F)
+>> +#define PCIE_MSI_CONTEXT_VALUE                          (0x1011000)
+>> +#define PCIE_MSI_TRANS_ENABLE                           (0x1ff0)
+>> +#define PCIE_MSI_LOW_ADDRESS                            (0x1b4)
+>> +#define PCIE_MSI_HIGH_ADDRESS                           (0x1c4)
+> 
+> Please remove unnecessary braces as below.
+> 
+
+Ok, will do as below.
+
+> +#define PCIE_SUBCTRL_MODE_REG                           0x2800
+> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+> .....
+> 
+> [.....]
+> 
+>> +/* Configure vmid/asid table in PCIe host */
+>> +static void hisi_pcie_config_context(struct hisi_pcie *pcie)
+>> +{
+>> +	int i;
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
+>> +
+>> +	for (i = 0; i < 0x400; i++)
+>> +		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>> +
+>> +	for (i = 0x400; i < 0x800; i++)
+>> +		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+> 
+> How about the following?
+> 
+> +	for (i = 0; i < 0x800; i++)
+> +		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+> 
+
+This is to configure init value of vmid and asid of each pcie device.
+
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
+>> +
+>> +	hisi_pcie_apb_writel(pcie, 0xb7010040, PCIE_MSI_LOW_ADDRESS);
+>> +	hisi_pcie_apb_writel(pcie, 0x0, PCIE_MSI_HIGH_ADDRESS);
+>> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_CONTEXT_VALUE, 0x10);
+>> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, 0x1c8);
+> 
+> Please don't use hardcoded numbers as possible.
+>
+
+OK, will use macro to do this.
+
+>> +
+>> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
+>> +}
+> [.....]
+> 
+> Best regards,
+> Jingoo Han
+> 
+
+Many thanks for your review and Best regards,
+Zhou Wang
+
+> 
+> 
+> .
+> 
+
 
