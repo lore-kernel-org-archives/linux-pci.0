@@ -1,80 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:55066 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932475AbbENKDq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 May 2015 06:03:46 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 14 May 2015 20:03:43 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 247032BB0054
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 20:03:41 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4EA3WUf25100486
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 20:03:40 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4EA38LB000413
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2015 20:03:08 +1000
-Date: Thu, 14 May 2015 18:02:50 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 9/9] powerpc/eeh: handle VF PE properly
-Message-ID: <20150514100250.GB12847@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-10-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150513011630.GA8973@gwshan>
+Received: from mx1.redhat.com ([209.132.183.28]:44240 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751629AbbEUGzg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 May 2015 02:55:36 -0400
+Date: Thu, 21 May 2015 14:54:51 +0800
+From: Baoquan He <bhe@redhat.com>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 08/10] iommu/vt-d: assign new page table for dma_map
+Message-ID: <20150521065451.GA23661@dhcp-128-28.nay.redhat.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1431337974-545-9-git-send-email-zhen-hual@hp.com>
+ <20150520235242.GA2342@dhcp-17-102.nay.redhat.com>
+ <555D3470.7060902@hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150513011630.GA8973@gwshan>
+In-Reply-To: <555D3470.7060902@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 13, 2015 at 11:16:30AM +1000, Gavin Shan wrote:
->> 	 * Actually, we should remove the PCI bridges as well.
->>@@ -416,7 +450,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
->> 	driver = eeh_pcid_get(dev);
->> 	if (driver) {
->> 		eeh_pcid_put(dev);
->>-		if (driver->err_handler)
->>+		if (removed && driver->err_handler)
->> 			return NULL;
->> 	}
->>
->>@@ -425,11 +459,21 @@ static void *eeh_rmv_device(void *data, void *userdata)
->> 		 pci_name(dev));
->> 	edev->bus = dev->bus;
->> 	edev->mode |= EEH_DEV_DISCONNECTED;
->>-	(*removed)++;
->>-
->>-	pci_lock_rescan_remove();
->>-	pci_stop_and_remove_bus_device(dev);
->>-	pci_unlock_rescan_remove();
->>+	if (removed)
->>+		(*removed)++;
->>+
->>+#ifdef CONFIG_PCI_IOV
->>+	if (edev->mode & EEH_DEV_VF) {
->>+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
->>+		edev->pdev = NULL;
->>+		pdn->pe_number = IODA_INVALID_PE;
->
->Setting the PE number to invalid one seems not correct because the PE
->is still consumed by the VF's RID.
->
+On 05/21/15 at 09:27am, Li, ZhenHua wrote:
+> Hi Baoquan,
+> 
+> In the early version of this patchset, old page tables are used by new
+> kernel.  But as discussed, we need to make kernel use new pages when
+> there is a new dma request , so we need to unmap the pages which were
+> mapped in old kernel, and this is what this patch does.
 
-In commit 781a868f3136, we introduce the check of pdn->pe_number in
-pnv_pci_dma_dev_setup(). Since VFs are create/released dynamically, we need to
-delay the bind between PE and the device. Then to avoid rebind it, we check
-the pdn->pe_number. The WARN_ON() is what you suggested.
+OK, just a new page table allocated in init_domain(), right? I thought a
+specific empty page-table is allocated for these new domains in kdump
+kernel.
 
-So if don't clear the pe_number here, we break that rule.
-
-
--- 
-Richard Yang
-Help you, Help me
-
+> 
+> Thanks
+> Zhenhua
+> 
+> On 05/21/2015 07:52 AM, Baoquan He wrote:
+> >On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
+> >>When a device driver issues the first dma_map command for a device, we
+> >>assign a new and empty page-table, thus removing all mappings from the
+> >>old kernel for the device.
+> >
+> >Hi Zhenhua,
+> >
+> > From your patch I got it will remove all mappings, assign a new
+> >page-table. But I didn't got why you stress an empty page-table. Did I
+> >miss anything?
+> >
+> >Thanks
+> >Baoquan
+> >
+> >>
+> >>Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+> >>---
+> >>  drivers/iommu/intel-iommu.c | 58 ++++++++++++++++++++++++++++++++++++++-------
+> >>  1 file changed, 50 insertions(+), 8 deletions(-)
+> >>
+> >>diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> >>index 91545bf..3cc1027 100644
+> >>--- a/drivers/iommu/intel-iommu.c
+> >>+++ b/drivers/iommu/intel-iommu.c
+> >>@@ -396,6 +396,9 @@ static int copy_root_entry_table(struct intel_iommu *iommu);
+> >>
+> >>  static int intel_iommu_load_translation_tables(struct intel_iommu *iommu);
+> >>
+> >>+static void unmap_device_dma(struct dmar_domain *domain,
+> >>+				struct device *dev,
+> >>+				struct intel_iommu *iommu);
+> >>  static void iommu_check_pre_te_status(struct intel_iommu *iommu);
+> >>  static u8 g_translation_pre_enabled;
+> >>
+> >>@@ -3115,6 +3118,7 @@ static struct iova *intel_alloc_iova(struct device *dev,
+> >>  static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+> >>  {
+> >>  	struct dmar_domain *domain;
+> >>+	struct intel_iommu *iommu;
+> >>  	int ret;
+> >>
+> >>  	domain = get_domain_for_dev(dev, DEFAULT_DOMAIN_ADDRESS_WIDTH);
+> >>@@ -3124,14 +3128,30 @@ static struct dmar_domain *__get_valid_domain_for_dev(struct device *dev)
+> >>  		return NULL;
+> >>  	}
+> >>
+> >>-	/* make sure context mapping is ok */
+> >>-	if (unlikely(!domain_context_mapped(dev))) {
+> >>-		ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
+> >>-		if (ret) {
+> >>-			printk(KERN_ERR "Domain context map for %s failed",
+> >>-			       dev_name(dev));
+> >>-			return NULL;
+> >>-		}
+> >>+	/* if in kdump kernel, we need to unmap the mapped dma pages,
+> >>+	 * detach this device first.
+> >>+	 */
+> >>+	if (likely(domain_context_mapped(dev))) {
+> >>+		iommu = domain_get_iommu(domain);
+> >>+		if (iommu->pre_enabled_trans) {
+> >>+			unmap_device_dma(domain, dev, iommu);
+> >>+
+> >>+			domain = get_domain_for_dev(dev,
+> >>+				DEFAULT_DOMAIN_ADDRESS_WIDTH);
+> >>+			if (!domain) {
+> >>+				pr_err("Allocating domain for %s failed",
+> >>+				       dev_name(dev));
+> >>+				return NULL;
+> >>+			}
+> >>+		} else
+> >>+			return domain;
+> >>+	}
+> >>+
+> >>+	ret = domain_context_mapping(domain, dev, CONTEXT_TT_MULTI_LEVEL);
+> >>+	if (ret) {
+> >>+		pr_err("Domain context map for %s failed",
+> >>+		       dev_name(dev));
+> >>+		return NULL;
+> >>  	}
+> >>
+> >>  	return domain;
+> >>@@ -5168,6 +5188,28 @@ static int intel_iommu_load_translation_tables(struct intel_iommu *iommu)
+> >>  	return ret;
+> >>  }
+> >>
+> >>+static void unmap_device_dma(struct dmar_domain *domain,
+> >>+				struct device *dev,
+> >>+				struct intel_iommu *iommu)
+> >>+{
+> >>+	struct context_entry *ce;
+> >>+	struct iova *iova;
+> >>+	phys_addr_t phys_addr;
+> >>+	dma_addr_t dev_addr;
+> >>+	struct pci_dev *pdev;
+> >>+
+> >>+	pdev = to_pci_dev(dev);
+> >>+	ce = iommu_context_addr(iommu, pdev->bus->number, pdev->devfn, 1);
+> >>+	phys_addr = context_address_root(ce) << VTD_PAGE_SHIFT;
+> >>+	dev_addr = phys_to_dma(dev, phys_addr);
+> >>+
+> >>+	iova = find_iova(&domain->iovad, IOVA_PFN(dev_addr));
+> >>+	if (iova)
+> >>+		intel_unmap(dev, dev_addr);
+> >>+
+> >>+	domain_remove_one_dev_info(domain, dev);
+> >>+}
+> >>+
+> >>  static void iommu_check_pre_te_status(struct intel_iommu *iommu)
+> >>  {
+> >>  	u32 sts;
+> >>--
+> >>2.0.0-rc0
+> >>
+> 
