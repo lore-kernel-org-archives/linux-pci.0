@@ -1,73 +1,106 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <555B4B67.40203@redhat.com>
-Date: Tue, 19 May 2015 10:40:39 -0400
-From: Jarod Wilson <jarod@redhat.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [Update][PATCH] PCIe / hotplug: Drop pointless ACPI-based "slot
- detection" check
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <2168334.DgvA03CWPi@vostro.rjw.lan> <6257210.QKy3yrBgEf@vostro.rjw.lan> <1573807.HQlNd2BFYP@vostro.rjw.lan>
-In-Reply-To: <1573807.HQlNd2BFYP@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v2 11/17] NTB: Reset transport QP link stats on down
+Date: Thu, 21 May 2015 04:20:55 -0400
+Message-Id: <20f4b3419bc565d02beade6a9db19b3796dd9dc9.1432196075.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
+References: <cover.1432192681.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
+References: <cover.1432196075.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/19/2015 9:27 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Jarod Wilson reports that the expresscard hotplug setup doesn't work
-> on HP ZBook G2.  The problem turns out to be the ACPI-based "slot
-> detection" code called from pciehp_probe() which tries to use some
-> questionable heuristics based on what ACPI objects are present for
-> the PCIe port device at hand to figure out whether or not to register
-> a hotplug slot for that port.
->
-> That code is used if there is at least one PCIe port having an ACPI
-> device configuration object related to hotplug (such as _EJ0 or _RMV)
-> and the Thunderbolt port on the affected machine has _RMV.  Of course,
-> Thunderbolt and PCIe native hotplug need not be mutually exclusive
-> (as they aren't on the machine in question), so that rule is simply
-> incorrect.
->
-> Moreover, the ACPI-based "slot detection" check does not add any
-> value if pciehp_probe() is called at all and the service type of the
-> device object it has been called for is PCIE_PORT_SERVICE_HP, because
-> PCIe hotplug services are only registered if the _OSC handshake in
-> acpi_pci_root_add() allows the kernel to control the PCIe native
-> hotplug feature.  No more checks need to be carried out to decide
-> whether or not to register a native PCIe hotlug slot in that case.
->
-> For the above reasons, make pciehp_probe() check if it has been
-> called for the right service type and drop the pointless ACPI-based
-> "slot detection" check from it.  Also remove the entire code whose
-> only user is that check (the entire pciehp_acpi.c file goes away
-> as a result) and drop function headers related to it from the
-> internal PCIeHP header file.
->
-> Link: http://marc.info/?t=143163219300002&r=1&w=2
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=98581
-> Reported-by: Jarod Wilson <jarod@redhat.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->
-> Changes in Makefile were missing from the previous version.
->
-> Bjorn, that's -stable material I think.  It should be applicable at least
-> since commit 5ba113f7c4fb (PCI: acpiphp: Handle PCIe ports without native
-> hotplug capability) that was shipped in 3.10.
->
-> Thanks!
+Reset the link stats when the link goes down.  In particular, the tx and
+rx index and count must be reset, or else the tx side will be sending
+packets to the rx side, where the rx side is not expecting them.  Reset
+all the stats, to be consistent.
 
-Changes all look good to me, and they work perfectly here with the 
-previously problematic ZBook 17.
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
 
-Reviewed-by: Jarod Wilson <jarod@redhat.com>
-Tested-by: Jarod Wilson <jarod@redhat.com>
-
-
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 6260016..eff776f 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -648,18 +648,37 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	return 0;
+ }
+ 
++static void ntb_qp_link_down_reset(struct ntb_transport_qp *qp)
++{
++	qp->link_is_up = false;
++
++	qp->tx_index = 0;
++	qp->rx_index = 0;
++	qp->rx_bytes = 0;
++	qp->rx_pkts = 0;
++	qp->rx_ring_empty = 0;
++	qp->rx_err_no_buf = 0;
++	qp->rx_err_oflow = 0;
++	qp->rx_err_ver = 0;
++	qp->rx_memcpy = 0;
++	qp->rx_async = 0;
++	qp->tx_bytes = 0;
++	qp->tx_pkts = 0;
++	qp->tx_ring_full = 0;
++	qp->tx_err_no_buf = 0;
++	qp->tx_memcpy = 0;
++	qp->tx_async = 0;
++}
++
+ static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
+ {
+ 	struct ntb_transport_ctx *nt = qp->transport;
+ 	struct pci_dev *pdev = nt->ndev->pdev;
+ 
+-	if (qp->link_is_up) {
+-		cancel_delayed_work_sync(&qp->link_work);
+-		return;
+-	}
+-
+ 	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
+-	qp->link_is_up = false;
++
++	cancel_delayed_work_sync(&qp->link_work);
++	ntb_qp_link_down_reset(qp);
+ 
+ 	if (qp->event_handler)
+ 		qp->event_handler(qp->cb_data, qp->link_is_up);
+@@ -866,9 +885,9 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
+ 	qp->qp_num = qp_num;
+ 	qp->transport = nt;
+ 	qp->ndev = nt->ndev;
+-	qp->link_is_up = false;
+ 	qp->client_ready = false;
+ 	qp->event_handler = NULL;
++	ntb_qp_link_down_reset(qp);
+ 
+ 	if (qp_count % mw_count && mw_num + 1 < qp_count / mw_count)
+ 		num_qps_mw = qp_count / mw_count + 1;
+@@ -1454,7 +1473,6 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
+ 	if (!qp->link_is_up)
+ 		return;
+ 
+-	qp->link_is_up = false;
+ 	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
+ 
+ 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
+@@ -1476,6 +1494,8 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
+ 	if (rc)
+ 		dev_err(&pdev->dev, "ntb: QP%d unable to send linkdown msg\n",
+ 			qp->qp_num);
++
++	ntb_qp_link_down_reset(qp);
+ }
+ 
+ /**
 -- 
-Jarod Wilson
-jarod@redhat.com
+2.4.0.rc0.43.gcf8a8c6
+
