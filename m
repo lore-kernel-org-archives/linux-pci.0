@@ -1,163 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [RFC 3/4] PCI, x86: Allocate PCI IRQ on demand and free it when not used anymore
-Date: Thu,  7 May 2015 11:12:53 +0800
-Message-Id: <1430968374-29286-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: [PATCH v2 14/17] NTB: Improve performance with write combining
+Date: Thu, 21 May 2015 04:20:58 -0400
+Message-Id: <0fd720f2c414bd0e444bac09bb82d58c1ffe2854.1432196075.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
+References: <cover.1432192681.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
+References: <cover.1432196075.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support IOAPIC hotplug, we need to correctly manage IOAPIC pin usage,
-which is to allocate IRQs on demand and free them when not used anymore.
-So use pcibios_alloc_irq() and pcibios_free_irq() to dynamically allocate
-and free PCI IRQs.
+From: Dave Jiang <dave.jiang@intel.com>
 
-Also remove obseleted code mp_should_keep_irq().
+Changing the memory window BAR mappings to write combining significantly
+boosts the performance.  We will also use memcpy that utilizies
+non-temporal store which showed performance improement when doing
+non-cached memcpys.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- arch/x86/include/asm/pci_x86.h |    2 --
- arch/x86/pci/common.c          |   20 +++++++++-----------
- arch/x86/pci/intel_mid_pci.c   |    7 +++++--
- arch/x86/pci/irq.c             |   15 +--------------
- drivers/acpi/pci_irq.c         |    9 +--------
- 5 files changed, 16 insertions(+), 37 deletions(-)
+ drivers/ntb/ntb_transport.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 164e3f8d3c3d..fa1195dae425 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 733c0ec..95252ea 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -58,6 +58,7 @@
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
++#include <linux/uaccess.h>
+ #include "linux/ntb.h"
+ #include "linux/ntb_transport.h"
  
--extern bool mp_should_keep_irq(struct device *dev);
--
- struct pci_raw_ops {
- 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
- 						int reg, int len, u32 *val);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8fd6f44aee83..dc78a4a9a466 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -673,24 +673,22 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
+@@ -990,7 +991,7 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 		if (rc)
+ 			goto err1;
  
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+int pcibios_alloc_irq(struct pci_dev *dev)
+-		mw->vbase = ioremap(mw->phys_addr, mw->phys_size);
++		mw->vbase = ioremap_wc(mw->phys_addr, mw->phys_size);
+ 		if (!mw->vbase) {
+ 			rc = -ENOMEM;
+ 			goto err1;
+@@ -1361,7 +1362,11 @@ static void ntb_tx_copy_callback(void *data)
+ 
+ static void ntb_memcpy_tx(struct ntb_queue_entry *entry, void __iomem *offset)
  {
--	int err;
--
--	if ((err = pci_enable_resources(dev, mask)) < 0)
--		return err;
--
--	if (!pci_dev_msi_enabled(dev))
--		return pcibios_enable_irq(dev);
--	return 0;
-+	return pcibios_enable_irq(dev);
- }
+-	memcpy_toio(offset, entry->buf, entry->len);
++	/*
++	 * Using non-temporal mov to improve performance on non-cached
++	 * writes. Even though we aren't actually copying from user space.
++	 */
++	__copy_from_user_inatomic_nocache(offset, entry->buf, entry->len);
  
--void pcibios_disable_device (struct pci_dev *dev)
-+void pcibios_free_irq(struct pci_dev *dev)
- {
--	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-+	if (pcibios_disable_irq)
- 		pcibios_disable_irq(dev);
- }
- 
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
-+{
-+	return pci_enable_resources(dev, mask);
-+}
-+
- int pci_ext_cfg_avail(void)
- {
- 	if (raw_pci_ext_ops)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 27062303c881..fb7a1f96d80c 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -234,10 +234,13 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
--	    dev->irq > 0) {
-+	if (dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
-+		/*
-+		 * Don't reset dev->irq here, otherwise
-+		 * intel_mid_pci_irq_enable() will fail on next call.
-+		 */
- 	}
- }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 5dc6ca5e1741..e71b3dbd87b8 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1256,22 +1256,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	return 0;
- }
- 
--bool mp_should_keep_irq(struct device *dev)
--{
--	if (dev->power.is_prepared)
--		return true;
--#ifdef CONFIG_PM
--	if (dev->power.runtime_status == RPM_SUSPENDING)
--		return true;
--#endif
--
--	return false;
--}
--
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
--	    dev->irq_managed && dev->irq) {
-+	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 		dev->irq_managed = 0;
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index b1def411c0b8..e7f718d6918a 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
--	/* Keep IOAPIC pin configuration when suspending */
--	if (dev->dev.power.is_prepared)
--		return;
--#ifdef	CONFIG_PM
--	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
--		return;
--#endif
--
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
-@@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
- 		dev->irq_managed = 0;
-+		dev->irq = 0;
- 	}
- }
+ 	/* Ensure that the data is fully copied out before setting the flags */
+ 	wmb();
 -- 
-1.7.10.4
+2.4.0.rc0.43.gcf8a8c6
 
