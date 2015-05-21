@@ -1,61 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li42-95.members.linode.com ([209.123.162.95]:54128 "EHLO
-	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750759AbbENLCc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 07:02:32 -0400
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-From: Pantelis Antoniou <panto@antoniou-consulting.com>
-In-Reply-To: <1431589652.4160.49.camel@kernel.crashing.org>
-Date: Thu, 14 May 2015 14:02:26 +0300
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <A748C569-24CF-41B9-BA91-822A67132DA9@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org> <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com> <1431585994.4160.32.camel@kernel.crashing.org> <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com> <1431587657.4160.37.camel@kernel.crashing.org> <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com> <1431588358.4160.42.camel@kernel.crashing.org> <D7FC0542-DD1A-42
- 8F-8E75-81620C6D83DC@antoniou-consulting.com> <1431589652.4160.49.camel@kernel.crashing.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: RE: [PATCH 03/16] ntb: Enable link training for RP mode in the
+ driver probe
+Date: Thu, 21 May 2015 12:49:05 +0000
+Message-ID: <40F65EF2B5E2254199711F58E3ACB84D7825FAF6@MX104CL02.corp.emc.com>
+References: <cover.1432135631.git.Allen.Hubbe@emc.com>
+ <ae66adf68441cdaf893d2a562924615c229489c0.1432135631.git.Allen.Hubbe@emc.com>
+ <CAErSpo5gf9VhegEGY5S+dak0UuMNEMDD29JT4TcTz_UPey3aNQ@mail.gmail.com>
+ <40F65EF2B5E2254199711F58E3ACB84D7825D377@MX104CL02.corp.emc.com>
+ <CAErSpo5WzQ86t5F2pfhHYipcUH3h2vv1DN1-Dpx_VPsOnbpu=w@mail.gmail.com>
+ <40F65EF2B5E2254199711F58E3ACB84D7825DE9F@MX104CL02.corp.emc.com>
+ <CAErSpo76T1noeTyKw7FZh-dhfSfqezU9Y4rBftOCdGC8-M7ySg@mail.gmail.com>
+In-Reply-To: <CAErSpo76T1noeTyKw7FZh-dhfSfqezU9Y4rBftOCdGC8-M7ySg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
-
-> On May 14, 2015, at 10:47 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
-> 
-
-[snip]
-
-So I spend some time thinking about your use case and I think it boils down
-to this:
-
-I have a live tree in the firmware, I have made changes and I need to reflect
-those changes to the live tree in the kernel.
-
-Sounds like ‘how do I generate a patch for getting those two in sync'. No?
-
-I can see where this might be useful for others as all.
-
-I think we really need to create a liblivedt like we have libfdt since
-we have a number of projects going about using/manipulating DT at runtime.
-
-1. The linux kernel, with it’s own live tree implementation.
-2. The device tree compiler (it has a live tree) custom implemented.
-3. Your weird and wonderful (or wacky) firmware.
-4. u-boot does use DT now, but it does with libfdt. I believe this is suboptimal.
-5. barebox does DT as well.
-
-Most of what we want to do with DT can be abstracted in a library I think that
-all of those projects can use.
-
-What are your thoughts?
-
-Regards
-
-— Pantelis
-
+RnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1v
+d25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+IE9uIFdl
+ZCwgTWF5IDIwLCAyMDE1IGF0IDY6MDAgUE0sIEh1YmJlLCBBbGxlbiA8QWxsZW4uSHViYmVAZW1j
+LmNvbT4NCj4gd3JvdGU6DQo+ID4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFz
+QGdvb2dsZS5jb21dDQo+ID4+IE9uIFdlZCwgTWF5IDIwLCAyMDE1IGF0IDQ6NDYgUE0sIEh1YmJl
+LCBBbGxlbiA8QWxsZW4uSHViYmVAZW1jLmNvbT4NCj4gPj4gd3JvdGU6DQo+ID4+ID4gRnJvbTog
+Qmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+ID4+IFBsZWFz
+ZSBydW4gImdpdCBsb2cgLS1vbmVsaW5lIGRyaXZlcnMvbnRiIiBhbmQgbWFrZSB5b3VyIHN1Ympl
+Y3QNCj4gPj4gbGluZXMNCj4gPj4gPj4gY29uc2lzdGVudC4gIFRoZSBjb252ZW50aW9uIEkgdXNl
+IGluIFBDSSAoYW5kIHdoYXQgd2FzIHVzZWQgaW4gTlRCDQo+ID4+ID4+IHVudGlsIHJlY2VudGx5
+KSBpcw0KPiA+PiA+Pg0KPiA+PiA+PiAgIC0gQWNyb255bXMgYW5kIGluaXRpYWxpc21zIGFyZSBj
+YXBpdGFsaXplZA0KPiA+PiA+PiAgIC0gU3ViamVjdCBsaW5lIGlzIGEgc3Vic3lzdGVtIHByZWZp
+eCAoIlBDSToiLCAiTlRCOiIsIGV0Yy4pDQo+ID4+IGZvbGxvd2VkDQo+ID4+ID4+IGJ5IGEgY29t
+cGxldGUgc2VudGVuY2Ugc3RhcnRpbmcgd2l0aCBhIGNhcGl0YWxpemVkIHZlcmIsIHdpdGggbm8N
+Cj4gPj4gPj4gcGVyaW9kIGF0IHRoZSBlbmQNCj4gPj4gPg0KPiA+PiA+IFRoZXNlIGFyZSB0aGUg
+bmV3IHN1YmplY3QgbGluZXMgdGhhdCB3aWxsIGJlIGluIHRoZSB2MiBvZiB0aGlzIHNldC4NCj4g
+Pj4NCj4gPj4gVGhhdCBoZWxwcyBhIGxvdCwgdGhhbmtzLg0KPiA+Pg0KPiA+PiA+IE5UQjogRml4
+IHNtYWxsIGNvZGUgZm9ybWF0IGlzc3VlcyBpbiB0cmFuc3BvcnQNCj4gPj4gPiBOVEI6IERlZmF1
+bHQgdG8gQ1BVIG1lbWNweSBmb3IgcGVyZm9ybWFuY2UNCj4gPj4gPiBOVEI6IEltcHJvdmUgcGVy
+Zm9ybWFuY2Ugd2l0aCB3cml0ZSBjb21iaW5pbmcNCj4gPj4gPiBOVEI6IFVzZSBOVU1BIGF3YXJl
+IG1lbW9yeSBhbGxvY2F0aW9uDQo+ID4+ID4gTlRCOiBVc2UgTlVNQSBtZW1vcnkgYW5kIERNQSBj
+aGFuIGluIHRyYW5zcG9ydA0KPiA+PiA+IE5UQjogUmVzZXQgdHJhbnNwb3J0IFFQIGxpbmsgc3Rh
+dHMgb24gZG93bg0KPiA+PiA+IE5UQjogRG8gbm90IGFkdmFuY2UgdHJhbnNwb3J0IFJYIG9uIGxp
+bmsgZG93bg0KPiA+PiA+IE5UQjogRGlmZmVyZW50aWF0ZSB0cmFuc3BvcnQgbGluayBkb3duIG1l
+c3NhZ2VzDQo+ID4+ID4gTlRCOiBSYXRlIGxpbWl0IG50Yl9xcF9saW5rX3dvcmsNCj4gPj4gPiBO
+VEI6IEFkZCB0b29sIGNsaWVudA0KPiA+PiA+IE5UQjogQWRkIHBpbmcgcG9uZyBjbGllbnQNCj4g
+Pj4NCj4gPj4gSSB0aGluayB0aGVzZSBhcmUgdGVzdCBjYXNlcywgbm90IHBhcnQgb2YgdGhlIGtl
+cm5lbCBpdHNlbGYuICBJdCdkIGJlDQo+ID4+IG5pY2UgdG8ga25vdyB0aGF0IGZyb20gdGhlIHN1
+bW1hcnkuICBJIGRvbid0IGtub3cgd2hhdCB0aGUgcHJlY2VkZW50DQo+ID4+IGlzIGZvciB0aGF0
+IChpZiB0aGVyZSBpcyBvbmUpLg0KPiA+DQo+ID4gV291bGQgeW91IGNvbnNpZGVyIHRoaXMgYXMg
+cHJlY2VkZW50Og0KPiA+DQo+ID4gNGE3NzZmMCBkbWF0ZXN0OiBTaW1wbGUgRE1BIG1lbWNweSB0
+ZXN0IGNsaWVudA0KPiA+DQo+ID4+DQo+ID4+ID4gTlRCOiBJbnRlbCBOVEIgcGFyYW1zIGZvciBT
+TkIgQjJCIGFkZHJlc3Nlcw0KPiA+Pg0KPiA+PiBUaGlzIHNlbnRlbmNlIG5vIHZlcmIgOikgIE5v
+dCBzdXJlIHdoYXQgeW91J3JlIGRvaW5nIHdpdGggdGhvc2UNCj4gcGFyYW1zLg0KPiA+DQo+ID4g
+TlRCOiBBZGQgcGFyYW1ldGVycyBmb3IgSW50ZWwgU05CIEIyQiBhZGRyZXNzZXMNCj4gPg0KPiA+
+Pg0KPiA+PiA+IE5UQjogQ2hlY2sgdGhlIERJRCBmb3Igd29ya2Fyb3VuZCBlcnJvciBmbGFncw0K
+PiA+Pg0KPiA+PiBJIHRoaW5rIHRoZXJlJ3Mgcm9vbSB0byBzcGVsbCBvdXQgImRldmljZSBJRCIu
+DQo+ID4NCj4gPiBOVEI6IENoZWNrIHRoZSBkZXZpY2UgSUQgdG8gc2V0IGVycmF0YSBmbGFncw0K
+PiA+DQo+ID4gQWxzbywgYWRkIHRoaXMgcHJvc2UgZGVzY3JpcHRpb24gdG8gdGhpcyBjb21taXQ6
+DQo+ID4NCj4gPiBTZXQgZXJyYXRhIGZsYWdzIGZvciB0aGUgc3BlY2lmaWMgZGV2aWNlIElEcyB0
+byB3aGljaCB0aGV5IGFwcGx5LA0KPiA+IGluc3RlYWQgb2YgdGhlIHdob2xlIHhlb24gaGFyZHdh
+cmUgY2xhc3MuDQo+ID4NCj4gPj4NCj4gPj4gPiBOVEI6IEVuYWJsZSBsaW5rIHRyYWluaW5nIGZv
+ciBSUCBtb2RlIGluIHByb2JlDQo+ID4+DQo+ID4+IElzIHRoYXQgUm9vdCBQb3J0Pw0KPiA+DQo+
+ID4geWVzDQo+ID4NCj4gPj4NCj4gPj4gPiBOVEI6IEFkZCBOVEIgaGFyZHdhcmUgYWJzdHJhY3Rp
+b24gbGF5ZXINCj4gPj4gPiBOVEI6IE1vdmUgZmlsZXMgaW4gcHJlcGFyYXRpb24gZm9yIE5UQiBh
+YnN0cmFjdGlvbg0KPiANCj4gQWxsIGxvb2tzIGdvb2QgdG8gbWUhDQoNClRoYW5rcyENCg==
