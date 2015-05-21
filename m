@@ -1,112 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33427 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752511AbbEKHRs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 03:17:48 -0400
-Received: by pacwv17 with SMTP id wv17so103171534pac.0
-        for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 00:17:48 -0700 (PDT)
-Message-ID: <55505796.5030904@ozlabs.ru>
-Date: Mon, 11 May 2015 17:17:42 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:9002 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169AbbEUMaq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 08:30:46 -0400
+Message-ID: <555DCFA4.7090104@hisilicon.com>
+Date: Thu, 21 May 2015 20:29:24 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 10/21] powerpc/powernv: Fundamental reset for PCI bus
- reset
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-11-git-send-email-gwshan@linux.vnet.ibm.com> <554E15C2.40506@ozlabs.ru> <20150511064720.GB8241@gwshan>
-In-Reply-To: <20150511064720.GB8241@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, "Zhang Jukuo" <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, Liguozhu <liguozhu@hisilicon.com>
+Subject: Re: [RFC PATCH v1 2/3] PCI: hisi: Add PCIe host support for Hisilicon
+ Soc Hip05
+References: <000101d092fb$94dde100$be99a300$@com> <555D37B0.2080909@hisilicon.com> <CAErSpo7TEgY=oJvLU3jyh=FcZqgsSxLi1Cw1mo6w+5WSRkfPMQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7TEgY=oJvLU3jyh=FcZqgsSxLi1Cw1mo6w+5WSRkfPMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/2015 04:47 PM, Gavin Shan wrote:
-> On Sun, May 10, 2015 at 12:12:18AM +1000, Alexey Kardashevskiy wrote:
->> On 05/01/2015 04:02 PM, Gavin Shan wrote:
->>> Function pnv_pci_reset_secondary_bus() is used to reset specified
->>> PCI bus, which is leaded by root complex or PCI bridge. That means
->>> the function shouldn't be called on PCI root bus and the patch
->>> removes the logic for that case.
+On 2015/5/21 20:09, Bjorn Helgaas wrote:
+> On Wed, May 20, 2015 at 8:41 PM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>> On 2015/5/20 20:50, Jingoo Han wrote:
+>>> On Wed, 20 May 2015 14:21:40 +0800, Zhou Wang wrote:
+> 
+>>>> +/* Configure vmid/asid table in PCIe host */
+>>>> +static void hisi_pcie_config_context(struct hisi_pcie *pcie)
+>>>> +{
+>>>> +    int i;
+>>>> +
+>>>> +    hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
+>>>> +
+>>>> +    for (i = 0; i < 0x400; i++)
+>>>> +            hisi_pcie_apb_writel(pcie, 0x0, i * 4);
+>>>> +
+>>>> +    for (i = 0x400; i < 0x800; i++)
+>>>> +            hisi_pcie_apb_writel(pcie, 0x0, i * 4);
 >>>
->>> Also, some adapters beneath the indicated PCI bus may require
->>> fundamental reset in order to successfully reload their firmwares
->>> after the reset. The patch translates hot reset to fundamental reset
->>> for that case.
+>>> How about the following?
 >>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
->>>   1 file changed, 26 insertions(+), 9 deletions(-)
+>>> +     for (i = 0; i < 0x800; i++)
+>>> +             hisi_pcie_apb_writel(pcie, 0x0, i * 4);
 >>>
->>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>> index 3c01095..58e4dcf 100644
->>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>> @@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>>   	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
->>>   }
->>>
->>> -void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
 >>
->>
->> Why changing dev to pdev? Keeping "dev" could make the patch simpler.
->>
->
-> In the early stage when I wrote the EEH code, I had "dev" to refer PCI
-> device, which isn't precisely enough. Actually, "dev" means "struct device"
-> while "pdev" stands for "struct pci_dev". That's why I changed it.
+>> This is to configure init value of vmid and asid of each pcie device.
+> 
+> But the combined loop looks functionally equivalent, i.e., I don't
+> think the device can tell the difference.  Personally I wouldn't mind
+> if you kept the two loops separate, but if you do, each one needs a
+> comment immediately before it so the reader has a clue that they are
+> doing semantically different things.  Otherwise it just looks like a
+> mistake and the reader wonders why they are split.
+> 
+> Bjorn
+
+Got it. There is a vmid table and a asid table in host controll
+registers. They are just adjoining as above. I will combine above loops
+with more comments together.
+
+Thanks and Regards,
+Zhou
+
+> 
+> .
+> 
 
 
-The rest of the file and the kernel overall use "dev" for pci_dev just 
-fine. I would not bother.
-
-
->>> +static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
->>>   {
->>> -	struct pci_controller *hose;
->>> +	int *freset = data;
->>>
->>> -	if (pci_is_root_bus(dev->bus)) {
->>> -		hose = pci_bus_to_host(dev->bus);
->>> -		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
->>> -		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
->>> -	} else {
->>> -		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
->>> -		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->>> +	/*
->>> +	 * Stop the iteration immediately if there is any
->>> +	 * one PCI device requesting fundamental reset
->>> +	 */
->>> +	*freset |= pdev->needs_freset;
->>> +	return *freset;
->>> +}
->>> +
->>> +void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
->>> +{
->>> +	int option = EEH_RESET_HOT;
->>> +	int freset = 0;
->>> +
->>> +	/* Check if there're any PCI devices asking for fundamental reset */
->>> +	if (pdev->subordinate) {
->>> +		pci_walk_bus(pdev->subordinate,
->>> +			     pnv_pci_dev_reset_type,
->>> +			     &freset);
->>> +		if (freset)
->>> +			option = EEH_RESET_FUNDAMENTAL;
->>>   	}
->>> +
->>> +	/* Issue the requested type of reset */
->>> +	pnv_eeh_bridge_reset(pdev, option);
->>> +	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
->>>   }
->>>
->>>   /**
->>>
->
-> Thanks,
-> Gavin
->
-
-
--- 
-Alexey
