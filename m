@@ -1,65 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:52752 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753574AbbE1Mbk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 08:31:40 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: linux-arm-kernel@lists.infradead.org, zhudacai@hisilicon.com,
-	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
-	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	'Pratyush Anand' <pratyush.anand@gmail.com>,
-	'Richard Zhu' <Richard.Zhu@freescale.com>,
-	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Liviu Dudau' <liviu.dudau@arm.com>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	'Liguozhu' <liguozhu@hisilicon.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-Date: Thu, 28 May 2015 14:30:57 +0200
-Message-ID: <4282256.8pP4M6Uy35@wuerfel>
-In-Reply-To: <5566FD5C.4050708@hisilicon.com>
-References: <000001d096a9$27bf43f0$773dcbd0$@com> <2095085.CuXXeGT0Wg@wuerfel> <5566FD5C.4050708@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v2 15/17] NTB: Default to CPU memcpy for performance
+Date: Thu, 21 May 2015 04:20:59 -0400
+Message-Id: <f81e011a326e20b8ef0cb2c863f3ace4b0e23318.1432196075.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
+References: <cover.1432192681.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
+References: <cover.1432196075.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 28 May 2015 19:34:52 Zhou Wang wrote:
-> > @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> >               if (!sys)
-> >                       panic("PCI: unable to allocate sys data!");
-> >  
-> > -#ifdef CONFIG_PCI_MSI
-> > -             sys->msi_ctrl = hw->msi_ctrl;
-> > -#endif
-> >               sys->busnr   = busnr;
-> >               sys->swizzle = hw->swizzle;
-> >               sys->map_irq = hw->map_irq;
-> > @@ -493,6 +481,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> >                               panic("PCI: unable to scan bus!");
-> >  
-> >                       busnr = sys->bus->busn_res.end + 1;
-> > +#ifdef CONFIG_PCI_MSI
-> > +                     bus->msi = hw->msi_ctrl;
-> > +#endif
-> >  
-> >                       list_add(&sys->node, head);
-> >               } else {
-> > 
-> 
-> Hi Arnd,
-> 
-> I think it does not work in above way(with adaptation as Fabrice mentioned).
-> As the msi controller is passed to secondary bus one by one during the process of enumeration.
-> Here we just set msi controller for root bus.
+From: Dave Jiang <dave.jiang@intel.com>
 
-Ah, too bad. I guess you are right, the bus->msi pointer here would
-really need to be set between pci_create_root_bus() and pci_scan_child_bus(),
-but we currently don't run any ARM specific code between the two.
+Disable DMA usage by default, since the CPU provides much better
+performance with write combining.  Provide a module parameter to enable
+DMA usage when offloading the memcpy is preferred.
 
-	Arnd
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 95252ea..9c266e1 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -88,6 +88,10 @@ static unsigned int copy_bytes = 1024;
+ module_param(copy_bytes, uint, 0644);
+ MODULE_PARM_DESC(copy_bytes, "Threshold under which NTB will use the CPU to copy instead of DMA");
+ 
++static bool use_dma;
++module_param(use_dma, bool, 0644);
++MODULE_PARM_DESC(use_dma, "Use DMA engine to perform large data copy");
++
+ static struct dentry *nt_debugfs_dir;
+ 
+ struct ntb_queue_entry {
+@@ -1571,10 +1575,15 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	dma_cap_zero(dma_mask);
+ 	dma_cap_set(DMA_MEMCPY, dma_mask);
+ 
+-	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
+-					   (void *)(unsigned long)node);
+-	if (!qp->dma_chan)
+-		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
++	if (use_dma) {
++		qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
++						   (void *)(unsigned long)node);
++		if (!qp->dma_chan)
++			dev_info(&pdev->dev, "Unable to allocate DMA channel\n");
++	} else {
++		qp->dma_chan = NULL;
++	}
++	dev_dbg(&pdev->dev, "Using %s memcpy\n", qp->dma_chan ? "DMA" : "CPU");
+ 
+ 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
+ 		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
+-- 
+2.4.0.rc0.43.gcf8a8c6
+
