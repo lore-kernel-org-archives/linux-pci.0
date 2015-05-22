@@ -1,46 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38434 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753372AbbE1Uis (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 16:38:48 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <555F355E.7060706@linaro.org>
+Date: Fri, 22 May 2015 21:55:42 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <2708462.WpN2O508C5@vostro.rjw.lan>
-References: <2708462.WpN2O508C5@vostro.rjw.lan>
-Date: Thu, 28 May 2015 22:38:47 +0200
-Message-ID: <CAJZ5v0iCv=qwNOeLnOh+cRum=UmyUp48M-gc3LkU91U5hdPeBg@mail.gmail.com>
-Subject: Re: [PATCH] Revert "PCI/PM: Remove pci_pm_complete()"
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v3 6/7] x86/PCI/ACPI: Use common interface to support
+ PCI host bridge
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1431593803-5213-7-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 28, 2015 at 4:12 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 2015年05月14日 16:56, Jiang Liu wrote:
+> Use common interface to simplify ACPI PCI host bridge implementation.
 >
-> Revert commit 84822b158fd3 "PCI/PM: Remove pci_pm_complete()" that
-> removed the execution of the device driver's ->complete callback
-> from the PCI bus type.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   arch/x86/pci/acpi.c |  292 +++++++++++++++------------------------------------
+>   1 file changed, 85 insertions(+), 207 deletions(-)
 >
-> That was a mistake, because those callbacks are not executed at all
-> now even if present.
->
-> Fixes: 84822b158fd3 "PCI/PM: Remove pci_pm_complete()"
-> Cc: 3.13+ <stable@vger.kernel.org> # 3.13+
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+[...]
+> -static void release_pci_root_info(struct pci_host_bridge *bridge)
+> +static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+>   {
+> -	struct resource *res;
+> -	struct resource_entry *entry;
+> -	struct pci_root_info *info = bridge->release_data;
+> -
+> -	resource_list_for_each_entry(entry, &bridge->windows) {
+> -		res = entry->res;
+> -		if (res->parent &&
+> -		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> -			release_resource(res);
+> -	}
+> -
+> -	teardown_mcfg_map(info);
+> -	kfree(info);
+> +	teardown_mcfg_map(ci);
+> +	kfree(ci);
 
-Scratch this, sorry.
+Implicit pointer cast? I think add a comment here that %p of ci
+is same as %p of info would be helpful for review and easy understood.
 
-The code is correct as is, because the bus type doesn't provide
-->complete at all in which case the core will run the driver's
-callback directly.
+other than that,
 
-We'll probably need ->complete for PCI at one point, but then I'll
-resubmit this one with a different changelog.
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-Thanks,
-Rafael
+Thanks
+Hanjun
