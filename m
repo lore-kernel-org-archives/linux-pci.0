@@ -1,73 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:36174 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579AbbE0Ffr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 01:35:47 -0400
-Received: by wizk4 with SMTP id k4so98733240wiz.1
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 22:35:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150527044749.GB21644@fury.dvhart.com>
-References: <20150223215155.18444386@neptune.home>
-	<20150303172753.GF83894@vmdeb7>
-	<20150305232038.1873d380@neptune.home>
-	<20150306174254.GB19001@vmdeb7>
-	<20150307011546.0050279d@neptune.home>
-	<20150309225238.0b9ced4e@neptune.home>
-	<CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
-	<20150311223445.6af76f7c@neptune.home>
-	<CAGr1u3tKVtQno=hUrKemLFYG12dtvPjFVR7oFwDG5cewJGCnJQ@mail.gmail.com>
-	<20150527044749.GB21644@fury.dvhart.com>
-Date: Tue, 26 May 2015 22:35:46 -0700
-Message-ID: <CAGr1u3t1+ktKG_v74nQ2H6txGcWSwBBfsWS74k0Ao2pNTvgAng@mail.gmail.com>
-Subject: Re: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb changes
-From: Michael Marineau <michael.marineau@coreos.com>
-To: Darren Hart <dvhart@infradead.org>
-Cc: =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Stephen Boyd <sboyd@codeaurora.org>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	platform-driver-x86@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Petri Hodju <petrihodju@yahoo.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 5/5] ARM: qcom: Add Qualcomm APQ8084 SoC
+Date: Fri, 22 May 2015 21:26:14 +0200
+Message-ID: <2504338.ikNh5XCYe2@wuerfel>
+In-Reply-To: <555F73FC.1030102@codeaurora.org>
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-6-git-send-email-svarbanov@mm-sol.com> <555F73FC.1030102@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 9:47 PM, Darren Hart <dvhart@infradead.org> wrote:
-> On Tue, May 26, 2015 at 12:10:48PM -0700, Michael Marineau wrote:
->> FYI, this actually broke backlight controls on my MBP11,3 because the
->> assumption the patch makes that gmux is always loaded before graphics
->> drivers didn't hold true. At least for me dracut included the nouveau
->> module in the initrd but not gmux, ensuring the ordering was wrong. No
->> errors were reporting, and gmux still offered the backlight device, it
->> just became inoperable. I worked around this for my kernel by building
->> gmux into vmlinuz instead of as a module but that isn't going to in
->> more general configs because there is an apple backlight driver which
->> cannot be built at all in that configuration.
->>
->
-> Thank you for reporting this Michael,
->
-> That is tough as nouveau doesn't have an explicit dependency on gmux, so we
-> could do something like a passive request_module(), but if it isn't in the
-> initrd image, it would still fail as you describe.
->
->> Is there a way to make the ordering between nouveau and gmux more
->> explicit/reliable? Can gmux complain loudly if the ordering is ever
->> wrong?
->
-> It should print an error if the probe fails due to the IO already being in use
-> or if it can't be allocated. The disabled IO case is only info level though,
-> perhaps that should be higher priority. Printing something when failing to probe
-> seems like a reasonable thing to do.
->
-> Michael, which message do you get if you boot with "debug" or "loglevel=6" when
-> apple-gmux is not built-in?
+On Friday 22 May 2015 11:22:52 Stephen Boyd wrote:
+> > diff --git a/arch/arm/mach-qcom/Kconfig b/arch/arm/mach-qcom/Kconfig
+> > index 2256cd1..9cfebee 100644
+> > --- a/arch/arm/mach-qcom/Kconfig
+> > +++ b/arch/arm/mach-qcom/Kconfig
+> > @@ -22,4 +22,11 @@ config ARCH_MSM8974
+> >       bool "Enable support for MSM8974"
+> >       select HAVE_ARM_ARCH_TIMER
+> >  
+> > +config ARCH_APQ8084
+> > +     bool "Enable support for APQ8084"
+> > +     select HAVE_ARM_ARCH_TIMER
+> > +     select MIGHT_HAVE_PCI
+> > +     select PCI_DOMAINS if PCI
+> > +     select PCI_MSI if PCI
+> > +
+> >
+> 
+> Can we move these PCI selects up to ARCH_QCOM directly? Let's try to
+> avoid adding more SoC specific options under ARCH_QCOM.
 
-No error, gmux claims it worked:
-[   13.693379] apple_gmux: Found gmux version 4.0.8 [indexed]
-[   13.693400] vgaarb: device changed decodes:
-PCI:0000:01:00.0,olddecodes=io+mem,decodes=io+mem:owns=none
-[   13.693404] apple_gmux: locked IO for PCI:0000:01:00.0
+I thought we already select 'MIGHT_HAVE_PCI' and 'PCI_DOMAINS' for
+all ARMv7 platforms. If not, we probably should.
 
-Full dmesg: https://gist.github.com/marineam/0e5a23548e8b3b2e1d50
+For PCI_MSI, I would leave that as user-selectable, there is no
+need to enforce that as far as I can tell. If the driver needs
+PCI_MSI support at compile-time, a dependency for that driver
+would make sense.
+
+	Arnd
