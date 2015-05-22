@@ -1,102 +1,179 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 7 May 2015 22:00:29 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Baoquan He <bhe@redhat.com>, "Li, ZhenHua" <zhen-hual@hp.com>,
-	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, alex.williamson@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150507140029.GC4559@localhost.localdomain>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <551E56F6.60503@hp.com>
- <20150403092111.GG22579@dhcp-128-53.nay.redhat.com>
- <20150405015453.GB1562@dhcp-17-102.nay.redhat.com>
- <20150407034622.GB7213@localhost.localdomain>
- <5523E5DB.2090001@redhat.com>
+Message-ID: <555F323F.3020107@linaro.org>
+Date: Fri, 22 May 2015 21:42:23 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5523E5DB.2090001@redhat.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
+Subject: Re: [Patch v3 2/7] ia64/PCI/ACPI: Use common ACPI resource parsing
+ interface for host bridge
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1431593803-5213-3-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/15 at 10:12am, Don Dutile wrote:
-> On 04/06/2015 11:46 PM, Dave Young wrote:
-> >On 04/05/15 at 09:54am, Baoquan He wrote:
-> >>On 04/03/15 at 05:21pm, Dave Young wrote:
-> >>>On 04/03/15 at 05:01pm, Li, ZhenHua wrote:
-> >>>>Hi Dave,
-> >>>>
-> >>>>There may be some possibilities that the old iommu data is corrupted by
-> >>>>some other modules. Currently we do not have a better solution for the
-> >>>>dmar faults.
-> >>>>
-> >>>>But I think when this happens, we need to fix the module that corrupted
-> >>>>the old iommu data. I once met a similar problem in normal kernel, the
-> >>>>queue used by the qi_* functions was written again by another module.
-> >>>>The fix was in that module, not in iommu module.
-> >>>
-> >>>It is too late, there will be no chance to save vmcore then.
-> >>>
-> >>>Also if it is possible to continue corrupt other area of oldmem because
-> >>>of using old iommu tables then it will cause more problems.
-> >>>
-> >>>So I think the tables at least need some verifycation before being used.
-> >>>
-> >>
-> >>Yes, it's a good thinking anout this and verification is also an
-> >>interesting idea. kexec/kdump do a sha256 calculation on loaded kernel
-> >>and then verify this again when panic happens in purgatory. This checks
-> >>whether any code stomps into region reserved for kexec/kernel and corrupt
-> >>the loaded kernel.
-> >>
-> >>If this is decided to do it should be an enhancement to current
-> >>patchset but not a approach change. Since this patchset is going very
-> >>close to point as maintainers expected maybe this can be merged firstly,
-> >>then think about enhancement. After all without this patchset vt-d often
-> >>raised error message, hung.
-> >
-> >It does not convince me, we should do it right at the beginning instead of
-> >introduce something wrong.
-> >
-> >I wonder why the old dma can not be remap to a specific page in kdump kernel
-> >so that it will not corrupt more memory. But I may missed something, I will
-> >looking for old threads and catch up.
-> >
-> >Thanks
-> >Dave
-> >
-> The (only) issue is not corruption, but once the iommu is re-configured, the old,
-> not-stopped-yet, dma engines will use iova's that will generate dmar faults, which
-> will be enabled when the iommu is re-configured (even to a single/simple paging scheme)
-> in the kexec kernel.
-> 
+On 2015年05月14日 16:56, Jiang Liu wrote:
+> Use common ACPI resource parsing interface to parse ACPI resources for
+> PCI host bridge, so we could share more code between IA64 and x86.
+> Later we will consolidate arch specific implementations into ACPI core.
+>
+> Tested-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   arch/ia64/pci/pci.c |  414 ++++++++++++++++++++++++---------------------------
+>   1 file changed, 193 insertions(+), 221 deletions(-)
+>
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index d4e162d35b34..23689d4c37ae 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -115,29 +115,12 @@ struct pci_ops pci_root_ops = {
+>   	.write = pci_write,
+>   };
+>
+> -/* Called by ACPI when it finds a new root bus.  */
+> -
+> -static struct pci_controller *alloc_pci_controller(int seg)
+> -{
+> -	struct pci_controller *controller;
+> -
+> -	controller = kzalloc(sizeof(*controller), GFP_KERNEL);
+> -	if (!controller)
+> -		return NULL;
+> -
+> -	controller->segment = seg;
+> -	return controller;
+> -}
+> -
+>   struct pci_root_info {
+> +	struct pci_controller controller;
+>   	struct acpi_device *bridge;
+> -	struct pci_controller *controller;
+>   	struct list_head resources;
+> -	struct resource *res;
+> -	resource_size_t *res_offset;
+> -	unsigned int res_num;
+>   	struct list_head io_resources;
+> -	char *name;
+> +	char name[16];
+>   };
+>
+>   static unsigned int
+> @@ -168,11 +151,11 @@ new_space (u64 phys_base, int sparse)
+>   	return i;
+>   }
+>
+> -static u64 add_io_space(struct pci_root_info *info,
+> -			struct acpi_resource_address64 *addr)
+> +static int add_io_space(struct device *dev, struct pci_root_info *info,
+> +			struct resource_entry *entry)
+>   {
+>   	struct iospace_resource *iospace;
+> -	struct resource *resource;
+> +	struct resource *resource, *res = entry->res;
+>   	char *name;
+>   	unsigned long base, min, max, base_port;
+>   	unsigned int sparse = 0, space_nr, len;
+> @@ -180,27 +163,24 @@ static u64 add_io_space(struct pci_root_info *info,
+>   	len = strlen(info->name) + 32;
+>   	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
+>   	if (!iospace) {
+> -		dev_err(&info->bridge->dev,
+> -				"PCI: No memory for %s I/O port space\n",
+> -				info->name);
+> -		goto out;
+> +		dev_err(dev, "PCI: No memory for %s I/O port space\n",
+> +			info->name);
+> +		return -ENOMEM;
+>   	}
+>
+> -	name = (char *)(iospace + 1);
+> -
+> -	min = addr->address.minimum;
+> -	max = min + addr->address.address_length - 1;
+> -	if (addr->info.io.translation_type == ACPI_SPARSE_TRANSLATION)
+> +	if (res->flags & IORESOURCE_IO_SPARSE)
+>   		sparse = 1;
+> -
+> -	space_nr = new_space(addr->address.translation_offset, sparse);
+> +	space_nr = new_space(entry->offset, sparse);
+>   	if (space_nr == ~0)
+>   		goto free_resource;
+>
+> +	name = (char *)(iospace + 1);
+> +	min = res->start - entry->offset;
+> +	max = res->end - entry->offset;
+>   	base = __pa(io_space[space_nr].mmio_base);
+>   	base_port = IO_SPACE_BASE(space_nr);
+>   	snprintf(name, len, "%s I/O Ports %08lx-%08lx", info->name,
+> -		base_port + min, base_port + max);
+> +		 base_port + min, base_port + max);
+>
+>   	/*
+>   	 * The SDM guarantees the legacy 0-64K space is sparse, but if the
+> @@ -216,153 +196,195 @@ static u64 add_io_space(struct pci_root_info *info,
+>   	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+>   	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
+>   	if (insert_resource(&iomem_resource, resource)) {
+> -		dev_err(&info->bridge->dev,
+> -				"can't allocate host bridge io space resource  %pR\n",
+> -				resource);
+> +		dev_err(dev,
+> +			"can't allocate host bridge io space resource  %pR\n",
+> +			resource);
+>   		goto free_resource;
+>   	}
+>
+> +	entry->offset = base_port;
+> +	res->start = min + base_port;
+> +	res->end = max + base_port;
+>   	list_add_tail(&iospace->list, &info->io_resources);
+> -	return base_port;
+> +
+> +	return 0;
+>
+>   free_resource:
+>   	kfree(iospace);
+> -out:
+> -	return ~0;
+> +	return -ENOSPC;
+> +}
+> +
+> +/*
+> + * An IO port or MMIO resource assigned to a PCI host bridge may be
+> + * consumed by the host bridge itself or available to its child
+> + * bus/devices. The ACPI specification defines a bit (Producer/Consumer)
+> + * to tell whether the resource is consumed by the host bridge itself,
+> + * but firmware hasn't used that bit consistently, so we can't rely on it.
 
-Don, so if iommu is not reconfigured then these faults will not happen?
-
-Baoquan and me has a confusion below today about iommu=off/intel_iommu=off:
-
-intel_iommu_init()
-{
+If we make the firmware obey to the ACPI spec, and
 ...
 
-       dmar_table_init();
+> + *
+> + * On x86 and IA64 platforms, all IO port and MMIO resources are assumed
+> + * to be available to child bus/devices except one special case:
+> + *     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
+> + *     to access PCI configuration space.
+> + *
+> + * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
 
-       disable active iommu translations;
+This is not going to happen on ARM64, right?
 
-       if (no_iommu || dmar_disabled)
-                goto out_free_dmar;
+but this question is not about the patch itself, so for this patch
 
-...
-}
-
-Any reason not move no_iommu check to the begining of intel_iommu_init function?
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
 Thanks
-Dave
+Hanjun
