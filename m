@@ -1,74 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:52895 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665AbbE0PeF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 11:34:05 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Zhou Wang <wangzhou1@hisilicon.com>, zhudacai@hisilicon.com,
-	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
-	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	'Pratyush Anand' <pratyush.anand@gmail.com>,
-	'Richard Zhu' <Richard.Zhu@freescale.com>,
-	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Liviu Dudau' <liviu.dudau@arm.com>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	'Liguozhu' <liguozhu@hisilicon.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-Date: Wed, 27 May 2015 17:31:46 +0200
-Message-ID: <2378629.Ocol8HRDqD@wuerfel>
-In-Reply-To: <5565CD0B.6020206@hisilicon.com>
-References: <000001d096a9$27bf43f0$773dcbd0$@com> <3340422.95mKZ6cYUI@wuerfel> <5565CD0B.6020206@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <555F5885.70105@mm-sol.com>
+Date: Fri, 22 May 2015 19:25:41 +0300
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mathieu Olivari <mathieu@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: Re: [PATCH v2 2/5] phy: qcom: Add Qualcomm PCIe PHY
+References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com> <1430743338-10441-3-git-send-email-svarbanov@mm-sol.com> <554783CD.50708@ti.com> <55478F1A.3000401@mm-sol.com> <20150519224143.GS31666@google.com> <555C8743.6020708@ti.com> <CAErSpo42N8YHWjrqUCj0ubqZLt4w-3g=ykPdR8ZMmWaW1GjWDw@mail.gmail.com>
+In-Reply-To: <CAErSpo42N8YHWjrqUCj0ubqZLt4w-3g=ykPdR8ZMmWaW1GjWDw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 27 May 2015 21:56:27 Zhou Wang wrote:
-> On 2015/5/26 16:02, Arnd Bergmann wrote:
-> > On Tuesday 26 May 2015 10:49:51 Zhou Wang wrote:
-> >>
-> >> I am a little confused that pci_sys_data is still needed as we don't use the code
-> >> in bios32. What was the problem you met? Could you share me more information? Then
-> >> let's see how to solve the problem.
-> >>
-> > 
-> > The PCI core code still calls pcibios_align_resource(), which will try to
-> > use the dev->sysdata pointer as 'struct pci_sys_data'. To solve this, we
+On 05/20/2015 04:23 PM, Bjorn Helgaas wrote:
+> On Wed, May 20, 2015 at 8:08 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> Hi Bjorn,
+>>
+>>
+>> On Wednesday 20 May 2015 04:11 AM, Bjorn Helgaas wrote:
+>>>
+>>> On Mon, May 04, 2015 at 06:24:10PM +0300, Stanimir Varbanov wrote:
+>>>>
+>>>> On 05/04/2015 05:35 PM, Kishon Vijay Abraham I wrote:
+>>>>>
+>>>>> Hi,
+>>>>>
+>>>>> On Monday 04 May 2015 06:12 PM, Stanimir Varbanov wrote:
+>>>>>>
+>>>>>> Add a PCIe PHY driver used by PCIe host controller driver
+>>>>>> on Qualcomm SoCs like Snapdragon 805.
+>>>>>>
+>>>>>> Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+>>>>>> ---
+>>>>>>    drivers/phy/Kconfig         |    9 ++
+>>>>>>    drivers/phy/Makefile        |    1 +
+>>>>>>    drivers/phy/phy-qcom-pcie.c |  291
+>>>>>> +++++++++++++++++++++++++++++++++++++++++++
+>>>>>
+>>>>>
+>>>>> Why do you need a new PHY driver for this? Why not use the existing QCOM
+>>>>> PHY driver. I can see the registers used here in
+>>>>> phy-qcom-ufs-qmp-14nm.h?
+>>>>
+>>>>
+>>>> I agree that on first glance there are similarities, but I'm not sure
+>>>> does the PHYs are the same IP blocks. Or at least they are different
+>>>> revisions which have too many differences. So trying to combine them
+>>>> will lead to more code than now.
+>>>>
+>>>> Either way I will try to understand how many the differences are.
+>>>
+>>>
+>>> Ping, where are we with this?  Should I wait for something else, or are
+>>> you
+>>> convinced there's enough difference to warrant a new PHY driver, Kishon?
+>>
+>>
+>> I'd like to wait to see if Stanimir can use existing driver instead of
+>> creating a new driver.
 > 
-> Thanks for reminding.
-> 
-> > need to change the pci-mvebu driver and the core code first to let the
-> 
-> It seams that only pci-mvebu implemented align_resource callback in ARM ?
+> OK, I'm waiting for a v3 with either tweaks to the QCOM PHY driver, or
+> stronger justification as to why that's impossible.  It's hard to
+> quantify statements like "there are similarities, but there are too
+> many differences," so you might have to actually attempt a patch for
+> the QCOM code and we can see how ugly that would turn out to be.
 
-Correct. The pointer in struct pci_sys_data was added for this driver, and
-no other driver has needed it so far.
+Kishon,
 
-> > driver override pcibios_align_resource() through an operation in 
-> > struct pci_host_bridge.
-> > 
-> > The other remaining use of dev->sysdata is the ARM pcibios_msi_controller()
-> > function that overrides the generic implementation.  To solve this, we need
-> > to change the five remaining drivers that set hw_pci->msi_ctrl to use
-> > the new generic method, and remove the ARM specific implementation.
-> 
-> Yes, that is better if we can do like this. But for pcie-designware, can we
-> just set bus->msi = &dw_pcie_msi_chip and get msi controller using dev->bus->msi
-> in pci_msi_controller()?
+I'm still checking the differences, sorry for the delay.
 
-Yes, that works. However there are two problems with the approach:
+Bjorn, is the pcie driver looks good enough to be merged?
 
-- we have to change all PCI host drivers on ARM to do this in order to remove
-  the ARM-specific pcibios_msi_controller() function
-- it's possible that there are dw_pcie implementations that do not include
-  an MSI controller, so that pointer would be NULL, which leads to the
-  core code to still call the ARM-specific pcibios_msi_controller() function
-  unless we remove it.
-
-	Arnd
+-- 
+regards,
+Stan
