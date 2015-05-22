@@ -1,129 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:37761 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933133AbbEOHiN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 03:38:13 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 17:38:12 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 23D64357804C
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 17:38:09 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F7c1dh17236132
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 17:38:09 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F7bZe9002922
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 17:37:36 +1000
-Date: Fri, 15 May 2015 17:37:10 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 10/11] powerpc/powernv: use "compound" as the child's
- list_head for compound PE
-Message-ID: <20150515073710.GB7980@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431668786-30371-11-git-send-email-weiyang@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <555F333E.10605@linaro.org>
+Date: Fri, 22 May 2015 21:46:38 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431668786-30371-11-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
+Subject: Re: [Patch v3 3/7] ia64/PCI: Use common struct resource_entry to
+ replace struct iospace_resource
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1431593803-5213-4-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 01:46:25PM +0800, Wei Yang wrote:
->Commit 262af557dd75(powerpc/powernv: Enable M64 aperatus for PHB3)
->introduces the concept of compound PE, and they are linked together to
->master PE's slaves lish_head with the list field. While this field is
->usually used to linked to the phb->ioda.pe_list to represents the PE is
->used.
+On 2015年05月14日 16:56, Jiang Liu wrote:
+> Use common struct resource_entry to replace private
+> struct iospace_resource.
 >
->This patch introduces a field "compound" to link those compound PEs.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   arch/ia64/include/asm/pci.h |    5 -----
+>   arch/ia64/pci/pci.c         |   17 ++++++++---------
+>   2 files changed, 8 insertions(+), 14 deletions(-)
 >
+> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+> index 52af5ed9f60b..5c10e0ec48d4 100644
+> --- a/arch/ia64/include/asm/pci.h
+> +++ b/arch/ia64/include/asm/pci.h
+> @@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+>   #define pci_legacy_read platform_pci_legacy_read
+>   #define pci_legacy_write platform_pci_legacy_write
+>
+> -struct iospace_resource {
+> -	struct list_head list;
+> -	struct resource res;
+> -};
+> -
+>   struct pci_controller {
+>   	struct acpi_device *companion;
+>   	void *iommu;
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index 23689d4c37ae..4af1b52c7a44 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
+>   static int add_io_space(struct device *dev, struct pci_root_info *info,
+>   			struct resource_entry *entry)
+>   {
+> -	struct iospace_resource *iospace;
+> +	struct resource_entry *iospace;
+>   	struct resource *resource, *res = entry->res;
+>   	char *name;
+>   	unsigned long base, min, max, base_port;
+>   	unsigned int sparse = 0, space_nr, len;
+>
+>   	len = strlen(info->name) + 32;
+> -	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
+> +	iospace = resource_list_create_entry(NULL, len);
+>   	if (!iospace) {
+>   		dev_err(dev, "PCI: No memory for %s I/O port space\n",
+>   			info->name);
+> @@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+>   	if (space_nr == 0)
+>   		sparse = 1;
+>
+> -	resource = &iospace->res;
+> +	resource = iospace->res;
+>   	resource->name  = name;
+>   	resource->flags = IORESOURCE_MEM;
+>   	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+> @@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+>   	entry->offset = base_port;
+>   	res->start = min + base_port;
+>   	res->end = max + base_port;
+> -	list_add_tail(&iospace->list, &info->io_resources);
+> +	resource_list_add_tail(iospace, &info->io_resources);
+>
+>   	return 0;
+>
+>   free_resource:
+> -	kfree(iospace);
+> +	resource_list_free_entry(iospace);
+>   	return -ENOSPC;
+>   }
+>
+> @@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
+>   static void __release_pci_root_info(struct pci_root_info *info)
+>   {
+>   	struct resource *res;
+> -	struct iospace_resource *iospace, *tmp;
+>   	struct resource_entry *entry, *tentry;
+>
+> -	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
+> -		release_resource(&iospace->res);
+> -		kfree(iospace);
+> +	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
+> +		release_resource(entry->res);
+> +		resource_list_destroy_entry(entry);
+>   	}
+>
+>   	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
 
-I don't think we needn't it with:
 
-- VF PEs are classified to master and slave PEs.
-- Master PEs is linked to phb->list;
-- Slave PEs is linked to master->slaves;
-- When iterating all PEs, you have to check PE's flag to cover all
-  (master & slave) VF PEs:
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-  for_each_pe_in_phb_list {
-         /* Things we're doing */
-         if (pe_is_not_vf_pe ||
-             pe_is_not_master_pe)
-             continue;
-
-         for_each_pe_in_master_vf_pe_list {
-               /* slave VF PEs */
-         }
-  }
-
-Thanks,
-Gavin
-
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->---
-> arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++----
-> arch/powerpc/platforms/powernv/pci.h      |    1 +
-> 2 files changed, 5 insertions(+), 4 deletions(-)
->
->diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->index 920c252..843457b 100644
->--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->@@ -344,7 +344,7 @@ done:
-> 		} else {
-> 			pe->flags |= PNV_IODA_PE_SLAVE;
-> 			pe->master = master_pe;
->-			list_add_tail(&pe->list, &master_pe->slaves);
->+			list_add_tail(&pe->compound, &master_pe->slaves);
-> 		}
-> 	}
->
->@@ -428,7 +428,7 @@ static void pnv_ioda_freeze_pe(struct pnv_phb *phb, int pe_no)
-> 	if (!(pe->flags & PNV_IODA_PE_MASTER))
-> 		return;
->
->-	list_for_each_entry(slave, &pe->slaves, list) {
->+	list_for_each_entry(slave, &pe->slaves, compound) {
-> 		rc = opal_pci_eeh_freeze_set(phb->opal_id,
-> 					     slave->pe_number,
-> 					     OPAL_EEH_ACTION_SET_FREEZE_ALL);
->@@ -464,7 +464,7 @@ static int pnv_ioda_unfreeze_pe(struct pnv_phb *phb, int pe_no, int opt)
-> 		return 0;
->
-> 	/* Clear frozen state for slave PEs */
->-	list_for_each_entry(slave, &pe->slaves, list) {
->+	list_for_each_entry(slave, &pe->slaves, compound) {
-> 		rc = opal_pci_eeh_freeze_clear(phb->opal_id,
-> 					     slave->pe_number,
-> 					     opt);
->@@ -516,7 +516,7 @@ static int pnv_ioda_get_pe_state(struct pnv_phb *phb, int pe_no)
-> 	if (!(pe->flags & PNV_IODA_PE_MASTER))
-> 		return state;
->
->-	list_for_each_entry(slave, &pe->slaves, list) {
->+	list_for_each_entry(slave, &pe->slaves, compound) {
-> 		rc = opal_pci_eeh_freeze_status(phb->opal_id,
-> 						slave->pe_number,
-> 						&fstate,
->diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->index 070ee88..540ab1e 100644
->--- a/arch/powerpc/platforms/powernv/pci.h
->+++ b/arch/powerpc/platforms/powernv/pci.h
->@@ -73,6 +73,7 @@ struct pnv_ioda_pe {
-> 	/* PEs in compound case */
-> 	struct pnv_ioda_pe	*master;
-> 	struct list_head	slaves;
->+	struct list_head	compound;
->
-> 	/* Link in list of PE#s */
-> 	struct list_head	dma_link;
->-- 
->1.7.9.5
->
-
+Thanks
+Hanjun
