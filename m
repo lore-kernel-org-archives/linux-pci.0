@@ -1,170 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:58705 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272AbbESK4x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:56:53 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:56:51 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 21D76357804C
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:56:48 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAueBZ28049418
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:56:48 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAuFb5003610
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:56:15 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 10/10] powerpc/powernv: compound PE for VFs
-Date: Tue, 19 May 2015 18:50:12 +0800
-Message-Id: <1432032612-21701-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:36141 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756229AbbEVTmL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 May 2015 15:42:11 -0400
+Received: by igbpi8 with SMTP id pi8so43749667igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2015 12:42:11 -0700 (PDT)
+Date: Fri, 22 May 2015 14:42:07 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, mjg59@coreos.com, rwhite@pobox.com,
+	alex.williamson@redhat.com
+Subject: Re: [PATCH v4 2/3] PCI/ASPM: Fix NULL pointer when find parent
+ pcie_link_state
+Message-ID: <20150522194207.GI32152@google.com>
+References: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
+ <1432191904-16451-2-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432191904-16451-2-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
-which means those VFs in a group should form a compound PE.
+On Thu, May 21, 2015 at 03:05:03PM +0800, Yijing Wang wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
+> in ATCA platform, system had unusual pcie topology:
+> 
+> (root port)   (downstream port)   (upstream port)
+> +-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
+> |                               +-01.0-[05]-- (downstream port)
+> |                               +-02.0-[06]--
+> |                               +-03.0-[07]--
+> |                               +-08.0-[08]--
+> |                               +-09.0-[09]--
+> |                               \-0a.0-[0a]--
+> We assumed root port and downstream port always
+> have external link, and downstream port always has a
+> upstream port. So in this case, when we allocated
+> pcie_link_state for downstream port 02:00.0, it try
+> to get parent bus pcie_link_state,
+> parent = pdev->bus->parent->self->link_state;
+> because root bus self is NULL, system will crash here.
+> 
+> Use pdev->has_secondary_link(introduced in previous patch)
+> to fix this issue.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pcie/aspm.c |    7 +++----
+>  1 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 7d4fcdc..8830740 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -561,8 +561,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  
+>  	if (!pci_is_pcie(pdev) || pdev->link_state)
+>  		return;
+> -	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
+> -	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
+> +
+> +	if (!pdev->has_secondary_link)
+>  		return;
+>  
+>  	/* VIA has a strange chipset, root port is under a bridge */
+> @@ -723,8 +723,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+>  	if (!pci_is_pcie(pdev))
+>  		return;
+>  
+> -	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
+> +	if (pdev->has_secondary_link)
+>  		parent = pdev;
+>  	if (!parent || !parent->link_state)
+>  		return;
 
-This patch links those VF PEs into compound PE in this case.
+I think we also have a problem here:
 
-[gwshan: code refactoring for a bit]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
- arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
- 2 files changed, 56 insertions(+), 7 deletions(-)
+   517  static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+   518  {
+   519          struct pcie_link_state *link;
+   520  
+   521          link = kzalloc(sizeof(*link), GFP_KERNEL);
+   522          if (!link)
+   523                  return NULL;
+   524          INIT_LIST_HEAD(&link->sibling);
+   525          INIT_LIST_HEAD(&link->children);
+   526          INIT_LIST_HEAD(&link->link);
+   527          link->pdev = pdev;
+   528          if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+   529                  struct pcie_link_state *parent;
+   530                  parent = pdev->bus->parent->self->link_state;
+   531                  if (!parent) {
+   532                          kfree(link);
+   533                          return NULL;
+   534                  }
+   535                  link->parent = parent;
+   536                  list_add(&link->link, &parent->children);
+   537          }
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f8bc950..56e7b65 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1363,9 +1363,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	}
- 
- 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
-+		struct pnv_ioda_pe *s, *sn;
- 		if (pe->parent_dev != pdev)
- 			continue;
- 
-+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
-+		    (pe->flags & PNV_IODA_PE_VF)) {
-+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
-+				pnv_pci_ioda2_release_dma_pe(pdev, s);
-+				list_del(&s->list);
-+				pnv_ioda_deconfigure_pe(phb, s);
-+				pnv_ioda_free_pe(phb, s->pe_number);
-+			}
-+		}
-+
- 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
- 
- 		/* Remove from list */
-@@ -1418,7 +1429,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
--	struct pnv_ioda_pe    *pe;
-+	struct pnv_ioda_pe    *pe, *master_pe;
- 	int                    pe_num;
- 	u16                    vf_index;
- 	struct pci_dn         *pdn;
-@@ -1464,10 +1475,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 				GFP_KERNEL, hose->node);
- 		pe->tce32_table->data = pe;
- 
--		/* Put PE to the list */
--		mutex_lock(&phb->ioda.pe_list_mutex);
--		list_add_tail(&pe->list, &phb->ioda.pe_list);
--		mutex_unlock(&phb->ioda.pe_list_mutex);
-+		/* Put PE to the list, or postpone it for compound PEs */
-+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
-+		    (num_vfs <= M64_PER_IOV)) {
-+			mutex_lock(&phb->ioda.pe_list_mutex);
-+			list_add_tail(&pe->list, &phb->ioda.pe_list);
-+			mutex_unlock(&phb->ioda.pe_list_mutex);
-+		}
- 
- 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
- 	}
-@@ -1480,10 +1494,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
- 
- 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
-+			master_pe = NULL;
-+
- 			for (vf_index = vf_group * vf_per_group;
- 			     vf_index < (vf_group + 1) * vf_per_group &&
- 			     vf_index < num_vfs;
- 			     vf_index++) {
-+
-+				/*
-+				 * Figure out the master PE and put all slave
-+				 * PEs to master PE's list.
-+				 */
-+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
-+				if (!master_pe) {
-+					pe->flags |= PNV_IODA_PE_MASTER;
-+					INIT_LIST_HEAD(&pe->slaves);
-+					master_pe = pe;
-+					mutex_lock(&phb->ioda.pe_list_mutex);
-+					list_add_tail(&pe->list, &phb->ioda.pe_list);
-+					mutex_unlock(&phb->ioda.pe_list_mutex);
-+				} else {
-+					pe->flags |= PNV_IODA_PE_SLAVE;
-+					pe->master = master_pe;
-+					list_add_tail(&pe->list,
-+						&master_pe->slaves);
-+				}
-+
- 				for (vf_index1 = vf_group * vf_per_group;
- 				     vf_index1 < (vf_group + 1) * vf_per_group &&
- 				     vf_index1 < num_vfs;
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 10bc8c3..717a58e 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -667,7 +667,7 @@ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
- 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pnv_phb *phb = hose->private_data;
- #ifdef CONFIG_PCI_IOV
--	struct pnv_ioda_pe *pe;
-+	struct pnv_ioda_pe *pe, *slave;
- 	struct pci_dn *pdn;
- 
- 	/* Fix the VF pdn PE number */
-@@ -679,10 +679,23 @@ static void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
- 			    (pdev->devfn & 0xff))) {
- 				pdn->pe_number = pe->pe_number;
- 				pe->pdev = pdev;
--				break;
-+				goto found;
-+			}
-+
-+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
-+			    (pe->flags & PNV_IODA_PE_VF)) {
-+				list_for_each_entry(slave, &pe->slaves, list) {
-+					if (slave->rid == ((pdev->bus->number << 8)
-+					   | (pdev->devfn & 0xff))) {
-+						pdn->pe_number = slave->pe_number;
-+						slave->pdev = pdev;
-+						goto found;
-+					}
-+				}
- 			}
- 		}
- 	}
-+found:
- #endif /* CONFIG_PCI_IOV */
- 
- 	if (phb && phb->dma_dev_setup)
--- 
-1.7.9.5
+Before your patch, we could only see Root Ports or Downstream Ports at line
+528.  Now we may also see Upstream Ports, so I think that test should be
+changed to "if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT)".
 
+Without this change, I think we would allocate pcie_link_state for the
+03:00.0 Upstream Port in your example, but it would not be connected to the
+tree of links starting at the 00:1c.0 Root Port.
+
+Do you agree?
+
+Bjorn
