@@ -1,110 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:35040 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbbEMQTm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 12:19:42 -0400
-Received: by igbyr2 with SMTP id yr2so143566093igb.0
-        for <linux-pci@vger.kernel.org>; Wed, 13 May 2015 09:19:41 -0700 (PDT)
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:38698 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757202AbbEVO6K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 May 2015 10:58:10 -0400
+Received: by igcau1 with SMTP id au1so34603366igc.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2015 07:58:10 -0700 (PDT)
+Subject: [PATCH] PCI/ASPM: Drop __pci_disable_link_state() useless "force"
+ parameter
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Matthew Garrett <mjg59@coreos.com>
+Date: Fri, 22 May 2015 09:58:08 -0500
+Message-ID: <20150522145807.27123.6007.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <5553742E.7070204@broadcom.com>
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de>
-	<1431465781-10753-3-git-send-email-hauke@hauke-m.de>
-	<CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com>
-	<5553742E.7070204@broadcom.com>
-Date: Wed, 13 May 2015 18:19:41 +0200
-Message-ID: <CACna6rzT=218pQk9M6NJWH51wszn=p0LmHrizrvV9Xkn-=Om3Q@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Scott Branden <sbranden@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13 May 2015 at 17:56, Ray Jui <rjui@broadcom.com> wrote:
-> On 5/12/2015 11:27 PM, Rafał Miłecki wrote:
->> On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> This driver adds support for the PCIe 2.0 controller found on the bcma
->>> bus. This controller can be found on (mostly) all Broadcom BCM470X /
->>> BCM5301X ARM SoCs.
->>>
->>> The driver found in the Broadcom SDK does some more stuff, like setting
->>> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
->>> PHY changes like "improving" the PCIe jitter and doing some special
->>> initializations for the 3rd PCIe port.
->>>
->>> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
->>> connected to them.
->>>
->>> PCI_DOMAINS is needed by this driver, because normally there is more
->>> than one PCIe controller and without PCI_DOMAINS only the first
->>> controller gets registered.
->>> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>
->> Acked-by: Rafał Miłecki <zajec5@gmail.com>
->>
->>
->>> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->>> +{
->>> +       struct iproc_pcie *pcie;
->>> +       LIST_HEAD(res);
->>> +       struct resource res_mem;
->>> +       int ret;
->>> +
->>> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
->>> +       if (!pcie)
->>> +               return -ENOMEM;
->>> +
->>> +       pcie->dev = &bdev->dev;
->>> +       bcma_set_drvdata(bdev, pcie);
->>> +
->>> +       pcie->base = bdev->io_addr;
->>> +
->>> +       res_mem.start = bdev->addr_s[0];
->>> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
->>> +       res_mem.name = "PCIe MEM space";
->>> +       res_mem.flags = IORESOURCE_MEM;
->>> +       pci_add_resource(&res, &res_mem);
->>> +
->>> +       pcie->resources = &res;
->>> +
->>> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
->>> +
->>> +       ret = iproc_pcie_setup(pcie);
->>
->> I think I don't like this part of iproc design. It lefts
->> pcie->resources pointing to some random memory after the setup/probe
->> are done. Guess it should be a separated parameter or sth.
->>
->> The patch is still OK, I just refer to generic iproc possible issue.
->>
-> Sorry Rafal, but could you please be more specific on this?
+After 387d37577fdd ("PCI: Don't clear ASPM bits when the FADT declares it's
+unsupported"), the "force" parameter to __pci_disable_link_state() is
+always "false".
 
-iproc_pcie_pltfm_probe (and iproc_pcie_bcma_probe) have local "res"
-variable (each its own). They do:
-pcie->resources = &res;
-and then they call
-iproc_pcie_setup(pcie);
+Remove the "force" parameter and assume it's always false.
 
-After iproc_pcie_pltfm_probe / iproc_pcie_bcma_probe returns, the
-pointer pcie->resources is not valid anymore, yet pcie struct is still
-in use. Of course pcie->resources isn't used anymore, but still, it's
-some in-struct pointer (to the random memory since local variable is
-not accessible anymore).
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aspm.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-I think you should drop
-struct list_head *resources;
-from the struct iproc_pcie and use
-iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *resources)
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 7d4fcdc..f90d8f2 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -714,8 +714,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+ 	up_read(&pci_bus_sem);
+ }
+ 
+-static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+-				     bool force)
++static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ {
+ 	struct pci_dev *parent = pdev->bus->self;
+ 	struct pcie_link_state *link;
+@@ -737,7 +736,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+ 	 * a similar mechanism using "PciASPMOptOut", which is also
+ 	 * ignored in this situation.
+ 	 */
+-	if (aspm_disabled && !force) {
++	if (aspm_disabled) {
+ 		dev_warn(&pdev->dev, "can't disable ASPM; OS doesn't have ASPM control\n");
+ 		return;
+ 	}
+@@ -763,7 +762,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+ 
+ void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ {
+-	__pci_disable_link_state(pdev, state, false, false);
++	__pci_disable_link_state(pdev, state, false);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state_locked);
+ 
+@@ -778,7 +777,7 @@ EXPORT_SYMBOL(pci_disable_link_state_locked);
+  */
+ void pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
+-	__pci_disable_link_state(pdev, state, true, false);
++	__pci_disable_link_state(pdev, state, true);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
 
--- 
-Rafał
