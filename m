@@ -1,97 +1,64 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+Message-ID: <555F11B4.8000503@linaro.org>
+Date: Fri, 22 May 2015 19:23:32 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [RFC 1/4] PCI: Add hooks to allocate/free IRQ resources when binding/unbinding driver
-Date: Thu,  7 May 2015 11:12:51 +0800
-Message-Id: <1430968374-29286-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430968374-29286-1-git-send-email-jiang.liu@linux.intel.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [Patch v3 5/7] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com> <5559E44B.2010702@linaro.org> <555BFC72.3060703@linux.intel.com> <555C0091.6050301@linaro.org>
+In-Reply-To: <555C0091.6050301@linaro.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add two hook points pcibios_{alloc|free}_irq() into PCI core, which will
-be called when binding/unbinding PCI device drivers. Then PCI arch code
-may hook into these two points to allocate IRQ resources on demand and
-free them when not used anymore.
+On 2015年05月20日 11:33, Hanjun Guo wrote:
+> +CC Suravee,
+>
+> On 2015年05月20日 11:16, Jiang Liu wrote:
+>> On 2015/5/18 21:08, Hanjun Guo wrote:
+>>> Hi Jiang,
+>>>
+>>> On 2015年05月14日 16:56, Jiang Liu wrote:
+>>>> Introduce common interface acpi_pci_root_create() and related data
+>>>> structures to create PCI root bus for ACPI PCI host bridges. It will
+>>>> be used to kill duplicated arch specific code for IA64 and x86. It may
+>>>> also help ARM64 in future.
+>>>
+>>> As I commented in previous version, this patch will introduce
+>>> compile error on ACPI enabled ARM64 kernel because struct
+>>> pci_controller is not defined for ARM64, so how about adding
+>>> the following patch before this patch, or squash to this one,
+>>> does it make sense?
+>> Hi Hanjun,
+>>     Thanks for fixing this building issue for ARM64. The patch
+>> is really what I want:). Will merge it into next version. With this
+>> patch applied, are there any other issues from ARM64 side?
+>
+> Suravee is testing ARM64 PCI on top of your patch set, he can confirm
+> that if there are any other issues :) (Suravee has a real ARM64 hardware
+> in hand)
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/pci-driver.c |   33 +++++++++++++++++++++++----------
- include/linux/pci.h      |    2 ++
- 2 files changed, 25 insertions(+), 10 deletions(-)
+After confirmed with Suravee, this patch set works OK on ARM64
+hardware for PCI hostbridge init, and can enumerate PCI devices
+(adding some ARM64 related PCI patches) and works fine with legacy
+interrupt, so to me, this patch set is good to go :)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3cb2210de553..8af4a671686f 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -388,18 +388,30 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- 	return error;
- }
- 
--static int pci_device_probe(struct device *dev)
-+int __weak pcibios_alloc_irq(struct pci_dev *dev)
- {
--	int error = 0;
--	struct pci_driver *drv;
--	struct pci_dev *pci_dev;
-+	return dev->irq;
-+}
- 
--	drv = to_pci_driver(dev->driver);
--	pci_dev = to_pci_dev(dev);
--	pci_dev_get(pci_dev);
--	error = __pci_device_probe(drv, pci_dev);
--	if (error)
--		pci_dev_put(pci_dev);
-+void __weak pcibios_free_irq(struct pci_dev *dev)
-+{
-+}
-+
-+static int pci_device_probe(struct device *dev)
-+{
-+	int error;
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	struct pci_driver *drv = to_pci_driver(dev->driver);
-+
-+	error = pcibios_alloc_irq(pci_dev);
-+	if (error >= 0) {
-+		pci_dev_get(pci_dev);
-+		error = __pci_device_probe(drv, pci_dev);
-+		if (error) {
-+			pcibios_free_irq(pci_dev);
-+			pci_dev_put(pci_dev);
-+		}
-+	}
- 
- 	return error;
- }
-@@ -415,6 +427,7 @@ static int pci_device_remove(struct device *dev)
- 			drv->remove(pci_dev);
- 			pm_runtime_put_noidle(dev);
- 		}
-+		pcibios_free_irq(pci_dev);
- 		pci_dev->driver = NULL;
- 	}
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8dc4c6e..f50d16a04abc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1656,6 +1656,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-+int pcibios_alloc_irq(struct pci_dev *dev);
-+void pcibios_free_irq(struct pci_dev *dev);
- 
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- extern struct dev_pm_ops pcibios_pm_ops;
--- 
-1.7.10.4
+For this patchset:
 
+Tested-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+
+I will add my Reviewed-by for some of patches later.
+
+Thanks
+Hanjun
