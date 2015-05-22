@@ -1,72 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55657EA3.5000601@linaro.org>
-Date: Wed, 27 May 2015 16:21:55 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:42882 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756101AbbEVBlV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 May 2015 21:41:21 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [PATCH v2] ACPI / PCI: remove stale list_head in struct acpi_prt_entry
+Date: Fri, 22 May 2015 04:06:43 +0200
+Message-ID: <46214942.PaRfZ23MiM@vostro.rjw.lan>
+In-Reply-To: <1432222166-9198-1-git-send-email-hanjun.guo@linaro.org>
+References: <1432222166-9198-1-git-send-email-hanjun.guo@linaro.org>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
- ACPI
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org> <20150526165844.GD2175@e106497-lin.cambridge.arm.com> <5564AB68.6080502@linux.intel.com>
-In-Reply-To: <5564AB68.6080502@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Liviu,
+On Thursday, May 21, 2015 11:29:26 PM Hanjun Guo wrote:
+> list_head "list" in struct acpi_prt_entry was used to connect
+> _PRT entries for PCI irq, but after commit 181380b702ee ("PCI/ACPI:
+> Don't cache _PRT, and don't associate them with bus numbers"),
+> the list head for _PRT entries was removed, but left "list" in
+> struct acpi_prt_entry which is useless and stale, remove it now.
+> 
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Yinghai Lu <yinghai@kernel.org>
+> CC: Yijing Wang <wangyijing@huawei.com>
+> ---
+> 
+> v2:
+> use the canonical commit reference format as Bjorn suggested.
 
-On 2015年05月27日 01:20, Jiang Liu wrote:
-> On 2015/5/27 0:58, Liviu Dudau wrote:
->> On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
->>> ARM64 ACPI based PCI host bridge init needs a arch dependent
->>> struct pci_controller to accommodate common PCI host bridge
->>> code which is introduced later, or it will lead to compile
->>> errors on ARM64.
->>
->> Hi Hanjun,
->>
->> Two questions: why don't you introduce this patch next to the
->> one that is going to make use of it (or even merge it there)?
+Queued up for 4.2, thanks!
 
-this is because of this patch is needed by Jiang Liu's patch set
-to fix the compile error on ARM64, I'd rather do that, but It's
-better to let Jiang Liu's patch goes in, and then this one, that's
-why I prepared a single patch for the struct. (I mentioned it
-in the cover letter)
+>  drivers/acpi/pci_irq.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> index b1def41..03e4b6c 100644
+> --- a/drivers/acpi/pci_irq.c
+> +++ b/drivers/acpi/pci_irq.c
+> @@ -44,7 +44,6 @@
+>  ACPI_MODULE_NAME("pci_irq");
+>  
+>  struct acpi_prt_entry {
+> -	struct list_head	list;
+>  	struct acpi_pci_id	id;
+>  	u8			pin;
+>  	acpi_handle		link;
+> 
 
->> Second, why is the whole struct pci_controller not surrounded
->> by #ifdef CONFIG_ACPI as you are implying that this is needed
->> only for ACPI?
-
-I hope it can be reused, since the NUMA node and segment (domain)
-is both needed for DT and ACPI, if it's not the case foe now, I
-can surrounded them all by #ifdef CONFIG_ACPI.
-
->>
->> Btw, looking through the whole series I'm not (yet) convinced
->> that this is needed at all.
-> Hi Liviu,
-> 	This structure is required by the requested patch set
-> at http://patchwork.ozlabs.org/patch/472249/, which consolidates
-> the common code to support PCI host bridge into ACPI core.
-
-Jiang, thanks for the explanation :)
-
-Thanks
-Hanjun
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
