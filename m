@@ -1,58 +1,94 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 15 May 2015 22:48:36 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?ISO-8859-15?Q?S=F6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-	James Hogan <james.hogan@imgtec.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Manuel Lauss <manuel.lauss@gmail.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	x86@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-ia64@vger.kernel.org, linux-mips@linux-mips.org,
-	linux-gpio@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-metag@vger.kernel.org
-Subject: Re: [RFC v1 11/11] genirq: Pass irq_data to helper function
- __irq_set_chip_handler_name_locked()
-In-Reply-To: <1430709339-29083-12-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1505152247280.4225@nanos>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com> <1430709339-29083-12-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <555F30AC.2090904@linaro.org>
+Date: Fri, 22 May 2015 21:35:40 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v3 1/7] ACPI/PCI: Enhance ACPI core to support sparse
+ IO space
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1431593803-5213-2-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 4 May 2015, Jiang Liu wrote:
->  /* caller has locked the irq_desc and both params are valid */
->  static inline void
-> -__irq_set_chip_handler_name_locked(unsigned int irq, struct irq_chip *chip,
-> +__irq_set_chip_handler_name_locked(struct irq_data *data, struct irq_chip *chip,
->  				   irq_flow_handler_t handler, const char *name)
->  {
->  	struct irq_desc *desc;
->  
-> -	desc = irq_to_desc(irq);
-> -	irq_desc_get_irq_data(desc)->chip = chip;
-> +	desc = irq_to_desc(data->irq);
+On 2015年05月14日 16:56, Jiang Liu wrote:
+> Enhance ACPI resource parsing interfaces to support sparse IO space,
+> which will be used to share common code between x86 and IA64 later.
+>
+> Tested-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   drivers/acpi/resource.c |    9 ++++++---
+>   include/linux/ioport.h  |    1 +
+>   2 files changed, 7 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 8244f013f210..fdcc73dad2c1 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>   EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+>
+>   static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+> -				      u8 io_decode)
+> +				      u8 io_decode, u8 translation_type)
+>   {
+>   	res->flags = IORESOURCE_IO;
+>
+> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>
+>   	if (io_decode == ACPI_DECODE_16)
+>   		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
+> +		res->flags |= IORESOURCE_IO_SPARSE;
+>   }
+>
+>   static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+>   {
+>   	res->start = start;
+>   	res->end = start + len - 1;
+> -	acpi_dev_ioresource_flags(res, len, io_decode);
+> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
+>   }
+>
+>   /**
+> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
+>   		acpi_dev_memresource_flags(res, len, wp);
+>   		break;
+>   	case ACPI_IO_RANGE:
+> -		acpi_dev_ioresource_flags(res, len, iodec);
+> +		acpi_dev_ioresource_flags(res, len, iodec,
+> +					  addr->info.io.translation_type);
+>   		break;
+>   	case ACPI_BUS_NUMBER_RANGE:
+>   		res->flags = IORESOURCE_BUS;
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 388e3ae94f7a..24bea087e7af 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -94,6 +94,7 @@ struct resource {
+>   /* PnP I/O specific bits (IORESOURCE_BITS) */
+>   #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
+>   #define IORESOURCE_IO_FIXED		(1<<1)
+> +#define IORESOURCE_IO_SPARSE		(1<<2)
+>
+>   /* PCI ROM control bits (IORESOURCE_BITS) */
+>   #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
 
-We should have a irq_data_to_desc() helper and use that instead of
-going through a full lookup again.
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-Thanks,
-
-	tglx
+Thanks
+Hanjun
