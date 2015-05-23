@@ -1,172 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49526 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbbE1AYF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 20:24:05 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	stable@vger.kernel.org.#.v3.19+
-Subject: [PATCH 1/2] PCI: Add pci_bus_addr_t
-Date: Wed, 27 May 2015 17:23:51 -0700
-Message-Id: <1432772632-5139-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 22 May 2015 20:40:37 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to
+ parent
+Message-ID: <20150523014037.GL32152@google.com>
+References: <2001450.KHHLaZsp3O@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2001450.KHHLaZsp3O@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-David Ahern reported that d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
-to fit in upstream windows") fails to boot on sparc/T5-8:
+On Mon, Apr 13, 2015 at 04:23:36PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
+> / nouveau: Fix VGA switcheroo problem related to hotplug) to propagate
+> the ignore_hotplug setting of the device to its parent bridge in case
+> hotplug notifications related to the graphics adapter switching are
+> given for the bridge rather than for the device itself (the need to
+> be ignored in both cases).
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
+> Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
+> Reported-and-tested-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address 0x110204000)
+Applied to pci/hotplug for v4.2, thanks!
 
-The problem is that sparc64 assumed that dma_addr_t only needed to hold DMA
-addresses, i.e., bus addresses returned via the DMA API (dma_map_single(),
-etc.), while the PCI core assumed dma_addr_t could hold *any* bus address,
-including raw BAR values.  On sparc64, all DMA addresses fit in 32 bits, so
-dma_addr_t is a 32-bit type.  However, BAR values can be 64 bits wide, so
-they don't fit in a dma_addr_t.  d63e2e1f3df9 added new checking that
-tripped over this mismatch.
+I marked it for stable and added a note to connect it to b440bde74f04
+("PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device")
 
-Add pci_bus_addr_t, which is wide enough to hold any PCI bus address,
-including both raw BAR values and DMA addresses.  This will be 64 bits
-on 64-bit platforms and on platforms with a 64-bit dma_addr_t.  Then
-dma_addr_t only needs to be wide enough to hold addresses from the DMA API.
-
-Fixes: d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Link: http://lkml.kernel.org/r/1427857069-6789-1-git-send-email-yinghai@kernel.org
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96231
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-[bhelgaas: changelog, bugzilla, Kconfig to ensure pci_bus_addr_t is at least as wide as dma_addr_t]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: David S. Miller <davem@davemloft.net>
-CC: stable@vger.kernel.org	# v3.19+
-
----
- drivers/pci/Kconfig |    4 ++++
- drivers/pci/bus.c   |   10 +++++-----
- drivers/pci/probe.c |   12 ++++++------
- include/linux/pci.h |   12 +++++++++---
- 4 files changed, 24 insertions(+), 14 deletions(-)
-
-Index: linux-2.6/drivers/pci/Kconfig
-===================================================================
---- linux-2.6.orig/drivers/pci/Kconfig
-+++ linux-2.6/drivers/pci/Kconfig
-@@ -1,6 +1,10 @@
- #
- # PCI configuration
- #
-+config PCI_BUS_ADDR_T_64BIT
-+	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
-+	depends on PCI
-+
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
-Index: linux-2.6/drivers/pci/bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/bus.c
-+++ linux-2.6/drivers/pci/bus.c
-@@ -92,11 +92,11 @@ void pci_bus_remove_resources(struct pci
- }
- 
- static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
--#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-+#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- static struct pci_bus_region pci_64_bit = {0,
--				(dma_addr_t) 0xffffffffffffffffULL};
--static struct pci_bus_region pci_high = {(dma_addr_t) 0x100000000ULL,
--				(dma_addr_t) 0xffffffffffffffffULL};
-+				(pci_bus_addr_t) 0xffffffffffffffffULL};
-+static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
-+				(pci_bus_addr_t) 0xffffffffffffffffULL};
- #endif
- 
- /*
-@@ -200,7 +200,7 @@ int pci_bus_alloc_resource(struct pci_bu
- 					  resource_size_t),
- 		void *alignf_data)
- {
--#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
-+#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -254,8 +254,8 @@ int __pci_read_base(struct pci_dev *dev,
- 	}
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
--		if ((sizeof(dma_addr_t) < 8 || sizeof(resource_size_t) < 8) &&
--		    sz64 > 0x100000000ULL) {
-+		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
-+		    && sz64 > 0x100000000ULL) {
- 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 			res->start = 0;
- 			res->end = 0;
-@@ -264,7 +264,7 @@ int __pci_read_base(struct pci_dev *dev,
- 			goto out;
- 		}
- 
--		if ((sizeof(dma_addr_t) < 8) && l) {
-+		if ((sizeof(pci_bus_addr_t) < 8) && l) {
- 			/* Above 32-bit boundary; try to reallocate */
- 			res->flags |= IORESOURCE_UNSET;
- 			res->start = 0;
-@@ -399,7 +399,7 @@ static void pci_read_bridge_mmio_pref(st
- 	struct pci_dev *dev = child->self;
- 	u16 mem_base_lo, mem_limit_lo;
- 	u64 base64, limit64;
--	dma_addr_t base, limit;
-+	pci_bus_addr_t base, limit;
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
-@@ -426,8 +426,8 @@ static void pci_read_bridge_mmio_pref(st
- 		}
- 	}
- 
--	base = (dma_addr_t) base64;
--	limit = (dma_addr_t) limit64;
-+	base = (pci_bus_addr_t) base64;
-+	limit = (pci_bus_addr_t) limit64;
- 
- 	if (base != base64) {
- 		dev_err(&dev->dev, "can't handle bridge window above 4GB (bus address %#010llx)\n",
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -577,9 +577,15 @@ int raw_pci_read(unsigned int domain, un
- int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
- 		  int reg, int len, u32 val);
- 
-+#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+typedef u64 pci_bus_addr_t;
-+#else
-+typedef u32 pci_bus_addr_t;
-+#endif
-+
- struct pci_bus_region {
--	dma_addr_t start;
--	dma_addr_t end;
-+	pci_bus_addr_t start;
-+	pci_bus_addr_t end;
- };
- 
- struct pci_dynids {
-@@ -1127,7 +1133,7 @@ int __must_check pci_bus_alloc_resource(
- 
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
- 
--static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
-+static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
- 	struct pci_bus_region region;
- 
+> ---
+> 
+> "Stable" material AFAICS.
+> 
+> ---
+>  drivers/pci/pci.c   |   11 +++++++++++
+>  include/linux/pci.h |    6 +-----
+>  2 files changed, 12 insertions(+), 5 deletions(-)
+> 
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -4319,6 +4319,17 @@ bool pci_device_is_present(struct pci_de
+>  }
+>  EXPORT_SYMBOL_GPL(pci_device_is_present);
+>  
+> +void pci_ignore_hotplug(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *bridge = dev->bus->self;
+> +
+> +	dev->ignore_hotplug = 1;
+> +	/* Propagate the "ignore hotplug" setting to the parent bridge. */
+> +	if (bridge)
+> +		bridge->ignore_hotplug = 1;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
+> +
+>  #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+>  static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+>  static DEFINE_SPINLOCK(resource_alignment_lock);
+> Index: linux-pm/include/linux/pci.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pci.h
+> +++ linux-pm/include/linux/pci.h
+> @@ -1002,6 +1002,7 @@ int __must_check pci_assign_resource(str
+>  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+>  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+>  bool pci_device_is_present(struct pci_dev *pdev);
+> +void pci_ignore_hotplug(struct pci_dev *dev);
+>  
+>  /* ROM control related routines */
+>  int pci_enable_rom(struct pci_dev *pdev);
+> @@ -1039,11 +1040,6 @@ bool pci_dev_run_wake(struct pci_dev *de
+>  bool pci_check_pme_status(struct pci_dev *dev);
+>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>  
+> -static inline void pci_ignore_hotplug(struct pci_dev *dev)
+> -{
+> -	dev->ignore_hotplug = 1;
+> -}
+> -
+>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>  				  bool enable)
+>  {
+> 
