@@ -1,123 +1,275 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:39296 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751203AbbETAef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 20:34:35 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.h.duyck@redhat.com>
-CC: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to
- protect VPD operations
-Date: Wed, 20 May 2015 00:34:33 +0000
-Message-ID: <F47DC49C-CCC5-4693-8905-20ABCE6F5993@intel.com>
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com>
- <555B78F7.60908@redhat.com> <20150519160158.00002cd6@unknown>
- <555BD029.7050803@redhat.com>
-In-Reply-To: <555BD029.7050803@redhat.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Received: from szxga01-in.huawei.com ([58.251.152.64]:10946 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbbEYBfQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2015 21:35:16 -0400
+Message-ID: <55627BFD.1090602@hisilicon.com>
+Date: Mon, 25 May 2015 09:33:49 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
+To: Zhou Wang <wangzhou1@hisilicon.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liguozhu@hisilicon.com>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+References: <1432102901-186201-1-git-send-email-wangzhou1@hisilicon.com> <1432102901-186201-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1432102901-186201-2-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+Hi Jingoo and Hi Pratyush,
 
-> On May 19, 2015, at 5:07 PM, Alexander Duyck =
-<alexander.h.duyck@redhat.com> wrote:
->=20
->=20
->=20
-> On 05/19/2015 04:01 PM, Jesse Brandeburg wrote:
+Do you have any comments about this patch? It will be very appreciated if I
+could get some help for you.
 
->> But Alex if you do this you're violating the principle of least
->> surprise, not to mention changing a user-space interface which should
->> not be done.
->=20
-> I'm willing to back off on dropping the VPD info for those functions =
-entirely, but the lock should not be pushed to the bus.
+Best Regards,
+Zhou
 
-Yeah, I think suddenly dropping the VPD from non-0 functions would be =
-disruptive.
+On 2015/5/20 14:21, Zhou Wang wrote:
+> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+> move related operations to dw_pcie_host_init.
+> 
+> I am not very clear about I/O resource management:
+>> 	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+>> 		pci_ioremap_io(global_io_offset, pp->io_base);
+>> 		global_io_offset += SZ_64K;
+>> 		pci_add_resource_offset(&res, &pp->io,
+>> 					global_io_offset - pp->io_bus_addr);
+>> 	}
+> so just move steps in dw_pcie_setup to dw_pcie_host_init.
+> 
+> I have compiled the driver with multi_v7_defconfig. However, I don't have
+> ARM32 PCIe related board to do test. It will be appreciated if someone could
+> help to test it.
+> 
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> ---
+>  drivers/pci/host/pcie-designware.c | 128 +++++++++++++++----------------------
+>  1 file changed, 50 insertions(+), 78 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2e9f84f..7bad9e5 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/pci_regs.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/types.h>
+> +#include <asm/hardirq.h>
+>  
+>  #include "pcie-designware.h"
+>  
+> @@ -67,17 +68,10 @@
+>  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+>  #define PCIE_ATU_UPPER_TARGET		0x91C
+>  
+> -static struct hw_pci dw_pci;
+> +static struct pci_ops dw_pcie_ops;
+>  
+>  static unsigned long global_io_offset;
+>  
+> -static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> -{
+> -	BUG_ON(!sys->private_data);
+> -
+> -	return sys->private_data;
+> -}
+> -
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  {
+>  	*val = readl(addr);
+> @@ -238,7 +232,7 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>  {
+>  	int irq, pos0, i;
+> -	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+> +	struct pcie_port *pp = desc->dev->bus->sysdata;
+>  
+>  	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+>  				       order_base_2(no_irqs));
+> @@ -281,7 +275,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+>  {
+>  	int irq, pos;
+>  	struct msi_msg msg;
+> -	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> +	struct pcie_port *pp = pdev->bus->sysdata;
+>  
+>  	if (desc->msi_attrib.is_msix)
+>  		return -EINVAL;
+> @@ -310,7 +304,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>  {
+>  	struct irq_data *data = irq_get_irq_data(irq);
+>  	struct msi_desc *msi = irq_data_get_msi(data);
+> -	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
+> +	struct pcie_port *pp = msi->dev->bus->sysdata;
+>  
+>  	clear_irq_range(pp, irq, 1, data->hwirq);
+>  }
+> @@ -342,13 +336,15 @@ static const struct irq_domain_ops msi_domain_ops = {
+>  	.map = dw_pcie_msi_map,
+>  };
+>  
+> -int dw_pcie_host_init(struct pcie_port *pp)
+> +int __init dw_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct device_node *np = pp->dev->of_node;
+>  	struct platform_device *pdev = to_platform_device(pp->dev);
+>  	struct of_pci_range range;
+>  	struct of_pci_range_parser parser;
+> +	struct pci_bus *bus;
+>  	struct resource *cfg_res;
+> +	LIST_HEAD(res);
+>  	u32 val, na, ns;
+>  	const __be32 *addrp;
+>  	int i, index, ret;
+> @@ -502,15 +498,49 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	val |= PORT_LOGIC_SPEED_CHANGE;
+>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+>  
+> -#ifdef CONFIG_PCI_MSI
+> -	dw_pcie_msi_chip.dev = pp->dev;
+> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+> +#ifdef CONFIG_ARM
+> +	/*
+> +	 * FIXME: we should really be able to use
+> +	 * of_pci_get_host_bridge_resources on arm32 as well,
+> +	 * but the conversion needs some more testing
+> +	 */
+> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> +		pci_ioremap_io(global_io_offset, pp->io_base);
+> +		global_io_offset += SZ_64K;
+> +		pci_add_resource_offset(&res, &pp->io,
+> +					global_io_offset - pp->io_bus_addr);
+> +	}
+> +	pci_add_resource_offset(&res, &pp->mem,
+> +				pp->mem.start - pp->mem_bus_addr);
+> +	pci_add_resource(&res, &pp->busn);
+> +#else
+> +	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+> +	if (ret)
+> +		return ret;
+> +#endif
+> +
+> +	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
+> +			      pp, &res);
+> +	if (!bus)
+> +		return -ENOMEM;
+> +
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
+> +#else
+> +	bus->msi = &dw_pcie_msi_chip;
+>  #endif
+>  
+> -	dw_pci.nr_controllers = 1;
+> -	dw_pci.private_data = (void **)&pp;
+> +	pci_scan_child_bus(bus);
+> +	if (pp->ops->scan_bus)
+> +		pp->ops->scan_bus(pp);
+>  
+> -	pci_common_init_dev(pp->dev, &dw_pci);
+> +#ifdef CONFIG_ARM
+> +	/* support old dtbs that incorrectly describe IRQs */
+> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +#endif
+> +
+> +	pci_assign_unassigned_bus_resources(bus);
+> +	pci_bus_add_devices(bus);
+>  
+>  	return 0;
+>  }
+> @@ -653,7 +683,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
+>  static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  			int size, u32 *val)
+>  {
+> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+> +	struct pcie_port *pp = bus->sysdata;
+>  	int ret;
+>  
+>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+> @@ -677,7 +707,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  			int where, int size, u32 val)
+>  {
+> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+> +	struct pcie_port *pp = bus->sysdata;
+>  	int ret;
+>  
+>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+> @@ -701,64 +731,6 @@ static struct pci_ops dw_pcie_ops = {
+>  	.write = dw_pcie_wr_conf,
+>  };
+>  
+> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> -{
+> -	struct pcie_port *pp;
+> -
+> -	pp = sys_to_pcie(sys);
+> -
+> -	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> -		sys->io_offset = global_io_offset - pp->io_bus_addr;
+> -		pci_ioremap_io(global_io_offset, pp->io_base);
+> -		global_io_offset += SZ_64K;
+> -		pci_add_resource_offset(&sys->resources, &pp->io,
+> -					sys->io_offset);
+> -	}
+> -
+> -	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
+> -	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+> -	pci_add_resource(&sys->resources, &pp->busn);
+> -
+> -	return 1;
+> -}
+> -
+> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> -{
+> -	struct pci_bus *bus;
+> -	struct pcie_port *pp = sys_to_pcie(sys);
+> -
+> -	pp->root_bus_nr = sys->busnr;
+> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> -				  &dw_pcie_ops, sys, &sys->resources);
+> -	if (!bus)
+> -		return NULL;
+> -
+> -	pci_scan_child_bus(bus);
+> -
+> -	if (bus && pp->ops->scan_bus)
+> -		pp->ops->scan_bus(pp);
+> -
+> -	return bus;
+> -}
+> -
+> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> -{
+> -	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+> -	int irq;
+> -
+> -	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+> -	if (!irq)
+> -		irq = pp->irq;
+> -
+> -	return irq;
+> -}
+> -
+> -static struct hw_pci dw_pci = {
+> -	.setup		= dw_pcie_setup,
+> -	.scan		= dw_pcie_scan_bus,
+> -	.map_irq	= dw_pcie_map_irq,
+> -};
+> -
+>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>  {
+>  	u32 val;
+> 
 
->> Mark's solution is pretty graceful and solves the issue at heart, =
-which
->> is that
->> 1) several Intel chips have this issue
->> 2) it appears that several other vendor's chips have this issue (or
->> similar) as well, but even if they don't Mark's fix will not change
->> their general operation, only make a small serializing effect when
->> multiple simultaneous reads are made.
->=20
-> 2 is based on a false premise.  The "vpd r/w failed" error is about as =
-common as dev_watchdog().  Just because it presents with a similar =
-symptom doesn't mean it is the same issue.
 
-I don't know if it is false, but it is possible that other devices could =
-have the same behavior. I didn't expect that it would fix them all by =
-any means, but I figured there would be some fellow travelers.
-
-> If the bug is in Intel Ethernet with VPD then I would suggest tweaking =
-the VPD logic and adding a Intel Ethernet PCI quirk.  It doesn't make =
-sense to assume based on one common error message that all of creation =
-has the same issue.
-
-> If anything I believe Mark's patches have revealed a bigger issue. =
-That is the fact that the sysfs file is reading outside of the VPD area =
-which the PCI spec doesn't have a defined behavior for.  I suspect this =
-is the cause of a number of the issues being reported as Broadcom had to =
-specifically quirk to prevent it, and I found one discussion that =
-indicated something similar might be needed for Realtek.
-
-It turns out that I missed something very important here - the state of =
-the F bit. Because of how that works, and how the kernel knows what the =
-last access was, it is vital to know which address/data registers are =
-shared and which ones aren't. This is going to result in a much bigger =
-fix. It will be necessary to positively know when this register sharing =
-is happening. This will result in significant changes to the VPD code in =
-order to model the behavior right. Essentially, devices with this issue =
-will need to have the vpd pointer point to the same structure. That =
-automatically fixes the locking issue. I will look into what can be done =
-for KVM while I am at it. It will be a big device table, but that is =
-unavoidable.
-
-Doggone it. It seemed too good to be true yesterday and now I know that =
-is because it is. So close. If only it weren't for VPD writes... I'm =
-going to start over now.
-
---
-Mark Rustad, Networking Division, Intel Corporation
-
-
---Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVW9aYAAoJEDwO/+eO4+5u8vMP/jBrOqxJTMZcuTktVyZ+rCXQ
-Xea3V/xMIY7xt5SeWovcZa/45Ft5lC4vZIdebT5R5FRpQoWC9S7qwhOJH+y9wGlS
-FroyrqNsNtBcrJVOAokCzj3PMAMNaPznsM34bTcfVWJQYqy7iVSy51V1kpKucl+U
-9ZH4LCmzWcqF+//N+Fig56nEO444YzgDsCkM09BVr+OxGcfNkW/A34xBuIF8Icfh
-Ib3/f+b1Q3icVNNlLuTLlDeOVqxE5jdsKX+644p8hIo+nWQ3ZIQDiVMk303Nnbyd
-b1SDTBUfRe8r0x1uQqd3/KPXRWZq8xCEH/3jGcTXrR+M5mBCg8P8ORf8X6+lvkGo
-/e7r6SE4gce7Wq4eJw4l8H/ceCQO2+3a+E7g+G6IYwrKoocTj2gDIP5fxTf0FGpC
-vrTy1lGJ8psh4O16x/4TOvlmmW2s5ps9pyXYbhVyhcqE9WzlYsdYT0p6rpZ2aeCP
-TsoYUgqJVewc9jZ1w/5gWco1b2wnHT5FYco769kzqBZngskeaLbAw2Yg5/fsKXg9
-tqX5HlY5P9E4YsDVC8GRZ9DTAJx8eL2VgPEpqrpoTS2zO6zqcGLXdTOjnrEK6oFi
-0+F8aS3h9FD6LH1ffbZvllrHdeFDq2dulDA1mybbI5UY/MMVUk3RHPR9l4gGzFe5
-5zAIjRAtkvskuhiJBXna
-=lTAI
------END PGP SIGNATURE-----
-
---Apple-Mail=_3F713B3E-87F1-4114-B3EF-6022C2E7AA1B--
