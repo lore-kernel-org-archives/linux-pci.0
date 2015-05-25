@@ -1,47 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34055 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754365AbbEMJVI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 May 2015 05:21:08 -0400
-Date: Wed, 13 May 2015 17:21:02 +0800
-From: Baoquan He <bhe@redhat.com>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old mem
-Message-ID: <20150513092102.GG3736@dhcp-128-28.nay.redhat.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
- <1431337974-545-5-git-send-email-zhen-hual@hp.com>
- <20150513090035.GE3736@dhcp-128-28.nay.redhat.com>
- <555315A1.5020402@hp.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:13973 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751588AbbEYBii (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2015 21:38:38 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mjg59@coreos.com>,
+	<rwhite@pobox.com>, <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [Update][PATCH v4 2/3] PCI/ASPM: Fix NULL pointer when find parent pcie_link_state
+Date: Mon, 25 May 2015 09:34:33 +0800
+Message-ID: <1432517673-1982-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <555315A1.5020402@hp.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/13/15 at 05:13pm, Li, ZhenHua wrote:
-> Hi Baoquan,
-> I am using a list here to store all the mapped addresses, and unmap
-> them out of iounmap.
+https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
+in ATCA platform, system had unusual pcie topology:
 
-> 
-> About the reason, please check the old mails. I cannot remember the
-> detailed reasons.
+(root port)   (downstream port)   (upstream port)
++-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
+|                               +-01.0-[05]-- (downstream port)
+|                               +-02.0-[06]--
+|                               +-03.0-[07]--
+|                               +-08.0-[08]--
+|                               +-09.0-[09]--
+|                               \-0a.0-[0a]--
+We assumed root port and downstream port always
+have external link, and downstream port always has a
+upstream port. So in this case, when we allocated
+pcie_link_state for downstream port 02:00.0, it try
+to get parent bus pcie_link_state,
+parent = pdev->bus->parent->self->link_state;
+because root bus self is NULL, system will crash here.
 
-Yeah, I understand that the list is used to collect all mapped addresses
-and unmap them all after spin_unlock_irqsave. 
+Use pdev->has_secondary_link(introduced in previous patch)
+to fix this issue.
 
-that's why it's better to put the reason in patch log. Patch log is used
-to record this kind of explanation so that you needn't say it again and
-again. My personal opinion.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aspm.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-Thanks
-Baoquan
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 4e1af76..942bf97 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -525,7 +525,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&link->children);
+ 	INIT_LIST_HEAD(&link->link);
+ 	link->pdev = pdev;
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
++	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) {
+ 		struct pcie_link_state *parent;
+ 		parent = pdev->bus->parent->self->link_state;
+ 		if (!parent) {
+@@ -561,8 +561,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 
+ 	if (!pci_is_pcie(pdev) || pdev->link_state)
+ 		return;
+-	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
+-	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
++
++	if (!pdev->has_secondary_link)
+ 		return;
+ 
+ 	/* VIA has a strange chipset, root port is under a bridge */
+@@ -715,8 +715,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 	if (!pci_is_pcie(pdev))
+ 		return;
+ 
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
++	if (pdev->has_secondary_link)
+ 		parent = pdev;
+ 	if (!parent || !parent->link_state)
+ 		return;
+-- 
+1.7.1
+
