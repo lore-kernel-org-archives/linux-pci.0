@@ -1,48 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:33609 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751763AbbE2IQV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 May 2015 04:16:21 -0400
-Date: Fri, 29 May 2015 10:16:18 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: wdavis@nvidia.com
-Cc: bhelgaas@google.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, tripperda@nvidia.com,
-	jhubbard@nvidia.com, jglisse@redhat.com, konrad.wilk@oracle.com
-Subject: Re: [PATCH v2 2/7] DMA-API: Introduce dma_(un)map_resource
-Message-ID: <20150529081617.GA13130@8bytes.org>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
- <1431973504-5903-3-git-send-email-wdavis@nvidia.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:18659 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbbEYBpv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 May 2015 21:45:51 -0400
+Message-ID: <55627DE2.3090902@huawei.com>
+Date: Mon, 25 May 2015 09:41:54 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431973504-5903-3-git-send-email-wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Matthew Garrett <mjg59@coreos.com>
+Subject: Re: [PATCH] PCI/ASPM: Drop __pci_disable_link_state() useless "force"
+ parameter
+References: <20150522145807.27123.6007.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150522145807.27123.6007.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 18, 2015 at 01:24:59PM -0500, wdavis@nvidia.com wrote:
-> +static inline dma_addr_t dma_map_resource_attrs(struct device *dev,
-> +						struct resource *res,
-> +						size_t offset, size_t size,
-> +						enum dma_data_direction dir,
-> +						struct dma_attrs *attrs)
-> +{
-> +	const struct dma_map_ops *ops = get_dma_ops(dev);
-> +	dma_addr_t addr = 0;
-> +
-> +	BUG_ON(!valid_dma_direction(dir));
-> +	if (ops->map_resource)
-> +		addr = ops->map_resource(dev, res, offset, size, dir,
-		> atops->map_resourcetrs);
-> +	debug_dma_map_resource(dev, res, offset, size, dir, addr);
-> +
-> +	return addr;
-> +}
+On 2015/5/22 22:58, Bjorn Helgaas wrote:
+> After 387d37577fdd ("PCI: Don't clear ASPM bits when the FADT declares it's
+> unsupported"), the "force" parameter to __pci_disable_link_state() is
+> always "false".
+> 
+> Remove the "force" parameter and assume it's always false.
 
-Please just do a BUG_ON(ops->map_resource == NULL) instead of checking the
-pointer and returning 0 if it is NULL. The 0 could be a valid dma_addr
-in some implementations, drivers are supposed to check the returned addr
-with dma_mapping_error only (and no '== 0' checks).
+It looks good to me.
+
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pcie/aspm.c |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 7d4fcdc..f90d8f2 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -714,8 +714,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+>  	up_read(&pci_bus_sem);
+>  }
+>  
+> -static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+> -				     bool force)
+> +static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+>  {
+>  	struct pci_dev *parent = pdev->bus->self;
+>  	struct pcie_link_state *link;
+> @@ -737,7 +736,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+>  	 * a similar mechanism using "PciASPMOptOut", which is also
+>  	 * ignored in this situation.
+>  	 */
+> -	if (aspm_disabled && !force) {
+> +	if (aspm_disabled) {
+>  		dev_warn(&pdev->dev, "can't disable ASPM; OS doesn't have ASPM control\n");
+>  		return;
+>  	}
+> @@ -763,7 +762,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+>  
+>  void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+>  {
+> -	__pci_disable_link_state(pdev, state, false, false);
+> +	__pci_disable_link_state(pdev, state, false);
+>  }
+>  EXPORT_SYMBOL(pci_disable_link_state_locked);
+>  
+> @@ -778,7 +777,7 @@ EXPORT_SYMBOL(pci_disable_link_state_locked);
+>   */
+>  void pci_disable_link_state(struct pci_dev *pdev, int state)
+>  {
+> -	__pci_disable_link_state(pdev, state, true, false);
+> +	__pci_disable_link_state(pdev, state, true);
+>  }
+>  EXPORT_SYMBOL(pci_disable_link_state);
+>  
+> 
+> 
+> 
 
 
-	Joerg
+-- 
+Thanks!
+Yijing
 
