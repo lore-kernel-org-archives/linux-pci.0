@@ -1,340 +1,403 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:57514 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922AbbELB0V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 21:26:21 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 12 May 2015 11:26:19 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 74CB22CE8054
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:26:15 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C1Q79t27918474
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:26:15 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C1PfOB010747
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 11:25:42 +1000
-Date: Tue, 12 May 2015 11:25:17 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 07/21] powerpc/powernv: Release PEs dynamically
-Message-ID: <20150512012517.GA31859@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-8-git-send-email-gwshan@linux.vnet.ibm.com>
- <554E00EB.5070802@ozlabs.ru>
- <20150511062553.GB28073@gwshan>
- <555053F0.1000409@ozlabs.ru>
- <20150512000308.GC4646@gwshan>
- <55514F09.4040100@ozlabs.ru>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:33578 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbbEYNtL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2015 09:49:11 -0400
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Zhou Wang'" <wangzhou1@hisilicon.com>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Liviu Dudau'" <liviu.dudau@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, "'Zhang Jukuo'" <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, "'Liguozhu'" <liguozhu@hisilicon.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
+	"'Lucas Stach'" <l.stach@pengutronix.de>
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <5562F0C9.4090007@hisilicon.com>
+In-Reply-To: <5562F0C9.4090007@hisilicon.com>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+Date: Mon, 25 May 2015 22:48:58 +0900
+Message-ID: <000001d096f1$93dca4e0$bb95eea0$@com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55514F09.4040100@ozlabs.ru>
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 12, 2015 at 10:53:29AM +1000, Alexey Kardashevskiy wrote:
->On 05/12/2015 10:03 AM, Gavin Shan wrote:
->>On Mon, May 11, 2015 at 05:02:08PM +1000, Alexey Kardashevskiy wrote:
->>>On 05/11/2015 04:25 PM, Gavin Shan wrote:
->>>>On Sat, May 09, 2015 at 10:43:23PM +1000, Alexey Kardashevskiy wrote:
->>>>>On 05/01/2015 04:02 PM, Gavin Shan wrote:
->>>>>>The original code doesn't support releasing PEs dynamically, meaning
->>>>>>that PE and the associated resources (IO, M32, M64 and DMA) can't
->>>>>>be released when unplugging a PCI adapter from one hotpluggable slot.
->>>>>>
->>>>>>The patch takes object oriented methodology, introducs reference
->>>>>>count to PE, which is initialized to 1 and increased with 1 when a
->>>>>>new PCI device joins the PE. Once the last PCI device leaves the
->>>>>>PE, the PE is going to be release together with its associated
->>>>>>(IO, M32, M64, DMA) resources.
->>>>>
->>>>>
->>>>>Too little commit log for non-trivial non-cut-n-paste 30KB patch...
->>>>>
->>>>
->>>>Ok. I'll add more details in next revision.
->>>>
->>>>>>
->>>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>>>>---
->>>>>>  arch/powerpc/include/asm/pci-bridge.h     |   3 +
->>>>>>  arch/powerpc/kernel/pci-hotplug.c         |   5 +
->>>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 658 +++++++++++++++++++-----------
->>>>>>  arch/powerpc/platforms/powernv/pci.h      |   4 +-
->>>>>>  4 files changed, 432 insertions(+), 238 deletions(-)
->>>>>>
->>>>>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
->>>>>>index 5367eb3..a6ad4b1 100644
->>>>>>--- a/arch/powerpc/include/asm/pci-bridge.h
->>>>>>+++ b/arch/powerpc/include/asm/pci-bridge.h
->>>>>>@@ -31,6 +31,9 @@ struct pci_controller_ops {
->>>>>>  	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
->>>>>>  	void		(*setup_bridge)(struct pci_bus *, unsigned long);
->>>>>>  	void		(*reset_secondary_bus)(struct pci_dev *dev);
->>>>>>+
->>>>>>+	/* Called when PCI device is released */
->>>>>>+	void		(*release_device)(struct pci_dev *);
->>>>>>  };
->>>>>>
->>>>>>  /*
->>>>>>diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
->>>>>>index 7ed85a6..0040343 100644
->>>>>>--- a/arch/powerpc/kernel/pci-hotplug.c
->>>>>>+++ b/arch/powerpc/kernel/pci-hotplug.c
->>>>>>@@ -29,6 +29,11 @@
->>>>>>   */
->>>>>>  void pcibios_release_device(struct pci_dev *dev)
->>>>>>  {
->>>>>>+	struct pci_controller *hose = pci_bus_to_host(dev->bus);
->>>>>>+
->>>>>>+	if (hose->controller_ops.release_device)
->>>>>>+		hose->controller_ops.release_device(dev);
->>>>>>+
->>>>>>  	eeh_remove_device(dev);
->>>>>>  }
->>>>>>
->>>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>>>index 910fb67..ef8c216 100644
->>>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>>>>@@ -12,6 +12,8 @@
->>>>>>  #undef DEBUG
->>>>>>
->>>>>>  #include <linux/kernel.h>
->>>>>>+#include <linux/atomic.h>
->>>>>>+#include <linux/kref.h>
->>>>>>  #include <linux/pci.h>
->>>>>>  #include <linux/crash_dump.h>
->>>>>>  #include <linux/debugfs.h>
->>>>>>@@ -47,6 +49,8 @@
->>>>>>  /* 256M DMA window, 4K TCE pages, 8 bytes TCE */
->>>>>>  #define TCE32_TABLE_SIZE	((0x10000000 / 0x1000) * 8)
->>>>>>
->>>>>>+static void pnv_ioda_release_pe(struct kref *kref);
->>>>>>+
->>>>>>  static void pe_level_printk(const struct pnv_ioda_pe *pe, const char *level,
->>>>>>  			    const char *fmt, ...)
->>>>>>  {
->>>>>>@@ -123,25 +127,400 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
->>>>>>  		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
->>>>>>  }
->>>>>>
->>>>>>-static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->>>>>>+static inline void pnv_ioda_pe_get(struct pnv_ioda_pe *pe)
->>>>>>  {
->>>>>>-	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
->>>>>>-		pr_warn("%s: Invalid PE %d on PHB#%x\n",
->>>>>>-			__func__, pe_no, phb->hose->global_number);
->>>>>>+	if (!pe)
->>>>>>+		return;
->>>>>>+
->>>>>>+	kref_get(&pe->kref);
->>>>>>+}
->>>>>>+
->>>>>>+static inline void pnv_ioda_pe_put(struct pnv_ioda_pe *pe)
->>>>>>+{
->>>>>>+	unsigned int count;
->>>>>>+
->>>>>>+	if (!pe)
->>>>>>  		return;
->>>>>>+
->>>>>>+	/*
->>>>>>+	 * The count is initialized to 1 and increased with 1 when
->>>>>>+	 * a new PCI device is bound with the PE. Once the last PCI
->>>>>>+	 * device is leaving from the PE, the PE is going to be
->>>>>>+	 * released.
->>>>>>+	 */
->>>>>>+	count = atomic_read(&pe->kref.refcount);
->>>>>>+	if (count == 2)
->>>>>>+		kref_sub(&pe->kref, 2, pnv_ioda_release_pe);
->>>>>>+	else
->>>>>>+		kref_put(&pe->kref, pnv_ioda_release_pe);
->>>>>
->>>>>
->>>>>What if pnv_ioda_pe_get() gets called between atomic_read() and kref_sub()?
->>>>>
->>>>
->>>>Yeah, that would have problem. But it shouldn't happen because the
->>>>PCI devices are joining the parent PE# in strictly serialized mode.
->>>>Same thing happens when detaching PCI devices from its parent PE.
->>>
->>>
->>>oookay. Another thing then - why is this kref counter initialized to 1?
->>>It would make sense if you did something special when the counter becomes 1
->>>after decrement but you do not.
->>>
->>>Also, this kref thing makes sense if you do kref_put() in multiple places and
->>>do not know which one will be the last one so you pass the callback to all of
->>>them. Here you do kref_put/sub in one place and you read the counter - so you
->>>can call pnv_ioda_release_pe() directly. And it feels like a simple atomic_t
->>>would do the job just fine. If you still feel that the counter should start
->>>from 1, there are atomic_dec_if_positive() and atomic_inc_not_zero() and
->>>others.
->>>
->>
->>It's good question actually. The counter is initialized to 1 when the PE
->>is reserved because of M64 requirement or allocated for non-M64 case. If
->>we reserve or allocate PE#, there is one thing for sure: the PCI bus has
->>one PCI device (including PCI bridge) at least. After the PE# is reserved
->>or allocated, the PCI device joins the PE with the result of increasing
->>the counter with 1. It means the counter is 2 when PE contains one PCI
->>device, and 3 when there're 2 devices. One reason for this design is that
->>we just need decrease the counter if we have to release this PE in the
->>window between PE reservation/allocation and first PCI device joins. I
->>think you're correct that we can call pnv_ioda_release_pe() in this window.
->>In this way, the counter is always reflecting the number of PCI devices
->>the PE contains.
->
->
->Good :) I believe it was something different 2-3 versions ago and evolved to
->this so you do not notice it straight away :)
->
+On Monday, May 25, 2015 6:52 PM, Zhou Wang wrote:
+> On 2015/5/25 13:10, Jingoo Han wrote:
+> > On Wed, 20 May 2015 14:21:39 +0800, Zhou Wang wrote:
+> >>
+> >> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+> >> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+> >> move related operations to dw_pcie_host_init.
+> >>
+> >> I am not very clear about I/O resource management:
+> >>> 	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> >>> 		pci_ioremap_io(global_io_offset, pp->io_base);
+> >>> 		global_io_offset += SZ_64K;
+> >>> 		pci_add_resource_offset(&res, &pp->io,
+> >>> 					global_io_offset - pp->io_bus_addr);
+> >>> 	}
+> >> so just move steps in dw_pcie_setup to dw_pcie_host_init.
+> >>
+> >> I have compiled the driver with multi_v7_defconfig. However, I don't have
+> >> ARM32 PCIe related board to do test. It will be appreciated if someone could
+> >> help to test it.
+> >>
+> >> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> >> ---
+> >>  drivers/pci/host/pcie-designware.c | 128 +++++++++++++++----------------------
+> >>  1 file changed, 50 insertions(+), 78 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> >> index 2e9f84f..7bad9e5 100644
+> >> --- a/drivers/pci/host/pcie-designware.c
+> >> +++ b/drivers/pci/host/pcie-designware.c
+> >> @@ -22,6 +22,7 @@
+> >>  #include <linux/pci_regs.h>
+> >>  #include <linux/platform_device.h>
+> >>  #include <linux/types.h>
+> >> +#include <asm/hardirq.h>
+> >
+> > +cc Kishon Vijay Abraham I, Richard Zhu, Lucas Stach
+> >
+> 
+> Thanks to involve more related guys to this discussion :)
+> 
+> > Please use <linux/hardirq.h> and insert it alphabetically.
+> >
+> > +#include <linux/hardirq.h>
+> >  #include <linux/irq.h>
+> >  #include <linux/irqdomain.h>
+> >  #include <linux/kernel.h>
+> >
+> 
+> OK, will do in next version patch.
+> 
+> >>
+> >>  #include "pcie-designware.h"
+> >>
+> >> @@ -67,17 +68,10 @@
+> >>  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+> >>  #define PCIE_ATU_UPPER_TARGET		0x91C
+> >>
+> >> -static struct hw_pci dw_pci;
+> >> +static struct pci_ops dw_pcie_ops;
+> >>
+> >>  static unsigned long global_io_offset;
+> >>
+> >> -static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> >> -{
+> >> -	BUG_ON(!sys->private_data);
+> >> -
+> >> -	return sys->private_data;
+> >> -}
+> >> -
+> >>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> >>  {
+> >>  	*val = readl(addr);
+> >> @@ -238,7 +232,7 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+> >>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> >>  {
+> >>  	int irq, pos0, i;
+> >> -	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+> >> +	struct pcie_port *pp = desc->dev->bus->sysdata;
+> >>
+> >>  	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+> >>  				       order_base_2(no_irqs));
+> >> @@ -281,7 +275,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+> >>  {
+> >>  	int irq, pos;
+> >>  	struct msi_msg msg;
+> >> -	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> >> +	struct pcie_port *pp = pdev->bus->sysdata;
+> >>
+> >>  	if (desc->msi_attrib.is_msix)
+> >>  		return -EINVAL;
+> >> @@ -310,7 +304,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+> >>  {
+> >>  	struct irq_data *data = irq_get_irq_data(irq);
+> >>  	struct msi_desc *msi = irq_data_get_msi(data);
+> >> -	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
+> >> +	struct pcie_port *pp = msi->dev->bus->sysdata;
+> >>
+> >>  	clear_irq_range(pp, irq, 1, data->hwirq);
+> >>  }
+> >> @@ -342,13 +336,15 @@ static const struct irq_domain_ops msi_domain_ops = {
+> >>  	.map = dw_pcie_msi_map,
+> >>  };
+> >>
+> >> -int dw_pcie_host_init(struct pcie_port *pp)
+> >> +int __init dw_pcie_host_init(struct pcie_port *pp)
+> >>  {
+> >>  	struct device_node *np = pp->dev->of_node;
+> >>  	struct platform_device *pdev = to_platform_device(pp->dev);
+> >>  	struct of_pci_range range;
+> >>  	struct of_pci_range_parser parser;
+> >> +	struct pci_bus *bus;
+> >>  	struct resource *cfg_res;
+> >> +	LIST_HEAD(res);
+> >>  	u32 val, na, ns;
+> >>  	const __be32 *addrp;
+> >>  	int i, index, ret;
+> >> @@ -502,15 +498,49 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >>  	val |= PORT_LOGIC_SPEED_CHANGE;
+> >>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> >>
+> >> -#ifdef CONFIG_PCI_MSI
+> >> -	dw_pcie_msi_chip.dev = pp->dev;
+> >> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+> >> +#ifdef CONFIG_ARM
+> >> +	/*
+> >> +	 * FIXME: we should really be able to use
+> >> +	 * of_pci_get_host_bridge_resources on arm32 as well,
+> >> +	 * but the conversion needs some more testing
+> >> +	 */
+> >> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> >> +		pci_ioremap_io(global_io_offset, pp->io_base);
+> >> +		global_io_offset += SZ_64K;
+> >> +		pci_add_resource_offset(&res, &pp->io,
+> >> +					global_io_offset - pp->io_bus_addr);
+> >> +	}
+> >> +	pci_add_resource_offset(&res, &pp->mem,
+> >> +				pp->mem.start - pp->mem_bus_addr);
+> >> +	pci_add_resource(&res, &pp->busn);
+> >> +#else
+> >> +	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+> >> +	if (ret)
+> >> +		return ret;
+> >> +#endif
+> >> +
+> >> +	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
+> >> +			      pp, &res);
+> >> +	if (!bus)
+> >> +		return -ENOMEM;
+> >> +
+> >> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> >> +	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
+> >> +#else
+> >> +	bus->msi = &dw_pcie_msi_chip;
+> >>  #endif
+> >>
+> >> -	dw_pci.nr_controllers = 1;
+> >> -	dw_pci.private_data = (void **)&pp;
+> >> +	pci_scan_child_bus(bus);
+> >> +	if (pp->ops->scan_bus)
+> >> +		pp->ops->scan_bus(pp);
+> >>
+> >> -	pci_common_init_dev(pp->dev, &dw_pci);
+> >> +#ifdef CONFIG_ARM
+> >> +	/* support old dtbs that incorrectly describe IRQs */
+> >> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> >> +#endif
+> >> +
+> >> +	pci_assign_unassigned_bus_resources(bus);
+> >> +	pci_bus_add_devices(bus);
+> >>
+> >>  	return 0;
+> >>  }
+> >> @@ -653,7 +683,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
+> >>  static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+> >>  			int size, u32 *val)
+> >>  {
+> >> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+> >> +	struct pcie_port *pp = bus->sysdata;
+> >>  	int ret;
+> >>
+> >>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+> >> @@ -677,7 +707,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+> >>  static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+> >>  			int where, int size, u32 val)
+> >>  {
+> >> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+> >> +	struct pcie_port *pp = bus->sysdata;
+> >>  	int ret;
+> >>
+> >>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+> >> @@ -701,64 +731,6 @@ static struct pci_ops dw_pcie_ops = {
+> >>  	.write = dw_pcie_wr_conf,
+> >>  };
+> >>
+> >> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> >> -{
+> >> -	struct pcie_port *pp;
+> >> -
+> >> -	pp = sys_to_pcie(sys);
+> >> -
+> >> -	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> >> -		sys->io_offset = global_io_offset - pp->io_bus_addr;
+> >> -		pci_ioremap_io(global_io_offset, pp->io_base);
+> >> -		global_io_offset += SZ_64K;
+> >> -		pci_add_resource_offset(&sys->resources, &pp->io,
+> >> -					sys->io_offset);
+> >> -	}
+> >> -
+> >> -	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
+> >> -	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+> >> -	pci_add_resource(&sys->resources, &pp->busn);
+> >> -
+> >> -	return 1;
+> >> -}
+> >> -
+> >> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> >> -{
+> >> -	struct pci_bus *bus;
+> >> -	struct pcie_port *pp = sys_to_pcie(sys);
+> >> -
+> >> -	pp->root_bus_nr = sys->busnr;
+> >
+> > 'pp->root_bus_nr' is initialized as '-1' at some soc-specific drivers
+> > However, 'sys->busnr' is set as '0, 1, 2 ...' by pcibios_init_hw()
+> > in arch/arm/kernel/bios32.c. '0, 1, 2 ...' means the number of
+> > each host controller.
+> >
+> > So, without setting 'pp->root_bus_nr' as '0, 1, 2, ...',
+> > it makes the problem.
+> >
+> 
+> 'sys->busnr' is set as "0, busn_res.end + 1 ..." in pcibios_init_hw() I think:
+> 
+> pcibios_init_hw()
+> 	for (nr = busnr = 0; nr < hw->nr_controllers; nr++)
+> 		sys->busnr = busnr;
+> 		...
+> 		busnr = sys->bus->busn_res.end + 1;
+> 
+> and it indicates root bus number of one pcie controller.
+> so in dw_pcie_scan_bus:
+> 	pp->root_bus_nr = sys->busnr;
+> 	bus = pci_create_root_bus(..., sys->busnr, ...);
 
-Thanks :)
+Oh, you're right. Sorry for my mistake.
 
->>
->>>>>>+}
->>>>>>+
->>>>>>+static void pnv_pci_release_device(struct pci_dev *pdev)
->>>>>>+{
->>>>>>+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
->>>>>>+	struct pnv_phb *phb = hose->private_data;
->>>>>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
->>>>>>+	struct pnv_ioda_pe *pe;
->>>>>>+
->>>>>>+	if (pdn && pdn->pe_number != IODA_INVALID_PE) {
->>>>>>+		pe = &phb->ioda.pe_array[pdn->pe_number];
->>>>>>+		pnv_ioda_pe_put(pe);
->>>>>>+		pdn->pe_number = IODA_INVALID_PE;
->>>>>>  	}
->>>>>>+}
->>>>>>
->>>>>>-	if (test_and_set_bit(pe_no, phb->ioda.pe_alloc)) {
->>>>>>-		pr_warn("%s: PE %d was assigned on PHB#%x\n",
->>>>>>-			__func__, pe_no, phb->hose->global_number);
->>>>>>+static void pnv_ioda_release_pe_dma(struct pnv_ioda_pe *pe)
->>>>>>+{
->>>>>>+	struct pnv_phb *phb = pe->phb;
->>>>>>+	int index, count;
->>>>>>+	unsigned long tbl_addr, tbl_size;
->>>>>>+
->>>>>>+	/* No DMA capability for slave PEs */
->>>>>>+	if (pe->flags & PNV_IODA_PE_SLAVE)
->>>>>>+		return;
->>>>>>+
->>>>>>+	/* Bypass DMA window */
->>>>>>+	if (phb->type == PNV_PHB_IODA2 &&
->>>>>>+	    pe->tce_bypass_enabled &&
->>>>>>+	    pe->tce32_table &&
->>>>>>+	    pe->tce32_table->set_bypass)
->>>>>>+		pe->tce32_table->set_bypass(pe->tce32_table, false);
->>>>>>+
->>>>>>+	/* 32-bits DMA window */
->>>>>>+	count = pe->tce32_seg_end - pe->tce32_seg_start;
->>>>>>+	tbl_addr = pe->tce32_table->it_base;
->>>>>>+	if (!count)
->>>>>>  		return;
->>>>>>+
->>>>>>+	/* Free IOMMU table */
->>>>>>+	iommu_free_table(pe->tce32_table,
->>>>>>+			 of_node_full_name(phb->hose->dn));
->>>>>>+
->>>>>>+	/* Deconfigure TCE table */
->>>>>>+	switch (phb->type) {
->>>>>>+	case PNV_PHB_IODA1:
->>>>>>+		for (index = 0; index < count; index++)
->>>>>>+			opal_pci_map_pe_dma_window(phb->opal_id,
->>>>>>+						   pe->pe_number,
->>>>>>+						   pe->tce32_seg_start + index,
->>>>>>+						   1,
->>>>>>+						   __pa(tbl_addr) +
->>>>>>+						   index * TCE32_TABLE_SIZE,
->>>>>>+						   0,
->>>>>>+						   0x1000);
->>>>>>+		bitmap_clear(phb->ioda.tce32_segmap,
->>>>>>+			     pe->tce32_seg_start,
->>>>>>+			     count);
->>>>>>+		tbl_size = TCE32_TABLE_SIZE * count;
->>>>>>+		break;
->>>>>>+	case PNV_PHB_IODA2:
->>>>>>+		opal_pci_map_pe_dma_window(phb->opal_id,
->>>>>>+					   pe->pe_number,
->>>>>>+					   pe->pe_number << 1,
->>>>>>+					   1,
->>>>>>+					   __pa(tbl_addr),
->>>>>>+					   0,
->>>>>>+					   0x1000);
->>>>>>+		tbl_size = (1ul << ilog2(phb->ioda.m32_pci_base));
->>>>>>+		tbl_size = (tbl_size >> IOMMU_PAGE_SHIFT_4K) * 8;
->>>>>>+		break;
->>>>>>+	default:
->>>>>>+		pe_warn(pe, "Unsupported PHB type %d\n", phb->type);
->>>>>>+		return;
->>>>>>+	}
->>>>>>+
->>>>>>+	/* Free memory of IOMMU table */
->>>>>>+	free_pages(tbl_addr, get_order(tbl_size));
->>>>>
->>>>>
->>>>>You just programmed the table address to TVT and then you are releasing the
->>>>>pages. It does not seem right, it will leave garbage in TVT. Also, I am
->>>>>adding helpers to alloc/free TCE pages in DDW patchset, you could reuse bits
->>>>>from there (I'll post v10 soon, you'll be in copy and you'll have to review
->>>>>that ;) ).
->>>>>
->>>>
->>>>I assume you're talking about TVE. I don't understand how garbage will be left
->>>>in TVE. opal_pci_map_pe_dma_window(), which is handled by skiboot, clear TVE
->>>>with zero'ed "tce_table_size". The pages previously allocated for TCE table is
->>>>released to buddy system, which can be allocated by somebody else (from buddy
->>>>or slab).
->>>
->>>opal_pci_map_pe_dma_window() takes __pa(tbl_addr) which points to some memory
->>>which is still allocated. This value goes to a table (which has 2 entries per
->>>PE, one for 32bit DMA window and one for bypass/hugewindow) which PHB uses to
->>>get the actual TCE table address. What is the name of this table? :) Anyway,
->>>you write an address there and then you call free_pages() so after
->>>free_pages(), the value in that TVE/TVT/whatever table is a garbage.
->>>
->>
->>I don't look into your DDW code yet. Before we have DDW patchset, the bypass
->>TVE (window) isn't supposed to have corresponding TCE table. I guess you might
->>change the behaviour in your DDW patchset and I'll take a close look on that.
->>For DMA32 window, which is the name of the table, the TVE is cleared by skiboot
->>when having zero "tce_table_size" argument.
->>
->>	opal_pci_map_pe_dma_window(phb->opal_id,
->>				   pe->pe_number,
->>				   pe->pe_number << 1,
->>				   1,
->>				   __pa(tbl_addr),
->>				   0,			<<<< "tce_table_size".
->>				   0x1000);
->
->
->Then please, when you pass tce_table_size==0, also pass zero address/zero
->page size/zero levels, unless you have very good reason to pass non-zero
->values for these. What you have now is confusing - it looks like you are
->initializing the table - it is not obvious that "0" is the size and not some
->flags.
->
->When people see this (which does the same thing, please correct me if I am
->wrong), they do not have questions what you are actually trying to do:
->
-> 	opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
-> 				   pe->pe_number << 1, 0, 0, 0, 0);
->
+> we set root bus number as "0, busn_res.end + 1". But in pcie-designware,
+> nr_controllers is set as 1, so it only comes into the loop in
+> pcibios_init_hw() one time.
 
-Sure, with more zero'ed parameters to the OPAL call, the purpose will be
-more clear. I also check the skiboot implementation of this function, it
-should work. I'll use the code as you're suggesting.
+Right, 'nr_controllers' is set as just '1', even though more than
+2 controllers are used.
 
-Thanks,
-Gavin
+> 
+> so how about we set 0 as default value of pp->root_bus_nr, then use
+> pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops, pp, &res);
+> to create root bus?
+
+I agree with your opinion. However, I still want to wait for other
+people's opinions. They will give good comments.
+Thank you.
+
+Best regards,
+Jingoo Han
+
+> 
+> > Thus, we need to come up with the way to resolve this.
+> >
+> > 1. Setting 'pp->root_bus_nr' as '0, 1, 2 ..' by each soc-specific driver.
+> >
+> > e.g)
+> >
+> > ./drivers/pci/host/pci-exynos.c
+> > @@ -534,7 +534,7 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
+> >                 }
+> >         }
+> >
+> > -       pp->root_bus_nr = -1;
+> > +       pp->root_bus_nr++;
+> >         pp->ops = &exynos_pcie_host_ops;
+> >
+> > ./drivers/pci/host/pci-imx6.c
+> > @@ -541,7 +541,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+> >                 }
+> >         }
+> >
+> > -       pp->root_bus_nr = -1;
+> > +       pp->root_bus_nr++;
+> >         pp->ops = &imx6_pcie_host_ops;
+> >
+> > ./drivers/pci/host/pci-keystone.c
+> > @@ -312,7 +312,7 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+> >                         return ret;
+> >         }
+> >
+> > -       pp->root_bus_nr = -1;
+> > +       pp->root_bus_nr++;
+> >         pp->ops = &keystone_pcie_host_ops;
+> >
+> > ./drivers/pci/host/pci-layerscape.c
+> > @@ -101,7 +101,7 @@ static int ls_add_pcie_port(struct ls_pcie *pcie)
+> >         pp = &pcie->pp;
+> >         pp->dev = pcie->dev;
+> >         pp->dbi_base = pcie->dbi;
+> > -       pp->root_bus_nr = -1;
+> > +       pp->root_bus_nr++;
+> >         pp->ops = &ls_pcie_host_ops;
+> >
+> > ./drivers/pci/host/pcie-spear13xx.c
+> > @@ -287,7 +287,7 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
+> >                 return ret;
+> >         }
+> >
+> > -       pp->root_bus_nr = -1;
+> > +       pp->root_bus_nr++;
+> >         pp->ops = &spear13xx_pcie_host_ops;
+> >
+> >
+> > 2. Setting 'pp->root_bus_nr' as '0, 1, 2 ..' by pcie-designware.c
+> >
+> > I believe that someone will give better idea. :-)
+> >
+> >> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> >> -				  &dw_pcie_ops, sys, &sys->resources);
+> >> -	if (!bus)
+> >> -		return NULL;
+> >> -
+> >> -	pci_scan_child_bus(bus);
+> >> -
+> >> -	if (bus && pp->ops->scan_bus)
+> >> -		pp->ops->scan_bus(pp);
+> >> -
+> >> -	return bus;
+> >> -}
+> >> -
+> >> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> >> -{
+> >> -	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+> >> -	int irq;
+> >> -
+> >> -	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+> >> -	if (!irq)
+> >> -		irq = pp->irq;
+> >> -
+> >> -	return irq;
+> >> -}
+> >> -
+> >> -static struct hw_pci dw_pci = {
+> >> -	.setup		= dw_pcie_setup,
+> >> -	.scan		= dw_pcie_scan_bus,
+> >> -	.map_irq	= dw_pcie_map_irq,
+> >> -};
+> >
+> > Right, 'struct hw_pci' should not be used in order to unify ARM32 and
+> > ARM64. I have no objection to remove 'struct hw_pci' from 'pcie-designware.c'.
+> > Thank you for your patch.
+> >
+> > Best regards,
+> > Jingoo Han
+> >
+> 
+> Many thanks for your reviewing!
+> Zhou Wang
+> 
+> >> -
+> >>  void dw_pcie_setup_rc(struct pcie_port *pp)
+> >>  {
+> >>  	u32 val;
+> >> --
+> >> 1.9.1
 
