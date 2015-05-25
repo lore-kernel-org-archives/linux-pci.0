@@ -1,42 +1,39 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 15 May 2015 22:57:46 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC v1 00/11] Split struct irq_data into common part and per-chip
- part
-In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1505152256300.4225@nanos>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI / hotplug: Propagate the "ignore hotplug" setting to parent
+Date: Tue, 26 May 2015 00:27:48 +0200
+Message-ID: <8651379.9rUBgamt32@vostro.rjw.lan>
+In-Reply-To: <20150523014037.GL32152@google.com>
+References: <2001450.KHHLaZsp3O@vostro.rjw.lan> <20150523014037.GL32152@google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 4 May 2015, Jiang Liu wrote:
-> Hi all,
-> 	Now the irq core supports hierarchy irq and stacked irqchips,
-> so there may be multiple irq_datas associated with the same irq. But
-> some fields in struct irq_data are per-irq instance and duplicating
-> those fields into multiple irq_data may cause troubles.
-> 	So this patch introduces a new data structure 'struct
-> irq_common_data' to host per-irq instance data fields, and struct
-> irq_data will only host per-chip data fields after the conversion.
+On Friday, May 22, 2015 08:40:37 PM Bjorn Helgaas wrote:
+> On Mon, Apr 13, 2015 at 04:23:36PM +0200, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Refine the mechanism introduced by commit f244d8b623da (ACPIPHP / radeon
+> > / nouveau: Fix VGA switcheroo problem related to hotplug) to propagate
+> > the ignore_hotplug setting of the device to its parent bridge in case
+> > hotplug notifications related to the graphics adapter switching are
+> > given for the bridge rather than for the device itself (the need to
+> > be ignored in both cases).
+> > 
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=61891
+> > Link: https://bugs.freedesktop.org/show_bug.cgi?id=88927
+> > Reported-and-tested-by: tiagdtd-lava <tiagdtd-lava@yahoo.de>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Applied to pci/hotplug for v4.2, thanks!
+> 
+> I marked it for stable and added a note to connect it to b440bde74f04
+> ("PCI: Add pci_ignore_hotplug() to ignore hotplug events for a device")
 
-I really like that change in general. Please address the few review
-comments and resubmit.
+Thanks a lot!
 
-Thanks,
-
-	tglx
