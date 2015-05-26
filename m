@@ -1,50 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 May 2015 13:57:07 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150512055707.GB29874@localhost.localdomain>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
- <20150507135600.GB4559@localhost.localdomain>
- <20150511101124.GG20611@8bytes.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:61720 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751730AbbEZRZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 May 2015 13:25:03 -0400
+Message-ID: <5564AC66.1030608@linux.intel.com>
+Date: Wed, 27 May 2015 01:24:54 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150511101124.GG20611@8bytes.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 11/11] ARM64 / PCI / ACPI: support for ACPI based PCI
+ hostbridge init
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org> <20150526171350.GV1565@arm.com>
+In-Reply-To: <20150526171350.GV1565@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/15 at 12:11pm, Joerg Roedel wrote:
-> On Thu, May 07, 2015 at 09:56:00PM +0800, Dave Young wrote:
-> > Joreg, I can not find the last reply from you, so just reply here about
-> > my worries here.
-> > 
-> > I said that the patchset will cause more problems, let me explain about
-> > it more here:
-> > 
-> > Suppose page table was corrupted, ie. original mapping iova1 -> page 1
-> > it was changed to iova1 -> page 2 accidently while crash happening,
-> > thus future dma will read/write page 2 instead page 1, right?
+On 2015/5/27 1:13, Will Deacon wrote:
+> On Tue, May 26, 2015 at 01:49:24PM +0100, Hanjun Guo wrote:
+>> Based on Jiang Liu's common interface to support PCI host bridge
+>> init and refactoring of MMCONFIG, this patch using information
+>> from ACPI MCFG table and IO/irq resources from _CRS to init
+>> ARM64 PCI hostbridge, then PCI will work on ARM64.
+>>
+>> This patch is based on Mark Salter and Tomasz Nowicki's work.
+>>
+>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Catalin Marinas <catalin.marinas@arm.com>
+>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+>> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+>> CC: Will Deacon <will.deacon@arm.com>
+>> ---
+>>  arch/arm64/Kconfig      |   7 ++
+>>  arch/arm64/kernel/pci.c | 245 +++++++++++++++++++++++++++++++++++++++++++++---
+>>  drivers/pci/pci.c       |  26 +++--
+>>  3 files changed, 257 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+>> index 9b80428..8e4b789 100644
+>> --- a/arch/arm64/Kconfig
+>> +++ b/arch/arm64/Kconfig
+>> @@ -276,6 +276,13 @@ config PCI_DOMAINS_GENERIC
+>>  config PCI_SYSCALL
+>>         def_bool PCI
+>>
+>> +config PCI_MMCONFIG
+>> +       def_bool y
+>> +       select PCI_ECAM
+>> +       select HAVE_PCI_ECAM
+>> +       select GENERIC_PCI_ECAM
+>> +       depends on ACPI
+>> +
+>>  source "drivers/pci/Kconfig"
+>>  source "drivers/pci/pcie/Kconfig"
+>>  source "drivers/pci/hotplug/Kconfig"
+>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> index 4095379..d1629dc 100644
+>> --- a/arch/arm64/kernel/pci.c
+>> +++ b/arch/arm64/kernel/pci.c
+>> @@ -11,12 +11,15 @@
+>>   */
+>>
+>>  #include <linux/acpi.h>
+>> +#include <linux/ecam.h>
+>>  #include <linux/init.h>
+>>  #include <linux/io.h>
+>>  #include <linux/kernel.h>
+>>  #include <linux/mm.h>
+>> +#include <linux/of_address.h>
+>>  #include <linux/of_pci.h>
+>>  #include <linux/of_platform.h>
+>> +#include <linux/pci-acpi.h>
+>>  #include <linux/slab.h>
+>>
+>>  #include <asm/pci-bridge.h>
+>> @@ -43,31 +46,251 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>   */
+>>  int pcibios_add_device(struct pci_dev *dev)
+>>  {
+>> -       dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>> +       if (acpi_disabled)
+>> +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>>
+>>         return 0;
+>>  }
+>>
+>> +#ifdef CONFIG_ACPI
+>> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>> +{
+>> +       struct pci_controller *sd = bridge->bus->sysdata;
+>> +
+>> +       ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+>> +       return 0;
+>> +}
+>> +
+>> +void pcibios_add_bus(struct pci_bus *bus)
+>> +{
+>> +       acpi_pci_add_bus(bus);
+>> +}
+>> +
+>> +void pcibios_remove_bus(struct pci_bus *bus)
+>> +{
+>> +       acpi_pci_remove_bus(bus);
+>> +}
+>> +
+>> +int pcibios_enable_irq(struct pci_dev *dev)
+>> +{
+>> +       if (!pci_dev_msi_enabled(dev))
+>> +               acpi_pci_irq_enable(dev);
+>> +       return 0;
+>> +}
+>> +
+>> +int pcibios_disable_irq(struct pci_dev *dev)
+>> +{
+>> +       if (!pci_dev_msi_enabled(dev))
+>> +               acpi_pci_irq_disable(dev);
+>> +       return 0;
+>> +}
+>> +
+>> +int pcibios_enable_device(struct pci_dev *dev, int bars)
+>> +{
+>> +       int err;
+>> +
+>> +       err = pci_enable_resources(dev, bars);
+>> +       if (err < 0)
+>> +               return err;
+>> +
+>> +       return pcibios_enable_irq(dev);
+>> +}
+>> +
+>> +static int __init pcibios_assign_resources(void)
+>> +{
+>> +       struct pci_bus *root_bus;
+>> +
+>> +       if (acpi_disabled)
+>> +               return 0;
+>> +
+>> +       list_for_each_entry(root_bus, &pci_root_buses, node) {
+>> +               pcibios_resource_survey_bus(root_bus);
+>> +               pci_assign_unassigned_root_bus_resources(root_bus);
+>> +       }
+>> +       return 0;
+>> +}
 > 
-> When the page-table is corrupted then it is a left-over from the old
-> kernel. When the kdump kernel boots the situation can at least not get
-> worse. For the page tables it is also hard to detect wrong mappings (if
-> this would be possible the hardware could already do it), so any checks
-> we could do there are of limited use anyway.
+> I'm starting to sound like a stuck record (and getting bored of it
+> myself!), but none of this looks arch-specific. Can it be moved into the
+> core?
+Hi Will,
+	Kindly reminder, there's a pending patch set to change the way
+to manage IRQ for pci devices, which affects
+pcibios_enable_irq()/pcibios_enable_device() and friends.
+Please refer to https://lkml.org/lkml/2015/5/6/989
+Thanks!
+Gerry
 
-Joerg, since both of you guys do not think it is a problem I will object it 
-any more though I still do not like reusing the old page tables. So let's
-leave it as a future issue.
-
-Thanks
-Dave
+> 
+> Will
+> 
