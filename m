@@ -1,37 +1,165 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1430382149-1645-2-git-send-email-jszhang@marvell.com>
-References: <1430382149-1645-1-git-send-email-jszhang@marvell.com>
-	<1430382149-1645-2-git-send-email-jszhang@marvell.com>
-Date: Wed, 20 May 2015 20:48:34 +0530
-Message-ID: <CAHM4w1n5+xk7Xymo4erxzw-ojC0z76uZe9C5k=9Rrt-TgbaO_Q@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: designware: consolidate outbound iATU
- programming functions
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Minghuan.Lian@freescale.com, fabrice.gasnier@st.com,
+Date: Tue, 26 May 2015 18:13:50 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 11/11] ARM64 / PCI / ACPI: support for ACPI based PCI
+ hostbridge init
+Message-ID: <20150526171350.GV1565@arm.com>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+ <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 30, 2015 at 1:52 PM, Jisheng Zhang <jszhang@marvell.com> wrote:
-> Currently, the outbound iATU programming functions are similar, the only
-> difference is index, type, addr and size. This patch tries to consolidate
-> these functions into one. One side effect is it saves around 1700 bytes in
-> text:
->
->    text    data     bss     dec     hex filename
->    9276     204       4    9484    250c pcie-designware.o-before
->    7532     204       4    7740    1e3c pcie-designware.o
->
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+On Tue, May 26, 2015 at 01:49:24PM +0100, Hanjun Guo wrote:
+> Based on Jiang Liu's common interface to support PCI host bridge
+> init and refactoring of MMCONFIG, this patch using information
+> from ACPI MCFG table and IO/irq resources from _CRS to init
+> ARM64 PCI hostbridge, then PCI will work on ARM64.
+> 
+> This patch is based on Mark Salter and Tomasz Nowicki's work.
+> 
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Catalin Marinas <catalin.marinas@arm.com>
+> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+> CC: Will Deacon <will.deacon@arm.com>
+> ---
+>  arch/arm64/Kconfig      |   7 ++
+>  arch/arm64/kernel/pci.c | 245 +++++++++++++++++++++++++++++++++++++++++++++---
+>  drivers/pci/pci.c       |  26 +++--
+>  3 files changed, 257 insertions(+), 21 deletions(-)
+> 
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 9b80428..8e4b789 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -276,6 +276,13 @@ config PCI_DOMAINS_GENERIC
+>  config PCI_SYSCALL
+>         def_bool PCI
+> 
+> +config PCI_MMCONFIG
+> +       def_bool y
+> +       select PCI_ECAM
+> +       select HAVE_PCI_ECAM
+> +       select GENERIC_PCI_ECAM
+> +       depends on ACPI
+> +
+>  source "drivers/pci/Kconfig"
+>  source "drivers/pci/pcie/Kconfig"
+>  source "drivers/pci/hotplug/Kconfig"
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 4095379..d1629dc 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -11,12 +11,15 @@
+>   */
+> 
+>  #include <linux/acpi.h>
+> +#include <linux/ecam.h>
+>  #include <linux/init.h>
+>  #include <linux/io.h>
+>  #include <linux/kernel.h>
+>  #include <linux/mm.h>
+> +#include <linux/of_address.h>
+>  #include <linux/of_pci.h>
+>  #include <linux/of_platform.h>
+> +#include <linux/pci-acpi.h>
+>  #include <linux/slab.h>
+> 
+>  #include <asm/pci-bridge.h>
+> @@ -43,31 +46,251 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>   */
+>  int pcibios_add_device(struct pci_dev *dev)
+>  {
+> -       dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +       if (acpi_disabled)
+> +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> 
+>         return 0;
+>  }
+> 
+> +#ifdef CONFIG_ACPI
+> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +{
+> +       struct pci_controller *sd = bridge->bus->sysdata;
+> +
+> +       ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+> +       return 0;
+> +}
+> +
+> +void pcibios_add_bus(struct pci_bus *bus)
+> +{
+> +       acpi_pci_add_bus(bus);
+> +}
+> +
+> +void pcibios_remove_bus(struct pci_bus *bus)
+> +{
+> +       acpi_pci_remove_bus(bus);
+> +}
+> +
+> +int pcibios_enable_irq(struct pci_dev *dev)
+> +{
+> +       if (!pci_dev_msi_enabled(dev))
+> +               acpi_pci_irq_enable(dev);
+> +       return 0;
+> +}
+> +
+> +int pcibios_disable_irq(struct pci_dev *dev)
+> +{
+> +       if (!pci_dev_msi_enabled(dev))
+> +               acpi_pci_irq_disable(dev);
+> +       return 0;
+> +}
+> +
+> +int pcibios_enable_device(struct pci_dev *dev, int bars)
+> +{
+> +       int err;
+> +
+> +       err = pci_enable_resources(dev, bars);
+> +       if (err < 0)
+> +               return err;
+> +
+> +       return pcibios_enable_irq(dev);
+> +}
+> +
+> +static int __init pcibios_assign_resources(void)
+> +{
+> +       struct pci_bus *root_bus;
+> +
+> +       if (acpi_disabled)
+> +               return 0;
+> +
+> +       list_for_each_entry(root_bus, &pci_root_buses, node) {
+> +               pcibios_resource_survey_bus(root_bus);
+> +               pci_assign_unassigned_root_bus_resources(root_bus);
+> +       }
+> +       return 0;
+> +}
 
-looks fine to me.
+I'm starting to sound like a stuck record (and getting bored of it
+myself!), but none of this looks arch-specific. Can it be moved into the
+core?
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Will
