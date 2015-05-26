@@ -1,112 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:36141 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756229AbbEVTmL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 May 2015 15:42:11 -0400
-Received: by igbpi8 with SMTP id pi8so43749667igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 22 May 2015 12:42:11 -0700 (PDT)
-Date: Fri, 22 May 2015 14:42:07 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, mjg59@coreos.com, rwhite@pobox.com,
-	alex.williamson@redhat.com
-Subject: Re: [PATCH v4 2/3] PCI/ASPM: Fix NULL pointer when find parent
- pcie_link_state
-Message-ID: <20150522194207.GI32152@google.com>
-References: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
- <1432191904-16451-2-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432191904-16451-2-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
+Date: Tue, 26 May 2015 20:49:13 +0800
+Message-Id: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 21, 2015 at 03:05:03PM +0800, Yijing Wang wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=94361 reported
-> in ATCA platform, system had unusual pcie topology:
-> 
-> (root port)   (downstream port)   (upstream port)
-> +-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
-> |                               +-01.0-[05]-- (downstream port)
-> |                               +-02.0-[06]--
-> |                               +-03.0-[07]--
-> |                               +-08.0-[08]--
-> |                               +-09.0-[09]--
-> |                               \-0a.0-[0a]--
-> We assumed root port and downstream port always
-> have external link, and downstream port always has a
-> upstream port. So in this case, when we allocated
-> pcie_link_state for downstream port 02:00.0, it try
-> to get parent bus pcie_link_state,
-> parent = pdev->bus->parent->self->link_state;
-> because root bus self is NULL, system will crash here.
-> 
-> Use pdev->has_secondary_link(introduced in previous patch)
-> to fix this issue.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pcie/aspm.c |    7 +++----
->  1 files changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 7d4fcdc..8830740 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -561,8 +561,8 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
->  
->  	if (!pci_is_pcie(pdev) || pdev->link_state)
->  		return;
-> -	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
-> -	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
-> +
-> +	if (!pdev->has_secondary_link)
->  		return;
->  
->  	/* VIA has a strange chipset, root port is under a bridge */
-> @@ -723,8 +723,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
->  	if (!pci_is_pcie(pdev))
->  		return;
->  
-> -	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
-> -	    pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
-> +	if (pdev->has_secondary_link)
->  		parent = pdev;
->  	if (!parent || !parent->link_state)
->  		return;
+This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
+which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
+code into ACPI core":
 
-I think we also have a problem here:
+https://lkml.org/lkml/2015/5/14/98
 
-   517  static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
-   518  {
-   519          struct pcie_link_state *link;
-   520  
-   521          link = kzalloc(sizeof(*link), GFP_KERNEL);
-   522          if (!link)
-   523                  return NULL;
-   524          INIT_LIST_HEAD(&link->sibling);
-   525          INIT_LIST_HEAD(&link->children);
-   526          INIT_LIST_HEAD(&link->link);
-   527          link->pdev = pdev;
-   528          if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
-   529                  struct pcie_link_state *parent;
-   530                  parent = pdev->bus->parent->self->link_state;
-   531                  if (!parent) {
-   532                          kfree(link);
-   533                          return NULL;
-   534                  }
-   535                  link->parent = parent;
-   536                  list_add(&link->link, &parent->children);
-   537          }
+This patch set including three parts:
 
-Before your patch, we could only see Root Ports or Downstream Ports at line
-528.  Now we may also see Upstream Ports, so I think that test should be
-changed to "if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT)".
+  - the first part is PATCH 1, which should be merged into Jiang Liu's 
+    patch set to fix the compile error on ARM64 when ACPI enabled.
 
-Without this change, I think we would allocate pcie_link_state for the
-03:00.0 Upstream Port in your example, but it would not be connected to the
-tree of links starting at the 00:1c.0 Root Port.
+  - the senconed part is the refactoring of mmconfig to let that mechanism
+    can be used for ARM64 too, it's Tomasz's work but he is moving to other
+    work and pretty busy for now, so I will take care of those patches, 
+    Tomasz will show up when some comments need to be addressed :)
 
-Do you agree?
+    In this version of mmconfig refactor patches, I removed the rename
+    of mmconfig -> ecam patch, because mmconfig is in multi places, and need
+    much more effort to convert them all to ecam, Bjorn, if you don't
+    like it, I can add them back.
 
-Bjorn
+  - The third part is about the ARM64 PCI hostbridge init based on ACPI,
+    first I fixed a compile error for XEN PCI on ARM64 when PCI_MMCONFIG=y,
+    and then introduce PCI init based on Jiang Liu and Tomasz's patch set.
+
+patch for ARM64 ACPI PCI still reserve the bus sysdata to get the domain
+number, because Yijing's patch set is still under review, will be removed
+when Yijing's patch set hits upstream.
+
+This patch set was tested by Suravee on Seattle board with legacy interrupt
+(not MSI), and it works, also tested on qemu by Graeme.
+
+You can get the code from:
+git://git.linaro.org/leg/acpi/acpi.git, devel branch
+
+Comments are welcomed.
+
+Thanks
+Hanjun
+
+
+Hanjun Guo (3):
+  ARM64 / PCI: introduce struct pci_controller for ACPI
+  XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
+  ARM64 / PCI / ACPI: support for ACPI based PCI hostbridge init
+
+Tomasz Nowicki (8):
+  x86, pci: Clean up comment about buggy MMIO config space access for
+    AMD Fam10h CPUs.
+  x86, pci: Abstract PCI config accessors and use AMD Fam10h workaround
+    exclusively.
+  x86, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+    out of arch/x86/ directory
+  pci, acpi, mcfg: Provide generic implementation of MCFG code
+    initialization.
+  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+    driver.
+  pci, acpi, mcfg: Share ACPI PCI config space accessors.
+
+ arch/arm64/Kconfig             |   7 +
+ arch/arm64/include/asm/pci.h   |  10 ++
+ arch/arm64/kernel/pci.c        | 245 ++++++++++++++++++++++++++--
+ arch/x86/Kconfig               |   4 +
+ arch/x86/include/asm/pci_x86.h |  34 +---
+ arch/x86/pci/Makefile          |   4 +-
+ arch/x86/pci/acpi.c            |   1 +
+ arch/x86/pci/mmconfig-shared.c | 301 +++++++++++-----------------------
+ arch/x86/pci/mmconfig_32.c     |  35 +---
+ arch/x86/pci/mmconfig_64.c     | 153 ------------------
+ arch/x86/pci/numachip.c        |  25 +--
+ drivers/acpi/Makefile          |   1 +
+ drivers/acpi/mcfg.c            | 103 ++++++++++++
+ drivers/pci/Kconfig            |  10 ++
+ drivers/pci/Makefile           |   5 +
+ drivers/pci/ecam.c             | 358 +++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c              |  26 +--
+ drivers/xen/pci.c              |   7 +-
+ include/linux/acpi.h           |   2 +
+ include/linux/ecam.h           |  56 +++++++
+ 20 files changed, 923 insertions(+), 464 deletions(-)
+ delete mode 100644 arch/x86/pci/mmconfig_64.c
+ create mode 100644 drivers/acpi/mcfg.c
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 include/linux/ecam.h
+
+-- 
+1.9.1
+
