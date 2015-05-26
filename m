@@ -1,98 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0072.outbound.protection.outlook.com ([65.55.169.72]:20683
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752057AbbERSZH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 May 2015 14:25:07 -0400
-Message-ID: <555A269F.4050907@caviumnetworks.com>
-Date: Mon, 18 May 2015 10:51:27 -0700
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>
-CC: Aleksey Makarov <aleksey.makarov@auriga.com>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH net-next v3 1/2] pci: Add Cavium PCI vendor id
-References: <CAErSpo4fLHEu_NOuy9CkrS9DOfSyCOkddPHEQz=pp6et8wa2AA@mail.gmail.com> <20150516.171444.245757401088795324.davem@davemloft.net> <CAErSpo61OUg7PS-rPpAMNBUg4MNtxUig21eWe0hewKpbdDrnEA@mail.gmail.com> <20150518.124152.558065488359768601.davem@davemloft.net> <CAErSpo4N=B1tF-cn8K_SUYcSkoUYUM_HyTKyFKCmbNFMG=KiFw@mail.gmail.com>
-In-Reply-To: <CAErSpo4N=B1tF-cn8K_SUYcSkoUYUM_HyTKyFKCmbNFMG=KiFw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH 06/11] pci, acpi, mcfg: Provide generic implementation of MCFG code initialization.
+Date: Tue, 26 May 2015 20:49:19 +0800
+Message-Id: <1432644564-24746-7-git-send-email-hanjun.guo@linaro.org>
+In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/18/2015 10:26 AM, Bjorn Helgaas wrote:
-> On Mon, May 18, 2015 at 11:41 AM, David Miller <davem@davemloft.net> wrote:
->> From: Bjorn Helgaas <bhelgaas@google.com>
->> Date: Mon, 18 May 2015 11:35:20 -0500
->>
->>> [+cc Greg]
->>>
->>> On Sat, May 16, 2015 at 4:14 PM, David Miller <davem@davemloft.net> wrote:
->>>> From: Bjorn Helgaas <bhelgaas@google.com>
->>>> Date: Sat, 16 May 2015 09:49:40 -0500
->>>>
->>>>> Hi Aleksey,
->>>>>
->>>>> On Fri, May 15, 2015 at 10:36 PM, Aleksey Makarov
->>>>> <aleksey.makarov@auriga.com> wrote:
->>>>>> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
->>>>>> ---
->>>>>>   include/linux/pci_ids.h | 2 ++
->>>>>>   1 file changed, 2 insertions(+)
->>>>>>
->>>>>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>>>>> index e63c02a..3633cc6 100644
->>>>>> --- a/include/linux/pci_ids.h
->>>>>> +++ b/include/linux/pci_ids.h
->>>>>> @@ -2327,6 +2327,8 @@
->>>>>>   #define PCI_DEVICE_ID_ALTIMA_AC9100    0x03ea
->>>>>>   #define PCI_DEVICE_ID_ALTIMA_AC1003    0x03eb
->>>>>>
->>>>>> +#define PCI_VENDOR_ID_CAVIUM           0x177d
->>>>>
->>>>> Please read the note at the top of include/linux/pci_ids.h.  If this
->>>>> definition is used in two or more drivers, mention that in the
->>>>> changelog.  Otherwise, just use the bare hex value or a private
->>>>> #define in your driver.
->>>>
->>>> It is referenced from two foo.c files in the same driver.
->>>>
->>>> I don't know what policy we want for situations like that.
->>>
->>> The current policy (1d4a433fc4e9 ("PCI: Document pci_ids.h addition
->>> policy.")) predates me and I don't know the whole rationale.  I can
->>> see that it might reduce backporting pain for distros.
->>>
->>> If two foo.c files in the same driver share the PCI ID, they likely
->>> share other things as well, so there's likely a shared .h file where a
->>> private PCI_VENDOR_ID_CAVIUM could go.
->>>
->>> But this is a vendor ID (not a device ID), and it seems likely that
->>> there will be other devices from Cavium, so maybe it would make sense
->>> to apply the policy to device IDs, and go ahead and add vendor IDs to
->>> pci_ids.h.
->>
->> That makes sense to me, and therefore this change is probably fine as-is.
->
-> OK.  I assume you'll take the whole series, so:
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 
-Thanks guys,
+First function acpi_mcfg_check_entry() does not apply any quirks by default.
 
-Just for the record, the Cavium ThunderX network controller driver (that 
-is part 2/2 of the series), is just the first user of the 
-PCI_VENDOR_ID_CAVIUM.  We have in the pipeline drivers/patches for USB 
-(xHCI), SATA (AHCI), GPIO, I2C, MMC, and maybe others that will also be 
-using this #define.
+Last two functions are required by ACPI subsystem to make PCI config
+space accessible. Generic code assume to do nothing for early init call but
+late init call does as follow:
+- parse MCFG table and add regions to ECAM resource list
+- map regions
+- add regions to iomem_resource
 
-I also agree with the concept that the vendor ID has more if a place in 
-pci_ids.h than device IDs (which usually can go in the driver itself).
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/acpi/mcfg.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-David Daney
-
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 63775af..745b83e 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -55,3 +55,29 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ 
+ 	return 0;
+ }
++
++int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
++					struct acpi_mcfg_allocation *cfg)
++{
++	return 0;
++}
++
++void __init __weak pci_mmcfg_early_init(void)
++{
++
++}
++
++void __init __weak pci_mmcfg_late_init(void)
++{
++	struct pci_mmcfg_region *cfg;
++
++	acpi_table_parse(ACPI_SIG_MCFG, acpi_parse_mcfg);
++
++	if (list_empty(&pci_mmcfg_list))
++		return;
++	if (!pci_mmcfg_arch_init())
++		free_all_mmcfg();
++
++	list_for_each_entry(cfg, &pci_mmcfg_list, list)
++		insert_resource(&iomem_resource, &cfg->res);
++}
+-- 
+1.9.1
 
