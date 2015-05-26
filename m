@@ -1,46 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55497E4D.6020202@hp.com>
-Date: Wed, 06 May 2015 10:37:01 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59538 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751714AbbEZVL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 May 2015 17:11:56 -0400
+Subject: [PATCH v2 2/2] ACPI / PCI: Account for ARI in _PRT lookups
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, ddutile@redhat.com, rjw@rjwysocki.net,
+	linux-kernel@vger.kernel.org, lenb@kernel.org
+Date: Tue, 26 May 2015 15:11:51 -0600
+Message-ID: <20150526211150.7537.42311.stgit@gimli.home>
+In-Reply-To: <20150526210927.7537.55656.stgit@gimli.home>
+References: <20150526210927.7537.55656.stgit@gimli.home>
 MIME-Version: 1.0
-To: Dave Young <dyoung@redhat.com>
-CC: Joerg Roedel <joro@8bytes.org>, Baoquan He <bhe@redhat.com>,
-	dwmw2@infradead.org, indou.takao@jp.fujitsu.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com, "Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <20150415005731.GC19051@localhost.localdomain> <552DFB56.1070600@hp.com> <20150415064803.GF19051@localhost.localdomain> <20150424080147.GC4458@dhcp-16-116.nay.redhat.com> <20150424082528.GA23912@dhcp-128-91.nay.redhat.com> <20150424083530.GD4458@dhcp-16-116.nay.redhat.com> <20150424084957.GC23912@dhcp-128-91.nay.redhat.com> <20150504162318.GH15736@8bytes.org> <20150505061423.GC31063@dhcp-128-4.nay.redhat.com> <20150505153157.GQ15736@8bytes.org> <20150506015135.GB14065@dhcp-128-4.nay.redhat.com>
-In-Reply-To: <20150506015135.GB14065@dhcp-128-4.nay.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dave,
-This patchset will only write root tables in old kernel,  if it is 
-corrupted, faults will also happen in old kernel, and hardware would 
-mark it. So things will not go worse..
+The PCIe specification, rev 3.0, section 2.2.8.1, contains the
+following implementation note:
 
-Thanks
-Zhenhua
-On 05/06/2015 09:51 AM, Dave Young wrote:
-> On 05/05/15 at 05:31pm, Joerg Roedel wrote:
->> On Tue, May 05, 2015 at 02:14:23PM +0800, Dave Young wrote:
->>> The failure is nothing different, but as I said in another reply the
->>> difference is we could use corrupted data to possiblly cause more failure.
->>
->> I still fail to see how things can get more worse than they already are
->> by reusing the old data (we just reuse it, we do not modify anything
->
-> DMA write will modify system ram, if the old data is corrupted  it is possible
-> that DMA operation modify wrong ram regions because of wrong mapping.
-> Am I missing something and is it not possible?
->
-> Thanks
-> Dave
->
+    Virtual Wire Mapping for INTx Interrupts From ARI Devices
+
+    The implied Device Number for an ARI Device is 0. When ARI-aware
+    software (including BIOS and operating system) enables ARI
+    Forwarding in the Downstream Port immediately above an ARI Device
+    in order to access its Extended Functions, software must
+    comprehend that the Downstream Port will use Device Number 0 for
+    the virtual wire mappings of INTx interrupts coming from all
+    Functions of the ARI Device. If non-ARI-aware software attempts
+    to determine the virtual wire mappings for Extended Functions, it
+    can come up with incorrect mappings by examining the traditional
+    Device Number field and finding it to be non-0.
+
+We account for this in pci_swizzle_interrupt_pin(), but it looks like
+we miss it here, looking for a _PRT entry with a slot matching the
+ARI device slot number.  This can cause errors like:
+
+pcieport 0000:80:03.0: can't derive routing for PCI INT B
+sfc 0000:82:01.1: PCI INT B: no GSI
+
+pci_dev.irq is then invalid, resulting in errors for drivers that
+attempt to enable INTx on the device.  Fix by using slot 0 for ARI
+enabled devices.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/acpi/pci_irq.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index b1def41..4db10b1 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -163,7 +163,7 @@ static int acpi_pci_irq_check_entry(acpi_handle handle, struct pci_dev *dev,
+ {
+ 	int segment = pci_domain_nr(dev->bus);
+ 	int bus = dev->bus->number;
+-	int device = PCI_SLOT(dev->devfn);
++	int device = pci_ari_enabled(dev->bus) ? 0 : PCI_SLOT(dev->devfn);
+ 	struct acpi_prt_entry *entry;
+ 
+ 	if (((prt->address >> 16) & 0xffff) != device ||
 
