@@ -1,306 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:50267 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932070AbbEOHcV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 03:32:21 -0400
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 17:32:19 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id B85463578052
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 17:32:15 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F7W6bL26148912
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 17:32:15 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F7Vfsf027877
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 17:31:42 +1000
-Date: Fri, 15 May 2015 17:31:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V4 09/11] powerpc/eeh: handle VF PE properly
-Message-ID: <20150515073116.GA7980@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431668786-30371-10-git-send-email-weiyang@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <556483E3.4010202@oracle.com>
+Date: Tue, 26 May 2015 10:32:03 -0400
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431668786-30371-10-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+CC: david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI: Do not set ACPI companions for host bridges
+ with parents
+References: <555FDDA1.8030806@oracle.com> <2059136.yfbqz351P1@vostro.rjw.lan> <1901357.YAorP09rCo@vostro.rjw.lan> <2625308.mOex6suvmm@vostro.rjw.lan>
+In-Reply-To: <2625308.mOex6suvmm@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 15, 2015 at 01:46:24PM +0800, Wei Yang wrote:
->Compared with Bus PE, VF PE just has one single pci function. This
->introduces the difference of error handling on a VF PE.
+On 05/25/2015 10:17 PM, Rafael J. Wysocki wrote:
+> On Tuesday, May 26, 2015 03:08:17 AM Rafael J. Wysocki wrote:
+>> On Tuesday, May 26, 2015 01:42:16 AM Rafael J. Wysocki wrote:
+>>> On Tuesday, May 26, 2015 01:22:12 AM Rafael J. Wysocki wrote:
+>>>> On Friday, May 22, 2015 09:53:37 PM Boris Ostrovsky wrote:
+>>>>> On 05/22/2015 04:11 AM, Sander Eikelenboom wrote:
+>>>>>> Hello Sander,
+>>>>>>
+>>>
+>>> [cut]
+>>>
+>>>>> (+Rafael again)
+>>>>>
+>>>>> So the immediate cause of those errors is that pdev->evtchn is 0.
+>>>>> Backend is not notified and things not go well then.
+>>>>>
+>>>>> And it is indeed caused by 97badf873ab60e841243b66133ff9eff2a46ef29:
+>>>>>
+>>>>> We allocate pcifront_sd in pcifront_scan_root() and then pass it to
+>>>>> pci_scan_bus_parented() as sysdata. Eventually this sysdata is used in
+>>>>> pcibios_root_bridge_prepare() as pci_sysdata. It is dereferenced as
+>>>>> pci_sysdata->companion (which I believe is aliased to pcifront_sd->pdev)
+>>>
+>>> Well, there is an int node field between them, so I'm not sure.
+>>>
+>>>>> and then set_primary_fwnode() writes it, thus corrupting
+>>>>> pcifront_sd->pdev (and I think this is what sets evtchn to zero).
+>>>
+>>> So the corruption happens when set_primary_fwnode() writes NULL to the
+>>> 'secondary' field of object pointed to by 'fwnode'.
+>>>
+>>> This isn't strictly necessary and we might avoid the crash by only
+>>> writing to fwnode->secondary if fn is not NULL.
+>>>
+>>> So, Sander please test the patch below too if possible.
+>>>
+>>> Of course, that doesn't solve a problem of passing an incorrect pointer
+>>> to ACPI_COMPANION_SET() in pcibios_root_bridge_prepare().
+>>
+>> And here's one more thing to test.
 >
->For example in the hotplug case, EEH needs to remove and re-create the VF
->properly. In the case when PF's error_detected() disable SRIOV, this patch
->introduces a flag to mark the eeh_dev of a VF to avoid the slot_reset() and
->resume(). Since the FW is not ware of the VF, this patch handles the VF
->restore/reset in kernel directly.
+> And the below is how I'd fix it, so you can simply test this patch and skip the
+> previous ones.
 >
->This patch is to handle the VF PE properly in these cases.
+> ---
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: PCI / ACPI: Do not set ACPI companions for host bridges with parents
 >
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Commit 97badf873ab6 (device property: Make it possible to use
+> secondary firmware nodes) uncovered a bug in the x86 (and ia64) PCI
+> host bridge initialization code that assumes bridge->bus->sysdata
+> to always point to a struct pci_sysdata object which need not be
+> the case (in particular, the Xen PCI frontend driver sets it to point
+> to a different data type).  If it is not the case, an incorrect
+> pointer (or a piece of data that is not a pointer at all) will be
+> passed to ACPI_COMPANION_SET() and that may cause interesting
+> breakage to happen going forward.
+>
+> To work around this problem use the observation that the ACPI
+> host bridge initialization always passes NULL as parent to
+> pci_create_root_bus(), so if pcibios_root_bridge_prepare() sees
+> a non-NULL parent of the bridge, it should not attempt to set
+> an ACPI companion for it, because that means that
+> pci_create_root_bus() has been called by someone else.
 
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-With following things fixed:
+I am wondering whether at some point we might want to use companion 
+information in Xen as well.
 
->---
-> arch/powerpc/include/asm/eeh.h   |    1 +
-> arch/powerpc/kernel/eeh.c        |    1 +
-> arch/powerpc/kernel/eeh_driver.c |  103 ++++++++++++++++++++++++++++++--------
-> arch/powerpc/kernel/eeh_pe.c     |    3 +-
-> 4 files changed, 85 insertions(+), 23 deletions(-)
->
->diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->index 3d64cf3..d24382c 100644
->--- a/arch/powerpc/include/asm/eeh.h
->+++ b/arch/powerpc/include/asm/eeh.h
->@@ -140,6 +140,7 @@ struct eeh_dev {
-> 	struct pci_controller *phb;	/* Associated PHB		*/
-> 	struct pci_dn *pdn;		/* Associated PCI device node	*/
-> 	struct pci_dev *pdev;		/* Associated PCI device	*/
->+	int    in_error;		/* Error flag for eeh_dev	*/
-> 	struct pci_dev *physfn;		/* Associated PF PORT		*/
-> 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
-> };
->diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
->index 221e280..077c3d1 100644
->--- a/arch/powerpc/kernel/eeh.c
->+++ b/arch/powerpc/kernel/eeh.c
->@@ -1226,6 +1226,7 @@ void eeh_remove_device(struct pci_dev *dev)
-> 	 * from the parent PE during the BAR resotre.
-> 	 */
-> 	edev->pdev = NULL;
->+	edev->in_error = 0;
+Another option might be to require that whoever creates their own 
+sysdata structure to have pci_sysdata as its first element, e.g.
 
-Could you please put detailed comments aboug the the usage of "in_error" here?
-I may look into it later to remove it. For now, you don't need to do that since
-we're almost run out of time.
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -52,7 +52,12 @@ struct pcifront_device {
+  };
 
-> 	dev->dev.archdata.edev = NULL;
-> 	if (!(edev->pe->state & EEH_PE_KEEP))
-> 		eeh_rmv_from_parent_pe(edev);
->diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
->index 89eb4bc..292089e 100644
->--- a/arch/powerpc/kernel/eeh_driver.c
->+++ b/arch/powerpc/kernel/eeh_driver.c
->@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
-> 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
-> 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
->
->+	edev->in_error = 1;
-> 	eeh_pcid_put(dev);
-> 	return NULL;
-> }
->@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
->
-> 	if (!driver->err_handler ||
-> 	    !driver->err_handler->slot_reset ||
->-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
->+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
->+	    (!edev->in_error)) {
-> 		eeh_pcid_put(dev);
-> 		return NULL;
-> 	}
->@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
->
-> 	if (!driver->err_handler ||
-> 	    !driver->err_handler->resume ||
->-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
->+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
->+	    (!edev->in_error)) {
-> 		edev->mode &= ~EEH_DEV_NO_HANDLER;
->-		eeh_pcid_put(dev);
->-		return NULL;
->+		goto out;
-> 	}
->
-> 	driver->err_handler->resume(dev);
->
->+out:
->+	edev->in_error = 0;
-> 	eeh_pcid_put(dev);
-> 	return NULL;
-> }
->@@ -386,12 +390,40 @@ static void *eeh_report_failure(void *data, void *userdata)
-> 	return NULL;
-> }
->
->+#ifdef CONFIG_PCI_IOV
->+static void *eeh_add_virt_device(void *data, void *userdata)
->+{
->+	struct pci_driver *driver;
->+	struct eeh_dev *edev = (struct eeh_dev *)data;
->+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
->+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
->+
->+	if (!(edev->physfn)) {
->+		pr_warn("%s: EEH dev %04x:%02x:%02x:%01x not for VF\n",
->+			__func__, edev->phb->global_number, pdn->busno,
->+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
+  struct pcifront_sd {
++       /*
++        * Must be the first element of this structure since pcifront_sd
++        * is assigned to bus' sysdata and may later be dereferenced as
++        * pci_sysdata.
++        */
++       struct pci_sysdata sd;
+         struct pcifront_device *pdev;
+  };
 
-			    %04x:%02x:%02x.%01x
 
-The connection symbol between device/function number is ".", not ":".
+-boris
 
->+		return NULL;
->+	}
->+
->+	driver = eeh_pcid_get(dev);
->+	if (driver) {
->+		eeh_pcid_put(dev);
->+		if (driver->err_handler)
->+			return NULL;
->+	}
->+
->+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
->+	return NULL;
->+}
->+#endif /* CONFIG_PCI_IOV */
->+
-> static void *eeh_rmv_device(void *data, void *userdata)
-> {
-> 	struct pci_driver *driver;
-> 	struct eeh_dev *edev = (struct eeh_dev *)data;
-> 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-> 	int *removed = (int *)userdata;
->+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+
 >
-> 	/*
-> 	 * Actually, we should remove the PCI bridges as well.
->@@ -416,7 +448,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
-> 	driver = eeh_pcid_get(dev);
-> 	if (driver) {
-> 		eeh_pcid_put(dev);
->-		if (driver->err_handler)
->+		if (removed && driver->err_handler)
-> 			return NULL;
-> 	}
+> Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>   arch/ia64/pci/pci.c |   13 ++++++++++---
+>   arch/x86/pci/acpi.c |   13 ++++++++++---
+>   2 files changed, 20 insertions(+), 6 deletions(-)
 >
->@@ -425,11 +457,18 @@ static void *eeh_rmv_device(void *data, void *userdata)
-> 		 pci_name(dev));
-> 	edev->bus = dev->bus;
-> 	edev->mode |= EEH_DEV_DISCONNECTED;
->-	(*removed)++;
->-
->-	pci_lock_rescan_remove();
->-	pci_stop_and_remove_bus_device(dev);
->-	pci_unlock_rescan_remove();
->+	if (removed)
->+		(*removed)++;
->+
->+	if (edev->physfn) {
->+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
->+		edev->pdev = NULL;
->+		pdn->pe_number = IODA_INVALID_PE;
->+	} else {
->+		pci_lock_rescan_remove();
->+		pci_stop_and_remove_bus_device(dev);
->+		pci_unlock_rescan_remove();
->+	}
+> Index: linux-pm/arch/x86/pci/acpi.c
+> ===================================================================
+> --- linux-pm.orig/arch/x86/pci/acpi.c
+> +++ linux-pm/arch/x86/pci/acpi.c
+> @@ -482,9 +482,16 @@ struct pci_bus *pci_acpi_scan_root(struc
 >
-> 	return NULL;
-> }
->@@ -548,6 +587,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
-> 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
-> 	struct timeval tstamp;
-> 	int cnt, rc, removed = 0;
->+	struct eeh_dev *edev;
+>   int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>   {
+> -	struct pci_sysdata *sd = bridge->bus->sysdata;
+> -
+> -	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+> +	/*
+> +	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+> +	 * here, pci_create_root_bus() has been called by someone else and
+> +	 * sysdata is likely to be different from what we expect.  Let it go in
+> +	 * that case.
+> +	 */
+> +	if (!bridge->dev.parent) {
+> +		struct pci_sysdata *sd = bridge->bus->sysdata;
+> +		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+> +	}
+>   	return 0;
+>   }
 >
-> 	/* pcibios will clear the counter; save the value */
-> 	cnt = pe->freeze_count;
->@@ -561,12 +601,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
-> 	 */
-> 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
-> 	if (bus) {
->-		pci_lock_rescan_remove();
->-		pcibios_remove_pci_devices(bus);
->-		pci_unlock_rescan_remove();
->-	} else if (frozen_bus) {
->+		if (pe->type & EEH_PE_VF)
->+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
->+		else {
->+			pci_lock_rescan_remove();
->+			pcibios_remove_pci_devices(bus);
->+			pci_unlock_rescan_remove();
->+		}
->+	} else if (frozen_bus)
-> 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
->-	}
+> Index: linux-pm/arch/ia64/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/arch/ia64/pci/pci.c
+> +++ linux-pm/arch/ia64/pci/pci.c
+> @@ -478,9 +478,16 @@ struct pci_bus *pci_acpi_scan_root(struc
 >
-> 	/*
-> 	 * Reset the pci controller. (Asserts RST#; resets config space).
->@@ -607,14 +650,26 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
-> 		 * PE. We should disconnect it so the binding can be
-> 		 * rebuilt when adding PCI devices.
-> 		 */
->+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
-> 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
->-		pcibios_add_pci_devices(bus);
->+#ifdef CONFIG_PCI_IOV
->+		if (pe->type & EEH_PE_VF)
->+			eeh_add_virt_device(edev, NULL);
->+		else
->+#endif
->+			pcibios_add_pci_devices(bus);
-> 	} else if (frozen_bus && removed) {
-> 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
-> 		ssleep(5);
+>   int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>   {
+> -	struct pci_controller *controller = bridge->bus->sysdata;
+> -
+> -	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+> +	/*
+> +	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+> +	 * here, pci_create_root_bus() has been called by someone else and
+> +	 * sysdata is likely to be different from what we expect.  Let it go in
+> +	 * that case.
+> +	 */
+> +	if (!bridge->dev.parent) {
+> +		struct pci_controller *controller = bridge->bus->sysdata;
+> +		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+> +	}
+>   	return 0;
+>   }
 >
->+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
-> 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
->-		pcibios_add_pci_devices(frozen_bus);
->+#ifdef CONFIG_PCI_IOV
->+		if (pe->type & EEH_PE_VF)
->+			eeh_add_virt_device(edev, NULL);
->+		else
->+#endif
->+			pcibios_add_pci_devices(frozen_bus);
-> 	}
-> 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
->
->@@ -792,11 +847,15 @@ perm_error:
-> 	 * the their PCI config any more.
-> 	 */
-> 	if (frozen_bus) {
->-		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
->-
->-		pci_lock_rescan_remove();
->-		pcibios_remove_pci_devices(frozen_bus);
->-		pci_unlock_rescan_remove();
->+		if (pe->type & EEH_PE_VF) {
->+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
->+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
->+		} else {
->+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
->+			pci_lock_rescan_remove();
->+			pcibios_remove_pci_devices(frozen_bus);
->+			pci_unlock_rescan_remove();
->+		}
-> 	}
-> }
->
->diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
->index 260a701..5cde950 100644
->--- a/arch/powerpc/kernel/eeh_pe.c
->+++ b/arch/powerpc/kernel/eeh_pe.c
->@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
-> 	if (pe->type & EEH_PE_PHB) {
-> 		bus = pe->phb->bus;
-> 	} else if (pe->type & EEH_PE_BUS ||
->-		   pe->type & EEH_PE_DEVICE) {
->+		   pe->type & EEH_PE_DEVICE ||
->+		   pe->type & EEH_PE_VF) {
-> 		if (pe->bus) {
-> 			bus = pe->bus;
-> 			goto out;
->-- 
->1.7.9.5
 >
 
