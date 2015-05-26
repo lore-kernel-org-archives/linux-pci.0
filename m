@@ -1,145 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28504 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbbESXRY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:17:24 -0400
-Message-ID: <555BC482.9040902@broadcom.com>
-Date: Tue, 19 May 2015 16:17:22 -0700
-From: Ray Jui <rjui@broadcom.com>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:49208 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751243AbbEZIE0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 04:04:26 -0400
+Message-ID: <556428C9.9080202@st.com>
+Date: Tue, 26 May 2015 10:03:21 +0200
+From: Fabrice Gasnier <fabrice.gasnier@st.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Scott Branden <sbranden@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
+To: Zhou Wang <wangzhou1@hisilicon.com>
+CC: Jingoo Han <jingoohan1@gmail.com>, <zhudacai@hisilicon.com>,
+	<devicetree@vger.kernel.org>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Liviu Dudau'" <liviu.dudau@arm.com>,
+	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	<qiuzhenfa@hisilicon.com>, "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
+	"'Liguozhu'" <liguozhu@hisilicon.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: add bcma pcie driver
-References: <1431465781-10753-1-git-send-email-hauke@hauke-m.de> <1431465781-10753-3-git-send-email-hauke@hauke-m.de> <CACna6rxVpJ-4b_5jG91JN62jQHh8u=QaLpO+_7J9mFr+_ScPaA@mail.gmail.com> <5553742E.7070204@broadcom.com> <CACna6rzT=218pQk9M6NJWH51wszn=p0LmHrizrvV9Xkn-=Om3Q@mail.gmail.com> <55537C43.4050606@broadcom.com> <55539B63.2060203@hauke-m.de> <20150519231456.GX31666@google.com>
-In-Reply-To: <20150519231456.GX31666@google.com>
-Content-Type: text/plain; charset="utf-8"
+	"'Lucas Stach'" <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <5562F0C9.4090007@hisilicon.com> <000001d096f1$93dca4e0$bb95eea0$@com> <5563451B.4050609@st.com> <5563DF4F.4080601@hisilicon.com>
+In-Reply-To: <5563DF4F.4080601@hisilicon.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi zhou,
 
+On 05/26/2015 04:49 AM, Zhou Wang wrote:
+>>   struct pcie_port {
+>> >+#ifdef CONFIG_ARM
+>> >+    /*
+>> >+     * this is a temporary hack to let the driver work on
+>> >+     * both arm32 and arm64. it can be removed after the
+>> >+     * arm32 cleanup is complete and bios32.c has stopped
+>> >+     * referencing host->pci_sys_data.
+>> >+     */
+>> >+    struct pci_sys_data    dummy;
+>> >+#endif
+>> >      struct device        *dev;
+>> >
+>> >
+>> >This looks like necessary as bios32 is dereferencing sysdata:
+>> >struct pci_sys_data *sysdata = dev->bus->sysdata;
+>> >
+>> >Best Regards,
+>> >Fabrice
+>> >
+> Hi Fabrice,
+>
+> Firstly, many thanks for your test:)
+>
+> I am a little confused that pci_sys_data is still needed as we don't use the code
+> in bios32. What was the problem you met? Could you share me more information? Then
+> let's see how to solve the problem.
 
-On 5/19/2015 4:14 PM, Bjorn Helgaas wrote:
-> On Wed, May 13, 2015 at 08:43:47PM +0200, Hauke Mehrtens wrote:
->> On 05/13/2015 06:30 PM, Ray Jui wrote:
->>> Hi Rafal,
->>>
->>> On 5/13/2015 9:19 AM, Rafał Miłecki wrote:
->>>> On 13 May 2015 at 17:56, Ray Jui <rjui@broadcom.com> wrote:
->>>>> On 5/12/2015 11:27 PM, Rafał Miłecki wrote:
->>>>>> On 12 May 2015 at 23:23, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>>>>>> This driver adds support for the PCIe 2.0 controller found on the bcma
->>>>>>> bus. This controller can be found on (mostly) all Broadcom BCM470X /
->>>>>>> BCM5301X ARM SoCs.
->>>>>>>
->>>>>>> The driver found in the Broadcom SDK does some more stuff, like setting
->>>>>>> up some DMA memory areas, chaining MPS and MRRS to 512 and also some
->>>>>>> PHY changes like "improving" the PCIe jitter and doing some special
->>>>>>> initializations for the 3rd PCIe port.
->>>>>>>
->>>>>>> This was tested on a bcm4708 board with 2 PCIe ports and wireless cards
->>>>>>> connected to them.
->>>>>>>
->>>>>>> PCI_DOMAINS is needed by this driver, because normally there is more
->>>>>>> than one PCIe controller and without PCI_DOMAINS only the first
->>>>>>> controller gets registered.
->>>>>>> This controller gets 6 IRQs, the last one is trigged by all IRQ events.
->>>>>>>
->>>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>>>>
->>>>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
->>>>>>
->>>>>>
->>>>>>> +static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->>>>>>> +{
->>>>>>> +       struct iproc_pcie *pcie;
->>>>>>> +       LIST_HEAD(res);
->>>>>>> +       struct resource res_mem;
->>>>>>> +       int ret;
->>>>>>> +
->>>>>>> +       pcie = devm_kzalloc(&bdev->dev, sizeof(*pcie), GFP_KERNEL);
->>>>>>> +       if (!pcie)
->>>>>>> +               return -ENOMEM;
->>>>>>> +
->>>>>>> +       pcie->dev = &bdev->dev;
->>>>>>> +       bcma_set_drvdata(bdev, pcie);
->>>>>>> +
->>>>>>> +       pcie->base = bdev->io_addr;
->>>>>>> +
->>>>>>> +       res_mem.start = bdev->addr_s[0];
->>>>>>> +       res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
->>>>>>> +       res_mem.name = "PCIe MEM space";
->>>>>>> +       res_mem.flags = IORESOURCE_MEM;
->>>>>>> +       pci_add_resource(&res, &res_mem);
->>>>>>> +
->>>>>>> +       pcie->resources = &res;
->>>>>>> +
->>>>>>> +       pcie->map_irq = iproc_pcie_bcma_map_irq;
->>>>>>> +
->>>>>>> +       ret = iproc_pcie_setup(pcie);
->>>>>>
->>>>>> I think I don't like this part of iproc design. It lefts
->>>>>> pcie->resources pointing to some random memory after the setup/probe
->>>>>> are done. Guess it should be a separated parameter or sth.
->>>>>>
->>>>>> The patch is still OK, I just refer to generic iproc possible issue.
->>>>>>
->>>>> Sorry Rafal, but could you please be more specific on this?
->>>>
->>>> iproc_pcie_pltfm_probe (and iproc_pcie_bcma_probe) have local "res"
->>>> variable (each its own). They do:
->>>> pcie->resources = &res;
->>>> and then they call
->>>> iproc_pcie_setup(pcie);
->>>>
->>>> After iproc_pcie_pltfm_probe / iproc_pcie_bcma_probe returns, the
->>>> pointer pcie->resources is not valid anymore, yet pcie struct is still
->>>> in use. Of course pcie->resources isn't used anymore, but still, it's
->>>> some in-struct pointer (to the random memory since local variable is
->>>> not accessible anymore).
->>>>
->>>> I think you should drop
->>>> struct list_head *resources;
->>>> from the struct iproc_pcie and use
->>>> iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *resources)
->>>>
->>>
->>> Okay thanks. That makes sense.
->>>
->>> Or I should keep a copy of the resources under pcie->resources. In the
->>> current pcie-iproc.c, the resource is not used anywhere else except when
->>> creating the root bus under iproc_pcie_setup. But in the future, I might
->>> need to add more code to explicitly program the outbound/inbound windows
->>> so this driver can work with some other iProc SoCs where the desired
->>> windows do not match power-on-reset values.
->>>
->>> I plan to change this along with the window programming patch in the
->>> future. I also think Hauke's current patch is fine.
->>>
->>> Thanks,
->>>
->>> Ray
->>>
->> I think parts of this resources are allocated and never freed.
->>
->> pci_add_resource() allocates some bytes, but I do not see where they are
->> freed, this also applies to the platform driver.
-> 
-> Where are we on this patch?  I see Ray's ack for [1/2], and a "I think the
-> current patch is fine"; is that an ack for [2/2] as well?
-> 
-> Bjorn
-> 
+This is not completely true: there is still code in bios32 that requires 
+pci_sys_data.
+No matters pci_common_init_dev() is being called or not :
 
-Yes, IMO, both patches from Hauke to extend the Iproc PCIe to support
-BCMA bus are fine.
+You can see pcibios_msi_controller() has a weak definition (in 
+drivers/pci/msi.c).
+But bios32 defines it for arm. Then it's being used.
+So, basically, pci_sys_data is still needed on arm. This is how above 
+workaround proposed by Arnd takes care of it.
+Without this, dereferencing the pointer as done in bios32, makes it 
+hazardous and lead to crashes...
+e.g. in pcibios_msi_controller(), pci_sys_data will point to 
+"dev->bus->sysdata", aka "struct device *dev" above.
 
-Thanks,
+Best Regards,
+Fabrice
+>
+> Thanks again and Best Regards,
+> Zhou
+>
 
-Ray
