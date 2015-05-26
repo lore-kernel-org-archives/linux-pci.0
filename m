@@ -1,181 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li42-95.members.linode.com ([209.123.162.95]:50538 "EHLO
-	li42-95.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752797AbbENHTd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 03:19:33 -0400
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-From: Pantelis Antoniou <panto@antoniou-consulting.com>
-In-Reply-To: <1431587657.4160.37.camel@kernel.crashing.org>
-Date: Thu, 14 May 2015 10:19:28 +0300
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com> <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com> <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com> <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com> <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com> <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org> <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com> <1431564871.4160.8.camel@kernel.crashing.org> <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com> <1431585994.4160.32.camel@kernel.crashing.org> <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com> <1431587657.4160.37.camel@kernel.crashing.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH 04/11] x86, pci: Reorder logic of pci_mmconfig_insert() function
+Date: Tue, 26 May 2015 20:49:17 +0800
+Message-Id: <1432644564-24746-5-git-send-email-hanjun.guo@linaro.org>
+In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 
-> On May 14, 2015, at 10:14 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
-> 
-> On Thu, 2015-05-14 at 10:04 +0300, Pantelis Antoniou wrote:
-> 
->> Hmm, since you just want to transmit a whole subtree things are a bit
->> simpler.
->> 
->> You don’t need any of the fixups, and your target node is known.
->> 
->> So your overlay is simply:
->> 
->> / {
->> 	fragment@0 {
->> 		target-path = “/foo”;
->> 		__overlay__ {
->> 			/* contents of the slot */
->> 		};
->> 	}; 
->> };
->> 
->> I think it’s possible to just bit-mangle a blob (in pseudo code).
->> 
->> 	const u8 template_overlay_blob[] = { <compiled blob of the above> };
->> 
->> 	flatten_slot(slot_blob);
->> 
->> 	overlay_blob = allocate_new_blob(template_overlay_blob, slot_blob);
->> 
->> 	overlay_node = find_node(overlay_blob, “/fragment@0/__overlay__);
->> 	target_prop = find_prop(overlay_blob, “/fragment@0/target-path”);
->> 
->> 	inject_slot_blob(overlay_blob, overlay_node, slot_blob);
->> 	modify_slot_target(overlay_blob, target_prop, slot_target);
->> 	
->> I don’t think you need to re-flatten anything, shuffling bits around with
->> memmove should work.
-> 
-> Fairly gross :-)
-> 
+This patch is the first step for MMCONFIG refactoring process.
 
-You don’t want to know how sausages are made, but they are delicious :)
+Code that uses pci_mmcfg_lock will be moved to common file and become
+accessible for all architectures. pci_mmconfig_insert() cannot be moved
+so easily since it is mixing generic mmconfig code with x86 specific logic
+inside of mutual exclusive block guarded by pci_mmcfg_lock.
 
-> But yeah generating the overlay doesn't necessarily scare me, I can
-> generate a temp tree that is the overlay in which I "copy" the subtree
-> (or in my internal ptr-based representation I could have a concept of
-> alias which I follow while flattening).
-> 
-> That leaves me with these problems:
-> 
-> - No support for removing of nodes, so that needs to be added back to
-> the format and to Linux unless I continue removing by hand in the PCI
-> hotplug code itself
-> 
+To get rid of that constraint, we reorder actions as follow:
+1. sanity check for mmconfig region presence, if we already have such
+region it doesn't make snese to alloc new mmconfig list entry
+2. mmconfig entry allocation, no need to lock
+3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
+4. insertion to mmconfig list can be done as the final step in separate
+function (candidate for further refactoring) and needs another mmconfig
+lookup to avoid race condition.
 
-What kind of nodes/properties you need to remove at _application_ time?
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ arch/x86/pci/mmconfig-shared.c | 99 +++++++++++++++++++++++-------------------
+ 1 file changed, 54 insertions(+), 45 deletions(-)
 
-What you describe is inserting a bunch of properties and nodes under
-a slot’s device node. Reverting the overlay removes them all just fine.
-
-> - No support for "committing" the overlay which needs to be added as
-> well.
-> 
-
-That’s the easiest part.
-
->>>>> Now we could consider that subtree as a changeset that can be undone,
->>>>> but that wouldn't work for boot time. And subsequent updates wouldn't
->>>>> have that concept of "undoing" anyway.
->>>>> 
->>>> 
->>>> I have posted another patch that does boot-time DT quirk which are
->>>> non-revertable.
->>>> 
->>>> https://lkml.org/lkml/2015/2/18/258
->>> 
->>> Not sure how that applies in my case ... I can't change the
->>> representation of the PCI subtree, this is standard OFW representation,
->>> I can't change the FW to make it an overlay-like thing at boot time,
->>> that would break existing kernels.
->>> 
->> 
->> The idea is to append the ‘quirk’ to the already booting device tree blob.
-> 
-> I know but that's not how things work for me. At boot time the FW passes
-> me one tree that contains all the PCI stuff it has probed.
-> 
->> Another idea floating around was to simple concatenate the booting blob with
->> any overlay blobs you want applied at boot time.
-> 
-> Sure but I don't get overlay blobs at boot time.
-> 
->>>>> IE. conceptually, what overlays do today is quite rooted around the idea
->>>>> of having a fixed "base" DT and some pre-compiled DTB overlays that
->>>>> get added/removed. The design completely ignore the idea of a FW that
->>>>> maintains a "live" tree which we want to keep in sync, which is what we
->>>>> want to do here, or what we could do with a "live" open firmware
->>>>> implementation.
->>>>> 
->>>>> Now we might be able to reconcile them, but it feels to me that the
->>>>> overlay/changeset stuff is too rooted in the first concept…
->>>>> 
->>>> 
->>>> The first DT overlays use case (beaglebone capes) is what got the concept
->>>> started.
->>>> 
->>>> Right now is a generic mechanism to apply modifications to the kernel
->>>> live tree, with the possibility to revert them.
->>> 
->>> Yes but as I said it's not really thought in term of keeping the kernel
->>> tree in sync with an external dynamically generated tree. Maybe we can
->>> fix it, but it's more complex…
->>> 
->> 
->> Yes it is, unfortunately.
-> 
-> Right. Which makes the solution of just passing my bit of tree as a blob
-> which I expand in Linux where I want it rather than an overlay tempting
-> if we can make Gavin patch more palatable (removing the hybrid stuff
-> etc…)
-> .
-> 
-
-I see. Well, how about this?
-
-Who said you have to do the whole blob dance in the firmware?
-
-You can just as easily pass the blob as it is to the linux kernel and
-the kernel there can convert it to an overlay and apply it.
-
-> Cheers,
-> Ben.
-> 
->>> Ben.
->>> 
->>>>> Ben.
->>>>> 
->>>>> 
->>>> 
->>>> Regards
->>>> 
->>>> — Pantelis
->>> 
->>> 
->> 
->> Regards
->> 
->> — Pantelis
-> 
-> 
-
-Regards
-
-— Pantelis
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 8b3bc4f..e770b70 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -834,6 +834,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
+  */
+ late_initcall(pci_mmcfg_late_insert_resources);
+ 
++static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
++{
++	struct pci_mmcfg_region *cfg_conflict;
++	int err = 0;
++
++	mutex_lock(&pci_mmcfg_lock);
++	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
++	if (cfg_conflict) {
++		if (cfg_conflict->end_bus < cfg->end_bus)
++			pr_info(FW_INFO "MMCONFIG for "
++				"domain %04x [bus %02x-%02x] "
++				"only partially covers this bridge\n",
++				cfg_conflict->segment, cfg_conflict->start_bus,
++				cfg_conflict->end_bus);
++		err = -EEXIST;
++		goto out;
++	}
++
++	if (pci_mmcfg_arch_map(cfg)) {
++		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
++		err = -ENOMEM;
++		goto out;
++	} else {
++		list_add_sorted(cfg);
++		pr_info("MMCONFIG at %pR (base %#lx)\n",
++			&cfg->res, (unsigned long)cfg->address);
++	}
++out:
++	mutex_unlock(&pci_mmcfg_lock);
++	return err;
++}
++
+ /* Add MMCFG information for host bridges */
+ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			phys_addr_t addr)
+@@ -845,66 +877,43 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (!(pci_probe & PCI_PROBE_MMCONF) || pci_mmcfg_arch_init_failed)
+ 		return -ENODEV;
+ 
+-	if (start > end)
++	if ((start > end) || !addr)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&pci_mmcfg_lock);
++	rcu_read_lock();
+ 	cfg = pci_mmconfig_lookup(seg, start);
+-	if (cfg) {
+-		if (cfg->end_bus < end)
+-			dev_info(dev, FW_INFO
+-				 "MMCONFIG for "
+-				 "domain %04x [bus %02x-%02x] "
+-				 "only partially covers this bridge\n",
+-				  cfg->segment, cfg->start_bus, cfg->end_bus);
+-		mutex_unlock(&pci_mmcfg_lock);
++	rcu_read_unlock();
++	if (cfg)
+ 		return -EEXIST;
+-	}
+-
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
+-		return -EINVAL;
+-	}
+ 
+-	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+-	if (cfg == NULL) {
++	if (!cfg) {
+ 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
+-		rc = -ENOMEM;
++		return -ENOMEM;
+ 	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
+ 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
+ 			 &cfg->res);
+-	} else {
+-		/* Insert resource if it's not in boot stage */
+-		if (pci_mmcfg_running_state)
+-			tmp = insert_resource_conflict(&iomem_resource,
+-						       &cfg->res);
+-
+-		if (tmp) {
+-			dev_warn(dev,
+-				 "MMCONFIG %pR conflicts with "
+-				 "%s %pR\n",
+-				 &cfg->res, tmp->name, tmp);
+-		} else if (pci_mmcfg_arch_map(cfg)) {
+-			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
+-				 &cfg->res);
+-		} else {
+-			list_add_sorted(cfg);
+-			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
+-				 &cfg->res, (unsigned long)addr);
+-			cfg = NULL;
+-			rc = 0;
+-		}
++		goto error;
+ 	}
+ 
+-	if (cfg) {
+-		if (cfg->res.parent)
+-			release_resource(&cfg->res);
+-		kfree(cfg);
++	/* Insert resource if it's not in boot stage */
++	if (pci_mmcfg_running_state)
++		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
++
++	if (tmp) {
++		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
++			 &cfg->res, tmp->name, tmp);
++		goto error;
+ 	}
+ 
+-	mutex_unlock(&pci_mmcfg_lock);
++	rc = pci_mmconfig_inject(cfg);
++	if (!rc)
++		return 0;
+ 
++error:
++	if (cfg->res.parent)
++		release_resource(&cfg->res);
++	kfree(cfg);
+ 	return rc;
+ }
+ 
+-- 
+1.9.1
 
