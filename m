@@ -1,252 +1,402 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:36048 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555AbbESWo4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 18:44:56 -0400
-Received: by igbpi8 with SMTP id pi8so88428839igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 15:44:56 -0700 (PDT)
-Date: Tue, 19 May 2015 17:44:52 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: mst@redhat.com, plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, daniel.vetter@intel.com,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	cocci@systeme.lip6.fr, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>, venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	xen-devel@lists.xensource.com
-Subject: Re: [PATCH v5 1/5] pci: add pci_iomap_wc() variants
-Message-ID: <20150519224452.GT31666@google.com>
-References: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1430415364-19679-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH 11/11] ARM64 / PCI / ACPI: support for ACPI based PCI hostbridge init
+Date: Tue, 26 May 2015 20:49:24 +0800
+Message-Id: <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org>
+In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 30, 2015 at 10:36:04AM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> This allows drivers to take advantage of write-combining
-> when possible. The PCI specification does not allow for us
-> to automatically identify a memory region which needs
-> write-combining so drivers have to identify these areas
-> on their own. There is IORESOURCE_PREFETCH but as clarified
-> by Michael and confirmed later by Bjorn, PCI prefetch bit
-> merely means bridges can combine writes and prefetch reads.
-> Prefetch does not affect ordering rules and does not allow
-> writes to be collapsed [0]. WC is stronger, it allows collapsing
-> and changes ordering rules. WC can also hurt latency as small
-> writes are buffered. Because of all this drivers needs to
-> know what they are doing, we can't set a write-combining
-> preference flag in the pci core automatically for drivers.
-> 
-> Lastly although there is also arch_phys_wc_add() this makes
-> use of architecture specific write-combining *hacks* and
-> the only one currently defined and used is MTRR for x86.
-> MTRRs are legacy, limited in number, have restrictive size
-> constraints, and are known to interact pooly with the BIOS.
-> MTRRs should only really be considered on old video framebuffer
-> drivers. If we made ioremap_wc() and similar calls start
-> automatically adding MTRRs, then performance will vary wildly
-> with the order of driver loading because we'll run out of MTRRs
-> part-way through bootup.
-> 
-> There are a few motivations for phasing out of MTRR and
-> helping driver change over to use write-combining with PAT:
-> 
-> a) Take advantage of PAT when available
-> 
-> b) Help bury MTRR code away, MTRR is architecture specific and on
->    x86 its replaced by PAT
-> 
-> c) Help with the goal of eventually using _PAGE_CACHE_UC over
->    _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
->    de33c442e titled "x86 PAT: fix performance drop for glx,
->    use UC minus for ioremap(), ioremap_nocache() and
->    pci_mmap_page_range()")
-> 
-> [0] https://lkml.org/lkml/2015/4/21/714
-> 
-> Cc: Toshi Kani <toshi.kani@hp.com>
-> Cc: Andy Lutomirski <luto@amacapital.net>
-> Cc: Suresh Siddha <sbsiddha@gmail.com>
-> Cc: Ingo Molnar <mingo@elte.hu>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Juergen Gross <jgross@suse.com>
-> Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-> Cc: Dave Airlie <airlied@redhat.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Antonino Daplas <adaplas@gmail.com>
-> Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-> Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-> Cc: Dave Hansen <dave.hansen@linux.intel.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: venkatesh.pallipadi@intel.com
-> Cc: Stefan Bader <stefan.bader@canonical.com>
-> Cc: Ville Syrjälä <syrjala@sci.fi>
-> Cc: Mel Gorman <mgorman@suse.de>
-> Cc: Vlastimil Babka <vbabka@suse.cz>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: Davidlohr Bueso <dbueso@suse.de>
-> Cc: konrad.wilk@oracle.com
-> Cc: ville.syrjala@linux.intel.com
-> Cc: david.vrabel@citrix.com
-> Cc: jbeulich@suse.com
-> Cc: Roger Pau Monné <roger.pau@citrix.com>
-> Cc: linux-fbdev@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: xen-devel@lists.xensource.com
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Based on Jiang Liu's common interface to support PCI host bridge
+init and refactoring of MMCONFIG, this patch using information
+from ACPI MCFG table and IO/irq resources from _CRS to init
+ARM64 PCI hostbridge, then PCI will work on ARM64.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+This patch is based on Mark Salter and Tomasz Nowicki's work.
 
-> ---
-> 
-> This v5 makes the code return NULL for IORESOURCE_IO and fixes the commit
-> log to clarify the conclusions reached for MTRR and our review of
-> IORESOURCE_PREFETCH.
-> 
->  include/asm-generic/pci_iomap.h | 14 ++++++++++
->  lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 75 insertions(+)
-> 
-> diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
-> index 7389c87..b1e17fc 100644
-> --- a/include/asm-generic/pci_iomap.h
-> +++ b/include/asm-generic/pci_iomap.h
-> @@ -15,9 +15,13 @@ struct pci_dev;
->  #ifdef CONFIG_PCI
->  /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
->  extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-> +extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
->  extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
->  				     unsigned long offset,
->  				     unsigned long maxlen);
-> +extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-> +					unsigned long offset,
-> +					unsigned long maxlen);
->  /* Create a virtual mapping cookie for a port on a given PCI device.
->   * Do not call this directly, it exists to make it easier for architectures
->   * to override */
-> @@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
->  	return NULL;
->  }
->  
-> +static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
-> +{
-> +	return NULL;
-> +}
->  static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
->  					    unsigned long offset,
->  					    unsigned long maxlen)
->  {
->  	return NULL;
->  }
-> +static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-> +					       unsigned long offset,
-> +					       unsigned long maxlen)
-> +{
-> +	return NULL;
-> +}
->  #endif
->  
->  #endif /* __ASM_GENERIC_IO_H */
-> diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
-> index bcce5f1..9604dcb 100644
-> --- a/lib/pci_iomap.c
-> +++ b/lib/pci_iomap.c
-> @@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
->  EXPORT_SYMBOL(pci_iomap_range);
->  
->  /**
-> + * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
-> + * @dev: PCI device that owns the BAR
-> + * @bar: BAR number
-> + * @offset: map memory at the given offset in BAR
-> + * @maxlen: max length of the memory to map
-> + *
-> + * Using this function you will get a __iomem address to your device BAR.
-> + * You can access it using ioread*() and iowrite*(). These functions hide
-> + * the details if this is a MMIO or PIO address space and will just do what
-> + * you expect from them in the correct way. When possible write combining
-> + * is used.
-> + *
-> + * @maxlen specifies the maximum length to map. If you want to get access to
-> + * the complete BAR from offset to the end, pass %0 here.
-> + * */
-> +void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-> +				 int bar,
-> +				 unsigned long offset,
-> +				 unsigned long maxlen)
-> +{
-> +	resource_size_t start = pci_resource_start(dev, bar);
-> +	resource_size_t len = pci_resource_len(dev, bar);
-> +	unsigned long flags = pci_resource_flags(dev, bar);
-> +
-> +	if (len <= offset || !start)
-> +		return NULL;
-> +	len -= offset;
-> +	start += offset;
-> +	if (maxlen && len > maxlen)
-> +		len = maxlen;
-> +	if (flags & IORESOURCE_IO)
-> +		return NULL;
-> +	if (flags & IORESOURCE_MEM)
-> +		return ioremap_wc(start, len);
-> +	/* What? */
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
-> +
-> +/**
->   * pci_iomap - create a virtual mapping cookie for a PCI BAR
->   * @dev: PCI device that owns the BAR
->   * @bar: BAR number
-> @@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
->  	return pci_iomap_range(dev, bar, 0, maxlen);
->  }
->  EXPORT_SYMBOL(pci_iomap);
-> +
-> +/**
-> + * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
-> + * @dev: PCI device that owns the BAR
-> + * @bar: BAR number
-> + * @maxlen: length of the memory to map
-> + *
-> + * Using this function you will get a __iomem address to your device BAR.
-> + * You can access it using ioread*() and iowrite*(). These functions hide
-> + * the details if this is a MMIO or PIO address space and will just do what
-> + * you expect from them in the correct way. When possible write combining
-> + * is used.
-> + *
-> + * @maxlen specifies the maximum length to map. If you want to get access to
-> + * the complete BAR without checking for its length first, pass %0 here.
-> + * */
-> +void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
-> +{
-> +	return pci_iomap_wc_range(dev, bar, 0, maxlen);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_iomap_wc);
->  #endif /* CONFIG_PCI */
-> -- 
-> 2.3.2.209.gd67f9d5.dirty
-> 
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
+---
+ arch/arm64/Kconfig      |   7 ++
+ arch/arm64/kernel/pci.c | 245 +++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/pci/pci.c       |  26 +++--
+ 3 files changed, 257 insertions(+), 21 deletions(-)
+
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 9b80428..8e4b789 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -276,6 +276,13 @@ config PCI_DOMAINS_GENERIC
+ config PCI_SYSCALL
+ 	def_bool PCI
+ 
++config PCI_MMCONFIG
++	def_bool y
++	select PCI_ECAM
++	select HAVE_PCI_ECAM
++	select GENERIC_PCI_ECAM
++	depends on ACPI
++
+ source "drivers/pci/Kconfig"
+ source "drivers/pci/pcie/Kconfig"
+ source "drivers/pci/hotplug/Kconfig"
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 4095379..d1629dc 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -11,12 +11,15 @@
+  */
+ 
+ #include <linux/acpi.h>
++#include <linux/ecam.h>
+ #include <linux/init.h>
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+ #include <linux/mm.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
++#include <linux/pci-acpi.h>
+ #include <linux/slab.h>
+ 
+ #include <asm/pci-bridge.h>
+@@ -43,31 +46,251 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+  */
+ int pcibios_add_device(struct pci_dev *dev)
+ {
+-	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++	if (acpi_disabled)
++		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+ 
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *sd = bridge->bus->sysdata;
++
++	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
++	return 0;
++}
++
++void pcibios_add_bus(struct pci_bus *bus)
++{
++	acpi_pci_add_bus(bus);
++}
++
++void pcibios_remove_bus(struct pci_bus *bus)
++{
++	acpi_pci_remove_bus(bus);
++}
++
++int pcibios_enable_irq(struct pci_dev *dev)
++{
++	if (!pci_dev_msi_enabled(dev))
++		acpi_pci_irq_enable(dev);
++	return 0;
++}
++
++int pcibios_disable_irq(struct pci_dev *dev)
++{
++	if (!pci_dev_msi_enabled(dev))
++		acpi_pci_irq_disable(dev);
++	return 0;
++}
++
++int pcibios_enable_device(struct pci_dev *dev, int bars)
++{
++	int err;
++
++	err = pci_enable_resources(dev, bars);
++	if (err < 0)
++		return err;
++
++	return pcibios_enable_irq(dev);
++}
++
++static int __init pcibios_assign_resources(void)
++{
++	struct pci_bus *root_bus;
++
++	if (acpi_disabled)
++		return 0;
++
++	list_for_each_entry(root_bus, &pci_root_buses, node) {
++		pcibios_resource_survey_bus(root_bus);
++		pci_assign_unassigned_root_bus_resources(root_bus);
++	}
++	return 0;
++}
+ /*
+- * raw_pci_read/write - Platform-specific PCI config space access.
++ * fs_initcall comes after subsys_initcall, so we know acpi scan
++ * has run.
+  */
+-int raw_pci_read(unsigned int domain, unsigned int bus,
+-		  unsigned int devfn, int reg, int len, u32 *val)
++fs_initcall(pcibios_assign_resources);
++
++static int pci_read(struct pci_bus *bus, unsigned int devfn, int where,
++		    int size, u32 *value)
+ {
+-	return -ENXIO;
++	return raw_pci_read(pci_domain_nr(bus), bus->number,
++			    devfn, where, size, value);
+ }
+ 
+-int raw_pci_write(unsigned int domain, unsigned int bus,
+-		unsigned int devfn, int reg, int len, u32 val)
++static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
++		     int size, u32 value)
+ {
+-	return -ENXIO;
++	return raw_pci_write(pci_domain_nr(bus), bus->number,
++			     devfn, where, size, value);
+ }
+ 
+-#ifdef CONFIG_ACPI
++struct pci_ops pci_root_ops = {
++	.read = pci_read,
++	.write = pci_write,
++};
++
++struct pci_root_info {
++	struct acpi_pci_root_info common;
++#ifdef  CONFIG_PCI_MMCONFIG
++	bool mcfg_added;
++	u8 start_bus;
++	u8 end_bus;
++#endif
++};
++
++#ifdef CONFIG_PCI_MMCONFIG
++static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
++{
++	struct pci_mmcfg_region *cfg;
++	struct pci_root_info *info;
++	struct acpi_pci_root *root = ci->root;
++	int err, seg = ci->controller.segment;
++
++	info = container_of(ci, struct pci_root_info, common);
++	info->start_bus = (u8)root->secondary.start;
++	info->end_bus = (u8)root->secondary.end;
++	info->mcfg_added = false;
++
++	rcu_read_lock();
++	cfg = pci_mmconfig_lookup(seg, info->start_bus);
++	rcu_read_unlock();
++	if (cfg)
++		return 0;
++
++	cfg = pci_mmconfig_alloc(seg, info->start_bus, info->end_bus,
++				 root->mcfg_addr);
++	if (!cfg)
++		return -ENOMEM;
++
++	err = pci_mmconfig_inject(cfg);
++	if (!err)
++		info->mcfg_added = true;
++
++	return err;
++}
++
++static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci)
++{
++	struct pci_root_info *info;
++
++	info = container_of(ci, struct pci_root_info, common);
++	if (info->mcfg_added) {
++		pci_mmconfig_delete(ci->controller.segment, info->start_bus,
++				    info->end_bus);
++		info->mcfg_added = false;
++	}
++}
++#else
++static int pci_add_mmconfig_region(struct acpi_pci_root_info *ci)
++{
++	return 0;
++}
++
++static void pci_remove_mmconfig_region(struct acpi_pci_root_info *ci) { }
++#endif
++
++static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
++{
++	return pci_add_mmconfig_region(ci);
++}
++
++static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
++{
++	struct pci_root_info *info;
++
++	info = container_of(ci, struct pci_root_info, common);
++	pci_remove_mmconfig_region(ci);
++	kfree(info);
++}
++
++static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci,
++					   int status)
++{
++	struct resource_entry *entry, *tmp;
++
++	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
++		struct resource *res = entry->res;
++
++		/*
++		 * Special handling for ARM IO range
++		 * TODO: need to move pci_register_io_range() function out
++		 * of drivers/of/address.c for both used by DT and ACPI
++		 */
++		if (res->flags & IORESOURCE_IO) {
++			unsigned long port;
++			int err;
++			resource_size_t length = res->end - res->start;
++
++			err = pci_register_io_range(res->start, length);
++			if (err) {
++				resource_list_destroy_entry(entry);
++				continue;
++			}
++
++			port = pci_address_to_pio(res->start);
++			if (port == (unsigned long)-1) {
++				resource_list_destroy_entry(entry);
++				continue;
++			}
++
++			res->start = port;
++			res->end = res->start + length - 1;
++
++			if (pci_remap_iospace(res, res->start) < 0)
++				resource_list_destroy_entry(entry);
++		}
++	}
++
++	return status;
++}
++
++static struct acpi_pci_root_ops acpi_pci_root_ops = {
++	.pci_ops = &pci_root_ops,
++	.init_info = pci_acpi_root_init_info,
++	.release_info = pci_acpi_root_release_info,
++	.prepare_resources = pci_acpi_root_prepare_resources,
++};
++
+ /* Root bridge scanning */
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+-	/* TODO: Should be revisited when implementing PCI on ACPI */
+-	return NULL;
++	struct pci_root_info *info;
++	int node;
++	int domain = root->segment;
++	int busnum = root->secondary.start;
++	struct pci_bus *bus;
++
++	if (domain && !pci_domains_supported) {
++		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
++			domain, busnum);
++		return NULL;
++	}
++
++	node = acpi_get_node(root->device->handle);
++	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
++	if (!info) {
++		dev_err(&root->device->dev, "pci_bus %04x:%02x: ignored (out of memory)\n",
++			domain, busnum);
++		return NULL;
++	}
++
++	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &info->common);
++
++	/* After the PCI-E bus has been walked and all devices discovered,
++	 * configure any settings of the fabric that might be necessary.
++	 */
++	if (bus) {
++		struct pci_bus *child;
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	return bus;
+ }
+ #endif
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index acc4b6e..0268a1d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/acpi.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -4509,7 +4510,7 @@ int pci_get_new_domain_nr(void)
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain;
+ 
+ 	/*
+ 	 * Check DT domain and use_dt_domains values.
+@@ -4537,17 +4538,22 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 	 * invalidating the domain value (domain = -1) and printing a
+ 	 * corresponding error.
+ 	 */
+-	if (domain >= 0 && use_dt_domains) {
+-		use_dt_domains = 1;
+-	} else if (domain < 0 && use_dt_domains != 1) {
+-		use_dt_domains = 0;
+-		domain = pci_get_new_domain_nr();
++	if (acpi_disabled) {
++		domain = of_get_pci_domain_nr(parent->of_node);
++		if (domain >= 0 && use_dt_domains) {
++			use_dt_domains = 1;
++		} else if (domain < 0 && use_dt_domains != 1) {
++			use_dt_domains = 0;
++			domain = pci_get_new_domain_nr();
++		} else {
++			dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++				parent->of_node->full_name);
++			domain = -1;
++		}
+ 	} else {
+-		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node->full_name);
+-		domain = -1;
++		struct pci_controller *sd = bus->sysdata;
++		domain = sd->segment;
+ 	}
+-
+ 	bus->domain_nr = domain;
+ }
+ #endif
+-- 
+1.9.1
+
