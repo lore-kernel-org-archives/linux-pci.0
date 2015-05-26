@@ -1,52 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58563 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751452AbbEEGKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 May 2015 02:10:25 -0400
-Date: Tue, 5 May 2015 14:09:31 +0800
-From: Dave Young <dyoung@redhat.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150505060931.GB31063@dhcp-128-4.nay.redhat.com>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
- <20150504110551.GD15736@8bytes.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 26 May 2015 15:21:55 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	"yasutake.koichi@jp.panasonic.com" <yasutake.koichi@jp.panasonic.com>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [RFC/RFT PATCH] PCI: move pci_read_bridge_bases to the generic
+ PCI layer
+Message-ID: <20150526142155.GA6464@red-moon>
+References: <1432214067-2752-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150526125759.GK1565@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150504110551.GD15736@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150526125759.GK1565@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/04/15 at 01:05pm, Joerg Roedel wrote:
-> On Fri, Apr 03, 2015 at 04:40:31PM +0800, Dave Young wrote:
-> > Have not read all the patches, but I have a question, not sure this
-> > has been answered before. Old memory is not reliable, what if the old
-> > memory get corrupted before panic? Is it safe to continue using it in
-> > 2nd kernel, I worry that it will cause problems.
+On Tue, May 26, 2015 at 01:57:59PM +0100, Will Deacon wrote:
+> Hi Lorenzo,
 > 
-> Yes, the old memory could be corrupted, and there are more failure cases
-> left which we have no way of handling yet (if iommu data structures are
-> in kdump backup areas).
+> On Thu, May 21, 2015 at 02:14:25PM +0100, Lorenzo Pieralisi wrote:
+> > When a PCI bus is scanned, upon PCI bridge detection the kernel
+> > has to read the bridge registers to set-up its resources so that
+> > the PCI resource hierarchy can be validated properly.
+> > 
+> > Most if not all architectures read PCI bridge registers in the
+> > pcibios_fixup_bus hook, that is called by the PCI generic layer
+> > whenever a PCI bus is scanned.
+> > 
+> > Since pci_read_bridge_bases is an arch agnostic operation (and it
+> > is carried out on all architectures) it can be moved to the generic
+> > PCI layer in order to consolidate code and remove the respective
+> > calls from the architectures back-ends.
+> > 
+> > The PCI_PROBE_ONLY flag is not checked before calling
+> > pci_read_bridge_buses in the generic layer since reading the bridge
+> > bases is not related to resources assignment; this implies that it
+> > can be carried out safely on PCI_PROBE_ONLY systems too and should
+> > not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+> > flag before reading the bridge bases.
 > 
-> The question is what to do if we find some of the old data structures
-> corrupted, hand how far should the tests go. Should we also check the
-> page-tables, for example? I think if some of the data structures for a
-> device are corrupted it probably already failed in the old kernel and
-> things won't get worse in the new one.
+> [...]
+> 
+> > diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+> > index 82f738e..cded02c 100644
+> > --- a/arch/alpha/kernel/pci.c
+> > +++ b/arch/alpha/kernel/pci.c
+> > @@ -242,12 +242,7 @@ pci_restore_srm_config(void)
+> >  
+> >  void pcibios_fixup_bus(struct pci_bus *bus)
+> >  {
+> > -	struct pci_dev *dev = bus->self;
+> > -
+> > -	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+> > - 		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+> > - 		pci_read_bridge_bases(bus);
+> > -	} 
+> 
+> I appreciate you're basically moving this code ...
+> 
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 062fee6..335d9f2 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -453,7 +453,11 @@ void pci_read_bridge_bases(struct pci_bus *child)
+> >  	struct resource *res;
+> >  	int i;
+> >  
+> > -	if (pci_is_root_bus(child))	/* It's a host bus, nothing to read */
+> > +	/*
+> > +	 * If it is not a PCI bridge there is nothing to read
+> > +	 */
+> > +	if (pci_is_root_bus(child) || !dev ||
+> > +		!((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI))
+> >  		return;
+> 
+> ... to here, but shouldn't we dispense with the class check and use
+> pci_is_bridge instead? pci_read_bridge_bases is making an assumption
+> that the header type is BRIDGE, so that seems like the more sensible
+> check to me.
 
-I agree that we can do nothing with the old corrupted data, but I worry
-about the future corruption after using the old corrupted data. I wonder
-if we can mark all the oldmem as readonly so that we can lower the risk.
-Is it resonable?
+Yes I thought about that before posting. I added the class check to make
+sure it covers the current checks carried out on all architectures
+I am patching (ie pci_is_bridge() would allow reading bridge bases
+for a cardbus header and I do not think that's correct as the code
+stands).
 
-Thanks
-Dave
+I am happy to refactor the check once we have some coverage for all
+archs.
+
+> Also, with these changes, can we now make pci_read_bridge_bases static
+> (as it has an implicit rdering requirement on the device having been
+> scanned)?
+
+As far as I understand the code, SPARC still needs it in arch specific
+code that scans the PCI bus, so I could not make it static with this
+set, I removed the call from all pcibios_fixup_bus implementations
+that were calling it but that's where I had to stop.
+
+Thanks for having a look,
+Lorenzo
