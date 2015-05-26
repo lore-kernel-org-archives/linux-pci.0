@@ -1,106 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:51074 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbbEDHIe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 May 2015 03:08:34 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 4 May 2015 17:08:32 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id E38C72CE8052
-	for <linux-pci@vger.kernel.org>; Mon,  4 May 2015 17:08:29 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4478LaC23789648
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:08:29 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4477vYL031448
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2015 17:07:57 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V3 0/9] VF EEH on Power8
-Date: Mon,  4 May 2015 15:07:29 +0800
-Message-Id: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5564DE8C.3000302@redhat.com>
+Date: Tue, 26 May 2015 16:58:52 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	linux-kernel@vger.kernel.org, lenb@kernel.org
+Subject: Re: [PATCH 2/2] ACPI / PCI: Account for ARI in _PRT lookups
+References: <20150526174611.31963.91186.stgit@gimli.home>	 <20150526175408.31963.49046.stgit@gimli.home> <5564D254.6050004@redhat.com> <1432672943.11375.490.camel@redhat.com>
+In-Reply-To: <1432672943.11375.490.camel@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-VF edev and VF PE and handle them properly.
+On 05/26/2015 04:42 PM, Alex Williamson wrote:
+> On Tue, 2015-05-26 at 16:06 -0400, Don Dutile wrote:
+>> On 05/26/2015 01:54 PM, Alex Williamson wrote:
+>>> The PCIe specification, rev 3.0, section 2.2.8.1, contains the
+>>> following implementation note:
+>>>
+>>>       Virtual Wire Mapping for INTx Interrupts From ARI Devices
+>>>
+>>>       The implied Device Number for an ARI Device is 0. When ARI-aware
+>>>       software (including BIOS and operating system) enables ARI
+>>>       Forwarding in the Downstream Port immediately above an ARI Device
+>>>       in order to access its Extended Functions, software must
+>>>       comprehend that the Downstream Port will use Device Number 0 for
+>>>       the virtual wire mappings of INTx interrupts coming from all
+>>>       Functions of the ARI Device. If non-ARI-aware software attempts
+>>>       to determine the virtual wire mappings for Extended Functions, it
+>>>       can come up with incorrect mappings by examining the traditional
+>>>       Device Number field and finding it to be non-0.
+>>>
+>>> We account for this in pci_swizzle_interrupt_pin(), but it looks like
+>>> we miss it here, looking for a _PRT entry with a slot matching the
+>>> ARI device slot number.  This can cause errors like:
+>>>
+>>> pcieport 0000:80:03.0: can't derive routing for PCI INT B
+>>> sfc 0000:82:01.1: PCI INT B: no GSI
+>>>
+>>> pci_dev.irq is then invalid, resulting in errors for drivers that
+>>> attempt to enable INTx on the device.  Fix by using slot 0 for ARI
+>>> enabled devices.
+>>>
+>>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>>> ---
+>>>    drivers/acpi/pci_irq.c |    4 ++--
+>>>    1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>>> index b1def41..65e83cd 100644
+>>> --- a/drivers/acpi/pci_irq.c
+>>> +++ b/drivers/acpi/pci_irq.c
+>>> @@ -163,7 +163,7 @@ static int acpi_pci_irq_check_entry(acpi_handle handle, struct pci_dev *dev,
+>>>    {
+>>>    	int segment = pci_domain_nr(dev->bus);
+>>>    	int bus = dev->bus->number;
+>>> -	int device = PCI_SLOT(dev->devfn);
+>>> +	int device = pci_ari_enabled(dev->bus) ? 0 : PCI_SLOT(dev->devfn);
+>>>    	struct acpi_prt_entry *entry;
+>>>
+>>>    	if (((prt->address >> 16) & 0xffff) != device ||
+>>> @@ -181,7 +181,7 @@ static int acpi_pci_irq_check_entry(acpi_handle handle, struct pci_dev *dev,
+>>>    	 */
+>>>    	entry->id.segment = segment;
+>>>    	entry->id.bus = bus;
+>>> -	entry->id.device = (prt->address >> 16) & 0xFFFF;
+>>> +	entry->id.device = PCI_SLOT(dev->devfn);
+>> I would expect that this should be = device, not PCI_SLOT(dev->devfn),
+>> esp if used by ACPI core, since it'll be expecting a swizzle from device 0,
+>> per above spec.
+>
+> But it's not used by ACPI core.
+>
+>> Additionally, if you look at the beginning of this function, this check is performed:
+>>          if (((prt->address >> 16) & 0xffff) != device ||
+>>               prt->pin + 1 != pin)
+>>                   return -ENODEV;
+>>
+>> So, that implies you leave this assignment as is,
+>> or set it to device -- six of one, half-dozen another.
+>
+> TBH, I didn't really know what to do with this field.  struct
+> acpi_prt_entry is defined locally to this file, so we're not passing it
+> out to ACPI core for anything.  The only consumer of entry.id in this
+> call path is the debug print at the bottom of the function:
+Well, do_prt_fixups(entry, prt) is called right after the setting,
+and although your patch leaves the state of id.device as it was before
+to enable the matches in the current list, that may not be so later.
 
-Different from the Bus PE, VF PE just contain one VF. This introduces the
-difference of EEH error handling on a VF PE. Generally, it has several
-differences.
+I'd leave the id.device as it was -- set to prt->address >> 16) & 0xFFFF
+for the proper matching all around.
 
-First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-relationship between its PF. This is not proper to enumerate a VF by usual
-scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-set.
+if you want the printf to change, patch it to use PCI_SLOT(dev->devfn) instead of entry->id.device.
 
-Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-the VF, this means the usual reset function done in FW will not work. One of
-the patch will imitate the reset/restore function in kernel space.
 
-Third, the VF may be removed during the PF's error_detected function. In this
-case, the original error_detected->slot_reset->resume sequence is not proper
-to those removed VFs, since they are re-created by PF in a fresh state. A flag
-in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-track whether this device needs to be reset or not.
-
-This has been tested both on host and in guest on Power8 with latest kernel
-version.
-
-v3:
-   * add back vf_index in pci_dn to track the VF's index
-   * rename ppdev in eeh_dev to physfn for consistency
-   * move edev->physfn assignment before dev->dev.archdata.edev is set
-   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
-   * more clear and detail in commit log and comment in code
-   * merge eeh_rmv_virt_device() with eeh_rmv_device()
-   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
-     pnv_eeh_cfg_blocked()
-   * move the vf reset/restore logic into its own patch, two patches are
-     created.
-     powerpc/powernv: Support PCI config restore for VFs
-     powerpc/powernv: Support EEH reset for VFs
-   * simplify the vf reset logic
-v2:
-   * add prefix pci_iov_ to virtfn_add/virtfn_remove
-   * use EEH_DEV_VF as a flag for a VF's eeh_dev
-   * use eeh_dev instead of edev in change log
-   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
-   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
-     well initialized
-   * do FLR to reset a VF PE
-   * imitate the restore function in FW for VF
-   * remove the reverse order patch, since it is still under discussion
-
-Wei Yang (9):
-  pci/iov: rename and export virtfn_add/virtfn_remove
-  powerpc/pci_dn: cache vf_index in pci_dn
-  powerpc/pci: remove PCI devices in reverse order
-  powerpc/eeh: cache address range just for normal device
-  powerpc/eeh: create EEH_PE_VF for VF PE
-  powerpc/powernv: create/release eeh_dev for VF
-  powerpc/powernv: Support EEH reset for VFs
-  powerpc/powernv: Support PCI config restore for VFs
-  powerpc/eeh: handle VF PE properly
-
- arch/powerpc/include/asm/eeh.h               |   10 ++
- arch/powerpc/include/asm/pci-bridge.h        |    2 +
- arch/powerpc/kernel/eeh.c                    |    5 +
- arch/powerpc/kernel/eeh_cache.c              |    2 +-
- arch/powerpc/kernel/eeh_dev.c                |   20 +++
- arch/powerpc/kernel/eeh_driver.c             |  108 +++++++++++---
- arch/powerpc/kernel/eeh_pe.c                 |   15 +-
- arch/powerpc/kernel/pci-hotplug.c            |    2 +-
- arch/powerpc/kernel/pci_dn.c                 |   12 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c |  200 +++++++++++++++++++++++++-
- drivers/pci/iov.c                            |   10 +-
- include/linux/pci.h                          |    2 +
- 12 files changed, 352 insertions(+), 36 deletions(-)
-
--- 
-1.7.9.5
+>
+>          ACPI_DEBUG_PRINT_RAW((ACPI_DB_INFO,
+>                                "      %04x:%02x:%02x[%c] -> %s[%d]\n",
+>                                entry->id.segment, entry->id.bus,
+>                                entry->id.device, pin_name(entry->pin),
+>                                prt->source, entry->index));
+>
+> Which is the reason I chose to use the value that I did, because using
+> 'device', aka 0, in the ARI path would be confusing.
+>
+> I think that the only reason entry.id exists is for the fixup code in
+> this file.  I'm happy to leave it as 'device' or the original
+> '(prt->address >> 16) & 0xFFFF', but what I have feels more correct for
+> the debug printk if nothing else.  Thanks,
+>
+> Alex
+>
+>>>    	entry->pin = prt->pin + 1;
+>>>
+>>>    	do_prt_fixups(entry, prt);
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>
+>
+>
 
