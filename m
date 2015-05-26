@@ -1,68 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp06.smtpout.orange.fr ([80.12.242.128]:21690 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033AbbETSzq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 14:55:46 -0400
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 26 May 2015 17:58:44 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Roland Stigge <stigge@antcom.de>,
-	Tony Lindgren <tony@atomide.com>,
-	Rajendra Nayak <rnayak@ti.com>, Paul Walmsley <paul@pwsan.com>,
-	Daniel Mack <daniel@zonque.org>,
-	Haojian Zhuang <haojian.zhuang@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Russell King <rmk+kernel@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org
-Subject: Re: [RFC v1 15/25] genirq: Kill the first parameter 'irq' of irq_flow_handler_t
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-	<1432116013-25902-16-git-send-email-jiang.liu@linux.intel.com>
-Date: Wed, 20 May 2015 20:54:12 +0200
-In-Reply-To: <1432116013-25902-16-git-send-email-jiang.liu@linux.intel.com>
-	(Jiang Liu's message of "Wed, 20 May 2015 18:00:03 +0800")
-Message-ID: <87mw0zhygb.fsf@belgarion.home>
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
+ ACPI
+Message-ID: <20150526165844.GD2175@e106497-lin.cambridge.arm.com>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+ <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jiang Liu <jiang.liu@linux.intel.com> writes:
+On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
+> ARM64 ACPI based PCI host bridge init needs a arch dependent
+> struct pci_controller to accommodate common PCI host bridge
+> code which is introduced later, or it will lead to compile
+> errors on ARM64.
 
-> diff --git a/arch/arm/mach-pxa/pcm990-baseboard.c b/arch/arm/mach-pxa/pcm990-baseboard.c
-> index 2897da2a5df6..0d8331f8536e 100644
-> --- a/arch/arm/mach-pxa/pcm990-baseboard.c
-> +++ b/arch/arm/mach-pxa/pcm990-baseboard.c
-> @@ -287,6 +287,7 @@ static struct irq_chip pcm990_irq_chip = {
->  static void pcm990_irq_handler(unsigned int irq, struct irq_desc *desc)
->  {
->  	unsigned long pending;
-> +	unsigned int irq;
-That doesn't look good, double irq definition.
+Hi Hanjun,
 
-Cheers.
+Two questions: why don't you introduce this patch next to the
+one that is going to make use of it (or even merge it there)?
+Second, why is the whole struct pci_controller not surrounded
+by #ifdef CONFIG_ACPI as you are implying that this is needed
+only for ACPI?
+
+Btw, looking through the whole series I'm not (yet) convinced
+that this is needed at all.
+
+Best regards,
+Liviu
+
+> 
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Catalin Marinas <catalin.marinas@arm.com>
+> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+> CC: Will Deacon <will.deacon@arm.com>
+> ---
+>  arch/arm64/include/asm/pci.h | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> index b008a72..7088495 100644
+> --- a/arch/arm64/include/asm/pci.h
+> +++ b/arch/arm64/include/asm/pci.h
+> @@ -10,6 +10,16 @@
+>  #include <asm-generic/pci-bridge.h>
+>  #include <asm-generic/pci-dma-compat.h>
+>  
+> +struct acpi_device;
+> +
+> +struct pci_controller {
+> +#ifdef CONFIG_ACPI
+> +	struct acpi_device *companion;	/* ACPI companion device */
+> +#endif
+> +	int		segment;	/* PCI domain */
+> +	int		node;		/* NUMA node */
+> +};
+> +
+>  #define PCIBIOS_MIN_IO		0x1000
+>  #define PCIBIOS_MIN_MEM		0
+>  
+> -- 
+> 1.9.1
+> 
 
 -- 
-Robert
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
