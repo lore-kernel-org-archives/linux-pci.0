@@ -1,93 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <555ED746.8030406@huawei.com>
-Date: Fri, 22 May 2015 15:14:14 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:37280 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbbEZX54 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 19:57:56 -0400
+Received: by igbsb11 with SMTP id sb11so1765092igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 16:57:55 -0700 (PDT)
+Date: Tue, 26 May 2015 18:57:51 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, mjg59@coreos.com, rwhite@pobox.com,
+	alex.williamson@redhat.com
+Subject: Re: [PATCH v4 1/3] PCI: Add pdev->has_secondary_link to mark pcie
+ link
+Message-ID: <20150526235751.GO32152@google.com>
+References: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Jeff Kirsher" <jeffrey.t.kirsher@intel.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <intel-wired-lan@lists.osuosl.org>
-Subject: Re: e1000e pci_disable_link_state_locked() issues
-References: <20150520194749.GA10210@google.com>
-In-Reply-To: <20150520194749.GA10210@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/5/21 3:47, Bjorn Helgaas wrote:
-> I think we have some issues with the e1000e usage of
-> pci_disable_link_state_locked(), which Yinghai added with 9f728f53dd70
-> ("PCI/e1000e: Add and use pci_disable_link_state_locked()").
+On Thu, May 21, 2015 at 03:05:02PM +0800, Yijing Wang wrote:
+> We assumed root port and downstream port always have
+> pcie link, downstream port always has a upstream port.
+> It's not always correct, In ATCA platform, system has
+> unusual pcie topology like:
 > 
-> That fixed an AER deadlock in the following path, where pci_bus_sem is held
-> by pci_walk_bus(), and we deadlocked when we tried to re-acquire it in
-> pci_disable_link_state():
+> (root port)   (downstream port)   (upstream port)
+> +-1c.0-[02-0a]----00.0-[03-0a]--+-00.0-[04]--
+> |                               +-01.0-[05]-- (downstream port)
+> |                               +-02.0-[06]--
+> |                               +-03.0-[07]--
+> |                               +-08.0-[08]--
+> |                               +-09.0-[09]--
+> |                               \-0a.0-[0a]--
 > 
->   do_recovery
->     broadcast_error_message(..., report_slot_reset)
->       pci_walk_bus
->         down_read(&pci_bus_sem)
->           cb(...)                                       # report_slot_reset
->             report_slot_reset
->               dev->driver->err_handler->slot_reset      # e1000_io_slot_reset
->                 e1000_io_slot_reset
->                   e1000e_disable_aspm
->                     pci_disable_link_state
->                       down_read(&pci_bus_sem)
+> In this pcie tree, downstream port 02:00.0 has no
+> pcie link, and upstream port 03:00.0 has a pcie link.
 > 
-> 9f728f53dd70 fixed that by changing e1000e_disable_aspm() to use
-> pci_disable_link_state_locked() instead, which assumes pci_bus_sem is
-> already held.
+> This patch introduced a new assumption suggested by Bjorn.
+> 1. Root port is always on the upstream end of a link.
+> 2. The pcie hierarchy should alternate between links
+> and internal switch logic, there should be no adjacent
+> links or internal buses in pcie tree.
 > 
-> That's fine for the e1000_io_slot_reset() path, where pci_bus_sem really
-> *is* held.  But e1000e_disable_aspm() is also called from e1000_probe() and
-> __e1000_resume(), and in those paths, we *don't* hold pci_bus_sem.
-> 
-> In effect, the caller of pci_disable_link_state_locked() is promising that
-> pci_bus_sem is held, and __pci_disable_link_state() relies on that promise
-> for its locking.  But e1000e isn't upholding its end of the bargain.
-> 
-> I'm not 100% sure __pci_disable_link_state() actually *needs* that locking:
-> it is only called from a driver, and it should be impossible for a device
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-pci_disable_link_state()/pci_disable_link_state_locked() almost always be called in drivers,
-one exception is a quirk function quirk_disable_aspm_l0s(). Since the final fixup is called
-in pci_bus_add_device(), and we have big lock pci_rescan_remove_lock to protect the add/remove,
-so I think it's still safe to call pci_disable_link_state() in quirk_disable_aspm_l0s() without
-the pci_bus_sem lock.
+Applied to pci/aspm for v4.2, thanks!
 
-/*
- * The 82575 and 82598 may experience data corruption issues when transitioning
- * out of L0S.  To prevent this we need to disable L0S on the pci-e link
- */
-static void quirk_disable_aspm_l0s(struct pci_dev *dev)
-{
-	dev_info(&dev->dev, "Disabling L0s\n");
-	pci_disable_link_state(dev, PCIE_LINK_STATE_L0S);
-}
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x10a7, quirk_disable_aspm_l0s);
-...
-
-
-> or any upstream bridge to go away while a driver is bound to it.  If
-> somebody wanted to analyze this further and propose a patch to remove the
-> locking (if it seems safe), that would be great.
+> ---
+>  drivers/pci/probe.c |   16 ++++++++++++++++
+>  include/linux/pci.h |    1 +
+>  2 files changed, 17 insertions(+), 0 deletions(-)
 > 
-> But in any case, __pci_disable_link_state() should be able to rely on its
-> callers following the rules, so I'd like to see an e1000e change to use
-> pci_disable_link_state() from the paths where pci_bus_sem is not held.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a9c5e63..192c6b9 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -973,6 +973,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  {
+>  	int pos;
+>  	u16 reg16;
+> +	struct pci_dev *parent;
+>  
+>  	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+>  	if (!pos)
+> @@ -982,6 +983,21 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  	pdev->pcie_flags_reg = reg16;
+>  	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+>  	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+> +
+> +	/*
+> +	 * We assume root port is always on the upstream end of
+> +	 * a link, and the pcie hierarchy should alternate
+> +	 * between links and internal switch logic.
+> +	 */
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+> +		pdev->has_secondary_link = 1;
+> +
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_UPSTREAM
+> +			|| pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> +		parent = pci_upstream_bridge(pdev);
+> +		if (!parent->has_secondary_link)
+> +			pdev->has_secondary_link = 1;
+> +	}
+>  }
+>  
+>  void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 50b7c7d..141fcc1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -355,6 +355,7 @@ struct pci_dev {
+>  	unsigned int	broken_intx_masking:1;
+>  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+>  	unsigned int	irq_managed:1;
+> +	unsigned int	has_secondary_link:1;
+>  	pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>  
+> -- 
+> 1.7.1
 > 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
-
