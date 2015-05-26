@@ -1,215 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:34192 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbbESXA0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 19:00:26 -0400
-Received: by ieczm2 with SMTP id zm2so26132024iec.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 16:00:26 -0700 (PDT)
-Date: Tue, 19 May 2015 18:00:20 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V2] pci/iov: fix resource leak on destroying VF
-Message-ID: <20150519230020.GU31666@google.com>
-References: <1428655984-26903-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:59535 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbbEZCyZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2015 22:54:25 -0400
+Message-ID: <5563DF4F.4080601@hisilicon.com>
+Date: Tue, 26 May 2015 10:49:51 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431057207-30775-1-git-send-email-weiyang@linux.vnet.ibm.com>
+To: Fabrice Gasnier <fabrice.gasnier@st.com>
+CC: Jingoo Han <jingoohan1@gmail.com>, <zhudacai@hisilicon.com>,
+	<devicetree@vger.kernel.org>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Liviu Dudau'" <liviu.dudau@arm.com>,
+	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	<qiuzhenfa@hisilicon.com>, "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
+	"'Liguozhu'" <liguozhu@hisilicon.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"'Lucas Stach'" <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <5562F0C9.4090007@hisilicon.com> <000001d096f1$93dca4e0$bb95eea0$@com> <5563451B.4050609@st.com>
+In-Reply-To: <5563451B.4050609@st.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 08, 2015 at 11:53:27AM +0800, Wei Yang wrote:
-> Beside pci_dev resources, VF has other resources between its PF, like
-> refcount to PF, sysfs link between them and the virtual bus. When a VF is
-> released in virtfn_remove(), those resources are released properly. But
-> in the hotplug case, they are not.
+On 2015/5/25 23:51, Fabrice Gasnier wrote:
+> Hi Zhou,
 > 
-> In hotplug case, VFs are removed by pci_stop_and_remove_bus_device()
-> instead of virtfn_remove(). This leads to some leak for resources.
+> On 05/25/2015 03:48 PM, Jingoo Han wrote:
+>>> >so how about we set 0 as default value of pp->root_bus_nr, then use
+>>> >pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops, pp, &res);
+>>> >to create root bus?
+>> I agree with your opinion. However, I still want to wait for other
+>> people's opinions. They will give good comments.
+>> Thank you.
+>>
+>> Best regards,
+>> Jingoo Han
+>>
+> I did a quick test with your patch in the context of another driver on arm32.
+> Just to confirm I added as well pp->root_bus_nr = 0;
 > 
-> This patch moves the resource release to pci_destroy_dev() to make sure
-> those resources are released when VF is destroyed.
-
-Earlier you mentioned a related commit, but you didn't reference it here.
-I thought you said this fixed a regression.  If so, we need information
-about it.  I know you said you'd like this patch to go to the stable
-kernel.  We need justification for that, too, e.g., a way to reproduce a
-problem and what the effect of the problem is.  I guess "hot-remove of
-an SR-IOV device" is probably the way to reproduce it, but I don't know
-what the effect is.  Does a subsequent hot-add fail?  Do we silently leak
-some memory?  If you could open a bugzilla with a dmesg log showing the
-problem, that would be great.
-
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/iov.c    |   42 +++++++++++++++++++++++-------------------
->  drivers/pci/pci.h    |   10 ++++++++++
->  drivers/pci/remove.c |   31 +++++++++++++++++++++++++++++++
->  3 files changed, 64 insertions(+), 19 deletions(-)
+> Then, I needed to add dummy pci_sys_data as suggested by Arnd in the first review :
+> http://www.spinics.net/lists/linux-pci/msg40445.html
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index ee0ebff..47daf2f 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -17,8 +17,6 @@
->  #include <linux/pci-ats.h>
->  #include "pci.h"
->  
-> -#define VIRTFN_ID_LEN	16
-> -
->  int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
->  {
->  	if (!dev->is_physfn)
-> @@ -94,7 +92,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->  	return child;
->  }
->  
-> -static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
-> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
->  {
->  	if (physbus != virtbus && list_empty(&virtbus->devices))
->  		pci_remove_bus(virtbus);
-> @@ -185,9 +183,7 @@ failed:
->  
->  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  {
-> -	char buf[VIRTFN_ID_LEN];
->  	struct pci_dev *virtfn;
-> -	struct pci_sriov *iov = dev->sriov;
->  
->  	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
->  					     pci_iov_virtfn_bus(dev, id),
-> @@ -200,24 +196,10 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  		__pci_reset_function(virtfn);
->  	}
->  
-> -	sprintf(buf, "virtfn%u", id);
-> -	sysfs_remove_link(&dev->dev.kobj, buf);
-> -	/*
-> -	 * pci_stop_dev() could have been called for this virtfn already,
-> -	 * so the directory for the virtfn may have been removed before.
-> -	 * Double check to avoid spurious sysfs warnings.
-> -	 */
-> -	if (virtfn->dev.kobj.sd)
-> -		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
-> -
-> -	mutex_lock(&iov->dev->sriov->lock);
->  	pci_stop_and_remove_bus_device(virtfn);
-> -	virtfn_remove_bus(dev->bus, virtfn->bus);
-> -	mutex_unlock(&iov->dev->sriov->lock);
->  
->  	/* balance pci_get_domain_bus_and_slot() */
->  	pci_dev_put(virtfn);
-> -	pci_dev_put(dev);
->  }
->  
->  int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-> @@ -760,3 +742,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  	return dev->sriov->total_VFs;
->  }
->  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
-> +
-> +void pci_sriov_lock(struct pci_dev *dev)
-> +{
-> +	struct pci_sriov *iov;
-> +
-> +	if (!dev->is_physfn)
-> +		return;
-> +
-> +	iov = dev->sriov;
-> +	mutex_lock(&iov->dev->sriov->lock);
-> +}
-> +
-> +void pci_sriov_unlock(struct pci_dev *dev)
-> +{
-> +	struct pci_sriov *iov;
-> +
-> +	if (!dev->is_physfn)
-> +		return;
-> +
-> +	iov = dev->sriov;
-> +	mutex_unlock(&iov->dev->sriov->lock);
-> +}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9bd762c2..a0323a2 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -260,6 +260,12 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
->  #endif /* CONFIG_PCI_ATS */
->  
->  #ifdef CONFIG_PCI_IOV
-> +
-> +#define VIRTFN_ID_LEN	16
-> +void pci_sriov_lock(struct pci_dev *dev);
-> +void pci_sriov_unlock(struct pci_dev *dev);
-> +void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus);
-> +
->  int pci_iov_init(struct pci_dev *dev);
->  void pci_iov_release(struct pci_dev *dev);
->  int pci_iov_resource_bar(struct pci_dev *dev, int resno);
-> @@ -268,6 +274,10 @@ void pci_restore_iov_state(struct pci_dev *dev);
->  int pci_iov_bus_range(struct pci_bus *bus);
->  
->  #else
-> +static inline void pci_sriov_lock(struct pci_dev *dev) { }
-> +static inline void pci_sriov_unlock(struct pci_dev *dev) { }
-> +static inline void virtfn_remove_bus(struct pci_bus *physbus,
-> +		struct pci_bus *virtbus) { }
-
-This doesn't make sense to me.  You added calls to pci_sriov_lock(), etc.,
-but they are all under #ifdef CONFIG_PCI_IOV.  So why do you need stubs
-when CONFIG_PCI_IOV is not defined?
-
->  static inline int pci_iov_init(struct pci_dev *dev)
->  {
->  	return -ENODEV;
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8a280e9..f2a07bf 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -41,6 +41,37 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	list_del(&dev->bus_list);
->  	up_write(&pci_bus_sem);
->  
-> +#ifdef CONFIG_PCI_IOV
-> +	if (dev->is_virtfn) {
-> +		char buf[VIRTFN_ID_LEN];
-> +		int id;
-> +		struct pci_dev *pdev = dev->physfn;
-> +
-> +		for (id = 0; id < pci_sriov_get_totalvfs(pdev); id++) {
-> +			if ((dev->bus->number == pci_iov_virtfn_bus(pdev, id))
-> +			   && (dev->devfn == pci_iov_virtfn_devfn(pdev, id))) {
-> +				sprintf(buf, "virtfn%u", id);
-> +				sysfs_remove_link(&pdev->dev.kobj, buf);
-> +				break;
-> +			}
-> +		}
-> +		/*
-> +		 * pci_stop_dev() could have been called for this virtfn
-> +		 * already, so the directory for the virtfn may have been
-> +		 * removed before.  Double check to avoid spurious sysfs
-> +		 * warnings.
-> +		 */
-> +		if (dev->dev.kobj.sd)
-> +			sysfs_remove_link(&dev->dev.kobj, "physfn");
-> +
-> +		pci_sriov_lock(pdev);
-> +		virtfn_remove_bus(pdev->bus, dev->bus);
-> +		pci_sriov_unlock(pdev);
-> +
-> +		pci_dev_put(dev->physfn);
-> +	}
-
-All this IOV-related code looks really out of place in pci_destroy_dev().
-Isn't there some way this code can be put in drivers/pci/iov.c?
-
+>  struct pcie_port {
+> +#ifdef CONFIG_ARM
+> +    /*
+> +     * this is a temporary hack to let the driver work on
+> +     * both arm32 and arm64. it can be removed after the
+> +     * arm32 cleanup is complete and bios32.c has stopped
+> +     * referencing host->pci_sys_data.
+> +     */
+> +    struct pci_sys_data    dummy;
 > +#endif
-> +
->  	pci_free_resources(dev);
->  	put_device(&dev->dev);
->  }
-> -- 
-> 1.7.9.5
+>      struct device        *dev;
 > 
+> 
+> This looks like necessary as bios32 is dereferencing sysdata:
+> struct pci_sys_data *sysdata = dev->bus->sysdata;
+> 
+> Best Regards,
+> Fabrice
+> 
+
+Hi Fabrice,
+
+Firstly, many thanks for your test :)
+
+I am a little confused that pci_sys_data is still needed as we don't use the code
+in bios32. What was the problem you met? Could you share me more information? Then
+let's see how to solve the problem.
+
+Thanks again and Best Regards,
+Zhou
+
+> .
+> 
+
+
