@@ -1,113 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
-Subject: [Patch v3 3/7] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
-Date: Thu, 14 May 2015 16:56:39 +0800
-Message-Id: <1431593803-5213-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v2 1/2] PCI: Move pci_ari_enabled() to global header
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, ddutile@redhat.com, rjw@rjwysocki.net,
+	linux-kernel@vger.kernel.org, lenb@kernel.org
+Date: Tue, 26 May 2015 15:11:44 -0600
+Message-ID: <20150526211144.7537.39241.stgit@gimli.home>
+In-Reply-To: <20150526210927.7537.55656.stgit@gimli.home>
+References: <20150526210927.7537.55656.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common struct resource_entry to replace private
-struct iospace_resource.
+This is useful outside of drivers/pci, particularly for deriving INTx
+routing via ACPI _PRT.  Also convert to bool return.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- arch/ia64/include/asm/pci.h |    5 -----
- arch/ia64/pci/pci.c         |   17 ++++++++---------
- 2 files changed, 8 insertions(+), 14 deletions(-)
+ drivers/pci/pci.h   |   11 -----------
+ include/linux/pci.h |   11 +++++++++++
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 52af5ed9f60b..5c10e0ec48d4 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 9bd762c2..c1b2a43 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -216,17 +216,6 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *fail_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
  
--struct iospace_resource {
--	struct list_head list;
--	struct resource res;
--};
+-/**
+- * pci_ari_enabled - query ARI forwarding status
+- * @bus: the PCI bus
+- *
+- * Returns 1 if ARI forwarding is enabled, or 0 if not enabled;
+- */
+-static inline int pci_ari_enabled(struct pci_bus *bus)
+-{
+-	return bus->self && bus->self->ari_enabled;
+-}
 -
- struct pci_controller {
- 	struct acpi_device *companion;
- 	void *iommu;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 23689d4c37ae..4af1b52c7a44 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
- static int add_io_space(struct device *dev, struct pci_root_info *info,
- 			struct resource_entry *entry)
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+ void pci_disable_bridge_window(struct pci_dev *dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..2925561 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1905,4 +1905,15 @@ static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
  {
--	struct iospace_resource *iospace;
-+	struct resource_entry *iospace;
- 	struct resource *resource, *res = entry->res;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
- 	len = strlen(info->name) + 32;
--	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	iospace = resource_list_create_entry(NULL, len);
- 	if (!iospace) {
- 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
- 			info->name);
-@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
--	resource = &iospace->res;
-+	resource = iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
-@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
- 	entry->offset = base_port;
- 	res->start = min + base_port;
- 	res->end = max + base_port;
--	list_add_tail(&iospace->list, &info->io_resources);
-+	resource_list_add_tail(iospace, &info->io_resources);
- 
- 	return 0;
- 
- free_resource:
--	kfree(iospace);
-+	resource_list_free_entry(iospace);
- 	return -ENOSPC;
+ 	return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
  }
- 
-@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
- static void __release_pci_root_info(struct pci_root_info *info)
- {
- 	struct resource *res;
--	struct iospace_resource *iospace, *tmp;
- 	struct resource_entry *entry, *tentry;
- 
--	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
--		release_resource(&iospace->res);
--		kfree(iospace);
-+	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
-+		release_resource(entry->res);
-+		resource_list_destroy_entry(entry);
- 	}
- 
- 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
--- 
-1.7.10.4
++
++/**
++ * pci_ari_enabled - query ARI forwarding status
++ * @bus: the PCI bus
++ *
++ * Returns true if ARI forwarding is enabled.
++ */
++static inline bool pci_ari_enabled(struct pci_bus *bus)
++{
++	return bus->self && bus->self->ari_enabled;
++}
+ #endif /* LINUX_PCI_H */
 
