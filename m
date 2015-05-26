@@ -1,159 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 27 May 2015 16:04:47 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:34185 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbbEZX6X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 19:58:23 -0400
+Received: by ieczm2 with SMTP id zm2so1680834iec.1
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 16:58:22 -0700 (PDT)
+Date: Tue, 26 May 2015 18:58:17 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150527210447.GY32152@google.com>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, mjg59@coreos.com, rwhite@pobox.com,
+	alex.williamson@redhat.com
+Subject: Re: [PATCH v4 3/3] PCI: Use pdev->has_secondary_link to identify
+ pcie link
+Message-ID: <20150526235817.GP32152@google.com>
+References: <1432191904-16451-1-git-send-email-wangyijing@huawei.com>
+ <1432191904-16451-3-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1432191904-16451-3-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, Suravee, Will]
+On Thu, May 21, 2015 at 03:05:04PM +0800, Yijing Wang wrote:
+> We assumed pcie root port and downstream port always have
+> pcie link, but in some unusual pcie topology platform like
+> ATCA, it may has the following pcie tree:
+> 
+> root port ---- downstream port -----upstream port
+>                                    |
+>                                    |downstream port
+> Now we introduce a flag pdev->has_secondary_link to tag
+> a device whether has pcie link, use it instead.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
-pci_read_bases() from the PCI core instead of from arch code, and there are
-likely some dependencies between these two things.
+Applied to pci/aspm for v4.2, thanks!
 
-On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
-> The PCI subsystem always assumes that I/O is supported on PCIe bridges
-> and tries to assign an I/O window to each port even if that is not
-> the case.
-> 
-> This may result in messages such as
-> 
-> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
-> 					get_res_add_size add_size 1000
-> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
-> 
-> for each bridge port, even if a port or its parent does not support
-> I/O in the first place.
-> 
-> To avoid this message, check if a port supports I/O before trying to
-> enable it. Also check if port's parent supports I/O, and only modify
-> a port's I/O resource size if both the port and its parent support I/O.
-> 
-> If IO is disabled after the initial port scan, the IO base and size
-> registers are set to 0x00f0 to indicate that IO is disabled. A later
-> rescan interprets this as "IO supported" and enables the IO range,
-> even if the parent does not support IO. Handle this situation as well.
-> 
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 > ---
->  drivers/pci/probe.c     | 14 ++++++++++++++
->  drivers/pci/setup-bus.c |  4 ++--
->  include/linux/pci.h     |  9 +++++++++
->  3 files changed, 25 insertions(+), 2 deletions(-)
+>  drivers/pci/pcie/aer/aerdrv_core.c |    3 +--
+>  drivers/pci/probe.c                |    2 +-
+>  drivers/pci/vc.c                   |    3 +--
+>  3 files changed, 3 insertions(+), 5 deletions(-)
 > 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 5653ea9..9803e3d 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -425,8 +425,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+>  
+>  	if (driver && driver->reset_link) {
+>  		status = driver->reset_link(udev);
+> -	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM ||
+> -		pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT) {
+> +	} else if (udev->has_secondary_link) {
+>  		status = default_reset_link(udev);
+>  	} else {
+>  		dev_printk(KERN_DEBUG, &dev->dev,
 > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6675a7a1b9fc..f4944ef45148 100644
+> index 192c6b9..eba4928 100644
 > --- a/drivers/pci/probe.c
 > +++ b/drivers/pci/probe.c
-> @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
->  	base = (io_base_lo & io_mask) << 8;
->  	limit = (io_limit_lo & io_mask) << 8;
+> @@ -1645,7 +1645,7 @@ static int only_one_child(struct pci_bus *bus)
+>  		return 0;
+>  	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+>  		return 1;
+> -	if (pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM &&
+> +	if (parent->has_secondary_link &&
+>  	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+>  		return 1;
+>  	return 0;
+> diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+> index 7e1304d..dfbab61 100644
+> --- a/drivers/pci/vc.c
+> +++ b/drivers/pci/vc.c
+> @@ -108,8 +108,7 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+>  	struct pci_dev *link = NULL;
 >  
-> +	/* If necessary, check if the bridge supports an I/O aperture */
-> +	if (!io_base_lo && !io_limit_lo) {
-> +		u16 io;
-> +
-> +		if (!pci_parent_supports_io(child))
-> +			return;
-> +
-> +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
-> +		pci_read_config_word(dev, PCI_IO_BASE, &io);
-> +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
-> +		if (!io)
-> +			return;
-> +	}
-
-I really like the idea of pushing this into pci_read_bridge_io().
-
-I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
-somehow get rid of pci_bridge_check_ranges() altogether?
-
-I think I looked at doing that a while back, and it seems like there was
-some wrinkle, but I don't remember what it was.
-
-It does make sense that if the bridge supports an I/O aperture, but there's
-no possibility of I/O resources on the primary side, we should pretend the
-bridge has no I/O aperture.  But I think it might be nice to emit a
-diagnostic about *why* we're ignoring it.  Otherwise there's a little
-discrepancy between dmesg and lspci.
-
-> +
->  	if ((io_base_lo & PCI_IO_RANGE_TYPE_MASK) == PCI_IO_RANGE_TYPE_32) {
->  		u16 io_base_hi, io_limit_hi;
+>  	/* Enable VCs from the downstream device */
+> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)
+> +	if (!dev->has_secondary_link)
+>  		return;
 >  
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 4fd0cacf7ca0..963b31a109a9 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -750,12 +750,12 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->  	b_res[1].flags |= IORESOURCE_MEM;
->  
->  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> -	if (!io) {
-> +	if (!io && pci_parent_supports_io(bus)) {
->  		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
->  		pci_read_config_word(bridge, PCI_IO_BASE, &io);
->  		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
->  	}
-> -	if (io)
-> +	if (io && (io != 0x00f0 || pci_parent_supports_io(bus)))
-
-I *think* this 0x00f0 depends on what pci_setup_bridge_io() writes to
-PCI_IO_BASE when it disables an I/O aperture.  Depending on that particular
-value here is sort of ugly and would need at least a comment if we can't
-figure out a better way to do it.
-
-But it would be ideal if we could get rid of pci_bridge_check_ranges()
-altogether and have the rule that we read bridge window characteristics
-(IORESOURCE_IO, IORESOURCE_MEM, IORESOURCE_PREFETCH, IORESOURCE_MEM_64)
-once when we enumerate the bridge.  After that, the only changes would be
-to change res->start and res->end and update the hardware correspondingly.
-
-I'd like res->flags to reflect the capabilities of the hardware, not
-whether the window is currently enabled.
-
->  		b_res[0].flags |= IORESOURCE_IO;
->  
->  	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 353db8dc4c6e..f3de9e24aab1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -489,6 +489,15 @@ static inline bool pci_is_root_bus(struct pci_bus *pbus)
->  	return !(pbus->parent);
->  }
->  
-> +/*
-> + * Returns true if the parent bus supports an I/O aperture.
-> + */
-> +static inline bool pci_parent_supports_io(struct pci_bus *pbus)
-> +{
-> +	return pci_is_root_bus(pbus) || pci_is_root_bus(pbus->parent) ||
-> +	       (pbus->parent->resource[0]->flags & IORESOURCE_IO);
-
-This is not obvious to me.  There are host bridges that do not have I/O
-apertures, so I don't see what the pci_is_root_bus() tests have to do with
-this.  The resource[0]->flags & IORESOURCE_IO part does make sense to me.
-
-I think at the root bus, we'd have to iterate through all the host bridge
-resources to figure out whether there are any I/O apertures.
-
-> +}
-> +
->  /**
->   * pci_is_bridge - check if the PCI device is a bridge
->   * @dev: PCI device
+>  	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
 > -- 
-> 2.1.0
+> 1.7.1
 > 
