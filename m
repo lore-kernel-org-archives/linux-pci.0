@@ -1,94 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <555F30AC.2090904@linaro.org>
-Date: Fri, 22 May 2015 21:35:40 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:51315 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755194AbbEZNuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 09:50:06 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "Jayachandran C." <jchandra@broadcom.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch v3 1/7] ACPI/PCI: Enhance ACPI core to support sparse
- IO space
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1431593803-5213-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
+Date: Tue, 26 May 2015 12:38:41 +0200
+Message-ID: <4112847.4hqbDCX9Jk@wuerfel>
+In-Reply-To: <20150526095924.GF1565@arm.com>
+References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com> <20150521063729.GB31418@jayachandranc.netlogicmicro.com> <20150526095924.GF1565@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年05月14日 16:56, Jiang Liu wrote:
-> Enhance ACPI resource parsing interfaces to support sparse IO space,
-> which will be used to share common code between x86 and IA64 later.
->
-> Tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   drivers/acpi/resource.c |    9 ++++++---
->   include/linux/ioport.h  |    1 +
->   2 files changed, 7 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 8244f013f210..fdcc73dad2c1 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->   EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
->
->   static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-> -				      u8 io_decode)
-> +				      u8 io_decode, u8 translation_type)
->   {
->   	res->flags = IORESOURCE_IO;
->
-> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->
->   	if (io_decode == ACPI_DECODE_16)
->   		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
-> +		res->flags |= IORESOURCE_IO_SPARSE;
->   }
->
->   static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->   {
->   	res->start = start;
->   	res->end = start + len - 1;
-> -	acpi_dev_ioresource_flags(res, len, io_decode);
-> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
->   }
->
->   /**
-> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
->   		acpi_dev_memresource_flags(res, len, wp);
->   		break;
->   	case ACPI_IO_RANGE:
-> -		acpi_dev_ioresource_flags(res, len, iodec);
-> +		acpi_dev_ioresource_flags(res, len, iodec,
-> +					  addr->info.io.translation_type);
->   		break;
->   	case ACPI_BUS_NUMBER_RANGE:
->   		res->flags = IORESOURCE_BUS;
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 388e3ae94f7a..24bea087e7af 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -94,6 +94,7 @@ struct resource {
->   /* PnP I/O specific bits (IORESOURCE_BITS) */
->   #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
->   #define IORESOURCE_IO_FIXED		(1<<1)
-> +#define IORESOURCE_IO_SPARSE		(1<<2)
->
->   /* PCI ROM control bits (IORESOURCE_BITS) */
->   #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+On Tuesday 26 May 2015 10:59:24 Will Deacon wrote:
+> > > Secondly, the hack to put pci_sys_data as the first member of gen_pci is ugly
+> > > at best
+> > 
+> > On balance, it removes the problem of using hw_pci interface which has its own
+> > ugliness (Arnd's mail on this http://www.spinics.net/lists/linux-pci/msg40703.html)
+> 
+> To me, that sounds like we should be disposing of the hw_pci interface
+> altogether and moving arch/arm/ over to the new architecture-independent
+> interface.
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+I'd like to do that for all drivers in drivers/pci/host, but leave the
+ones for the legacy platforms in arch/arm alone, in particular the ones
+that use nr_controllers != 1.
 
-Thanks
-Hanjun
+We should be able to remove pci_common_init_dev() and directly probe
+all devices that are using that, while we keep pci_common_init()
+around for the legacy case that also does not have a parent device.
+
+	Arnd
