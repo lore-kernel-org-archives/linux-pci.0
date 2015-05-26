@@ -1,50 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v2 09/17] NTB: Differentiate transport link down messages
-Date: Thu, 21 May 2015 04:20:53 -0400
-Message-Id: <5e7c07b40a593f52fac2a4ceb24678f3c9f88948.1432196075.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
-References: <cover.1432192681.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
-References: <cover.1432196075.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55647B22.3010801@oracle.com>
+Date: Tue, 26 May 2015 09:54:42 -0400
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+MIME-Version: 1.0
+To: Hanjun Guo <hanjun.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [PATCH 10/11] XEN / PCI: Remove the dependence on arch x86 when
+ PCI_MMCONFIG=y
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-11-git-send-email-hanjun.guo@linaro.org>
+In-Reply-To: <1432644564-24746-11-git-send-email-hanjun.guo@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The same message "qp %d: Link Down\n" was printed at two locations in
-ntb_transport.  Change the messages so they are distinct.
+On 05/26/2015 08:49 AM, Hanjun Guo wrote:
+> In drivers/xen/pci.c, there are arch x86 dependent codes when
+> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+> depends on ACPI, so this will prevent XEN PCI running on other
+> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+>
+> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
+> and it's defined in asm/pci_x86.h, the code means that
+> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+> ingnore the xen mcfg init. Actually this is duplicate, because
+> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+> pci_mmconfig_list will be empty, and the if (list_empty())
+> after it will do the same job.
+>
+> So just remove the arch related code and the head file, this
+> will be no functional change for x86, and also makes xen/pci.c
+> usable for other architectures.
+>
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> ---
+>   drivers/xen/pci.c | 6 ------
+>   1 file changed, 6 deletions(-)
+>
+> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
+> index 6785ebb..9a8dbe3 100644
+> --- a/drivers/xen/pci.c
+> +++ b/drivers/xen/pci.c
+> @@ -28,9 +28,6 @@
+>   #include <asm/xen/hypervisor.h>
+>   #include <asm/xen/hypercall.h>
+>   #include "../pci/pci.h"
+> -#ifdef CONFIG_PCI_MMCONFIG
+> -#include <asm/pci_x86.h>
+> -#endif
+>
+>   static bool __read_mostly pci_seg_supported = true;
+>
+> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
+>   	if (!xen_initial_domain())
+>   		return 0;
+>
+> -	if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+> -		return 0;
+> -
+>   	if (list_empty(&pci_mmcfg_list))
+>   		return 0;
+>
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+(+Stefano who is Xen ARM maintainer)
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index e38e4f8..e2d4258 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -658,7 +658,7 @@ static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
- 		return;
- 	}
- 
--	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
-+	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
- 	qp->link_is_up = false;
- 
- 	if (qp->event_handler)
-@@ -1456,7 +1456,7 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 		return;
- 
- 	qp->link_is_up = false;
--	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
-+	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
- 
- 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
- 		entry = ntb_list_rm(&qp->ntb_tx_free_q_lock, &qp->tx_free_q);
--- 
-2.4.0.rc0.43.gcf8a8c6
+This will not build on x86 since pci_mmcfg_list since, for example, 
+pci_mmcfg_list is declared in pci_x86.h.
+
+And I am not sure I understand why you are trying to do this since AFAIK 
+CONFIG_PCI_MMCONFIG is only defined on x86 so neither pci_x86.h will be 
+included nor xen_mcfg_late() will be defined on ARM.
+
+
+-boris
+
+
 
