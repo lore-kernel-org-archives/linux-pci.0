@@ -1,95 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 May 2015 15:03:32 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH v6 1/2] PCI/MSI: Don't disable MSI/MSI-X at shutdown
-Message-ID: <1431431730-25164-2-git-send-email-mst@redhat.com>
-References: <1431431730-25164-1-git-send-email-mst@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <556494D9.9090007@oracle.com>
+Date: Tue, 26 May 2015 11:44:25 -0400
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431431730-25164-1-git-send-email-mst@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
+Subject: Re: [PATCH 10/11] XEN / PCI: Remove the dependence on arch x86 when
+ PCI_MMCONFIG=y
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-11-git-send-email-hanjun.guo@linaro.org> <55647B22.3010801@oracle.com> <55647C94.9080606@oracle.com> <5564893B.2070102@linaro.org>
+In-Reply-To: <5564893B.2070102@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-d52877c7b1af ("pci/irq: let pci_device_shutdown to call pci_msi_shutdown
-v2") disabled MSI/MSI-X at device shutdown to address a kexec problem.
+On 05/26/2015 10:54 AM, Tomasz Nowicki wrote:
+> On 26.05.2015 16:00, Boris Ostrovsky wrote:
+>> On 05/26/2015 09:54 AM, Boris Ostrovsky wrote:
+>>> On 05/26/2015 08:49 AM, Hanjun Guo wrote:
+>>>> In drivers/xen/pci.c, there are arch x86 dependent codes when
+>>>> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+>>>> depends on ACPI, so this will prevent XEN PCI running on other
+>>>> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+>>>>
+>>>> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+>>>> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) ==
+>>>> 0),
+>>>> and it's defined in asm/pci_x86.h, the code means that
+>>>> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+>>>> ingnore the xen mcfg init. Actually this is duplicate, because
+>>>> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+>>>> pci_mmconfig_list will be empty, and the if (list_empty())
+>>>> after it will do the same job.
+>>>>
+>>>> So just remove the arch related code and the head file, this
+>>>> will be no functional change for x86, and also makes xen/pci.c
+>>>> usable for other architectures.
+>>>>
+>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>>>> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+>>>> ---
+>>>>   drivers/xen/pci.c | 6 ------
+>>>>   1 file changed, 6 deletions(-)
+>>>>
+>>>> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
+>>>> index 6785ebb..9a8dbe3 100644
+>>>> --- a/drivers/xen/pci.c
+>>>> +++ b/drivers/xen/pci.c
+>>>> @@ -28,9 +28,6 @@
+>>>>   #include <asm/xen/hypervisor.h>
+>>>>   #include <asm/xen/hypercall.h>
+>>>>   #include "../pci/pci.h"
+>>>> -#ifdef CONFIG_PCI_MMCONFIG
+>>>> -#include <asm/pci_x86.h>
+>>>> -#endif
+>>>>
+>>>>   static bool __read_mostly pci_seg_supported = true;
+>>>>
+>>>> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
+>>>>       if (!xen_initial_domain())
+>>>>           return 0;
+>>>>
+>>>> -    if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+>>>> -        return 0;
+>>>> -
+>>>>       if (list_empty(&pci_mmcfg_list))
+>>>>           return 0;
+>>>>
+>>>
+>>> (+Stefano who is Xen ARM maintainer)
+>>>
+>>> This will not build on x86 since pci_mmcfg_list since, for example,
+>>> pci_mmcfg_list is declared in pci_x86.h.
+>>
+>>
+>> And now really with Stefano and with parsable first sentence, sorry:
+>>
+>>
+>> This will not build on x86 since pci_mmcfg_list, for example, is
+>> declared in pci_x86.h.
+>
+> With this patch set, not any more. Please see preceding patches.
 
-The change made by the above commit is no longer necessary: it was
-superceded by commit d5dea7d95c48 ("PCI: msi: Disable msi interrupts
-when we initialize a pci device") which makes sure the original kexec
-problem is solved in the new kernel, and commit b566a22c23 ("PCI:
-disable Bus Master on PCI device shutdown") which makes sure device does
-not send MSI interrupts (MSI is a memory write and so is suppressed when
-bus master is cleared).
 
-On the contrary, disabling MSI makes it *more* likely that the device
-will cause mischief since unlike MSI, INT#x interrupts are not
-suppressed by clearing bus mastering.
+OK, I didn't notice this was part of a series.
 
-One example of such mischief is that after we disable MSI, the device
-may assert INT#x (remember, cleaning bus mastering does not disable
-INT#x interrupts), and if the driver hasn't registered an interrupt
-handler for it, the interrupt is never deasserted which causes an "irq
-%d: nobody cared" message, with irq being subsequently disabled. This is
-actually not hard to observe with virtio devices.  Not a huge problem,
-but ugly, and might in theory cause other problems, e.g. if the irq
-being disabled is shared with another device that attempts to use it in
-its shutdown callback, or if irq debugging was explicitly disabled on
-the kernel command line.
+Then if not having PCI_PROBE_MMCONF bit set is indeed equivalent to 
+list_empty(&pci_mmcfg_list), is there any reason for this flag to 
+(continue to) exist? (and also for pci_mmcfg_arch_init_failed.)
 
-Another theoretical problem is that if the driver does not flush MSI
-interrupts in the shutdown callback, MSI interrupt handler will run at
-the same time as the INT#x handler, which doesn't normally happen
-outside the shutdown path; Depending on the driver, the two handlers
-might conflict. I did not go looking for such driver bugs but this seems
-plausible.
 
-virtio specifically has another issue: register functions change between
-msi enabled and disabled modes, so disabling MSI while driver is doing
-things (e.g. from a kthread) will make the device confused.
+-boris
 
-Of course, some of the above specific issues can be solved by
-implementing a shutdown callback in the driver: this callback would have
-to suppress further activity from both the driver and the device, and
-flush outstanding handlers. This is a non-trivial amount of code that
-can trigger at any time, so needs careful thought to avoid race
-conditions causing bugs, and that's only running on shutdown, so isn't
-well tested.
 
-Instead, stop disabling MSIs in PCI core at shutdown: it's simple, safe,
-removes code instead of adding more code, and needs no driver support.
-
-Reported-by: Fam Zheng <famz@redhat.com>
-Tested-by: Fam Zheng <famz@redhat.com>
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yhlu.kernel.send@gmail.com>
-CC: Ulrich Obergfell <uobergfe@redhat.com>
-CC: Rusty Russell <rusty@rustcorp.com.au>
----
- drivers/pci/pci-driver.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3cb2210..38a602c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -450,8 +450,6 @@ static void pci_device_shutdown(struct device *dev)
- 
- 	if (drv && drv->shutdown)
- 		drv->shutdown(pci_dev);
--	pci_msi_shutdown(pci_dev);
--	pci_msix_shutdown(pci_dev);
- 
- #ifdef CONFIG_KEXEC
- 	/*
--- 
-MST
 
