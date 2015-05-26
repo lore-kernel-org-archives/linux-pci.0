@@ -1,165 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 May 2015 18:13:50 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 11/11] ARM64 / PCI / ACPI: support for ACPI based PCI
- hostbridge init
-Message-ID: <20150526171350.GV1565@arm.com>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
- <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:36094 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbbEZX6q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 19:58:46 -0400
+Received: by igbpi8 with SMTP id pi8so71777042igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 16:58:46 -0700 (PDT)
+Date: Tue, 26 May 2015 18:58:42 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Matthew Garrett <mjg59@coreos.com>
+Subject: Re: [PATCH] PCI/ASPM: Drop __pci_disable_link_state() useless
+ "force" parameter
+Message-ID: <20150526235842.GQ32152@google.com>
+References: <20150522145807.27123.6007.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432644564-24746-12-git-send-email-hanjun.guo@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150522145807.27123.6007.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 01:49:24PM +0100, Hanjun Guo wrote:
-> Based on Jiang Liu's common interface to support PCI host bridge
-> init and refactoring of MMCONFIG, this patch using information
-> from ACPI MCFG table and IO/irq resources from _CRS to init
-> ARM64 PCI hostbridge, then PCI will work on ARM64.
+On Fri, May 22, 2015 at 09:58:08AM -0500, Bjorn Helgaas wrote:
+> After 387d37577fdd ("PCI: Don't clear ASPM bits when the FADT declares it's
+> unsupported"), the "force" parameter to __pci_disable_link_state() is
+> always "false".
 > 
-> This patch is based on Mark Salter and Tomasz Nowicki's work.
+> Remove the "force" parameter and assume it's always false.
 > 
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Liviu Dudau <Liviu.Dudau@arm.com>
-> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Applied to pci/aspm for v4.2.
+
 > ---
->  arch/arm64/Kconfig      |   7 ++
->  arch/arm64/kernel/pci.c | 245 +++++++++++++++++++++++++++++++++++++++++++++---
->  drivers/pci/pci.c       |  26 +++--
->  3 files changed, 257 insertions(+), 21 deletions(-)
+>  drivers/pci/pcie/aspm.c |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
 > 
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 9b80428..8e4b789 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -276,6 +276,13 @@ config PCI_DOMAINS_GENERIC
->  config PCI_SYSCALL
->         def_bool PCI
-> 
-> +config PCI_MMCONFIG
-> +       def_bool y
-> +       select PCI_ECAM
-> +       select HAVE_PCI_ECAM
-> +       select GENERIC_PCI_ECAM
-> +       depends on ACPI
-> +
->  source "drivers/pci/Kconfig"
->  source "drivers/pci/pcie/Kconfig"
->  source "drivers/pci/hotplug/Kconfig"
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 4095379..d1629dc 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -11,12 +11,15 @@
->   */
-> 
->  #include <linux/acpi.h>
-> +#include <linux/ecam.h>
->  #include <linux/init.h>
->  #include <linux/io.h>
->  #include <linux/kernel.h>
->  #include <linux/mm.h>
-> +#include <linux/of_address.h>
->  #include <linux/of_pci.h>
->  #include <linux/of_platform.h>
-> +#include <linux/pci-acpi.h>
->  #include <linux/slab.h>
-> 
->  #include <asm/pci-bridge.h>
-> @@ -43,31 +46,251 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->   */
->  int pcibios_add_device(struct pci_dev *dev)
->  {
-> -       dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +       if (acpi_disabled)
-> +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> 
->         return 0;
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 7d4fcdc..f90d8f2 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -714,8 +714,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+>  	up_read(&pci_bus_sem);
 >  }
+>  
+> -static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+> -				     bool force)
+> +static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+>  {
+>  	struct pci_dev *parent = pdev->bus->self;
+>  	struct pcie_link_state *link;
+> @@ -737,7 +736,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+>  	 * a similar mechanism using "PciASPMOptOut", which is also
+>  	 * ignored in this situation.
+>  	 */
+> -	if (aspm_disabled && !force) {
+> +	if (aspm_disabled) {
+>  		dev_warn(&pdev->dev, "can't disable ASPM; OS doesn't have ASPM control\n");
+>  		return;
+>  	}
+> @@ -763,7 +762,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+>  
+>  void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+>  {
+> -	__pci_disable_link_state(pdev, state, false, false);
+> +	__pci_disable_link_state(pdev, state, false);
+>  }
+>  EXPORT_SYMBOL(pci_disable_link_state_locked);
+>  
+> @@ -778,7 +777,7 @@ EXPORT_SYMBOL(pci_disable_link_state_locked);
+>   */
+>  void pci_disable_link_state(struct pci_dev *pdev, int state)
+>  {
+> -	__pci_disable_link_state(pdev, state, true, false);
+> +	__pci_disable_link_state(pdev, state, true);
+>  }
+>  EXPORT_SYMBOL(pci_disable_link_state);
+>  
 > 
-> +#ifdef CONFIG_ACPI
-> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +       struct pci_controller *sd = bridge->bus->sysdata;
-> +
-> +       ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> +       return 0;
-> +}
-> +
-> +void pcibios_add_bus(struct pci_bus *bus)
-> +{
-> +       acpi_pci_add_bus(bus);
-> +}
-> +
-> +void pcibios_remove_bus(struct pci_bus *bus)
-> +{
-> +       acpi_pci_remove_bus(bus);
-> +}
-> +
-> +int pcibios_enable_irq(struct pci_dev *dev)
-> +{
-> +       if (!pci_dev_msi_enabled(dev))
-> +               acpi_pci_irq_enable(dev);
-> +       return 0;
-> +}
-> +
-> +int pcibios_disable_irq(struct pci_dev *dev)
-> +{
-> +       if (!pci_dev_msi_enabled(dev))
-> +               acpi_pci_irq_disable(dev);
-> +       return 0;
-> +}
-> +
-> +int pcibios_enable_device(struct pci_dev *dev, int bars)
-> +{
-> +       int err;
-> +
-> +       err = pci_enable_resources(dev, bars);
-> +       if (err < 0)
-> +               return err;
-> +
-> +       return pcibios_enable_irq(dev);
-> +}
-> +
-> +static int __init pcibios_assign_resources(void)
-> +{
-> +       struct pci_bus *root_bus;
-> +
-> +       if (acpi_disabled)
-> +               return 0;
-> +
-> +       list_for_each_entry(root_bus, &pci_root_buses, node) {
-> +               pcibios_resource_survey_bus(root_bus);
-> +               pci_assign_unassigned_root_bus_resources(root_bus);
-> +       }
-> +       return 0;
-> +}
-
-I'm starting to sound like a stuck record (and getting bored of it
-myself!), but none of this looks arch-specific. Can it be moved into the
-core?
-
-Will
