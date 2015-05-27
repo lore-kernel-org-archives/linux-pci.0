@@ -1,191 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:54603 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435AbbEKG0o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 02:26:44 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 16:26:42 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 675B52BB0051
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:26:40 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B6QVTP41156624
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:26:40 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B6Q7RX010973
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 16:26:07 +1000
-Date: Mon, 11 May 2015 14:25:49 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V3 5/9] powerpc/eeh: create EEH_PE_VF for VF PE
-Message-ID: <20150511062549.GB1632@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1430723258-21299-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1430723258-21299-6-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150511023707.GA8816@gwshan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55657EA3.5000601@linaro.org>
+Date: Wed, 27 May 2015 16:21:55 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150511023707.GA8816@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
+ ACPI
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org> <20150526165844.GD2175@e106497-lin.cambridge.arm.com> <5564AB68.6080502@linux.intel.com>
+In-Reply-To: <5564AB68.6080502@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 11, 2015 at 12:37:07PM +1000, Gavin Shan wrote:
->On Mon, May 04, 2015 at 03:07:34PM +0800, Wei Yang wrote:
->
->Please reorder PATCH[6] with this one because the EEH device is expected
->to be created before EEH PE.
+Hi Liviu,
 
-That's a good idea.
-
->
->>On powernv platform, VF PE is a special PE which is different from the Bus
->>PE.  On the EEH side, it needs a corresponding concept to handle the VF PE
->>properly. For example, we need to create VF PE when VF's pci_dev is
->>initialized in kernel. And add a flag to mark it is a VF PF.
->                                                       ^^^^^
+On 2015年05月27日 01:20, Jiang Liu wrote:
+> On 2015/5/27 0:58, Liviu Dudau wrote:
+>> On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
+>>> ARM64 ACPI based PCI host bridge init needs a arch dependent
+>>> struct pci_controller to accommodate common PCI host bridge
+>>> code which is introduced later, or it will lead to compile
+>>> errors on ARM64.
 >>
->
->>From above commit log, my understanding is that you're adding a flag to
->identify VF PE, which is handled differently from bus PE. You missed the
->details on the difference between them and the speical treament to VF PE.
->Could you help add those information in the commit log to make it looks
->complete?
->
-
-This patch just introduce the VF PE. For those differences, we have another
-patch "handle VF PE properly" to cover. In the log of that patch, I listed
-those differences. Do you think this is fine?
-
->>This patch introduces the EEH_PE_VF type for VF PE and creates it for a VF.
->>At the mean time, it creates the sysfs and address cache for VF PE.
->                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->
->                   it creates the sysfs and address cache for VF PE at PCI
->device final fixup time.
->
+>> Hi Hanjun,
 >>
->>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>---
->> arch/powerpc/include/asm/eeh.h               |    1 +
->> arch/powerpc/kernel/eeh_pe.c                 |   12 ++++++++++--
->> arch/powerpc/platforms/powernv/eeh-powernv.c |   12 ++++++++++++
->> 3 files changed, 23 insertions(+), 2 deletions(-)
+>> Two questions: why don't you introduce this patch next to the
+>> one that is going to make use of it (or even merge it there)?
+
+this is because of this patch is needed by Jiang Liu's patch set
+to fix the compile error on ARM64, I'd rather do that, but It's
+better to let Jiang Liu's patch goes in, and then this one, that's
+why I prepared a single patch for the struct. (I mentioned it
+in the cover letter)
+
+>> Second, why is the whole struct pci_controller not surrounded
+>> by #ifdef CONFIG_ACPI as you are implying that this is needed
+>> only for ACPI?
+
+I hope it can be reused, since the NUMA node and segment (domain)
+is both needed for DT and ACPI, if it's not the case foe now, I
+can surrounded them all by #ifdef CONFIG_ACPI.
+
 >>
->>diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>index a52db28..56e8cd9 100644
->>--- a/arch/powerpc/include/asm/eeh.h
->>+++ b/arch/powerpc/include/asm/eeh.h
->>@@ -70,6 +70,7 @@ struct pci_dn;
->> #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
->> #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
->> #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
->>+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
->>
->> #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
->> #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
->>diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
->>index 35f0b62..edfe63a 100644
->>--- a/arch/powerpc/kernel/eeh_pe.c
->>+++ b/arch/powerpc/kernel/eeh_pe.c
->>@@ -299,7 +299,12 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
->> 	 * EEH device already having associated PE, but
->> 	 * the direct parent EEH device doesn't have yet.
->> 	 */
->>-	pdn = pdn ? pdn->parent : NULL;
->>+#ifdef CONFIG_PCI_IOV
->>+	if (edev->mode & EEH_DEV_VF)
->>+		pdn = pci_get_pdn(edev->physfn);
->>+	else
->>+#endif
->>+		pdn = pdn ? pdn->parent : NULL;
->
->[A]
->
->> 	while (pdn) {
->> 		/* We're poking out of PCI territory */
->> 		parent = pdn_to_eeh_dev(pdn);
->>@@ -382,7 +387,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
->> 	}
->>
->> 	/* Create a new EEH PE */
->>-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->>+	if (edev->mode & EEH_DEV_VF)
->>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
->>+	else
->>+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->
->You don't have CONFIG_PCI_IOV here to protect the code, but you had
->that at [A]. In order to keep the code look consistent, you either
->add it or remove it for all places. I prefer to remove it, which
->we don't need CONFIG_PCI_IOV.
->
+>> Btw, looking through the whole series I'm not (yet) convinced
+>> that this is needed at all.
+> Hi Liviu,
+> 	This structure is required by the requested patch set
+> at http://patchwork.ozlabs.org/patch/472249/, which consolidates
+> the common code to support PCI host bridge into ACPI core.
 
-Ok, that's fine to remove it.
+Jiang, thanks for the explanation :)
 
-BTW, if remove the CONFIG_PCI_IOV, we need to remove it around the physfn in
-eeh_dev definition. That's fine?
-
->> 	if (!pe) {
->> 		pr_err("%s: out of memory!\n", __func__);
->> 		return -ENOMEM;
->>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>index 622f08c..5447481 100644
->>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>@@ -1540,3 +1540,15 @@ static int __init eeh_powernv_init(void)
->> 	return ret;
->> }
->> machine_early_initcall(powernv, eeh_powernv_init);
->>+
->>+#ifdef CONFIG_PCI_IOV
->>+static void pnv_pci_fixup_vf_eeh(struct pci_dev *pdev)
->>+{
->
->Please rename it to pnv_eeh_vf_final_fixup(). Names of all functions
->in this file expect prefix "pnv_eeh_". With "_final_", it's clearly
->to tell it's called on PCI device final fixup time.
->
-
-ok
-
->>+	/* sysfs files should only be added after devices are added */
->
->It's nice to explain why here: sysfs for the PCI device isn't populated
->and the MMIO resource isn't finalized for the PCI device yet.
->
-
-Don't get your point.
-
-sysfs of the PCI device is populated at this point.
-
->>+	if (pdev->is_virtfn) {
->>+		eeh_add_device_late(pdev);
->>+		eeh_sysfs_add_device(pdev);
->>+	}
->>+}
->
->The nested ifdef can be avoided as:
->
->	if (!pdev->is_virtfn)
->		return;
->
->	eeh_add_device_late(pdev);
->	eeh_sysfs_add_device(pdev);
->
-
-Ok.
-
->>+DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_eeh);
->>+#endif /* CONFIG_PCI_IOV */
->
->Thanks,
->Gavin
-
--- 
-Richard Yang
-Help you, Help me
-
+Thanks
+Hanjun
