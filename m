@@ -1,106 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0135.outbound.protection.outlook.com ([65.55.169.135]:47488
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752701AbbEOSeO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 14:34:14 -0400
-From: Bhushan Bharat <Bharat.Bhushan@freescale.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-CC: Bansal Ayushi <Ayushi.Bansal@freescale.com>
-Subject: RE: Crash at vfio_intx_handler for PCI device 
-Date: Fri, 15 May 2015 17:00:18 +0000
-Message-ID: <CY1PR0301MB12761E3A28E4D4F1F72B2EFB90C70@CY1PR0301MB1276.namprd03.prod.outlook.com>
-References: <BY2PR03MB1606C055D54CC65D00DE8EAFBC70@BY2PR03MB160.namprd03.prod.outlook.com>
-In-Reply-To: <BY2PR03MB1606C055D54CC65D00DE8EAFBC70@BY2PR03MB160.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mark Rutland <mark.rutland@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v9 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
+Date: Wed, 27 May 2015 11:27:38 -0700
+Message-Id: <0fcf7325d2b5da11442473fb8439f8eff450217a.1432747280.git.dhdang@apm.com>
+In-Reply-To: <cover.1432747280.git.dhdang@apm.com>
+References: <cover.1432747280.git.dhdang@apm.com>
+In-Reply-To: <cover.1432747280.git.dhdang@apm.com>
+References: <20150525125206.64d15861@arm.com> <cover.1432747280.git.dhdang@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-We are direct assigning the intel ixgbe device on Freescale T4240QDS-2 using VFIO. We are getting below crash when running QEMU.
-When we set the flag 'nointxmask', the issue resolved. 
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-Here is the info of lspci -vvvxxx for that PCI device:
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index c8d3e0e..d8f3a1c 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -374,6 +374,28 @@
+ 			};
+ 		};
+ 
++		msi: msi@79000000 {
++			compatible = "apm,xgene1-msi";
++			msi-controller;
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		pcie0: pcie@1f2b0000 {
+ 			status = "disabled";
+ 			device_type = "pci";
+@@ -395,6 +417,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie0clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie1: pcie@1f2c0000 {
+@@ -418,6 +441,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie1clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie2: pcie@1f2d0000 {
+@@ -441,6 +465,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie2clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie3: pcie@1f500000 {
+@@ -464,6 +489,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie3clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie4: pcie@1f510000 {
+@@ -487,6 +513,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie4clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+-- 
+1.9.1
 
-0001:01:00.1 Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01)
-                Subsystem: Intel Corporation Ethernet Server Adapter X520-2
-                Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-                Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-                Latency: 0, Cache Line Size: 32 bytes
-                Interrupt: pin B routed to IRQ 17
-                Region 0: Memory at c40100000 (64-bit, non-prefetchable) [size=512K]
-                Region 2: I/O ports at 1020 [disabled] [size=32]
-                Region 4: Memory at c40180000 (64-bit, non-prefetchable) [size=16K]
-                [virtual] Expansion ROM at c40280000 [disabled] [size=512K]
-                Capabilities: [40] Power Management version 3
-                                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
-                                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-                Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-                                Address: 0000000000000000  Data: 0000
-                                Masking: 00000000  Pending: 00000000
-                Capabilities: [70] MSI-X: Enable+ Count=64 Masked-
-                                Vector table: BAR=4 offset=00000000
-                                PBA: BAR=4 offset=00002000
-                Capabilities: [a0] Express (v2) Endpoint, MSI 00
-                                DevCap:               MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                                                ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-                                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                                                RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-                                                MaxPayload 128 bytes, MaxReadReq 512 bytes
-                                DevSta:                CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                                LnkCap:                Port #4, Speed 5GT/s, Width x8, ASPM L0s, Exit Latency L0s <512ns, L1 <4us
-                                                ClockPM- Surprise- LLActRep- BwNot-
-                                LnkCtl:  ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-                                                ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported
-                                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-                                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-                                                EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-                Capabilities: [e0] Vital Product Data
-                                Unknown small resource type 00, will not decode more.
-                Capabilities: [100 v1] Advanced Error Reporting
-                                UESta:   DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                                UEMsk:                DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                                CESta:   RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                                CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                                AERCap:               First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-                Capabilities: [140 v1] Device Serial Number 00-1b-21-ff-ff-89-81-88
-                Capabilities: [150 v1] Alternative Routing-ID Interpretation (ARI)
-                                ARICap:                MFVC- ACS-, Next Function: 0
-                                ARICtl:  MFVC- ACS-, Function Group: 0
-                Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
-                                IOVCap:               Migration-, Interrupt Message Number: 000
-                                IOVCtl:  Enable- Migration- Interrupt- MSE- ARIHierarchy-
-                                IOVSta: Migration-
-                                Initial VFs: 64, Total VFs: 64, Number of VFs: 0, Function Dependency Link: 01
-                                VF offset: 384, stride: 2, Device ID: 10ed
-                                Supported Page Size: 00000553, System Page Size: 00000001
-                                Region 0: Memory at 00000000e0500000 (64-bit, non-prefetchable)
-                                Region 3: Memory at 00000000e0600000 (64-bit, non-prefetchable)
-                                VF Migration: offset: 00000000, BIR: 0
-                Kernel driver in use: vfio-pci
-00: 86 80 fb 10 06 04 10 00 01 00 00 02 08 00 80 00
-10: 04 00 10 e0 00 00 00 00 21 10 00 00 00 00 00 00
-20: 04 00 18 e0 00 00 00 00 00 00 00 00 86 80 11 7a
-30: 00 00 00 00 40 00 00 00 00 00 00 00 00 02 00 00
-40: 01 50 23 48 00 20 00 2b 00 00 00 00 00 00 00 00
-50: 05 70 80 01 00 00 00 00 00 00 00 00 00 00 00 00
-60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-70: 11 a0 3f 80 04 00 00 00 04 20 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 10 e0 02 00 c2 8c 00 10 10 28 00 00 82 34 01 04
-b0: 40 00 41 10 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 1f 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 03 00 00 80 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-Thanks
--Bharat
