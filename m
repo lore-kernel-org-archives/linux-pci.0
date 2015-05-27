@@ -1,97 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 29 May 2015 18:36:50 +0200
-From: Darren Hart <dvhart@infradead.org>
-To: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: Michael Marineau <michael.marineau@coreos.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	platform-driver-x86@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Petri Hodju <petrihodju@yahoo.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb changes
-Message-ID: <20150529163650.GA94698@vmdeb7>
-References: <20150305232038.1873d380@neptune.home>
- <20150306174254.GB19001@vmdeb7>
- <20150307011546.0050279d@neptune.home>
- <20150309225238.0b9ced4e@neptune.home>
- <CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
- <20150311223445.6af76f7c@neptune.home>
- <CAGr1u3tKVtQno=hUrKemLFYG12dtvPjFVR7oFwDG5cewJGCnJQ@mail.gmail.com>
- <20150527044749.GB21644@fury.dvhart.com>
- <CAGr1u3t1+ktKG_v74nQ2H6txGcWSwBBfsWS74k0Ao2pNTvgAng@mail.gmail.com>
- <20150527081323.35a3cf88@pluto.restena.lu>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:35650 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752274AbbE0Dz4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 23:55:56 -0400
+Received: by pdea3 with SMTP id a3so107130576pde.2
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 20:55:55 -0700 (PDT)
+Message-ID: <55654041.2040902@linaro.org>
+Date: Wed, 27 May 2015 11:55:45 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20150527081323.35a3cf88@pluto.restena.lu>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
+Subject: Re: [PATCH 10/11] XEN / PCI: Remove the dependence on arch x86 when
+ PCI_MMCONFIG=y
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-11-git-send-email-hanjun.guo@linaro.org> <55647B22.3010801@oracle.com> <55647C94.9080606@oracle.com> <5564893B.2070102@linaro.org> <556494D9.9090007@oracle.com>
+In-Reply-To: <556494D9.9090007@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 08:13:23AM +0200, Bruno Pr�mont wrote:
-> On Tue, 26 May 2015 22:35:46 -0700 Michael Marineau wrote:
-> > On Tue, May 26, 2015 at 9:47 PM, Darren Hart <dvhart@infradead.org> wrote:
-> > > On Tue, May 26, 2015 at 12:10:48PM -0700, Michael Marineau wrote:
-> > >> FYI, this actually broke backlight controls on my MBP11,3 because the
-> > >> assumption the patch makes that gmux is always loaded before graphics
-> > >> drivers didn't hold true. At least for me dracut included the nouveau
-> > >> module in the initrd but not gmux, ensuring the ordering was wrong. No
-> > >> errors were reporting, and gmux still offered the backlight device, it
-> > >> just became inoperable. I worked around this for my kernel by building
-> > >> gmux into vmlinuz instead of as a module but that isn't going to in
-> > >> more general configs because there is an apple backlight driver which
-> > >> cannot be built at all in that configuration.
-> > >>
-> > >
-> > > Thank you for reporting this Michael,
-> > >
-> > > That is tough as nouveau doesn't have an explicit dependency on gmux, so we
-> > > could do something like a passive request_module(), but if it isn't in the
-> > > initrd image, it would still fail as you describe.
-> > >
-> > >> Is there a way to make the ordering between nouveau and gmux more
-> > >> explicit/reliable? Can gmux complain loudly if the ordering is ever
-> > >> wrong?
-> > >
-> > > It should print an error if the probe fails due to the IO already being in use
-> > > or if it can't be allocated. The disabled IO case is only info level though,
-> > > perhaps that should be higher priority. Printing something when failing to probe
-> > > seems like a reasonable thing to do.
-> > >
-> > > Michael, which message do you get if you boot with "debug" or "loglevel=6" when
-> > > apple-gmux is not built-in?
-> > 
-> > No error, gmux claims it worked:
-> > [   13.693379] apple_gmux: Found gmux version 4.0.8 [indexed]
-> > [   13.693400] vgaarb: device changed decodes:
-> > PCI:0000:01:00.0,olddecodes=io+mem,decodes=io+mem:owns=none
-> > [   13.693404] apple_gmux: locked IO for PCI:0000:01:00.0
-> > 
-> > Full dmesg: https://gist.github.com/marineam/0e5a23548e8b3b2e1d50
-> 
-> What GPUs are there in your MBP11,3? From your dmesg it looks like all
-> you have is NVIDIA GPU 0000:01:00.0 (lspci?).
-> 
-> Is there a somehow hidden intel GPU around doing the backlight?
-> If so my locking does the wrong thing for your system as:
-> 
-> [    0.393298] vgaarb: device added: PCI:0000:01:00.0,decodes=io+mem,owns=none,locks=none
-> [    0.393299] vgaarb: loaded
-> [    0.393300] vgaarb: setting as boot device: PCI:0000:01:00.0
-> [    0.393301] vgaarb: bridge control possible 0000:01:00.0
-> ...
-> [   13.693379] apple_gmux: Found gmux version 4.0.8 [indexed]
-> [   13.693400] vgaarb: device changed decodes: PCI:0000:01:00.0,olddecodes=io+mem,decodes=io+mem:owns=none
-> [   13.693404] apple_gmux: locked IO for PCI:0000:01:00.0
-> 
-> Here it triggers "olddecodes=none -> io+mem".
-> 
-> Making sure to lock only the intel GPU when present and especially protecting
-> against nvidia driver will be hard if legacy-IO is being processed by a hidden
-> device!
+On 2015年05月26日 23:44, Boris Ostrovsky wrote:
+> On 05/26/2015 10:54 AM, Tomasz Nowicki wrote:
+>> On 26.05.2015 16:00, Boris Ostrovsky wrote:
+>>> On 05/26/2015 09:54 AM, Boris Ostrovsky wrote:
+>>>> On 05/26/2015 08:49 AM, Hanjun Guo wrote:
+>>>>> In drivers/xen/pci.c, there are arch x86 dependent codes when
+>>>>> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
+>>>>> depends on ACPI, so this will prevent XEN PCI running on other
+>>>>> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
+>>>>>
+>>>>> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
+>>>>> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) ==
+>>>>> 0),
+>>>>> and it's defined in asm/pci_x86.h, the code means that
+>>>>> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
+>>>>> ingnore the xen mcfg init. Actually this is duplicate, because
+>>>>> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
+>>>>> pci_mmconfig_list will be empty, and the if (list_empty())
+>>>>> after it will do the same job.
+>>>>>
+>>>>> So just remove the arch related code and the head file, this
+>>>>> will be no functional change for x86, and also makes xen/pci.c
+>>>>> usable for other architectures.
+>>>>>
+>>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>>>>> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+>>>>> ---
+>>>>>   drivers/xen/pci.c | 6 ------
+>>>>>   1 file changed, 6 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
+>>>>> index 6785ebb..9a8dbe3 100644
+>>>>> --- a/drivers/xen/pci.c
+>>>>> +++ b/drivers/xen/pci.c
+>>>>> @@ -28,9 +28,6 @@
+>>>>>   #include <asm/xen/hypervisor.h>
+>>>>>   #include <asm/xen/hypercall.h>
+>>>>>   #include "../pci/pci.h"
+>>>>> -#ifdef CONFIG_PCI_MMCONFIG
+>>>>> -#include <asm/pci_x86.h>
+>>>>> -#endif
+>>>>>
+>>>>>   static bool __read_mostly pci_seg_supported = true;
+>>>>>
+>>>>> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
+>>>>>       if (!xen_initial_domain())
+>>>>>           return 0;
+>>>>>
+>>>>> -    if ((pci_probe & PCI_PROBE_MMCONF) == 0)
+>>>>> -        return 0;
+>>>>> -
+>>>>>       if (list_empty(&pci_mmcfg_list))
+>>>>>           return 0;
+>>>>>
+>>>>
+>>>> (+Stefano who is Xen ARM maintainer)
+>>>>
+>>>> This will not build on x86 since pci_mmcfg_list since, for example,
+>>>> pci_mmcfg_list is declared in pci_x86.h.
+>>>
+>>>
+>>> And now really with Stefano and with parsable first sentence, sorry:
+>>>
+>>>
+>>> This will not build on x86 since pci_mmcfg_list, for example, is
+>>> declared in pci_x86.h.
+>>
+>> With this patch set, not any more. Please see preceding patches.
+>
+>
+> OK, I didn't notice this was part of a series.
 
-Ugh indeed. Worst case we can special case via dmi strings. Is this Apple device
-significantly different from others? Bruno, what are you testing on?
+Sorry, I didn't cc you all of those patches.
 
--- 
-Darren Hart
-Intel Open Source Technology Center
+>
+> Then if not having PCI_PROBE_MMCONF bit set is indeed equivalent to
+> list_empty(&pci_mmcfg_list), is there any reason for this flag to
+> (continue to) exist? (and also for pci_mmcfg_arch_init_failed.)
+
+I think PCI_PROBE_MMCONF bit is needed for early init of pci mmconfig in
+the x86 arch related code, but for xen_mcfg_late(), it's called after
+acpi_init() which the mmconfig is ready for use if it's available (the
+pci_mmcfg_list is empty or not), so not having PCI_PROBE_MMCONF bit set
+is equivalent list_empty(&pci_mmcfg_list) is not suitable for all cases,
+but I think it will be ok after mmconfig is initialized.
+
+I think my change log is misleading and needs updating :)
+
+Thanks
+Hanjun
