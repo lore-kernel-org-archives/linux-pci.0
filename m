@@ -1,85 +1,32 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40204 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbbEOFty (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:49:54 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:49:52 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id DDE982CE8050
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:49 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5nfG250462796
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:49 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5nGt6001146
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:49:17 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 02/11] powerpc/pci_dn: cache vf_index in pci_dn
-Date: Fri, 15 May 2015 13:46:17 +0800
-Message-Id: <1431668786-30371-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150516152823.GK31666@google.com>
+References: <1427857069-6789-1-git-send-email-yinghai@kernel.org>
+	<20150516152537.GJ31666@google.com>
+	<20150516152823.GK31666@google.com>
+Date: Wed, 27 May 2015 16:27:19 -0700
+Message-ID: <CAE9FiQVeAJHv_T-O6g4zSTz19DP1LdyMo28tJX5zg4fmDuGxAw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] PCI/sparc: Fix booting with T5-8
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch caches the VF index in pci_dn, which can be used to calculate
-VF's bus, device and function number. Those information helps to locate
-the VF's PCI device instance when doing hotplug during EEH recovery if
-necessary.
+On Sat, May 16, 2015 at 8:28 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> BTW, if it makes sense to add pci_bus_addr_t first, without the other
+> sparc64/prefetchability changes, that's fine with me.  But I think there
+> were some doc and maybe Kconfig updates related to that, so please fold
+> those in and repost it.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci_dn.c          |    4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Good to me, will repost that.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 1811c44..d78afe4 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -199,6 +199,7 @@ struct pci_dn {
- #ifdef CONFIG_PCI_IOV
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
-+	int     vf_index;		/* VF index in the PF */
- 	int     offset;			/* PE# for the first VF PE */
- #define M64_PER_IOV 4
- 	int     m64_per_iov;
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..f771130 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
- #ifdef CONFIG_PCI_IOV
- static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 					   struct pci_dev *pdev,
-+					   int vf_index,
- 					   int busno, int devfn)
- {
- 	struct pci_dn *pdn;
-@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 	pdn->parent = parent;
- 	pdn->busno = busno;
- 	pdn->devfn = devfn;
-+	pdn->vf_index = vf_index;
- #ifdef CONFIG_PPC_POWERNV
- 	pdn->pe_number = IODA_INVALID_PE;
- #endif
-@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 		return NULL;
- 
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
--		pdn = add_one_dev_pci_data(parent, NULL,
-+		pdn = add_one_dev_pci_data(parent, NULL, i,
- 					   pci_iov_virtfn_bus(pdev, i),
- 					   pci_iov_virtfn_devfn(pdev, i));
- 		if (!pdn) {
--- 
-1.7.9.5
+Thanks
 
+Yinghai
