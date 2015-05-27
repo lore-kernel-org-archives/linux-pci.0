@@ -1,159 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:60108 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbbEOFwE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 01:52:04 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 15 May 2015 15:52:03 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A248C2CE804E
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:52:01 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4F5pr8T39714818
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:52:01 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4F5pSmM003905
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 15:51:29 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V4 08/11] powerpc/powernv: Support PCI config restore for VFs
-Date: Fri, 15 May 2015 13:46:23 +0800
-Message-Id: <1431668786-30371-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431668786-30371-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from xspv0103.northgrum.com ([134.223.120.78]:57497 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbbE0VMO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 17:12:14 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: [PATCH v0 13/13] PCI: Don't adjust settings for statically enumerated
+Date: Wed, 27 May 2015 20:59:59 +0000
+Message-ID: <266e0f1d2fb843bd92486f79c7281cb4@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since skiboot firmware is not aware of VFs, the restore action for VF
-should be done in kernel.
+Once a PCI device's memory settings have been fixed through a static
+enumeration profile, do not allow other parts of the PCI subsystem
+to reset those settings.  Specifically,
+pci_reassigndev_resource_alignment() will remove the memory behind a
+bridge if there are no devices downstream.  With static enumeration,
+devices may appear downstream later on, after the initial scan. Thus,
+do not remove resources explicitly set by the static enumeration
+profile.
 
-The patch introduces function pnv_eeh_restore_vf_config() to restore PCI
-config space for VFs after reset.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jason Tang <jason.tang2@ngc.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h        |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |   59 +++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci.c         |   16 +++++++
- 3 files changed, 75 insertions(+), 1 deletion(-)
+ drivers/pci/pci.h             |   12 ++++++++++++
+ drivers/pci/pci_static_enum.c |    4 ++++
+ drivers/pci/probe.c           |    3 ++-
+ include/linux/pci.h           |    4 ++++
+ 4 files changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index d78afe4..168b991 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -205,6 +205,7 @@ struct pci_dn {
- 	int     m64_per_iov;
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
-+	int	mps;
- #endif /* CONFIG_PCI_IOV */
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index db710ac..6233998 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -336,6 +336,14 @@ static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
+ {
+ 	return bus->subordinate;
+ }
++/**
++ * pci_static_enum_set() - return %true if @dev's bridge and BAR
++ * settings have been set by a static enumeration profile
++ */
++static inline bool pci_static_enum_set(struct pci_dev *dev)
++{
++	return dev->is_static_enum;
++}
+ #else
+ static inline void pci_static_enum_set_opt(const char *str) { return; }
+ static inline int pci_static_enum_exists(void) { return 0; }
+@@ -350,6 +358,10 @@ static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
+ {
+ 	return 0;
+ }
++static inline bool pci_static_enum_set(struct pci_dev *dev)
++{
++	return false;
++}
  #endif
- 	struct list_head child_list;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 61f1a55..e200ed1 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1601,6 +1601,59 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
+ 
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/pci_static_enum.c b/drivers/pci/pci_static_enum.c
+index 14626cd..7b78a85 100644
+--- a/drivers/pci/pci_static_enum.c
++++ b/drivers/pci/pci_static_enum.c
+@@ -372,6 +372,8 @@ static void pci_static_enum_set_bridge_memory(struct pci_dev *dev, struct pci_st
+ 	   memory */
+ 	if (root)
+ 		pci_walk_bus(root, pci_static_enum_invalidate, setting);
++
++	dev->is_static_enum = 1;
  }
  
-+#ifdef CONFIG_PCI_IOV
-+static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	int pcie_cap, aer_cap, old_mps;
-+	u32 devctl, cmd, cap2, aer_capctl;
+ /**
+@@ -515,6 +517,8 @@ static void pci_static_enum_set_mmio_bars(struct pci_dev *dev, struct pci_static
+ 		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
+ 		pci_static_enum_reset_mmio_bar(dev, setting, reg);
+ 	}
 +
-+	/* Restore MPS */
-+	pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
-+	if (pcie_cap) {
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
-+	}
-+
-+	/* Disable Completion Timeout */
-+	if (pcie_cap) {
-+		eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCAP2, 4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn, pcie_cap + PCI_EXP_DEVCTL2, 4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (pcie_cap) {
-+		eeh_ops->read_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, pcie_cap + PCI_EXP_DEVCTL, 2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (pcie_cap) {
-+		aer_cap = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
-+		eeh_ops->read_config(pdn, aer_cap + PCI_ERR_CAP, 4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, aer_cap + PCI_ERR_CAP, 4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_IOV */
-+
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -1611,7 +1664,11 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EEXIST;
++	dev->is_static_enum = 1;
+ }
  
- 	phb = edev->phb->private_data;
--	ret = opal_pci_reinit(phb->opal_id,
-+	/* FW is not VF aware, we rely on OS to restore it */
-+	if (edev->physfn)
-+		ret = pnv_eeh_restore_vf_config(pdn);
-+	else
-+		ret = opal_pci_reinit(phb->opal_id,
- 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
- 	if (ret) {
- 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index bca2aeb..31d0258 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -781,3 +781,19 @@ machine_subsys_initcall_sync(powernv, tce_iommu_bus_notifier_init);
- struct pci_controller_ops pnv_pci_controller_ops = {
- 	.dma_dev_setup = pnv_pci_dma_dev_setup,
- };
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 418fb59..5bbc11d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1553,7 +1553,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	pci_fixup_device(pci_fixup_header, dev);
+ 
+ 	/* moved out from quirk header fixup code */
+-	pci_reassigndev_resource_alignment(dev);
++	if (!pci_static_enum_set(dev))
++		pci_reassigndev_resource_alignment(dev);
+ 
+ 	/* Clear the state_saved flag. */
+ 	dev->state_saved = false;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b82503b..aa208f0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -334,6 +334,10 @@ struct pci_dev {
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+ 	/* keep track of device state */
+ 	unsigned int	is_added:1;
++#ifdef CONFIG_PCI_STATIC_ENUMERATION
++	unsigned int	is_static_enum:1;	/* static enumeration applied */
++#endif
 +
-+static void pnv_pci_fixup_vf_caps(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	int parent_mps;
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/* Synchronize MPS for VF and PF */
-+	parent_mps = pcie_get_mps(pdev->physfn);
-+	if ((128 << pdev->pcie_mpss) >= parent_mps)
-+		pcie_set_mps(pdev, parent_mps);
-+	pdn->mps = pcie_get_mps(pdev);
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_caps);
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
 -- 
 1.7.9.5
 
