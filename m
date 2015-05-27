@@ -1,55 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:45589 "EHLO extserv.mm-sol.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753289AbbEDMm2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 08:42:28 -0400
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Mathieu Olivari <mathieu@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: [PATCH v2 5/5] ARM: qcom: Add Qualcomm APQ8084 SoC
-Date: Mon,  4 May 2015 15:42:18 +0300
-Message-Id: <1430743338-10441-6-git-send-email-svarbanov@mm-sol.com>
-In-Reply-To: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
-References: <1430743338-10441-1-git-send-email-svarbanov@mm-sol.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:52895 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbbE0PeF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 11:34:05 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Zhou Wang <wangzhou1@hisilicon.com>, zhudacai@hisilicon.com,
+	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
+	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	'Pratyush Anand' <pratyush.anand@gmail.com>,
+	'Richard Zhu' <Richard.Zhu@freescale.com>,
+	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Liviu Dudau' <liviu.dudau@arm.com>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	'Liguozhu' <liguozhu@hisilicon.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+Date: Wed, 27 May 2015 17:31:46 +0200
+Message-ID: <2378629.Ocol8HRDqD@wuerfel>
+In-Reply-To: <5565CD0B.6020206@hisilicon.com>
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <3340422.95mKZ6cYUI@wuerfel> <5565CD0B.6020206@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds Snapdragon 805 ARM-based SoC as multiplatform
-compatible platform.
+On Wednesday 27 May 2015 21:56:27 Zhou Wang wrote:
+> On 2015/5/26 16:02, Arnd Bergmann wrote:
+> > On Tuesday 26 May 2015 10:49:51 Zhou Wang wrote:
+> >>
+> >> I am a little confused that pci_sys_data is still needed as we don't use the code
+> >> in bios32. What was the problem you met? Could you share me more information? Then
+> >> let's see how to solve the problem.
+> >>
+> > 
+> > The PCI core code still calls pcibios_align_resource(), which will try to
+> > use the dev->sysdata pointer as 'struct pci_sys_data'. To solve this, we
+> 
+> Thanks for reminding.
+> 
+> > need to change the pci-mvebu driver and the core code first to let the
+> 
+> It seams that only pci-mvebu implemented align_resource callback in ARM ?
 
-Signed-off-by: Stanimir Varbanov <svarbanov@mm-sol.com>
----
- arch/arm/mach-qcom/Kconfig |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Correct. The pointer in struct pci_sys_data was added for this driver, and
+no other driver has needed it so far.
 
-diff --git a/arch/arm/mach-qcom/Kconfig b/arch/arm/mach-qcom/Kconfig
-index 2256cd1..9cfebee 100644
---- a/arch/arm/mach-qcom/Kconfig
-+++ b/arch/arm/mach-qcom/Kconfig
-@@ -22,4 +22,11 @@ config ARCH_MSM8974
- 	bool "Enable support for MSM8974"
- 	select HAVE_ARM_ARCH_TIMER
- 
-+config ARCH_APQ8084
-+	bool "Enable support for APQ8084"
-+	select HAVE_ARM_ARCH_TIMER
-+	select MIGHT_HAVE_PCI
-+	select PCI_DOMAINS if PCI
-+	select PCI_MSI if PCI
-+
- endif
--- 
-1.7.0.4
+> > driver override pcibios_align_resource() through an operation in 
+> > struct pci_host_bridge.
+> > 
+> > The other remaining use of dev->sysdata is the ARM pcibios_msi_controller()
+> > function that overrides the generic implementation.  To solve this, we need
+> > to change the five remaining drivers that set hw_pci->msi_ctrl to use
+> > the new generic method, and remove the ARM specific implementation.
+> 
+> Yes, that is better if we can do like this. But for pcie-designware, can we
+> just set bus->msi = &dw_pcie_msi_chip and get msi controller using dev->bus->msi
+> in pci_msi_controller()?
 
+Yes, that works. However there are two problems with the approach:
+
+- we have to change all PCI host drivers on ARM to do this in order to remove
+  the ARM-specific pcibios_msi_controller() function
+- it's possible that there are dw_pcie implementations that do not include
+  an MSI controller, so that pointer would be NULL, which leads to the
+  core code to still call the ARM-specific pcibios_msi_controller() function
+  unless we remove it.
+
+	Arnd
