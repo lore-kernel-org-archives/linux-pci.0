@@ -1,46 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 20 May 2015 17:23:44 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC v1 13/25] genirq: Kill the parameter 'irq' of
- kstat_incr_irqs_this_cpu()
-In-Reply-To: <1432116013-25902-14-git-send-email-jiang.liu@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1505201721590.4225@nanos>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-14-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:36028 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314AbbE0ALj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 20:11:39 -0400
+Received: by igbpi8 with SMTP id pi8so71967454igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2015 17:11:39 -0700 (PDT)
+Date: Tue, 26 May 2015 19:11:34 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, dja@axtens.net,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH Part1 v11 1/5] PCI: mvebu: Use pci_common_init_dev() to
+ simplify code
+Message-ID: <20150527001134.GS32152@google.com>
+References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+ <1430204499-19571-2-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1430204499-19571-2-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 May 2015, Jiang Liu wrote:
-> diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-> index d82a77d39aeb..ab675f282291 100644
-> --- a/kernel/irq/internals.h
-> +++ b/kernel/irq/internals.h
-> @@ -193,7 +193,7 @@ static inline bool irqd_has_set(struct irq_data *d, unsigned int mask)
->  	return __irqd_to_state(d) & mask;
+On Tue, Apr 28, 2015 at 03:01:35PM +0800, Yijing Wang wrote:
+> Mvebu_pcie_scan_bus() is not necessary, we could use
+> pci_common_init_dev() instead of pci_common_init(),
+> and pass the device pointer as the parent. Then
+> pci_scan_root_bus() will be called to scan the pci busses.
+> 
+> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Reviewed-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> CC: Jason Cooper <jason@lakedaemon.net>
+
+Thomas, Jason, any input?
+
+> ---
+>  drivers/pci/host/pci-mvebu.c |   18 +-----------------
+>  1 files changed, 1 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 1ab8635..70aa095 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -751,21 +751,6 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  	return 1;
 >  }
 >  
-> -static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *desc)
-> +static inline void kstat_incr_irqs_this_cpu(struct irq_desc *desc)
->  {
->  	__this_cpu_inc(*desc->kstat_irqs);
->  	__this_cpu_inc(kstat.irqs_sum);
-
-That hunk does not apply. Neither on mainline nor on tip/x86/apic
-
-Thanks,
-
-	tglx
+> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> -{
+> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+> -	struct pci_bus *bus;
+> -
+> -	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
+> -				  &mvebu_pcie_ops, sys, &sys->resources);
+> -	if (!bus)
+> -		return NULL;
+> -
+> -	pci_scan_child_bus(bus);
+> -
+> -	return bus;
+> -}
+> -
+>  static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+>  						 const struct resource *res,
+>  						 resource_size_t start,
+> @@ -809,12 +794,11 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>  	hw.nr_controllers = 1;
+>  	hw.private_data   = (void **)&pcie;
+>  	hw.setup          = mvebu_pcie_setup;
+> -	hw.scan           = mvebu_pcie_scan_bus;
+>  	hw.map_irq        = of_irq_parse_and_map_pci;
+>  	hw.ops            = &mvebu_pcie_ops;
+>  	hw.align_resource = mvebu_pcie_align_resource;
+>  
+> -	pci_common_init(&hw);
+> +	pci_common_init_dev(&pcie->pdev->dev, &hw);
+>  }
+>  
+>  /*
+> -- 
+> 1.7.1
+> 
