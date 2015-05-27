@@ -1,47 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40959 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751587AbbESUjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 16:39:22 -0400
-Message-ID: <555B9F74.3040004@redhat.com>
-Date: Tue, 19 May 2015 13:39:16 -0700
-From: Alexander Duyck <alexander.h.duyck@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:50477 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751207AbbE0AEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 20:04:37 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
+Date: Wed, 27 May 2015 02:30:06 +0200
+Message-ID: <1951882.p8DdrcurkC@vostro.rjw.lan>
+In-Reply-To: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
 MIME-Version: 1.0
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Limit VPD reads for all Intel
- Ethernet devices
-References: <20150519000042.56109.69779.stgit@mdrustad-wks.jf.intel.com> <555B5CBF.1090902@redhat.com> <4AD84211-965C-4F0B-A7F4-3E6CCE6567E3@intel.com> <555B77E5.5060006@redhat.com> <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com>
-In-Reply-To: <99014381-25AB-416D-8E09-C431B5CD5A6C@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tuesday, May 26, 2015 08:49:13 PM Hanjun Guo wrote:
+> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
+> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
+> code into ACPI core":
+> 
+> https://lkml.org/lkml/2015/5/14/98
+
+I'll be regarding this patchset as an RFC until the one from Jiang Liu goes in.
 
 
-On 05/19/2015 11:38 AM, Rustad, Mark D wrote:
->> On May 19, 2015, at 10:50 AM, Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
->>
->> These two patches are very much related.
-> They are only related because I saw an opportunity to do this while working on the other issue. That is the only relationship.
->
-> <snip material on the other patch>
->
->>>> Artificially limiting the size of the VPD does nothing but cut off possibly useful data, you would be better of providing all of the data on only the first function than providing only partial data on all functions and adding extra lock overhead.
->>> This limit only limits the maximum that the OS will read to what is architecturally possible in these devices. Yes, PCIe architecturally provides for the possibility of more, but these devices do not. More repeating data can be read, however slowly, but there is no possibility of useful content beyond the first 1K. If this limit were set to 0x100, which is more in line what the actual usage is, it would be an artificial limit, but at 1K it is not. Oh and it does include devices made by others that incorporate Intel Ethernet silicon, not just Intel-built devices.
->> As per section 3.4.4 of the X540 datasheet the upper addressable range for the VPD section is 0xFFF which means the upper limit for the hardware is 0x1000, not 0x400.
-> Ok. I have no problem changing it to that. I had been looking at other specs, but 0x1000 really is a hard limit.
->
-> <snip more material mostly relating to the other patch>
-
-So how does this improve boot time anyway?  The original patch 
-description said this improved boot time and reduced memory usage but I 
-have yet to find where any of those gains would actually occur.  If you 
-can point me in that direction I might have a better idea of the 
-motivations behind this.
-
-- Alex
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
