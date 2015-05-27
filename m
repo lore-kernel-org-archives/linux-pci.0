@@ -1,53 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:39917 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752003AbbEDLFx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 May 2015 07:05:53 -0400
-Date: Mon, 4 May 2015 13:05:51 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Dave Young <dyoung@redhat.com>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, dwmw2@infradead.org,
-	indou.takao@jp.fujitsu.com, bhe@redhat.com, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v9 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-Message-ID: <20150504110551.GD15736@8bytes.org>
-References: <1426743388-26908-1-git-send-email-zhen-hual@hp.com>
- <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:38398 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753258AbbE0PsD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 11:48:03 -0400
+Received: by igbjd9 with SMTP id jd9so2031278igb.1
+        for <linux-pci@vger.kernel.org>; Wed, 27 May 2015 08:48:01 -0700 (PDT)
+Date: Wed, 27 May 2015 10:47:58 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, dja@axtens.net,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH Part1 v11 4/5] PCI: xgene: Use pci_scan_root_bus()
+ instead of pci_create_root_bus()
+Message-ID: <20150527154758.GU32152@google.com>
+References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
+ <1430204499-19571-5-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150403084031.GF22579@dhcp-128-53.nay.redhat.com>
+In-Reply-To: <1430204499-19571-5-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 03, 2015 at 04:40:31PM +0800, Dave Young wrote:
-> Have not read all the patches, but I have a question, not sure this
-> has been answered before. Old memory is not reliable, what if the old
-> memory get corrupted before panic? Is it safe to continue using it in
-> 2nd kernel, I worry that it will cause problems.
+On Tue, Apr 28, 2015 at 03:01:38PM +0800, Yijing Wang wrote:
+> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
+> Now pci_scan_root_bus() == pci_create_root_bus() +
+> pci_scan_child_bus() if busn resource is supplied.
+> Xgene added the busn resource to resources list
+> in of_pci_get_host_bridge_resources(). So it should be safe
+> to use pci_scan_root_bus() instead.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Tanmay Inamdar <tinamdar@apm.com>
 
-Yes, the old memory could be corrupted, and there are more failure cases
-left which we have no way of handling yet (if iommu data structures are
-in kdump backup areas).
+Tanmay, any comments on this?
 
-The question is what to do if we find some of the old data structures
-corrupted, hand how far should the tests go. Should we also check the
-page-tables, for example? I think if some of the data structures for a
-device are corrupted it probably already failed in the old kernel and
-things won't get worse in the new one.
-
-So checking is not strictly necessary in the first version of these
-patches (unless we find a valid failure scenario). Once we have some
-good plan on what to do if we find corruption, we can add checking of
-course.
-
-
-Regards,
-
-	Joerg
-
+> ---
+>  drivers/pci/host/pci-xgene.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index ee082c0..87e3962 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> -	bus = pci_create_root_bus(&pdev->dev, 0,
+> +	bus = pci_scan_root_bus(&pdev->dev, 0,
+>  					&xgene_pcie_ops, port, &res);
+>  	if (!bus)
+>  		return -ENOMEM;
+>  
+> -	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+>  	pci_bus_add_devices(bus);
+>  
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
