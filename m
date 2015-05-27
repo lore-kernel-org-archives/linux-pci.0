@@ -1,64 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42548 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752610AbbETBCT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 May 2015 21:02:19 -0400
-Message-ID: <555BDD14.2080807@redhat.com>
-Date: Tue, 19 May 2015 18:02:12 -0700
-From: Alexander Duyck <alexander.h.duyck@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 27 May 2015 17:58:21 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
+	linux-kernel@vger.kernel.org,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI: Do not set ACPI companions for host bridges
+ with parents
+Message-ID: <20150527225821.GF10210@google.com>
+References: <555FDDA1.8030806@oracle.com>
+ <2059136.yfbqz351P1@vostro.rjw.lan>
+ <1901357.YAorP09rCo@vostro.rjw.lan>
+ <2625308.mOex6suvmm@vostro.rjw.lan>
 MIME-Version: 1.0
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-CC: "Brandeburg, Jesse" <jesse.brandeburg@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH] pci: Use a bus-global mutex to protect
- VPD operations
-References: <20150519000037.56109.68356.stgit@mdrustad-wks.jf.intel.com> <555B78F7.60908@redhat.com> <20150519160158.00002cd6@unknown> <555BD029.7050803@redhat.com> <F47DC49C-CCC5-4693-8905-20ABCE6F5993@intel.com>
-In-Reply-To: <F47DC49C-CCC5-4693-8905-20ABCE6F5993@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2625308.mOex6suvmm@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, May 26, 2015 at 04:17:05AM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, May 26, 2015 03:08:17 AM Rafael J. Wysocki wrote:
+> > On Tuesday, May 26, 2015 01:42:16 AM Rafael J. Wysocki wrote:
+> > > On Tuesday, May 26, 2015 01:22:12 AM Rafael J. Wysocki wrote:
+> > > > On Friday, May 22, 2015 09:53:37 PM Boris Ostrovsky wrote:
+> > > > > On 05/22/2015 04:11 AM, Sander Eikelenboom wrote:
+> > > > > > Hello Sander,
+> > > > > >
+> > > 
+> > > [cut]
+> > > 
+> > > > > (+Rafael again)
+> > > > > 
+> > > > > So the immediate cause of those errors is that pdev->evtchn is 0. 
+> > > > > Backend is not notified and things not go well then.
+> > > > > 
+> > > > > And it is indeed caused by 97badf873ab60e841243b66133ff9eff2a46ef29:
+> > > > > 
+> > > > > We allocate pcifront_sd in pcifront_scan_root() and then pass it to 
+> > > > > pci_scan_bus_parented() as sysdata. Eventually this sysdata is used in 
+> > > > > pcibios_root_bridge_prepare() as pci_sysdata. It is dereferenced as 
+> > > > > pci_sysdata->companion (which I believe is aliased to pcifront_sd->pdev)
+> > > 
+> > > Well, there is an int node field between them, so I'm not sure.
+> > > 
+> > > > > and then set_primary_fwnode() writes it, thus corrupting 
+> > > > > pcifront_sd->pdev (and I think this is what sets evtchn to zero).
+> > > 
+> > > So the corruption happens when set_primary_fwnode() writes NULL to the
+> > > 'secondary' field of object pointed to by 'fwnode'.
+> > > 
+> > > This isn't strictly necessary and we might avoid the crash by only
+> > > writing to fwnode->secondary if fn is not NULL.
+> > > 
+> > > So, Sander please test the patch below too if possible.
+> > > 
+> > > Of course, that doesn't solve a problem of passing an incorrect pointer
+> > > to ACPI_COMPANION_SET() in pcibios_root_bridge_prepare().
+> > 
+> > And here's one more thing to test.
+> 
+> And the below is how I'd fix it, so you can simply test this patch and skip the
+> previous ones.
+> 
+> ---
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: PCI / ACPI: Do not set ACPI companions for host bridges with parents
+> 
+> Commit 97badf873ab6 (device property: Make it possible to use
+> secondary firmware nodes) uncovered a bug in the x86 (and ia64) PCI
+> host bridge initialization code that assumes bridge->bus->sysdata
+> to always point to a struct pci_sysdata object which need not be
+> the case (in particular, the Xen PCI frontend driver sets it to point
+> to a different data type).  If it is not the case, an incorrect
+> pointer (or a piece of data that is not a pointer at all) will be
+> passed to ACPI_COMPANION_SET() and that may cause interesting
+> breakage to happen going forward.
+> 
+> To work around this problem use the observation that the ACPI
+> host bridge initialization always passes NULL as parent to
+> pci_create_root_bus(), so if pcibios_root_bridge_prepare() sees
+> a non-NULL parent of the bridge, it should not attempt to set
+> an ACPI companion for it, because that means that
+> pci_create_root_bus() has been called by someone else.
+> 
+> Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+Do you want to merge this, Rafael?
 
-On 05/19/2015 05:34 PM, Rustad, Mark D wrote:
->> On May 19, 2015, at 5:07 PM, Alexander Duyck <alexander.h.duyck@redhat.com> wrote:
->>
->>
->>
->> On 05/19/2015 04:01 PM, Jesse Brandeburg wrote:
->>> But Alex if you do this you're violating the principle of least
->>> surprise, not to mention changing a user-space interface which should
->>> not be done.
->> I'm willing to back off on dropping the VPD info for those functions entirely, but the lock should not be pushed to the bus.
-> Yeah, I think suddenly dropping the VPD from non-0 functions would be disruptive.
->
->>> Mark's solution is pretty graceful and solves the issue at heart, which
->>> is that
->>> 1) several Intel chips have this issue
->>> 2) it appears that several other vendor's chips have this issue (or
->>> similar) as well, but even if they don't Mark's fix will not change
->>> their general operation, only make a small serializing effect when
->>> multiple simultaneous reads are made.
->> 2 is based on a false premise.  The "vpd r/w failed" error is about as common as dev_watchdog().  Just because it presents with a similar symptom doesn't mean it is the same issue.
-> I don't know if it is false, but it is possible that other devices could have the same behavior. I didn't expect that it would fix them all by any means, but I figured there would be some fellow travelers.
->
->> If the bug is in Intel Ethernet with VPD then I would suggest tweaking the VPD logic and adding a Intel Ethernet PCI quirk.  It doesn't make sense to assume based on one common error message that all of creation has the same issue.
->> If anything I believe Mark's patches have revealed a bigger issue. That is the fact that the sysfs file is reading outside of the VPD area which the PCI spec doesn't have a defined behavior for.  I suspect this is the cause of a number of the issues being reported as Broadcom had to specifically quirk to prevent it, and I found one discussion that indicated something similar might be needed for Realtek.
-> It turns out that I missed something very important here - the state of the F bit. Because of how that works, and how the kernel knows what the last access was, it is vital to know which address/data registers are shared and which ones aren't. This is going to result in a much bigger fix. It will be necessary to positively know when this register sharing is happening. This will result in significant changes to the VPD code in order to model the behavior right. Essentially, devices with this issue will need to have the vpd pointer point to the same structure. That automatically fixes the locking issue. I will look into what can be done for KVM while I am at it. It will be a big device table, but that is unavoidable.
->
-> Doggone it. It seemed too good to be true yesterday and now I know that is because it is. So close. If only it weren't for VPD writes... I'm going to start over now.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-My suspicion is that we have a number of bugs floating around out there 
-like the Broadcom issue.  Specifically, one of the ones I found was that 
-the r8169 seems to have a similar issue as called out in the email 
-thread at http://permalink.gmane.org/gmane.linux.network/232260.  I'm 
-wondering if we shouldn't add an initializer for the read/write 
-functions that will go through and pull out the 3 or 4 headers from the 
-VPD data needed to get the actual length.  Then it would lock down the 
-VPD and save some serious time on reads since most devices don't have 
-32K of VPD to read.
-
-- Alex
+> ---
+>  arch/ia64/pci/pci.c |   13 ++++++++++---
+>  arch/x86/pci/acpi.c |   13 ++++++++++---
+>  2 files changed, 20 insertions(+), 6 deletions(-)
+> 
+> Index: linux-pm/arch/x86/pci/acpi.c
+> ===================================================================
+> --- linux-pm.orig/arch/x86/pci/acpi.c
+> +++ linux-pm/arch/x86/pci/acpi.c
+> @@ -482,9 +482,16 @@ struct pci_bus *pci_acpi_scan_root(struc
+>  
+>  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>  {
+> -	struct pci_sysdata *sd = bridge->bus->sysdata;
+> -
+> -	ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+> +	/*
+> +	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+> +	 * here, pci_create_root_bus() has been called by someone else and
+> +	 * sysdata is likely to be different from what we expect.  Let it go in
+> +	 * that case.
+> +	 */
+> +	if (!bridge->dev.parent) {
+> +		struct pci_sysdata *sd = bridge->bus->sysdata;
+> +		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+> +	}
+>  	return 0;
+>  }
+>  
+> Index: linux-pm/arch/ia64/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/arch/ia64/pci/pci.c
+> +++ linux-pm/arch/ia64/pci/pci.c
+> @@ -478,9 +478,16 @@ struct pci_bus *pci_acpi_scan_root(struc
+>  
+>  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>  {
+> -	struct pci_controller *controller = bridge->bus->sysdata;
+> -
+> -	ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+> +	/*
+> +	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+> +	 * here, pci_create_root_bus() has been called by someone else and
+> +	 * sysdata is likely to be different from what we expect.  Let it go in
+> +	 * that case.
+> +	 */
+> +	if (!bridge->dev.parent) {
+> +		struct pci_controller *controller = bridge->bus->sysdata;
+> +		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+> +	}
+>  	return 0;
+>  }
+>  
+> 
