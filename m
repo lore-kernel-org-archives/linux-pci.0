@@ -1,76 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jarod Wilson <jarod@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook G2
-Date: Tue, 19 May 2015 13:36:06 +0200
-Message-ID: <2168334.DgvA03CWPi@vostro.rjw.lan>
-In-Reply-To: <555AA8CD.3010706@redhat.com>
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <1948383.UKjRPomMUp@vostro.rjw.lan> <555AA8CD.3010706@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55657B02.5090805@linaro.org>
+Date: Wed, 27 May 2015 10:06:26 +0200
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org> <20150526170817.GU1565@arm.com>
+In-Reply-To: <20150526170817.GU1565@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, May 18, 2015 11:06:53 PM Jarod Wilson wrote:
-> On 5/18/2015 7:06 PM, Rafael J. Wysocki wrote:
-> > On Monday, May 18, 2015 04:45:28 PM Jarod Wilson wrote:
-> ...
-> >>>>>>> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
-> >>>>>>>> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
-> >>>>>>>> including at least BIOS revision 01.07, do not have an ACPI _RMV
-> >>>>>>>> object
-> >>>>>>>> associated with their expresscard slots, so acpi-based
-> >>>>>>>> hotplug-capable
-> >>>>>>>> slot detection fails. If we fall back to pcie-based detection, the
-> >>>>>>>> systems
-> >>>>>>>> work just fine
-> ...
-> >> Ah, I forgot some additional details. pciehp_probe() in
-> >> drivers/pci/hotplug/pciehp_core.c fails on the
-> >> pciehp_acpi_slot_detection_check() call for the expresscard slot, which
-> >> is why the base pciehp doesn't bind. DEVICE_ACPI_HANDLE(&dev->dev) in
-> >> the slot detection check is winding up with a NULL acpi device.
-> >
-> > So IMO the bug is that select_detection_mode() assumes that ACPI should be
-> > used as the PCIe hotplug detection method if it has found at least one
-> > device that looks like an "ACPI hotplug slot" (Thuderbolt breaks that "logic").
-> >
-> > To be honest, I'm not sure why we need the pciehp_acpi_slot_detection_check()
-> > in pciehp_probe() at all.  It doesn't add any value as far as I can say.
-> >
-> > If pciehp_probe() is called at all, we have registered a PCIe port service
-> > and if this is a "hotplug" service, we wouldn't have registered it if the
-> > _OSC handshake had not given us contol over native hotplug.
-> >
-> > So I wonder if the patch below makes any difference.
-> 
-> Yeah, that also works, for the most part. You still get spew from 
-> pciehp_acpi_slot_detection_init() saying "Using ACPI for slot 
-> detection.", but in re-reading pciehp_acpi.c in its entirety... I can't 
-> see anything productive that it actually does. I'm of the mind that the 
-> entire file should just be nuked, the path from pciehp_core.c that your 
-> patch alters was the only one that called 
-> pciehp_acpi_slot_detection_check(), and everything else is basically the 
-> dummy probe and fluff, nothing meaningful actually happens.
+On 26.05.2015 19:08, Will Deacon wrote:
+> On Tue, May 26, 2015 at 01:49:18PM +0100, Hanjun Guo wrote:
+>> From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+>>
+>> ECAM standard and MCFG table are architecture independent and it makes
+>> sense to share common code across all architectures. Both are going to
+>> corresponding files - ecam.c and mcfg.c
+>>
+>> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
+>> We already have acpi_parse_mcfg prototype which is used nowhere.
+>> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
+>> can be used perfectly here.
+>>
+>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> ---
+>>   arch/x86/Kconfig               |   3 +
+>>   arch/x86/include/asm/pci_x86.h |  33 ------
+>>   arch/x86/pci/acpi.c            |   1 +
+>>   arch/x86/pci/mmconfig-shared.c | 244 +---------------------------------------
+>>   arch/x86/pci/mmconfig_32.c     |   1 +
+>>   arch/x86/pci/mmconfig_64.c     |   1 +
+>>   arch/x86/pci/numachip.c        |   1 +
+>>   drivers/acpi/Makefile          |   1 +
+>>   drivers/acpi/mcfg.c            |  57 ++++++++++
+>>   drivers/pci/Kconfig            |   7 ++
+>>   drivers/pci/Makefile           |   5 +
+>>   drivers/pci/ecam.c             | 245 +++++++++++++++++++++++++++++++++++++++++
+>
+> Why can't we make use of the ECAM implementation used by pci-host-generic
+> and drivers/pci/access.c?
 
-Right, all that is horrible horrible garbage.
+We had that question when I had posted MMCFG patch set separately, 
+please see:
+https://lkml.org/lkml/2015/3/11/492
 
-> I can whip up a follow-up patch that neuters that file entirely in the morning.
-
-Well, let me have that pleasure. :-)
-
-Anyway, code that is only used in one place should be dropped along with its
-only user.
-
-> At the very least, the "Using ACPI" bit needs to be beaten into submission, 
-> since its not going to be accurate.
-
-An updated patch will follow this message.
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Tomasz
