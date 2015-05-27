@@ -1,152 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58732 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751538AbbE2Wpg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 May 2015 18:45:36 -0400
-Message-ID: <1432939534.5794.56.camel@redhat.com>
-Subject: Re: [PATCH RFC 2/4] PCI: pciehp: Wait for hotplug command
- completion lazily
-From: Alex Williamson <alex.williamson@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150527225821.GF10210@google.com>
+References: <555FDDA1.8030806@oracle.com>
+	<2059136.yfbqz351P1@vostro.rjw.lan>
+	<1901357.YAorP09rCo@vostro.rjw.lan>
+	<2625308.mOex6suvmm@vostro.rjw.lan>
+	<20150527225821.GF10210@google.com>
+Date: Thu, 28 May 2015 01:18:43 +0200
+Message-ID: <CAJZ5v0jea5tLjwH+4y1NZvNktcPdu+Pd_71gTrxM3+=9D27fKw@mail.gmail.com>
+Subject: Re: [PATCH] PCI / ACPI: Do not set ACPI companions for host bridges
+ with parents
+From: "Rafael J. Wysocki" <rafael@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "Jan C. Nordholz" <jckn@gmx.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Fri, 29 May 2015 16:45:34 -0600
-In-Reply-To: <20140614212126.15202.66060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <20140614212126.15202.66060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	david.vrabel@citrix.com, xen-devel@lists.xenproject.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, May 28, 2015 at 12:58 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, May 26, 2015 at 04:17:05AM +0200, Rafael J. Wysocki wrote:
+>> On Tuesday, May 26, 2015 03:08:17 AM Rafael J. Wysocki wrote:
+>> > On Tuesday, May 26, 2015 01:42:16 AM Rafael J. Wysocki wrote:
+>> > > On Tuesday, May 26, 2015 01:22:12 AM Rafael J. Wysocki wrote:
+>> > > > On Friday, May 22, 2015 09:53:37 PM Boris Ostrovsky wrote:
+>> > > > > On 05/22/2015 04:11 AM, Sander Eikelenboom wrote:
+>> > > > > > Hello Sander,
+>> > > > > >
+>> > >
+>> > > [cut]
+>> > >
+>> > > > > (+Rafael again)
+>> > > > >
+>> > > > > So the immediate cause of those errors is that pdev->evtchn is 0.
+>> > > > > Backend is not notified and things not go well then.
+>> > > > >
+>> > > > > And it is indeed caused by 97badf873ab60e841243b66133ff9eff2a46ef29:
+>> > > > >
+>> > > > > We allocate pcifront_sd in pcifront_scan_root() and then pass it to
+>> > > > > pci_scan_bus_parented() as sysdata. Eventually this sysdata is used in
+>> > > > > pcibios_root_bridge_prepare() as pci_sysdata. It is dereferenced as
+>> > > > > pci_sysdata->companion (which I believe is aliased to pcifront_sd->pdev)
+>> > >
+>> > > Well, there is an int node field between them, so I'm not sure.
+>> > >
+>> > > > > and then set_primary_fwnode() writes it, thus corrupting
+>> > > > > pcifront_sd->pdev (and I think this is what sets evtchn to zero).
+>> > >
+>> > > So the corruption happens when set_primary_fwnode() writes NULL to the
+>> > > 'secondary' field of object pointed to by 'fwnode'.
+>> > >
+>> > > This isn't strictly necessary and we might avoid the crash by only
+>> > > writing to fwnode->secondary if fn is not NULL.
+>> > >
+>> > > So, Sander please test the patch below too if possible.
+>> > >
+>> > > Of course, that doesn't solve a problem of passing an incorrect pointer
+>> > > to ACPI_COMPANION_SET() in pcibios_root_bridge_prepare().
+>> >
+>> > And here's one more thing to test.
+>>
+>> And the below is how I'd fix it, so you can simply test this patch and skip the
+>> previous ones.
+>>
+>> ---
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Subject: PCI / ACPI: Do not set ACPI companions for host bridges with parents
+>>
+>> Commit 97badf873ab6 (device property: Make it possible to use
+>> secondary firmware nodes) uncovered a bug in the x86 (and ia64) PCI
+>> host bridge initialization code that assumes bridge->bus->sysdata
+>> to always point to a struct pci_sysdata object which need not be
+>> the case (in particular, the Xen PCI frontend driver sets it to point
+>> to a different data type).  If it is not the case, an incorrect
+>> pointer (or a piece of data that is not a pointer at all) will be
+>> passed to ACPI_COMPANION_SET() and that may cause interesting
+>> breakage to happen going forward.
+>>
+>> To work around this problem use the observation that the ACPI
+>> host bridge initialization always passes NULL as parent to
+>> pci_create_root_bus(), so if pcibios_root_bridge_prepare() sees
+>> a non-NULL parent of the bridge, it should not attempt to set
+>> an ACPI companion for it, because that means that
+>> pci_create_root_bus() has been called by someone else.
+>>
+>> Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Do you want to merge this, Rafael?
 
-Sorry, I'm digging up and old patch here and this RFC was the only copy
-I could find in my mailbox.
+I can do that.
 
-On Sat, 2014-06-14 at 15:21 -0600, Bjorn Helgaas wrote:
-> Previously we issued a hotplug command and waited for it to complete.  But
-> there's no need to wait until we're ready to issue the *next* command.  The
-> next command will probably be much later, so the first one may have already
-> completed and we may not have to actually wait at all.
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-I'm seeing a regression as a result of this patch.  Consider the
-following function:
-
-int pciehp_reset_slot(struct slot *slot, int probe)
-{
-	...
-	pcie_write_cmd(ctrl, 0, ctrl_mask);
-	...
-	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-
-Our command write is clearing bits that control whether the slot has
-presence detection and link layer state change enabled.  These are the
-things that we're trying to clear to prevent a secondary bus reset from
-turning into a surprise hotplug.  If we don't wait for the command to
-complete, what state are when in as we initiate the secondary bus reset?
-On my system, it's like we never issued the write command at all, the
-previous behavior where the hotplug controller detects the link down as
-a surprise hotplug returns.  So I'm afraid we do need to wait until
-we're ready to issue the *next* command, because it's our only
-indication that the current command has completed.
-
-I thought maybe we just need a separate flush command for cases like
-this, but then I started looking at the cases where we use this
-function:
-
-pciehp_set_attention_status
-pciehp_green_led_on
-pciehp_green_led_off
-pciehp_green_led_blink
-pciehp_power_on_slot
-pciehp_power_off_slot
-pcie_enable_notification
-pcie_disable_notification
-
-The slot power ones concern me the same as the reset issue.  In the 'on'
-case, we immediately call link enable, so the slot better have
-acknowledged the power on command.  In the 'off' case, it seems pretty
-bad to complete the 'off' function, but we don't know if the slot is
-actually off yet.  For notifications, I can imagine that the caller of
-those functions is going to want on or off at the completion of those
-functions, not some in-between state.  Even in the case of the LED
-functions, where do we want the error to occur, at the time the command
-is issued, or maybe some time in the future when the next unrelated
-command comes through.
-
-So, rather than posting a new patch adding a flush everywhere that it
-seems a little scary, should we consider scrapping this patch altogether
-as unsafe?  We need to wait, not only to issue the next command, but to
-have any sort of acknowledgment that the current command has completed.
-
-> 
-> Because of hardware errata, some controllers generate command completion
-> events for some commands but not others.  In the case of Intel CF118 (see
-> spec update reference), the controller indicates command completion only
-> for Slot Control writes that change the value of the following bits:
-> 
->   Power Controller Control
->   Power Indicator Control
->   Attention Indicator Control
->   Electromechanical Interlock Control
-> 
-> Changes to other bits, e.g., the interrupt enable bits, do not cause the
-> Command Completed bit to be set.  Controllers from AMD and Nvidia are
-> reported to have similar errata.
-> 
-> These errata cause timeouts when pcie_enable_notification() enables
-> interrupts.  Previously that timeout occurred at boot-time.  With this
-> change, the timeout occurs later, when we change the state of the slot
-> power, indicators, or interlock.  This speeds up boot but causes a timeout
-> at the first hotplug event on the slot.  Subsequent events don't timeout
-> because only the first (boot-time) hotplug command updates Slot Control
-> without touching the power/indicator/interlock controls.
-
-It sounds like we need some sort of completion mask to handle devices
-like this, instead of effectively removing the write-barrier for the
-general case.  Thanks,
-
-Alex
-
-> 
-> Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 0e76e9d9d134..f44fdb5b0b08 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -165,6 +165,9 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->  
->  	mutex_lock(&ctrl->ctrl_lock);
->  
-> +	/* Wait for any previous command that might still be in progress */
-> +	pcie_wait_cmd(ctrl);
-> +
->  	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
->  	if (slot_status & PCI_EXP_SLTSTA_CC) {
->  		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> @@ -197,10 +200,6 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->  	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
->  	ctrl->slot_ctrl = slot_ctrl;
->  
-> -	/*
-> -	 * Wait for command completion.
-> -	 */
-> -	pcie_wait_cmd(ctrl);
->  	mutex_unlock(&ctrl->ctrl_lock);
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+Thanks!
