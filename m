@@ -1,140 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:38418 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbbEGXEa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 19:04:30 -0400
-Received: by igbhj9 with SMTP id hj9so7246109igb.1
-        for <linux-pci@vger.kernel.org>; Thu, 07 May 2015 16:04:30 -0700 (PDT)
-Date: Thu, 7 May 2015 18:04:26 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Casey Leedom <leedom@chelsio.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Request for advice on where to put Root Complex "fix up" code
- for downstream device
-Message-ID: <20150507230426.GO24643@google.com>
-References: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:58994 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059AbbE0TwY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 15:52:24 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Fabrice Gasnier <fabrice.gasnier@st.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Zhou Wang <wangzhou1@hisilicon.com>, zhudacai@hisilicon.com,
+	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
+	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	'Pratyush Anand' <pratyush.anand@gmail.com>,
+	'Richard Zhu' <Richard.Zhu@freescale.com>,
+	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Liviu Dudau' <liviu.dudau@arm.com>,
+	'Liguozhu' <liguozhu@hisilicon.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+Date: Wed, 27 May 2015 21:51:52 +0200
+Message-ID: <16371687.jmfn381VuV@wuerfel>
+In-Reply-To: <5565EEAD.9070003@st.com>
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <2095085.CuXXeGT0Wg@wuerfel> <5565EEAD.9070003@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Casey,
-
-On Thu, May 07, 2015 at 12:34:51AM +0000, Casey Leedom wrote:
-> Hello,
+On Wednesday 27 May 2015 18:19:57 Fabrice Gasnier wrote:
+> On 05/27/2015 05:43 PM, Arnd Bergmann wrote:
+> > On Wednesday 27 May 2015 17:31:46 Arnd Bergmann wrote:
+> >> Yes, that works. However there are two problems with the approach:
+> >>
+> >> - we have to change all PCI host drivers on ARM to do this in order to remove
+> >>    the ARM-specific pcibios_msi_controller() function
+> >> - it's possible that there are dw_pcie implementations that do not include
+> >>    an MSI controller, so that pointer would be NULL, which leads to the
+> >>    core code to still call the ARM-specific pcibios_msi_controller() function
+> >>    unless we remove it.
+> > I wonder if this simple patch would be sufficient to kill off
+> > pcibios_msi_controller().
+> >
+> > Can one of you try it?
+> >
+> >       Arnd
 > 
->   I've included both the Network and PCI Development mailing lists because this crosses both domains.  If this violates protocols, I apologise in advance.  I believe that this ~probably~ will be a "PCI Development" issue but since it affects a Network Device, I figured input from that quarter should be solicited as well.
+> Hi Arnd,
+> I tested it quickly on my platform, with and without CONFIG_PCI_MSI.
+> In both case it seems to run fine with dw pcie.
 > 
->   We have a Network Device, T5, which unfortunately has a PCI Compliance bug in it[1].  Doubly unfortunately, the PCI SIG 3.0 Compliance Tests which we dutifully ranb before releasing the silicon two years ago didn't include a vector for this, so it wasn't discovered till very recently.  In order to solve this bug, we need to modify the Root Complex's PCI Express Capability Device Control register in order to turn off the Enable No Snoop and Enable Relaxed Ordering features.
-> 
->   I've cons'ed up demonstration code within the Device Driver for T5, cxgb4, to traverse the PCI graph to the Root Complex for the T5 Device and perform this modification[2].  This demonstrates the "workability" of doing the operation, but I'm betting that this is _not_ where either the Network or PCI Development teams would like such code to go.  My expectation is that this code needs to go into drivers/pci/quirks.c.
-> 
->   So, this mail is a request for advice on how the Network and PCI Development teams would like this handled.  Once I receive this input, I will submit a patch to the correct team for inclusion in the kernel.  Thank you for your time and attention.
 
-There are a lot of fixups in drivers/pci/quirks.c.  For things that have to
-be worked around either before a driver claims the device or if there is no
-driver at all, the fixup *has* to go in drivers/pci/quirks.c
+Awesome. Now we just need to find a way to move the align_resource callback.
+I wonder if the approach below would be acceptable.
 
-But for things like this, where the problem can only occur after a driver
-claims the device, I think it makes more sense to put the fixup in the
-driver itself.  The only wrinkle here is that the fixup has to be done on a
-separate device, not the device claimed by the driver.  But I think it
-probably still makes sense to put this fixup in the driver.
+	Arnd
 
-> Casey
-> 
-> [1] Chelsio T5 PCI-E Compliance Bug:
-> 
->     The bug is that when the Root Complex send a Transaction Layer Packet (TLP)
->     Request downstream to a Device,the TLP may contain Attributes.  The PCI
->     Specification states that two of these Attributes, No Snoop and Relaxed
->     Ordering, must be included in the Device's TLP Response.  Further, the PCI
->     Specification "encourages" Root Complexes to drop TLP Responses which
->     are out of compliance with this rule.
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index fcbbbb1b9e95..20839d26a490 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -597,9 +588,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
+-		return sys->align_resource(dev, res, start, size, align);
+-
+ 	return start;
+ }
+ 
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 1ab863551920..74216c9c2822 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -751,27 +751,20 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	return 1;
+ }
+ 
+-static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
++static resource_size_t mvebu_pcie_align_resource(void *data,
++						 const struct resource *res,
++						 resource_size_t size,
++						 resource_size_t align)
+ {
+-	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+-	struct pci_bus *bus;
++	struct device *dev = data;
+ 
+-	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
+-				  &mvebu_pcie_ops, sys, &sys->resources);
+-	if (!bus)
+-		return NULL;
++	resource_size_t start = res->start;
+ 
+-	pci_scan_child_bus(bus);
++	if (res->flags & IORESOURCE_IO && start & 0x300)
++		start = (start + 0x3ff) & ~0x3ff;
+ 
+-	return bus;
+-}
++	start = (start + align - 1) & ~(align - 1);
+ 
+-static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+-						 const struct resource *res,
+-						 resource_size_t start,
+-						 resource_size_t size,
+-						 resource_size_t align)
+-{
+ 	if (dev->bus->number != 0)
+ 		return start;
+ 
+@@ -796,6 +789,25 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 		return start;
+ }
+ 
++static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
++{
++	struct mvebu_pcie *pcie = sys_to_pcie(sys);
++	struct pci_host_bridge *phb;
++	struct pci_bus *bus;
++
++	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
++				  &mvebu_pcie_ops, sys, &sys->resources);
++	if (!bus)
++		return NULL;
++
++	phb = pci_find_host_bridge(bus);
++	phb->align_resource = mvebu_pcie_align_resource;
++
++	pci_scan_child_bus(bus);
++
++	return bus;
++}
++
+ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ {
+ 	struct hw_pci hw;
+@@ -812,7 +824,6 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+ 	hw.scan           = mvebu_pcie_scan_bus;
+ 	hw.map_irq        = of_irq_parse_and_map_pci;
+ 	hw.ops            = &mvebu_pcie_ops;
+-	hw.align_resource = mvebu_pcie_align_resource;
+ 
+ 	pci_common_init(&hw);
+ }
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 232f9254c11a..e1f5e13c4636 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -200,7 +200,11 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
+ }
+ 
+ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+-		int resno, resource_size_t size, resource_size_t align)
++		int resno, resource_size_t size, resource_size_t align,
++		resource_size_t (*alignf)(void *,
++					  const struct resource *,
++					  resource_size_t,
++					  resource_size_t))
+ {
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+@@ -217,7 +221,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+-				     pcibios_align_resource, dev);
++				     alignf, dev);
+ 	if (ret == 0)
+ 		return 0;
+ 
+@@ -229,7 +233,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+-					     pcibios_align_resource, dev);
++					     alignf, dev);
+ 		if (ret == 0)
+ 			return 0;
+ 	}
+@@ -242,7 +246,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 */
+ 	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+-					     pcibios_align_resource, dev);
++					     alignf, dev);
+ 
+ 	return ret;
+ }
+@@ -251,10 +255,19 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 				resource_size_t size, resource_size_t min_align)
+ {
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *phb;
+ 	int ret;
+ 
+ 	bus = dev->bus;
+-	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
++	phb = pci_find_host_bridge(bus);
++
++	if (phb->align_resource)
++		alignf = phb->align_resource;
++	else
++		alignf = pcibios_align_resource;
++
++	while ((ret = __pci_assign_resource(bus, dev, resno, size,
++					    min_align, alignf))) {
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
 
-Can you include a pointer to the relevant part of the spec?
-
-> [2] Demonstration Code for clearing Root Complex No Snoop and Relaxed Ordering:
-> 
-> --- a/drivers/net/ethernet/chelsio/cxgb4_main.c	Mon Apr 06 09:27:21 2015 -0700
-> +++ b/drivers/net/ethernet/chelsio/cxgb4_main.c	Tue Apr 07 13:39:05 2015 -0700
-> @@ -9956,6 +9956,36 @@ static void enable_pcie_relaxed_ordering
->  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
->  }
->  
-> +/*
-> + * Find the highest PCI-Express bridge above a PCI Device.  If found, that's
-> + * the Root Complex PCI-PCI Bridge for the PCI Device.  If we find the Root
-> + * Comples, clear the Enable Relaxed Ordering and Enable No Snoop bits in that
-
-s/Comples/Complex/, but the Root Complex itself does not appear as a PCI
-device, so we'll never actually find *it*.  But I think we should *always*
-find a Root Port.  Your code and text suggests that it's possible we
-wouldn't (since you say "*If* found, ...").  Is there a case you're
-thinking of where we wouldn't find a Root Port?
-
-> + * bridge's PCI-E Capability Device Control register.  This will prevent the
-> + * Root Complex from setting those attributes in the Transaction Layer Packets
-> + * of the Requests which it sends down stream to the PCI Device.
-> + */
-> +static void clear_root_complex_tlp_attributes(struct pci_dev *pdev)
-> +{
-> +	struct pci_bus *bus = pdev->bus;
-> +	struct pci_dev *highest_pcie_bridge = NULL;
-> +
-> +	while (bus) {
-> +		struct pci_dev *bridge = bus->self;
-> +
-> +		if (!bridge || !bridge->pcie_cap)
-> +			break;
-> +		highest_pcie_bridge = bridge;
-> +		bus = bus->parent;
-> +	}
-
-Can you use pci_upstream_bridge() here?  There are a couple places where we
-want to find the Root Port, so we might factor that out someday.  It'll be
-easier to find all those places if they use with pci_upstream_bridge().
-
-> +
-> +	if (highest_pcie_bridge)
-> +		pcie_capability_clear_and_set_word(highest_pcie_bridge,
-> +						   PCI_EXP_DEVCTL,
-> +						   PCI_EXP_DEVCTL_RELAX_EN |
-> +						   PCI_EXP_DEVCTL_NOSNOOP_EN,
-> +						   0);
-
-Please include a dmesg note here, especially since the driver is changing
-the config of a device other than its own.
-
-> +}
-> +
->  static int init_one(struct pci_dev *pdev,
->  			      const struct pci_device_id *ent)
->  {
-> @@ -9973,6 +10003,19 @@ static int init_one(struct pci_dev *pdev
->  		++version_printed;
->  	}
->  
-> +	/*
-> +	 * T5 has a PCI-E Compliance bug in it where it doesn't copy the
-> +	 * Transaction Layer Packet Attributes from downstream Requests into
-> +	 * it's upstream Responses.  Most Root Complexes are fine with this
-
-s/it's/its/
-
-> +	 * but a few get prissy and drop the non-compliant T5 Responses
-> +	 * leading to endless Device Timeouts when TLP Attributes are set.  So
-> +	 * if we're a T5, attempt to clear our Root Complex's enable bits for
-> +	 * TLP Attributes ...
-> +	 */
-> +	if (CHELSIO_PCI_ID_VER(pdev->device) == CHELSIO_T5 ||
-> +	    CHELSIO_PCI_ID_VER(pdev->device) == CHELSIO_T5_FPGA)
-> +		clear_root_complex_tlp_attributes(pdev);
-> +
->  	err = pci_request_regions(pdev, KBUILD_MODNAME);
->  	if (err) {
->  		/* Just info, some other driver may have claimed the device. */--
-
-Bjorn
