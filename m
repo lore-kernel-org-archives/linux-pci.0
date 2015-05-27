@@ -1,96 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52402 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753444AbbEUKLP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 May 2015 06:11:15 -0400
-Date: Thu, 21 May 2015 18:11:10 +0800
-From: Baoquan He <bhe@redhat.com>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 08/10] iommu/vt-d: assign new page table for dma_map
-Message-ID: <20150521101110.GE3258@dhcp-128-28.nay.redhat.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
- <1431337974-545-9-git-send-email-zhen-hual@hp.com>
- <20150520235242.GA2342@dhcp-17-102.nay.redhat.com>
- <555D3470.7060902@hp.com>
- <20150521065451.GA23661@dhcp-128-28.nay.redhat.com>
- <555D99EB.2030603@hp.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:48081 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331AbbE0BPd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 21:15:33 -0400
+Message-ID: <55651A9D.4080400@huawei.com>
+Date: Wed, 27 May 2015 09:15:09 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <555D99EB.2030603@hp.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: <xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>,
+	<dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH Part2 v11 1/2] xen/PCI: Don't use deprecated function
+ pci_scan_bus_parented()
+References: <1430213554-9107-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1430213554-9107-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/21/15 at 04:40pm, Li, ZhenHua wrote:
-> Hi Baoquan,
-> During driver being loaded and initialized, when there is a new dma
-> request, the function
->                __get_valid_domain_for_dev
-> is called, and then new page is mapped.
-> 
-> Please check this:
-> struct dma_map_ops intel_dma_ops = {
->         .alloc = intel_alloc_coherent,
->         .free = intel_free_coherent,
->         .map_sg = intel_map_sg,
->         .unmap_sg = intel_unmap_sg,
->         .map_page = intel_map_page,
->         .unmap_page = intel_unmap_page,
->         .mapping_error = intel_mapping_error,
-> };
-> 
-> You can also add dump_stack() in __get_valid_domain_for_dev to debug.
+Hi Konrad, sorry to bother you again, any comments for this patch ?
 
-Yeah, I saw that. At the beginning I am just wondering why you say a new
-page-table, and also mention it's a empty page-table. I think here that
-new page-table is an empty page-table when you said them.
+Thanks!
+Yijing.
 
-No confusion any more. Thanks for explanation.
+On 2015/4/28 17:32, Yijing Wang wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Use pci_scan_root_bus() instead of deprecated function
+> pci_scan_bus_parented().
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: xen-devel@lists.xenproject.org
+> ---
+>  drivers/pci/xen-pcifront.c |   16 +++++++++++++---
+>  1 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 7cfd2db..240f388 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -446,9 +446,15 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  				 unsigned int domain, unsigned int bus)
+>  {
+>  	struct pci_bus *b;
+> +	LIST_HEAD(resources);
+>  	struct pcifront_sd *sd = NULL;
+>  	struct pci_bus_entry *bus_entry = NULL;
+>  	int err = 0;
+> +	static struct resource busn_res = {
+> +		.start = 0,
+> +		.end = 255,
+> +		.flags = IORESOURCE_BUS,
+> +	};
+>  
+>  #ifndef CONFIG_PCI_DOMAINS
+>  	if (domain != 0) {
+> @@ -470,17 +476,21 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  		err = -ENOMEM;
+>  		goto err_out;
+>  	}
+> +	pci_add_resource(&resources, &ioport_resource);
+> +	pci_add_resource(&resources, &iomem_resource);
+> +	pci_add_resource(&resources, &busn_res);
+>  	pcifront_init_sd(sd, domain, bus, pdev);
+>  
+>  	pci_lock_rescan_remove();
+>  
+> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> -				  &pcifront_bus_ops, sd);
+> +	b = pci_scan_root_bus(&pdev->xdev->dev, bus,
+> +				  &pcifront_bus_ops, sd, &resources);
+>  	if (!b) {
+>  		dev_err(&pdev->xdev->dev,
+>  			"Error creating PCI Frontend Bus!\n");
+>  		err = -ENOMEM;
+>  		pci_unlock_rescan_remove();
+> +		pci_free_resource_list(&resources);
+>  		goto err_out;
+>  	}
+>  
+> @@ -488,7 +498,7 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  
+>  	list_add(&bus_entry->list, &pdev->root_buses);
+>  
+> -	/* pci_scan_bus_parented skips devices which do not have a have
+> +	/* pci_scan_root_bus skips devices which do not have a
+>  	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+>  	err = pcifront_scan_bus(pdev, domain, bus, b);
+>  
+> 
 
-> 
-> Thanks
-> Zhenhua
-> 
-> On 05/21/2015 02:54 PM, Baoquan He wrote:
-> >On 05/21/15 at 09:27am, Li, ZhenHua wrote:
-> >>Hi Baoquan,
-> >>
-> >>In the early version of this patchset, old page tables are used by new
-> >>kernel.  But as discussed, we need to make kernel use new pages when
-> >>there is a new dma request , so we need to unmap the pages which were
-> >>mapped in old kernel, and this is what this patch does.
-> >
-> >OK, just a new page table allocated in init_domain(), right? I thought a
-> >specific empty page-table is allocated for these new domains in kdump
-> >kernel.
-> >
-> >>
-> >>Thanks
-> >>Zhenhua
-> >>
-> >>On 05/21/2015 07:52 AM, Baoquan He wrote:
-> >>>On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
-> >>>>When a device driver issues the first dma_map command for a device, we
-> >>>>assign a new and empty page-table, thus removing all mappings from the
-> >>>>old kernel for the device.
-> >>>
-> >>>Hi Zhenhua,
-> >>>
-> >>> From your patch I got it will remove all mappings, assign a new
-> >>>page-table. But I didn't got why you stress an empty page-table. Did I
-> >>>miss anything?
-> >>>
-> >>>Thanks
-> >>>Baoquan
-> >>>
-> >>>>
-> >>>>Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-> >>>>--
+
+-- 
+Thanks!
+Yijing
+
