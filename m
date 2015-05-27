@@ -1,288 +1,194 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:36935 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754151AbbESK4d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 May 2015 06:56:33 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 19 May 2015 20:56:31 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 6A6702CE8050
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:56:30 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4JAuMmE17367144
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:56:30 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4JAtvRG003273
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2015 20:55:58 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V7 09/10] powerpc/eeh: Support error recovery for VF PE
-Date: Tue, 19 May 2015 18:50:11 +0800
-Message-Id: <1432032612-21701-10-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH] NTB: Reschedule long tasklets to avoid stalls
+Date: Wed, 27 May 2015 07:26:10 -0400
+Message-Id: <5666174a290c19906ba1deed99ce379699be2343.1432724735.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Different from PCI bus dependent PE, PE for VFs doesn't have the
-primary bus, on which the PCI hotplug is implemented. The patch
-supports error recovery, especially the PCI hotplug for VF's PE.
-The hotplug on VF's PE is implemented based on VFs, instead of
-PCI bus any more.
+Instead of looping in the tasklets to complete all the work, reschdule
+the tasklets to finish the work later.  This allows the scheduler to
+run, to avoid a stall.
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Tasklets are added to each transport queue pair, replacing the tasklet
+that was in the transport context.
+
+The doorbell mask is not used in the interrupt path (the mask is still
+used when queue pairs are allocated and freed - that is not changed).
+Instead, when an interrupt arrives, the doorbell bit of the queue pair
+is left set, to prevent further interrupts, and cleared when the queue
+pair is done processing.  Care is taken to avoid missing an interrupt.
+
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
 ---
- arch/powerpc/include/asm/eeh.h   |    1 +
- arch/powerpc/kernel/eeh.c        |    8 +++
- arch/powerpc/kernel/eeh_driver.c |  100 ++++++++++++++++++++++++++++++--------
- arch/powerpc/kernel/eeh_pe.c     |    3 +-
- 4 files changed, 90 insertions(+), 22 deletions(-)
+ drivers/ntb/ntb_transport.c | 72 +++++++++++++++++++++------------------------
+ 1 file changed, 33 insertions(+), 39 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 3d64cf3..d24382c 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -140,6 +140,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	int    in_error;		/* Error flag for eeh_dev	*/
- 	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index f8f2fdaba072..4c59f24cef2d 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -151,6 +151,7 @@ struct ntb_transport_qp {
+ 	unsigned int rx_max_entry;
+ 	unsigned int rx_max_frame;
+ 	dma_cookie_t last_cookie;
++	struct tasklet_struct rxc_db_work;
+ 
+ 	void (*event_handler)(void *data, int status);
+ 	struct delayed_work link_work;
+@@ -210,7 +211,6 @@ struct ntb_transport_ctx {
+ 	bool link_is_up;
+ 	struct delayed_work link_work;
+ 	struct work_struct link_cleanup;
+-	struct tasklet_struct db_work;
  };
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 9ee61d1..1207547 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1229,6 +1229,14 @@ void eeh_remove_device(struct pci_dev *dev)
- 	 * from the parent PE during the BAR resotre.
- 	 */
- 	edev->pdev = NULL;
+ 
+ enum {
+@@ -246,7 +246,7 @@ enum {
+ #define NTB_QP_DEF_NUM_ENTRIES	100
+ #define NTB_LINK_DOWN_TIMEOUT	10
+ 
+-static void ntb_transport_doorbell_work(unsigned long data);
++static void ntb_transport_rxc_db(unsigned long data);
+ static const struct ntb_ctx_ops ntb_transport_ops;
+ static struct ntb_client ntb_transport_client;
+ 
+@@ -949,6 +949,9 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
+ 	INIT_LIST_HEAD(&qp->rx_free_q);
+ 	INIT_LIST_HEAD(&qp->tx_free_q);
+ 
++	tasklet_init(&qp->rxc_db_work, ntb_transport_rxc_db,
++		     (unsigned long)qp);
 +
-+	/*
-+	 * The flag "in_error" is used to trace EEH devices for VFs
-+	 * in error state or not. It's set in eeh_report_error(). If
-+	 * it's not set, eeh_report_{reset,resume}() won't be called
-+	 * for the VF EEH device.
-+	 */
-+	edev->in_error = 0;
- 	dev->dev.archdata.edev = NULL;
- 	if (!(edev->pe->state & EEH_PE_KEEP))
- 		eeh_rmv_from_parent_pe(edev);
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 24768ff..63a2c33 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
- 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
- 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
- 
-+	edev->in_error = 1;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->slot_reset ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		eeh_pcid_put(dev);
- 		return NULL;
- 	}
-@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->resume ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		edev->mode &= ~EEH_DEV_NO_HANDLER;
--		eeh_pcid_put(dev);
--		return NULL;
-+		goto out;
- 	}
- 
- 	driver->err_handler->resume(dev);
- 
-+out:
-+	edev->in_error = 0;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -386,12 +390,38 @@ static void *eeh_report_failure(void *data, void *userdata)
- 	return NULL;
+ 	return 0;
  }
  
-+static void *eeh_add_virt_device(void *data, void *userdata)
-+{
-+	struct pci_driver *driver;
-+	struct eeh_dev *edev = (struct eeh_dev *)data;
-+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
-+
-+	if (!(edev->physfn)) {
-+		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
-+			__func__, edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+		return NULL;
-+	}
-+
-+	driver = eeh_pcid_get(dev);
-+	if (driver) {
-+		eeh_pcid_put(dev);
-+		if (driver->err_handler)
-+			return NULL;
-+	}
-+
-+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
-+	return NULL;
-+}
-+
- static void *eeh_rmv_device(void *data, void *userdata)
+@@ -1036,8 +1039,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 
+ 	INIT_DELAYED_WORK(&nt->link_work, ntb_transport_link_work);
+ 	INIT_WORK(&nt->link_cleanup, ntb_transport_link_cleanup_work);
+-	tasklet_init(&nt->db_work, ntb_transport_doorbell_work,
+-		     (unsigned long)nt);
+ 
+ 	rc = ntb_set_ctx(ndev, nt, &ntb_transport_ops);
+ 	if (rc)
+@@ -1078,7 +1079,6 @@ static void ntb_transport_free(struct ntb_client *self, struct ntb_dev *ndev)
+ 	int i;
+ 
+ 	ntb_transport_link_cleanup(nt);
+-	tasklet_disable(&nt->db_work);
+ 	cancel_work_sync(&nt->link_cleanup);
+ 	cancel_delayed_work_sync(&nt->link_work);
+ 
+@@ -1316,13 +1316,13 @@ err:
+ 	return rc;
+ }
+ 
+-static int ntb_transport_rxc_db(void *data, int db_num)
++static void ntb_transport_rxc_db(unsigned long data)
  {
- 	struct pci_driver *driver;
- 	struct eeh_dev *edev = (struct eeh_dev *)data;
- 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
- 	int *removed = (int *)userdata;
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+-	struct ntb_transport_qp *qp = data;
++	struct ntb_transport_qp *qp = (void *)data;
+ 	int rc, i;
  
- 	/*
- 	 * Actually, we should remove the PCI bridges as well.
-@@ -416,7 +446,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 	driver = eeh_pcid_get(dev);
- 	if (driver) {
- 		eeh_pcid_put(dev);
--		if (driver->err_handler)
-+		if (removed && driver->err_handler)
- 			return NULL;
- 	}
+ 	dev_dbg(&qp->ndev->pdev->dev, "%s: doorbell %d received\n",
+-		__func__, db_num);
++		__func__, qp->qp_num);
  
-@@ -425,11 +455,23 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 		 pci_name(dev));
- 	edev->bus = dev->bus;
- 	edev->mode |= EEH_DEV_DISCONNECTED;
--	(*removed)++;
-+	if (removed)
-+		(*removed)++;
+ 	/* Limit the number of packets processed in a single interrupt to
+ 	 * provide fairness to others
+@@ -1336,7 +1336,21 @@ static int ntb_transport_rxc_db(void *data, int db_num)
+ 	if (qp->dma_chan)
+ 		dma_async_issue_pending(qp->dma_chan);
  
--	pci_lock_rescan_remove();
--	pci_stop_and_remove_bus_device(dev);
--	pci_unlock_rescan_remove();
-+	if (edev->physfn) {
-+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
-+		edev->pdev = NULL;
+-	return i;
++	if (i == qp->rx_max_entry) {
++		/* there is more work to do */
++		tasklet_schedule(&qp->rxc_db_work);
++	} else if (ntb_db_read(qp->ndev) & BIT_ULL(qp->qp_num)) {
++		/* the doorbell bit is set: clear it */
++		ntb_db_clear(qp->ndev, BIT_ULL(qp->qp_num));
++		/* ntb_db_read ensures ntb_db_clear write is committed */
++		ntb_db_read(qp->ndev);
 +
-+		/*
-+		 * We have to set the VF PE number to invalid one, which is
-+		 * required to plug the VF successfully.
++		/* an interrupt may have arrived between finishing
++		 * ntb_process_rxc and clearing the doorbell bit:
++		 * there might be some more work to do.
 +		 */
-+		pdn->pe_number = IODA_INVALID_PE;
-+	} else {
-+		pci_lock_rescan_remove();
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_unlock_rescan_remove();
++		tasklet_schedule(&qp->rxc_db_work);
 +	}
- 
- 	return NULL;
  }
-@@ -548,6 +590,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
- 	struct timeval tstamp;
- 	int cnt, rc, removed = 0;
-+	struct eeh_dev *edev;
  
- 	/* pcibios will clear the counter; save the value */
- 	cnt = pe->freeze_count;
-@@ -561,12 +604,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
- 	if (bus) {
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(bus);
--		pci_unlock_rescan_remove();
--	} else if (frozen_bus) {
-+		if (pe->type & EEH_PE_VF)
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+		else {
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(bus);
-+			pci_unlock_rescan_remove();
-+		}
-+	} else if (frozen_bus)
- 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
--	}
+ static void ntb_tx_copy_callback(void *data)
+@@ -1662,6 +1676,7 @@ void ntb_transport_free_queue(struct ntb_transport_qp *qp)
+ 	qp_bit = BIT_ULL(qp->qp_num);
  
- 	/*
- 	 * Reset the pci controller. (Asserts RST#; resets config space).
-@@ -607,14 +653,22 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		 * PE. We should disconnect it so the binding can be
- 		 * rebuilt when adding PCI devices.
- 		 */
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(bus);
- 	} else if (frozen_bus && removed) {
- 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
- 		ssleep(5);
+ 	ntb_db_set_mask(qp->ndev, qp_bit);
++	tasklet_disable(&qp->rxc_db_work);
  
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(frozen_bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(frozen_bus);
- 	}
- 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+ 	cancel_delayed_work_sync(&qp->link_work);
  
-@@ -792,11 +846,15 @@ perm_error:
- 	 * the their PCI config any more.
- 	 */
- 	if (frozen_bus) {
--		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+@@ -1903,46 +1918,25 @@ unsigned int ntb_transport_max_size(struct ntb_transport_qp *qp)
+ }
+ EXPORT_SYMBOL_GPL(ntb_transport_max_size);
+ 
+-static void ntb_transport_doorbell_work(unsigned long data)
++static void ntb_transport_doorbell_callback(void *data, int vector)
+ {
+-	struct ntb_transport_ctx *nt = (void *)data;
++	struct ntb_transport_ctx *nt = data;
+ 	struct ntb_transport_qp *qp;
+-	u64 db_mask, db_bits, db_again;
++	u64 db_mask, db_bits;
+ 	unsigned int qp_num;
+-	int rc;
+ 
+-	db_mask = nt->qp_bitmap & ~nt->qp_bitmap_free;
++	db_mask = (nt->qp_bitmap & ~nt->qp_bitmap_free &
++		   ntb_db_vector_mask(nt->ndev, vector));
+ 	db_bits = db_mask & ntb_db_read(nt->ndev);
+ 
+ 	while (db_bits) {
+-		ntb_db_clear(nt->ndev, db_bits);
+-		db_again = 0;
 -
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(frozen_bus);
--		pci_unlock_rescan_remove();
-+		if (pe->type & EEH_PE_VF) {
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+		} else {
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(frozen_bus);
-+			pci_unlock_rescan_remove();
-+		}
+-		while (db_bits) {
+-			qp_num = __ffs(db_bits);
+-			qp = &nt->qp_vec[qp_num];
++		qp_num = __ffs(db_bits);
++		qp = &nt->qp_vec[qp_num];
+ 
+-			rc = ntb_transport_rxc_db(qp, qp_num);
+-			if (rc == qp->rx_max_entry)
+-				db_again |= BIT_ULL(qp_num);
+-
+-			db_bits &= ~BIT_ULL(qp_num);
+-		}
++		tasklet_schedule(&qp->rxc_db_work);
+ 
+-		db_bits = db_mask & ntb_db_read(nt->ndev);
+-		db_bits |= db_again;
++		db_bits &= ~BIT_ULL(qp_num);
  	}
+-
+-	ntb_db_clear_mask(nt->ndev, db_mask);
+-}
+-
+-static void ntb_transport_doorbell_callback(void *data, int vector)
+-{
+-	struct ntb_transport_ctx *nt = data;
+-
+-	ntb_db_set_mask(nt->ndev, ntb_db_valid_mask(nt->ndev));
+-
+-	tasklet_schedule(&nt->db_work);
  }
  
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 260a701..5cde950 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
- 	if (pe->type & EEH_PE_PHB) {
- 		bus = pe->phb->bus;
- 	} else if (pe->type & EEH_PE_BUS ||
--		   pe->type & EEH_PE_DEVICE) {
-+		   pe->type & EEH_PE_DEVICE ||
-+		   pe->type & EEH_PE_VF) {
- 		if (pe->bus) {
- 			bus = pe->bus;
- 			goto out;
+ static const struct ntb_ctx_ops ntb_transport_ops = {
 -- 
-1.7.9.5
+2.4.0.rc0.43.gcf8a8c6
 
