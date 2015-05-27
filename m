@@ -1,189 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	James Hogan <james.hogan@imgtec.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Manuel Lauss <manuel.lauss@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-ia64@vger.kernel.org,
-	linux-mips@linux-mips.org, linux-gpio@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-metag@vger.kernel.org
-Subject: [RFC v1 11/11] genirq: Pass irq_data to helper function __irq_set_chip_handler_name_locked()
-Date: Mon,  4 May 2015 11:15:39 +0800
-Message-Id: <1430709339-29083-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from xspv0103.northgrum.com ([134.223.120.78]:57391 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417AbbE0VLJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 17:11:09 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: [PATCH v0 07/13] PCI: Calculate child's bus number based upon
+ enumeration
+Date: Wed, 27 May 2015 20:59:15 +0000
+Message-ID: <241508a7908d4b82952d292d01c8ebc6@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For most cases, callers pass irq_data->irq to helper function
-__irq_set_chip_handler_name_locked() and then it looks up irq_data again
-by calling irq_get_irq_data(irq).
+While scanning a bridge, pci_scan_bridge() checks if a child pci_bus
+already exists by looking up its bus number. It uses the value
+'max+1' as the expected child bus number. If the child does not exist,
+pci_scan_bridge() will create a new pci_bus for the child.
 
-So pass irq_data directly instead of irq_data->irq to
-__irq_set_chip_handler_name_locked().
+While rescanning the same bridge, pci_scan_bridge() assumes an existing
+child's bus number is 'max+1'. This is not always true, given a static
+enumeration profile. The profile may intentionally skip bus numbers.
+Thus, the child's number is not necessarily 'max+1'.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This commit changes the scanning behavior slightly. If the device being
+scanned has an enumeration profile, then pci_scan_bridge() will use
+that number when searching for it. Otherwise it falls back to the
+default 'max+1' bus number.
+
+Signed-off-by: Jason Tang <jason.tang2@ngc.com>
 ---
- arch/ia64/kernel/iosapic.c      |    6 +++---
- arch/mips/alchemy/common/irq.c  |    4 ++--
- drivers/gpio/gpio-zynq.c        |    9 ++++-----
- drivers/irqchip/irq-metag-ext.c |    5 ++---
- drivers/irqchip/irq-mips-gic.c  |   11 ++++-------
- include/linux/irqdesc.h         |    6 +++---
- 6 files changed, 18 insertions(+), 23 deletions(-)
+ drivers/pci/pci.h             |    7 +++++++
+ drivers/pci/pci_static_enum.c |   24 ++++++++++++++++++++++++
+ drivers/pci/probe.c           |    6 ++++--
+ 3 files changed, 35 insertions(+), 2 deletions(-)
 
-diff --git a/arch/ia64/kernel/iosapic.c b/arch/ia64/kernel/iosapic.c
-index 4d2698d43c39..317993e92cba 100644
---- a/arch/ia64/kernel/iosapic.c
-+++ b/arch/ia64/kernel/iosapic.c
-@@ -610,9 +610,9 @@ register_intr (unsigned int gsi, int irq, unsigned char delivery,
- 			       chip->name, irq_type->name);
- 		chip = irq_type;
- 	}
--	__irq_set_chip_handler_name_locked(irq, chip, trigger == IOSAPIC_EDGE ?
--					   handle_edge_irq : handle_level_irq,
--					   NULL);
-+	__irq_set_chip_handler_name_locked(irq_get_irq_data(irq), chip,
-+		trigger == IOSAPIC_EDGE ? handle_edge_irq : handle_level_irq,
-+		NULL);
- 	return 0;
- }
- 
-diff --git a/arch/mips/alchemy/common/irq.c b/arch/mips/alchemy/common/irq.c
-index 6cb60abfdcc9..026c4eed37d5 100644
---- a/arch/mips/alchemy/common/irq.c
-+++ b/arch/mips/alchemy/common/irq.c
-@@ -491,7 +491,7 @@ static int au1x_ic_settype(struct irq_data *d, unsigned int flow_type)
- 	default:
- 		ret = -EINVAL;
- 	}
--	__irq_set_chip_handler_name_locked(d->irq, chip, handler, name);
-+	__irq_set_chip_handler_name_locked(d, chip, handler, name);
- 
- 	wmb();
- 
-@@ -703,7 +703,7 @@ static int au1300_gpic_settype(struct irq_data *d, unsigned int type)
- 		return -EINVAL;
- 	}
- 
--	__irq_set_chip_handler_name_locked(d->irq, &au1300_gpic, hdl, name);
-+	__irq_set_chip_handler_name_locked(d, &au1300_gpic, hdl, name);
- 
- 	au1300_gpic_chgcfg(d->irq - ALCHEMY_GPIC_INT_BASE, GPIC_CFG_IC_MASK, s);
- 
-diff --git a/drivers/gpio/gpio-zynq.c b/drivers/gpio/gpio-zynq.c
-index 184c4b1b2558..aea6075e5b2e 100644
---- a/drivers/gpio/gpio-zynq.c
-+++ b/drivers/gpio/gpio-zynq.c
-@@ -422,13 +422,12 @@ static int zynq_gpio_set_irq_type(struct irq_data *irq_data, unsigned int type)
- 	writel_relaxed(int_any,
- 		       gpio->base_addr + ZYNQ_GPIO_INTANY_OFFSET(bank_num));
- 
--	if (type & IRQ_TYPE_LEVEL_MASK) {
--		__irq_set_chip_handler_name_locked(irq_data->irq,
-+	if (type & IRQ_TYPE_LEVEL_MASK)
-+		__irq_set_chip_handler_name_locked(irq_data,
- 			&zynq_gpio_level_irqchip, handle_fasteoi_irq, NULL);
--	} else {
--		__irq_set_chip_handler_name_locked(irq_data->irq,
-+	else
-+		__irq_set_chip_handler_name_locked(irq_data,
- 			&zynq_gpio_edge_irqchip, handle_level_irq, NULL);
--	}
- 
- 	return 0;
- }
-diff --git a/drivers/irqchip/irq-metag-ext.c b/drivers/irqchip/irq-metag-ext.c
-index 2cb474ad8809..52e501d8c8f0 100644
---- a/drivers/irqchip/irq-metag-ext.c
-+++ b/drivers/irqchip/irq-metag-ext.c
-@@ -404,7 +404,6 @@ static int meta_intc_irq_set_type(struct irq_data *data, unsigned int flow_type)
- #ifdef CONFIG_METAG_SUSPEND_MEM
- 	struct meta_intc_priv *priv = &meta_intc_priv;
- #endif
--	unsigned int irq = data->irq;
- 	irq_hw_number_t hw = data->hwirq;
- 	unsigned int bit = 1 << meta_intc_offset(hw);
- 	void __iomem *level_addr = meta_intc_level_addr(hw);
-@@ -413,10 +412,10 @@ static int meta_intc_irq_set_type(struct irq_data *data, unsigned int flow_type)
- 
- 	/* update the chip/handler */
- 	if (flow_type & IRQ_TYPE_LEVEL_MASK)
--		__irq_set_chip_handler_name_locked(irq, &meta_intc_level_chip,
-+		__irq_set_chip_handler_name_locked(data, &meta_intc_level_chip,
- 						   handle_level_irq, NULL);
- 	else
--		__irq_set_chip_handler_name_locked(irq, &meta_intc_edge_chip,
-+		__irq_set_chip_handler_name_locked(data, &meta_intc_edge_chip,
- 						   handle_edge_irq, NULL);
- 
- 	/* and clear/set the bit in HWLEVELEXT */
-diff --git a/drivers/irqchip/irq-mips-gic.c b/drivers/irqchip/irq-mips-gic.c
-index 09257c301bd2..fb2e64b1f414 100644
---- a/drivers/irqchip/irq-mips-gic.c
-+++ b/drivers/irqchip/irq-mips-gic.c
-@@ -365,15 +365,12 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
- 		break;
- 	}
- 
--	if (is_edge) {
--		__irq_set_chip_handler_name_locked(d->irq,
--						   &gic_edge_irq_controller,
-+	if (is_edge)
-+		__irq_set_chip_handler_name_locked(d, &gic_edge_irq_controller,
- 						   handle_edge_irq, NULL);
--	} else {
--		__irq_set_chip_handler_name_locked(d->irq,
--						   &gic_level_irq_controller,
-+	else
-+		__irq_set_chip_handler_name_locked(d, &gic_level_irq_controller,
- 						   handle_level_irq, NULL);
--	}
- 	spin_unlock_irqrestore(&gic_lock, flags);
- 
- 	return 0;
-diff --git a/include/linux/irqdesc.h b/include/linux/irqdesc.h
-index 81a7231c0379..720ff116b533 100644
---- a/include/linux/irqdesc.h
-+++ b/include/linux/irqdesc.h
-@@ -168,15 +168,15 @@ static inline void __irq_set_handler_locked(unsigned int irq,
- 
- /* caller has locked the irq_desc and both params are valid */
- static inline void
--__irq_set_chip_handler_name_locked(unsigned int irq, struct irq_chip *chip,
-+__irq_set_chip_handler_name_locked(struct irq_data *data, struct irq_chip *chip,
- 				   irq_flow_handler_t handler, const char *name)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 7a051f5..665c798 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -325,6 +325,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ void pci_static_enum_set_opt(const char *str);
+ int pci_static_enum_exists(void);
+ void pci_static_enum_bus_nums(struct pci_bus *bus);
++int pci_static_enum_get_busnr(struct pci_bus *bus, struct pci_dev *dev,
++			      int default_busnr);
+ /**
+  * pci_bus_subordinate() - return the subordinate bus number assigned
+  * to @dev by the static enumeration profile, or 0 if not set
+@@ -337,6 +339,11 @@ static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
+ static inline void pci_static_enum_set_opt(const char *str) { return; }
+ static inline int pci_static_enum_exists(void) { return 0; }
+ static inline void pci_static_enum_bus_nums(struct pci_bus *bus) { return; }
++static inline int pci_static_enum_get_busnr(struct pci_bus *bus, struct pci_dev *dev,
++					    int default_busnr)
++{
++	return default_busnr;
++}
+ static inline unsigned char pci_bus_subordinate(struct pci_bus *bus)
  {
- 	struct irq_desc *desc;
- 
--	desc = irq_to_desc(irq);
--	irq_desc_get_irq_data(desc)->chip = chip;
-+	desc = irq_to_desc(data->irq);
- 	desc->handle_irq = handler;
- 	desc->name = name;
-+	data->chip = chip;
+ 	return 0;
+diff --git a/drivers/pci/pci_static_enum.c b/drivers/pci/pci_static_enum.c
+index dda9055..dbdc973 100644
+--- a/drivers/pci/pci_static_enum.c
++++ b/drivers/pci/pci_static_enum.c
+@@ -225,3 +225,27 @@ void pci_static_enum_bus_nums(struct pci_bus *bus)
+ 	bus->number = bus->busn_res.start = setting->secondary_bus;
+ 	bus->subordinate = setting->subordinate_bus;
  }
++
++/**
++ * pci_static_enum_get_busnr() - calculate bus number for a device
++ * @bus: bus contain @dev
++ * @dev: PCI device to lookup
++ * @default_num: default bus number
++ * Return: expected bus number for @dev, or @default_num if @dev has
++ * no if @dev has no static enumeration profile
++ */
++int pci_static_enum_get_busnr(struct pci_bus *bus, struct pci_dev *dev,
++			      int default_num)
++{
++	struct pci_static_enum_setting *setting;
++
++	if (!bus || !dev)
++		return default_num;
++
++	setting =
++	    pci_static_enum_find_setting(pci_domain_nr(bus), bus->number,
++					 dev->devfn);
++	if (setting)
++		return setting->secondary_bus;
++	return default_num;
++}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a7bf7c5..b3e7db4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -777,6 +777,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 	u16 bctl;
+ 	u8 primary, secondary, subordinate;
+ 	int broken = 0;
++	int child_busnr;
  
- static inline int irq_balancing_disabled(unsigned int irq)
+ 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+ 	primary = buses & 0xFF;
+@@ -867,9 +868,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 		/* Prevent assigning a bus number that already exists.
+ 		 * This can happen when a bridge is hot-plugged, so in
+ 		 * this case we only re-scan this bus. */
+-		child = pci_find_bus(pci_domain_nr(bus), max+1);
++		child_busnr  = pci_static_enum_get_busnr(bus, dev, max+1);
++		child = pci_find_bus(pci_domain_nr(bus), child_busnr);
+ 		if (!child) {
+-			child = pci_add_new_bus(bus, dev, max+1);
++			child = pci_add_new_bus(bus, dev, child_busnr);
+ 			if (!child)
+ 				goto out;
+ 			pci_bus_insert_busn_res(child, child->number, 0xff);
 -- 
-1.7.10.4
+1.7.9.5
 
