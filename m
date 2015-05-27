@@ -1,187 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 May 2015 11:44:36 +0100
-From: Lee Jones <lee.jones@linaro.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.restena.lu ([158.64.1.62]:45518 "EHLO
+	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbbE0GCY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 02:02:24 -0400
+Date: Wed, 27 May 2015 07:53:29 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Michael Marineau <michael.marineau@coreos.com>
+Cc: Darren Hart <dvhart@infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-omap@vger.kernel.org
-Subject: Re: [RFC v1 08/25] mfd: Use irq_desc_get_xxx() to avoid redundant
- lookup of irq_desc
-Message-ID: <20150520104436.GF3627@x1>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
- <1432116013-25902-9-git-send-email-jiang.liu@linux.intel.com>
+	platform-driver-x86@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Petri Hodju <petrihodju@yahoo.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Patch v3] apple-gmux: lock iGP IO to protect from vgaarb
+ changes
+Message-ID: <20150527075329.6df43854@pluto.restena.lu>
+In-Reply-To: <20150527044749.GB21644@fury.dvhart.com>
+References: <20150223215155.18444386@neptune.home>
+	<20150303172753.GF83894@vmdeb7>
+	<20150305232038.1873d380@neptune.home>
+	<20150306174254.GB19001@vmdeb7>
+	<20150307011546.0050279d@neptune.home>
+	<20150309225238.0b9ced4e@neptune.home>
+	<CAErSpo61r-_hy1hfUMm2ooXZVLTBhtjd-x5uXbyEg=WcG=itnQ@mail.gmail.com>
+	<20150311223445.6af76f7c@neptune.home>
+	<CAGr1u3tKVtQno=hUrKemLFYG12dtvPjFVR7oFwDG5cewJGCnJQ@mail.gmail.com>
+	<20150527044749.GB21644@fury.dvhart.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1432116013-25902-9-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 May 2015, Jiang Liu wrote:
+Hi Michael,
 
-> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-> already have a pointer to corresponding irq_desc.
+On Tue, 26 May 2015 21:47:49 -0700 Darren Hart wrote:
+> On Tue, May 26, 2015 at 12:10:48PM -0700, Michael Marineau wrote:
+> > FYI, this actually broke backlight controls on my MBP11,3 because the
+> > assumption the patch makes that gmux is always loaded before graphics
+> > drivers didn't hold true. At least for me dracut included the nouveau
+> > module in the initrd but not gmux, ensuring the ordering was wrong. No
+> > errors were reporting, and gmux still offered the backlight device, it
+> > just became inoperable. I worked around this for my kernel by building
+> > gmux into vmlinuz instead of as a module but that isn't going to in
+> > more general configs because there is an apple backlight driver which
+> > cannot be built at all in that configuration.
 > 
-> Do the same thing to avoid pattern "irq_get_chip_data(data->irq)".
+> Thank you for reporting this Michael,
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/mfd/ezx-pcap.c    |    2 +-
->  drivers/mfd/max8997-irq.c |    8 ++++----
->  drivers/mfd/mt6397-core.c |    8 ++++----
->  drivers/mfd/t7l66xb.c     |    2 +-
->  drivers/mfd/tc6393xb.c    |    2 +-
->  drivers/mfd/twl6030-irq.c |    2 +-
->  6 files changed, 12 insertions(+), 12 deletions(-)
+> That is tough as nouveau doesn't have an explicit dependency on gmux, so we
+> could do something like a passive request_module(), but if it isn't in the
+> initrd image, it would still fail as you describe.
+> 
+> > Is there a way to make the ordering between nouveau and gmux more
+> > explicit/reliable? Can gmux complain loudly if the ordering is ever
+> > wrong?
+> 
+> It should print an error if the probe fails due to the IO already being in use
+> or if it can't be allocated. The disabled IO case is only info level though,
+> perhaps that should be higher priority. Printing something when failing to probe
+> seems like a reasonable thing to do.
+> 
+> Michael, which message do you get if you boot with "debug" or "loglevel=6" when
+> apple-gmux is not built-in?
 
-Again, so long as this has been properly tested:
+A full kernel log up to including post-initrd loading of gmux would be
+useful.
 
-Acked-by: Lee Jones <lee.jones@linaro.org>
+As far as I have seen nouveau should not be doing unneeded vgaarb
+operations by itself (though userspace might be) as opposed to closed
+nvidia driver.
 
-> diff --git a/drivers/mfd/ezx-pcap.c b/drivers/mfd/ezx-pcap.c
-> index 5991faddd3c6..e5f4ffaa5414 100644
-> --- a/drivers/mfd/ezx-pcap.c
-> +++ b/drivers/mfd/ezx-pcap.c
-> @@ -207,7 +207,7 @@ static void pcap_isr_work(struct work_struct *work)
->  
->  static void pcap_irq_handler(unsigned int irq, struct irq_desc *desc)
->  {
-> -	struct pcap_chip *pcap = irq_get_handler_data(irq);
-> +	struct pcap_chip *pcap = irq_desc_get_handler_data(desc);
->  
->  	desc->irq_data.chip->irq_ack(&desc->irq_data);
->  	queue_work(pcap->workqueue, &pcap->isr_work);
-> diff --git a/drivers/mfd/max8997-irq.c b/drivers/mfd/max8997-irq.c
-> index 43fa61413e93..381738b477f8 100644
-> --- a/drivers/mfd/max8997-irq.c
-> +++ b/drivers/mfd/max8997-irq.c
-> @@ -113,14 +113,14 @@ static const struct max8997_irq_data max8997_irqs[] = {
->  
->  static void max8997_irq_lock(struct irq_data *data)
->  {
-> -	struct max8997_dev *max8997 = irq_get_chip_data(data->irq);
-> +	struct max8997_dev *max8997 = irq_data_get_irq_chip_data(data);
->  
->  	mutex_lock(&max8997->irqlock);
->  }
->  
->  static void max8997_irq_sync_unlock(struct irq_data *data)
->  {
-> -	struct max8997_dev *max8997 = irq_get_chip_data(data->irq);
-> +	struct max8997_dev *max8997 = irq_data_get_irq_chip_data(data);
->  	int i;
->  
->  	for (i = 0; i < MAX8997_IRQ_GROUP_NR; i++) {
-> @@ -148,7 +148,7 @@ irq_to_max8997_irq(struct max8997_dev *max8997, int irq)
->  
->  static void max8997_irq_mask(struct irq_data *data)
->  {
-> -	struct max8997_dev *max8997 = irq_get_chip_data(data->irq);
-> +	struct max8997_dev *max8997 = irq_data_get_irq_chip_data(data);
->  	const struct max8997_irq_data *irq_data = irq_to_max8997_irq(max8997,
->  								data->irq);
->  
-> @@ -157,7 +157,7 @@ static void max8997_irq_mask(struct irq_data *data)
->  
->  static void max8997_irq_unmask(struct irq_data *data)
->  {
-> -	struct max8997_dev *max8997 = irq_get_chip_data(data->irq);
-> +	struct max8997_dev *max8997 = irq_data_get_irq_chip_data(data);
->  	const struct max8997_irq_data *irq_data = irq_to_max8997_irq(max8997,
->  								data->irq);
->  
-> diff --git a/drivers/mfd/mt6397-core.c b/drivers/mfd/mt6397-core.c
-> index 09bc7804952a..dab325b9d0df 100644
-> --- a/drivers/mfd/mt6397-core.c
-> +++ b/drivers/mfd/mt6397-core.c
-> @@ -39,14 +39,14 @@ static const struct mfd_cell mt6397_devs[] = {
->  
->  static void mt6397_irq_lock(struct irq_data *data)
->  {
-> -	struct mt6397_chip *mt6397 = irq_get_chip_data(data->irq);
-> +	struct mt6397_chip *mt6397 = irq_data_get_irq_chip_data(data);
->  
->  	mutex_lock(&mt6397->irqlock);
->  }
->  
->  static void mt6397_irq_sync_unlock(struct irq_data *data)
->  {
-> -	struct mt6397_chip *mt6397 = irq_get_chip_data(data->irq);
-> +	struct mt6397_chip *mt6397 = irq_data_get_irq_chip_data(data);
->  
->  	regmap_write(mt6397->regmap, MT6397_INT_CON0, mt6397->irq_masks_cur[0]);
->  	regmap_write(mt6397->regmap, MT6397_INT_CON1, mt6397->irq_masks_cur[1]);
-> @@ -56,7 +56,7 @@ static void mt6397_irq_sync_unlock(struct irq_data *data)
->  
->  static void mt6397_irq_disable(struct irq_data *data)
->  {
-> -	struct mt6397_chip *mt6397 = irq_get_chip_data(data->irq);
-> +	struct mt6397_chip *mt6397 = irq_data_get_irq_chip_data(data);
->  	int shift = data->hwirq & 0xf;
->  	int reg = data->hwirq >> 4;
->  
-> @@ -65,7 +65,7 @@ static void mt6397_irq_disable(struct irq_data *data)
->  
->  static void mt6397_irq_enable(struct irq_data *data)
->  {
-> -	struct mt6397_chip *mt6397 = irq_get_chip_data(data->irq);
-> +	struct mt6397_chip *mt6397 = irq_data_get_irq_chip_data(data);
->  	int shift = data->hwirq & 0xf;
->  	int reg = data->hwirq >> 4;
->  
-> diff --git a/drivers/mfd/t7l66xb.c b/drivers/mfd/t7l66xb.c
-> index c09fb5dccd50..b752ca2be549 100644
-> --- a/drivers/mfd/t7l66xb.c
-> +++ b/drivers/mfd/t7l66xb.c
-> @@ -187,7 +187,7 @@ static struct mfd_cell t7l66xb_cells[] = {
->  /* Handle the T7L66XB interrupt mux */
->  static void t7l66xb_irq(unsigned int irq, struct irq_desc *desc)
->  {
-> -	struct t7l66xb *t7l66xb = irq_get_handler_data(irq);
-> +	struct t7l66xb *t7l66xb = irq_desc_get_handler_data(desc);
->  	unsigned int isr;
->  	unsigned int i, irq_base;
->  
-> diff --git a/drivers/mfd/tc6393xb.c b/drivers/mfd/tc6393xb.c
-> index 63458b39a97d..d21253a51cff 100644
-> --- a/drivers/mfd/tc6393xb.c
-> +++ b/drivers/mfd/tc6393xb.c
-> @@ -525,7 +525,7 @@ static int tc6393xb_register_gpio(struct tc6393xb *tc6393xb, int gpio_base)
->  static void
->  tc6393xb_irq(unsigned int irq, struct irq_desc *desc)
->  {
-> -	struct tc6393xb *tc6393xb = irq_get_handler_data(irq);
-> +	struct tc6393xb *tc6393xb = irq_desc_get_handler_data(desc);
->  	unsigned int isr;
->  	unsigned int i, irq_base;
->  
-> diff --git a/drivers/mfd/twl6030-irq.c b/drivers/mfd/twl6030-irq.c
-> index 2807e1a95663..5b8cd5cd42cf 100644
-> --- a/drivers/mfd/twl6030-irq.c
-> +++ b/drivers/mfd/twl6030-irq.c
-> @@ -231,7 +231,7 @@ static irqreturn_t twl6030_irq_thread(int irq, void *data)
->  
->  static int twl6030_irq_set_wake(struct irq_data *d, unsigned int on)
->  {
-> -	struct twl6030_irq *pdata = irq_get_chip_data(d->irq);
-> +	struct twl6030_irq *pdata = irq_data_get_irq_chip_data(d);
->  
->  	if (on)
->  		atomic_inc(&pdata->wakeirqs);
+If your systems allows, try booting to init=/bin/bash, then check for
+backlight, load nouveau, check for backlight and finally load gmux and
+check backlight (putting i915 in the mix where initrd/userspace puts
+it would be nice).
 
--- 
-Lee Jones
-Linaro STMicroelectronics Landing Team Lead
-Linaro.org │ Open source software for ARM SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Thanks,
+Bruno
