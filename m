@@ -1,89 +1,113 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
 	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch v3 1/7] ACPI/PCI: Enhance ACPI core to support sparse IO space
-Date: Thu, 14 May 2015 16:56:37 +0800
-Message-Id: <1431593803-5213-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mark Rutland <mark.rutland@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v9 1/4] documentation: dts: Add the device tree binding for APM  X-Gene v1 PCIe MSI device tree node
+Date: Wed, 27 May 2015 11:27:36 -0700
+Message-Id: <5651f2fdf00916f67593157440cda4ec99ce008e.1432747280.git.dhdang@apm.com>
+In-Reply-To: <cover.1432747280.git.dhdang@apm.com>
+References: <cover.1432747280.git.dhdang@apm.com>
+In-Reply-To: <cover.1432747280.git.dhdang@apm.com>
+References: <20150525125206.64d15861@arm.com> <cover.1432747280.git.dhdang@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ACPI resource parsing interfaces to support sparse IO space,
-which will be used to share common code between x86 and IA64 later.
+X-Gene v1 PCIe MSI controller block provides PCIE MSI functionality for
+5 X-Gene v1 PCIE ports
 
-Tested-by: Tony Luck <tony.luck@intel.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+The driver for this binding is under 'drivers/pci/host/pci-xgene-msi.c'
+
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/acpi/resource.c |    9 ++++++---
- include/linux/ioport.h  |    1 +
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      | 68 ++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 8244f013f210..fdcc73dad2c1 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
- static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
--				      u8 io_decode)
-+				      u8 io_decode, u8 translation_type)
- {
- 	res->flags = IORESOURCE_IO;
- 
-@@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-+	if (translation_type == ACPI_SPARSE_TRANSLATION)
-+		res->flags |= IORESOURCE_IO_SPARSE;
- }
- 
- static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-@@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_ioresource_flags(res, len, io_decode);
-+	acpi_dev_ioresource_flags(res, len, io_decode, 0);
- }
- 
- /**
-@@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
- 		acpi_dev_memresource_flags(res, len, wp);
- 		break;
- 	case ACPI_IO_RANGE:
--		acpi_dev_ioresource_flags(res, len, iodec);
-+		acpi_dev_ioresource_flags(res, len, iodec,
-+					  addr->info.io.translation_type);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae94f7a..24bea087e7af 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -94,6 +94,7 @@ struct resource {
- /* PnP I/O specific bits (IORESOURCE_BITS) */
- #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
- #define IORESOURCE_IO_FIXED		(1<<1)
-+#define IORESOURCE_IO_SPARSE		(1<<2)
- 
- /* PCI ROM control bits (IORESOURCE_BITS) */
- #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+new file mode 100644
+index 0000000..36d881c
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+@@ -0,0 +1,68 @@
++* AppliedMicro X-Gene v1 PCIe MSI controller
++
++Required properties:
++
++- compatible: should be "apm,xgene1-msi" to identify
++	      X-Gene v1 PCIe MSI controller block.
++- msi-controller: indicates that this is X-Gene v1 PCIe MSI controller node
++- reg: physical base address (0x79000000) and length (0x900000) for controller
++       registers. These registers include the MSI termination address and data
++       registers as well as the MSI interrupt status registers.
++- reg-names: not required
++- interrupts: A list of 16 interrupt outputs of the controller, starting from
++	      interrupt number 0x10 to 0x1f.
++- interrupt-names: not required
++
++Each PCIe node needs to have property msi-parent that points to msi controller node
++
++Examples:
++
++SoC DTSI:
++
++	+ MSI node:
++	msi@79000000 {
++		compatible = "apm,xgene1-msi";
++		msi-controller;
++		reg = <0x00 0x79000000 0x0 0x900000>;
++		interrupts = 	<0x0 0x10 0x4>
++				<0x0 0x11 0x4>
++				<0x0 0x12 0x4>
++				<0x0 0x13 0x4>
++				<0x0 0x14 0x4>
++				<0x0 0x15 0x4>
++				<0x0 0x16 0x4>
++				<0x0 0x17 0x4>
++				<0x0 0x18 0x4>
++				<0x0 0x19 0x4>
++				<0x0 0x1a 0x4>
++				<0x0 0x1b 0x4>
++				<0x0 0x1c 0x4>
++				<0x0 0x1d 0x4>
++				<0x0 0x1e 0x4>
++				<0x0 0x1f 0x4>;
++	};
++
++	+ PCIe controller node with msi-parent property pointing to MSI node:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
++			      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		dma-coherent;
++		clocks = <&pcie0clk 0>;
++		msi-parent= <&msi>;
++	};
 -- 
-1.7.10.4
+1.9.1
 
