@@ -1,55 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0085.outbound.protection.outlook.com ([157.56.110.85]:57087
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755688AbbEWBnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 May 2015 21:43:09 -0400
-From: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>
-To: <netdev@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>,
-	Robert Richter <robert.richter@caviumnetworks.com>,
-	Aleksey Makarov <aleksey.makarov@caviumnetworks.com>,
-	Sunil Goutham <sgoutham@cavium.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH net-next v5 1/2] pci: Add Cavium PCI vendor id
-Date: Fri, 22 May 2015 18:28:15 -0700
-Message-ID: <1432344498-17131-2-git-send-email-aleksey.makarov@caviumnetworks.com>
-In-Reply-To: <1432344498-17131-1-git-send-email-aleksey.makarov@caviumnetworks.com>
-References: <1432344498-17131-1-git-send-email-aleksey.makarov@caviumnetworks.com>
+Received: from xspv0103.northgrum.com ([134.223.120.78]:57239 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486AbbE0VKE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 17:10:04 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: [PATCH v0 03/13] PCI: Add Kconfig option PCI_STATIC_ENUMERATION
+Date: Wed, 27 May 2015 20:58:54 +0000
+Message-ID: <a59b2055cd9946d5a95b0e547944d12a@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sunil Goutham <sgoutham@cavium.com>
+This adds a new Kconfig option that enables PCI static enumeration.
+Changes to existing files will key off of this option.
 
-This vendor id will be used by network (vNIC), USB (xHCI),
-SATA (AHCI), GPIO, I2C, MMC and maybe other drivers
-for ThunderX SoC.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sunil Goutham <sgoutham@cavium.com>
-Signed-off-by: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>
+Signed-off-by: Jason Tang <jason.tang2@ngc.com>
 ---
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/Kconfig |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1fa99a3..80bd333 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2324,6 +2324,8 @@
- #define PCI_DEVICE_ID_ALTIMA_AC9100	0x03ea
- #define PCI_DEVICE_ID_ALTIMA_AC1003	0x03eb
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 7a8f1c5..81ead93 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -114,4 +114,16 @@ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
  
-+#define PCI_VENDOR_ID_CAVIUM		0x177d
++config PCI_STATIC_ENUMERATION
++	bool "PCI static enumeration support"
++	depends on PCI
++	help
++	  Say Y here to allow PCI devices to be specifically enumerated
++	  instead of relying upon BIOS to enumerate the devices. This is
++	  useful when hotplugging non-CardBus devices. A static enumeration
++	  option string can be given on the command line to override BIOS
++	  settings.
 +
- #define PCI_VENDOR_ID_BELKIN		0x1799
- #define PCI_DEVICE_ID_BELKIN_F5D7010V7	0x701f
- 
++	  When in doubt, say N.
++
+ source "drivers/pci/host/Kconfig"
 -- 
-2.4.1
+1.7.9.5
 
