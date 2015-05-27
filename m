@@ -1,214 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:34146 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717AbbETXTQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 May 2015 19:19:16 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: bhelgaas@google.com
-Cc: tomi.valkeinen@ti.com, airlied@linux.ie,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Subject: [PATCH v6 4/4] video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
-Date: Wed, 20 May 2015 16:08:13 -0700
-Message-Id: <1432163293-20965-5-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:51991 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbbE0Pnw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 11:43:52 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Zhou Wang <wangzhou1@hisilicon.com>, zhudacai@hisilicon.com,
+	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
+	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	'Pratyush Anand' <pratyush.anand@gmail.com>,
+	'Richard Zhu' <Richard.Zhu@freescale.com>,
+	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Liviu Dudau' <liviu.dudau@arm.com>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	'Liguozhu' <liguozhu@hisilicon.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+Date: Wed, 27 May 2015 17:43:14 +0200
+Message-ID: <2095085.CuXXeGT0Wg@wuerfel>
+In-Reply-To: <2378629.Ocol8HRDqD@wuerfel>
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <5565CD0B.6020206@hisilicon.com> <2378629.Ocol8HRDqD@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Wednesday 27 May 2015 17:31:46 Arnd Bergmann wrote:
+> Yes, that works. However there are two problems with the approach:
+> 
+> - we have to change all PCI host drivers on ARM to do this in order to remove
+>   the ARM-specific pcibios_msi_controller() function
+> - it's possible that there are dw_pcie implementations that do not include
+>   an MSI controller, so that pointer would be NULL, which leads to the
+>   core code to still call the ARM-specific pcibios_msi_controller() function
+>   unless we remove it.
 
-This driver uses the same area for MTRR as for the ioremap().
-Convert the driver from using the x86 specific MTRR code to
-the architecture agnostic arch_phys_wc_add(). arch_phys_wc_add()
-will avoid MTRR if write-combining is available, in order to
-take advantage of that also ensure the ioremap'd area is requested
-as write-combining.
+I wonder if this simple patch would be sufficient to kill off
+pcibios_msi_controller().
 
-There are a few motivations for this:
+Can one of you try it?
 
-a) Take advantage of PAT when available
+	Arnd
 
-b) Help bury MTRR code away, MTRR is architecture specific and on
-   x86 its replaced by PAT
-
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-The conversion done is expressed by the following Coccinelle
-SmPL patch, it additionally required manual intervention to
-address all the #ifdery and removal of redundant things which
-arch_phys_wc_add() already addresses such as verbose message
-about when MTRR fails and doing nothing when we didn't get
-an MTRR.
-
-@ mtrr_found @
-expression index, base, size;
-@@
-
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Generated-by: Coccinelle SmPL
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/video/fbdev/vt8623fb.c | 31 ++++++-------------------------
- 1 file changed, 6 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/video/fbdev/vt8623fb.c b/drivers/video/fbdev/vt8623fb.c
-index ea7f056..60f24828 100644
---- a/drivers/video/fbdev/vt8623fb.c
-+++ b/drivers/video/fbdev/vt8623fb.c
-@@ -26,13 +26,9 @@
- #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
- #include <video/vga.h>
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index fcbbbb1b9e95..7afb6d253162 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -18,15 +18,6 @@
  
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
+ static int debug_pci;
+ 
+-#ifdef CONFIG_PCI_MSI
+-struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+-{
+-	struct pci_sys_data *sysdata = dev->bus->sysdata;
+-
+-	return sysdata->msi_ctrl;
+-}
 -#endif
 -
- struct vt8623fb_info {
- 	char __iomem *mmio_base;
--	int mtrr_reg;
-+	int wc_cookie;
- 	struct vgastate state;
- 	struct mutex open_lock;
- 	unsigned int ref_count;
-@@ -99,10 +95,7 @@ static struct svga_timing_regs vt8623_timing_regs     = {
- /* Module parameters */
+ /*
+  * We can't use pci_get_device() here since we are
+  * called from interrupt context.
+@@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		if (!sys)
+ 			panic("PCI: unable to allocate sys data!");
  
- static char *mode_option = "640x480-8@60";
--
--#ifdef CONFIG_MTRR
- static int mtrr = 1;
+-#ifdef CONFIG_PCI_MSI
+-		sys->msi_ctrl = hw->msi_ctrl;
 -#endif
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+@@ -493,6 +481,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 				panic("PCI: unable to scan bus!");
  
- MODULE_AUTHOR("(c) 2006 Ondrej Zajicek <santiago@crfreenet.org>");
- MODULE_LICENSE("GPL");
-@@ -112,11 +105,8 @@ module_param(mode_option, charp, 0644);
- MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
- module_param_named(mode, mode_option, charp, 0);
- MODULE_PARM_DESC(mode, "Default video mode e.g. '648x480-8@60' (deprecated)");
--
--#ifdef CONFIG_MTRR
- module_param(mtrr, int, 0444);
- MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
--#endif
+ 			busnr = sys->bus->busn_res.end + 1;
++#ifdef CONFIG_PCI_MSI
++			bus->msi = hw->msi_ctrl;
++#endif
  
- 
- /* ------------------------------------------------------------------------- */
-@@ -710,7 +700,7 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	info->fix.mmio_len = pci_resource_len(dev, 1);
- 
- 	/* Map physical IO memory address into kernel space */
--	info->screen_base = pci_iomap(dev, 0, 0);
-+	info->screen_base = pci_iomap_wc(dev, 0, 0);
- 	if (! info->screen_base) {
- 		rc = -ENOMEM;
- 		dev_err(info->device, "iomap for framebuffer failed\n");
-@@ -781,12 +771,9 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	/* Record a reference to the driver data */
- 	pci_set_drvdata(dev, info);
- 
--#ifdef CONFIG_MTRR
--	if (mtrr) {
--		par->mtrr_reg = -1;
--		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
--	}
--#endif
-+	if (mtrr)
-+		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
-+						  info->fix.smem_len);
- 
- 	return 0;
- 
-@@ -816,13 +803,7 @@ static void vt8623_pci_remove(struct pci_dev *dev)
- 	if (info) {
- 		struct vt8623fb_info *par = info->par;
- 
--#ifdef CONFIG_MTRR
--		if (par->mtrr_reg >= 0) {
--			mtrr_del(par->mtrr_reg, 0, 0);
--			par->mtrr_reg = -1;
--		}
--#endif
--
-+		arch_phys_wc_del(par->wc_cookie);
- 		unregister_framebuffer(info);
- 		fb_dealloc_cmap(&info->cmap);
- 
--- 
-2.3.2.209.gd67f9d5.dirty
+ 			list_add(&sys->node, head);
+ 		} else {
 
