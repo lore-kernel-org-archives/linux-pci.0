@@ -1,173 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:19632 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbbEASpY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 May 2015 14:45:24 -0400
-From: <wdavis@nvidia.com>
-To: joro@8bytes.org
-CC: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 4/6] iommu/amd: Implement (un)map_resource
-Date: Fri, 1 May 2015 13:32:16 -0500
-Message-ID: <1430505138-2877-5-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 27 May 2015 10:47:02 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for
+ ACPI
+Message-ID: <20150527094702.GE2175@e106497-lin.cambridge.arm.com>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+ <1432644564-24746-2-git-send-email-hanjun.guo@linaro.org>
+ <20150526165844.GD2175@e106497-lin.cambridge.arm.com>
+ <5564AB68.6080502@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5564AB68.6080502@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+On Tue, May 26, 2015 at 06:20:40PM +0100, Jiang Liu wrote:
+> On 2015/5/27 0:58, Liviu Dudau wrote:
+> > On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
+> >> ARM64 ACPI based PCI host bridge init needs a arch dependent
+> >> struct pci_controller to accommodate common PCI host bridge
+> >> code which is introduced later, or it will lead to compile
+> >> errors on ARM64.
+> > 
+> > Hi Hanjun,
+> > 
+> > Two questions: why don't you introduce this patch next to the
+> > one that is going to make use of it (or even merge it there)?
+> > Second, why is the whole struct pci_controller not surrounded
+> > by #ifdef CONFIG_ACPI as you are implying that this is needed
+> > only for ACPI?
+> > 
+> > Btw, looking through the whole series I'm not (yet) convinced
+> > that this is needed at all.
+> Hi Liviu,
+> 	This structure is required by the requested patch set
+> at http://patchwork.ozlabs.org/patch/472249/, which consolidates
+> the common code to support PCI host bridge into ACPI core.
+> Thanks!
+> Gerry
 
-Implement 'map_resource' for the AMD IOMMU driver. Generalize the existing
-map_page implementation to operate on a physical address, and make both
-map_page and map_resource wrappers around that helper (and similiarly, for
-unmap_page and unmap_resource).
+Hi Jiang,
 
-This allows a device to map another's resource, to enable peer-to-peer
-transactions.
+Thanks for pointing me on the right answer, I've missed that series!
+Probably not the best place to comment on that series here, but I
+wonder why did you not made the pci_controller structure available
+in a more generic header file that can be included so that arches
+don't have to redefine the structure every time. After all, you are
+trying to consolidate things.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- drivers/iommu/amd_iommu.c | 76 +++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 63 insertions(+), 13 deletions(-)
+Oh, and pci_controller name throws a lot of false negatives, maybe
+a more specific one (acpi_pci_controller?) would make things clear?
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index e43d489..ca2dac6 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -503,6 +503,8 @@ DECLARE_STATS_COUNTER(cnt_map_single);
- DECLARE_STATS_COUNTER(cnt_unmap_single);
- DECLARE_STATS_COUNTER(cnt_map_sg);
- DECLARE_STATS_COUNTER(cnt_unmap_sg);
-+DECLARE_STATS_COUNTER(cnt_map_resource);
-+DECLARE_STATS_COUNTER(cnt_unmap_resource);
- DECLARE_STATS_COUNTER(cnt_alloc_coherent);
- DECLARE_STATS_COUNTER(cnt_free_coherent);
- DECLARE_STATS_COUNTER(cross_page);
-@@ -541,6 +543,8 @@ static void amd_iommu_stats_init(void)
- 	amd_iommu_stats_add(&cnt_unmap_single);
- 	amd_iommu_stats_add(&cnt_map_sg);
- 	amd_iommu_stats_add(&cnt_unmap_sg);
-+	amd_iommu_stats_add(&cnt_map_resource);
-+	amd_iommu_stats_add(&cnt_unmap_resource);
- 	amd_iommu_stats_add(&cnt_alloc_coherent);
- 	amd_iommu_stats_add(&cnt_free_coherent);
- 	amd_iommu_stats_add(&cross_page);
-@@ -2752,20 +2756,16 @@ static void __unmap_single(struct dma_ops_domain *dma_dom,
- }
- 
- /*
-- * The exported map_single function for dma_ops.
-+ * Wrapper function that contains code common to mapping a physical address
-+ * range from a page or a resource.
-  */
--static dma_addr_t map_page(struct device *dev, struct page *page,
--			   unsigned long offset, size_t size,
--			   enum dma_data_direction dir,
--			   struct dma_attrs *attrs)
-+static dma_addr_t __map_phys(struct device *dev, phys_addr_t paddr,
-+			     size_t size, enum dma_data_direction dir)
- {
- 	unsigned long flags;
- 	struct protection_domain *domain;
- 	dma_addr_t addr;
- 	u64 dma_mask;
--	phys_addr_t paddr = page_to_phys(page) + offset;
--
--	INC_STATS_COUNTER(cnt_map_single);
- 
- 	domain = get_domain(dev);
- 	if (PTR_ERR(domain) == -EINVAL)
-@@ -2791,16 +2791,15 @@ out:
- }
- 
- /*
-- * The exported unmap_single function for dma_ops.
-+ * Wrapper function that contains code common to unmapping a physical address
-+ * range from a page or a resource.
-  */
--static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
--		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+static void __unmap_phys(struct device *dev, dma_addr_t dma_addr, size_t size,
-+			 enum dma_data_direction dir)
- {
- 	unsigned long flags;
- 	struct protection_domain *domain;
- 
--	INC_STATS_COUNTER(cnt_unmap_single);
--
- 	domain = get_domain(dev);
- 	if (IS_ERR(domain))
- 		return;
-@@ -2815,6 +2814,55 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
- }
- 
- /*
-+ * The exported map_single function for dma_ops.
-+ */
-+static dma_addr_t map_page(struct device *dev, struct page *page,
-+			   unsigned long offset, size_t size,
-+			   enum dma_data_direction dir,
-+			   struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_map_single);
-+
-+	return __map_phys(dev, page_to_phys(page) + offset, size, dir);
-+}
-+
-+/*
-+ * The exported unmap_single function for dma_ops.
-+ */
-+static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
-+		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_unmap_single);
-+
-+	__unmap_phys(dev, dma_addr, size, dir);
-+}
-+
-+/*
-+ * The exported map_resource function for dma_ops.
-+ */
-+static dma_addr_t map_resource(struct device *dev, struct resource *res,
-+			       unsigned long offset, size_t size,
-+			       enum dma_data_direction dir,
-+			       struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_map_resource);
-+
-+	return __map_phys(dev, res->start + offset, size, dir);
-+}
-+
-+/*
-+ * The exported unmap_resource function for dma_ops.
-+ */
-+static void unmap_resource(struct device *dev, dma_addr_t dma_addr,
-+			   size_t size, enum dma_data_direction dir,
-+			   struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_unmap_resource);
-+
-+	__unmap_phys(dev, dma_addr, size, dir);
-+}
-+
-+/*
-  * The exported map_sg function for dma_ops (handles scatter-gather
-  * lists).
-  */
-@@ -3066,6 +3114,8 @@ static struct dma_map_ops amd_iommu_dma_ops = {
- 	.unmap_page = unmap_page,
- 	.map_sg = map_sg,
- 	.unmap_sg = unmap_sg,
-+	.map_resource = map_resource,
-+	.unmap_resource = unmap_resource,
- 	.dma_supported = amd_iommu_dma_supported,
- };
- 
+Best regards,
+Liviu
+
+> 
+> > 
+> > Best regards,
+> > Liviu
+> > 
+> >>
+> >> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> >> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> >> CC: Arnd Bergmann <arnd@arndb.de>
+> >> CC: Catalin Marinas <catalin.marinas@arm.com>
+> >> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+> >> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+> >> CC: Will Deacon <will.deacon@arm.com>
+> >> ---
+> >>  arch/arm64/include/asm/pci.h | 10 ++++++++++
+> >>  1 file changed, 10 insertions(+)
+> >>
+> >> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> >> index b008a72..7088495 100644
+> >> --- a/arch/arm64/include/asm/pci.h
+> >> +++ b/arch/arm64/include/asm/pci.h
+> >> @@ -10,6 +10,16 @@
+> >>  #include <asm-generic/pci-bridge.h>
+> >>  #include <asm-generic/pci-dma-compat.h>
+> >>  
+> >> +struct acpi_device;
+> >> +
+> >> +struct pci_controller {
+> >> +#ifdef CONFIG_ACPI
+> >> +	struct acpi_device *companion;	/* ACPI companion device */
+> >> +#endif
+> >> +	int		segment;	/* PCI domain */
+> >> +	int		node;		/* NUMA node */
+> >> +};
+> >> +
+> >>  #define PCIBIOS_MIN_IO		0x1000
+> >>  #define PCIBIOS_MIN_MEM		0
+> >>  
+> >> -- 
+> >> 1.9.1
+> >>
+> > 
+> 
+
 -- 
-2.3.7
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
