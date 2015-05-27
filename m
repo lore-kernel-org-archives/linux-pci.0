@@ -1,116 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49686 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753450AbbEZNOI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 May 2015 09:14:08 -0400
-Date: Tue, 26 May 2015 13:57:59 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	"yasutake.koichi@jp.panasonic.com" <yasutake.koichi@jp.panasonic.com>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFC/RFT PATCH] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150526125759.GK1565@arm.com>
-References: <1432214067-2752-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:57166 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbbE0NaZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 09:30:25 -0400
+Message-ID: <5565C598.7020809@hisilicon.com>
+Date: Wed, 27 May 2015 21:24:40 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432214067-2752-1-git-send-email-lorenzo.pieralisi@arm.com>
+To: Fabrice Gasnier <fabrice.gasnier@st.com>
+CC: Jingoo Han <jingoohan1@gmail.com>, <zhudacai@hisilicon.com>,
+	<devicetree@vger.kernel.org>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
+	<linux-pci@vger.kernel.org>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Liviu Dudau'" <liviu.dudau@arm.com>,
+	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	<qiuzhenfa@hisilicon.com>, "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
+	"'Liguozhu'" <liguozhu@hisilicon.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"'Lucas Stach'" <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <5562F0C9.4090007@hisilicon.com> <000001d096f1$93dca4e0$bb95eea0$@com> <5563451B.4050609@st.com> <5563DF4F.4080601@hisilicon.com> <556428C9.9080202@st.com>
+In-Reply-To: <556428C9.9080202@st.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On Thu, May 21, 2015 at 02:14:25PM +0100, Lorenzo Pieralisi wrote:
-> When a PCI bus is scanned, upon PCI bridge detection the kernel
-> has to read the bridge registers to set-up its resources so that
-> the PCI resource hierarchy can be validated properly.
+On 2015/5/26 16:03, Fabrice Gasnier wrote:
+> Hi zhou,
 > 
-> Most if not all architectures read PCI bridge registers in the
-> pcibios_fixup_bus hook, that is called by the PCI generic layer
-> whenever a PCI bus is scanned.
+> On 05/26/2015 04:49 AM, Zhou Wang wrote:
+>>>   struct pcie_port {
+>>> >+#ifdef CONFIG_ARM
+>>> >+    /*
+>>> >+     * this is a temporary hack to let the driver work on
+>>> >+     * both arm32 and arm64. it can be removed after the
+>>> >+     * arm32 cleanup is complete and bios32.c has stopped
+>>> >+     * referencing host->pci_sys_data.
+>>> >+     */
+>>> >+    struct pci_sys_data    dummy;
+>>> >+#endif
+>>> >      struct device        *dev;
+>>> >
+>>> >
+>>> >This looks like necessary as bios32 is dereferencing sysdata:
+>>> >struct pci_sys_data *sysdata = dev->bus->sysdata;
+>>> >
+>>> >Best Regards,
+>>> >Fabrice
+>>> >
+>> Hi Fabrice,
+>>
+>> Firstly, many thanks for your test:)
+>>
+>> I am a little confused that pci_sys_data is still needed as we don't use the code
+>> in bios32. What was the problem you met? Could you share me more information? Then
+>> let's see how to solve the problem.
 > 
-> Since pci_read_bridge_bases is an arch agnostic operation (and it
-> is carried out on all architectures) it can be moved to the generic
-> PCI layer in order to consolidate code and remove the respective
-> calls from the architectures back-ends.
+> This is not completely true: there is still code in bios32 that requires pci_sys_data.
+
+Right.
+
+> No matters pci_common_init_dev() is being called or not :
 > 
-> The PCI_PROBE_ONLY flag is not checked before calling
-> pci_read_bridge_buses in the generic layer since reading the bridge
-> bases is not related to resources assignment; this implies that it
-> can be carried out safely on PCI_PROBE_ONLY systems too and should
-> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> flag before reading the bridge bases.
+> You can see pcibios_msi_controller() has a weak definition (in drivers/pci/msi.c).
+> But bios32 defines it for arm. Then it's being used.
 
-[...]
+But here in dw_pcie_host_init, I directly set bus->msi = &dw_pcie_msi_chip. So in
+drivers/pci/msi.c, we will get the msi controller by dev->bus->msi in pci_msi_controller.
+It will not run into pcibios_msi_controller().
 
-> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-> index 82f738e..cded02c 100644
-> --- a/arch/alpha/kernel/pci.c
-> +++ b/arch/alpha/kernel/pci.c
-> @@ -242,12 +242,7 @@ pci_restore_srm_config(void)
->  
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
-> -	struct pci_dev *dev = bus->self;
-> -
-> -	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
-> - 		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-> - 		pci_read_bridge_bases(bus);
-> -	} 
+Maybe there is still something I miss understood, if so, please let me know.
 
-I appreciate you're basically moving this code ...
+Best Regards,
+Zhou
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 062fee6..335d9f2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -453,7 +453,11 @@ void pci_read_bridge_bases(struct pci_bus *child)
->  	struct resource *res;
->  	int i;
->  
-> -	if (pci_is_root_bus(child))	/* It's a host bus, nothing to read */
-> +	/*
-> +	 * If it is not a PCI bridge there is nothing to read
-> +	 */
-> +	if (pci_is_root_bus(child) || !dev ||
-> +		!((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI))
->  		return;
+> So, basically, pci_sys_data is still needed on arm. This is how above workaround proposed by Arnd takes care of it.
+> Without this, dereferencing the pointer as done in bios32, makes it hazardous and lead to crashes...
+> e.g. in pcibios_msi_controller(), pci_sys_data will point to "dev->bus->sysdata", aka "struct device *dev" above.
+> 
+> Best Regards,
+> Fabrice
+>>
+>> Thanks again and Best Regards,
+>> Zhou
+>>
+> 
+> 
+> .
+> 
 
-... to here, but shouldn't we dispense with the class check and use
-pci_is_bridge instead? pci_read_bridge_bases is making an assumption
-that the header type is BRIDGE, so that seems like the more sensible
-check to me.
 
-Also, with these changes, can we now make pci_read_bridge_bases static
-(as it has an implicit rdering requirement on the device having been
-scanned)?
-
-Will
