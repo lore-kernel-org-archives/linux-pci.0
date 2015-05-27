@@ -1,107 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:48340 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750812AbbE1BEs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 21:04:48 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	linux-sh@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not modular
-Date: Thu, 28 May 2015 03:30:19 +0200
-Message-ID: <4269355.CI4MW738Od@vostro.rjw.lan>
-In-Reply-To: <20150527193149.GD10210@google.com>
-References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop> <CAE9FiQXq59tSBM0SQ4OToXydZrRC3yukALmWEb6K9xpCGbdUhg@mail.gmail.com> <20150527193149.GD10210@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailuogwhop.emc.com ([168.159.213.141]:59522 "EHLO
+	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbbE0Uiv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 16:38:51 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH] NTB: Skip reading doorbell bits in callback
+Date: Wed, 27 May 2015 11:37:49 -0400
+Message-Id: <ccfb91d6e93eb0136b72e0454d697ae4e8101523.1432740351.git.Allen.Hubbe@emc.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, May 27, 2015 02:31:49 PM Bjorn Helgaas wrote:
-> [updated Rafael's email addr; not sure if sisk.pl still works or not]
-> 
-> On Wed, May 27, 2015 at 11:31:21AM -0700, Yinghai Lu wrote:
-> > On Fri, Jul 26, 2013 at 5:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > > On Thu, Jul 25, 2013 at 10:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >> Convert pciehp to be builtin only, with no module option.
-> > >>
-> > >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >> ---
-> > >>  drivers/pci/pcie/Kconfig |    5 +----
-> > >>  1 file changed, 1 insertion(+), 4 deletions(-)
-> > >>
-> > >> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> > >> index 569f82f..3b94cfc 100644
-> > >> --- a/drivers/pci/pcie/Kconfig
-> > >> +++ b/drivers/pci/pcie/Kconfig
-> > >> @@ -14,15 +14,12 @@ config PCIEPORTBUS
-> > >>  # Include service Kconfig here
-> > >>  #
-> > >>  config HOTPLUG_PCI_PCIE
-> > >> -       tristate "PCI Express Hotplug driver"
-> > >> +       bool "PCI Express Hotplug driver"
-> > >>         depends on HOTPLUG_PCI && PCIEPORTBUS
-> > >>         help
-> > >>           Say Y here if you have a motherboard that supports PCI Express Native
-> > >>           Hotplug
-> > >>
-> > >> -         To compile this driver as a module, choose M here: the
-> > >> -         module will be called pciehp.
-> > >> -
-> > >>           When in doubt, say N.
-> > >>
-> > >>  source "drivers/pci/pcie/aer/Kconfig"
-> > >>
-> > >
-> > > Acked-by: Yinghai Lu <yinghai@kernel.org>
-> > 
-> > Hi Bjorn,
-> > 
-> > Looks like we lose the option to disable pciehp after we make it as built-in.
-> > 
-> > Before acpiphp and pciehp could be compiled as modules, and user could
-> > blacklist to disable them.
-> > 
-> > Now they are all built-in, but only acpiphp has acpiphp.disable to
-> > disable acpiphp.
-> > we don't have pciehp.disable yet.
-> > 
-> > Do you think if we should add pciehp.disable ?
-> 
-> Did you find a situation that would require pciehp.disable?  I hesitate to
-> add it because if there's a problem and pciehp.disable fixes it, people
-> tend to think the solution is "boot with pciehp.disable."  But the *real*
-> solution is to fix whatever is broken in the kernel, so no parameter is
-> needed at all.
+Avoid the penalty of ioread latency before doing useful work in the
+doorbell callback.  Instead of reading the doorbell bits, assume the
+bits are set, and always schedule the transport qp tasklets.
 
-Agreed.
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+Notes:
+  This should theoretically improve the response time.  Experiments with
+  netperf do not show any significant difference in either direction.
 
-For debug you can always use pcie_ports=compat and that will disable
-pciehp too.
+ drivers/ntb/ntb_transport.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> > BTW we don't have any description for acpiphp.disable anywhere.
-> 
-> True.  I'll give you my opinion; Rafael may have a different one.
-> 
-> I don't know whether it's a good idea to add a description or not, for the
-> same reason as above.  I think we should actively discourage people from
-> using kernel parameters, except for debugging purposes and for some legacy
-> issues where there's no way for the kernel to figure things out by itself.
-> But in my opinion, acpiphp isn't in any of those categories, so I'm content
-> to have the parameter present but undocumented.  It seems more likely that
-> we'll hear about issues then, and we might be able to do something about
-> them.
-
-Agreed again.
-
-Rafael
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 4c59f24cef2d..b70b6a30a0b5 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -1922,12 +1922,11 @@ static void ntb_transport_doorbell_callback(void *data, int vector)
+ {
+ 	struct ntb_transport_ctx *nt = data;
+ 	struct ntb_transport_qp *qp;
+-	u64 db_mask, db_bits;
++	u64 db_bits;
+ 	unsigned int qp_num;
+ 
+-	db_mask = (nt->qp_bitmap & ~nt->qp_bitmap_free &
++	db_bits = (nt->qp_bitmap & ~nt->qp_bitmap_free &
+ 		   ntb_db_vector_mask(nt->ndev, vector));
+-	db_bits = db_mask & ntb_db_read(nt->ndev);
+ 
+ 	while (db_bits) {
+ 		qp_num = __ffs(db_bits);
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
