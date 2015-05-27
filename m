@@ -1,68 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:16785 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755347AbbE2R2I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:08 -0400
-From: <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v3 3/7] dma-mapping: pci: add pci_(un)map_resource
-Date: Fri, 29 May 2015 12:14:42 -0500
-Message-ID: <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+Received: from xspv0103.northgrum.com ([134.223.120.78]:57239 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497AbbE0VKD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 17:10:03 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: [PATCH v0 01/13] PCI: Set bus's device name later
+Date: Wed, 27 May 2015 20:58:43 +0000
+Message-ID: <da3bdc7bcbff43f5a90172043866848d@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Will Davis <wdavis@nvidia.com>
+The PCI bus's device name is based upon its bus number. An upcoming
+patch will allow the user to explicitly set a bus's number and
+subordinate; thus its name will no longer be accurate. The solution is
+to move when a bus's name is set to be a bit later within
+pci_alloc_child_bus().
 
-Simply route these through to the new dma_(un)map_resource APIs.
+Furthermore, the name is currently based upon busnr. It is more accurate
+to use child->number, even though at this time both values are the same.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+Signed-off-by: Jason Tang <jason.tang2@ngc.com>
 ---
- include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/pci/probe.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-index c110843..ac4a4ad 100644
---- a/include/asm-generic/pci-dma-compat.h
-+++ b/include/asm-generic/pci-dma-compat.h
-@@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
- 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
- }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8d2f400..873030b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -684,7 +684,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	 * now as the parent is not properly set up yet.
+ 	 */
+ 	child->dev.class = &pcibus_class;
+-	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
  
-+static inline dma_addr_t
-+pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
-+		 unsigned long offset, size_t size, int direction)
-+{
-+	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
-+}
+ 	/*
+ 	 * Set up the primary, secondary and subordinate
+@@ -695,6 +694,8 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	child->busn_res.end = 0xff;
+ 
+ 	if (!bridge) {
++		dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child),
++			     child->number);
+ 		child->dev.parent = parent->bridge;
+ 		goto add_dev;
+ 	}
+@@ -702,6 +703,10 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	child->self = bridge;
+ 	child->bridge = get_device(&bridge->dev);
+ 	child->dev.parent = child->bridge;
 +
-+static inline void
-+pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
-+		   int direction)
-+{
-+	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-+}
++	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child),
++		     child->number);
 +
- static inline int
- pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
- 	   int nents, int direction)
+ 	pci_set_bus_of_node(child);
+ 	pci_set_bus_speed(child);
+ 
 -- 
-2.4.0
+1.7.9.5
 
