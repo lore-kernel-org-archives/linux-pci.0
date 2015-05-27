@@ -1,107 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55647C94.9080606@oracle.com>
-Date: Tue, 26 May 2015 10:00:52 -0400
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-MIME-Version: 1.0
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45776 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751468AbbE0UEJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 May 2015 16:04:09 -0400
+Date: Wed, 27 May 2015 22:04:02 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	tomi.valkeinen@ti.com, airlied@linux.ie,
+	linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com, Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>
-Subject: Re: [PATCH 10/11] XEN / PCI: Remove the dependence on arch x86 when
- PCI_MMCONFIG=y
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-11-git-send-email-hanjun.guo@linaro.org> <55647B22.3010801@oracle.com>
-In-Reply-To: <55647B22.3010801@oracle.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
+	david.vrabel@citrix.com, jbeulich@suse.com,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
+Subject: Re: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
+Message-ID: <20150527200402.GS23057@wotan.suse.de>
+References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+ <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
+ <20150521223321.GG32152@google.com>
+ <20150522002341.GM23057@wotan.suse.de>
+ <20150526174008.GN32152@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150526174008.GN32152@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/26/2015 09:54 AM, Boris Ostrovsky wrote:
-> On 05/26/2015 08:49 AM, Hanjun Guo wrote:
->> In drivers/xen/pci.c, there are arch x86 dependent codes when
->> CONFIG_PCI_MMCONFIG is enabled, since CONFIG_PCI_MMCONFIG
->> depends on ACPI, so this will prevent XEN PCI running on other
->> architectures using ACPI with PCI_MMCONFIG enabled (such as ARM64).
->>
->> Fortunatly, it can be sloved in a simple way. In drivers/xen/pci.c,
->> the only x86 dependent code is if ((pci_probe & PCI_PROBE_MMCONF) == 0),
->> and it's defined in asm/pci_x86.h, the code means that
->> if the PCI resource is not probed in PCI_PROBE_MMCONF way, just
->> ingnore the xen mcfg init. Actually this is duplicate, because
->> if PCI resource is not probed in PCI_PROBE_MMCONF way, the
->> pci_mmconfig_list will be empty, and the if (list_empty())
->> after it will do the same job.
->>
->> So just remove the arch related code and the head file, this
->> will be no functional change for x86, and also makes xen/pci.c
->> usable for other architectures.
->>
->> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->> CC: Boris Ostrovsky <boris.ostrovsky@oracle.com>
->> ---
->>   drivers/xen/pci.c | 6 ------
->>   1 file changed, 6 deletions(-)
->>
->> diff --git a/drivers/xen/pci.c b/drivers/xen/pci.c
->> index 6785ebb..9a8dbe3 100644
->> --- a/drivers/xen/pci.c
->> +++ b/drivers/xen/pci.c
->> @@ -28,9 +28,6 @@
->>   #include <asm/xen/hypervisor.h>
->>   #include <asm/xen/hypercall.h>
->>   #include "../pci/pci.h"
->> -#ifdef CONFIG_PCI_MMCONFIG
->> -#include <asm/pci_x86.h>
->> -#endif
->>
->>   static bool __read_mostly pci_seg_supported = true;
->>
->> @@ -222,9 +219,6 @@ static int __init xen_mcfg_late(void)
->>       if (!xen_initial_domain())
->>           return 0;
->>
->> -    if ((pci_probe & PCI_PROBE_MMCONF) == 0)
->> -        return 0;
->> -
->>       if (list_empty(&pci_mmcfg_list))
->>           return 0;
->>
->
-> (+Stefano who is Xen ARM maintainer)
->
-> This will not build on x86 since pci_mmcfg_list since, for example, 
-> pci_mmcfg_list is declared in pci_x86.h.
+On Tue, May 26, 2015 at 12:40:08PM -0500, Bjorn Helgaas wrote:
+> On Fri, May 22, 2015 at 02:23:41AM +0200, Luis R. Rodriguez wrote:
+> > On Thu, May 21, 2015 at 05:33:21PM -0500, Bjorn Helgaas wrote:
+> > > 
+> > > I tentatively put this (and the rest of the series) on a pci/resource
+> > > branch.  I'm hoping you'll propose some clarification about
+> > > EXPORT_SYMBOL_GPL().
+> > 
+> > EXPORT_SYMBOL_GPL() also serves to ensure only GPL modules can
+> > only run that code. So for instance although we have "Dual BSD/GPL"
+> > tags for modules pure "BSD" tags do not exist for module tags and
+> > cannot run EXPORT_SYMBOL_GPL() code [0]. Also there is some folks
+> > who do believe tha at run time all kernel modules are GPL [1] [2].
+> > And to be precise even though the FSF may claim a list of licenses
+> > are GPL-compatible we cannot rely on this list alone for our own
+> > goals and if folks want to use our EXPORT_SYMBOL_GPL()s they must
+> > discuss this on lkml [2].
+> 
+> By "propose some clarification," I meant that I hoped you would propose a
+> patch to Documentation/ that would give maintainers some guidance.
 
+I *really really* would hate to do so but only because you insist, I'll look
+into this...
 
-And now really with Stefano and with parsable first sentence, sorry:
+ASDF
 
-
-This will not build on x86 since pci_mmcfg_list, for example, is 
-declared in pci_x86.h.
-
-
->
-> And I am not sure I understand why you are trying to do this since 
-> AFAIK CONFIG_PCI_MMCONFIG is only defined on x86 so neither pci_x86.h 
-> will be included nor xen_mcfg_late() will be defined on ARM.
->
->
-> -boris
->
->
->
-
+  Luis
