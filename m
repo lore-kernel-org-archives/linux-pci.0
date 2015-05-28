@@ -1,201 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35164 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106AbbELIaK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 May 2015 04:30:10 -0400
-Date: Tue, 12 May 2015 16:29:54 +0800
-From: Dave Young <dyoung@redhat.com>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 04/10] iommu/vt-d: functions to copy data from old mem
-Message-ID: <20150512082954.GD4561@localhost.localdomain>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
- <1431337974-545-5-git-send-email-zhen-hual@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1431337974-545-5-git-send-email-zhen-hual@hp.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:49526 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbbE1AYF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 20:24:05 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	stable@vger.kernel.org.#.v3.19+
+Subject: [PATCH 1/2] PCI: Add pci_bus_addr_t
+Date: Wed, 27 May 2015 17:23:51 -0700
+Message-Id: <1432772632-5139-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
-> Add some functions to copy the data from old kernel.
-> These functions are used to copy context tables and page tables.
-> 
-> To avoid calling iounmap between spin_lock_irqsave and spin_unlock_irqrestore,
-> use a link here, store the pointers , and then use iounmap to free them in
-> another place.
-> 
-> Li, Zhen-hua:
->     The functions and logics.
-> 
-> Takao Indoh:
->     Check if pfn is ram:
->         if (page_is_ram(pfn))
-> 
-> Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
-> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
-> ---
->  drivers/iommu/intel-iommu.c | 102 ++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/intel-iommu.h |   6 +++
->  2 files changed, 108 insertions(+)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 07e6118..0b97c15 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -371,6 +371,17 @@ static struct context_entry *device_to_existing_context_entry(
->  				struct intel_iommu *iommu,
->  				u8 bus, u8 devfn);
->  
-> +/*
-> + * A structure used to store the address allocated by ioremap();
-> + * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
-> + */
-> +struct iommu_remapped_entry {
-> +	struct list_head list;
-> +	void __iomem *mem;
-> +};
-> +static LIST_HEAD(__iommu_remapped_mem);
-> +static DEFINE_MUTEX(__iommu_mem_list_lock);
-> +
->  
->  /*
->   * This domain is a statically identity mapping domain.
-> @@ -4833,3 +4844,94 @@ static struct context_entry *device_to_existing_context_entry(
->  	return ret;
->  }
->  
-> +/*
-> + * Copy memory from a physically-addressed area into a virtually-addressed area
-> + */
-> +int __iommu_load_from_oldmem(void *to, unsigned long from, unsigned long size)
-> +{
-> +	unsigned long pfn;		/* Page Frame Number */
-> +	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-> +	unsigned long offset;		/* Lower 12 bits of to */
+David Ahern reported that d63e2e1f3df9 ("sparc/PCI: Clip bridge windows
+to fit in upstream windows") fails to boot on sparc/T5-8:
 
-comment for above variable are unnecessary, they are clear enough.
-BTW, use size_t size in function argument is better.
+pci 0000:06:00.0: reg 0x184: can't handle BAR above 4GB (bus address 0x110204000)
 
-> +	void __iomem *virt_mem;
-> +	struct iommu_remapped_entry *mapped;
-> +
-> +	pfn = from >> VTD_PAGE_SHIFT;
-> +	offset = from & (~VTD_PAGE_MASK);
-> +
-> +	if (page_is_ram(pfn)) {
-> +		memcpy(to, pfn_to_kaddr(pfn) + offset, csize);
-> +	} else{
-> +
-> +		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-> +				GFP_KERNEL);
-> +		if (!mapped)
-> +			return -ENOMEM;
-> +
-> +		virt_mem = ioremap_cache((unsigned long)from, size);
-> +		if (!virt_mem) {
-> +			kfree(mapped);
-> +			return -ENOMEM;
-> +		}
-> +		memcpy(to, virt_mem, size);
+The problem is that sparc64 assumed that dma_addr_t only needed to hold DMA
+addresses, i.e., bus addresses returned via the DMA API (dma_map_single(),
+etc.), while the PCI core assumed dma_addr_t could hold *any* bus address,
+including raw BAR values.  On sparc64, all DMA addresses fit in 32 bits, so
+dma_addr_t is a 32-bit type.  However, BAR values can be 64 bits wide, so
+they don't fit in a dma_addr_t.  d63e2e1f3df9 added new checking that
+tripped over this mismatch.
 
-csize or size? as previous comment use size_t in argument it will be ok here.
+Add pci_bus_addr_t, which is wide enough to hold any PCI bus address,
+including both raw BAR values and DMA addresses.  This will be 64 bits
+on 64-bit platforms and on platforms with a 64-bit dma_addr_t.  Then
+dma_addr_t only needs to be wide enough to hold addresses from the DMA API.
 
-> +
-> +		mutex_lock(&__iommu_mem_list_lock);
-> +		mapped->mem = virt_mem;
-> +		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-> +		mutex_unlock(&__iommu_mem_list_lock);
-> +	}
-> +	return size;
+Fixes: d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Link: http://lkml.kernel.org/r/1427857069-6789-1-git-send-email-yinghai@kernel.org
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96231
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+[bhelgaas: changelog, bugzilla, Kconfig to ensure pci_bus_addr_t is at least as wide as dma_addr_t]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+CC: stable@vger.kernel.org	# v3.19+
 
-type mismatch?
+---
+ drivers/pci/Kconfig |    4 ++++
+ drivers/pci/bus.c   |   10 +++++-----
+ drivers/pci/probe.c |   12 ++++++------
+ include/linux/pci.h |   12 +++++++++---
+ 4 files changed, 24 insertions(+), 14 deletions(-)
 
-> +}
-> +
-> +/*
-> + * Copy memory from a virtually-addressed area into a physically-addressed area
-> + */
-> +int __iommu_save_to_oldmem(unsigned long to, void *from, unsigned long size)
-> +{
-> +	unsigned long pfn;		/* Page Frame Number */
-> +	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-> +	unsigned long offset;		/* Lower 12 bits of to */
-
-Ditto about data type and comments..
-
-> +	void __iomem *virt_mem;
-> +	struct iommu_remapped_entry *mapped;
-> +
-> +	pfn = to >> VTD_PAGE_SHIFT;
-> +	offset = to & (~VTD_PAGE_MASK);
-> +
-> +	if (page_is_ram(pfn)) {
-> +		memcpy(pfn_to_kaddr(pfn) + offset, from, csize);
-> +	} else{
-> +		mapped = kzalloc(sizeof(struct iommu_remapped_entry),
-> +				GFP_KERNEL);
-> +		if (!mapped)
-> +			return -ENOMEM;
-> +
-> +		virt_mem = ioremap_cache((unsigned long)to, size);
-> +		if (!virt_mem) {
-> +			kfree(mapped);
-> +			return -ENOMEM;
-> +		}
-> +		memcpy(virt_mem, from, size);
-> +		mutex_lock(&__iommu_mem_list_lock);
-> +		mapped->mem = virt_mem;
-> +		list_add_tail(&mapped->list, &__iommu_remapped_mem);
-> +		mutex_unlock(&__iommu_mem_list_lock);
-> +	}
-> +	return size;
-> +}
-
-Above two functions looks duplicate, can they be merged as one function and
-add a argument about direction?
-
-> +
-> +/*
-> + * Free the mapped memory for ioremap;
-> + */
-> +int __iommu_free_mapped_mem(void)
-> +{
-> +	struct iommu_remapped_entry *mem_entry, *tmp;
-> +
-> +	mutex_lock(&__iommu_mem_list_lock);
-> +	list_for_each_entry_safe(mem_entry, tmp, &__iommu_remapped_mem, list) {
-> +		iounmap(mem_entry->mem);
-> +		list_del(&mem_entry->list);
-> +		kfree(mem_entry);
-> +	}
-> +	mutex_unlock(&__iommu_mem_list_lock);
-> +	return 0;
-> +}
-> +
-> diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-> index 796ef96..ced1fac 100644
-> --- a/include/linux/intel-iommu.h
-> +++ b/include/linux/intel-iommu.h
-> @@ -380,4 +380,10 @@ extern int dmar_ir_support(void);
->  
->  extern const struct attribute_group *intel_iommu_groups[];
->  
-> +extern int __iommu_load_from_oldmem(void *to, unsigned long from,
-> +					unsigned long size);
-> +extern int __iommu_save_to_oldmem(unsigned long to, void *from,
-> +					unsigned long size);
-> +extern int __iommu_free_mapped_mem(void);
-> +
->  #endif
-> -- 
-> 2.0.0-rc0
-> 
+Index: linux-2.6/drivers/pci/Kconfig
+===================================================================
+--- linux-2.6.orig/drivers/pci/Kconfig
++++ linux-2.6/drivers/pci/Kconfig
+@@ -1,6 +1,10 @@
+ #
+ # PCI configuration
+ #
++config PCI_BUS_ADDR_T_64BIT
++	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
++	depends on PCI
++
+ config PCI_MSI
+ 	bool "Message Signaled Interrupts (MSI and MSI-X)"
+ 	depends on PCI
+Index: linux-2.6/drivers/pci/bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/bus.c
++++ linux-2.6/drivers/pci/bus.c
+@@ -92,11 +92,11 @@ void pci_bus_remove_resources(struct pci
+ }
+ 
+ static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+-#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
++#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ static struct pci_bus_region pci_64_bit = {0,
+-				(dma_addr_t) 0xffffffffffffffffULL};
+-static struct pci_bus_region pci_high = {(dma_addr_t) 0x100000000ULL,
+-				(dma_addr_t) 0xffffffffffffffffULL};
++				(pci_bus_addr_t) 0xffffffffffffffffULL};
++static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
++				(pci_bus_addr_t) 0xffffffffffffffffULL};
+ #endif
+ 
+ /*
+@@ -200,7 +200,7 @@ int pci_bus_alloc_resource(struct pci_bu
+ 					  resource_size_t),
+ 		void *alignf_data)
+ {
+-#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
++#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
+ 
+ 	if (res->flags & IORESOURCE_MEM_64) {
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -254,8 +254,8 @@ int __pci_read_base(struct pci_dev *dev,
+ 	}
+ 
+ 	if (res->flags & IORESOURCE_MEM_64) {
+-		if ((sizeof(dma_addr_t) < 8 || sizeof(resource_size_t) < 8) &&
+-		    sz64 > 0x100000000ULL) {
++		if ((sizeof(pci_bus_addr_t) < 8 || sizeof(resource_size_t) < 8)
++		    && sz64 > 0x100000000ULL) {
+ 			res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 			res->start = 0;
+ 			res->end = 0;
+@@ -264,7 +264,7 @@ int __pci_read_base(struct pci_dev *dev,
+ 			goto out;
+ 		}
+ 
+-		if ((sizeof(dma_addr_t) < 8) && l) {
++		if ((sizeof(pci_bus_addr_t) < 8) && l) {
+ 			/* Above 32-bit boundary; try to reallocate */
+ 			res->flags |= IORESOURCE_UNSET;
+ 			res->start = 0;
+@@ -399,7 +399,7 @@ static void pci_read_bridge_mmio_pref(st
+ 	struct pci_dev *dev = child->self;
+ 	u16 mem_base_lo, mem_limit_lo;
+ 	u64 base64, limit64;
+-	dma_addr_t base, limit;
++	pci_bus_addr_t base, limit;
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
+@@ -426,8 +426,8 @@ static void pci_read_bridge_mmio_pref(st
+ 		}
+ 	}
+ 
+-	base = (dma_addr_t) base64;
+-	limit = (dma_addr_t) limit64;
++	base = (pci_bus_addr_t) base64;
++	limit = (pci_bus_addr_t) limit64;
+ 
+ 	if (base != base64) {
+ 		dev_err(&dev->dev, "can't handle bridge window above 4GB (bus address %#010llx)\n",
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -577,9 +577,15 @@ int raw_pci_read(unsigned int domain, un
+ int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 		  int reg, int len, u32 val);
+ 
++#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
++typedef u64 pci_bus_addr_t;
++#else
++typedef u32 pci_bus_addr_t;
++#endif
++
+ struct pci_bus_region {
+-	dma_addr_t start;
+-	dma_addr_t end;
++	pci_bus_addr_t start;
++	pci_bus_addr_t end;
+ };
+ 
+ struct pci_dynids {
+@@ -1127,7 +1133,7 @@ int __must_check pci_bus_alloc_resource(
+ 
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+ 
+-static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
++static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ {
+ 	struct pci_bus_region region;
+ 
