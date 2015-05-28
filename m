@@ -1,199 +1,237 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Grant Likely <grant.likely@linaro.org>,
-	Kevin Cernekee <cernekee@gmail.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC v1 08/11] genirq: Move field 'affinity' from struct irq_data into struct irq_common_data
-Date: Mon,  4 May 2015 11:15:36 +0800
-Message-Id: <1430709339-29083-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1430709339-29083-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22561 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650AbbE1AYG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 20:24:06 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	stable@vger.kernel.org.#.v3.19+
+Subject: [PATCH 2/2] PCI: Doc updates for pci_bus_addr_t
+Date: Wed, 27 May 2015 17:23:52 -0700
+Message-Id: <1432772632-5139-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1432772632-5139-1-git-send-email-yinghai@kernel.org>
+References: <1432772632-5139-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Irq affinity mask is per-irq instead of per irqchip, so move it into
-struct irq_common_data.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Make clear difference for pci_bus_addr_t and dma_addr_t.
+
+Fixes: d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Fixes: 23b13bc76f35 ("PCI: Fail safely if we can't handle BARs larger than 4GB")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Link: http://lkml.kernel.org/r/1427857069-6789-1-git-send-email-yinghai@kernel.org
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96231
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+CC: stable@vger.kernel.org	# v3.19+
+
 ---
- include/linux/irq.h  |   12 ++++++------
- kernel/irq/irqdesc.c |    9 +++++----
- kernel/irq/manage.c  |   12 ++++++------
- kernel/irq/proc.c    |    2 +-
- 4 files changed, 18 insertions(+), 17 deletions(-)
+ Documentation/DMA-API-HOWTO.txt |   29 +++++++++++++++++------------
+ Documentation/DMA-API.txt       |   30 +++++++++++++++---------------
+ include/linux/types.h           |   12 ++++++++++--
+ 3 files changed, 42 insertions(+), 29 deletions(-)
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index cf386d97b96d..6ac20b3f3053 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -110,8 +110,8 @@ enum {
- /*
-  * Return value for chip->irq_set_affinity()
-  *
-- * IRQ_SET_MASK_OK	- OK, core updates irq_data.affinity
-- * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_data.affinity
-+ * IRQ_SET_MASK_OK	- OK, core updates irq_common_data.affinity
-+ * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_common_data.affinity
-  * IRQ_SET_MASK_OK_DONE	- Same as IRQ_SET_MASK_OK for core. Special code to
-  *			  support stacked irqchips, which indicates skipping
-  *			  all descendent irqchips.
-@@ -131,6 +131,7 @@ struct irq_domain;
-  *			Use accessor functions to deal with it
-  * @node:		node index useful for balancing
-  * @handler_data:	per-IRQ data for the irq_chip methods
-+ * @affinity:		IRQ affinity on SMP
+Index: linux-2.6/Documentation/DMA-API-HOWTO.txt
+===================================================================
+--- linux-2.6.orig/Documentation/DMA-API-HOWTO.txt
++++ linux-2.6/Documentation/DMA-API-HOWTO.txt
+@@ -25,13 +25,18 @@ physical addresses.  These are the addre
+ address is not directly useful to a driver; it must use ioremap() to map
+ the space and produce a virtual address.
+ 
+-I/O devices use a third kind of address: a "bus address" or "DMA address".
+-If a device has registers at an MMIO address, or if it performs DMA to read
+-or write system memory, the addresses used by the device are bus addresses.
+-In some systems, bus addresses are identical to CPU physical addresses, but
+-in general they are not.  IOMMUs and host bridges can produce arbitrary
++I/O devices use a third kind of address: a "bus address".  If a device has
++registers at an MMIO address, or if it performs DMA to read or write system
++memory, the addresses used by the device are bus addresses.  In some
++systems, bus addresses are identical to CPU physical addresses, but in
++general they are not.  IOMMUs and host bridges can produce arbitrary
+ mappings between physical and bus addresses.
+ 
++From a device's point of view, DMA uses the bus address space, but it may
++be restricted to a subset of that space.  For example, even if a system
++supports 64-bit addresses for main memory and PCI BARs, it may use an IOMMU
++so devices only need to use 32-bit DMA addresses.
++
+ Here's a picture and some examples:
+ 
+                CPU                  CPU                  Bus
+@@ -72,11 +77,11 @@ can use virtual address X to access the
+ cannot because DMA doesn't go through the CPU virtual memory system.
+ 
+ In some simple systems, the device can do DMA directly to physical address
+-Y.  But in many others, there is IOMMU hardware that translates bus
++Y.  But in many others, there is IOMMU hardware that translates DMA
+ addresses to physical addresses, e.g., it translates Z to Y.  This is part
+ of the reason for the DMA API: the driver can give a virtual address X to
+ an interface like dma_map_single(), which sets up any required IOMMU
+-mapping and returns the bus address Z.  The driver then tells the device to
++mapping and returns the DMA address Z.  The driver then tells the device to
+ do DMA to Z, and the IOMMU maps it to the buffer at address Y in system
+ RAM.
+ 
+@@ -98,7 +103,7 @@ First of all, you should make sure
+ #include <linux/dma-mapping.h>
+ 
+ is in your driver, which provides the definition of dma_addr_t.  This type
+-can hold any valid DMA or bus address for the platform and should be used
++can hold any valid DMA address for the platform and should be used
+ everywhere you hold a DMA address returned from the DMA mapping functions.
+ 
+ 			 What memory is DMA'able?
+@@ -316,7 +321,7 @@ There are two types of DMA mappings:
+   Think of "consistent" as "synchronous" or "coherent".
+ 
+   The current default is to return consistent memory in the low 32
+-  bits of the bus space.  However, for future compatibility you should
++  bits of the DMA space.  However, for future compatibility you should
+   set the consistent mask even if this default is fine for your
+   driver.
+ 
+@@ -403,7 +408,7 @@ dma_alloc_coherent() returns two values:
+ can use to access it from the CPU and dma_handle which you pass to the
+ card.
+ 
+-The CPU virtual address and the DMA bus address are both
++The CPU virtual address and the DMA address are both
+ guaranteed to be aligned to the smallest PAGE_SIZE order which
+ is greater than or equal to the requested size.  This invariant
+ exists (for example) to guarantee that if you allocate a chunk
+@@ -645,8 +650,8 @@ PLEASE NOTE:  The 'nents' argument to th
+               dma_map_sg call.
+ 
+ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
+-counterpart, because the bus address space is a shared resource and
+-you could render the machine unusable by consuming all bus addresses.
++counterpart, because the DMA address space is a shared resource and
++you could render the machine unusable by consuming all DMA addresses.
+ 
+ If you need to use the same streaming DMA region multiple times and touch
+ the data in between the DMA transfers, the buffer needs to be synced
+Index: linux-2.6/Documentation/DMA-API.txt
+===================================================================
+--- linux-2.6.orig/Documentation/DMA-API.txt
++++ linux-2.6/Documentation/DMA-API.txt
+@@ -18,10 +18,10 @@ Part I - dma_ API
+ To get the dma_ API, you must #include <linux/dma-mapping.h>.  This
+ provides dma_addr_t and the interfaces described below.
+ 
+-A dma_addr_t can hold any valid DMA or bus address for the platform.  It
+-can be given to a device to use as a DMA source or target.  A CPU cannot
+-reference a dma_addr_t directly because there may be translation between
+-its physical address space and the bus address space.
++A dma_addr_t can hold any valid DMA address for the platform.  It can be
++given to a device to use as a DMA source or target.  A CPU cannot reference
++a dma_addr_t directly because there may be translation between its physical
++address space and the DMA address space.
+ 
+ Part Ia - Using large DMA-coherent buffers
+ ------------------------------------------
+@@ -42,7 +42,7 @@ It returns a pointer to the allocated re
+ address space) or NULL if the allocation failed.
+ 
+ It also returns a <dma_handle> which may be cast to an unsigned integer the
+-same width as the bus and given to the device as the bus address base of
++same width as the bus and given to the device as the DMA address base of
+ the region.
+ 
+ Note: consistent memory can be expensive on some platforms, and the
+@@ -193,7 +193,7 @@ dma_map_single(struct device *dev, void
+ 		      enum dma_data_direction direction)
+ 
+ Maps a piece of processor virtual memory so it can be accessed by the
+-device and returns the bus address of the memory.
++device and returns the DMA address of the memory.
+ 
+ The direction for both APIs may be converted freely by casting.
+ However the dma_ API uses a strongly typed enumerator for its
+@@ -212,20 +212,20 @@ contiguous piece of memory.  For this re
+ this API should be obtained from sources which guarantee it to be
+ physically contiguous (like kmalloc).
+ 
+-Further, the bus address of the memory must be within the
++Further, the DMA address of the memory must be within the
+ dma_mask of the device (the dma_mask is a bit mask of the
+-addressable region for the device, i.e., if the bus address of
+-the memory ANDed with the dma_mask is still equal to the bus
++addressable region for the device, i.e., if the DMA address of
++the memory ANDed with the dma_mask is still equal to the DMA
+ address, then the device can perform DMA to the memory).  To
+ ensure that the memory allocated by kmalloc is within the dma_mask,
+ the driver may specify various platform-dependent flags to restrict
+-the bus address range of the allocation (e.g., on x86, GFP_DMA
+-guarantees to be within the first 16MB of available bus addresses,
++the DMA address range of the allocation (e.g., on x86, GFP_DMA
++guarantees to be within the first 16MB of available DMA addresses,
+ as required by ISA devices).
+ 
+ Note also that the above constraints on physical contiguity and
+ dma_mask may not apply if the platform has an IOMMU (a device which
+-maps an I/O bus address to a physical memory address).  However, to be
++maps an I/O DMA address to a physical memory address).  However, to be
+ portable, device driver writers may *not* assume that such an IOMMU
+ exists.
+ 
+@@ -296,7 +296,7 @@ reduce current DMA mapping usage or dela
+ 	dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 		int nents, enum dma_data_direction direction)
+ 
+-Returns: the number of bus address segments mapped (this may be shorter
++Returns: the number of DMA address segments mapped (this may be shorter
+ than <nents> passed in if some elements of the scatter/gather list are
+ physically or virtually adjacent and an IOMMU maps them with a single
+ entry).
+@@ -340,7 +340,7 @@ must be the same as those and passed in
+ API.
+ 
+ Note: <nents> must be the number you passed in, *not* the number of
+-bus address entries returned.
++DMA address entries returned.
+ 
+ void
+ dma_sync_single_for_cpu(struct device *dev, dma_addr_t dma_handle, size_t size,
+@@ -507,7 +507,7 @@ it's asked for coherent memory for this
+ phys_addr is the CPU physical address to which the memory is currently
+ assigned (this will be ioremapped so the CPU can access the region).
+ 
+-device_addr is the bus address the device needs to be programmed
++device_addr is the DMA address the device needs to be programmed
+ with to actually address this memory (this will be handed out as the
+ dma_addr_t in dma_alloc_coherent()).
+ 
+Index: linux-2.6/include/linux/types.h
+===================================================================
+--- linux-2.6.orig/include/linux/types.h
++++ linux-2.6/include/linux/types.h
+@@ -139,12 +139,20 @@ typedef unsigned long blkcnt_t;
   */
- struct irq_common_data {
- 	unsigned int		state_use_accessors;
-@@ -138,6 +139,7 @@ struct irq_common_data {
- 	unsigned int		node;
- #endif
- 	void			*handler_data;
-+	cpumask_var_t		affinity;
- };
+ #define pgoff_t unsigned long
  
- /**
-@@ -154,7 +156,6 @@ struct irq_common_data {
-  * @chip_data:		platform-specific per-chip private data for the chip
-  *			methods, to allow shared chip implementations
-  * @msi_desc:		MSI descriptor
-- * @affinity:		IRQ affinity on SMP
-  *
-  * The fields here need to overlay the ones in irq_desc until we
-  * cleaned up the direct references and switched everything over to
-@@ -172,7 +173,6 @@ struct irq_data {
- #endif
- 	void			*chip_data;
- 	struct msi_desc		*msi_desc;
--	cpumask_var_t		affinity;
- };
- 
- /*
-@@ -653,12 +653,12 @@ static inline int irq_data_get_node(struct irq_data *d)
- static inline struct cpumask *irq_get_affinity_mask(int irq)
- {
- 	struct irq_data *d = irq_get_irq_data(irq);
--	return d ? d->affinity : NULL;
-+	return d ? d->common->affinity : NULL;
- }
- 
- static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
- {
--	return d->affinity;
-+	return d->common->affinity;
- }
- 
- unsigned int arch_dynirq_lower_bound(unsigned int from);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 7f881792ad5f..2c39a203f78b 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -38,12 +38,13 @@ static void __init init_irq_default_affinity(void)
- #ifdef CONFIG_SMP
- static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- {
--	if (!zalloc_cpumask_var_node(&desc->irq_data.affinity, gfp, node))
-+	if (!zalloc_cpumask_var_node(&desc->irq_common_data.affinity,
-+				     gfp, node))
- 		return -ENOMEM;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	if (!zalloc_cpumask_var_node(&desc->pending_mask, gfp, node)) {
--		free_cpumask_var(desc->irq_data.affinity);
-+		free_cpumask_var(desc->irq_common_data.affinity);
- 		return -ENOMEM;
- 	}
- #endif
-@@ -52,7 +53,7 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- 
- static void desc_smp_init(struct irq_desc *desc, int node)
- {
--	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
-+	cpumask_copy(desc->irq_common_data.affinity, irq_default_affinity);
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	cpumask_clear(desc->pending_mask);
- #endif
-@@ -124,7 +125,7 @@ static void free_masks(struct irq_desc *desc)
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	free_cpumask_var(desc->pending_mask);
- #endif
--	free_cpumask_var(desc->irq_data.affinity);
-+	free_cpumask_var(desc->irq_common_data.affinity);
- }
+-/* A dma_addr_t can hold any valid DMA or bus address for the platform */
++/*
++ * A dma_addr_t can hold any valid DMA address, i.e., any address returned
++ * by the DMA API.
++ *
++ * If the DMA API only uses 32-bit addresses, dma_addr_t need only be 32
++ * bits wide.  Bus addresses, e.g., PCI BARs, may be wider than 32 bits,
++ * but drivers do memory-mapped I/O to ioremapped kernel virtual addresses,
++ * so they don't care about the size of the actual bus addresses.
++ */
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ typedef u64 dma_addr_t;
  #else
- static inline void free_masks(struct irq_desc *desc) { }
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index d206aa2c3378..7588bf87e8f3 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -190,7 +190,7 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	switch (ret) {
- 	case IRQ_SET_MASK_OK:
- 	case IRQ_SET_MASK_OK_DONE:
--		cpumask_copy(data->affinity, mask);
-+		cpumask_copy(desc->irq_common_data.affinity, mask);
- 	case IRQ_SET_MASK_OK_NOCOPY:
- 		irq_set_thread_affinity(desc);
- 		ret = 0;
-@@ -271,7 +271,7 @@ static void irq_affinity_notify(struct work_struct *work)
- 	if (irq_move_pending(&desc->irq_data))
- 		irq_get_pending(cpumask, desc);
- 	else
--		cpumask_copy(cpumask, desc->irq_data.affinity);
-+		cpumask_copy(cpumask, desc->irq_common_data.affinity);
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ typedef u32 dma_addr_t;
+-#endif /* dma_addr_t */
++#endif
  
- 	notify->notify(notify, cpumask);
-@@ -343,9 +343,9 @@ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
- 	 * one of the targets is online.
- 	 */
- 	if (irqd_has_set(&desc->irq_data, IRQD_AFFINITY_SET)) {
--		if (cpumask_intersects(desc->irq_data.affinity,
-+		if (cpumask_intersects(desc->irq_common_data.affinity,
- 				       cpu_online_mask))
--			set = desc->irq_data.affinity;
-+			set = desc->irq_common_data.affinity;
- 		else
- 			irqd_clear(&desc->irq_data, IRQD_AFFINITY_SET);
- 	}
-@@ -796,8 +796,8 @@ irq_thread_check_affinity(struct irq_desc *desc, struct irqaction *action)
- 	 * This code is triggered unconditionally. Check the affinity
- 	 * mask pointer. For CPU_MASK_OFFSTACK=n this is optimized out.
- 	 */
--	if (desc->irq_data.affinity)
--		cpumask_copy(mask, desc->irq_data.affinity);
-+	if (desc->irq_common_data.affinity)
-+		cpumask_copy(mask, desc->irq_common_data.affinity);
- 	else
- 		valid = false;
- 	raw_spin_unlock_irq(&desc->lock);
-diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-index 0e97c142ce40..e3a8c9577ba6 100644
---- a/kernel/irq/proc.c
-+++ b/kernel/irq/proc.c
-@@ -39,7 +39,7 @@ static struct proc_dir_entry *root_irq_dir;
- static int show_irq_affinity(int type, struct seq_file *m, void *v)
- {
- 	struct irq_desc *desc = irq_to_desc((long)m->private);
--	const struct cpumask *mask = desc->irq_data.affinity;
-+	const struct cpumask *mask = desc->irq_common_data.affinity;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	if (irqd_is_setaffinity_pending(&desc->irq_data))
--- 
-1.7.10.4
-
+ typedef unsigned __bitwise__ gfp_t;
+ typedef unsigned __bitwise__ fmode_t;
