@@ -1,84 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:14444 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbbEZAfR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 May 2015 20:35:17 -0400
-Message-ID: <5563BFD3.5050902@broadcom.com>
-Date: Mon, 25 May 2015 17:35:31 -0700
-From: Ray Jui <rjui@broadcom.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:35930 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754306AbbE1UH4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 16:07:56 -0400
+Date: Thu, 28 May 2015 21:07:49 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: corbet@lwn.net, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mingo@elte.hu,
+	gnomes@lxorguk.ukuu.org.uk, gregkh@linuxfoundation.org,
+	jkosina@suse.cz, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	xen-devel@lists.xenproject.org, bp@suse.de,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
+Message-ID: <20150528200749.GD7232@ZenIV.linux.org.uk>
+References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>, <zajec5@gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: free resource list after registration
-References: <1432499823-27369-1-git-send-email-hauke@hauke-m.de> <1432499823-27369-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1432499823-27369-2-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hauke,
-
-On 15-05-24 01:37 PM, Hauke Mehrtens wrote:
-> The resource list is only used in the setup process and was never
-> freed. pci_add_resource() allocates a memory area to store the list
-> item. This patch fixes the memory leak.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->   drivers/pci/host/pcie-iproc-bcma.c     | 8 ++++----
->   drivers/pci/host/pcie-iproc-platform.c | 8 ++++----
->   2 files changed, 8 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-> index f96b39e..2e4f2d6 100644
-> --- a/drivers/pci/host/pcie-iproc-bcma.c
-> +++ b/drivers/pci/host/pcie-iproc-bcma.c
-> @@ -65,12 +65,12 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
->   	pcie->map_irq = iproc_pcie_bcma_map_irq;
->
->   	ret = iproc_pcie_setup(pcie, &res);
-> -	if (ret) {
-> +	if (ret)
->   		dev_err(pcie->dev, "PCIe controller setup failed\n");
-> -		return ret;
-> -	}
->
-> -	return 0;
-> +	pci_free_resource_list(&res);
-> +
-> +	return ret;
->   }
->
->   static void iproc_pcie_bcma_remove(struct bcma_device *bdev)
-> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-> index c5fe4c1..9aedc8e 100644
-> --- a/drivers/pci/host/pcie-iproc-platform.c
-> +++ b/drivers/pci/host/pcie-iproc-platform.c
-> @@ -72,12 +72,12 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
->   	pcie->map_irq = of_irq_parse_and_map_pci;
->
->   	ret = iproc_pcie_setup(pcie, &res);
-> -	if (ret) {
-> +	if (ret)
->   		dev_err(pcie->dev, "PCIe controller setup failed\n");
-> -		return ret;
-> -	}
->
-> -	return 0;
-> +	pci_free_resource_list(&res);
-> +
-> +	return ret;
->   }
->
->   static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->
-
-This looks good to me and I sanity tested it on a BCM958300K Cygnus 
-combo board.
-
-Thanks,
-
-Reviewed-by: Ray Jui <rjui@broadcom.com>
-Tested-by: Ray Jui <rjui@broadcom.com>
+On Thu, May 28, 2015 at 11:56:01AM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> 
+> Current documentation over use case for EXPORT_SYMBOL_GPL()
+> only acknowledges functions which are "an internal implementation
+> issue, and not really an interface". In practice these days
+> though we have some maintainers taking on preferences to require
+> all new functionality go in with EXPORT_SYMBOL_GPL().
+> 
+> A maintainer asking developers to use EXPORT_SYMBOL_GPL()
+> for new functionality tends to be a well accepted and understood
+> position that maintainers can take and typically requires the
+> maintainers educating contributing developers on their own
+> positions and requirements.
+> 
+> Developers who submit code to maintainers not familiar with
+> these preferences as optional for new functionality need explicit
+> guidence though as existing documentation does not acknowledge
+> this as a valid possibility. Without this being documented some
+> maintainers are reluctant to accept new functionality with
+> EXPORT_SYMBOL_GPL().
+> 
+> This extends the use case documentation for EXPORT_SYMBOL_GPL()
+> to acknowledge acceptance for new functionality.
+ 
+... while some of us consider that as pointless posturing and will refuse
+to merge such exports regardless.  It's _NOT_ a universal default; please,
+do not attempt to imply otherwise.  In particular, for fs/*.c I will not
+accept that as valid grounds for use of EXPORT_SYMBOL_GPL.
