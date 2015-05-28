@@ -1,51 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:42178 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbbEHBB6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 May 2015 21:01:58 -0400
-Message-ID: <554C0AC7.2080705@hp.com>
-Date: Fri, 08 May 2015 09:00:55 +0800
-From: "Li, ZhenHua" <zhen-hual@hp.com>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:35430 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbbE1WIb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 18:08:31 -0400
 MIME-Version: 1.0
-To: Joerg Roedel <joro@8bytes.org>
-CC: Baoquan He <bhe@redhat.com>, alex.williamson@redhat.com,
-	indou.takao@jp.fujitsu.com, tom.vaden@hp.com, rwright@hp.com,
-	dwmw2@infradead.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, lisa.mitchell@hp.com,
-	jerry.hoemann@hp.com, iommu@lists.linux-foundation.org,
-	ddutile@redhat.com, doug.hatch@hp.com,
-	ishii.hironobu@jp.fujitsu.com, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, billsumnerlinux@gmail.com, li.zhang6@hp.com,
-	dyoung@redhat.com, vgoyal@redhat.com,
-	"Li, ZhenHua" <zhen-hual@hp.com>
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com> <20150429112024.GB5799@dhcp-16-116.nay.redhat.com> <20150503085530.GK15033@dhcp-16-116.nay.redhat.com> <5546E240.5090403@hp.com> <20150504031749.GF5799@dhcp-16-116.nay.redhat.com> <20150507173200.GF20611@8bytes.org>
-In-Reply-To: <20150507173200.GF20611@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4269355.CI4MW738Od@vostro.rjw.lan>
+References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
+	<CAE9FiQXq59tSBM0SQ4OToXydZrRC3yukALmWEb6K9xpCGbdUhg@mail.gmail.com>
+	<20150527193149.GD10210@google.com>
+	<4269355.CI4MW738Od@vostro.rjw.lan>
+Date: Thu, 28 May 2015 15:08:28 -0700
+Message-ID: <CAE9FiQWDsQxKK3m4_-dSXm8V3xNc4oOtg2UQi=aayeKhLutwQg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not modular
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	linux-sh@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
-This problem is caused by the latest updates in iommu module, and we are 
-trying to fix it.
-When it is fixed, we will send out a new version of the patchset.
+On Wed, May 27, 2015 at 6:30 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, May 27, 2015 02:31:49 PM Bjorn Helgaas wrote:
+> For debug you can always use pcie_ports=compat and that will disable
+> pciehp too.
 
-Thanks
-Zhenhua
-
-On 05/08/2015 01:32 AM, Joerg Roedel wrote:
-> Hi Baoquan, ZhenHua,
->
-> On Mon, May 04, 2015 at 11:17:49AM +0800, Baoquan He wrote:
->> On 05/04/15 at 11:06am, Li, ZhenHua wrote:
->>> Hi baoquan,
->>> Could you paste the kernel log of the first kernel ?
->
-> Please let me know when you have worked this issue out.
->
->
-> Thanks,
->
-> 	Joerg
->
-
+That will disable AER at the same time, right?.
