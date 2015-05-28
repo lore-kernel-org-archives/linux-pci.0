@@ -1,128 +1,56 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5559F76E.5040203@redhat.com>
-Date: Mon, 18 May 2015 10:30:06 -0400
-From: Jarod Wilson <jarod@redhat.com>
+Date: Thu, 28 May 2015 18:36:22 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v6 1/2] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150528182645-mutt-send-email-mst@redhat.com>
+References: <1431431730-25164-1-git-send-email-mst@redhat.com>
+ <1431431730-25164-2-git-send-email-mst@redhat.com>
+ <871tilmwiq.fsf@x220.int.ebiederm.org>
+ <20150513081101-mutt-send-email-mst@redhat.com>
+ <20150514075957-mutt-send-email-mst@redhat.com>
+ <46708A26-16CB-4417-BCFA-12F4C78FC2F7@xmission.com>
+ <20150514113732-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/hotplug: work-around for missing _RMV on HP ZBook
- G2
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <20150516143750.GG31666@google.com> <20150516144155.GH31666@google.com>
-In-Reply-To: <20150516144155.GH31666@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150514113732-mutt-send-email-mst@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/16/2015 10:41 AM, Bjorn Helgaas wrote:
-> [fix Rafael's email address]
->
-> On Sat, May 16, 2015 at 09:37:50AM -0500, Bjorn Helgaas wrote:
->> Hi Jarod,
->>
->> On Thu, May 14, 2015 at 03:33:58PM -0400, Jarod Wilson wrote:
->>> The HP ZBook 15 and 17 Mobile Workstations, generation 2, up to and
->>> including at least BIOS revision 01.07, do not have an ACPI _RMV object
->>> associated with their expresscard slots, so acpi-based hotplug-capable
->>> slot detection fails. If we fall back to pcie-based detection, the systems
->>> work just fine, so this uses dmi matching to do that. With luck, a future
->>> BIOS will remedy this (I've let someone at HP know about the problem),
->>> but for now, just use this for all existing versions.
->>>
->>> Note: they *do* have a proper _RMV object for what I believe is their
->>> thunderbolt ports.
->>>
->>> Tested successfully on an HP ZBook 17 G2 and HP ZBook 15 G2.
->>>
->>> CC: Len Brown <lenb@kernel.org>
->>> CC: "Rafael J. Wysocki" <rjw@sisk.pl>
->>> CC: Bjorn Helgaas <bhelgaas@google.com>
->>> CC: linux-acpi@vger.kernel.org
->>> CC: linux-pci@vger.kernel.org
->>> Signed-off-by: Jarod Wilson <jarod@redhat.com>
->>> ---
->>>   drivers/pci/hotplug/pciehp_acpi.c | 33 +++++++++++++++++++++++++++++++++
->>>   1 file changed, 33 insertions(+)
->>>
->>> diff --git a/drivers/pci/hotplug/pciehp_acpi.c b/drivers/pci/hotplug/pciehp_acpi.c
->>> index 93cc926..db38fb5 100644
->>> --- a/drivers/pci/hotplug/pciehp_acpi.c
->>> +++ b/drivers/pci/hotplug/pciehp_acpi.c
->>> @@ -28,6 +28,7 @@
->>>   #include <linux/pci_hotplug.h>
->>>   #include <linux/slab.h>
->>>   #include <linux/module.h>
->>> +#include <linux/dmi.h>
->>>   #include "pciehp.h"
->>>
->>>   #define PCIEHP_DETECT_PCIE	(0)
->>> @@ -109,10 +110,40 @@ static struct pcie_port_service_driver __initdata dummy_driver = {
->>>   	.probe		= dummy_probe,
->>>   };
->>>
->>> +static int __init set_slot_detection_mode_pcie(const struct dmi_system_id *d)
->>> +{
->>> +	info("%s lacks ACPI _RMV object for expresscard\n", d->ident);
->>> +	return 1;
->>> +}
->>> +
->>> +static struct dmi_system_id __initdata missing_acpi_rmv[] = {
->>> +	/* ZBook 17 through at least bios v01.07 */
->>> +	{
->>> +	 .callback = set_slot_detection_mode_pcie,
->>> +	 .ident = "HP ZBook 17 G2 Mobile Workstation",
->>> +	 .matches = {
->>> +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
->>> +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 17 G2"),
->>> +		},
->>> +	},
->>> +	/* ZBook 15 through at least bios v01.07 */
->>> +	{
->>> +	 .callback = set_slot_detection_mode_pcie,
->>> +	 .ident = "HP ZBook 15 G2 Mobile Workstation",
->>> +	 .matches = {
->>> +		DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
->>> +		DMI_MATCH(DMI_PRODUCT_NAME, "HP ZBook 15 G2"),
->>> +		},
->>> +	},
->>> +	{ .ident = NULL }
->>> +};
->>> +
->>>   static int __init select_detection_mode(void)
->>>   {
->>>   	struct dummy_slot *slot, *tmp;
->>>
->>> +	if (dmi_check_system(missing_acpi_rmv))
->>> +		return PCIEHP_DETECT_PCIE;
->>
->> Oh, my goodness.  I forgot how terrible this path is.  Can anyone write a
->> simple explanation of how we choose to use acpiphp or pciehp?  Module
->> parameters?  A dummy driver that looks for duplicate slot numbers?  Looking
->> for _ADR, _EJ0, _RMV?  This is just nuts.
->>
->> I can't really believe that we're doing this correctly.
->>
->> If I understand correctly, the ZBooks don't have _RMV, but we try to use
->> acpiphp anyway, and acpiphp doesn't work?
+On Thu, May 14, 2015 at 11:53:34AM +0200, Michael S. Tsirkin wrote:
+> > you are almost certainly going to subject it to a
+> > screaming MSI interrupt and there almost certainly will
+> > not be code to disable MSIs as they are disabled by at
+> > boot up by default.
+> > 
+> > Eric
+> 
+> OTOH if you do disable MSI but leave device functioning you will just
+> get screaming INT#x which is even worse because it will end up disabling
+> INT#x which is shared, and so breaking multiple devices and not just
+> this one.
 
-They do have an _RMV entry for another device, whatever is on 
-0000:00:1c.0, which appears to be the thunderbolt port, but I have yet 
-to verify that (no thunderbolt devices to play with yet). The 
-expresscard slot is 0000:3c:02.0.
+Eric, can you comment on this please?
+To list the points again:
+	1- if device is properly shut down there's no need to disable MSIs
+	2- if device is not properly shut down disabling MSIs will cause
+	   screaming INT#x interrupts
+	3- in both cases if we leave MSI on then we can be sure we won't
+	   get screaming interrupts since we now disable bus mastering
+           which suppresses MSIs (but not INT#x)
 
->> That sounds more like a problem
->> with our acpiphp/pciehp selection "algorithm" than a BIOS bug.
->>
->> Jarod, can you open a report at http://bugzilla.kernel.org and attach a
->> complete dmesg log, "lspci -vv" output, and an acpidump?  I'm particularly
->> interested in whether the BIOS granted us control over PCIe native hotplug.
->> If it did, I wonder why we would even attempt to use acpiphp.
+Looking at the commit that added the disable, that is d52877c7b1af, you
+will see that historically it preceded b566a22c23. So the screaming MSI
+problem that d52877c7b1af tried to address is now gone, addressed by
+b566a22c23.
 
-Done:
+What do you think?
 
-https://bugzilla.kernel.org/show_bug.cgi?id=98581
-
--- 
-Jarod Wilson
-jarod@redhat.com
+> -- 
+> MST
