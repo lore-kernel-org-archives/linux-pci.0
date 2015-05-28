@@ -1,51 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Gilad Avidov <gavidov@codeaurora.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFC v1 12/25] spmi: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Wed, 20 May 2015 18:00:00 +0800
-Message-Id: <1432116013-25902-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:43005 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751372AbbE1TSr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 May 2015 15:18:47 -0400
+Date: Thu, 28 May 2015 21:18:44 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mingo@elte.hu, gnomes@lxorguk.ukuu.org.uk,
+	gregkh@linuxfoundation.org, jkosina@suse.cz, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
+	bp@suse.de
+Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
+Message-ID: <20150528191844.GU23057@wotan.suse.de>
+References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
+ <20150528130923.42f34540@lwn.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150528130923.42f34540@lwn.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-already have a pointer to corresponding irq_desc.
+On Thu, May 28, 2015 at 01:09:23PM -0600, Jonathan Corbet wrote:
+> On Thu, 28 May 2015 11:56:01 -0700
+> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
+> 
+> > +    Some maintainers and developers may however have a preference to
+> > +    require EXPORT_SYMBOL_GPL() when adding any new APIs or functionality.
+> 
+> As a nit, I would take out "have a preference to".
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/spmi/spmi-pmic-arb.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Fine by me, do you need a new submission on my part of can you amend yourself?
 
-diff --git a/drivers/spmi/spmi-pmic-arb.c b/drivers/spmi/spmi-pmic-arb.c
-index d7119db49cfe..b32cb0a813cb 100644
---- a/drivers/spmi/spmi-pmic-arb.c
-+++ b/drivers/spmi/spmi-pmic-arb.c
-@@ -453,8 +453,8 @@ static void periph_interrupt(struct spmi_pmic_arb_dev *pa, u8 apid)
- 
- static void pmic_arb_chained_irq(unsigned int irq, struct irq_desc *desc)
- {
--	struct spmi_pmic_arb_dev *pa = irq_get_handler_data(irq);
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct spmi_pmic_arb_dev *pa = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	void __iomem *intr = pa->intr;
- 	int first = pa->min_apid >> 5;
- 	int last = pa->max_apid >> 5;
--- 
-1.7.10.4
+> From what I can tell, there are developers who think this position makes
+> little sense and, perhaps, risks diluting the value of EXPORT_SYMBOL_GPL()
+> by attaching it to everything.  My inclination, though, would be to accept
+> this change as documentation of clear existing practice; whether that
+> practice should change is, I think, a separate discussion.
 
+Great, thanks.
+
+  Luis
